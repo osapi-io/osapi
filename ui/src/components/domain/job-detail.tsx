@@ -10,7 +10,7 @@ import { formatDuration, formatTime, summarize } from "@/lib/format";
 import { hostSteps } from "@/lib/steps";
 import { ChainSection } from "@/components/domain/step-tree";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
-import { statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 import { useJobDetail } from "@/hooks/use-job-detail";
 
 interface JobDetailProps {
@@ -84,6 +84,7 @@ function ObjectKV({ v }: { v: unknown }) {
  * The Jobs page and the job panel of a step's result on the Plans page both show it.
  */
 export function JobView({ job }: { job: JobDetailResponse }) {
+  const statusColor = useStatus();
   // The API sorts both by hostname.
   const states = job.agent_states ?? [];
   const responses = job.responses ?? [];
@@ -101,7 +102,9 @@ export function JobView({ job }: { job: JobDetailResponse }) {
             ["Job ID", <span className="font-mono">{job.id}</span>],
             [
               "Status",
-              <Badge variant={statusVariant(job.status)}>{job.status}</Badge>,
+              <Badge variant={statusColor.variant(job.status)}>
+                {job.status}
+              </Badge>,
             ],
             ["Hostname", job.hostname],
             ["Target", job.target],
@@ -140,7 +143,9 @@ export function JobView({ job }: { job: JobDetailResponse }) {
               {
                 header: "Status",
                 cell: (r) => (
-                  <Badge variant={statusVariant(r.status)}>{r.status}</Badge>
+                  <Badge variant={statusColor.variant(r.status)}>
+                    {r.status}
+                  </Badge>
                 ),
               },
               { header: "Data", cell: (r) => summarize(r.data) },
@@ -168,7 +173,9 @@ export function JobView({ job }: { job: JobDetailResponse }) {
               {
                 header: "Status",
                 cell: (st) => (
-                  <Badge variant={statusVariant(st.status)}>{st.status}</Badge>
+                  <Badge variant={statusColor.variant(st.status)}>
+                    {st.status}
+                  </Badge>
                 ),
               },
               {
@@ -207,7 +214,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
             {
               header: "Event",
               cell: (e) => (
-                <Badge variant={statusVariant(e.event)}>{e.event}</Badge>
+                <Badge variant={statusColor.variant(e.event)}>{e.event}</Badge>
               ),
             },
             { header: "Hostname", cell: (e) => e.hostname },

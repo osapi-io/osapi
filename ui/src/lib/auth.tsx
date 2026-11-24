@@ -1,51 +1,39 @@
 import { useState, useCallback, type ReactNode } from "react";
-import { OPERATION_PERMISSIONS, type OperationId } from "@/lib/operations.gen";
 import {
-  ROLES,
-  getRoleByName,
-  getRoleByJwtRole,
   hasPermission,
   hasAllPermissions,
   type Permission,
 } from "@/lib/permissions";
-import { setAuthToken as setAuthTokenValue } from "@/lib/auth-token";
 import { AuthContext } from "@/lib/auth-context";
-import { jwtClaimStrings } from "@/lib/jwt";
+import { useCatalog } from "@/hooks/use-catalog";
+import { useSession } from "@/hooks/use-session";
+import type { OperationID } from "@/sdk/gen/schemas";
 
 // ---------------------------------------------------------------------------
 // Auth provider
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY_ROLE = "osapi-role-override";
-const STORAGE_KEY_TOKEN = "osapi-token";
 
-// Token from env var (set in .env.local) — skips sign-in when present
-const ENV_TOKEN = import.meta.env.OSAPI_BEARER_TOKEN || "";
-
+/**
+ * AuthProvider gives the role of the token, or of the role switcher, and
+ * what it may call. The roles and the permission of each operation come from
+ * the catalog, so it is inside CatalogProvider.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const session = useSession();
+  const { roles, operations } = useCatalog();
   const [roleOverride, setRoleOverrideState] = useState<string | null>(() => {
     return localStorage.getItem(STORAGE_KEY_ROLE);
   });
 
-  const [token, setTokenState] = useState<string | null>(() => {
-    return ENV_TOKEN || localStorage.getItem(STORAGE_KEY_TOKEN) || null;
-  });
-
-  const tokenRoles = token ? jwtClaimStrings(token, "roles") : [];
-  const tokenTargets = token ? jwtClaimStrings(token, "targets") : [];
-  const isAuthenticated = token !== null && tokenRoles.length > 0;
-
-  let role;
-  if (roleOverride) {
-    role = getRoleByName(roleOverride) ?? ROLES[ROLES.length - 1];
-  } else if (tokenRoles.length > 0) {
-    role =
-      getRoleByJwtRole(tokenRoles[0]) ??
-      getRoleByName(tokenRoles[0]) ??
-      ROLES[ROLES.length - 1];
-  } else {
-    role = ROLES[ROLES.length - 1];
-  }
+  // The last role has the least: the UI falls back to it.
+  const least = roles[roles.length - 1];
+  const byName = (name: string | null) =>
+    name ? roles.find((r) => r.name === name) : undefined;
+  const role =
+    (roleOverride ? byName(roleOverride) : byName(session.tokenRoles[0])) ??
+    least;
 
   const can = useCallback(
     (permission: Permission) => hasPermission(role, permission),
@@ -53,9 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const canCall = useCallback(
-    (operation: OperationId) =>
-      hasPermission(role, OPERATION_PERMISSIONS[operation]),
-    [role],
+    (operation: OperationID) => {
+      const permission = operations.get(operation);
+      return permission !== undefined && hasPermission(role, permission);
+    },
+    [role, operations],
   );
 
   const canAll = useCallback(
@@ -72,33 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setToken = useCallback((t: string) => {
-    setAuthTokenValue(t);
-    setTokenState(t);
-    localStorage.setItem(STORAGE_KEY_TOKEN, t);
-  }, []);
-
-  const clearToken = useCallback(() => {
-    setAuthTokenValue(null);
-    setTokenState(null);
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated,
+        ...session,
         role,
         roleOverride,
-        token,
-        tokenRoles,
-        tokenTargets,
         can,
         canCall,
         canAll,
         setRoleOverride,
-        setToken,
-        clearToken,
       }}
     >
       {children}

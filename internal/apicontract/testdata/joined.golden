@@ -24,6 +24,7 @@ op GET /api/agent/{hostname} id=GetAgentDetails tags=[Agent_Management_API_agent
 op GET /api/audit id=GetAuditLogs tags=[Audit_Log_API_audit] auth=BearerAuth:audit:read params=[query:limit:integer query:offset:integer query:operation:string query:status:integer query:user:string query:writes:boolean] body= responses=[200=application/json:ListAuditResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/audit/export id=GetAuditExport tags=[Audit_Log_API_audit] auth=BearerAuth:audit:read params=[] body= responses=[200=application/json:ListAuditResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/audit/{id} id=GetAuditLogByID tags=[Audit_Log_API_audit] auth=BearerAuth:audit:read params=[path:id!:string/uuid] body= responses=[200=application/json:AuditEntryResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
+op GET /api/catalog id=GetCatalog tags=[Catalog_API_catalog] auth=BearerAuth:catalog:read params=[] body= responses=[200=application/json:CatalogResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/file id=GetFiles tags=[File_Management_API_file_operations] auth=BearerAuth:file:read params=[] body= responses=[200=application/json:FileListResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/file/stale id=GetFileStale tags=[File_Management_API_file_operations] auth=BearerAuth:file:read params=[] body= responses=[200=application/json:StaleDeploymentsResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/file/{name} id=GetFileByName tags=[File_Management_API_file_operations] auth=BearerAuth:file:read params=[path:name!:string] body= responses=[200=application/json:FileInfoResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
@@ -187,6 +188,68 @@ schema AuditEntryResponse.entry! = AuditEntry
 schema Averages.15min! = number/double
 schema Averages.1min! = number/double
 schema Averages.5min! = number/double
+schema CatalogArea.label! = string
+schema CatalogArea.name! = string
+schema CatalogBehavior.area! = string
+schema CatalogBehavior.chain! = string
+schema CatalogBehavior.doc! = string
+schema CatalogBehavior.internal! = boolean
+schema CatalogBehavior.methods! = [CatalogMethod]
+schema CatalogBehavior.name! = string
+schema CatalogBehavior.parent = string
+schema CatalogBehavior.platforms! = [string]
+schema CatalogBehavior.title! = string
+schema CatalogBehavior.used_by! = [string]
+schema CatalogBehavior.uses! = [string]
+schema CatalogCall.behavior! = string
+schema CatalogCall.calls = [CatalogCall]
+schema CatalogCall.method! = string
+schema CatalogColumn.columns = [CatalogColumn]
+schema CatalogColumn.doc! = string
+schema CatalogColumn.kind! = string(value|values|object|list)
+schema CatalogColumn.label! = string
+schema CatalogColumn.name! = string
+schema CatalogColumn.render = string
+schema CatalogExample.doc! = string
+schema CatalogExample.input! = 
+schema CatalogExample.output = 
+schema CatalogField.doc! = string
+schema CatalogField.in! = string(path|query|body)
+schema CatalogField.kind! = string(string|number|bool|list|object)
+schema CatalogField.name! = string
+schema CatalogField.options = [string]
+schema CatalogField.required! = boolean
+schema CatalogField.secret = boolean
+schema CatalogMethod.calls! = [CatalogCall]
+schema CatalogMethod.columns! = [CatalogColumn]
+schema CatalogMethod.disruption = string
+schema CatalogMethod.disruptive = boolean
+schema CatalogMethod.doc! = string
+schema CatalogMethod.examples! = [CatalogExample]
+schema CatalogMethod.fields! = [CatalogField]
+schema CatalogMethod.http_method = string
+schema CatalogMethod.input! = string
+schema CatalogMethod.kind! = string(read|write|action)
+schema CatalogMethod.long = string
+schema CatalogMethod.name! = string
+schema CatalogMethod.output! = string
+schema CatalogMethod.path = string
+schema CatalogMethod.permission = Permission
+schema CatalogMethod.platforms! = [string]
+schema CatalogMethod.runs_on! = [string]
+schema CatalogOperation.id! = OperationID
+schema CatalogOperation.permission! = Permission
+schema CatalogResponse.areas! = [CatalogArea]
+schema CatalogResponse.behaviors! = [CatalogBehavior]
+schema CatalogResponse.count_tones! = map[string]
+schema CatalogResponse.host_families! = [string]
+schema CatalogResponse.operations! = [CatalogOperation]
+schema CatalogResponse.permissions! = [Permission]
+schema CatalogResponse.roles! = [CatalogRole]
+schema CatalogResponse.status_tones! = map[string]
+schema CatalogRole.description! = string
+schema CatalogRole.name! = string
+schema CatalogRole.permissions! = [Permission]
 schema CertificateCollectionResponse.job_id = string/uuid
 schema CertificateCollectionResponse.results! = [CertificateEntry]
 schema CertificateCreateRequest.name! = string
@@ -650,6 +713,7 @@ schema OSInfoResponse.family = string
 schema OSInfoResponse.version! = string
 schema ObjectStoreInfo.name! = string
 schema ObjectStoreInfo.size! = integer
+schema OperationID = string(AdmitMachine|DeleteFileByName|DeleteJobByID|DeleteMachine|DeleteNodeCertificate|DeleteNodeDns|DeleteNodeDocker|DeleteNodeFile|DeleteNodeGroup|DeleteNodeImage|DeleteNodeInterface|DeleteNodeInterfaceRoute|DeleteNodeNtp|DeleteNodePackage|DeleteNodeSchedule|DeleteNodeService|DeleteNodeSysctl|DeleteNodeUser|DeleteNodeUserSshkey|DrainAgent|GetAdmission|GetAdmissions|GetAgentDetails|GetAgentFacts|GetAgents|GetAuditExport|GetAuditLogByID|GetAuditLogs|GetCatalog|GetFileByName|GetFileStale|GetFiles|GetHealthStatus|GetJobByID|GetJobs|GetNodeCertificate|GetNodeCertificateByKey|GetNodeDisk|GetNodeDnsByKey|GetNodeDocker|GetNodeDockerByKey|GetNodeFile|GetNodeGroup|GetNodeGroupByKey|GetNodeHostname|GetNodeImage|GetNodeInterface|GetNodeInterfaceByKey|GetNodeInterfaceRoute|GetNodeLoad|GetNodeLog|GetNodeLogSource|GetNodeMemory|GetNodeNtp|GetNodeOs|GetNodePackage|GetNodePackageByKey|GetNodePackageUpdates|GetNodeProcess|GetNodeProcessByKey|GetNodeSchedule|GetNodeScheduleByKey|GetNodeService|GetNodeServiceByKey|GetNodeStatus|GetNodeSysctl|GetNodeSysctlByKey|GetNodeTimezone|GetNodeUptime|GetNodeUser|GetNodeUserByKey|GetNodeUserSshkey|GetTrace|PostFile|PostNodeCertificate|PostNodeCommandExec|PostNodeCommandShell|PostNodeConnectivityPing|PostNodeDocker|PostNodeDockerExec|PostNodeDockerStart|PostNodeDockerStop|PostNodeGroup|PostNodeImagePull|PostNodeInterface|PostNodeInterfaceRoute|PostNodeNtp|PostNodePackage|PostNodePowerReboot|PostNodePowerShutdown|PostNodeProcessSignal|PostNodeSchedule|PostNodeService|PostNodeServiceDisable|PostNodeServiceEnable|PostNodeServiceRestart|PostNodeServiceStart|PostNodeServiceStop|PostNodeSysctl|PostNodeUser|PostNodeUserSshkey|PutFileByName|PutNodeCertificate|PutNodeDns|PutNodeFile|PutNodeGroup|PutNodeHostname|PutNodeInterface|PutNodeInterfaceRoute|PutNodeNtp|PutNodePackageUpdates|PutNodeSchedule|PutNodeService|PutNodeSysctl|PutNodeTimezone|PutNodeUser|PutNodeUserPassword|RejectMachine|RetryJobByID|RevokeMachine|UndrainAgent)
 schema OsEntry.error = string
 schema OsEntry.hostname! = string
 schema OsEntry.os_info = Release
@@ -694,6 +758,7 @@ schema PackageUpdatesResult.hostname! = string
 schema PackageUpdatesResult.status! = string(ok|failed|skipped|timeout)
 schema PackageUpdatesUpdateResponse.job_id = string/uuid
 schema PackageUpdatesUpdateResponse.results! = [PackageUpdatesResult]
+schema Permission = string(health:read|trace:read|certificate:read|certificate:write|command:execute|command:shell|connectivity:execute|disk:read|dns:read|dns:write|docker:read|docker:write|docker:execute|docker:exec|file:read|file:write|group:read|group:write|hostname:read|hostname:write|image:read|image:execute|image:write|interface:read|interface:write|load:read|log:read|memory:read|ntp:read|ntp:write|os:read|package:read|package:write|power:execute|process:read|process:execute|schedule:read|schedule:write|service:read|service:write|service:execute|status:read|sysctl:read|sysctl:write|timezone:read|timezone:write|uptime:read|user:read|user:write|admission:read|admission:write|agent:read|agent:write|audit:read|catalog:read|job:read|job:write)
 schema PowerRebootRequest.delay = integer
 schema PowerRebootRequest.message = string
 schema PowerRebootResponse.job_id = string/uuid
@@ -1007,6 +1072,7 @@ schema UserUpdateResponse.results! = [UserResult]
 tag Admission_API_admission
 tag Agent_Management_API_agent_operations
 tag Audit_Log_API_audit
+tag Catalog_API_catalog
 tag Certificate_API_certificate_operations
 tag Command_API_command_operations
 tag Connectivity_API_connectivity_operations

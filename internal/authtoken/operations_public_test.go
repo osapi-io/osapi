@@ -21,7 +21,6 @@
 package authtoken_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -51,12 +50,8 @@ paths:
 `)
 	got, err := authtoken.OperationPermissions(spec)
 	s.Require().NoError(err)
-	s.Equal(map[string]string{"getNodeStatus": "status:read"}, got,
+	s.Equal(map[string]authtoken.Permission{"GetNodeStatus": "status:read"}, got,
 		"a public operation needs no permission, and parameters is not an operation")
-
-	ts := authtoken.OperationsTypeScript(got)
-	s.Contains(ts, "  getNodeStatus: \"status:read\",\n")
-	s.Contains(ts, "export type OperationId")
 }
 
 func (s *OperationsPublicTestSuite) TestOperationPermissionsRefusesBadYAML() {
@@ -71,15 +66,16 @@ func (s *OperationsPublicTestSuite) TestOperations() {
 	motd := behavior.Lookup("motdperm")
 	for _, m := range motd.Methods {
 		id := motd.OperationID(m)
-		s.Equal(string(motd.Permission(m.PermissionVerb())), got[strings.ToLower(id[:1])+id[1:]],
+		s.Equal(motd.Permission(m.PermissionVerb()), got[id],
 			"a served behavior's method has its permission")
 	}
 	hidden := behavior.Lookup("hiddenperm")
-	s.NotContains(got, "get"+hidden.OperationID(hidden.Methods[0])[3:],
+	s.NotContains(got, hidden.OperationID(hidden.Methods[0]),
 		"an internal behavior has no route")
-	s.Equal("helth:read", got["getZztypoStatus"], "a method that names a permission has it")
-	s.Equal("zzsplit:write", got["postZzsplitOne"])
-	s.NotContains(got, "getZzsplitOpen", "a public method needs no permission")
+	s.Equal(authtoken.Permission("helth:read"), got["GetZztypoStatus"],
+		"a method that names a permission has it")
+	s.Equal(authtoken.Permission("zzsplit:write"), got["PostZzsplitOne"])
+	s.NotContains(got, "GetZzsplitOpen", "a public method needs no permission")
 }
 
 func TestOperationsPublicTestSuite(

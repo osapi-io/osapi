@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Command gen writes the UI's status tones, ui/src/lib/status.gen.ts, from
-// the CLI's StatusTones, and the docs site's palette from the CLI's colors. go generate ./internal/behaviors/all runs it.
+// Command gen writes the docs site's palette from the CLI's colors. go
+// generate ./internal/behaviors/all runs it.
 package main
 
 import (
@@ -36,9 +36,8 @@ func main() {
 	flag.Parse()
 
 	for file, content := range map[string]string{
-		cli.StatusTypeScriptFile: cli.StatusTypeScript(),
-		cli.DocsPaletteCSSFile:   cli.DocsPaletteCSS(),
-		cli.DocsPaletteTSFile:    cli.DocsPaletteTS(),
+		cli.DocsPaletteCSSFile: cli.DocsPaletteCSS(),
+		cli.DocsPaletteTSFile:  cli.DocsPaletteTS(),
 	} {
 		if err := os.WriteFile(filepath.Join(*root, file), []byte(content), 0o644); err != nil {
 			fmt.Fprintln(os.Stderr, err)

@@ -186,7 +186,7 @@ func (s *ModelPublicTestSuite) TestNew() {
 					types = append(types, t.Name)
 				}
 				s.Equal([]string{
-					"DnsEntry", "ErrorResponse",
+					"DnsEntry", "DnsKind", "ErrorResponse",
 					"FileUploadResponse", "JobList", "JobListTimeline",
 				}, types)
 			},
@@ -212,6 +212,22 @@ func (s *ModelPublicTestSuite) TestNew() {
 				s.Equal("any", fields["JobList.result"].Type.String())
 				s.Equal("[]JobListTimeline", fields["JobList.timeline"].Type.String())
 				s.Equal("Min1", fields["JobList.1min"].GoName)
+				s.Equal("DnsKind", fields["DnsEntry.kind"].Type.String())
+				s.Empty(fields["DnsEntry.kind"].Enum, "the type of a schema has the values")
+			},
+		},
+		{
+			name: "when a schema is a string, its type is a string with no fields",
+			validateFunc: func() {
+				for _, t := range m.Types {
+					if t.Name == "DnsKind" {
+						s.Equal("string", t.Scalar)
+						s.Empty(t.Fields)
+						s.Equal("The kind of a resolver", t.Doc)
+					} else {
+						s.Empty(t.Scalar, t.Name)
+					}
+				}
 			},
 		},
 	}

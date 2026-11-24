@@ -14,7 +14,7 @@ import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
 import { Activity } from "lucide-react";
-import { statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 import { Spinner } from "@/components/ui/spinner";
 import { Count } from "@/components/ui/count";
 import { KVList } from "@/components/ui/kv-list";
@@ -24,6 +24,7 @@ import { type SubRow, subRows } from "@/lib/registry";
 
 export function Dashboard() {
   useVimScroll();
+  const statusColor = useStatus();
   const {
     data: health,
     error: healthErr,
@@ -74,7 +75,7 @@ export function Dashboard() {
         actions={
           health && (
             <>
-              <Badge variant={statusVariant(health.status)}>
+              <Badge variant={statusColor.variant(health.status)}>
                 {health.status}
               </Badge>
             </>

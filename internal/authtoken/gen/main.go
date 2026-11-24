@@ -31,19 +31,14 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
-// main writes the UI's permissions, authtoken.TypeScript, and the SDK's
-// constants, authtoken.Go, under --root.
+// main writes the SDK's constants, authtoken.Go, under --root.
 func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
 	flag.Parse()
 
-	for file, text := range map[string]string{
-		authtoken.TypeScriptFile: authtoken.TypeScript(),
-		authtoken.GoFile:         authtoken.Go(),
-	} {
-		if err := os.WriteFile(filepath.Join(*root, file), []byte(text), 0o644); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
+	path := filepath.Join(*root, authtoken.GoFile)
+	if err := os.WriteFile(path, []byte(authtoken.Go()), 0o644); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }

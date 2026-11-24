@@ -7,8 +7,9 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { DataTable } from "@/components/ui/data-table";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/hooks/use-auth";
-import { ROLES, ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
-import { catalogIndex } from "@/lib/catalog-index";
+import type { Permission } from "@/lib/permissions";
+import { useCatalog } from "@/hooks/use-catalog";
+import type { StepDef } from "@/lib/catalog-index";
 import { Shield, Check, X } from "lucide-react";
 
 // Group permissions by resource
@@ -24,7 +25,8 @@ function groupPermissions(perms: string[]) {
 export function Roles() {
   useVimScroll();
   const { role: currentRole, tokenRoles, tokenTargets } = useAuth();
-  const grouped = groupPermissions([...ALL_PERMISSIONS]);
+  const { roles, permissions, steps } = useCatalog();
+  const grouped = groupPermissions([...permissions]);
 
   return (
     <ContentArea>
@@ -70,7 +72,7 @@ export function Roles() {
         <SectionLabel>Role Definitions</SectionLabel>
         <DataTable
           compact={false}
-          rows={ROLES}
+          rows={roles}
           getRowKey={(r) => r.name}
           columns={[
             {
@@ -112,13 +114,11 @@ export function Roles() {
             // A role has a permission or not: yes or a blank, as osapi
             // controller role list prints it. A yes is not a status, so it is not
             // green.
-            ...ROLES.map((r) => ({
+            ...roles.map((r) => ({
               header: r.label,
               align: "center" as const,
               cell: (row: { resource: string; perm: string }) =>
-                r.permissions.has(
-                  row.perm as (typeof ALL_PERMISSIONS)[number],
-                ) ? (
+                r.permissions.has(row.perm as Permission) ? (
                   <span className="text-text">yes</span>
                 ) : null,
             })),
@@ -133,7 +133,7 @@ export function Roles() {
           The permission that each step of a plan needs
         </Text>
         <DataTable
-          rows={catalogIndex.steps.filter((d) => d.permission)}
+          rows={steps.filter((d) => d.permission)}
           getRowKey={(d) => d.run}
           columns={[
             {
@@ -148,11 +148,11 @@ export function Roles() {
                 </span>
               ),
             },
-            ...ROLES.map((r) => ({
+            ...roles.map((r) => ({
               header: r.label,
               align: "center" as const,
-              cell: (d: (typeof catalogIndex.steps)[number]) =>
-                r.permissions.has(d.permission as Permission) ? (
+              cell: (d: StepDef) =>
+                d.permission && r.permissions.has(d.permission) ? (
                   <Check className="mx-auto h-3.5 w-3.5 text-primary" />
                 ) : (
                   <X className="mx-auto h-3.5 w-3.5 text-text-muted/30" />

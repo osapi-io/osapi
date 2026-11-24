@@ -23,7 +23,7 @@ import { RunBar } from "@/components/domain/run-bar";
 import { deleteFileByName } from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
 import { runMethod } from "@/lib/run-method";
 import type { StepDef } from "@/lib/catalog-index";
-import { permitted } from "@/lib/permissions";
+import { permitted, type Permission } from "@/lib/permissions";
 import {
   planYAML,
   preflight,
@@ -43,7 +43,7 @@ import { runController } from "@/lib/run-controller";
 export function Plan() {
   const { can, role } = useAuth();
   const { agents } = useAgents(30000);
-  const { steps: defs, step: stepDef } = useCatalog();
+  const { steps: defs, step: stepDef, hostFamilies } = useCatalog();
   const {
     steps,
     addStep,
@@ -63,7 +63,7 @@ export function Plan() {
   const focusStep = useStepFocus(stepRefs);
 
   const allowed = useCallback(
-    (permission: string | undefined) => permitted(permission, can),
+    (permission: Permission | undefined) => permitted(permission, can),
     [can],
   );
   const runnable = (s: PlanStep) => {
@@ -81,8 +81,8 @@ export function Plan() {
     : `${steps.length} ${steps.length === 1 ? "step" : "steps"}`;
 
   const check = useMemo(
-    () => preflight(steps, stepDef, (p) => allowed(p), agents),
-    [steps, stepDef, allowed, agents],
+    () => preflight(steps, stepDef, (p) => allowed(p), agents, hostFamilies),
+    [steps, stepDef, allowed, agents, hostFamilies],
   );
 
   const add = useCallback(

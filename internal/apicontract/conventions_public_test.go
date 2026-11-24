@@ -36,9 +36,11 @@ import (
 var probes = map[string]bool{"GET /api/health/ready 503": true}
 
 // notCollections are the controller's GETs without a key that are not a
-// list of things: the health of the controller.
+// list of things: the health of the controller, and the catalog, one
+// document that the UI reads.
 var notCollections = map[string]bool{
 	"/api/health": true, "/api/health/ready": true, "/api/health/status": true,
+	"/api/catalog": true,
 }
 
 type ConventionsPublicTestSuite struct {

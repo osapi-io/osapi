@@ -93,8 +93,8 @@ const (
 // StatusTones maps a status word to its tone: green for ok, amber for
 // attention, red for wrong. The word is the first one in the cell,
 // lowercased, so "ok nats://localhost:4222" and "Ready" both match. A word
-// that is not here is plain. The UI's ui/src/lib/status.gen.ts is generated
-// from this map, so a page and a terminal show a word in the same color.
+// that is not here is plain. The catalog endpoint serves this map to the
+// UI, so a page and a terminal show a word in the same color.
 var StatusTones = map[string]string{
 	"ok":              ToneOK,
 	"ready":           ToneOK,
@@ -159,7 +159,7 @@ func statusStyle(
 
 // CountTones maps what a count counts to the tone it takes when above zero.
 // A zero is dim whatever it counts: nothing happened. A kind not here is
-// plain. The UI reads the same map, from ui/src/lib/status.gen.ts.
+// plain. The UI reads the same map, from the catalog endpoint.
 var CountTones = map[string]string{
 	"completed":   ToneOK,
 	"ok":          ToneOK,

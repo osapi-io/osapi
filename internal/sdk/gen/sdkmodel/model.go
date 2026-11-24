@@ -262,6 +262,9 @@ type Type struct {
 	Doc string
 	// Fields are the properties of the schema, in the order of their names.
 	Fields []*Field
+	// Scalar is the Go type under a schema that is not an object, such as
+	// string for the enum Permission, or empty for a struct.
+	Scalar string
 }
 
 // Field is a property of a schema.
@@ -762,6 +765,11 @@ func (b *builder) named(
 	}
 	t := &Type{Name: name, Doc: s.Description}
 	b.types[name] = t
+	if s.Type != nil && s.Type.Is(openapi3.TypeString) {
+		t.Scalar = "string"
+
+		return nil
+	}
 	fields, err := b.fields(name, s)
 	if err != nil {
 		return err
@@ -796,8 +804,12 @@ func (b *builder) fields(
 			Type:     ft,
 			Required: slices.Contains(s.Required, p),
 		}
-		for _, e := range s.Properties[p].Value.Enum {
-			f.Enum = append(f.Enum, fmt.Sprint(e))
+		// A schema of the components with an enum is a type of its own,
+		// which has the values, so a field of it does not list them.
+		if s.Properties[p].Ref == "" {
+			for _, e := range s.Properties[p].Value.Enum {
+				f.Enum = append(f.Enum, fmt.Sprint(e))
+			}
 		}
 		out = append(out, f)
 	}

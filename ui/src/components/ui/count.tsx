@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { COUNT_TONES } from "@/lib/status.gen";
+import { useCatalog } from "@/hooks/use-catalog";
 
 const toneClass = {
   ok: "text-status-ready",
@@ -17,11 +17,12 @@ interface CountProps {
 
 /**
  * Count is a number of something, as the CLI's cli.Count prints it: a zero
- * is dim, and a count above zero takes its kind's tone from COUNT_TONES,
- * which is generated from internal/cli/theme.go.
+ * is dim, and a count above zero takes its kind's tone from the count tones
+ * of the catalog: the CLI's CountTones.
  */
 export function Count({ n, kind, bare }: CountProps) {
-  const tone = COUNT_TONES[kind.toLowerCase()];
+  const { countTones } = useCatalog();
+  const tone = countTones[kind.toLowerCase()];
   return (
     <span>
       <span

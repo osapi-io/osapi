@@ -16,6 +16,6 @@ export function useJob(id: string | null, intervalMs = 0) {
       return unwrap<JobDetailResponse>(res, "Failed to load the job");
     },
     [id],
-    { enabled: id !== null && canCall("getJobByID"), intervalMs },
+    { enabled: id !== null && canCall("GetJobByID"), intervalMs },
   );
 }

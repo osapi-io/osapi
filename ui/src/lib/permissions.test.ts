@@ -1,14 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { catalogIndex } from "@/lib/catalog-index";
 import {
-  getRoleByName,
+  hasAllPermissions,
   hasPermission,
   permitted,
+  rolesOf,
   type Permission,
 } from "@/lib/permissions";
+import { testCatalog, testIndex as catalogIndex } from "@/test/catalog";
 
 const canAs = (name: string) => {
-  const role = getRoleByName(name);
+  const role = catalogIndex.roles.find((r) => r.name === name);
   if (!role) throw new Error(`no role ${name}`);
   return (p: Permission) => hasPermission(role, p);
 };
@@ -31,10 +32,10 @@ describe("permitted", () => {
 
   test("a step with no known permission is refused, not allowed", () => {
     expect(permitted(undefined, () => true)).toBe(false);
-    expect(permitted("nothing:read", () => true)).toBe(false);
+    expect(permitted("dns:read", () => false)).toBe(false);
   });
 
-  test("each step of a plan has a permission that the UI knows", () => {
+  test("each step of a plan has a permission", () => {
     const missing = catalogIndex.steps
       .filter((d) => !permitted(d.permission, () => true))
       .map((d) => d.run);
@@ -44,5 +45,21 @@ describe("permitted", () => {
   test("each step is in the list once", () => {
     const runs = catalogIndex.steps.map((d) => d.run);
     expect(runs.length).toBe(new Set(runs).size);
+  });
+});
+
+describe("rolesOf", () => {
+  test("is each role of the catalog, in order, with its permissions", () => {
+    const roles = rolesOf(testCatalog.roles);
+    expect(roles.map((r) => r.name)).toEqual(["admin", "read", "observer"]);
+    expect(roles[2]).toMatchObject({
+      label: "observer",
+      jwtRole: "observer",
+      description: "A dashboard or a monitor.",
+    });
+    expect(hasAllPermissions(roles[2], ["agent:read", "catalog:read"])).toBe(
+      true,
+    );
+    expect(hasAllPermissions(roles[2], ["agent:read", "dns:read"])).toBe(false);
   });
 });

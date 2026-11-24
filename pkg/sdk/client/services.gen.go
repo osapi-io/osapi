@@ -17,6 +17,10 @@ type services struct {
 	// activity.
 	Audit *AuditService
 
+	// Catalog calls the API's Catalog group: the behaviors, the permissions and
+	// the roles that the controller serves, for the UI.
+	Catalog *CatalogService
+
 	// Certificate calls the API's Certificate group: the certificate authorities
 	// that the host trusts.
 	Certificate *CertificateService
@@ -142,6 +146,7 @@ func (s *services) wire(c *Client) {
 	s.Admission = &AdmissionService{client: c}
 	s.Agent = &AgentService{client: c}
 	s.Audit = &AuditService{client: c}
+	s.Catalog = &CatalogService{client: c}
 	s.Certificate = &CertificateService{client: c}
 	s.Command = &CommandService{client: c}
 	s.Connectivity = &ConnectivityService{client: c}

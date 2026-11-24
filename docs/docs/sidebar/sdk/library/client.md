@@ -154,13 +154,14 @@ the spec.
 
 ### Fleet
 
-| Service                            | Description                                                          |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| [Admission](../fleet/admission.md) | Admit, reject and revoke the nodes that ask to join.                 |
-| [Agent](../fleet/agent.md)         | Operations related to agent discovery and details.                   |
-| [Health](../fleet/health.md)       | Health check endpoints for liveness, readiness, and detailed status. |
-| [Job](../fleet/job.md)             | Operations related to the job queue.                                 |
-| [Trace](../fleet/trace.md)         | The spans of a trace.                                                |
+| Service                            | Description                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| [Admission](../fleet/admission.md) | Admit, reject and revoke the nodes that ask to join.                                 |
+| [Agent](../fleet/agent.md)         | Operations related to agent discovery and details.                                   |
+| [Catalog](../fleet/catalog.md)     | The behaviors, the permissions and the roles that the controller serves, for the UI. |
+| [Health](../fleet/health.md)       | Health check endpoints for liveness, readiness, and detailed status.                 |
+| [Job](../fleet/job.md)             | Operations related to the job queue.                                                 |
+| [Trace](../fleet/trace.md)         | The spans of a trace.                                                                |
 
 <!-- /osapi:sdk-services -->
 

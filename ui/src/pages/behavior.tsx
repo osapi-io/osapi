@@ -7,7 +7,6 @@ import { KVList } from "@/components/ui/kv-list";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Text } from "@/components/ui/text";
 import { useCatalog } from "@/hooks/use-catalog";
-import { AREAS } from "@/lib/catalog.gen";
 import {
   MethodCard,
   BehaviorLinks,
@@ -23,7 +22,7 @@ import { BackLink, PlanLink } from "@/components/domain/behavior-nav";
  */
 export function BehaviorPage() {
   const { name = "" } = useParams();
-  const { behavior } = useCatalog();
+  const { behavior, areas } = useCatalog();
   const b = behavior(name);
   const { hash } = useLocation();
 
@@ -43,7 +42,7 @@ export function BehaviorPage() {
       </ContentArea>
     );
   }
-  const area = AREAS.find((a) => a.name === b.area);
+  const area = areas.find((a) => a.name === b.area);
 
   return (
     <ContentArea>
@@ -67,7 +66,7 @@ export function BehaviorPage() {
             ["Under", b.parent ? <BehaviorLinks names={[b.parent]} /> : null],
             ["Platforms", <Platforms names={b.platforms} />],
             ["Calls", <BehaviorLinks names={b.uses} />],
-            ["Called by", <BehaviorLinks names={b.usedBy} />],
+            ["Called by", <BehaviorLinks names={b.used_by} />],
             [
               "Methods",
               `${b.methods.length}: ${b.methods.map((m) => m.name).join(", ")}`,

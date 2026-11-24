@@ -86,7 +86,7 @@ export function Audit() {
       );
     },
     [offset, applied],
-    { enabled: canCall("getAuditLogs") },
+    { enabled: canCall("GetAuditLogs") },
   );
   const { data, loading } = logs;
   const error = exportError ?? logs.error;
@@ -117,7 +117,7 @@ export function Audit() {
     }
   };
 
-  if (!canCall("getAuditLogs")) {
+  if (!canCall("GetAuditLogs")) {
     return <PermissionDenied title="Audit Log" what="audit entries" />;
   }
 

@@ -21,7 +21,7 @@ export function useAgents(intervalMs = 10000) {
       );
     },
     [],
-    { enabled: canCall("getAgents"), intervalMs },
+    { enabled: canCall("GetAgents"), intervalMs },
   );
   return { agents: data ?? [], error, loading, refresh };
 }

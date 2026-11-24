@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 import { HealthDot } from "@/components/ui/health-dot";
 import { Text } from "@/components/ui/text";
-import { statusDot, statusText } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 
 interface ComponentRowProps {
   name: string;
@@ -24,6 +24,7 @@ export function ComponentRow({
   url,
   isLast,
 }: ComponentRowProps) {
+  const statusColor = useStatus();
   // The url sits on its own line under the address, as in the CLI, so a
   // long one is never cut and every row keeps the same shape.
   return (
@@ -34,13 +35,13 @@ export function ComponentRow({
       )}
     >
       <div className="flex items-center gap-2">
-        <HealthDot status={statusDot(status)} />
+        <HealthDot status={statusColor.dot(status)} />
         <Text className="font-medium">{name}</Text>
         {address && <Text variant="muted">{address}</Text>}
         {/* The dot says ok. The word shows only when it is not ok, so a
             card of healthy rows has one mark per row, not two. */}
-        {statusDot(status) !== "ok" && (
-          <Text variant={statusText(status)} className="ml-auto">
+        {statusColor.dot(status) !== "ok" && (
+          <Text variant={statusColor.text(status)} className="ml-auto">
             {status}
           </Text>
         )}

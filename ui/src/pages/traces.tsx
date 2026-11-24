@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getTrace } from "@/sdk/gen/trace-api-trace/trace-api-trace";
 import type { TraceNode, TraceResponse } from "@/sdk/gen/schemas";
-import { statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
 import { KVList } from "@/components/ui/kv-list";
@@ -55,6 +55,7 @@ function flatten(
 
 export function Traces() {
   const { canCall } = useAuth();
+  const statusColor = useStatus();
   const navigate = useNavigate();
   const { id } = useParams();
   const [input, setInput] = useState(id ?? "");
@@ -97,7 +98,7 @@ export function Traces() {
   const trace = current?.trace ?? null;
   const error = current?.error ?? null;
 
-  if (!canCall("getTrace")) {
+  if (!canCall("GetTrace")) {
     return <PermissionDenied title="Traces" what="traces" />;
   }
 
@@ -247,7 +248,7 @@ export function Traces() {
                 header: "Status",
                 align: "center",
                 cell: (r: TraceRow) => (
-                  <Badge variant={statusVariant(r.node.status)}>
+                  <Badge variant={statusColor.variant(r.node.status)}>
                     {r.node.status}
                   </Badge>
                 ),

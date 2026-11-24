@@ -131,6 +131,7 @@ func OpenAPI(
 		params:   openapi3.ParametersMap{},
 		docs:     g.Docs,
 		examples: g.Examples,
+		enums:    g.Enums,
 	}
 	for _, m := range g.Methods {
 		op, err := b.operation(g, m)
@@ -158,6 +159,7 @@ type builder struct {
 	params   openapi3.ParametersMap
 	docs     map[reflect.Type]string
 	examples map[reflect.Type]map[string]string
+	enums    map[reflect.Type]func() []string
 }
 
 func (b *builder) operation(
@@ -326,6 +328,9 @@ func (b *builder) ref(
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
+	if values, ok := b.enums[t]; ok {
+		return b.enum(t, values), nil
+	}
 	if t.Kind() != reflect.Struct || t.Name() == "" || t == reflect.TypeFor[time.Time]() {
 		s, err := b.inline(t)
 		if err != nil {
@@ -355,6 +360,24 @@ func (b *builder) ref(
 	}
 
 	return &openapi3.SchemaRef{Ref: ref}, nil
+}
+
+// enum is a $ref to the schema of t, a named string type, which it adds
+// the first time, with the values that values gives.
+func (b *builder) enum(
+	t reflect.Type,
+	values func() []string,
+) *openapi3.SchemaRef {
+	if _, ok := b.schemas[t.Name()]; !ok {
+		s := openapi3.NewStringSchema()
+		s.Description = b.docs[t]
+		for _, v := range values() {
+			s.Enum = append(s.Enum, v)
+		}
+		b.schemas[t.Name()] = openapi3.NewSchemaRef("", s)
+	}
+
+	return &openapi3.SchemaRef{Ref: "#/components/schemas/" + t.Name()}
 }
 
 // inline is the schema of a type that is not a named struct.

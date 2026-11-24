@@ -62,6 +62,16 @@ Use: For each type whose schema has a description, such as one that another
 group defines too: the full spec fails when two groups define one schema in
 different words.
 
+### `Enum[T](values)`
+
+Makes T, a named string type, a schema of the components, with the values that
+values returns as its enum. values runs when the spec is built, after each group
+and behavior registered. orval makes a union type of the values, and the SDK a
+string type.
+
+Use: For a field whose values are a set that osapi knows, such as a permission
+or an operation ID, so a client checks a value when it compiles.
+
 ### `Example[T]("field", "example")`
 
 Gives the field of T with that json name its example in the schema.

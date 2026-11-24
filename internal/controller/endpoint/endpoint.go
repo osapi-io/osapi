@@ -79,6 +79,9 @@ type Group struct {
 	// Examples are the examples of fields of the group's named types, by
 	// type and json name, which Example sets: for a value a tag cannot hold.
 	Examples map[reflect.Type]map[string]string
+	// Enums are the values of the group's named string types, which Enum
+	// sets: each is a schema of the components, with its values as an enum.
+	Enums map[reflect.Type]func() []string
 	// Methods are the group's endpoints, in the order they were declared.
 	Methods []*Method
 }
@@ -159,6 +162,21 @@ func Doc[T any](
 			g.Docs = map[reflect.Type]string{}
 		}
 		g.Docs[reflect.TypeFor[T]()] = doc
+	})
+}
+
+// Enum makes T, a named string type, a schema of the components with the
+// values that values gives as its enum, such as each permission: a client
+// then has a type with only those values. values runs when the spec is
+// built, after each group and behavior registered.
+func Enum[T ~string](
+	values func() []string,
+) Option {
+	return optionFunc(func(g *Group) {
+		if g.Enums == nil {
+			g.Enums = map[reflect.Type]func() []string{}
+		}
+		g.Enums[reflect.TypeFor[T]()] = values
 	})
 }
 

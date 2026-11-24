@@ -1354,6 +1354,24 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "category",
+          label: "Catalog",
+          key: "fleet-catalog",
+          link: {
+            type: "doc",
+            id: "gen/api/catalog-api-catalog",
+          },
+          items: [
+            {
+              type: "doc",
+              id: "gen/api/get-catalog",
+              label: "Get the catalog",
+              className: "api-method get",
+              key: "fleet-catalog-api-catalog-gen-api-get-catalog",
+            },
+          ],
+        },
+        {
+          type: "category",
           label: "Health",
           key: "fleet-health",
           link: {

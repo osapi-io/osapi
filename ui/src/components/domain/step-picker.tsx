@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
+import type { Permission } from "@/lib/permissions";
 import { ListBox } from "@/components/ui/list-box";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, Info, Lock, Plus } from "lucide-react";
 import { SearchBox } from "@/components/ui/search-box";
 import { Text } from "@/components/ui/text";
 import { KindMark } from "@/components/domain/method-kind";
-import { AREAS } from "@/lib/catalog.gen";
+import { useCatalog } from "@/hooks/use-catalog";
 import { stepMatches, type StepDef } from "@/lib/catalog-index";
 
 interface StepPickerProps {
   steps: StepDef[];
-  allowed: (permission: string | undefined) => boolean;
+  allowed: (permission: Permission | undefined) => boolean;
   onAdd: (def: StepDef) => void;
 }
 
@@ -33,28 +34,31 @@ interface Group {
 export function StepPicker({ steps, allowed, onAdd }: StepPickerProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const { areas: catalogAreas } = useCatalog();
 
   const areas = useMemo(() => {
     const shown = steps.filter((s) => stepMatches(s, query));
-    return AREAS.map((a) => {
-      const groups: Group[] = [];
-      for (const s of shown.filter((x) => x.area === a.name)) {
-        const key = s.behavior?.name ?? `${a.name}-controller`;
-        let g = groups.find((x) => x.key === key);
-        if (!g) {
-          g = {
-            key,
-            title: s.title,
-            behavior: s.behavior?.name,
-            steps: [],
-          };
-          groups.push(g);
+    return catalogAreas
+      .map((a) => {
+        const groups: Group[] = [];
+        for (const s of shown.filter((x) => x.area === a.name)) {
+          const key = s.behavior?.name ?? `${a.name}-controller`;
+          let g = groups.find((x) => x.key === key);
+          if (!g) {
+            g = {
+              key,
+              title: s.title,
+              behavior: s.behavior?.name,
+              steps: [],
+            };
+            groups.push(g);
+          }
+          g.steps.push(s);
         }
-        g.steps.push(s);
-      }
-      return { ...a, groups };
-    }).filter((a) => a.groups.length > 0);
-  }, [steps, query]);
+        return { ...a, groups };
+      })
+      .filter((a) => a.groups.length > 0);
+  }, [steps, query, catalogAreas]);
 
   const toggle = (key: string) =>
     setOpen((prev) => {

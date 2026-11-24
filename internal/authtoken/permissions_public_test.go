@@ -412,7 +412,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 			},
 		},
 		{
-			name: "when auditor, it gets the audit log, the traces, the jobs and the health",
+			name: "when auditor, it gets the audit log, the traces, the jobs, the health and the catalog",
 			role: authtoken.RoleAuditor,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
@@ -421,16 +421,18 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 					client.PermTraceRead,
 					client.PermJobRead,
 					client.PermHealthRead,
+					client.PermCatalogRead,
 				}, perms)
 			},
 		},
 		{
-			name: "when observer, it gets the health, the status and the agents only",
+			name: "when observer, it gets the health, the status, the agents and the catalog only",
 			role: authtoken.RoleObserver,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.ElementsMatch([]authtoken.Permission{
 					client.PermHealthRead, client.PermStatusRead, client.PermAgentRead,
+					client.PermCatalogRead,
 				}, perms)
 			},
 		},
@@ -523,36 +525,13 @@ func (s *PermissionsPublicTestSuite) TestRoleTable() {
 	s.False(strings.HasSuffix(table, "\n"), "the caller adds the lines around it")
 }
 
-func (s *PermissionsPublicTestSuite) TestTypeScript() {
-	ts := authtoken.TypeScript()
-
-	s.True(strings.HasPrefix(ts, "// Code generated"), "it says it is generated")
-	all := authtoken.AllPermissions()
-	s.Contains(ts, "export type Permission =\n  | \""+string(all[0])+"\"\n")
-	s.Contains(ts, "  | \""+string(all[len(all)-1])+"\";\n", "the last member ends the type")
-	for _, p := range all {
-		s.Contains(ts, "  \""+string(p)+"\",\n", "ALL_PERMISSIONS has %s", p)
+// TestRoleDescription says who each built-in role is for, and nothing for a
+// role that is not built in.
+func (s *PermissionsPublicTestSuite) TestRoleDescription() {
+	for _, r := range authtoken.Roles() {
+		s.NotEmpty(authtoken.RoleDescription(r), "%s has a description", r)
 	}
-
-	for _, role := range authtoken.Roles() {
-		perms, ok := authtoken.RolePermissions(role)
-		s.Require().True(ok)
-		start := strings.Index(ts, "  "+string(role)+": [")
-		s.Require().GreaterOrEqual(start, 0, "ROLE_PERMISSIONS has %s", role)
-		block := ts[start : start+strings.Index(ts[start:], "],\n")]
-		s.Equal(len(perms), strings.Count(block, "\"")/2,
-			"the %s role lists each of its permissions", role)
-		if line := ts[start : start+strings.Index(ts[start:], "\n")]; strings.HasSuffix(
-			line,
-			"],",
-		) {
-			s.LessOrEqual(
-				len(line),
-				80,
-				"a role on one line fits in 80 columns, as Prettier keeps it",
-			)
-		}
-	}
+	s.Empty(authtoken.RoleDescription("write"))
 }
 
 func (s *PermissionsPublicTestSuite) TestHasPermission() {

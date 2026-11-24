@@ -195,8 +195,10 @@ func Roles() []Role {
 // auditorPermissions and observerPermissions are the roles that a list
 // defines, not a verb: what an auditor and an observer read.
 var (
-	auditorPermissions  = []Permission{"audit:read", "trace:read", "job:read", "health:read"}
-	observerPermissions = []Permission{"health:read", "status:read", "agent:read"}
+	auditorPermissions = []Permission{
+		"audit:read", "trace:read", "job:read", "health:read", "catalog:read",
+	}
+	observerPermissions = []Permission{"health:read", "status:read", "agent:read", "catalog:read"}
 )
 
 // AdminOnly reports whether only the admin role grants p: its verb is

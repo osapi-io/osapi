@@ -1,18 +1,13 @@
 // ---------------------------------------------------------------------------
-// Permissions — generated from Go, in permissions.gen.ts
+// Permissions and roles, from the catalog that the controller serves
 // ---------------------------------------------------------------------------
 
-import {
-  ALL_PERMISSIONS,
-  BUILT_IN_ROLES,
-  ROLE_PERMISSIONS,
-  type Permission,
-} from "./permissions.gen";
+import type { CatalogRole, Permission } from "@/sdk/gen/schemas";
 
-export { ALL_PERMISSIONS, type Permission };
+export type { Permission };
 
 // ---------------------------------------------------------------------------
-// Roles — named sets of permissions with hierarchy
+// Roles — named sets of permissions
 // ---------------------------------------------------------------------------
 
 export interface RoleDefinition {
@@ -24,32 +19,21 @@ export interface RoleDefinition {
   permissions: Set<Permission>;
 }
 
-// The built-in roles of the controller, one for each kind of person or
-// program that uses osapi. Their permissions come from Go
-// (ROLE_PERMISSIONS), so the UI shows what a token of the role can do. The
-// last is the one with the least, which the UI falls back to.
-const role = (
-  name: keyof typeof ROLE_PERMISSIONS,
-  description: string,
-): RoleDefinition => ({
-  name,
-  label: name,
-  description,
-  jwtRole: name,
-  permissions: new Set(ROLE_PERMISSIONS[name]),
-});
-
-/** The built-in roles, in the order and with the descriptions that Go gives. */
-export const ROLES: RoleDefinition[] = BUILT_IN_ROLES.map((r) =>
-  role(r.name, r.description),
-);
-
-export function getRoleByName(name: string): RoleDefinition | undefined {
-  return ROLES.find((r) => r.name === name);
-}
-
-export function getRoleByJwtRole(jwtRole: string): RoleDefinition | undefined {
-  return ROLES.find((r) => r.jwtRole === jwtRole);
+/**
+ * The built-in roles of the controller, one for each kind of person or
+ * program that uses osapi, in the order and with the descriptions and the
+ * permissions that the catalog gives. Thus the UI shows what a token of the
+ * role can do. The last is the one with the least, which the UI falls back
+ * to.
+ */
+export function rolesOf(roles: readonly CatalogRole[]): RoleDefinition[] {
+  return roles.map((r) => ({
+    name: r.name,
+    label: r.name,
+    description: r.description,
+    jwtRole: r.name,
+    permissions: new Set(r.permissions),
+  }));
 }
 
 export function hasPermission(
@@ -66,29 +50,20 @@ export function hasAllPermissions(
   return permissions.every((p) => role.permissions.has(p));
 }
 
-export function hasAnyPermission(
-  role: RoleDefinition,
-  permissions: Permission[],
-): boolean {
-  return permissions.some((p) => role.permissions.has(p));
-}
-
 // ---------------------------------------------------------------------------
 // A step's permission
 // ---------------------------------------------------------------------------
 
 /**
  * Whether a role that has the permissions that can accepts may run a step
- * that needs permission. A step with no permission that the UI knows is
- * refused, not allowed: the UI cannot tell what the API will ask for.
+ * that needs permission. A step with no permission is refused, not allowed:
+ * the UI cannot tell what the API will ask for. A role has only the
+ * permissions that the catalog lists, so a permission that the controller
+ * does not know is refused too.
  */
 export function permitted(
-  permission: string | undefined,
+  permission: Permission | undefined,
   can: (permission: Permission) => boolean,
 ): boolean {
-  return (
-    permission !== undefined &&
-    (ALL_PERMISSIONS as readonly string[]).includes(permission) &&
-    can(permission as Permission)
-  );
+  return permission !== undefined && can(permission);
 }

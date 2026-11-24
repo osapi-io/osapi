@@ -419,7 +419,8 @@ func writeInput(
 	f.Line()
 }
 
-// writeType writes t, a struct with a field for each property.
+// writeType writes t, a struct with a field for each property, or the
+// scalar type under it, such as a string for an enum.
 func writeType(
 	f *jen.File,
 	t *sdkmodel.Type,
@@ -429,6 +430,12 @@ func writeType(
 		doc = t.Name + ": " + s
 	}
 	fileComment(f, doc)
+	if t.Scalar != "" {
+		f.Type().Id(t.Name).Id(t.Scalar)
+		f.Line()
+
+		return
+	}
 	writeFields(f, t)
 	f.Line()
 }

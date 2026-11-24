@@ -15,8 +15,8 @@ import {
 import { cn } from "@/lib/cn";
 import { IconButton } from "@/components/ui/icon-button";
 import { useAuth } from "@/hooks/use-auth";
-import { ROLES } from "@/lib/permissions";
-import type { OperationId } from "@/lib/operations.gen";
+import { useCatalog } from "@/hooks/use-catalog";
+import type { OperationID } from "@/sdk/gen/schemas";
 import { Badge } from "@/components/ui/badge";
 import { Dropdown } from "@/components/ui/dropdown";
 import { useOutsideClick } from "@/hooks/use-outside-click";
@@ -34,27 +34,27 @@ const adminLinks: {
   to: string;
   label: string;
   icon: typeof FileText;
-  operation?: OperationId;
+  operation?: OperationID;
 }[] = [
   {
     to: "/admin/audit",
     label: "Audit Log",
     icon: FileText,
-    operation: "getAuditLogs",
+    operation: "GetAuditLogs",
   },
   {
     to: "/admin/admission",
     label: "Admission",
     icon: ShieldAlert,
-    operation: "getAdmissions",
+    operation: "GetAdmissions",
   },
-  { to: "/admin/jobs", label: "Jobs", icon: Briefcase, operation: "getJobs" },
+  { to: "/admin/jobs", label: "Jobs", icon: Briefcase, operation: "GetJobs" },
   { to: "/admin/roles", label: "Roles", icon: Shield },
   {
     to: "/admin/traces",
     label: "Traces",
     icon: GitBranch,
-    operation: "getTrace",
+    operation: "GetTrace",
   },
 ];
 
@@ -68,6 +68,7 @@ export function Navbar() {
     canCall,
     tokenRoles,
   } = useAuth();
+  const { roles } = useCatalog();
   const isTokenAdmin = tokenRoles.includes("admin");
   const visibleLinks = adminLinks.filter(
     (link) => !link.operation || canCall(link.operation),
@@ -162,7 +163,7 @@ export function Navbar() {
             placeholder="Auto (from token)"
             options={[
               { value: "", label: "Auto (from token)" },
-              ...ROLES.map((r) => ({ value: r.name, label: r.label })),
+              ...roles.map((r) => ({ value: r.name, label: r.label })),
             ]}
             className="w-40"
           />

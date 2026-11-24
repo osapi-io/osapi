@@ -4,8 +4,7 @@
 // {run, target, with}, so a plan exports as the YAML that a workflow reads.
 // ---------------------------------------------------------------------------
 
-import type { AgentInfo } from "@/sdk/gen/schemas";
-import { HOST_FAMILIES } from "@/lib/catalog.gen";
+import type { AgentInfo, Permission } from "@/sdk/gen/schemas";
 import { methodInput, methodReady } from "@/lib/catalog";
 import type { StepDef } from "@/lib/catalog-index";
 
@@ -156,16 +155,18 @@ export function hostPlatform(agent: AgentInfo): string | undefined {
 }
 
 /**
- * Whether a method runs on a host of platform: one that its runsOn names,
+ * Whether a method runs on a host of platform: one that its runs_on names,
  * which the catalog has from the agent's own rule, or any other Linux when
- * runsOn has "*".
+ * runs_on has "*". hostFamilies are the platforms that gohai names, from the
+ * catalog.
  */
 export function runsOnHost(
   runsOn: readonly string[],
   platform: string,
+  hostFamilies: readonly string[],
 ): boolean {
   if (runsOn.includes(platform)) return true;
-  return !HOST_FAMILIES.includes(platform) && runsOn.includes("*");
+  return !hostFamilies.includes(platform) && runsOn.includes("*");
 }
 
 /** The agents that a target names: each, one host, or the hosts of a label. */
@@ -212,8 +213,9 @@ export interface Preflight {
 export function preflight(
   steps: PlanStep[],
   stepDef: (run: string) => StepDef | undefined,
-  can: (permission: string) => boolean,
+  can: (permission: Permission) => boolean,
   agents: AgentInfo[],
+  hostFamilies: readonly string[],
 ): Preflight {
   const perms = new Map<string, PermissionCheck>();
   const skips: PlatformSkip[] = [];
@@ -234,7 +236,7 @@ export function preflight(
     if (!def.method) continue;
     for (const host of targetHosts(step.target, agents)) {
       const platform = hostPlatform(host);
-      if (platform && !runsOnHost(def.method.runsOn, platform)) {
+      if (platform && !runsOnHost(def.method.runs_on, platform, hostFamilies)) {
         skips.push({
           stepId: step.id,
           run: step.run,
