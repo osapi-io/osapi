@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
@@ -77,7 +79,7 @@ func Drain(
 	if err != nil {
 		return struct{}{}, err
 	}
-	if info.State == job.AgentStateDraining || info.State == job.AgentStateCordoned {
+	if info.State == types.AgentDraining || info.State == types.AgentCordoned {
 		return struct{}{}, endpoint.Errorf(ErrState,
 			"agent %s is already in %s state", in.Hostname, info.State)
 	}
@@ -103,7 +105,7 @@ func Undrain(
 	if err != nil {
 		return struct{}{}, err
 	}
-	if info.State != job.AgentStateDraining && info.State != job.AgentStateCordoned {
+	if info.State != types.AgentDraining && info.State != types.AgentCordoned {
 		return struct{}{}, endpoint.Errorf(ErrState,
 			"agent %s is not in draining or cordoned state (current: %s)",
 			in.Hostname, info.State)

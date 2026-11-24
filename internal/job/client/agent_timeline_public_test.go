@@ -27,6 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -413,20 +415,20 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 	tests := []struct {
 		name         string
 		events       []job.TimelineEvent
-		validateFunc func(string)
+		validateFunc func(types.AgentState)
 	}{
 		{
 			name:   "when no events returns Ready",
 			events: []job.TimelineEvent{},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 		{
 			name:   "when nil events returns Ready",
 			events: nil,
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 		{
@@ -439,8 +441,8 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 					Message:   "drain requested",
 				},
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateDraining, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentDraining, got)
 			},
 		},
 		{
@@ -453,8 +455,8 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 					Message:   "node cordoned",
 				},
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateCordoned, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentCordoned, got)
 			},
 		},
 		{
@@ -473,8 +475,8 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 					Message:   "undrain requested",
 				},
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 		{
@@ -493,8 +495,8 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 					Message:   "agent ready",
 				},
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 		{
@@ -507,8 +509,8 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 					Message:   "unknown event",
 				},
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 	}

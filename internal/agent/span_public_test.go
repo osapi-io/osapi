@@ -24,6 +24,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/nats-io/nats.go"
@@ -44,7 +46,6 @@ import (
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type SpanPublicTestSuite struct {
@@ -110,13 +111,13 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 	tests := []struct {
 		name        string
 		response    job.Response
-		requestType job.Type
+		requestType types.JobType
 		validate    func(span sdktrace.ReadOnlySpan)
 	}{
 		{
 			name:        "when a write completes records the status and changed",
 			response:    job.Response{Status: types.AgentJobStatusCompleted, Changed: &changed},
-			requestType: job.TypeModify,
+			requestType: types.JobTypeModify,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(
 					map[string]string{"job.status": "completed", "job.changed": "true"},
@@ -128,7 +129,7 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 		{
 			name:        "when a read completes records only the status",
 			response:    job.Response{Status: types.AgentJobStatusCompleted},
-			requestType: job.TypeQuery,
+			requestType: types.JobTypeQuery,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(map[string]string{"job.status": "completed"}, attrs(span.Attributes()))
 			},
@@ -139,7 +140,7 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 				Status: types.AgentJobStatusFailed,
 				Error:  "permission denied",
 			},
-			requestType: job.TypeModify,
+			requestType: types.JobTypeModify,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(map[string]string{"job.status": "failed"}, attrs(span.Attributes()))
 				s.Equal(codes.Error, span.Status().Code)
@@ -152,7 +153,7 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 				Status: types.AgentJobStatusSkipped,
 				Error:  "operation not supported on this OS family",
 			},
-			requestType: job.TypeQuery,
+			requestType: types.JobTypeQuery,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(map[string]string{"job.status": "skipped"}, attrs(span.Attributes()))
 				s.Equal(codes.Unset, span.Status().Code)

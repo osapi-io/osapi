@@ -127,7 +127,7 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Address`    | `string`           | Listen address of a sub-component, such as :8080.                                            |
 | `Age`        | `string`           | Time since component started.                                                                |
 | `Components` | `[]ComponentEntry` | The sub-components of the component, such as its api and its metrics server, sorted by name. |
-| `Conditions` | `[]string`         | Active conditions.                                                                           |
+| `Conditions` | `[]ConditionType`  | Active conditions.                                                                           |
 | `CPUPercent` | `float64`          | Process CPU usage percentage.                                                                |
 | `Hostname`   | `string`           | Component hostname.                                                                          |
 | `MemBytes`   | `int64`            | Process RSS memory in bytes.                                                                 |
@@ -135,6 +135,13 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Type`       | `string`           | Component type (agent, controller, nats), or the name of a sub-component, such as api.       |
 | `URL`        | `string`           | Where a person opens a sub-component, from its url config key.                               |
 | `Version`    | `string`           | Build version of the component's binary.                                                     |
+
+### ConditionType
+
+A condition that an agent or a component evaluates.
+
+A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
+`ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`.
 
 ### GetHealthStatusComponent
 

@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	heartbeatmocks "github.com/osapi-io/osapi/internal/heartbeat/mocks"
 
 	"github.com/stretchr/testify/suite"
@@ -144,7 +146,7 @@ func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {
 						var reg job.ComponentRegistration
 						s.Require().NoError(json.Unmarshal(data, &reg))
 						s.Require().Len(reg.Conditions, 1)
-						s.Equal("ProcessMemoryPressure", reg.Conditions[0].Type)
+						s.Equal(types.ConditionProcessMemoryPressure, reg.Conditions[0].Type)
 						s.True(reg.Conditions[0].Status)
 						return uint64(1), nil
 					})

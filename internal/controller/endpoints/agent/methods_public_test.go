@@ -26,6 +26,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -97,7 +101,11 @@ func (s *MethodsPublicTestSuite) TestList() {
 				s.Require().NoError(err)
 				s.Equal(2, got.TotalItems)
 				s.Equal("server1", got.Items[0].Hostname)
-				s.Equal("Ready", got.Items[1].State, "an agent that reported no state is Ready")
+				s.Equal(
+					types.AgentReady,
+					got.Items[1].State,
+					"an agent that reported no state is Ready",
+				)
 			},
 		},
 		{
@@ -160,7 +168,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				}},
 				Facts:           map[string]any{"rack": "a1"},
 				MissingPrograms: []string{"chronyc"},
-				State:           job.AgentStateDraining,
+				State:           types.AgentDraining,
 				Conditions: []job.Condition{{
 					Type: "HighLoad", Status: true, Reason: "load", LastTransitionTime: at,
 				}, {
@@ -194,7 +202,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				s.Equal(100, got.Routes[0].Metric)
 				s.Equal(map[string]any{"rack": "a1"}, got.Facts)
 				s.Equal([]string{"chronyc"}, got.MissingPrograms)
-				s.Equal("Draining", got.State)
+				s.Equal(types.AgentDraining, got.State)
 				s.Equal(
 					[]agent.NodeCondition{
 						{Type: "HighLoad", Reason: "load", LastTransitionTime: at},
@@ -313,9 +321,9 @@ func (s *MethodsPublicTestSuite) check(
 }
 
 func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
-	ready := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: job.AgentStateReady}
-	draining := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: job.AgentStateDraining}
-	cordoned := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: job.AgentStateCordoned}
+	ready := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: types.AgentReady}
+	draining := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: types.AgentDraining}
+	cordoned := &job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: types.AgentCordoned}
 
 	type call func(context.Context, agent.Deps, string) (struct{}, error)
 	drain := func(ctx context.Context, d agent.Deps, h string) (struct{}, error) {
@@ -466,6 +474,24 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 			s.check(err, tc.wantErr, tc.wantErrMsg)
 		})
 	}
+}
+
+// TestSpecEnums: the spec's AgentState and ConditionType have each value
+// of their type, so a client checks a value when it compiles.
+func (s *MethodsPublicTestSuite) TestSpecEnums() {
+	doc, err := endpoint.OpenAPI(agent.Group)
+	s.Require().NoError(err)
+
+	states := make([]any, 0, len(types.AgentState("").Values()))
+	for _, v := range types.AgentState("").Values() {
+		states = append(states, string(v))
+	}
+	s.Equal(states, doc.Components.Schemas["AgentState"].Value.Enum)
+	conditions := make([]any, 0, len(types.ConditionType("").Values()))
+	for _, v := range types.ConditionType("").Values() {
+		conditions = append(conditions, string(v))
+	}
+	s.Equal(conditions, doc.Components.Schemas["ConditionType"].Value.Enum)
 }
 
 func TestMethodsPublicTestSuite(

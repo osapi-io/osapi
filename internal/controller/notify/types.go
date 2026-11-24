@@ -26,7 +26,14 @@ package notify
 import (
 	"context"
 	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
+
+// ConditionComponentUnreachable is the condition of a component whose
+// heartbeat expired. Only the notifier sends it: no component reports it, so
+// it is not one of types.ConditionType values.
+const ConditionComponentUnreachable types.ConditionType = "ComponentUnreachable"
 
 // ConditionEvent represents a condition state transition on a component.
 type ConditionEvent struct {
@@ -35,7 +42,7 @@ type ConditionEvent struct {
 	// Hostname identifies the component.
 	Hostname string
 	// Condition is the condition type (e.g., "MemoryPressure").
-	Condition string
+	Condition types.ConditionType
 	// Active is true when the condition fires, false when resolved.
 	Active bool
 	// Reason describes why the condition triggered or resolved.

@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -33,7 +35,7 @@ import (
 // findPrevCondition returns the previous condition of the given type,
 // or nil if not found.
 func findPrevCondition(
-	condType string,
+	condType types.ConditionType,
 	prev []job.Condition,
 ) *job.Condition {
 	for i := range prev {
@@ -47,7 +49,7 @@ func findPrevCondition(
 // transitionTime returns the previous LastTransitionTime if status
 // hasn't changed, otherwise returns now.
 func transitionTime(
-	condType string,
+	condType types.ConditionType,
 	newStatus bool,
 	prev []job.Condition,
 ) time.Time {
@@ -64,7 +66,7 @@ func evaluateMemoryPressure(
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {
-	c := job.Condition{Type: job.ConditionMemoryPressure}
+	c := job.Condition{Type: types.ConditionMemoryPressure}
 	if stats == nil || stats.Total == 0 {
 		c.LastTransitionTime = transitionTime(c.Type, false, prev)
 		return c
@@ -90,7 +92,7 @@ func evaluateHighLoad(
 	multiplier float64,
 	prev []job.Condition,
 ) job.Condition {
-	c := job.Condition{Type: job.ConditionHighLoad}
+	c := job.Condition{Type: types.ConditionHighLoad}
 	if loadAvg == nil || cpuCount == 0 {
 		c.LastTransitionTime = transitionTime(c.Type, false, prev)
 		return c
@@ -112,7 +114,7 @@ func evaluateDiskPressure(
 	threshold int,
 	prev []job.Condition,
 ) job.Condition {
-	c := job.Condition{Type: job.ConditionDiskPressure}
+	c := job.Condition{Type: types.ConditionDiskPressure}
 	if len(disks) == 0 {
 		c.LastTransitionTime = transitionTime(c.Type, false, prev)
 		return c

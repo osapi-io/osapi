@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -76,7 +78,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
-				s.Equal("ProcessMemoryPressure", got[0].Type)
+				s.Equal(types.ConditionProcessMemoryPressure, got[0].Type)
 				s.False(got[0].Status)
 				s.Empty(got[0].Reason)
 			},
@@ -91,7 +93,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
-				s.Equal("ProcessMemoryPressure", got[0].Type)
+				s.Equal(types.ConditionProcessMemoryPressure, got[0].Type)
 				s.True(got[0].Status)
 				s.NotEmpty(got[0].Reason)
 			},
@@ -106,7 +108,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
-				s.Equal("ProcessHighCPU", got[0].Type)
+				s.Equal(types.ConditionProcessHighCPU, got[0].Type)
 				s.False(got[0].Status)
 				s.Empty(got[0].Reason)
 			},
@@ -121,7 +123,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			prev:       nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
-				s.Equal("ProcessHighCPU", got[0].Type)
+				s.Equal(types.ConditionProcessHighCPU, got[0].Type)
 				s.True(got[0].Status)
 				s.NotEmpty(got[0].Reason)
 			},
@@ -139,9 +141,9 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			prev: nil,
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 2)
-				s.Equal("ProcessMemoryPressure", got[0].Type)
+				s.Equal(types.ConditionProcessMemoryPressure, got[0].Type)
 				s.True(got[0].Status)
-				s.Equal("ProcessHighCPU", got[1].Type)
+				s.Equal(types.ConditionProcessHighCPU, got[1].Type)
 				s.True(got[1].Status)
 			},
 		},
@@ -154,14 +156,14 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			thresholds: process.ConditionThresholds{MemoryPressureBytes: 100},
 			prev: []job.Condition{
 				{
-					Type:               "ProcessMemoryPressure",
+					Type:               types.ConditionProcessMemoryPressure,
 					Status:             true,
 					LastTransitionTime: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
 			validateFunc: func(got []job.Condition) {
 				s.Require().Len(got, 1)
-				s.Equal("ProcessMemoryPressure", got[0].Type)
+				s.Equal(types.ConditionProcessMemoryPressure, got[0].Type)
 				s.True(got[0].Status)
 				s.Equal(
 					time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -178,7 +180,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateProcessConditions() {
 			thresholds: process.ConditionThresholds{MemoryPressureBytes: 100},
 			prev: []job.Condition{
 				{
-					Type:               "ProcessMemoryPressure",
+					Type:               types.ConditionProcessMemoryPressure,
 					Status:             true, // was true, now false
 					LastTransitionTime: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				},

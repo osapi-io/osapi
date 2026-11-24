@@ -27,6 +27,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -275,6 +277,19 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			}
 		})
 	}
+}
+
+// TestSpecConditionType: the spec's ConditionType has each condition, so a
+// client checks a value when it compiles.
+func (s *MethodsPublicTestSuite) TestSpecConditionType() {
+	doc, err := endpoint.OpenAPI(health.Group)
+	s.Require().NoError(err)
+
+	conditions := make([]any, 0, len(types.ConditionType("").Values()))
+	for _, v := range types.ConditionType("").Values() {
+		conditions = append(conditions, string(v))
+	}
+	s.Equal(conditions, doc.Components.Schemas["ConditionType"].Value.Enum)
 }
 
 func TestMethodsPublicTestSuite(t *testing.T) {

@@ -37,6 +37,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Tag("health", "Health",
 		"Health check endpoints for liveness, readiness, and detailed status."),
 	endpoint.Uses[Deps](),
+	endpoint.Doc[types.ConditionType]("A condition that an agent or a component evaluates."),
 	endpoint.Get[LivenessInput, HealthResponse]("liveness").
 		Handle(Liveness).
 		ID("GetHealth").

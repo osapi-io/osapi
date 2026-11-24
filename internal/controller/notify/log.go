@@ -48,7 +48,7 @@ func (n *LogNotifier) Notify(
 			"condition fired",
 			slog.String("source", event.ComponentType),
 			slog.String("hostname", event.Hostname),
-			slog.String("condition", event.Condition),
+			slog.String("condition", string(event.Condition)),
 			slog.Bool("active", event.Active),
 			slog.String("reason", event.Reason),
 		)
@@ -60,7 +60,7 @@ func (n *LogNotifier) Notify(
 		"condition resolved",
 		slog.String("source", event.ComponentType),
 		slog.String("hostname", event.Hostname),
-		slog.String("condition", event.Condition),
+		slog.String("condition", string(event.Condition)),
 		slog.Bool("active", event.Active),
 		slog.String("reason", event.Reason),
 	)

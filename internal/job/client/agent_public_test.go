@@ -1048,7 +1048,7 @@ func (s *AgentPublicTestSuite) TestListAgents() {
 			},
 			validateFunc: func(agents []job.AgentInfo) {
 				s.Len(agents, 1)
-				s.Equal(job.AgentStateDraining, agents[0].State)
+				s.Equal(types.AgentDraining, agents[0].State)
 			},
 		},
 		{
@@ -1293,7 +1293,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 			},
 			validateFunc: func(info *job.AgentInfo) {
 				s.NotNil(info)
-				s.Equal(job.AgentStateDraining, info.State)
+				s.Equal(types.AgentDraining, info.State)
 			},
 		},
 		{

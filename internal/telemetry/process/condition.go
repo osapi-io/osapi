@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -62,10 +64,14 @@ func EvaluateProcessConditions(
 		}
 
 		conditions = append(conditions, job.Condition{
-			Type:               "ProcessMemoryPressure",
-			Status:             memStatus,
-			Reason:             reason,
-			LastTransitionTime: transitionTime("ProcessMemoryPressure", memStatus, prev),
+			Type:   types.ConditionProcessMemoryPressure,
+			Status: memStatus,
+			Reason: reason,
+			LastTransitionTime: transitionTime(
+				types.ConditionProcessMemoryPressure,
+				memStatus,
+				prev,
+			),
 		})
 	}
 
@@ -82,10 +88,10 @@ func EvaluateProcessConditions(
 		}
 
 		conditions = append(conditions, job.Condition{
-			Type:               "ProcessHighCPU",
+			Type:               types.ConditionProcessHighCPU,
 			Status:             cpuStatus,
 			Reason:             reason,
-			LastTransitionTime: transitionTime("ProcessHighCPU", cpuStatus, prev),
+			LastTransitionTime: transitionTime(types.ConditionProcessHighCPU, cpuStatus, prev),
 		})
 	}
 
@@ -95,7 +101,7 @@ func EvaluateProcessConditions(
 // transitionTime returns the previous LastTransitionTime if the status
 // hasn't changed, otherwise returns now.
 func transitionTime(
-	condType string,
+	condType types.ConditionType,
 	newStatus bool,
 	prev []job.Condition,
 ) time.Time {

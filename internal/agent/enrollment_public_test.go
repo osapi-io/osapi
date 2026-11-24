@@ -32,6 +32,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/avfs/avfs"
@@ -806,7 +808,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				return &nats.Msg{Data: data}
 			}(),
 			validateFunc: func(a *agent.Agent) {
-				assert.Equal(suite.T(), "Ready", agent.GetAgentState(a))
+				assert.Equal(suite.T(), types.AgentReady, agent.GetAgentState(a))
 
 				m := agent.GetAgentPKIManager(a)
 				assert.NotNil(suite.T(), m.ControllerPublicKey())
@@ -867,7 +869,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 			}(),
 			validateFunc: func(a *agent.Agent) {
 				// File write failed — state should NOT be Ready.
-				assert.NotEqual(suite.T(), "Ready", agent.GetAgentState(a))
+				assert.NotEqual(suite.T(), types.AgentReady, agent.GetAgentState(a))
 			},
 		},
 	}

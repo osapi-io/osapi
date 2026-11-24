@@ -2,7 +2,11 @@
 
 package client
 
-import "time"
+import (
+	"time"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // AgentInfo is the AgentInfo of the spec.
 type AgentInfo struct {
@@ -77,10 +81,9 @@ type AgentInfo struct {
 	// When the agent process started.
 	StartedAt time.Time `json:"started_at,omitzero"`
 
-	// The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A
-	// drain that the agent has not applied yet is Draining. It is one of: Ready,
-	// Draining, Cordoned, Pending.
-	State AgentInfoState `json:"state"`
+	// The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A
+	// drain that the agent has not applied yet is Draining.
+	State types.AgentState `json:"state"`
 
 	// Agent state transition history.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
@@ -97,18 +100,6 @@ type AgentInfo struct {
 	// report it.
 	Version string `json:"version,omitempty"`
 }
-
-// AgentInfoState: The scheduling state of the agent: Ready, Draining, Cordoned
-// or Pending. A drain that the agent has not applied yet is Draining.
-type AgentInfoState string
-
-// The values of AgentInfoState.
-const (
-	AgentInfoStateReady    AgentInfoState = "Ready"
-	AgentInfoStateDraining AgentInfoState = "Draining"
-	AgentInfoStateCordoned AgentInfoState = "Cordoned"
-	AgentInfoStatePending  AgentInfoState = "Pending"
-)
 
 // FactKeyEntry is the FactKeyEntry of the spec.
 type FactKeyEntry struct {
@@ -200,22 +191,9 @@ type NodeCondition struct {
 	// Reason is the property reason.
 	Reason string `json:"reason,omitempty"`
 
-	// Type is the property type. It is one of: MemoryPressure, HighLoad,
-	// DiskPressure, DrainStuck, ConsumersUnavailable.
-	Type NodeConditionType `json:"type"`
+	// A condition that an agent or a component evaluates.
+	Type types.ConditionType `json:"type"`
 }
-
-// NodeConditionType is the NodeConditionType of the spec.
-type NodeConditionType string
-
-// The values of NodeConditionType.
-const (
-	NodeConditionTypeMemoryPressure       NodeConditionType = "MemoryPressure"
-	NodeConditionTypeHighLoad             NodeConditionType = "HighLoad"
-	NodeConditionTypeDiskPressure         NodeConditionType = "DiskPressure"
-	NodeConditionTypeDrainStuck           NodeConditionType = "DrainStuck"
-	NodeConditionTypeConsumersUnavailable NodeConditionType = "ConsumersUnavailable"
-)
 
 // OSInfoResponse: Operating system information.
 type OSInfoResponse struct {

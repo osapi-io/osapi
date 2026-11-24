@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -35,7 +37,6 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // natsStatus is the part of a NATS client that the health metrics read.
@@ -209,7 +210,7 @@ func newMetricsProvider(
 			for _, a := range agents {
 				// A drained agent is registered but takes no jobs, so it is
 				// not ready.
-				if a.State == "" || a.State == job.AgentStateReady {
+				if a.State == "" || a.State == types.AgentReady {
 					ready++
 				}
 				labels := ""
@@ -270,7 +271,7 @@ func newMetricsProvider(
 					entry = health.ComponentEntry{
 						Type:     "agent",
 						Hostname: reg.Hostname,
-						Status:   status,
+						Status:   string(status),
 						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
 						Version:  reg.AgentVersion,
 					}
@@ -292,7 +293,7 @@ func newMetricsProvider(
 					entry = health.ComponentEntry{
 						Type:     reg.Type,
 						Hostname: reg.Hostname,
-						Status:   "Ready",
+						Status:   string(types.AgentReady),
 						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
 						Version:  reg.Version,
 					}

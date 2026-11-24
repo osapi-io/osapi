@@ -58,6 +58,10 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Tag("agent_operations", "Agent",
 		"Operations related to agent discovery and details."),
 	endpoint.Uses[Deps](),
+	endpoint.Doc[types.AgentState](
+		"The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.",
+	),
+	endpoint.Doc[types.ConditionType]("A condition that an agent or a component evaluates."),
 	endpoint.Doc[LoadAverageResponse]("The system load averages for 1, 5, and 15 minutes."),
 	endpoint.Doc[MemoryResponse]("Memory usage information."),
 	endpoint.Doc[OSInfoResponse]("Operating system information."),

@@ -4,6 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { ConditionType } from './conditionType';
 
 export interface ComponentEntry {
   /** Listen address of a sub-component, such as :8080. */
@@ -13,7 +14,7 @@ export interface ComponentEntry {
   /** The sub-components of the component, such as its api and its metrics server, sorted by name. */
   components?: ComponentEntry[];
   /** Active conditions. */
-  conditions?: string[];
+  conditions?: ConditionType[];
   /** Process CPU usage percentage. */
   cpu_percent?: number;
   /** Component hostname. */

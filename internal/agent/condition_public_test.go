@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/agent"
@@ -40,37 +42,37 @@ type ConditionPublicTestSuite struct {
 func (s *ConditionPublicTestSuite) TestFindPrevCondition() {
 	tests := []struct {
 		name         string
-		condType     string
+		condType     types.ConditionType
 		prev         []job.Condition
 		validateFunc func(*job.Condition)
 	}{
 		{
 			name:     "when condition type is found returns pointer",
-			condType: job.ConditionMemoryPressure,
+			condType: types.ConditionMemoryPressure,
 			prev: []job.Condition{
 				{
-					Type:   job.ConditionMemoryPressure,
+					Type:   types.ConditionMemoryPressure,
 					Status: true,
 					Reason: "high",
 				},
 				{
-					Type:   job.ConditionHighLoad,
+					Type:   types.ConditionHighLoad,
 					Status: false,
 				},
 			},
 			validateFunc: func(c *job.Condition) {
 				s.Require().NotNil(c)
-				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.Equal(types.ConditionMemoryPressure, c.Type)
 				s.True(c.Status)
 				s.Equal("high", c.Reason)
 			},
 		},
 		{
 			name:     "when condition type is not found returns nil",
-			condType: job.ConditionDiskPressure,
+			condType: types.ConditionDiskPressure,
 			prev: []job.Condition{
 				{
-					Type:   job.ConditionMemoryPressure,
+					Type:   types.ConditionMemoryPressure,
 					Status: true,
 				},
 			},
@@ -80,7 +82,7 @@ func (s *ConditionPublicTestSuite) TestFindPrevCondition() {
 		},
 		{
 			name:     "when prev is empty returns nil",
-			condType: job.ConditionHighLoad,
+			condType: types.ConditionHighLoad,
 			prev:     []job.Condition{},
 			validateFunc: func(c *job.Condition) {
 				s.Nil(c)
@@ -88,7 +90,7 @@ func (s *ConditionPublicTestSuite) TestFindPrevCondition() {
 		},
 		{
 			name:     "when prev is nil returns nil",
-			condType: job.ConditionHighLoad,
+			condType: types.ConditionHighLoad,
 			prev:     nil,
 			validateFunc: func(c *job.Condition) {
 				s.Nil(c)
@@ -109,18 +111,18 @@ func (s *ConditionPublicTestSuite) TestTransitionTime() {
 
 	tests := []struct {
 		name         string
-		condType     string
+		condType     types.ConditionType
 		newStatus    bool
 		prev         []job.Condition
 		validateFunc func(time.Time)
 	}{
 		{
 			name:      "when matching prev has same status preserves transition time",
-			condType:  job.ConditionHighLoad,
+			condType:  types.ConditionHighLoad,
 			newStatus: true,
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionHighLoad,
+					Type:               types.ConditionHighLoad,
 					Status:             true,
 					LastTransitionTime: fixedTime,
 				},
@@ -131,11 +133,11 @@ func (s *ConditionPublicTestSuite) TestTransitionTime() {
 		},
 		{
 			name:      "when matching prev has different status returns now",
-			condType:  job.ConditionHighLoad,
+			condType:  types.ConditionHighLoad,
 			newStatus: true,
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionHighLoad,
+					Type:               types.ConditionHighLoad,
 					Status:             false,
 					LastTransitionTime: fixedTime,
 				},
@@ -147,11 +149,11 @@ func (s *ConditionPublicTestSuite) TestTransitionTime() {
 		},
 		{
 			name:      "when no matching prev returns now",
-			condType:  job.ConditionDiskPressure,
+			condType:  types.ConditionDiskPressure,
 			newStatus: true,
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionHighLoad,
+					Type:               types.ConditionHighLoad,
 					Status:             true,
 					LastTransitionTime: fixedTime,
 				},
@@ -162,7 +164,7 @@ func (s *ConditionPublicTestSuite) TestTransitionTime() {
 		},
 		{
 			name:      "when prev is empty returns now",
-			condType:  job.ConditionHighLoad,
+			condType:  types.ConditionHighLoad,
 			newStatus: false,
 			prev:      []job.Condition{},
 			validateFunc: func(t time.Time) {
@@ -171,7 +173,7 @@ func (s *ConditionPublicTestSuite) TestTransitionTime() {
 		},
 		{
 			name:      "when prev is nil returns now",
-			condType:  job.ConditionHighLoad,
+			condType:  types.ConditionHighLoad,
 			newStatus: false,
 			prev:      nil,
 			validateFunc: func(t time.Time) {
@@ -205,7 +207,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 			threshold: 80,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.Equal(types.ConditionMemoryPressure, c.Type)
 				s.True(c.Status)
 				s.Contains(c.Reason, "memory")
 				s.Contains(c.Reason, "88%")
@@ -221,7 +223,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 			threshold: 80,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.Equal(types.ConditionMemoryPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -232,7 +234,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 			threshold: 80,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.Equal(types.ConditionMemoryPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -246,7 +248,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 			threshold: 80,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.Equal(types.ConditionMemoryPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -260,7 +262,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateMemoryPressure() {
 			threshold: 80,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionMemoryPressure, c.Type)
+				s.Equal(types.ConditionMemoryPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -295,7 +297,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateHighLoad() {
 			multiplier: 2.0, // threshold = 8.0
 			prev:       nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionHighLoad, c.Type)
+				s.Equal(types.ConditionHighLoad, c.Type)
 				s.True(c.Status)
 				s.Contains(c.Reason, "load 8.50")
 				s.Contains(c.Reason, "threshold 8.00")
@@ -313,7 +315,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateHighLoad() {
 			multiplier: 2.0, // threshold = 8.0
 			prev:       nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionHighLoad, c.Type)
+				s.Equal(types.ConditionHighLoad, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -325,7 +327,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateHighLoad() {
 			multiplier: 2.0,
 			prev:       nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionHighLoad, c.Type)
+				s.Equal(types.ConditionHighLoad, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -341,7 +343,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateHighLoad() {
 			multiplier: 2.0,
 			prev:       nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionHighLoad, c.Type)
+				s.Equal(types.ConditionHighLoad, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -357,7 +359,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateHighLoad() {
 			multiplier: 2.0, // threshold = 8.0, Load1 = 8.0 (not >)
 			prev:       nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionHighLoad, c.Type)
+				s.Equal(types.ConditionHighLoad, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -393,7 +395,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateDiskPressure() {
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionDiskPressure, c.Type)
+				s.Equal(types.ConditionDiskPressure, c.Type)
 				s.True(c.Status)
 				s.Contains(c.Reason, "/dev/sda1")
 				s.Contains(c.Reason, "95%")
@@ -419,7 +421,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateDiskPressure() {
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionDiskPressure, c.Type)
+				s.Equal(types.ConditionDiskPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -430,7 +432,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateDiskPressure() {
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionDiskPressure, c.Type)
+				s.Equal(types.ConditionDiskPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -441,7 +443,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateDiskPressure() {
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionDiskPressure, c.Type)
+				s.Equal(types.ConditionDiskPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -459,7 +461,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateDiskPressure() {
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionDiskPressure, c.Type)
+				s.Equal(types.ConditionDiskPressure, c.Type)
 				s.False(c.Status)
 				s.Empty(c.Reason)
 			},
@@ -483,7 +485,7 @@ func (s *ConditionPublicTestSuite) TestEvaluateDiskPressure() {
 			threshold: 90,
 			prev:      nil,
 			validateFunc: func(c job.Condition) {
-				s.Equal(job.ConditionDiskPressure, c.Type)
+				s.Equal(types.ConditionDiskPressure, c.Type)
 				s.True(c.Status)
 				s.Contains(c.Reason, "/dev/sdb1")
 			},
@@ -521,7 +523,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			},
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             false,
 					LastTransitionTime: fixedPast,
 				},
@@ -546,7 +548,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			},
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             true,
 					LastTransitionTime: fixedPast,
 				},
@@ -570,7 +572,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			},
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             true,
 					LastTransitionTime: fixedPast,
 				},
@@ -595,7 +597,7 @@ func (s *ConditionPublicTestSuite) TestLastTransitionTimeTracking() {
 			},
 			prev: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             false,
 					LastTransitionTime: fixedPast,
 				},

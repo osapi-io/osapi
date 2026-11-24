@@ -338,10 +338,10 @@ func BuildLabelSubjects(
 // active NATS consumers and can process jobs. Agents that are cordoned,
 // draining, or pending PKI enrollment are excluded from broadcast expectations.
 func agentCanReceiveJobs(
-	state string,
+	state types.AgentState,
 ) bool {
 	switch state {
-	case AgentStateCordoned, AgentStateDraining, AgentStatePending:
+	case types.AgentCordoned, types.AgentDraining, types.AgentPending:
 		return false
 	default:
 		return true

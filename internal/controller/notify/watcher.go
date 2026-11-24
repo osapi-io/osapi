@@ -28,6 +28,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -57,7 +59,7 @@ type Watcher struct {
 	bucket           string
 	notifier         Notifier
 	logger           *slog.Logger
-	prev             map[string]map[string]*conditionState // key → condition → state
+	prev             map[string]map[types.ConditionType]*conditionState // key → condition → state
 	renotifyInterval time.Duration
 	mu               sync.Mutex
 }
@@ -77,7 +79,7 @@ func NewWatcher(
 		bucket:           bucket,
 		notifier:         notifier,
 		logger:           logger.With(slog.String("subsystem", "controller.notify")),
-		prev:             make(map[string]map[string]*conditionState),
+		prev:             make(map[string]map[types.ConditionType]*conditionState),
 		renotifyInterval: renotifyInterval,
 	}
 }
@@ -168,7 +170,7 @@ func (w *Watcher) handleDelete(
 	_ = w.notifier.Notify(ctx, ConditionEvent{
 		ComponentType: componentType,
 		Hostname:      hostname,
-		Condition:     "ComponentUnreachable",
+		Condition:     ConditionComponentUnreachable,
 		Active:        true,
 		Reason:        "heartbeat expired",
 		Timestamp:     time.Now(),
@@ -230,7 +232,7 @@ func (w *Watcher) detectTransitions(
 
 	now := time.Now()
 
-	current := make(map[string]bool)
+	current := make(map[types.ConditionType]bool)
 	for _, c := range conditions {
 		if c.Status {
 			current[c.Type] = true
@@ -239,7 +241,7 @@ func (w *Watcher) detectTransitions(
 
 	prev := w.prev[key]
 	if prev == nil {
-		prev = make(map[string]*conditionState)
+		prev = make(map[types.ConditionType]*conditionState)
 	}
 
 	// New or re-notifiable conditions.

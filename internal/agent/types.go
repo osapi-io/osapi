@@ -27,6 +27,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/avfs/avfs"
@@ -121,7 +123,7 @@ type Agent struct {
 
 	// state is the agent's scheduling state (Ready, Draining, Cordoned).
 	// Guarded by lifecycleMu.
-	state string
+	state types.AgentState
 
 	// pkiManager handles keypair and enrollment lifecycle. Nil before Start
 	// loads the keys; the agent takes no job until then.

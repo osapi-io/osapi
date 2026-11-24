@@ -9058,15 +9058,7 @@ components:
           format: date-time
           type: string
         state:
-          description: 'The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.'
-          enum:
-            - Ready
-            - Draining
-            - Cordoned
-            - Pending
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=Ready Draining Cordoned Pending
+          $ref: '#/components/schemas/AgentState'
         timeline:
           description: Agent state transition history.
           items:
@@ -9086,6 +9078,25 @@ components:
         - hostname
         - state
       type: object
+    AgentState:
+      description: 'The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.'
+      enum:
+        - Ready
+        - Draining
+        - Cordoned
+        - Pending
+      type: string
+    ConditionType:
+      description: A condition that an agent or a component evaluates.
+      enum:
+        - MemoryPressure
+        - HighLoad
+        - DiskPressure
+        - DrainStuck
+        - ConsumersUnavailable
+        - ProcessMemoryPressure
+        - ProcessHighCPU
+      type: string
     FactKeyEntry:
       properties:
         builtin:
@@ -9203,15 +9214,7 @@ components:
         reason:
           type: string
         type:
-          enum:
-            - MemoryPressure
-            - HighLoad
-            - DiskPressure
-            - DrainStuck
-            - ConsumersUnavailable
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=MemoryPressure HighLoad DiskPressure DrainStuck ConsumersUnavailable
+          $ref: '#/components/schemas/ConditionType'
       required:
         - type
         - last_transition_time
@@ -10198,7 +10201,7 @@ components:
         conditions:
           description: Active conditions.
           items:
-            type: string
+            $ref: '#/components/schemas/ConditionType'
           type: array
         cpu_percent:
           description: Process CPU usage percentage.

@@ -21,12 +21,12 @@
 package agent
 
 import (
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // identityAttrs tell which agent ran a job: the hostname that it answers to,
@@ -53,7 +53,7 @@ func (a *Agent) identityAttrs() []attribute.KeyValue {
 func recordOutcome(
 	span trace.Span,
 	response job.Response,
-	requestType job.Type,
+	requestType types.JobType,
 ) {
 	span.SetAttributes(attribute.String("job.status", string(response.Status)))
 
@@ -65,7 +65,7 @@ func recordOutcome(
 			attribute.String("job.skip_reason", response.Error),
 		))
 	case types.AgentJobStatusCompleted:
-		if requestType == job.TypeModify && response.Changed != nil {
+		if requestType == types.JobTypeModify && response.Changed != nil {
 			span.SetAttributes(attribute.Bool("job.changed", *response.Changed))
 		}
 	}

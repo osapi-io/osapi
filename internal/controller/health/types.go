@@ -26,6 +26,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	api "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
@@ -115,7 +117,7 @@ type ComponentEntry struct {
 	Type       string
 	Hostname   string
 	Status     string
-	Conditions []string
+	Conditions []types.ConditionType
 	Age        string
 	CPUPercent float64
 	MemBytes   int64

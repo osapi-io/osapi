@@ -27,10 +27,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
@@ -270,7 +271,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 		name         string
 		useState     bool
 		setupMocks   func(*jobmocks.MockNATSClient)
-		validateFunc func(string)
+		validateFunc func(types.AgentState)
 	}{
 		{
 			name:     "when drain flag exists and the agent has not applied it is Draining",
@@ -281,8 +282,8 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(entry, nil)
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateDraining, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentDraining, got)
 			},
 		},
 		{
@@ -293,15 +294,15 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, errors.New("key not found"))
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 		{
 			name:     "when there is no state bucket keeps original state",
 			useState: false,
-			validateFunc: func(got string) {
-				s.Equal("", got)
+			validateFunc: func(got types.AgentState) {
+				s.Empty(got)
 			},
 		},
 	}

@@ -3,7 +3,7 @@ import {
   drainAgent,
   undrainAgent,
 } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
-import { AgentInfoState, type AgentInfo } from "@/sdk/gen/schemas";
+import { AgentState, type AgentInfo } from "@/sdk/gen/schemas";
 
 export type DrainRequest = "drain" | "undrain";
 
@@ -29,10 +29,10 @@ export function useDrain(agent: AgentInfo, onRefresh?: () => void) {
   // drain when the agent is Cordoned, its jobs stopped, not when it is
   // only Draining.
   const caughtUp =
-    (pending === "drain" && agent.state === AgentInfoState.Cordoned) ||
+    (pending === "drain" && agent.state === AgentState.Cordoned) ||
     (pending === "undrain" &&
-      agent.state !== AgentInfoState.Draining &&
-      agent.state !== AgentInfoState.Cordoned);
+      agent.state !== AgentState.Draining &&
+      agent.state !== AgentState.Cordoned);
 
   useEffect(() => {
     if (!pending || caughtUp) return;
@@ -40,7 +40,7 @@ export function useDrain(agent: AgentInfo, onRefresh?: () => void) {
     const giveUp = setTimeout(() => {
       setNote({
         text:
-          pending === "drain" && agent.state === AgentInfoState.Draining
+          pending === "drain" && agent.state === AgentState.Draining
             ? `${agent.hostname} is still draining: its jobs have not stopped.`
             : `${agent.hostname} has not picked up the ${pending} yet; it applies at the agent's next heartbeat.`,
         error: true,

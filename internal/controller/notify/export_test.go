@@ -24,6 +24,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -46,14 +48,14 @@ func NewConditionState(
 // WatcherGetPrev returns the internal prev state map for inspection in tests.
 func WatcherGetPrev(
 	w *Watcher,
-) map[string]map[string]*conditionState {
+) map[string]map[types.ConditionType]*conditionState {
 	return w.prev
 }
 
 // WatcherSetPrev replaces the internal prev state map for test setup.
 func WatcherSetPrev(
 	w *Watcher,
-	prev map[string]map[string]*conditionState,
+	prev map[string]map[types.ConditionType]*conditionState,
 ) {
 	w.prev = prev
 }
@@ -62,7 +64,7 @@ func WatcherSetPrev(
 func WatcherSetPrevEntry(
 	w *Watcher,
 	key string,
-	entry map[string]*conditionState,
+	entry map[types.ConditionType]*conditionState,
 ) {
 	w.prev[key] = entry
 }

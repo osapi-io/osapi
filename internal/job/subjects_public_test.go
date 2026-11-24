@@ -23,6 +23,8 @@ package job_test
 import (
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -1215,7 +1217,7 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 			name: "when _all excludes cordoned agents",
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
-				{Hostname: "web-02", State: job.AgentStateCordoned},
+				{Hostname: "web-02", State: types.AgentCordoned},
 				{Hostname: "web-03"},
 			},
 			target: "_all",
@@ -1227,7 +1229,7 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 			name: "when _all excludes draining agents",
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
-				{Hostname: "web-02", State: job.AgentStateDraining},
+				{Hostname: "web-02", State: types.AgentDraining},
 			},
 			target: "_all",
 			validateFunc: func(got int) {
@@ -1238,7 +1240,7 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 			name: "when _all excludes pending agents",
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
-				{Hostname: "web-02", State: job.AgentStatePending},
+				{Hostname: "web-02", State: types.AgentPending},
 			},
 			target: "_all",
 			validateFunc: func(got int) {
@@ -1251,7 +1253,7 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 				{
 					Hostname: "web-01",
 					Labels:   map[string]string{"group": "web.dev"},
-					State:    job.AgentStateCordoned,
+					State:    types.AgentCordoned,
 				},
 				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
 			},
@@ -1266,7 +1268,7 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 				{
 					Hostname: "web-01",
 					Labels:   map[string]string{"group": "web.dev"},
-					State:    job.AgentStateDraining,
+					State:    types.AgentDraining,
 				},
 				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
 			},
@@ -1292,7 +1294,7 @@ func (suite *SubjectsPublicTestSuite) TestRecipients() {
 			MachineID: "m-web2",
 			Hostname:  "web-02",
 			Labels:    map[string]string{"group": "web"},
-			State:     job.AgentStateCordoned,
+			State:     types.AgentCordoned,
 		},
 		{MachineID: "m-db", Hostname: "db-01", Labels: map[string]string{"group": "db"}},
 	}
@@ -1417,7 +1419,7 @@ func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
 			name: "when _all excludes cordoned agents",
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
-				{Hostname: "web-02", State: job.AgentStateCordoned},
+				{Hostname: "web-02", State: types.AgentCordoned},
 				{Hostname: "web-03"},
 			},
 			target: "_all",
@@ -1429,7 +1431,7 @@ func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
 			name: "when _all excludes draining agents",
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
-				{Hostname: "web-02", State: job.AgentStateDraining},
+				{Hostname: "web-02", State: types.AgentDraining},
 			},
 			target: "_all",
 			validateFunc: func(got []string) {
@@ -1440,7 +1442,7 @@ func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
 			name: "when _all excludes pending agents",
 			agents: []job.AgentInfo{
 				{Hostname: "web-01"},
-				{Hostname: "web-02", State: job.AgentStatePending},
+				{Hostname: "web-02", State: types.AgentPending},
 			},
 			target: "_all",
 			validateFunc: func(got []string) {
@@ -1453,7 +1455,7 @@ func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
 				{
 					Hostname: "web-01",
 					Labels:   map[string]string{"group": "web.dev"},
-					State:    job.AgentStateCordoned,
+					State:    types.AgentCordoned,
 				},
 				{Hostname: "web-02", Labels: map[string]string{"group": "web.dev"}},
 			},

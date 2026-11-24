@@ -32,6 +32,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -309,7 +311,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 			stopFunc: func(a *agent.Agent) {
 				// Agent should be in pending state — consumers not started.
 				state := agent.GetAgentState(a)
-				s.Equal(job.AgentStatePending, state)
+				s.Equal(types.AgentPending, state)
 
 				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()

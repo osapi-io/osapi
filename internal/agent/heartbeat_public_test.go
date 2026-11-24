@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 
 	"github.com/avfs/avfs"
@@ -260,7 +262,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 		registryBucket:  "registry",
 		natsClient:      s.mockKV,
 	})
-	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentState(s.testAgent, types.AgentReady)
 	agent.SetAgentMachineID(s.testAgent, "test-machine-id")
 
 	// writeRegistration now calls handleDrainDetection which checks drain flag.
@@ -661,7 +663,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 				registryBucket:  "registry",
 				natsClient:      mockKV,
 			})
-			agent.SetAgentState(testAgent, job.AgentStateReady)
+			agent.SetAgentState(testAgent, types.AgentReady)
 			agent.SetAgentMachineID(testAgent, "test-machine-id")
 			agent.SetAgentHostname(testAgent, tt.initialHostname)
 

@@ -29,6 +29,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -39,7 +41,7 @@ import (
 type AgentTarget struct {
 	MachineID string
 	Hostname  string
-	State     string
+	State     types.AgentState
 	Labels    map[string]string
 	// Verified reports whether the registration behind this target was signed
 	// by the key stored for its machine ID. Only a verified target is
@@ -238,7 +240,7 @@ func allAgentsPending(
 	}
 
 	for _, a := range agents {
-		if a.State != "Pending" {
+		if a.State != types.AgentPending {
 			return false
 		}
 	}
@@ -265,7 +267,7 @@ func matchesHostname(
 
 		if a.Hostname == target || a.MachineID == target {
 			// A pending agent exists but cannot be dispatched to yet.
-			return a.State != "Pending"
+			return a.State != types.AgentPending
 		}
 	}
 
@@ -295,7 +297,7 @@ func PendingTarget(
 
 	if target == "_any" || target == "_all" {
 		for _, a := range agents {
-			if a.State != "Pending" {
+			if a.State != types.AgentPending {
 				return "", false
 			}
 		}
@@ -305,7 +307,7 @@ func PendingTarget(
 
 	for _, a := range agents {
 		if a.Hostname == target || a.MachineID == target {
-			if a.State == "Pending" {
+			if a.State == types.AgentPending {
 				return target, true
 			}
 

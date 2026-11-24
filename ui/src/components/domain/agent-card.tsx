@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useDrain } from "@/hooks/use-drain";
-import { AgentInfoState } from "@/sdk/gen/schemas";
+import { AgentState } from "@/sdk/gen/schemas";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,10 +40,9 @@ export function AgentCard({
 }: AgentCardProps) {
   const { canCall } = useAuth();
   const statusColor = useStatus();
-  const isPending = agent.state === AgentInfoState.Pending;
+  const isPending = agent.state === AgentState.Pending;
   const isDrained =
-    agent.state === AgentInfoState.Draining ||
-    agent.state === AgentInfoState.Cordoned;
+    agent.state === AgentState.Draining || agent.state === AgentState.Cordoned;
   const canWrite = canCall("DrainAgent");
   const badgeVariant = statusColor.variant(agent.state);
   // The API lists only the conditions that hold.
@@ -55,7 +54,7 @@ export function AgentCard({
   // else the state the agent reports.
   const shownState =
     pending === "drain"
-      ? AgentInfoState.Draining
+      ? AgentState.Draining
       : pending === "undrain"
         ? "Undraining"
         : agent.state;
@@ -71,7 +70,7 @@ export function AgentCard({
           {agent.hostname}
         </CardTitle>
         <div className="ml-auto flex items-center gap-1.5">
-          {shownState && shownState !== AgentInfoState.Ready ? (
+          {shownState && shownState !== AgentState.Ready ? (
             <Badge
               variant={pending ? "pending" : statusColor.variant(shownState)}
             >
