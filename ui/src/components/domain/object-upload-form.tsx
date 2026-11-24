@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { enumLabel } from "@/lib/format";
-import { PostFileBodyContentType } from "@/sdk/gen/schemas";
+import { ContentType } from "@/sdk/gen/schemas";
 import { Input } from "@/components/ui/input";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Text } from "@/components/ui/text";
@@ -18,8 +18,7 @@ interface ObjectUploadFormProps {
  */
 export function ObjectUploadForm({ data, onChange }: ObjectUploadFormProps) {
   const name = (data.name as string) || "";
-  const contentType =
-    (data.content_type as string) || PostFileBodyContentType.raw;
+  const contentType = (data.content_type as string) || ContentType.raw;
   const fileName = (data._file_name as string) || "";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -91,7 +90,7 @@ export function ObjectUploadForm({ data, onChange }: ObjectUploadFormProps) {
           label="Content Type"
           value={contentType}
           onChange={(v) => update("content_type", v)}
-          options={Object.values(PostFileBodyContentType).map((v) => ({
+          options={Object.values(ContentType).map((v) => ({
             value: v,
             label: enumLabel(v),
           }))}
