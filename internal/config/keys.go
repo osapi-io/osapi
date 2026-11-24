@@ -57,6 +57,10 @@ var Defaults = map[string]any{
 	"nats.enrollment.bucket":   "agent-enrollment",
 	"nats.enrollment.storage":  "file",
 	"nats.enrollment.replicas": 1,
+	"nats.secrets.bucket":      "secrets",
+	"nats.secrets.history":     10,
+	"nats.secrets.storage":     "file",
+	"nats.secrets.replicas":    1,
 
 	"agent.nats.host":                            "localhost",
 	"agent.nats.port":                            4222,

@@ -40,5 +40,6 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/vaultkey"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/version"
 )

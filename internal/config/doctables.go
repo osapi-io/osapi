@@ -83,15 +83,19 @@ func DocTable(
 	shipped map[string]any,
 ) string {
 	rows := [][]string{{"Key", "Type", "Default", "Environment", "Description"}}
-	for _, k := range Keys() {
+	for _, k := range append(Keys(), VaultKeys()...) {
 		if !under(k.Name, prefixes) {
 			continue
+		}
+		env := "none"
+		if k.Env != "" {
+			env = "`" + k.Env + "`"
 		}
 		rows = append(rows, []string{
 			"`" + k.Name + "`",
 			k.Type,
 			defaultText(k, shipped),
-			"`" + k.Env + "`",
+			env,
 			strings.ReplaceAll(k.Doc, "|", "\\|"),
 		})
 	}

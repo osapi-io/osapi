@@ -49,6 +49,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 				State:      config.NATSState{Bucket: "agent-state"},
 				FileState:  config.NATSFileState{Bucket: "file-state"},
 				Enrollment: config.NATSEnrollment{Bucket: "agent-enrollment"},
+				Secrets:    config.NATSSecrets{Bucket: "secrets"},
 			},
 			validateFunc: func(got []config.KVBucketInfo) {
 				s.Len(got, len([]string{
@@ -58,6 +59,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 					"state",
 					"file-state",
 					"enrollment",
+					"secrets",
 				}))
 				for i, info := range got {
 					s.Equal([]string{
@@ -67,6 +69,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 						"state",
 						"file-state",
 						"enrollment",
+						"secrets",
 					}[i], info.Name)
 					s.Equal([]string{
 						"job-queue",
@@ -75,6 +78,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 						"agent-state",
 						"file-state",
 						"agent-enrollment",
+						"secrets",
 					}[i], info.Bucket)
 				}
 			},
@@ -90,6 +94,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 					"state",
 					"file-state",
 					"enrollment",
+					"secrets",
 				}))
 				for i, info := range got {
 					s.Equal([]string{
@@ -99,8 +104,9 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 						"state",
 						"file-state",
 						"enrollment",
+						"secrets",
 					}[i], info.Name)
-					s.Equal([]string{"", "", "", "", "", ""}[i], info.Bucket)
+					s.Equal([]string{"", "", "", "", "", "", ""}[i], info.Bucket)
 				}
 			},
 		},
@@ -119,6 +125,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 					"state",
 					"file-state",
 					"enrollment",
+					"secrets",
 				}))
 				for i, info := range got {
 					s.Equal([]string{
@@ -128,9 +135,11 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 						"state",
 						"file-state",
 						"enrollment",
+						"secrets",
 					}[i], info.Name)
 					s.Equal([]string{
 						"job-queue",
+						"",
 						"",
 						"",
 						"",

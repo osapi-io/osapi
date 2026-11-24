@@ -133,6 +133,9 @@ func Setup(
 	if cfg.FileState.Bucket != "" {
 		kvs = append(kvs, FileStateKV(namespace, cfg.FileState))
 	}
+	if cfg.Secrets.Bucket != "" {
+		kvs = append(kvs, SecretsKV(namespace, cfg.Secrets))
+	}
 	for _, kv := range kvs {
 		if err := nc.KVCreateOrUpdate(ctx, kv); err != nil {
 			return fmt.Errorf("create KV bucket %s: %w", kv.Bucket, err)

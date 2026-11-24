@@ -29,6 +29,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs/vfs/osfs"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -40,6 +41,8 @@ import (
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/secret/vault"
+	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -87,7 +90,21 @@ func natsConfig() config.NATS {
 		Objects:    config.NATSObjects{Bucket: "file-objects"},
 		FileState:  config.NATSFileState{Bucket: "file-state"},
 		Enrollment: config.NATSEnrollment{Bucket: "agent-enrollment"},
+		Secrets:    config.NATSSecrets{Bucket: "secrets", History: 5},
 	}
+}
+
+// withVault is cfg with a nats vault default, whose key is in a new file.
+func withVault(
+	t *testing.T,
+	cfg config.Config,
+) config.Config {
+	file := filepath.Join(t.TempDir(), "secrets.key")
+	_, err := natsvault.CreateKey(context.Background(), osfs.NewWithNoIdm(), file)
+	require.NoError(t, err)
+	cfg.Controller.Secrets.Vaults = []vault.Spec{{Name: "default", Type: "nats", KeyFile: file}}
+
+	return cfg
 }
 
 // startServer runs an embedded server and returns a controller config that
@@ -138,10 +155,11 @@ func natsOptions(
 
 func (s *ControllerPublicTestSuite) TestNew() {
 	tests := []struct {
-		name    string
-		cfg     func() config.Config
-		opts    []controller.Option
-		wantErr string
+		name       string
+		cfg        func() config.Config
+		opts       []controller.Option
+		wantErr    string
+		wantVaults []string
 	}{
 		{
 			name: "when NATS runs serves the API and answers health checks",
@@ -169,6 +187,29 @@ func (s *ControllerPublicTestSuite) TestNew() {
 				cfg.NATS.Enrollment.Bucket = "bad name"
 				return cfg
 			},
+		},
+		{
+			name:       "when a vault is configured opens it",
+			cfg:        func() config.Config { return withVault(s.T(), startServer(s.T())) },
+			wantVaults: []string{"default"},
+		},
+		{
+			name: "when the key of a vault is not there returns the error",
+			cfg: func() config.Config {
+				cfg := withVault(s.T(), startServer(s.T()))
+				cfg.Controller.Secrets.Vaults[0].KeyFile = filepath.Join(s.T().TempDir(), "none")
+				return cfg
+			},
+			wantErr: `vault "default": read the vault key: `,
+		},
+		{
+			name: "when no secrets bucket is named and a vault needs it returns the error",
+			cfg: func() config.Config {
+				cfg := withVault(s.T(), startServer(s.T()))
+				cfg.NATS.Secrets.Bucket = ""
+				return cfg
+			},
+			wantErr: `vault "default": nats.secrets.bucket is empty`,
 		},
 		{
 			name: "when nothing listens returns the error",
@@ -222,6 +263,7 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			c.Start()
 			s.NoError(c.CheckHealth(context.Background()))
 			s.Contains(c.SubComponents(), "controller.api")
+			s.Equal(tc.wantVaults, c.Vaults().Names())
 			c.Stop(context.Background())
 		})
 	}

@@ -22,6 +22,7 @@ package config
 
 import (
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -137,6 +138,18 @@ type NATS struct {
 	Objects    NATSObjects    `mapstructure:"objects,omitempty"`
 	FileState  NATSFileState  `mapstructure:"file_state,omitempty"`
 	Enrollment NATSEnrollment `mapstructure:"enrollment,omitempty"`
+	Secrets    NATSSecrets    `mapstructure:"secrets,omitempty"`
+}
+
+// NATSSecrets configuration for the KV bucket of the nats vaults. Each value
+// in it is encrypted, under <vault>.<key>.
+type NATSSecrets struct {
+	// Bucket is the KV bucket name for the values of the nats vaults.
+	Bucket string `mapstructure:"bucket" validate:"omitempty,nats_name" doc:"KV bucket for the encrypted values of each nats vault."`
+	// History is how many versions of each key the bucket keeps.
+	History  int    `mapstructure:"history"  validate:"omitempty,min=1,max=64" doc:"How many versions of each secret the bucket keeps, from 1 to 64."`
+	Storage  string `mapstructure:"storage"                                    doc:"Storage backend: 'file' or 'memory'."`
+	Replicas int    `mapstructure:"replicas"                                   doc:"Number of KV replicas."`
 }
 
 // NATSEnrollment configuration for the PKI enrollment KV bucket.
@@ -313,6 +326,14 @@ type Controller struct {
 	UI UIConfig `mapstructure:"ui,omitempty"`
 	// PKI holds PKI enrollment and signing settings.
 	PKI ControllerPKI `mapstructure:"pki,omitempty"`
+	// Secrets holds the vaults that the controller resolves secrets from.
+	Secrets ControllerSecrets `mapstructure:"secrets,omitempty"`
+}
+
+// ControllerSecrets holds the vaults of the controller.
+type ControllerSecrets struct {
+	// Vaults are the vaults, each with its name, type and targets.
+	Vaults []vault.Spec `mapstructure:"vaults" validate:"dive" doc:"The vaults that a reference such as secret://default/registry-token names, each with name, type, targets, key_file or key_env, and config."`
 }
 
 // UIConfig holds settings for the embedded management UI.

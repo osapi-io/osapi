@@ -25,6 +25,10 @@ The controller accepts tokens from more than one signing key. Each token has the
 expire. [Authentication](authentication.md#change-the-signing-key) has the
 steps.
 
+The controller can have vaults, which keep secrets encrypted in NATS.
+[Configuration](../../usage/configuration.md#vaults) tells how to add a vault
+and make its key with `osapi controller vault key create`.
+
 ## What comes next
 
 Vaults, `secret://` references and values sealed to the agent that uses them are

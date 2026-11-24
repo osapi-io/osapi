@@ -331,3 +331,17 @@ func EnrollmentKV(
 		Replicas: enrollmentCfg.Replicas,
 	}
 }
+
+// SecretsKV builds a jetstream.KeyValueConfig from the secrets config
+// values. The bucket has no TTL, and keeps History versions of each key.
+func SecretsKV(
+	namespace string,
+	secretsCfg config.NATSSecrets,
+) jetstream.KeyValueConfig {
+	return jetstream.KeyValueConfig{
+		Bucket:   job.ApplyNamespaceToInfraName(namespace, secretsCfg.Bucket),
+		History:  uint8(min(max(secretsCfg.History, 1), jetstream.KeyValueMaxHistory)),
+		Storage:  StorageType(secretsCfg.Storage),
+		Replicas: secretsCfg.Replicas,
+	}
+}
