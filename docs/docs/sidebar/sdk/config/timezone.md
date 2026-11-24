@@ -79,23 +79,35 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### TimezoneEntry
 
-| Field       | Type     | Description                                                                            |
-| ----------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`     | `string` | Error message if the agent failed.                                                     |
-| `Hostname`  | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`    | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Timezone`  | `string` | The IANA name of the timezone, such as America/New_York.                               |
-| `UTCOffset` | `string` | The offset from UTC now, such as -05:00.                                               |
+| Field       | Type                  | Description                                                                            |
+| ----------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `Error`     | `string`              | Error message if the agent failed.                                                     |
+| `Hostname`  | `string`              | Hostname of the agent that produced this result.                                       |
+| `Status`    | `TimezoneEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Timezone`  | `string`              | The IANA name of the timezone, such as America/New_York.                               |
+| `UTCOffset` | `string`              | The offset from UTC now, such as -05:00.                                               |
+
+### TimezoneEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### TimezoneResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Timezone` | `string` | The timezone of the host.                                                              |
+| Field      | Type                   | Description                                                                            |
+| ---------- | ---------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                 | Whether the host changed.                                                              |
+| `Error`    | `string`               | Error message if the agent failed.                                                     |
+| `Hostname` | `string`               | Hostname of the agent that produced this result.                                       |
+| `Status`   | `TimezoneResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Timezone` | `string`               | The timezone of the host.                                                              |
+
+### TimezoneResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### TimezoneUpdateInput
 

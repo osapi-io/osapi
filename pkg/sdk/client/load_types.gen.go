@@ -15,5 +15,16 @@ type LoadEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status LoadEntryStatus `json:"status"`
 }
+
+// LoadEntryStatus: The status of the operation for this host.
+type LoadEntryStatus string
+
+// The values of LoadEntryStatus.
+const (
+	LoadEntryStatusOk      LoadEntryStatus = "ok"
+	LoadEntryStatusFailed  LoadEntryStatus = "failed"
+	LoadEntryStatusSkipped LoadEntryStatus = "skipped"
+	LoadEntryStatusTimeout LoadEntryStatus = "timeout"
+)

@@ -35,11 +35,11 @@ func (s *ScheduleService) List(
 type ScheduleCreateInput struct {
 	// The content type: raw, or template to render the object with the agent's
 	// facts and vars; the object's own when empty. It is one of: raw, template.
-	ContentType string `json:"content_type,omitempty"`
+	ContentType ScheduleCreateRequestContentType `json:"content_type,omitzero"`
 
 	// The interval of a script in /etc/cron.daily and the like; give it or
 	// schedule. It is one of: hourly, daily, weekly, monthly.
-	Interval string `json:"interval,omitempty"`
+	Interval ScheduleCreateRequestInterval `json:"interval,omitzero"`
 
 	// The entry, and its file name, such as backup.
 	Name string `json:"name"`
@@ -102,7 +102,7 @@ type ScheduleUpdateInput struct {
 
 	// The content type, raw or template; the object's own when empty. It is one
 	// of: raw, template.
-	ContentType string `json:"content_type,omitempty"`
+	ContentType ScheduleUpdateRequestContentType `json:"content_type,omitzero"`
 
 	// The object to deploy; the entry's own when empty.
 	Object string `json:"object,omitempty"`

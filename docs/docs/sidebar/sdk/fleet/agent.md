@@ -165,11 +165,18 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Routes`           | `[]RouteResponse`            | Network routing table entries.                                                                                                                                                                                                |
 | `ServiceMgr`       | `string`                     | Init system.                                                                                                                                                                                                                  |
 | `StartedAt`        | `time.Time`                  | When the agent process started.                                                                                                                                                                                               |
-| `State`            | `string`                     | The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining. It is one of: Ready, Draining, Cordoned, Pending.                                            |
+| `State`            | `AgentInfoState`             | The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining. It is one of: Ready, Draining, Cordoned, Pending.                                            |
 | `Timeline`         | `[]TimelineEvent`            | Agent state transition history.                                                                                                                                                                                               |
 | `Uptime`           | `string`                     | The system uptime.                                                                                                                                                                                                            |
 | `Verified`         | `bool`                       | Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.  |
 | `Version`          | `string`                     | The build version of the agent binary. Absent for an agent that does not report it.                                                                                                                                           |
+
+### AgentInfoState
+
+The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain
+that the agent has not applied yet is Draining.
+
+A `string`, one of `Ready`, `Draining`, `Cordoned`, `Pending`.
 
 ### FactKeyEntry
 
@@ -215,21 +222,32 @@ Memory usage information.
 
 ### NetworkInterfaceResponse
 
-| Field    | Type     | Description                                         |
-| -------- | -------- | --------------------------------------------------- |
-| `Family` | `string` | IP address family. It is one of: inet, inet6, dual. |
-| `IPv4`   | `string` |                                                     |
-| `IPv6`   | `string` |                                                     |
-| `MAC`    | `string` |                                                     |
-| `Name`   | `string` |                                                     |
+| Field    | Type                             | Description                                         |
+| -------- | -------------------------------- | --------------------------------------------------- |
+| `Family` | `NetworkInterfaceResponseFamily` | IP address family. It is one of: inet, inet6, dual. |
+| `IPv4`   | `string`                         |                                                     |
+| `IPv6`   | `string`                         |                                                     |
+| `MAC`    | `string`                         |                                                     |
+| `Name`   | `string`                         |                                                     |
+
+### NetworkInterfaceResponseFamily
+
+IP address family.
+
+A `string`, one of `inet`, `inet6`, `dual`.
 
 ### NodeCondition
 
-| Field                | Type        | Description                                                                             |
-| -------------------- | ----------- | --------------------------------------------------------------------------------------- |
-| `LastTransitionTime` | `time.Time` |                                                                                         |
-| `Reason`             | `string`    |                                                                                         |
-| `Type`               | `string`    | It is one of: MemoryPressure, HighLoad, DiskPressure, DrainStuck, ConsumersUnavailable. |
+| Field                | Type                | Description                                                                             |
+| -------------------- | ------------------- | --------------------------------------------------------------------------------------- |
+| `LastTransitionTime` | `time.Time`         |                                                                                         |
+| `Reason`             | `string`            |                                                                                         |
+| `Type`               | `NodeConditionType` | It is one of: MemoryPressure, HighLoad, DiskPressure, DrainStuck, ConsumersUnavailable. |
+
+### NodeConditionType
+
+A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
+`ConsumersUnavailable`.
 
 ### OSInfoResponse
 

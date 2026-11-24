@@ -12,7 +12,7 @@ type TimezoneEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status TimezoneEntryStatus `json:"status"`
 
 	// The IANA name of the timezone, such as America/New_York.
 	Timezone string `json:"timezone,omitempty"`
@@ -20,6 +20,17 @@ type TimezoneEntry struct {
 	// The offset from UTC now, such as -05:00.
 	UTCOffset string `json:"utc_offset,omitempty"`
 }
+
+// TimezoneEntryStatus: The status of the operation for this host.
+type TimezoneEntryStatus string
+
+// The values of TimezoneEntryStatus.
+const (
+	TimezoneEntryStatusOk      TimezoneEntryStatus = "ok"
+	TimezoneEntryStatusFailed  TimezoneEntryStatus = "failed"
+	TimezoneEntryStatusSkipped TimezoneEntryStatus = "skipped"
+	TimezoneEntryStatusTimeout TimezoneEntryStatus = "timeout"
+)
 
 // TimezoneResult is the TimezoneResult of the spec.
 type TimezoneResult struct {
@@ -34,8 +45,19 @@ type TimezoneResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status TimezoneResultStatus `json:"status"`
 
 	// The timezone of the host.
 	Timezone string `json:"timezone,omitempty"`
 }
+
+// TimezoneResultStatus: The status of the operation for this host.
+type TimezoneResultStatus string
+
+// The values of TimezoneResultStatus.
+const (
+	TimezoneResultStatusOk      TimezoneResultStatus = "ok"
+	TimezoneResultStatusFailed  TimezoneResultStatus = "failed"
+	TimezoneResultStatusSkipped TimezoneResultStatus = "skipped"
+	TimezoneResultStatusTimeout TimezoneResultStatus = "timeout"
+)

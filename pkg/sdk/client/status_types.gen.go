@@ -39,8 +39,19 @@ type StatusEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status StatusEntryStatus `json:"status"`
 
 	// Uptime is the property uptime.
 	Uptime Entry `json:"uptime,omitzero"`
 }
+
+// StatusEntryStatus: The status of the operation for this host.
+type StatusEntryStatus string
+
+// The values of StatusEntryStatus.
+const (
+	StatusEntryStatusOk      StatusEntryStatus = "ok"
+	StatusEntryStatusFailed  StatusEntryStatus = "failed"
+	StatusEntryStatusSkipped StatusEntryStatus = "skipped"
+	StatusEntryStatusTimeout StatusEntryStatus = "timeout"
+)

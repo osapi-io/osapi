@@ -203,7 +203,7 @@ The fields of each type are the properties of its schema in the API's spec.
 How a deploy treats a file: raw writes its bytes as they are; template renders
 it with Go text/template and the agent's facts.
 
-A `string`.
+A `string`, one of `raw`, `template`.
 
 ### FileInfo
 

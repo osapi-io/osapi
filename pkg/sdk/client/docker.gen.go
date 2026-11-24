@@ -19,7 +19,7 @@ type DockerService struct {
 type DockerListParams struct {
 	// State is the state of the query: only the containers in this state: running,
 	// stopped or all, the default. The zero value leaves it out.
-	State string
+	State GetNodeDockerState
 }
 
 // List is the operation GetNodeDocker: list the containers of the host.
@@ -39,7 +39,7 @@ func (s *DockerService) List(
 ) (*Response[Collection[DockerEntry]], error) {
 	q := url.Values{}
 	if params.State != "" {
-		q.Set("state", params.State)
+		q.Set("state", string(params.State))
 	}
 	return send[Collection[DockerEntry]](ctx, s.client, http.MethodGet, "/api/node/"+url.PathEscape(hostname)+"/docker", q, nil)
 }

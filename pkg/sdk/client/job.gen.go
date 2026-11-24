@@ -19,7 +19,7 @@ type JobService struct {
 type JobListParams struct {
 	// Status is the status of the query: filter jobs by status. The zero value
 	// leaves it out.
-	Status string
+	Status GetJobsStatus
 
 	// Limit is the limit of the query: maximum number of jobs per page (1-100).
 	// The zero value leaves it out.
@@ -43,7 +43,7 @@ func (s *JobService) List(
 ) (*Response[ListJobsResponse], error) {
 	q := url.Values{}
 	if params.Status != "" {
-		q.Set("status", params.Status)
+		q.Set("status", string(params.Status))
 	}
 	if params.Limit != 0 {
 		q.Set("limit", strconv.Itoa(params.Limit))

@@ -71,7 +71,7 @@ type CatalogColumn struct {
 
 	// What the field holds: value, values, object or list. It is one of: value,
 	// values, object, list.
-	Kind string `json:"kind"`
+	Kind CatalogColumnKind `json:"kind"`
 
 	// The label of the field.
 	Label string `json:"label"`
@@ -82,6 +82,17 @@ type CatalogColumn struct {
 	// The render tag of the field, such as bytes.
 	Render string `json:"render,omitempty"`
 }
+
+// CatalogColumnKind: What the field holds: value, values, object or list.
+type CatalogColumnKind string
+
+// The values of CatalogColumnKind.
+const (
+	CatalogColumnKindValue  CatalogColumnKind = "value"
+	CatalogColumnKindValues CatalogColumnKind = "values"
+	CatalogColumnKindObject CatalogColumnKind = "object"
+	CatalogColumnKindList   CatalogColumnKind = "list"
+)
 
 // CatalogExample is the CatalogExample of the spec.
 type CatalogExample struct {
@@ -102,11 +113,11 @@ type CatalogField struct {
 
 	// Where the field goes in the request: path, query or body. It is one of:
 	// path, query, body.
-	In string `json:"in"`
+	In CatalogFieldIn `json:"in"`
 
 	// How a form takes the value: string, number, bool, list or object. It is one
 	// of: string, number, bool, list, object.
-	Kind string `json:"kind"`
+	Kind CatalogFieldKind `json:"kind"`
 
 	// The json name of the field.
 	Name string `json:"name"`
@@ -120,6 +131,29 @@ type CatalogField struct {
 	// The field is a secret.
 	Secret bool `json:"secret,omitempty"`
 }
+
+// CatalogFieldIn: Where the field goes in the request: path, query or body.
+type CatalogFieldIn string
+
+// The values of CatalogFieldIn.
+const (
+	CatalogFieldInPath  CatalogFieldIn = "path"
+	CatalogFieldInQuery CatalogFieldIn = "query"
+	CatalogFieldInBody  CatalogFieldIn = "body"
+)
+
+// CatalogFieldKind: How a form takes the value: string, number, bool, list or
+// object.
+type CatalogFieldKind string
+
+// The values of CatalogFieldKind.
+const (
+	CatalogFieldKindString CatalogFieldKind = "string"
+	CatalogFieldKindNumber CatalogFieldKind = "number"
+	CatalogFieldKindBool   CatalogFieldKind = "bool"
+	CatalogFieldKindList   CatalogFieldKind = "list"
+	CatalogFieldKindObject CatalogFieldKind = "object"
+)
 
 // CatalogMethod is the CatalogMethod of the spec.
 type CatalogMethod struct {
@@ -153,7 +187,7 @@ type CatalogMethod struct {
 
 	// What the method does to a host, by the verb of its permission: read, write
 	// or action. It is one of: read, write, action.
-	Kind string `json:"kind"`
+	Kind CatalogMethodKind `json:"kind"`
 
 	// The rest of what the method does.
 	Long string `json:"long,omitempty"`
@@ -178,6 +212,17 @@ type CatalogMethod struct {
 	// a Linux host whose platform gohai has no family for.
 	RunsOn []string `json:"runs_on"`
 }
+
+// CatalogMethodKind: What the method does to a host, by the verb of its
+// permission: read, write or action.
+type CatalogMethodKind string
+
+// The values of CatalogMethodKind.
+const (
+	CatalogMethodKindRead   CatalogMethodKind = "read"
+	CatalogMethodKindWrite  CatalogMethodKind = "write"
+	CatalogMethodKindAction CatalogMethodKind = "action"
+)
 
 // CatalogOperation is the CatalogOperation of the spec.
 type CatalogOperation struct {

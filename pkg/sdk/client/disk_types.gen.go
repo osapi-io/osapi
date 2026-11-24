@@ -15,5 +15,16 @@ type DiskEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status DiskEntryStatus `json:"status"`
 }
+
+// DiskEntryStatus: The status of the operation for this host.
+type DiskEntryStatus string
+
+// The values of DiskEntryStatus.
+const (
+	DiskEntryStatusOk      DiskEntryStatus = "ok"
+	DiskEntryStatusFailed  DiskEntryStatus = "failed"
+	DiskEntryStatusSkipped DiskEntryStatus = "skipped"
+	DiskEntryStatusTimeout DiskEntryStatus = "timeout"
+)

@@ -90,7 +90,7 @@ func runCreate(
 	resp, err := c.Interface.Create(ctx, target, client.InterfaceCreateInput{
 		Addresses: []string{"10.0.1.5/24"},
 		Name:      "osapi0",
-		Type:      "dummy",
+		Type:      client.InterfaceCreateRequestType("dummy"),
 	})
 	if err != nil {
 		return err
@@ -111,7 +111,7 @@ func runCreate2(
 		MACAddress: "52:54:00:aa:bb:cc",
 		MTU:        9000,
 		Name:       "osapi0",
-		Type:       "dummy",
+		Type:       client.InterfaceCreateRequestType("dummy"),
 	})
 	if err != nil {
 		return err
@@ -147,7 +147,7 @@ func runUpdate(
 	resp, err := c.Interface.Update(ctx, target, client.InterfaceUpdateInput{
 		DHCP4: true,
 		Name:  "osapi0",
-		Type:  "dummy",
+		Type:  client.InterfaceUpdateRequestType("dummy"),
 	})
 	if err != nil {
 		return err

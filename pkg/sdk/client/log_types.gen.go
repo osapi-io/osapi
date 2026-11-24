@@ -2,6 +2,21 @@
 
 package client
 
+// GetNodeLogPriority: Only the entries at this priority or above.
+type GetNodeLogPriority string
+
+// The values of GetNodeLogPriority.
+const (
+	GetNodeLogPriorityEmerg   GetNodeLogPriority = "emerg"
+	GetNodeLogPriorityAlert   GetNodeLogPriority = "alert"
+	GetNodeLogPriorityCrit    GetNodeLogPriority = "crit"
+	GetNodeLogPriorityErr     GetNodeLogPriority = "err"
+	GetNodeLogPriorityWarning GetNodeLogPriority = "warning"
+	GetNodeLogPriorityNotice  GetNodeLogPriority = "notice"
+	GetNodeLogPriorityInfo    GetNodeLogPriority = "info"
+	GetNodeLogPriorityDebug   GetNodeLogPriority = "debug"
+)
+
 // LogEntry is the LogEntry of the spec.
 type LogEntry struct {
 	// Error message if the agent failed.
@@ -21,7 +36,7 @@ type LogEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status LogEntryStatus `json:"status"`
 
 	// When journald recorded it, in RFC 3339.
 	Timestamp string `json:"timestamp,omitempty"`
@@ -29,3 +44,14 @@ type LogEntry struct {
 	// The syslog identifier that wrote it.
 	Unit string `json:"unit,omitempty"`
 }
+
+// LogEntryStatus: The status of the operation for this host.
+type LogEntryStatus string
+
+// The values of LogEntryStatus.
+const (
+	LogEntryStatusOk      LogEntryStatus = "ok"
+	LogEntryStatusFailed  LogEntryStatus = "failed"
+	LogEntryStatusSkipped LogEntryStatus = "skipped"
+	LogEntryStatusTimeout LogEntryStatus = "timeout"
+)

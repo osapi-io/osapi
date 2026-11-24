@@ -15,8 +15,19 @@ type UptimeEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status UptimeEntryStatus `json:"status"`
 
 	// How long the host has run, in days, hours and minutes.
 	Uptime string `json:"uptime,omitempty"`
 }
+
+// UptimeEntryStatus: The status of the operation for this host.
+type UptimeEntryStatus string
+
+// The values of UptimeEntryStatus.
+const (
+	UptimeEntryStatusOk      UptimeEntryStatus = "ok"
+	UptimeEntryStatusFailed  UptimeEntryStatus = "failed"
+	UptimeEntryStatusSkipped UptimeEntryStatus = "skipped"
+	UptimeEntryStatusTimeout UptimeEntryStatus = "timeout"
+)

@@ -105,7 +105,7 @@ type UserUpdateInput struct {
 
 	// Whether to refuse logins with its password: locked refuses them, unlocked
 	// allows them. It is one of: locked, unlocked.
-	Lock string `json:"lock,omitempty"`
+	Lock UserUpdateRequestLock `json:"lock,omitzero"`
 
 	// Its login shell, such as /bin/bash.
 	Shell string `json:"shell,omitempty"`

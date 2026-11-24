@@ -153,9 +153,18 @@ func (s *ModelPublicTestSuite) TestNew() {
 				s.Empty(status.OptionalQuery())
 				list := services["Job"].Methods[0]
 				s.Empty(list.RequiredQuery())
-				s.Len(list.OptionalQuery(), 2)
+				s.Len(list.OptionalQuery(), 3)
 				s.Equal("int", list.Query[0].Type.String())
 				s.Equal("bool", list.Query[1].Type.String())
+				s.Equal(sdkmodel.Named, list.Query[2].Type.Kind,
+					"an enum of a parameter is a type of its own")
+				s.Equal("GetJobsState", list.Query[2].Type.String())
+				for _, t := range m.Types {
+					if t.Name == "GetJobsState" {
+						s.Equal("The state of the jobs", t.Doc,
+							"an enum of a parameter has the parameter's doc")
+					}
+				}
 			},
 		},
 		{
@@ -197,8 +206,8 @@ func (s *ModelPublicTestSuite) TestNew() {
 					types = append(types, t.Name)
 				}
 				s.Equal([]string{
-					"DnsEntry", "DnsKind", "ErrorResponse",
-					"FileUploadResponse", "JobList", "JobListTimeline",
+					"DnsEntry", "DnsEntryStatus", "DnsKind", "ErrorResponse",
+					"FileUploadResponse", "GetJobsState", "JobList", "JobListTimelineItem",
 				}, types)
 			},
 		},
@@ -214,6 +223,8 @@ func (s *ModelPublicTestSuite) TestNew() {
 				s.True(fields["DnsEntry.hostname"].Required)
 				s.False(fields["DnsEntry.servers"].Required)
 				s.Equal([]string{"ok", "failed"}, fields["DnsEntry.status"].Enum)
+				s.Equal("DnsEntryStatus", fields["DnsEntry.status"].Type.String(),
+					"an enum of a field is a type of its own")
 				s.Equal("[]string", fields["DnsEntry.servers"].Type.String())
 				s.Equal("int64", fields["FileUploadResponse.size"].Type.String())
 				s.Equal("time.Time", fields["JobList.created"].Type.String())
@@ -221,7 +232,8 @@ func (s *ModelPublicTestSuite) TestNew() {
 				s.Equal("map[string]string", fields["JobList.labels"].Type.String())
 				s.Equal("map[string]any", fields["JobList.facts"].Type.String())
 				s.Equal("any", fields["JobList.result"].Type.String())
-				s.Equal("[]JobListTimeline", fields["JobList.timeline"].Type.String())
+				s.Equal("[]JobListTimelineItem", fields["JobList.timeline"].Type.String(),
+					"an item has the name of the list and Item")
 				s.Equal("Min1", fields["JobList.1min"].GoName)
 				s.Equal("DnsKind", fields["DnsEntry.kind"].Type.String())
 				s.Empty(fields["DnsEntry.kind"].Enum, "the type of a schema has the values")
@@ -230,13 +242,21 @@ func (s *ModelPublicTestSuite) TestNew() {
 		{
 			name: "when a schema is a string, its type is a string with no fields",
 			validateFunc: func() {
+				enums := map[string][]string{
+					"DnsKind":        {"static", "dhcp"},
+					"DnsEntryStatus": {"ok", "failed"},
+					"GetJobsState":   {"queued", "done"},
+				}
 				for _, t := range m.Types {
-					if t.Name == "DnsKind" {
-						s.Equal("string", t.Scalar)
-						s.Empty(t.Fields)
-						s.Equal("The kind of a resolver", t.Doc)
+					if want, ok := enums[t.Name]; ok {
+						s.Equal("string", t.Scalar, t.Name)
+						s.Empty(t.Fields, t.Name)
+						s.Equal(want, t.Enum, t.Name)
 					} else {
 						s.Empty(t.Scalar, t.Name)
+					}
+					if t.Name == "DnsKind" {
+						s.Equal("The kind of a resolver", t.Doc)
 					}
 				}
 			},
@@ -360,6 +380,18 @@ func (s *ModelPublicTestSuite) TestNewErrors() {
 				)
 			},
 			want: "parameter all is a []string",
+		},
+		{
+			name: "when a parameter is an object of the components",
+			edit: func(text string) string {
+				return strings.Replace(
+					text,
+					"schema: {type: boolean}",
+					"schema: {$ref: '#/components/schemas/FileUploadResponse'}",
+					1,
+				)
+			},
+			want: "parameter all is a FileUploadResponse",
 		},
 		{
 			name: "when the body is not a schema of the components",

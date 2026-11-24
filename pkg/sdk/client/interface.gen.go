@@ -76,7 +76,7 @@ type InterfaceCreateInput struct {
 
 	// The type: ethernet, the default, for an interface the host has, or dummy for
 	// a dummy interface that netplan makes. It is one of: ethernet, dummy.
-	Type string `json:"type,omitempty"`
+	Type InterfaceCreateRequestType `json:"type,omitzero"`
 
 	// Turn on wake-on-LAN.
 	Wakeonlan bool `json:"wakeonlan,omitempty"`
@@ -138,7 +138,7 @@ type InterfaceUpdateInput struct {
 
 	// The type: ethernet, the default, for an interface the host has, or dummy for
 	// a dummy interface that netplan makes. It is one of: ethernet, dummy.
-	Type string `json:"type,omitempty"`
+	Type InterfaceUpdateRequestType `json:"type,omitzero"`
 
 	// Turn on wake-on-LAN.
 	Wakeonlan bool `json:"wakeonlan,omitempty"`

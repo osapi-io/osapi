@@ -77,14 +77,20 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CatalogColumn
 
-| Field     | Type              | Description                                                                                     |
-| --------- | ----------------- | ----------------------------------------------------------------------------------------------- |
-| `Columns` | `[]CatalogColumn` | The columns of an object, or of a list of objects.                                              |
-| `Doc`     | `string`          | What the field is.                                                                              |
-| `Kind`    | `string`          | What the field holds: value, values, object or list. It is one of: value, values, object, list. |
-| `Label`   | `string`          | The label of the field.                                                                         |
-| `Name`    | `string`          | The json name of the field.                                                                     |
-| `Render`  | `string`          | The render tag of the field, such as bytes.                                                     |
+| Field     | Type                | Description                                                                                     |
+| --------- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| `Columns` | `[]CatalogColumn`   | The columns of an object, or of a list of objects.                                              |
+| `Doc`     | `string`            | What the field is.                                                                              |
+| `Kind`    | `CatalogColumnKind` | What the field holds: value, values, object or list. It is one of: value, values, object, list. |
+| `Label`   | `string`            | The label of the field.                                                                         |
+| `Name`    | `string`            | The json name of the field.                                                                     |
+| `Render`  | `string`            | The render tag of the field, such as bytes.                                                     |
+
+### CatalogColumnKind
+
+What the field holds: value, values, object or list.
+
+A `string`, one of `value`, `values`, `object`, `list`.
 
 ### CatalogExample
 
@@ -96,37 +102,56 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CatalogField
 
-| Field      | Type       | Description                                                                                                         |
-| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
-| `Doc`      | `string`   | What the field is.                                                                                                  |
-| `In`       | `string`   | Where the field goes in the request: path, query or body. It is one of: path, query, body.                          |
-| `Kind`     | `string`   | How a form takes the value: string, number, bool, list or object. It is one of: string, number, bool, list, object. |
-| `Name`     | `string`   | The json name of the field.                                                                                         |
-| `Options`  | `[]string` | The values of a oneof rule.                                                                                         |
-| `Required` | `bool`     | The request needs the field.                                                                                        |
-| `Secret`   | `bool`     | The field is a secret.                                                                                              |
+| Field      | Type               | Description                                                                                                         |
+| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `Doc`      | `string`           | What the field is.                                                                                                  |
+| `In`       | `CatalogFieldIn`   | Where the field goes in the request: path, query or body. It is one of: path, query, body.                          |
+| `Kind`     | `CatalogFieldKind` | How a form takes the value: string, number, bool, list or object. It is one of: string, number, bool, list, object. |
+| `Name`     | `string`           | The json name of the field.                                                                                         |
+| `Options`  | `[]string`         | The values of a oneof rule.                                                                                         |
+| `Required` | `bool`             | The request needs the field.                                                                                        |
+| `Secret`   | `bool`             | The field is a secret.                                                                                              |
+
+### CatalogFieldIn
+
+Where the field goes in the request: path, query or body.
+
+A `string`, one of `path`, `query`, `body`.
+
+### CatalogFieldKind
+
+How a form takes the value: string, number, bool, list or object.
+
+A `string`, one of `string`, `number`, `bool`, `list`, `object`.
 
 ### CatalogMethod
 
-| Field        | Type               | Description                                                                                                                      |
-| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `Calls`      | `[]CatalogCall`    | The calls that the examples of the method make to other behaviors.                                                               |
-| `Columns`    | `[]CatalogColumn`  | The fields of the rows that the method answers, as the CLI's output reads them.                                                  |
-| `Disruption` | `string`           | What the method interrupts.                                                                                                      |
-| `Disruptive` | `bool`             | The method can interrupt a host, such as a reboot.                                                                               |
-| `Doc`        | `string`           | What the method does.                                                                                                            |
-| `Examples`   | `[]CatalogExample` | The examples of the method.                                                                                                      |
-| `Fields`     | `[]CatalogField`   | The fields of the input.                                                                                                         |
-| `HttpMethod` | `string`           | The HTTP method of the route. An internal behavior has no route.                                                                 |
-| `Input`      | `string`           | The input type and its fields, a required one marked *.                                                                          |
-| `Kind`       | `string`           | What the method does to a host, by the verb of its permission: read, write or action. It is one of: read, write, action.         |
-| `Long`       | `string`           | The rest of what the method does.                                                                                                |
-| `Name`       | `string`           | The name of the method.                                                                                                          |
-| `Output`     | `string`           | The output type and its fields.                                                                                                  |
-| `Path`       | `string`           | The path of the route.                                                                                                           |
-| `Permission` | `Permission`       | A permission that osapi knows, as resource:verb.                                                                                 |
-| `Platforms`  | `[]string`         | The platforms that the method runs on: those that its On limits it to, else each platform of the behavior.                       |
-| `RunsOn`     | `[]string`         | The host platforms that the method runs on, as the agent decides, and * for a Linux host whose platform gohai has no family for. |
+| Field        | Type                | Description                                                                                                                      |
+| ------------ | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `Calls`      | `[]CatalogCall`     | The calls that the examples of the method make to other behaviors.                                                               |
+| `Columns`    | `[]CatalogColumn`   | The fields of the rows that the method answers, as the CLI's output reads them.                                                  |
+| `Disruption` | `string`            | What the method interrupts.                                                                                                      |
+| `Disruptive` | `bool`              | The method can interrupt a host, such as a reboot.                                                                               |
+| `Doc`        | `string`            | What the method does.                                                                                                            |
+| `Examples`   | `[]CatalogExample`  | The examples of the method.                                                                                                      |
+| `Fields`     | `[]CatalogField`    | The fields of the input.                                                                                                         |
+| `HttpMethod` | `string`            | The HTTP method of the route. An internal behavior has no route.                                                                 |
+| `Input`      | `string`            | The input type and its fields, a required one marked *.                                                                          |
+| `Kind`       | `CatalogMethodKind` | What the method does to a host, by the verb of its permission: read, write or action. It is one of: read, write, action.         |
+| `Long`       | `string`            | The rest of what the method does.                                                                                                |
+| `Name`       | `string`            | The name of the method.                                                                                                          |
+| `Output`     | `string`            | The output type and its fields.                                                                                                  |
+| `Path`       | `string`            | The path of the route.                                                                                                           |
+| `Permission` | `Permission`        | A permission that osapi knows, as resource:verb.                                                                                 |
+| `Platforms`  | `[]string`          | The platforms that the method runs on: those that its On limits it to, else each platform of the behavior.                       |
+| `RunsOn`     | `[]string`          | The host platforms that the method runs on, as the agent decides, and * for a Linux host whose platform gohai has no family for. |
+
+### CatalogMethodKind
+
+What the method does to a host, by the verb of its permission: read, write or
+action.
+
+A `string`, one of `read`, `write`, `action`.
 
 ### CatalogOperation
 
@@ -160,13 +185,59 @@ The fields of each type are the properties of its schema in the API's spec.
 
 An operationId of an operation that needs a permission.
 
-A `string`.
+A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
+`DeleteMachine`, `DeleteNodeCertificate`, `DeleteNodeDns`, `DeleteNodeDocker`,
+`DeleteNodeFile`, `DeleteNodeGroup`, `DeleteNodeImage`, `DeleteNodeInterface`,
+`DeleteNodeInterfaceRoute`, `DeleteNodeNtp`, `DeleteNodePackage`,
+`DeleteNodeSchedule`, `DeleteNodeService`, `DeleteNodeSysctl`, `DeleteNodeUser`,
+`DeleteNodeUserSshkey`, `DeleteSecret`, `DrainAgent`, `GetAdmission`,
+`GetAdmissions`, `GetAgentDetails`, `GetAgentFacts`, `GetAgents`,
+`GetAuditExport`, `GetAuditLogByID`, `GetAuditLogs`, `GetCatalog`,
+`GetFileByName`, `GetFileStale`, `GetFiles`, `GetHealthStatus`, `GetJobByID`,
+`GetJobs`, `GetNodeCertificate`, `GetNodeCertificateByKey`, `GetNodeDisk`,
+`GetNodeDnsByKey`, `GetNodeDocker`, `GetNodeDockerByKey`, `GetNodeFile`,
+`GetNodeGroup`, `GetNodeGroupByKey`, `GetNodeHostname`, `GetNodeImage`,
+`GetNodeInterface`, `GetNodeInterfaceByKey`, `GetNodeInterfaceRoute`,
+`GetNodeLoad`, `GetNodeLog`, `GetNodeLogSource`, `GetNodeMemory`, `GetNodeNtp`,
+`GetNodeOs`, `GetNodePackage`, `GetNodePackageByKey`, `GetNodePackageUpdates`,
+`GetNodeProcess`, `GetNodeProcessByKey`, `GetNodeSchedule`,
+`GetNodeScheduleByKey`, `GetNodeService`, `GetNodeServiceByKey`,
+`GetNodeStatus`, `GetNodeSysctl`, `GetNodeSysctlByKey`, `GetNodeTimezone`,
+`GetNodeUptime`, `GetNodeUser`, `GetNodeUserByKey`, `GetNodeUserSshkey`,
+`GetSecret`, `GetSecretValue`, `GetSecretVaults`, `GetSecrets`, `GetTrace`,
+`PostFile`, `PostNodeCertificate`, `PostNodeCommandExec`,
+`PostNodeCommandShell`, `PostNodeConnectivityPing`, `PostNodeDocker`,
+`PostNodeDockerExec`, `PostNodeDockerStart`, `PostNodeDockerStop`,
+`PostNodeGroup`, `PostNodeImagePull`, `PostNodeInterface`,
+`PostNodeInterfaceRoute`, `PostNodeNtp`, `PostNodePackage`,
+`PostNodePowerReboot`, `PostNodePowerShutdown`, `PostNodeProcessSignal`,
+`PostNodeSchedule`, `PostNodeService`, `PostNodeServiceDisable`,
+`PostNodeServiceEnable`, `PostNodeServiceRestart`, `PostNodeServiceStart`,
+`PostNodeServiceStop`, `PostNodeSysctl`, `PostNodeUser`, `PostNodeUserSshkey`,
+`PutFileByName`, `PutNodeCertificate`, `PutNodeDns`, `PutNodeFile`,
+`PutNodeGroup`, `PutNodeHostname`, `PutNodeInterface`, `PutNodeInterfaceRoute`,
+`PutNodeNtp`, `PutNodePackageUpdates`, `PutNodeSchedule`, `PutNodeService`,
+`PutNodeSysctl`, `PutNodeTimezone`, `PutNodeUser`, `PutNodeUserPassword`,
+`PutSecret`, `RejectMachine`, `RetryJobByID`, `RevokeMachine`, `UndrainAgent`.
 
 ### Permission
 
 A permission that osapi knows, as resource:verb.
 
-A `string`.
+A `string`, one of `health:read`, `trace:read`, `secret:use`, `secret:reveal`,
+`certificate:read`, `certificate:write`, `command:execute`, `command:shell`,
+`connectivity:execute`, `disk:read`, `dns:read`, `dns:write`, `docker:read`,
+`docker:write`, `docker:execute`, `docker:exec`, `file:read`, `file:write`,
+`group:read`, `group:write`, `hostname:read`, `hostname:write`, `image:read`,
+`image:execute`, `image:write`, `interface:read`, `interface:write`,
+`load:read`, `log:read`, `memory:read`, `ntp:read`, `ntp:write`, `os:read`,
+`package:read`, `package:write`, `power:execute`, `process:read`,
+`process:execute`, `schedule:read`, `schedule:write`, `service:read`,
+`service:write`, `service:execute`, `status:read`, `sysctl:read`,
+`sysctl:write`, `timezone:read`, `timezone:write`, `uptime:read`, `user:read`,
+`user:write`, `admission:read`, `admission:write`, `agent:read`, `agent:write`,
+`audit:read`, `catalog:read`, `job:read`, `job:write`, `secret:read`,
+`secret:write`.
 
 ## Example
 

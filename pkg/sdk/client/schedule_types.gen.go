@@ -2,6 +2,29 @@
 
 package client
 
+// ScheduleCreateRequestContentType: The content type: raw, or template to
+// render the object with the agent's facts and vars; the object's own when
+// empty.
+type ScheduleCreateRequestContentType string
+
+// The values of ScheduleCreateRequestContentType.
+const (
+	ScheduleCreateRequestContentTypeRaw      ScheduleCreateRequestContentType = "raw"
+	ScheduleCreateRequestContentTypeTemplate ScheduleCreateRequestContentType = "template"
+)
+
+// ScheduleCreateRequestInterval: The interval of a script in /etc/cron.daily
+// and the like; give it or schedule.
+type ScheduleCreateRequestInterval string
+
+// The values of ScheduleCreateRequestInterval.
+const (
+	ScheduleCreateRequestIntervalHourly  ScheduleCreateRequestInterval = "hourly"
+	ScheduleCreateRequestIntervalDaily   ScheduleCreateRequestInterval = "daily"
+	ScheduleCreateRequestIntervalWeekly  ScheduleCreateRequestInterval = "weekly"
+	ScheduleCreateRequestIntervalMonthly ScheduleCreateRequestInterval = "monthly"
+)
+
 // ScheduleEntry is the ScheduleEntry of the spec.
 type ScheduleEntry struct {
 	// Error message if the agent failed.
@@ -27,11 +50,22 @@ type ScheduleEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ScheduleEntryStatus `json:"status"`
 
 	// The user it runs as.
 	User string `json:"user,omitempty"`
 }
+
+// ScheduleEntryStatus: The status of the operation for this host.
+type ScheduleEntryStatus string
+
+// The values of ScheduleEntryStatus.
+const (
+	ScheduleEntryStatusOk      ScheduleEntryStatus = "ok"
+	ScheduleEntryStatusFailed  ScheduleEntryStatus = "failed"
+	ScheduleEntryStatusSkipped ScheduleEntryStatus = "skipped"
+	ScheduleEntryStatusTimeout ScheduleEntryStatus = "timeout"
+)
 
 // ScheduleResult is the ScheduleResult of the spec.
 type ScheduleResult struct {
@@ -49,5 +83,26 @@ type ScheduleResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ScheduleResultStatus `json:"status"`
 }
+
+// ScheduleResultStatus: The status of the operation for this host.
+type ScheduleResultStatus string
+
+// The values of ScheduleResultStatus.
+const (
+	ScheduleResultStatusOk      ScheduleResultStatus = "ok"
+	ScheduleResultStatusFailed  ScheduleResultStatus = "failed"
+	ScheduleResultStatusSkipped ScheduleResultStatus = "skipped"
+	ScheduleResultStatusTimeout ScheduleResultStatus = "timeout"
+)
+
+// ScheduleUpdateRequestContentType: The content type, raw or template; the
+// object's own when empty.
+type ScheduleUpdateRequestContentType string
+
+// The values of ScheduleUpdateRequestContentType.
+const (
+	ScheduleUpdateRequestContentTypeRaw      ScheduleUpdateRequestContentType = "raw"
+	ScheduleUpdateRequestContentTypeTemplate ScheduleUpdateRequestContentType = "template"
+)

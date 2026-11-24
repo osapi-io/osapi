@@ -47,7 +47,7 @@ The last entry of one unit at info or above, `go run log.go list-2`:
 ```go
 resp, err := c.Log.List(ctx, target, client.LogListParams{
 	Lines:    1,
-	Priority: "info",
+	Priority: client.GetNodeLogPriority("info"),
 	Since:    "1 hour ago",
 	Unit:     "nginx.service",
 })
@@ -57,18 +57,31 @@ resp, err := c.Log.List(ctx, target, client.LogListParams{
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### GetNodeLogPriority
+
+Only the entries at this priority or above.
+
+A `string`, one of `emerg`, `alert`, `crit`, `err`, `warning`, `notice`, `info`,
+`debug`.
+
 ### LogEntry
 
-| Field       | Type     | Description                                                                            |
-| ----------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`     | `string` | Error message if the agent failed.                                                     |
-| `Hostname`  | `string` | Hostname of the agent that produced this result.                                       |
-| `Message`   | `string` | The message.                                                                           |
-| `PID`       | `int`    | The process that wrote it.                                                             |
-| `Priority`  | `string` | Its priority, by name.                                                                 |
-| `Status`    | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Timestamp` | `string` | When journald recorded it, in RFC 3339.                                                |
-| `Unit`      | `string` | The syslog identifier that wrote it.                                                   |
+| Field       | Type             | Description                                                                            |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `Error`     | `string`         | Error message if the agent failed.                                                     |
+| `Hostname`  | `string`         | Hostname of the agent that produced this result.                                       |
+| `Message`   | `string`         | The message.                                                                           |
+| `PID`       | `int`            | The process that wrote it.                                                             |
+| `Priority`  | `string`         | Its priority, by name.                                                                 |
+| `Status`    | `LogEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Timestamp` | `string`         | When journald recorded it, in RFC 3339.                                                |
+| `Unit`      | `string`         | The syslog identifier that wrote it.                                                   |
+
+### LogEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

@@ -142,27 +142,39 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### PackageInstalled
 
-| Field          | Type     | Description                                                                            |
-| -------------- | -------- | -------------------------------------------------------------------------------------- |
-| `Architecture` | `string` | The architecture it is built for, such as amd64.                                       |
-| `Description`  | `string` | Its one-line summary.                                                                  |
-| `Error`        | `string` | Error message if the agent failed.                                                     |
-| `Hostname`     | `string` | Hostname of the agent that produced this result.                                       |
-| `Manager`      | `string` | The package database that has it: dpkg, rpm or brew.                                   |
-| `Name`         | `string` | The package.                                                                           |
-| `Size`         | `int64`  | Its installed size in bytes.                                                           |
-| `Status`       | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Version`      | `string` | The installed version.                                                                 |
+| Field          | Type                     | Description                                                                            |
+| -------------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `Architecture` | `string`                 | The architecture it is built for, such as amd64.                                       |
+| `Description`  | `string`                 | Its one-line summary.                                                                  |
+| `Error`        | `string`                 | Error message if the agent failed.                                                     |
+| `Hostname`     | `string`                 | Hostname of the agent that produced this result.                                       |
+| `Manager`      | `string`                 | The package database that has it: dpkg, rpm or brew.                                   |
+| `Name`         | `string`                 | The package.                                                                           |
+| `Size`         | `int64`                  | Its installed size in bytes.                                                           |
+| `Status`       | `PackageInstalledStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Version`      | `string`                 | The installed version.                                                                 |
+
+### PackageInstalledStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### PackageResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The package.                                                                           |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                  | Description                                                                            |
+| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                | Whether the host changed.                                                              |
+| `Error`    | `string`              | Error message if the agent failed.                                                     |
+| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`              | The package.                                                                           |
+| `Status`   | `PackageResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### PackageResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

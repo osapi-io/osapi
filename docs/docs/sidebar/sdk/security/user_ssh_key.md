@@ -154,25 +154,37 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UserSshkeyKey
 
-| Field         | Type     | Description                                                                            |
-| ------------- | -------- | -------------------------------------------------------------------------------------- |
-| `Comment`     | `string` | The comment after the key, such as alice@laptop.                                       |
-| `Error`       | `string` | Error message if the agent failed.                                                     |
-| `Fingerprint` | `string` | The SHA256 fingerprint of the key.                                                     |
-| `Hostname`    | `string` | Hostname of the agent that produced this result.                                       |
-| `Options`     | `string` | The options before the key, such as from="10.0.0.0/8".                                 |
-| `Status`      | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Type`        | `string` | The key type, such as ssh-ed25519.                                                     |
+| Field         | Type                  | Description                                                                            |
+| ------------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `Comment`     | `string`              | The comment after the key, such as alice@laptop.                                       |
+| `Error`       | `string`              | Error message if the agent failed.                                                     |
+| `Fingerprint` | `string`              | The SHA256 fingerprint of the key.                                                     |
+| `Hostname`    | `string`              | Hostname of the agent that produced this result.                                       |
+| `Options`     | `string`              | The options before the key, such as from="10.0.0.0/8".                                 |
+| `Status`      | `UserSshkeyKeyStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Type`        | `string`              | The key type, such as ssh-ed25519.                                                     |
+
+### UserSshkeyKeyStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### UserSshkeyResult
 
-| Field         | Type     | Description                                                                            |
-| ------------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`     | `bool`   | Whether the host changed.                                                              |
-| `Error`       | `string` | Error message if the agent failed.                                                     |
-| `Fingerprint` | `string` | The SHA256 fingerprint of the key.                                                     |
-| `Hostname`    | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`      | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field         | Type                     | Description                                                                            |
+| ------------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `Changed`     | `bool`                   | Whether the host changed.                                                              |
+| `Error`       | `string`                 | Error message if the agent failed.                                                     |
+| `Fingerprint` | `string`                 | The SHA256 fingerprint of the key.                                                     |
+| `Hostname`    | `string`                 | Hostname of the agent that produced this result.                                       |
+| `Status`      | `UserSshkeyResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### UserSshkeyResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

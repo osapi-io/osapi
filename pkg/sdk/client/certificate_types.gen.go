@@ -38,12 +38,23 @@ type CertificateEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status CertificateEntryStatus `json:"status"`
 
 	// Its subject, such as CN=ISRG Root X1,O=Internet Security Research
 	// Group,C=US.
 	Subject string `json:"subject,omitempty"`
 }
+
+// CertificateEntryStatus: The status of the operation for this host.
+type CertificateEntryStatus string
+
+// The values of CertificateEntryStatus.
+const (
+	CertificateEntryStatusOk      CertificateEntryStatus = "ok"
+	CertificateEntryStatusFailed  CertificateEntryStatus = "failed"
+	CertificateEntryStatusSkipped CertificateEntryStatus = "skipped"
+	CertificateEntryStatusTimeout CertificateEntryStatus = "timeout"
+)
 
 // CertificateResult is the CertificateResult of the spec.
 type CertificateResult struct {
@@ -61,5 +72,16 @@ type CertificateResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status CertificateResultStatus `json:"status"`
 }
+
+// CertificateResultStatus: The status of the operation for this host.
+type CertificateResultStatus string
+
+// The values of CertificateResultStatus.
+const (
+	CertificateResultStatusOk      CertificateResultStatus = "ok"
+	CertificateResultStatusFailed  CertificateResultStatus = "failed"
+	CertificateResultStatusSkipped CertificateResultStatus = "skipped"
+	CertificateResultStatusTimeout CertificateResultStatus = "timeout"
+)

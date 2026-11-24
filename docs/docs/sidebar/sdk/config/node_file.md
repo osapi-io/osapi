@@ -120,35 +120,60 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### FileDeleteResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Path`     | `string` | Absolute path of the file.                                                             |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                     | Description                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                   | Whether the host changed.                                                              |
+| `Error`    | `string`                 | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                 | Hostname of the agent that produced this result.                                       |
+| `Path`     | `string`                 | Absolute path of the file.                                                             |
+| `Status`   | `FileDeleteResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### FileDeleteResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### FileStatus
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Path`     | `string` | Absolute path of the file.                                                             |
-| `SHA256`   | `string` | SHA-256 of the file on the host, when it is there.                                     |
-| `State`    | `string` | in-sync, drifted, missing or unmanaged.                                                |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type               | Description                                                                            |
+| ---------- | ------------------ | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`           | Error message if the agent failed.                                                     |
+| `Hostname` | `string`           | Hostname of the agent that produced this result.                                       |
+| `Path`     | `string`           | Absolute path of the file.                                                             |
+| `SHA256`   | `string`           | SHA-256 of the file on the host, when it is there.                                     |
+| `State`    | `string`           | in-sync, drifted, missing or unmanaged.                                                |
+| `Status`   | `FileStatusStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### FileStatusStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### FileUpdateRequestContentType
+
+How the object is written: raw as it is, or template rendered with .Facts, .Vars
+and .Hostname; the object's own when empty.
+
+A `string`, one of `raw`, `template`.
 
 ### FileUpdateResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Path`     | `string` | Absolute path of the file.                                                             |
-| `SHA256`   | `string` | SHA-256 of the content that the file holds.                                            |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                     | Description                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                   | Whether the host changed.                                                              |
+| `Error`    | `string`                 | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                 | Hostname of the agent that produced this result.                                       |
+| `Path`     | `string`                 | Absolute path of the file.                                                             |
+| `SHA256`   | `string`                 | SHA-256 of the content that the file holds.                                            |
+| `Status`   | `FileUpdateResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### FileUpdateResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### NodeFileDeleteInput
 
@@ -158,15 +183,15 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### NodeFileUpdateInput
 
-| Field         | Type                | Description                                                                                                                                               |
-| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ContentType` | `string`            | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty. It is one of: raw, template. |
-| `Group`       | `string`            | Group that owns the file; left as written when empty.                                                                                                     |
-| `Mode`        | `string`            | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                                           |
-| `ObjectName`  | `string`            | The object of the object store, from osapi client file list.                                                                                              |
-| `Owner`       | `string`            | User that owns the file; left as written when empty.                                                                                                      |
-| `Path`        | `string`            | Absolute path of the file on the host.                                                                                                                    |
-| `Vars`        | `map[string]string` | Variables of a template, as .Vars, each as key=value.                                                                                                     |
+| Field         | Type                           | Description                                                                                                                                               |
+| ------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `FileUpdateRequestContentType` | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty. It is one of: raw, template. |
+| `Group`       | `string`                       | Group that owns the file; left as written when empty.                                                                                                     |
+| `Mode`        | `string`                       | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                                           |
+| `ObjectName`  | `string`                       | The object of the object store, from osapi client file list.                                                                                              |
+| `Owner`       | `string`                       | User that owns the file; left as written when empty.                                                                                                      |
+| `Path`        | `string`                       | Absolute path of the file on the host.                                                                                                                    |
+| `Vars`        | `map[string]string`            | Variables of a template, as .Vars, each as key=value.                                                                                                     |
 
 ## Example
 

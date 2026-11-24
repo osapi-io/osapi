@@ -147,7 +147,7 @@ func runUpdate2(
 	resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
 		Groups: []string{"root"},
 		Home:   "/home/osapitest2",
-		Lock:   "locked",
+		Lock:   client.UserUpdateRequestLock("locked"),
 		Name:   "osapitest",
 	})
 	if err != nil {
@@ -164,7 +164,7 @@ func runUpdate3(
 	target string,
 ) error {
 	resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
-		Lock: "unlocked",
+		Lock: client.UserUpdateRequestLock("unlocked"),
 		Name: "osapitest",
 	})
 	if err != nil {

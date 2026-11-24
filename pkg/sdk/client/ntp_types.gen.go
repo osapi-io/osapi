@@ -15,8 +15,19 @@ type NtpResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status NtpResultStatus `json:"status"`
 }
+
+// NtpResultStatus: The status of the operation for this host.
+type NtpResultStatus string
+
+// The values of NtpResultStatus.
+const (
+	NtpResultStatusOk      NtpResultStatus = "ok"
+	NtpResultStatusFailed  NtpResultStatus = "failed"
+	NtpResultStatusSkipped NtpResultStatus = "skipped"
+	NtpResultStatusTimeout NtpResultStatus = "timeout"
+)
 
 // NtpStatus is the NtpStatus of the spec.
 type NtpStatus struct {
@@ -37,7 +48,7 @@ type NtpStatus struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status NtpStatusStatus `json:"status"`
 
 	// The NTP stratum of the host.
 	Stratum int `json:"stratum,omitempty"`
@@ -45,3 +56,14 @@ type NtpStatus struct {
 	// Whether chrony is synchronized to a source.
 	Synchronized bool `json:"synchronized,omitempty"`
 }
+
+// NtpStatusStatus: The status of the operation for this host.
+type NtpStatusStatus string
+
+// The values of NtpStatusStatus.
+const (
+	NtpStatusStatusOk      NtpStatusStatus = "ok"
+	NtpStatusStatusFailed  NtpStatusStatus = "failed"
+	NtpStatusStatusSkipped NtpStatusStatus = "skipped"
+	NtpStatusStatusTimeout NtpStatusStatus = "timeout"
+)

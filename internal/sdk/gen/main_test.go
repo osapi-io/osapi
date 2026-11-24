@@ -106,6 +106,20 @@ func (s *MainTestSuite) TestRun() {
 				s.Contains(job, "type JobListParams struct {")
 				s.Contains(job, `q.Set("limit", strconv.Itoa(params.Limit))`)
 				s.Contains(job, `q.Set("all", strconv.FormatBool(params.All))`)
+				s.Contains(job, "State GetJobsState\n")
+				s.Contains(
+					job,
+					"if params.State != \"\" {\n\t\tq.Set(\"state\", string(params.State))",
+				)
+				s.Contains(s.read("job_types.gen.go"),
+					"type GetJobsState string",
+					"the enum of a parameter is a type of its service")
+				s.Contains(s.read("job_types.gen.go"), `GetJobsStateQueued GetJobsState = "queued"`)
+				s.Contains(s.read("network_dns_types.gen.go"),
+					"Status DnsEntryStatus `json:\"status,omitzero\"`",
+					"the enum of a field is a type")
+				s.Contains(s.read("network_dns_types.gen.go"),
+					`DnsEntryStatusFailed DnsEntryStatus = "failed"`)
 				s.Contains(job, ") error {\n\treturn sendEmpty(")
 				s.Contains(s.read("node_file.gen.go"), `q.Set("path", path)`)
 			},

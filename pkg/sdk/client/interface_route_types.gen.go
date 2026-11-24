@@ -33,8 +33,19 @@ type InterfaceRouteEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status InterfaceRouteEntryStatus `json:"status"`
 }
+
+// InterfaceRouteEntryStatus: The status of the operation for this host.
+type InterfaceRouteEntryStatus string
+
+// The values of InterfaceRouteEntryStatus.
+const (
+	InterfaceRouteEntryStatusOk      InterfaceRouteEntryStatus = "ok"
+	InterfaceRouteEntryStatusFailed  InterfaceRouteEntryStatus = "failed"
+	InterfaceRouteEntryStatusSkipped InterfaceRouteEntryStatus = "skipped"
+	InterfaceRouteEntryStatusTimeout InterfaceRouteEntryStatus = "timeout"
+)
 
 // InterfaceRouteResult is the InterfaceRouteResult of the spec.
 type InterfaceRouteResult struct {
@@ -52,5 +63,16 @@ type InterfaceRouteResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status InterfaceRouteResultStatus `json:"status"`
 }
+
+// InterfaceRouteResultStatus: The status of the operation for this host.
+type InterfaceRouteResultStatus string
+
+// The values of InterfaceRouteResultStatus.
+const (
+	InterfaceRouteResultStatusOk      InterfaceRouteResultStatus = "ok"
+	InterfaceRouteResultStatusFailed  InterfaceRouteResultStatus = "failed"
+	InterfaceRouteResultStatusSkipped InterfaceRouteResultStatus = "skipped"
+	InterfaceRouteResultStatusTimeout InterfaceRouteResultStatus = "timeout"
+)

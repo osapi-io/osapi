@@ -27,11 +27,22 @@ type PackageInstalled struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status PackageInstalledStatus `json:"status"`
 
 	// The installed version.
 	Version string `json:"version,omitempty"`
 }
+
+// PackageInstalledStatus: The status of the operation for this host.
+type PackageInstalledStatus string
+
+// The values of PackageInstalledStatus.
+const (
+	PackageInstalledStatusOk      PackageInstalledStatus = "ok"
+	PackageInstalledStatusFailed  PackageInstalledStatus = "failed"
+	PackageInstalledStatusSkipped PackageInstalledStatus = "skipped"
+	PackageInstalledStatusTimeout PackageInstalledStatus = "timeout"
+)
 
 // PackageResult is the PackageResult of the spec.
 type PackageResult struct {
@@ -49,5 +60,16 @@ type PackageResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status PackageResultStatus `json:"status"`
 }
+
+// PackageResultStatus: The status of the operation for this host.
+type PackageResultStatus string
+
+// The values of PackageResultStatus.
+const (
+	PackageResultStatusOk      PackageResultStatus = "ok"
+	PackageResultStatusFailed  PackageResultStatus = "failed"
+	PackageResultStatusSkipped PackageResultStatus = "skipped"
+	PackageResultStatusTimeout PackageResultStatus = "timeout"
+)

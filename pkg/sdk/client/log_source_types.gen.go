@@ -15,5 +15,16 @@ type LogSourceSource struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status LogSourceSourceStatus `json:"status"`
 }
+
+// LogSourceSourceStatus: The status of the operation for this host.
+type LogSourceSourceStatus string
+
+// The values of LogSourceSourceStatus.
+const (
+	LogSourceSourceStatusOk      LogSourceSourceStatus = "ok"
+	LogSourceSourceStatusFailed  LogSourceSourceStatus = "failed"
+	LogSourceSourceStatusSkipped LogSourceSourceStatus = "skipped"
+	LogSourceSourceStatusTimeout LogSourceSourceStatus = "timeout"
+)

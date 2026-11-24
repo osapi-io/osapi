@@ -36,11 +36,22 @@ type ProcessEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ProcessEntryStatus `json:"status"`
 
 	// The user that runs it.
 	User string `json:"user,omitempty"`
 }
+
+// ProcessEntryStatus: The status of the operation for this host.
+type ProcessEntryStatus string
+
+// The values of ProcessEntryStatus.
+const (
+	ProcessEntryStatusOk      ProcessEntryStatus = "ok"
+	ProcessEntryStatusFailed  ProcessEntryStatus = "failed"
+	ProcessEntryStatusSkipped ProcessEntryStatus = "skipped"
+	ProcessEntryStatusTimeout ProcessEntryStatus = "timeout"
+)
 
 // ProcessResult is the ProcessResult of the spec.
 type ProcessResult struct {
@@ -61,5 +72,29 @@ type ProcessResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ProcessResultStatus `json:"status"`
 }
+
+// ProcessResultStatus: The status of the operation for this host.
+type ProcessResultStatus string
+
+// The values of ProcessResultStatus.
+const (
+	ProcessResultStatusOk      ProcessResultStatus = "ok"
+	ProcessResultStatusFailed  ProcessResultStatus = "failed"
+	ProcessResultStatusSkipped ProcessResultStatus = "skipped"
+	ProcessResultStatusTimeout ProcessResultStatus = "timeout"
+)
+
+// ProcessSignalRequestSignal: The signal: TERM, KILL, HUP, INT, USR1 or USR2.
+type ProcessSignalRequestSignal string
+
+// The values of ProcessSignalRequestSignal.
+const (
+	ProcessSignalRequestSignalTERM ProcessSignalRequestSignal = "TERM"
+	ProcessSignalRequestSignalKILL ProcessSignalRequestSignal = "KILL"
+	ProcessSignalRequestSignalHUP  ProcessSignalRequestSignal = "HUP"
+	ProcessSignalRequestSignalINT  ProcessSignalRequestSignal = "INT"
+	ProcessSignalRequestSignalUSR1 ProcessSignalRequestSignal = "USR1"
+	ProcessSignalRequestSignalUSR2 ProcessSignalRequestSignal = "USR2"
+)

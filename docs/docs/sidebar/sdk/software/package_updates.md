@@ -75,23 +75,35 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### PackageUpdatesAvailable
 
-| Field            | Type     | Description                                                                            |
-| ---------------- | -------- | -------------------------------------------------------------------------------------- |
-| `CurrentVersion` | `string` | The installed version.                                                                 |
-| `Error`          | `string` | Error message if the agent failed.                                                     |
-| `Hostname`       | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`           | `string` | The package.                                                                           |
-| `NewVersion`     | `string` | The version the index has.                                                             |
-| `Status`         | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field            | Type                            | Description                                                                            |
+| ---------------- | ------------------------------- | -------------------------------------------------------------------------------------- |
+| `CurrentVersion` | `string`                        | The installed version.                                                                 |
+| `Error`          | `string`                        | Error message if the agent failed.                                                     |
+| `Hostname`       | `string`                        | Hostname of the agent that produced this result.                                       |
+| `Name`           | `string`                        | The package.                                                                           |
+| `NewVersion`     | `string`                        | The version the index has.                                                             |
+| `Status`         | `PackageUpdatesAvailableStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### PackageUpdatesAvailableStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### PackageUpdatesResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the refresh got new index data.                                                |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                         | Description                                                                            |
+| ---------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                       | Whether the refresh got new index data.                                                |
+| `Error`    | `string`                     | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                     | Hostname of the agent that produced this result.                                       |
+| `Status`   | `PackageUpdatesResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### PackageUpdatesResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

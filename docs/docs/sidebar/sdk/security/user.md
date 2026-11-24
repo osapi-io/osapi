@@ -160,7 +160,7 @@ Move the home, set the groups and lock it, `go run user.go update-2`:
 resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
 	Groups: []string{"root"},
 	Home:   "/home/osapitest2",
-	Lock:   "locked",
+	Lock:   client.UserUpdateRequestLock("locked"),
 	Name:   "osapitest",
 })
 ```
@@ -169,7 +169,7 @@ Unlock it, `go run user.go update-3`:
 
 ```go
 resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
-	Lock: "unlocked",
+	Lock: client.UserUpdateRequestLock("unlocked"),
 	Name: "osapitest",
 })
 ```
@@ -207,18 +207,24 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UserAccount
 
-| Field      | Type       | Description                                                                            |
-| ---------- | ---------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`   | Error message if the agent failed.                                                     |
-| `GID`      | `int`      | Its primary group ID.                                                                  |
-| `Groups`   | `[]string` | The groups it is a member of, besides its primary group.                               |
-| `Home`     | `string`   | Its home directory.                                                                    |
-| `Hostname` | `string`   | Hostname of the agent that produced this result.                                       |
-| `Locked`   | `bool`     | Whether a login with its password is refused.                                          |
-| `Name`     | `string`   | The user.                                                                              |
-| `Shell`    | `string`   | Its login shell.                                                                       |
-| `Status`   | `string`   | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `UID`      | `int`      | Its numeric user ID.                                                                   |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `GID`      | `int`               | Its primary group ID.                                                                  |
+| `Groups`   | `[]string`          | The groups it is a member of, besides its primary group.                               |
+| `Home`     | `string`            | Its home directory.                                                                    |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Locked`   | `bool`              | Whether a login with its password is refused.                                          |
+| `Name`     | `string`            | The user.                                                                              |
+| `Shell`    | `string`            | Its login shell.                                                                       |
+| `Status`   | `UserAccountStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `UID`      | `int`               | Its numeric user ID.                                                                   |
+
+### UserAccountStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### UserCreateInput
 
@@ -235,23 +241,36 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UserResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The user.                                                                              |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type               | Description                                                                            |
+| ---------- | ------------------ | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`             | Whether the host changed.                                                              |
+| `Error`    | `string`           | Error message if the agent failed.                                                     |
+| `Hostname` | `string`           | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`           | The user.                                                                              |
+| `Status`   | `UserResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### UserResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### UserUpdateInput
 
-| Field    | Type       | Description                                                                                                            |
-| -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `Name`   | `string`   | The name of the path. The user to remove, with its home directory, such as alice.                                      |
-| `Groups` | `[]string` | The groups it is a member of, which replace the groups it has.                                                         |
-| `Home`   | `string`   | Its home directory, which usermod moves the files to.                                                                  |
-| `Lock`   | `string`   | Whether to refuse logins with its password: locked refuses them, unlocked allows them. It is one of: locked, unlocked. |
-| `Shell`  | `string`   | Its login shell, such as /bin/bash.                                                                                    |
+| Field    | Type                    | Description                                                                                                            |
+| -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `Name`   | `string`                | The name of the path. The user to remove, with its home directory, such as alice.                                      |
+| `Groups` | `[]string`              | The groups it is a member of, which replace the groups it has.                                                         |
+| `Home`   | `string`                | Its home directory, which usermod moves the files to.                                                                  |
+| `Lock`   | `UserUpdateRequestLock` | Whether to refuse logins with its password: locked refuses them, unlocked allows them. It is one of: locked, unlocked. |
+| `Shell`  | `string`                | Its login shell, such as /bin/bash.                                                                                    |
+
+### UserUpdateRequestLock
+
+Whether to refuse logins with its password: locked refuses them, unlocked allows
+them.
+
+A `string`, one of `locked`, `unlocked`.
 
 ## Example
 

@@ -18,8 +18,19 @@ type FileDeleteResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status FileDeleteResultStatus `json:"status"`
 }
+
+// FileDeleteResultStatus: The status of the operation for this host.
+type FileDeleteResultStatus string
+
+// The values of FileDeleteResultStatus.
+const (
+	FileDeleteResultStatusOk      FileDeleteResultStatus = "ok"
+	FileDeleteResultStatusFailed  FileDeleteResultStatus = "failed"
+	FileDeleteResultStatusSkipped FileDeleteResultStatus = "skipped"
+	FileDeleteResultStatusTimeout FileDeleteResultStatus = "timeout"
+)
 
 // FileStatus is the FileStatus of the spec.
 type FileStatus struct {
@@ -40,8 +51,30 @@ type FileStatus struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status FileStatusStatus `json:"status"`
 }
+
+// FileStatusStatus: The status of the operation for this host.
+type FileStatusStatus string
+
+// The values of FileStatusStatus.
+const (
+	FileStatusStatusOk      FileStatusStatus = "ok"
+	FileStatusStatusFailed  FileStatusStatus = "failed"
+	FileStatusStatusSkipped FileStatusStatus = "skipped"
+	FileStatusStatusTimeout FileStatusStatus = "timeout"
+)
+
+// FileUpdateRequestContentType: How the object is written: raw as it is, or
+// template rendered with .Facts, .Vars and .Hostname; the object's own when
+// empty.
+type FileUpdateRequestContentType string
+
+// The values of FileUpdateRequestContentType.
+const (
+	FileUpdateRequestContentTypeRaw      FileUpdateRequestContentType = "raw"
+	FileUpdateRequestContentTypeTemplate FileUpdateRequestContentType = "template"
+)
 
 // FileUpdateResult is the FileUpdateResult of the spec.
 type FileUpdateResult struct {
@@ -62,5 +95,16 @@ type FileUpdateResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status FileUpdateResultStatus `json:"status"`
 }
+
+// FileUpdateResultStatus: The status of the operation for this host.
+type FileUpdateResultStatus string
+
+// The values of FileUpdateResultStatus.
+const (
+	FileUpdateResultStatusOk      FileUpdateResultStatus = "ok"
+	FileUpdateResultStatusFailed  FileUpdateResultStatus = "failed"
+	FileUpdateResultStatusSkipped FileUpdateResultStatus = "skipped"
+	FileUpdateResultStatusTimeout FileUpdateResultStatus = "timeout"
+)

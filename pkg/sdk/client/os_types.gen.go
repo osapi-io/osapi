@@ -15,5 +15,16 @@ type OsEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status OsEntryStatus `json:"status"`
 }
+
+// OsEntryStatus: The status of the operation for this host.
+type OsEntryStatus string
+
+// The values of OsEntryStatus.
+const (
+	OsEntryStatusOk      OsEntryStatus = "ok"
+	OsEntryStatusFailed  OsEntryStatus = "failed"
+	OsEntryStatusSkipped OsEntryStatus = "skipped"
+	OsEntryStatusTimeout OsEntryStatus = "timeout"
+)

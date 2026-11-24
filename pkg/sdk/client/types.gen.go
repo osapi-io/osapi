@@ -51,8 +51,36 @@ type ErrorResponse struct {
 	// (503). server_error: the controller failed; its log has the cause (500). It
 	// is one of: invalid_request, unauthorized, forbidden, not_found, not_managed,
 	// not_installed, conflict, unavailable, server_error.
-	Reason string `json:"reason,omitempty"`
+	Reason ErrorResponseReason `json:"reason,omitzero"`
 }
+
+// ErrorResponseReason: Why the request failed, as a word that a program can
+// branch on. The HTTP status is the class of the problem; the reason is the
+// cause, and the error is the message for a person, which can change between
+// releases. invalid_request: the request breaks a rule, such as a missing
+// field (400). unauthorized: no token, or a token that is not valid (401).
+// forbidden: the token does not have the permission (403). not_found: the host
+// or osapi does not have what the request names (404). not_managed: the item
+// is there, but osapi did not deploy it, so osapi does not change it (409).
+// not_installed: the host does not have a program that the request needs
+// (409). conflict: the state of the item blocks the request, such as a create
+// of one that exists (409). unavailable: a part that osapi depends on is down,
+// such as NATS (503). server_error: the controller failed; its log has the
+// cause (500).
+type ErrorResponseReason string
+
+// The values of ErrorResponseReason.
+const (
+	ErrorResponseReasonInvalidRequest ErrorResponseReason = "invalid_request"
+	ErrorResponseReasonUnauthorized   ErrorResponseReason = "unauthorized"
+	ErrorResponseReasonForbidden      ErrorResponseReason = "forbidden"
+	ErrorResponseReasonNotFound       ErrorResponseReason = "not_found"
+	ErrorResponseReasonNotManaged     ErrorResponseReason = "not_managed"
+	ErrorResponseReasonNotInstalled   ErrorResponseReason = "not_installed"
+	ErrorResponseReasonConflict       ErrorResponseReason = "conflict"
+	ErrorResponseReasonUnavailable    ErrorResponseReason = "unavailable"
+	ErrorResponseReasonServerError    ErrorResponseReason = "server_error"
+)
 
 // Release is the Release of the spec.
 type Release struct {

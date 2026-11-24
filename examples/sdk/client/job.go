@@ -55,7 +55,7 @@ func runList2(
 ) error {
 	resp, err := c.Job.List(ctx, client.JobListParams{
 		Limit:  3,
-		Status: "completed",
+		Status: client.GetJobsStatus("completed"),
 	})
 	if err != nil {
 		return err

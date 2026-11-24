@@ -81,22 +81,34 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### HostnameEntry
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The hostname of the host.                                                              |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                  | Description                                                                            |
+| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`              | Error message if the agent failed.                                                     |
+| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`              | The hostname of the host.                                                              |
+| `Status`   | `HostnameEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### HostnameEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### HostnameResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The hostname of the host.                                                              |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                   | Description                                                                            |
+| ---------- | ---------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                 | Whether the host changed.                                                              |
+| `Error`    | `string`               | Error message if the agent failed.                                                     |
+| `Hostname` | `string`               | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`               | The hostname of the host.                                                              |
+| `Status`   | `HostnameResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### HostnameResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### HostnameUpdateInput
 

@@ -45,12 +45,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### MemoryEntry
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Memory`   | `Usage`  |                                                                                        |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Memory`   | `Usage`             |                                                                                        |
+| `Status`   | `MemoryEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### MemoryEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### Usage
 

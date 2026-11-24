@@ -18,5 +18,16 @@ type UserPasswordResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status UserPasswordResultStatus `json:"status"`
 }
+
+// UserPasswordResultStatus: The status of the operation for this host.
+type UserPasswordResultStatus string
+
+// The values of UserPasswordResultStatus.
+const (
+	UserPasswordResultStatusOk      UserPasswordResultStatus = "ok"
+	UserPasswordResultStatusFailed  UserPasswordResultStatus = "failed"
+	UserPasswordResultStatusSkipped UserPasswordResultStatus = "skipped"
+	UserPasswordResultStatusTimeout UserPasswordResultStatus = "timeout"
+)

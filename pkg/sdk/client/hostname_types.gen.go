@@ -15,8 +15,19 @@ type HostnameEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status HostnameEntryStatus `json:"status"`
 }
+
+// HostnameEntryStatus: The status of the operation for this host.
+type HostnameEntryStatus string
+
+// The values of HostnameEntryStatus.
+const (
+	HostnameEntryStatusOk      HostnameEntryStatus = "ok"
+	HostnameEntryStatusFailed  HostnameEntryStatus = "failed"
+	HostnameEntryStatusSkipped HostnameEntryStatus = "skipped"
+	HostnameEntryStatusTimeout HostnameEntryStatus = "timeout"
+)
 
 // HostnameResult is the HostnameResult of the spec.
 type HostnameResult struct {
@@ -34,5 +45,16 @@ type HostnameResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status HostnameResultStatus `json:"status"`
 }
+
+// HostnameResultStatus: The status of the operation for this host.
+type HostnameResultStatus string
+
+// The values of HostnameResultStatus.
+const (
+	HostnameResultStatusOk      HostnameResultStatus = "ok"
+	HostnameResultStatusFailed  HostnameResultStatus = "failed"
+	HostnameResultStatusSkipped HostnameResultStatus = "skipped"
+	HostnameResultStatusTimeout HostnameResultStatus = "timeout"
+)

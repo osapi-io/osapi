@@ -78,7 +78,7 @@ func runStatus2(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: "agent"})
+	resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: client.GetHealthStatusComponent("agent")})
 	if err != nil {
 		return err
 	}

@@ -18,8 +18,19 @@ type DnsEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status DnsEntryStatus `json:"status"`
 }
+
+// DnsEntryStatus: The status of the operation for this host.
+type DnsEntryStatus string
+
+// The values of DnsEntryStatus.
+const (
+	DnsEntryStatusOk      DnsEntryStatus = "ok"
+	DnsEntryStatusFailed  DnsEntryStatus = "failed"
+	DnsEntryStatusSkipped DnsEntryStatus = "skipped"
+	DnsEntryStatusTimeout DnsEntryStatus = "timeout"
+)
 
 // DnsResult is the DnsResult of the spec.
 type DnsResult struct {
@@ -37,5 +48,16 @@ type DnsResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status DnsResultStatus `json:"status"`
 }
+
+// DnsResultStatus: The status of the operation for this host.
+type DnsResultStatus string
+
+// The values of DnsResultStatus.
+const (
+	DnsResultStatusOk      DnsResultStatus = "ok"
+	DnsResultStatusFailed  DnsResultStatus = "failed"
+	DnsResultStatusSkipped DnsResultStatus = "skipped"
+	DnsResultStatusTimeout DnsResultStatus = "timeout"
+)

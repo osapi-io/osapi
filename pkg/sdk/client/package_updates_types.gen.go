@@ -21,8 +21,19 @@ type PackageUpdatesAvailable struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status PackageUpdatesAvailableStatus `json:"status"`
 }
+
+// PackageUpdatesAvailableStatus: The status of the operation for this host.
+type PackageUpdatesAvailableStatus string
+
+// The values of PackageUpdatesAvailableStatus.
+const (
+	PackageUpdatesAvailableStatusOk      PackageUpdatesAvailableStatus = "ok"
+	PackageUpdatesAvailableStatusFailed  PackageUpdatesAvailableStatus = "failed"
+	PackageUpdatesAvailableStatusSkipped PackageUpdatesAvailableStatus = "skipped"
+	PackageUpdatesAvailableStatusTimeout PackageUpdatesAvailableStatus = "timeout"
+)
 
 // PackageUpdatesResult is the PackageUpdatesResult of the spec.
 type PackageUpdatesResult struct {
@@ -37,5 +48,16 @@ type PackageUpdatesResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status PackageUpdatesResultStatus `json:"status"`
 }
+
+// PackageUpdatesResultStatus: The status of the operation for this host.
+type PackageUpdatesResultStatus string
+
+// The values of PackageUpdatesResultStatus.
+const (
+	PackageUpdatesResultStatusOk      PackageUpdatesResultStatus = "ok"
+	PackageUpdatesResultStatusFailed  PackageUpdatesResultStatus = "failed"
+	PackageUpdatesResultStatusSkipped PackageUpdatesResultStatus = "skipped"
+	PackageUpdatesResultStatusTimeout PackageUpdatesResultStatus = "timeout"
+)

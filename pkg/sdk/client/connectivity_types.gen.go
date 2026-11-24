@@ -36,5 +36,16 @@ type ConnectivityPingResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ConnectivityPingResultStatus `json:"status"`
 }
+
+// ConnectivityPingResultStatus: The status of the operation for this host.
+type ConnectivityPingResultStatus string
+
+// The values of ConnectivityPingResultStatus.
+const (
+	ConnectivityPingResultStatusOk      ConnectivityPingResultStatus = "ok"
+	ConnectivityPingResultStatusFailed  ConnectivityPingResultStatus = "failed"
+	ConnectivityPingResultStatusSkipped ConnectivityPingResultStatus = "skipped"
+	ConnectivityPingResultStatusTimeout ConnectivityPingResultStatus = "timeout"
+)

@@ -46,13 +46,19 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UptimeEntry
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Seconds`  | `int`    | How long the host has run, in seconds.                                                 |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Uptime`   | `string` | How long the host has run, in days, hours and minutes.                                 |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Seconds`  | `int`               | How long the host has run, in seconds.                                                 |
+| `Status`   | `UptimeEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Uptime`   | `string`            | How long the host has run, in days, hours and minutes.                                 |
+
+### UptimeEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

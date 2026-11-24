@@ -19,7 +19,7 @@ type AdmissionService struct {
 type AdmissionListParams struct {
 	// State is the state of the query: only the records in this state: pending,
 	// admitted, rejected or revoked. The zero value leaves it out.
-	State string
+	State GetAdmissionsState
 }
 
 // List is the operation GetAdmissions: list admission records.
@@ -34,7 +34,7 @@ func (s *AdmissionService) List(
 ) (*Response[ListAdmissionResponse], error) {
 	q := url.Values{}
 	if params.State != "" {
-		q.Set("state", params.State)
+		q.Set("state", string(params.State))
 	}
 	return send[ListAdmissionResponse](ctx, s.client, http.MethodGet, "/api/admission", q, nil)
 }

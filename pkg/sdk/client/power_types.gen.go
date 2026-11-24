@@ -21,5 +21,16 @@ type PowerResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status PowerResultStatus `json:"status"`
 }
+
+// PowerResultStatus: The status of the operation for this host.
+type PowerResultStatus string
+
+// The values of PowerResultStatus.
+const (
+	PowerResultStatusOk      PowerResultStatus = "ok"
+	PowerResultStatusFailed  PowerResultStatus = "failed"
+	PowerResultStatusSkipped PowerResultStatus = "skipped"
+	PowerResultStatusTimeout PowerResultStatus = "timeout"
+)

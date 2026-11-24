@@ -55,12 +55,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### DiskEntry
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Disks`    | `[]Disk` | Each local filesystem.                                                                 |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type              | Description                                                                            |
+| ---------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `Disks`    | `[]Disk`          | Each local filesystem.                                                                 |
+| `Error`    | `string`          | Error message if the agent failed.                                                     |
+| `Hostname` | `string`          | Hostname of the agent that produced this result.                                       |
+| `Status`   | `DiskEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### DiskEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

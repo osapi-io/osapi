@@ -19,10 +19,22 @@ type CreateJobResponse struct {
 	Timestamp string `json:"timestamp,omitempty"`
 }
 
+// GetJobsStatus: Filter jobs by status.
+type GetJobsStatus string
+
+// The values of GetJobsStatus.
+const (
+	GetJobsStatusSubmitted      GetJobsStatus = "submitted"
+	GetJobsStatusProcessing     GetJobsStatus = "processing"
+	GetJobsStatusCompleted      GetJobsStatus = "completed"
+	GetJobsStatusFailed         GetJobsStatus = "failed"
+	GetJobsStatusPartialFailure GetJobsStatus = "partial_failure"
+)
+
 // JobDetailResponse is the JobDetailResponse of the spec.
 type JobDetailResponse struct {
 	// How far each agent got, by hostname.
-	AgentStates []JobDetailResponseAgentStates `json:"agent_states,omitempty"`
+	AgentStates []JobDetailResponseAgentStatesItem `json:"agent_states,omitempty"`
 
 	// The calls of other behaviors that the method made on each host, one line for
 	// each host, such as web-01: netplan update (changed) → managedfile update
@@ -49,7 +61,7 @@ type JobDetailResponse struct {
 	Operation JobDetailResponseOperation `json:"operation,omitzero"`
 
 	// What each agent answered, by hostname.
-	Responses []JobDetailResponseResponses `json:"responses,omitempty"`
+	Responses []JobDetailResponseResponsesItem `json:"responses,omitempty"`
 
 	// The result data if completed.
 	Result any `json:"result,omitempty"`
@@ -63,15 +75,15 @@ type JobDetailResponse struct {
 	Target string `json:"target,omitempty"`
 
 	// Chronological sequence of job lifecycle events.
-	Timeline []JobDetailResponseTimeline `json:"timeline,omitempty"`
+	Timeline []JobDetailResponseTimelineItem `json:"timeline,omitempty"`
 
 	// Last update timestamp.
 	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
-// JobDetailResponseAgentStates is the JobDetailResponseAgentStates of the
-// spec.
-type JobDetailResponseAgentStates struct {
+// JobDetailResponseAgentStatesItem is the JobDetailResponseAgentStatesItem of
+// the spec.
+type JobDetailResponseAgentStatesItem struct {
 	// Duration is the property duration.
 	Duration string `json:"duration,omitempty"`
 
@@ -83,8 +95,21 @@ type JobDetailResponseAgentStates struct {
 
 	// How far the agent got: acknowledged, started, completed, failed or skipped.
 	// It is one of: acknowledged, started, completed, failed, skipped.
-	Status string `json:"status,omitempty"`
+	Status JobDetailResponseAgentStatesItemStatus `json:"status,omitzero"`
 }
+
+// JobDetailResponseAgentStatesItemStatus: How far the agent got: acknowledged,
+// started, completed, failed or skipped.
+type JobDetailResponseAgentStatesItemStatus string
+
+// The values of JobDetailResponseAgentStatesItemStatus.
+const (
+	JobDetailResponseAgentStatesItemStatusAcknowledged JobDetailResponseAgentStatesItemStatus = "acknowledged"
+	JobDetailResponseAgentStatesItemStatusStarted      JobDetailResponseAgentStatesItemStatus = "started"
+	JobDetailResponseAgentStatesItemStatusCompleted    JobDetailResponseAgentStatesItemStatus = "completed"
+	JobDetailResponseAgentStatesItemStatusFailed       JobDetailResponseAgentStatesItemStatus = "failed"
+	JobDetailResponseAgentStatesItemStatusSkipped      JobDetailResponseAgentStatesItemStatus = "skipped"
+)
 
 // JobDetailResponseOperation: What the job asked for, with each secret masked.
 type JobDetailResponseOperation struct {
@@ -95,8 +120,9 @@ type JobDetailResponseOperation struct {
 	Type string `json:"type"`
 }
 
-// JobDetailResponseResponses is the JobDetailResponseResponses of the spec.
-type JobDetailResponseResponses struct {
+// JobDetailResponseResponsesItem is the JobDetailResponseResponsesItem of the
+// spec.
+type JobDetailResponseResponsesItem struct {
 	// Changed is the property changed.
 	Changed bool `json:"changed,omitempty"`
 
@@ -117,8 +143,9 @@ type JobDetailResponseResponses struct {
 	Steps []types.Step `json:"steps,omitempty"`
 }
 
-// JobDetailResponseTimeline is the JobDetailResponseTimeline of the spec.
-type JobDetailResponseTimeline struct {
+// JobDetailResponseTimelineItem is the JobDetailResponseTimelineItem of the
+// spec.
+type JobDetailResponseTimelineItem struct {
 	// Error details if applicable.
 	Error string `json:"error,omitempty"`
 

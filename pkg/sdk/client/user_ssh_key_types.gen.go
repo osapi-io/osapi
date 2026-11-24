@@ -21,11 +21,22 @@ type UserSshkeyKey struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status UserSshkeyKeyStatus `json:"status"`
 
 	// The key type, such as ssh-ed25519.
 	Type string `json:"type,omitempty"`
 }
+
+// UserSshkeyKeyStatus: The status of the operation for this host.
+type UserSshkeyKeyStatus string
+
+// The values of UserSshkeyKeyStatus.
+const (
+	UserSshkeyKeyStatusOk      UserSshkeyKeyStatus = "ok"
+	UserSshkeyKeyStatusFailed  UserSshkeyKeyStatus = "failed"
+	UserSshkeyKeyStatusSkipped UserSshkeyKeyStatus = "skipped"
+	UserSshkeyKeyStatusTimeout UserSshkeyKeyStatus = "timeout"
+)
 
 // UserSshkeyResult is the UserSshkeyResult of the spec.
 type UserSshkeyResult struct {
@@ -43,5 +54,16 @@ type UserSshkeyResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status UserSshkeyResultStatus `json:"status"`
 }
+
+// UserSshkeyResultStatus: The status of the operation for this host.
+type UserSshkeyResultStatus string
+
+// The values of UserSshkeyResultStatus.
+const (
+	UserSshkeyResultStatusOk      UserSshkeyResultStatus = "ok"
+	UserSshkeyResultStatusFailed  UserSshkeyResultStatus = "failed"
+	UserSshkeyResultStatusSkipped UserSshkeyResultStatus = "skipped"
+	UserSshkeyResultStatusTimeout UserSshkeyResultStatus = "timeout"
+)

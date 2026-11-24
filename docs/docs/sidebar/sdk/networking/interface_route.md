@@ -188,28 +188,40 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### InterfaceRouteEntry
 
-| Field         | Type     | Description                                                                            |
-| ------------- | -------- | -------------------------------------------------------------------------------------- |
-| `Destination` | `string` | The destination in CIDR notation, or default.                                          |
-| `Error`       | `string` | Error message if the agent failed.                                                     |
-| `Family`      | `string` | inet or inet6.                                                                         |
-| `Gateway`     | `string` | The gateway; empty for a route on the link.                                            |
-| `Hostname`    | `string` | Hostname of the agent that produced this result.                                       |
-| `Interface`   | `string` | The interface the route goes out of.                                                   |
-| `Metric`      | `int`    | The metric; 0 when the kernel gives none.                                              |
-| `Proto`       | `string` | Where the route came from, such as kernel, dhcp or static; empty on macOS.             |
-| `Scope`       | `string` | The scope, such as link; empty for a global route.                                     |
-| `Status`      | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field         | Type                        | Description                                                                            |
+| ------------- | --------------------------- | -------------------------------------------------------------------------------------- |
+| `Destination` | `string`                    | The destination in CIDR notation, or default.                                          |
+| `Error`       | `string`                    | Error message if the agent failed.                                                     |
+| `Family`      | `string`                    | inet or inet6.                                                                         |
+| `Gateway`     | `string`                    | The gateway; empty for a route on the link.                                            |
+| `Hostname`    | `string`                    | Hostname of the agent that produced this result.                                       |
+| `Interface`   | `string`                    | The interface the route goes out of.                                                   |
+| `Metric`      | `int`                       | The metric; 0 when the kernel gives none.                                              |
+| `Proto`       | `string`                    | Where the route came from, such as kernel, dhcp or static; empty on macOS.             |
+| `Scope`       | `string`                    | The scope, such as link; empty for a global route.                                     |
+| `Status`      | `InterfaceRouteEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### InterfaceRouteEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### InterfaceRouteResult
 
-| Field         | Type     | Description                                                                            |
-| ------------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`     | `bool`   | Whether the host changed.                                                              |
-| `Destination` | `string` | The destination of the route.                                                          |
-| `Error`       | `string` | Error message if the agent failed.                                                     |
-| `Hostname`    | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`      | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field         | Type                         | Description                                                                            |
+| ------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`     | `bool`                       | Whether the host changed.                                                              |
+| `Destination` | `string`                     | The destination of the route.                                                          |
+| `Error`       | `string`                     | Error message if the agent failed.                                                     |
+| `Hostname`    | `string`                     | Hostname of the agent that produced this result.                                       |
+| `Status`      | `InterfaceRouteResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### InterfaceRouteResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### InterfaceRouteUpdateInput
 

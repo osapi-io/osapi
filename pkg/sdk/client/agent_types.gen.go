@@ -80,7 +80,7 @@ type AgentInfo struct {
 	// The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A
 	// drain that the agent has not applied yet is Draining. It is one of: Ready,
 	// Draining, Cordoned, Pending.
-	State string `json:"state"`
+	State AgentInfoState `json:"state"`
 
 	// Agent state transition history.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
@@ -97,6 +97,18 @@ type AgentInfo struct {
 	// report it.
 	Version string `json:"version,omitempty"`
 }
+
+// AgentInfoState: The scheduling state of the agent: Ready, Draining, Cordoned
+// or Pending. A drain that the agent has not applied yet is Draining.
+type AgentInfoState string
+
+// The values of AgentInfoState.
+const (
+	AgentInfoStateReady    AgentInfoState = "Ready"
+	AgentInfoStateDraining AgentInfoState = "Draining"
+	AgentInfoStateCordoned AgentInfoState = "Cordoned"
+	AgentInfoStatePending  AgentInfoState = "Pending"
+)
 
 // FactKeyEntry is the FactKeyEntry of the spec.
 type FactKeyEntry struct {
@@ -155,7 +167,7 @@ type MemoryResponse struct {
 // NetworkInterfaceResponse is the NetworkInterfaceResponse of the spec.
 type NetworkInterfaceResponse struct {
 	// IP address family. It is one of: inet, inet6, dual.
-	Family string `json:"family,omitempty"`
+	Family NetworkInterfaceResponseFamily `json:"family,omitzero"`
 
 	// IPv4 is the property ipv4.
 	IPv4 string `json:"ipv4,omitempty"`
@@ -170,6 +182,16 @@ type NetworkInterfaceResponse struct {
 	Name string `json:"name"`
 }
 
+// NetworkInterfaceResponseFamily: IP address family.
+type NetworkInterfaceResponseFamily string
+
+// The values of NetworkInterfaceResponseFamily.
+const (
+	NetworkInterfaceResponseFamilyInet  NetworkInterfaceResponseFamily = "inet"
+	NetworkInterfaceResponseFamilyInet6 NetworkInterfaceResponseFamily = "inet6"
+	NetworkInterfaceResponseFamilyDual  NetworkInterfaceResponseFamily = "dual"
+)
+
 // NodeCondition is the NodeCondition of the spec.
 type NodeCondition struct {
 	// LastTransitionTime is the property last_transition_time.
@@ -180,8 +202,20 @@ type NodeCondition struct {
 
 	// Type is the property type. It is one of: MemoryPressure, HighLoad,
 	// DiskPressure, DrainStuck, ConsumersUnavailable.
-	Type string `json:"type"`
+	Type NodeConditionType `json:"type"`
 }
+
+// NodeConditionType is the NodeConditionType of the spec.
+type NodeConditionType string
+
+// The values of NodeConditionType.
+const (
+	NodeConditionTypeMemoryPressure       NodeConditionType = "MemoryPressure"
+	NodeConditionTypeHighLoad             NodeConditionType = "HighLoad"
+	NodeConditionTypeDiskPressure         NodeConditionType = "DiskPressure"
+	NodeConditionTypeDrainStuck           NodeConditionType = "DrainStuck"
+	NodeConditionTypeConsumersUnavailable NodeConditionType = "ConsumersUnavailable"
+)
 
 // OSInfoResponse: Operating system information.
 type OSInfoResponse struct {

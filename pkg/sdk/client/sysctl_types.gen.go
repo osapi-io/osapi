@@ -18,11 +18,22 @@ type SysctlEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status SysctlEntryStatus `json:"status"`
 
 	// Current runtime value.
 	Value string `json:"value,omitempty"`
 }
+
+// SysctlEntryStatus: The status of the operation for this host.
+type SysctlEntryStatus string
+
+// The values of SysctlEntryStatus.
+const (
+	SysctlEntryStatusOk      SysctlEntryStatus = "ok"
+	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
+	SysctlEntryStatusSkipped SysctlEntryStatus = "skipped"
+	SysctlEntryStatusTimeout SysctlEntryStatus = "timeout"
+)
 
 // SysctlMutationResult is the SysctlMutationResult of the spec.
 type SysctlMutationResult struct {
@@ -40,5 +51,16 @@ type SysctlMutationResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status SysctlMutationResultStatus `json:"status"`
 }
+
+// SysctlMutationResultStatus: The status of the operation for this host.
+type SysctlMutationResultStatus string
+
+// The values of SysctlMutationResultStatus.
+const (
+	SysctlMutationResultStatusOk      SysctlMutationResultStatus = "ok"
+	SysctlMutationResultStatusFailed  SysctlMutationResultStatus = "failed"
+	SysctlMutationResultStatusSkipped SysctlMutationResultStatus = "skipped"
+	SysctlMutationResultStatusTimeout SysctlMutationResultStatus = "timeout"
+)

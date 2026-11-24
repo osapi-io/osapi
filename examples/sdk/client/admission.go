@@ -55,7 +55,7 @@ func runList2(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: "pending"})
+	resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: client.GetAdmissionsState("pending")})
 	if err != nil {
 		return err
 	}

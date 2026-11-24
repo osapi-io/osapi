@@ -91,8 +91,14 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Service`       | `string`            | The service that made the span, such as osapi-agent.          |
 | `SpanID`        | `string`            | The span ID.                                                  |
 | `StartTime`     | `time.Time`         | When the span started.                                        |
-| `Status`        | `string`            | Whether the work of the span failed. It is one of: ok, error. |
+| `Status`        | `TraceSpanStatus`   | Whether the work of the span failed. It is one of: ok, error. |
 | `StatusMessage` | `string`            | The error of a failed span.                                   |
+
+### TraceSpanStatus
+
+Whether the work of the span failed.
+
+A `string`, one of `ok`, `error`.
 
 ## Example
 

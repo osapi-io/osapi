@@ -30,11 +30,22 @@ type UserAccount struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status UserAccountStatus `json:"status"`
 
 	// Its numeric user ID.
 	UID int `json:"uid,omitempty"`
 }
+
+// UserAccountStatus: The status of the operation for this host.
+type UserAccountStatus string
+
+// The values of UserAccountStatus.
+const (
+	UserAccountStatusOk      UserAccountStatus = "ok"
+	UserAccountStatusFailed  UserAccountStatus = "failed"
+	UserAccountStatusSkipped UserAccountStatus = "skipped"
+	UserAccountStatusTimeout UserAccountStatus = "timeout"
+)
 
 // UserResult is the UserResult of the spec.
 type UserResult struct {
@@ -52,5 +63,26 @@ type UserResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status UserResultStatus `json:"status"`
 }
+
+// UserResultStatus: The status of the operation for this host.
+type UserResultStatus string
+
+// The values of UserResultStatus.
+const (
+	UserResultStatusOk      UserResultStatus = "ok"
+	UserResultStatusFailed  UserResultStatus = "failed"
+	UserResultStatusSkipped UserResultStatus = "skipped"
+	UserResultStatusTimeout UserResultStatus = "timeout"
+)
+
+// UserUpdateRequestLock: Whether to refuse logins with its password: locked
+// refuses them, unlocked allows them.
+type UserUpdateRequestLock string
+
+// The values of UserUpdateRequestLock.
+const (
+	UserUpdateRequestLockLocked   UserUpdateRequestLock = "locked"
+	UserUpdateRequestLockUnlocked UserUpdateRequestLock = "unlocked"
+)

@@ -2,6 +2,16 @@
 
 package client
 
+// InterfaceCreateRequestType: The type: ethernet, the default, for an
+// interface the host has, or dummy for a dummy interface that netplan makes.
+type InterfaceCreateRequestType string
+
+// The values of InterfaceCreateRequestType.
+const (
+	InterfaceCreateRequestTypeEthernet InterfaceCreateRequestType = "ethernet"
+	InterfaceCreateRequestTypeDummy    InterfaceCreateRequestType = "dummy"
+)
+
 // InterfaceEntry is the InterfaceEntry of the spec.
 type InterfaceEntry struct {
 	// Each of its addresses, in CIDR notation.
@@ -39,8 +49,19 @@ type InterfaceEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status InterfaceEntryStatus `json:"status"`
 }
+
+// InterfaceEntryStatus: The status of the operation for this host.
+type InterfaceEntryStatus string
+
+// The values of InterfaceEntryStatus.
+const (
+	InterfaceEntryStatusOk      InterfaceEntryStatus = "ok"
+	InterfaceEntryStatusFailed  InterfaceEntryStatus = "failed"
+	InterfaceEntryStatusSkipped InterfaceEntryStatus = "skipped"
+	InterfaceEntryStatusTimeout InterfaceEntryStatus = "timeout"
+)
 
 // InterfaceResult is the InterfaceResult of the spec.
 type InterfaceResult struct {
@@ -58,5 +79,26 @@ type InterfaceResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status InterfaceResultStatus `json:"status"`
 }
+
+// InterfaceResultStatus: The status of the operation for this host.
+type InterfaceResultStatus string
+
+// The values of InterfaceResultStatus.
+const (
+	InterfaceResultStatusOk      InterfaceResultStatus = "ok"
+	InterfaceResultStatusFailed  InterfaceResultStatus = "failed"
+	InterfaceResultStatusSkipped InterfaceResultStatus = "skipped"
+	InterfaceResultStatusTimeout InterfaceResultStatus = "timeout"
+)
+
+// InterfaceUpdateRequestType: The type: ethernet, the default, for an
+// interface the host has, or dummy for a dummy interface that netplan makes.
+type InterfaceUpdateRequestType string
+
+// The values of InterfaceUpdateRequestType.
+const (
+	InterfaceUpdateRequestTypeEthernet InterfaceUpdateRequestType = "ethernet"
+	InterfaceUpdateRequestTypeDummy    InterfaceUpdateRequestType = "dummy"
+)

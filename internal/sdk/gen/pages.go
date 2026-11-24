@@ -311,7 +311,7 @@ func servicePage(
 				b.WriteString(doc + "\n\n")
 			}
 			if t.Scalar != "" {
-				fmt.Fprintf(&b, "A `%s`.\n", t.Scalar)
+				fmt.Fprintf(&b, "A `%s`%s.\n", t.Scalar, values(t.Enum))
 
 				continue
 			}
@@ -386,6 +386,18 @@ func methodText(
 	parts = append(parts, send)
 
 	return strings.Join(parts, "\n\n") + "\n"
+}
+
+// values is the text that lists the values of an enum, such as ", one of
+// `raw`, `template`", or "" when it has none.
+func values(
+	enum []string,
+) string {
+	if len(enum) == 0 {
+		return ""
+	}
+
+	return ", one of `" + strings.Join(enum, "`, `") + "`"
 }
 
 // fieldDoc is the description of a field of a type.
