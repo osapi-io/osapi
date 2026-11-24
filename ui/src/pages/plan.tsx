@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { usePlanCommands } from "@/hooks/use-plan-commands";
+import { StepInputs } from "@/components/domain/step-inputs";
 import { FileCode } from "lucide-react";
 import { useVimNav } from "@/hooks/use-vim-nav";
 import { useStepFocus } from "@/hooks/use-step-focus";
-import { useCommands } from "@/hooks/use-commands";
 import { useAuth } from "@/hooks/use-auth";
 import { useAgents } from "@/hooks/use-agents";
 import { useCatalog } from "@/hooks/use-catalog";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { StepCard } from "@/components/domain/step-card";
-import { StepForm } from "@/components/domain/step-form";
 import { StepPicker } from "@/components/domain/step-picker";
 import { PlanPreflight } from "@/components/domain/plan-preflight";
 import { PlanYAML } from "@/components/domain/plan-yaml";
@@ -20,14 +20,7 @@ import { ResultCard } from "@/components/domain/result-card";
 import { RunLinks } from "@/components/domain/run-links";
 import { JobChain } from "@/components/domain/job-chain";
 import { RunBar } from "@/components/domain/run-bar";
-import { ObjectUploadForm } from "@/components/domain/object-upload-form";
-import { ObjectDeleteForm } from "@/components/domain/object-delete-form";
-import {
-  deleteFileByName,
-  getFileStale,
-  getFiles,
-  postFile,
-} from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
+import { deleteFileByName } from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
 import { runMethod } from "@/lib/run-method";
 import type { StepDef } from "@/lib/catalog-index";
 import { permitted } from "@/lib/permissions";
@@ -39,25 +32,7 @@ import {
   type PlanStep,
 } from "@/lib/plan";
 import { traceIdOf } from "@/lib/trace";
-
-/** Runs a call of the controller: a step of the object store. */
-async function runController(step: PlanStep): Promise<{ data: unknown }> {
-  switch (step.run) {
-    case "objectstore.list":
-      return getFiles();
-    case "objectstore.upload":
-      return postFile({
-        name: step.with.name as string,
-        content_type: ((step.with.content_type as string) || "raw") as
-          "raw" | "template",
-        file: step.with._file as globalThis.File,
-      });
-    case "objectstore.delete":
-      return deleteFileByName(step.with.name as string);
-    default:
-      return getFileStale();
-  }
-}
+import { runController } from "@/lib/run-controller";
 
 /**
  * Plan is the composer: steps that run in order, each a method of a behavior
@@ -166,43 +141,16 @@ export function Plan() {
     setRunning(false);
   }, [steps, stepDef, setOutcome, scrollTo, scrollToResult]);
 
-  useCommands(
-    [
-      {
-        id: "cmd:run",
-        name: "run",
-        description: "Run the plan",
-        category: "actions",
-        action: () => {
-          if (canRun && !running) handleRun();
-        },
-      },
-      {
-        id: "cmd:clear",
-        name: "clear",
-        description: "Remove each step",
-        category: "actions",
-        action: () => clearSteps(),
-      },
-      {
-        id: "cmd:yaml",
-        name: "yaml",
-        description: "Show the plan as YAML",
-        category: "actions",
-        action: () => setYamlOpen(true),
-      },
-      ...defs
-        .filter((d) => allowed(d.permission))
-        .map((d) => ({
-          id: `step:${d.run}`,
-          name: d.run.replace(".", " "),
-          description: d.doc,
-          category: "steps",
-          action: () => add(d),
-        })),
-    ],
-    [canRun, running, handleRun, clearSteps, defs, allowed, add],
-  );
+  usePlanCommands({
+    canRun,
+    running,
+    run: handleRun,
+    clear: clearSteps,
+    showYAML: () => setYamlOpen(true),
+    defs,
+    allowed,
+    add,
+  });
 
   useVimNav({
     items: steps,
@@ -214,37 +162,6 @@ export function Plan() {
     executing: running,
     itemRefs: stepRefs,
   });
-
-  const renderForm = (step: PlanStep, def: StepDef) => {
-    if (def.method) {
-      return (
-        <StepForm
-          stepId={step.id}
-          method={def.method}
-          data={step.with}
-          onChange={(data) => setWith(step.id, data)}
-        />
-      );
-    }
-    if (step.run === "objectstore.upload") {
-      return (
-        <ObjectUploadForm
-          data={step.with}
-          onChange={(data) => setWith(step.id, data)}
-        />
-      );
-    }
-    if (step.run === "objectstore.delete") {
-      return (
-        <ObjectDeleteForm
-          stepId={step.id}
-          data={step.with}
-          onChange={(data) => setWith(step.id, data)}
-        />
-      );
-    }
-    return null;
-  };
 
   const items: React.ReactNode[] = [];
   steps.forEach((step, i) => {
@@ -270,7 +187,11 @@ export function Plan() {
         last={i === steps.length - 1}
         onFocusCard={() => setFocusedId(step.id)}
       >
-        {renderForm(step, def)}
+        <StepInputs
+          step={step}
+          def={def}
+          onChange={(data) => setWith(step.id, data)}
+        />
       </StepCard>,
     );
     const jobId = (step.result as { job_id?: unknown } | undefined)?.job_id;

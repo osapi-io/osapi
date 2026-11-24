@@ -30,7 +30,8 @@ import (
 const TypeScriptFile = "ui/src/lib/permissions.gen.ts"
 
 // TypeScript is the UI's list of permissions and the permissions of each
-// built-in role, as TypeScript, from AllPermissions and RolePermissions.
+// built-in role, as TypeScript, from AllPermissions and RolePermissions, and
+// the built-in roles in order with their descriptions.
 // go generate ./internal/behaviors/all writes it to TypeScriptFile, with
 // every behavior registered, so the UI checks the permissions that a token
 // can have. A test fails when the file is stale.
@@ -84,6 +85,20 @@ func TypeScript() string {
 		sb.WriteString("  ],\n")
 	}
 	sb.WriteString("};\n")
+
+	sb.WriteString("\n/** The built-in roles, in order, with what each is for. */\n")
+	sb.WriteString("export const BUILT_IN_ROLES = [\n")
+	for _, role := range Roles() {
+		fmt.Fprintf(&sb, "  {\n    name: %q,\n", role)
+		// Prettier breaks the line after the key when it does not fit.
+		if line := fmt.Sprintf("    description: %q,", RoleDescription(role)); len(line) <= 80 {
+			sb.WriteString(line + "\n")
+		} else {
+			fmt.Fprintf(&sb, "    description:\n      %q,\n", RoleDescription(role))
+		}
+		sb.WriteString("  },\n")
+	}
+	sb.WriteString("] as const;\n")
 
 	return sb.String()
 }

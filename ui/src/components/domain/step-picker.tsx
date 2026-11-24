@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ListBox } from "@/components/ui/list-box";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, Info, Lock, Plus } from "lucide-react";
 import { SearchBox } from "@/components/ui/search-box";
@@ -83,7 +84,7 @@ export function StepPicker({ steps, allowed, onAdd }: StepPickerProps) {
           <h3 className="mb-1 px-1 text-xs font-semibold text-text-muted">
             {a.label}
           </h3>
-          <ul className="overflow-hidden rounded-lg border border-border bg-card">
+          <ListBox>
             {a.groups.map((g) => {
               const isOpen = query !== "" || open.has(g.key);
               return (
@@ -142,7 +143,7 @@ export function StepPicker({ steps, allowed, onAdd }: StepPickerProps) {
                 </li>
               );
             })}
-          </ul>
+          </ListBox>
         </div>
       ))}
     </div>

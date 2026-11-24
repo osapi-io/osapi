@@ -4,10 +4,12 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { JobDetailResponseAgentStatesItemStatus } from './jobDetailResponseAgentStatesItemStatus';
 
 export type JobDetailResponseAgentStatesItem = {
   duration?: string;
   error?: string;
   hostname: string;
-  status?: string;
+  /** How far the agent got: acknowledged, started, completed, failed or skipped. */
+  status?: JobDetailResponseAgentStatesItemStatus;
 };

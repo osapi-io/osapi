@@ -67,6 +67,11 @@ export interface CatalogMethod {
   readonly path?: string;
   readonly permission?: string;
   readonly platforms: readonly string[];
+  /**
+   * The host platforms that it runs on, as the agent decides, and "*" for a
+   * Linux host whose platform gohai has no family for.
+   */
+  readonly runsOn: readonly string[];
   /** The input type and its fields, a required one marked *. */
   readonly input: string;
   /** The output type and its fields. */

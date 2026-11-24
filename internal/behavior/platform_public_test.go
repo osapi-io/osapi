@@ -168,15 +168,17 @@ func (s *PlatformPublicTestSuite) TestOn() {
 		wantRuns   bool
 		serves     behavior.PlatformName
 		wantServes bool
+		// wantOnHost is RunsOnHost: a provider for the host, and RunsOn.
+		wantOnHost bool
 	}{
 		{
 			name: "when the method names no platform", platforms: []behavior.PlatformName{"linux"},
-			host: "fedora", wantRuns: true, serves: "linux", wantServes: true,
+			host: "fedora", wantRuns: true, serves: "linux", wantServes: true, wantOnHost: true,
 		},
 		{
 			name: "when the host is the platform On names", on: []behavior.PlatformName{"debian"},
 			platforms: []behavior.PlatformName{"linux"}, host: "debian", wantRuns: true,
-			serves: "linux", wantServes: true,
+			serves: "linux", wantServes: true, wantOnHost: true,
 		},
 		{
 			name: "when the host is another distribution", on: []behavior.PlatformName{"debian"},
@@ -191,6 +193,7 @@ func (s *PlatformPublicTestSuite) TestOn() {
 			wantRuns:   true,
 			serves:     "darwin",
 			wantServes: false,
+			wantOnHost: true,
 		},
 		{
 			name: "when On names linux and the host is macOS", on: []behavior.PlatformName{"linux"},
@@ -218,6 +221,7 @@ func (s *PlatformPublicTestSuite) TestOn() {
 
 			s.Equal(tc.wantRuns, b.Methods[0].RunsOn(tc.host))
 			s.Equal(tc.wantServes, b.Serves(b.Methods[0], tc.serves))
+			s.Equal(tc.wantOnHost, b.RunsOnHost(b.Methods[0], tc.host))
 		})
 	}
 }

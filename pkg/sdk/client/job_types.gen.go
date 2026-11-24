@@ -79,7 +79,8 @@ type JobDetailResponseAgentStates struct {
 	// Hostname is the property hostname.
 	Hostname string `json:"hostname"`
 
-	// Status is the property status.
+	// How far the agent got: acknowledged, started, completed, failed or skipped.
+	// It is one of: acknowledged, started, completed, failed, skipped.
 	Status string `json:"status,omitempty"`
 }
 

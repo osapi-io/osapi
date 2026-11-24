@@ -1,41 +1,16 @@
-import { useEffect, useState } from "react";
 import { getHealthStatus } from "@/sdk/gen/health-check-api-health/health-check-api-health";
 import type { StatusResponse } from "@/sdk/gen/schemas";
+import { useAuth } from "@/hooks/use-auth";
+import { unwrap, usePolling } from "@/hooks/use-polling";
 
+/** The health of each component, each intervalMs. */
 export function useHealth(intervalMs = 10000) {
-  const [data, setData] = useState<StatusResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const poll = async () => {
-      try {
-        const result = await getHealthStatus();
-        if (!mounted) return;
-        if (result.status === 200) {
-          setData(result.data as StatusResponse);
-          setError(null);
-        } else {
-          setError("Failed to fetch health");
-        }
-        setLoading(false);
-      } catch (e) {
-        if (mounted) {
-          setError(e instanceof Error ? e.message : "Failed to fetch health");
-          setLoading(false);
-        }
-      }
-    };
-
-    poll();
-    const id = setInterval(poll, intervalMs);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, [intervalMs]);
-
+  const { canCall } = useAuth();
+  const { data, error, loading } = usePolling(
+    async () =>
+      unwrap<StatusResponse>(await getHealthStatus(), "Failed to fetch health"),
+    [],
+    { enabled: canCall("getHealthStatus"), intervalMs },
+  );
   return { data, error, loading };
 }

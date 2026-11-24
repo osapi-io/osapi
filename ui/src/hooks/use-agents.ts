@@ -1,46 +1,27 @@
-import { useEffect, useState, useCallback } from "react";
 import { getAgents } from "@/sdk/gen/agent-management-api-agent-operations/agent-management-api-agent-operations";
 import type { AgentInfo, ListAgentsResponse } from "@/sdk/gen/schemas";
+import { useAuth } from "@/hooks/use-auth";
+import { unwrap, usePolling } from "@/hooks/use-polling";
 
 export type { AgentInfo };
 
+/** The agents of the fleet, by hostname, each intervalMs. */
 export function useAgents(intervalMs = 10000) {
-  const [agents, setAgents] = useState<AgentInfo[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const doFetch = async () => {
-      try {
-        const result = await getAgents();
-        if (cancelled) return;
-        if (result.status === 200) {
-          // The registry gives no stable order, so the cards would swap
-          // places on each poll.
-          const items = [...(result.data as ListAgentsResponse).items];
-          items.sort((a, b) => a.hostname.localeCompare(b.hostname));
-          setAgents(items);
-          setError(null);
-        } else {
-          setError("Failed to fetch agents");
-        }
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Failed to fetch agents");
-      }
-      if (!cancelled) setLoading(false);
-    };
-    doFetch();
-    const id = setInterval(doFetch, intervalMs);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [intervalMs, refreshKey]);
-
-  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
-
-  return { agents, error, loading, refresh };
+  const { canCall } = useAuth();
+  const { data, error, loading, refresh } = usePolling(
+    async () => {
+      const body = unwrap<ListAgentsResponse>(
+        await getAgents(),
+        "Failed to fetch agents",
+      );
+      // The registry gives no stable order, so the cards would swap places
+      // on each poll.
+      return [...body.items].sort((a, b) =>
+        a.hostname.localeCompare(b.hostname),
+      );
+    },
+    [],
+    { enabled: canCall("getAgents"), intervalMs },
+  );
+  return { agents: data ?? [], error, loading, refresh };
 }

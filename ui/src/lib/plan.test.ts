@@ -9,7 +9,7 @@ import {
   planReducer,
   planYAML,
   preflight,
-  servesPlatform,
+  runsOnHost,
   stepStatus,
   targetHosts,
   type PlanStep,
@@ -126,12 +126,12 @@ describe("platforms", () => {
     expect(hostPlatform(agent("x"))).toBeUndefined();
   });
 
-  test("a method on linux runs on each Linux, not on macOS", () => {
-    expect(servesPlatform([], "darwin")).toBe(true);
-    expect(servesPlatform(["debian"], "debian")).toBe(true);
-    expect(servesPlatform(["linux"], "fedora linux")).toBe(true);
-    expect(servesPlatform(["linux"], "darwin")).toBe(false);
-    expect(servesPlatform(["debian"], "suse")).toBe(false);
+  test("a method runs on the hosts that its runsOn names", () => {
+    expect(runsOnHost(["debian"], "debian")).toBe(true);
+    expect(runsOnHost(["debian"], "suse")).toBe(false);
+    expect(runsOnHost(["debian", "fedora", "*"], "nixos")).toBe(true);
+    expect(runsOnHost(["debian"], "nixos")).toBe(false);
+    expect(runsOnHost(["debian", "*"], "darwin")).toBe(false);
   });
 });
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { TraceSpanStatus } from "@/sdk/gen/schemas";
 import { useNavigate, useParams } from "react-router-dom";
 import { Search, GitBranch } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -230,7 +231,7 @@ export function Traces() {
                   <div className="relative h-2 w-48 rounded bg-white/5">
                     <div
                       className={
-                        r.node.span.status === "error"
+                        r.node.span.status === TraceSpanStatus.error
                           ? "absolute h-2 rounded bg-status-error"
                           : "absolute h-2 rounded bg-primary"
                       }

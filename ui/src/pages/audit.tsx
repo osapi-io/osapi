@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { Pagination } from "@/components/ui/pagination";
+import { unwrap, usePolling } from "@/hooks/use-polling";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -10,18 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { KVList } from "@/components/ui/kv-list";
-import { CodeBlock } from "@/components/ui/code-block";
-import { RunLinks } from "@/components/domain/run-links";
-import { ChainSection } from "@/components/domain/step-tree";
 import {
   Loader2,
   Download,
   FileText,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -33,6 +28,8 @@ import type { AuditEntry, ListAuditResponse } from "@/sdk/gen/schemas";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
 import { formatTime } from "@/lib/format";
+import { AuditDetail } from "@/components/domain/audit-detail";
+import { FilterInput } from "@/components/ui/filter-input";
 
 const PAGE_SIZE = 20;
 
@@ -46,48 +43,11 @@ interface Filters {
   status: string;
 }
 
-// AuditDetail is one entry in full: who, what, the result, the chain of
-// calls that its job made on each host, and the links to its job and its
-// trace.
-function AuditDetail({ entry }: { entry: AuditEntry }) {
-  return (
-    <div className="space-y-3 px-2 py-2">
-      <KVList
-        pairs={[
-          ["User", entry.user],
-          ["Roles", entry.roles.join(", ") || "-"],
-          ["Targets", entry.targets?.join(", ") || "each host"],
-          ["Source IP", entry.source_ip],
-          ["Operation", entry.operation_id || "-"],
-          ["Method", entry.method],
-          ["Path", entry.path],
-          ["Status", String(entry.response_code)],
-          ["Duration", `${entry.duration_ms}ms`],
-          ["Time", formatTime(entry.timestamp)],
-          ["ID", entry.id],
-        ]}
-      />
-      {entry.request_summary && (
-        <div>
-          <Text variant="label" as="p" className="mb-1">
-            Request, with each secret replaced
-          </Text>
-          <CodeBlock variant="json">{entry.request_summary}</CodeBlock>
-        </div>
-      )}
-      <ChainSection hosts={entry.steps ?? []} lines={entry.chain} />
-      <RunLinks jobId={entry.job_id} traceId={entry.trace_id} />
-    </div>
-  );
-}
-
 export function Audit() {
   useVimScroll();
   const { canCall } = useAuth();
 
-  const [data, setData] = useState<ListAuditResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [exportError, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [offset, setOffset] = useState(0);
   // Reads are hidden at first: the UI's own polling reads fill the log, and
@@ -110,51 +70,33 @@ export function Audit() {
     return () => clearTimeout(t);
   }, [filters]);
 
-  const fetchLogs = useCallback(async () => {
-    try {
+  const logs = usePolling(
+    async () => {
       const status = Number(applied.status);
-      const result = await getAuditLogs({
-        limit: PAGE_SIZE,
-        offset,
-        writes: applied.reads ? undefined : true,
-        user: applied.user.trim() || undefined,
-        operation: applied.operation.trim() || undefined,
-        status: Number.isInteger(status) && status > 0 ? status : undefined,
-      });
-      if (result.status === 200) {
-        setData(result.data as ListAuditResponse);
-        setError(null);
-      } else {
-        setError("Failed to fetch audit logs");
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch audit logs");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, applied]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const poll = async () => {
-      if (!mounted) return;
-      await fetchLogs();
-    };
-
-    poll();
-    const id = setInterval(poll, 10000);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, [fetchLogs]);
+      return unwrap<ListAuditResponse>(
+        await getAuditLogs({
+          limit: PAGE_SIZE,
+          offset,
+          writes: applied.reads ? undefined : true,
+          user: applied.user.trim() || undefined,
+          operation: applied.operation.trim() || undefined,
+          status: Number.isInteger(status) && status > 0 ? status : undefined,
+        }),
+        "Failed to fetch audit logs",
+      );
+    },
+    [offset, applied],
+    { enabled: canCall("getAuditLogs") },
+  );
+  const { data, loading } = logs;
+  const error = exportError ?? logs.error;
 
   const handleExport = async () => {
     setExporting(true);
     try {
       const result = await getAuditExport();
       if (result.status === 200) {
+        setError(null);
         const exportData = result.data as ListAuditResponse;
         const blob = new Blob([JSON.stringify(exportData, null, 2)], {
           type: "application/json",
@@ -182,8 +124,6 @@ export function Audit() {
   const items = data?.items ?? [];
 
   const totalItems = data?.total_items ?? 0;
-  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
   return (
     <ContentArea>
@@ -336,62 +276,14 @@ export function Audit() {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <Text variant="muted">
-                Page {currentPage} of {totalPages}
-              </Text>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={offset === 0}
-                  onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={offset + PAGE_SIZE >= totalItems}
-                  onClick={() => setOffset(offset + PAGE_SIZE)}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            offset={offset}
+            limit={PAGE_SIZE}
+            total={totalItems}
+            onChange={setOffset}
+          />
         </>
       )}
     </ContentArea>
-  );
-}
-
-function FilterInput({
-  label,
-  value,
-  placeholder,
-  className = "w-48",
-  onChange,
-}: {
-  label: string;
-  value: string;
-  placeholder: string;
-  className?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className={className}>
-      <Text variant="label" as="label" className="mb-1 block">
-        {label}
-      </Text>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    </div>
   );
 }

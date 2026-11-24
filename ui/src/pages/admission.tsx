@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { unwrap, usePolling } from "@/hooks/use-polling";
+import { enumLabel } from "@/lib/format";
+import { GetAdmissionsState } from "@/sdk/gen/schemas";
 import { ContentArea } from "@/components/layout/content-area";
 import { AdmissionCard } from "@/components/domain/admission-card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -14,49 +16,27 @@ import { getAdmissions } from "@/sdk/gen/admission-api-admission/admission-api-a
 
 // The sections, in the order a reader acts on them: what waits for a
 // decision first, then what is in, then what was kept out.
-const sections = [
-  { state: "pending", title: "Pending" },
-  { state: "admitted", title: "Admitted" },
-  { state: "rejected", title: "Rejected" },
-  { state: "revoked", title: "Revoked" },
-] as const;
+const sections = Object.values(GetAdmissionsState).map((state) => ({
+  state,
+  title: enumLabel(state),
+}));
 
 export function Admission() {
   const { canCall } = useAuth();
-  const [error, setError] = useState<string | null>(null);
-  const [records, setRecords] = useState<Record[]>([]);
-  const [loading, setLoading] = useState(true);
-
   // A failed load shows as an error, as on the other pages, not as an
   // empty page that reads as no machines.
-  const fetchRecords = useCallback(async () => {
-    try {
-      const resp = await getAdmissions();
-      if (resp.status === 200) {
-        setRecords(resp.data.items ?? []);
-        setError(null);
-      } else {
-        setError(
-          (resp.data as { error?: string })?.error ??
-            "Failed to fetch admission records",
-        );
-      }
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Failed to fetch admission records",
-      );
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const initialFetch = setTimeout(fetchRecords, 0);
-    const interval = setInterval(fetchRecords, 10000);
-    return () => {
-      clearTimeout(initialFetch);
-      clearInterval(interval);
-    };
-  }, [fetchRecords]);
+  const admissions = usePolling(
+    async () =>
+      unwrap<{ items?: Record[] }>(
+        await getAdmissions(),
+        "Failed to fetch admission records",
+      ).items ?? [],
+    [],
+    { enabled: canCall("getAdmissions") },
+  );
+  const records = admissions.data ?? [];
+  const { error, loading } = admissions;
+  const fetchRecords = admissions.refresh;
 
   if (!canCall("getAdmissions")) {
     return <PermissionDenied title="Admission" what="admission records" />;

@@ -1,5 +1,4 @@
-import { useCallback, useRef, useSyncExternalStore } from "react";
-import { getJobByID } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
+import { JobDetailResponseAgentStatesItemStatus } from "@/sdk/gen/schemas";
 import type { JobDetailResponse } from "@/sdk/gen/schemas";
 import { Badge } from "@/components/ui/badge";
 import { IdBadge } from "@/components/ui/id-badge";
@@ -12,119 +11,7 @@ import { hostSteps } from "@/lib/steps";
 import { ChainSection } from "@/components/domain/step-tree";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { statusVariant } from "@/lib/status";
-
-// Shared state between inline pill + panel for the same job ID
-const jobStates = new Map<
-  string,
-  {
-    listeners: Set<() => void>;
-    expanded: boolean;
-    job: JobDetailResponse | null;
-    loading: boolean;
-    error: string | null;
-  }
->();
-
-function getJobState(jobId: string) {
-  if (!jobStates.has(jobId)) {
-    jobStates.set(jobId, {
-      listeners: new Set(),
-      expanded: false,
-      job: null,
-      loading: false,
-      error: null,
-    });
-  }
-  return jobStates.get(jobId)!;
-}
-
-function notify(jobId: string) {
-  const s = jobStates.get(jobId);
-  if (s) for (const fn of s.listeners) fn();
-}
-
-function update(
-  jobId: string,
-  patch: Partial<Omit<ReturnType<typeof getJobState>, "listeners">>,
-) {
-  const s = getJobState(jobId);
-  Object.assign(s, patch);
-  notify(jobId);
-}
-
-type JobSnapshot = {
-  expanded: boolean;
-  job: JobDetailResponse | null;
-  loading: boolean;
-  error: string | null;
-};
-
-function useJobDetail(jobId: string) {
-  const state = getJobState(jobId);
-  const cachedSnapshot = useRef<JobSnapshot | null>(null);
-
-  const subscribe = useCallback(
-    (cb: () => void) => {
-      state.listeners.add(cb);
-      return () => {
-        state.listeners.delete(cb);
-      };
-    },
-    [state],
-  );
-
-  const getSnapshot = useCallback((): JobSnapshot => {
-    const s = getJobState(jobId);
-    const prev = cachedSnapshot.current;
-    if (
-      prev &&
-      prev.expanded === s.expanded &&
-      prev.job === s.job &&
-      prev.loading === s.loading &&
-      prev.error === s.error
-    ) {
-      return prev;
-    }
-    const next: JobSnapshot = {
-      expanded: s.expanded,
-      job: s.job,
-      loading: s.loading,
-      error: s.error,
-    };
-    cachedSnapshot.current = next;
-    return next;
-  }, [jobId]);
-
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot);
-
-  const toggle = useCallback(async () => {
-    if (snapshot.expanded) {
-      update(jobId, { expanded: false });
-      return;
-    }
-
-    if (!snapshot.job && !snapshot.loading) {
-      update(jobId, { loading: true, error: null });
-      try {
-        const result = await getJobByID(jobId);
-        if (result.status === 200) {
-          update(jobId, { job: result.data as JobDetailResponse });
-        } else {
-          update(jobId, { error: "Failed to fetch job" });
-        }
-      } catch (e) {
-        update(jobId, {
-          error: e instanceof Error ? e.message : "Failed to fetch job",
-        });
-      }
-      update(jobId, { loading: false });
-    }
-
-    update(jobId, { expanded: true });
-  }, [jobId, snapshot.expanded, snapshot.job, snapshot.loading]);
-
-  return { ...snapshot, toggle };
-}
+import { useJobDetail } from "@/hooks/use-job-detail";
 
 interface JobDetailProps {
   jobId: string;
@@ -200,9 +87,10 @@ export function JobView({ job }: { job: JobDetailResponse }) {
   // The API sorts both by hostname.
   const states = job.agent_states ?? [];
   const responses = job.responses ?? [];
-  const count = (status: string) =>
+  const count = (status: JobDetailResponseAgentStatesItemStatus) =>
     states.filter((s) => s.status === status).length;
-  const skipped = count("skipped");
+  const S = JobDetailResponseAgentStatesItemStatus;
+  const skipped = count(S.skipped);
 
   return (
     <div className="space-y-3">
@@ -228,7 +116,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
             [
               "Agents",
               states.length > 1 &&
-                `${states.length} total (${count("completed")} completed, ${count("failed")} failed, ${count("started")} processing${skipped > 0 ? `, ${skipped} skipped` : ""})`,
+                `${states.length} total (${count(S.completed)} completed, ${count(S.failed)} failed, ${count(S.started)} processing${skipped > 0 ? `, ${skipped} skipped` : ""})`,
             ],
           ]}
         />
@@ -306,7 +194,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
         <SectionLabel>Timeline</SectionLabel>
         <DataTable
           rows={job.timeline ?? []}
-          getRowKey={(_, i) => i}
+          getRowKey={(e) => `${e.timestamp}-${e.event}-${e.hostname ?? ""}`}
           columns={[
             {
               header: "Timestamp",

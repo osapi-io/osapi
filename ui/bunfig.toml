@@ -2,3 +2,7 @@
 # Skip packages published less than 7 days ago, matching the Dependabot
 # cooldown. A hijacked release is usually found and pulled within days.
 minimumReleaseAge = 604800
+
+[test]
+# Components and hooks render into happy-dom.
+preload = ["./src/test/dom.ts", "./src/test/cleanup.ts"]

@@ -170,6 +170,23 @@ const (
 	RoleObserver Role = "observer"
 )
 
+// roleDescriptions are what each built-in role is for, in one line, as the
+// UI shows it.
+var roleDescriptions = map[Role]string{
+	RoleAdmin:      "Everything, including admission, tokens, shells and the audit log",
+	RoleOperator:   "Reads, and actions such as a restart, a signal or a reboot",
+	RoleAutomation: "Reads, and changes to the configuration, with no actions",
+	RoleAuditor:    "The audit log, traces, jobs and health, read only",
+	RoleRead:       "Reads each thing that is not admin only",
+	RoleObserver:   "Health, status and agents only, for dashboards",
+}
+
+// RoleDescription is what a built-in role is for, in one line, or "" for a
+// custom role.
+func RoleDescription(r Role) string {
+	return roleDescriptions[r]
+}
+
 // Roles are the built-in roles.
 func Roles() []Role {
 	return []Role{RoleAdmin, RoleOperator, RoleAutomation, RoleAuditor, RoleRead, RoleObserver}

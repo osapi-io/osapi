@@ -126,6 +126,7 @@ export * from './hostnameUpdateRequest';
 export * from './hostnameUpdateResponse';
 export * from './jobDetailResponse';
 export * from './jobDetailResponseAgentStatesItem';
+export * from './jobDetailResponseAgentStatesItemStatus';
 export * from './jobDetailResponseOperation';
 export * from './jobDetailResponseResponsesItem';
 export * from './jobDetailResponseTimelineItem';
