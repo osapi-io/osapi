@@ -23,9 +23,9 @@ The command prints:
 ```ansi
 $ osapi client agent list
 [1;38;2;0;213;255mAgents (2):[0m
-  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mMACHINE ID                            [0m[38;2;10;143;176mSTATE     [0m[38;2;10;143;176mCONDITIONS  [0m[38;2;10;143;176mLABELS     [0m[38;2;10;143;176mAGE     [0m[38;2;10;143;176mLOAD            [0m[38;2;10;143;176mOS            [0m[38;2;10;143;176mVERSION[0m
-  [1mweb-01[0m    [38;2;138;138;138m4c4c4544-0035-4b10-8031-b4c04f4d3332[0m  [38;2;103;234;147mReady[0m     [38;2;138;138;138m-[0m           group:web  [38;2;138;138;138m2d 3h[0m   0.32 0.28 0.25  Ubuntu 24.04  v1.4.0
-  [1mmac-01[0m    [38;2;138;138;138m[0m                                      [38;5;222mDraining[0m  [38;2;138;138;138m-[0m                      [38;2;138;138;138m1h 30m[0m  1.12 0.94 0.88  macOS 15.5    v1.4.0
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mMACHINE ID                            [0m[38;2;10;143;176mSTATE     [0m[38;2;10;143;176mCONDITIONS  [0m[38;2;10;143;176mLABELS     [0m[38;2;10;143;176mAGE     [0m[38;2;10;143;176mLOAD            [0m[38;2;10;143;176mOS                   [0m[38;2;10;143;176mVERSION[0m
+  [1mweb-01[0m    [38;2;138;138;138m4c4c4544-0035-4b10-8031-b4c04f4d3332[0m  [38;2;103;234;147mReady[0m     [38;2;138;138;138m-[0m           group:web  [38;2;138;138;138m2d 3h[0m   0.32 0.28 0.25  Ubuntu 24.04 debian  v1.4.0
+  [1mmac-01[0m    [38;2;138;138;138m[0m                                      [38;5;222mDraining[0m  [38;2;138;138;138m-[0m                      [38;2;138;138;138m1h 30m[0m  1.12 0.94 0.88  macOS 15.5 darwin    v1.4.0
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```
@@ -50,7 +50,8 @@ With `--json`, the API's response:
       },
       "os_info": {
         "distribution": "Ubuntu",
-        "version": "24.04"
+        "version": "24.04",
+        "family": "debian"
       },
       "version": "v1.4.0",
       "registered_at": "2026-01-15T09:59:52Z",
@@ -79,7 +80,8 @@ With `--json`, the API's response:
       },
       "os_info": {
         "distribution": "macOS",
-        "version": "15.5"
+        "version": "15.5",
+        "family": "darwin"
       },
       "version": "v1.4.0",
       "registered_at": "2026-01-15T09:59:52Z"

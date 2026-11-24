@@ -243,10 +243,11 @@ Memory usage information.
 
 Operating system information.
 
-| Field          | Type     | Description                            |
-| -------------- | -------- | -------------------------------------- |
-| `Distribution` | `string` | The name of the Linux distribution.    |
-| `Version`      | `string` | The version of the Linux distribution. |
+| Field          | Type     | Description                                                                                                                                                             |
+| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Distribution` | `string` | The name of the Linux distribution.                                                                                                                                     |
+| `Family`       | `string` | The platform family that the agent picks providers by, as gohai names it: debian, suse, darwin and so on. A method runs on a host whose family is one of its platforms. |
+| `Version`      | `string` | The version of the Linux distribution.                                                                                                                                  |
 
 ### RouteResponse
 

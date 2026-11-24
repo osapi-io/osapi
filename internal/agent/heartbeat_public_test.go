@@ -433,6 +433,32 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationHasVersion() {
 	})
 }
 
+func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationHasFamily() {
+	s.Run("its OS info has the family that the agent picks providers by", func() {
+		agent.SetPlatformFns(func() string { return "suse" }, func() bool { return false })
+		defer agent.ResetPlatformFns()
+
+		var got job.AgentRegistration
+		s.mockKV.EXPECT().
+			KVPut(gomock.Any(), "registry", "agents.test_machine_id", gomock.Any()).
+			DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+				s.Require().NoError(json.Unmarshal(data, &got))
+
+				return 1, nil
+			})
+
+		agent.ExportWriteRegistration(
+			context.Background(),
+			s.testAgent,
+			"test-machine-id",
+			"test-agent",
+		)
+
+		s.Require().NotNil(got.OSInfo)
+		s.Equal("suse", got.OSInfo.Family)
+	})
+}
+
 func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 	tests := []struct {
 		name         string

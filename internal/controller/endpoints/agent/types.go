@@ -87,8 +87,9 @@ type AgentInfo struct { //nolint:revive // the schema name is part of the API
 
 // OSInfoResponse is the host's operating system.
 type OSInfoResponse struct {
-	Distribution string `json:"distribution" doc:"The name of the Linux distribution."    example:"Ubuntu"`
-	Version      string `json:"version"      doc:"The version of the Linux distribution." example:"20.04"`
+	Distribution string `json:"distribution"     doc:"The name of the Linux distribution."                                                                                                                                     example:"Ubuntu"`
+	Version      string `json:"version"          doc:"The version of the Linux distribution."                                                                                                                                  example:"20.04"`
+	Family       string `json:"family,omitempty" doc:"The platform family that the agent picks providers by, as gohai names it: debian, suse, darwin and so on. A method runs on a host whose family is one of its platforms." example:"debian"`
 }
 
 // LoadAverageResponse is the host's load over 1, 5 and 15 minutes.

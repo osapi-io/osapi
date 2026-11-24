@@ -23,14 +23,14 @@ const def = (run: string): StepDef => {
 
 const agent = (
   hostname: string,
-  distribution?: string,
+  family?: string,
   labels?: Record<string, string>,
 ): AgentInfo =>
   ({
     hostname,
     state: "Ready",
     labels,
-    os_info: distribution ? { distribution, version: "1" } : undefined,
+    os_info: family ? { distribution: "any", version: "1", family } : undefined,
   }) as AgentInfo;
 
 describe("a new step", () => {
@@ -119,11 +119,10 @@ describe("planReducer", () => {
 });
 
 describe("platforms", () => {
-  test("a host's platform is from its distribution", () => {
-    expect(hostPlatform(agent("m", "macOS"))).toBe("darwin");
-    expect(hostPlatform(agent("u", "Ubuntu"))).toBe("debian");
-    expect(hostPlatform(agent("s", "openSUSE Leap"))).toBe("suse");
-    expect(hostPlatform(agent("f", "Fedora Linux"))).toBe("fedora linux");
+  test("a host's platform is the family that its agent reports", () => {
+    expect(hostPlatform(agent("m", "darwin"))).toBe("darwin");
+    expect(hostPlatform(agent("u", "debian"))).toBe("debian");
+    expect(hostPlatform(agent("s", "suse"))).toBe("suse");
     expect(hostPlatform(agent("x"))).toBeUndefined();
   });
 
@@ -138,8 +137,8 @@ describe("platforms", () => {
 
 describe("targetHosts", () => {
   const agents = [
-    agent("web-01", "Ubuntu", { group: "web" }),
-    agent("mac-01", "macOS"),
+    agent("web-01", "debian", { group: "web" }),
+    agent("mac-01", "darwin"),
   ];
   test("is each host, one host, or the hosts of a label", () => {
     expect(targetHosts("_all", agents)).toHaveLength(2);
@@ -162,7 +161,7 @@ describe("preflight", () => {
     newStep(def("power.reboot"), "c"),
     { id: "x", run: "no.such", target: "", with: {} },
   ];
-  const agents = [agent("web-01", "Ubuntu"), agent("mac-01", "macOS")];
+  const agents = [agent("web-01", "debian"), agent("mac-01", "darwin")];
 
   test("checks each permission, each platform, and the pending steps", () => {
     const check = preflight(

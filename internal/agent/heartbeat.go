@@ -140,6 +140,7 @@ func (a *Agent) writeRegistration(
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {
+		info.Family = detectFn()
 		reg.OSInfo = info
 	}
 
