@@ -26,6 +26,7 @@ package token
 
 import (
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Group is the token group's definition. The commands, their flags, their
@@ -42,12 +43,12 @@ var Group = command.Register(command.Define(
 		Example("--subject svc@example.com --roles=read \\\n    -p status:read -p health:read").
 		Example("--subject team-web --roles=operator \\\n    -t group:web -t web-01").
 		Fails("no roles", GenerateInput{Subject: "ops"}).
-		Fails("no subject", GenerateInput{Roles: []string{"read"}}).
+		Fails("no subject", GenerateInput{Roles: []types.Role{types.RoleRead}}).
 		Fails("an unknown permission", GenerateInput{
-			Roles: []string{"read"}, Subject: "ops", Permissions: []string{"root:all"},
+			Roles: []types.Role{types.RoleRead}, Subject: "ops", Permissions: []string{"root:all"},
 		}).
 		Fails("a target scope of _all", GenerateInput{
-			Roles: []string{"read"}, Subject: "ops", Targets: []string{"_all"},
+			Roles: []types.Role{types.RoleRead}, Subject: "ops", Targets: []string{types.TargetAll},
 		}).
 		Handle(Generate),
 	command.Method[ValidateInput, Claims]("validate").

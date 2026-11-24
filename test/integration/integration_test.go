@@ -35,6 +35,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"gopkg.in/yaml.v3"
 )
@@ -121,7 +123,7 @@ func TestMain(
 	}
 
 	t := authtoken.New(nil)
-	token, err = t.Generate(signingKey, []string{"admin"}, "integration@test", nil, nil)
+	token, err = t.Generate(signingKey, []types.Role{types.RoleAdmin}, "integration@test", nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "generate token: %v\n", err)
 		os.Exit(1)

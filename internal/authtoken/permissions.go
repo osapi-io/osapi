@@ -42,18 +42,6 @@ type Role = types.Role
 // permissions.
 type CustomRoles map[Role][]Permission
 
-// RolesOf is roles, as a token's claims hold them, as Roles.
-func RolesOf(
-	roles []string,
-) []Role {
-	out := make([]Role, 0, len(roles))
-	for _, r := range roles {
-		out = append(out, Role(r))
-	}
-
-	return out
-}
-
 // PermissionsOf is perms, as a token's claims hold them, as Permissions.
 func PermissionsOf(
 	perms []string,
@@ -150,40 +138,15 @@ func init() {
 	})
 }
 
-// The built-in roles, one for each kind of person or program that uses
-// osapi. The SDK's Role constants are written from Roles.
-const (
-	// RoleAdmin is the owner of the fleet: each permission.
-	RoleAdmin Role = "admin"
-	// RoleOperator is the person on call: each read, and each action that
-	// makes something happen (execute), such as a restart, a signal or a
-	// reboot, but no change to the configuration.
-	RoleOperator Role = "operator"
-	// RoleAutomation is CI or a workflow that changes the configuration:
-	// each read and each write, and the use of a secret in a write, but no
-	// action.
-	RoleAutomation Role = "automation"
-	// RoleAuditor reads the audit log, the traces and the jobs, and the
-	// health. It changes and runs nothing.
-	RoleAuditor Role = "auditor"
-	// RoleRead reads each thing that is not admin only. Logs, files and
-	// process arguments can hold secrets, and read has them.
-	RoleRead Role = "read"
-	// RoleObserver is a dashboard or a monitor: the health, the status of
-	// each host, and the agents with their facts. It reads no file, log or
-	// command output.
-	RoleObserver Role = "observer"
-)
-
 // roleDescriptions are what each built-in role is for, in one line, as the
 // UI shows it.
 var roleDescriptions = map[Role]string{
-	RoleAdmin:      "Everything, including admission, tokens, shells and the audit log",
-	RoleOperator:   "Reads, and actions such as a restart, a signal or a reboot",
-	RoleAutomation: "Reads, and changes to the configuration, with no actions",
-	RoleAuditor:    "The audit log, traces, jobs and health, read only",
-	RoleRead:       "Reads each thing that is not admin only",
-	RoleObserver:   "Health, status and agents only, for dashboards",
+	types.RoleAdmin:      "Everything, including admission, tokens, shells and the audit log",
+	types.RoleOperator:   "Reads, and actions such as a restart, a signal or a reboot",
+	types.RoleAutomation: "Reads, and changes to the configuration, with no actions",
+	types.RoleAuditor:    "The audit log, traces, jobs and health, read only",
+	types.RoleRead:       "Reads each thing that is not admin only",
+	types.RoleObserver:   "Health, status and agents only, for dashboards",
 }
 
 // RoleDescription is what a built-in role is for, in one line, or "" for a
@@ -194,7 +157,14 @@ func RoleDescription(r Role) string {
 
 // Roles are the built-in roles.
 func Roles() []Role {
-	return []Role{RoleAdmin, RoleOperator, RoleAutomation, RoleAuditor, RoleRead, RoleObserver}
+	return []Role{
+		types.RoleAdmin,
+		types.RoleOperator,
+		types.RoleAutomation,
+		types.RoleAuditor,
+		types.RoleRead,
+		types.RoleObserver,
+	}
 }
 
 // auditorPermissions and observerPermissions are the roles that a list
@@ -236,22 +206,22 @@ func RolePermissions(
 ) ([]Permission, bool) {
 	var grants func(p Permission, verb string) bool
 	switch role {
-	case RoleAdmin:
+	case types.RoleAdmin:
 		return AllPermissions(), true
-	case RoleOperator:
+	case types.RoleOperator:
 		grants = func(p Permission, verb string) bool {
 			return (verb == "read" || verb == "execute") && !AdminOnly(p)
 		}
-	case RoleAutomation:
+	case types.RoleAutomation:
 		// A secret goes into a write, so the role that writes uses one.
 		grants = func(p Permission, verb string) bool {
 			return (verb == "read" || verb == "write" || verb == "use") && !AdminOnly(p)
 		}
-	case RoleRead:
+	case types.RoleRead:
 		grants = func(p Permission, verb string) bool { return verb == "read" && !AdminOnly(p) }
-	case RoleAuditor:
+	case types.RoleAuditor:
 		grants = func(p Permission, _ string) bool { return slices.Contains(auditorPermissions, p) }
-	case RoleObserver:
+	case types.RoleObserver:
 		grants = func(p Permission, _ string) bool { return slices.Contains(observerPermissions, p) }
 	default:
 		return nil, false

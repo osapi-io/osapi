@@ -23,26 +23,28 @@ package token
 import (
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // GenerateInput is what a new token carries.
 type GenerateInput struct {
-	Roles       []string `json:"roles"       short:"r" validate:"required"                    doc:"Roles for the token: built-in, or a custom role of the config"`
-	Subject     string   `json:"subject"     short:"u" validate:"required"                    doc:"Subject for the token (e.g., user ID or unique identifier)"`
-	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"   doc:"Direct permissions, which override the roles; osapi controller role get --name admin lists each one"`
-	Targets     []string `json:"targets"     short:"t" validate:"omitempty,dive,target_scope" doc:"Hosts the token may act on: hostnames and labels, such as group:web; without it, each host"`
+	Roles       []types.Role `json:"roles"       short:"r" validate:"required"                    doc:"Roles for the token: built-in, or a custom role of the config"`
+	Subject     string       `json:"subject"     short:"u" validate:"required"                    doc:"Subject for the token (e.g., user ID or unique identifier)"`
+	Permissions []string     `json:"permissions" short:"p" validate:"omitempty,dive,permission"   doc:"Direct permissions, which override the roles; osapi controller role get --name admin lists each one"`
+	Targets     []string     `json:"targets"     short:"t" validate:"omitempty,dive,target_scope" doc:"Hosts the token may act on: hostnames and labels, such as group:web; without it, each host"`
 }
 
 // GenerateOutput is a new token, with what it carries.
 type GenerateOutput struct {
 	Token string `json:"token"`
 	// KeyID is the kid of the token: the ID of the key that signed it.
-	KeyID       string   `json:"kid"                   label:"Key ID"`
-	Subject     string   `json:"subject"`
-	Roles       []string `json:"roles"`
-	Permissions []string `json:"permissions,omitempty"`
-	Targets     []string `json:"targets,omitempty"`
+	KeyID       string       `json:"kid"                   label:"Key ID"`
+	Subject     string       `json:"subject"`
+	Roles       []types.Role `json:"roles"`
+	Permissions []string     `json:"permissions,omitempty"`
+	Targets     []string     `json:"targets,omitempty"`
 }
 
 // ValidateInput is the token to check.
@@ -53,10 +55,10 @@ type ValidateInput struct {
 // Claims are what a valid token carries.
 type Claims struct {
 	// KeyID is the kid of the token: the ID of the key that signed it.
-	KeyID       string   `json:"kid"                   label:"Key ID"`
-	Subject     string   `json:"subject"`
-	Roles       []string `json:"roles"`
-	Permissions []string `json:"permissions,omitempty"`
+	KeyID       string       `json:"kid"                   label:"Key ID"`
+	Subject     string       `json:"subject"`
+	Roles       []types.Role `json:"roles"`
+	Permissions []string     `json:"permissions,omitempty"`
 	// Targets are the hosts the token may act on; none is each host.
 	Targets []string `json:"targets,omitempty"`
 	// EffectivePermissions are what the roles and the permissions grant,

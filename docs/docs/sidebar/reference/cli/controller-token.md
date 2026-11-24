@@ -26,12 +26,12 @@ Generate and validate API tokens.
 
 ### Flags (4)
 
-| FLAG          | SHORT | TYPE      | VALIDATE                    | HELP                                                                                                |
-| ------------- | ----- | --------- | --------------------------- | --------------------------------------------------------------------------------------------------- |
-| --roles       | r     | \[]string | required                    | Roles for the token: built-in, or a custom role of the config                                       |
-| --subject     | u     | string    | required                    | Subject for the token (e.g., user ID or unique identifier)                                          |
-| --permissions | p     | \[]string | omitempty,dive,permission   | Direct permissions, which override the roles; osapi controller role get --name admin lists each one |
-| --targets     | t     | \[]string | omitempty,dive,target_scope | Hosts the token may act on: hostnames and labels, such as group:web; without it, each host          |
+| FLAG          | SHORT | TYPE          | VALIDATE                    | HELP                                                                                                |
+| ------------- | ----- | ------------- | --------------------------- | --------------------------------------------------------------------------------------------------- |
+| --roles       | r     | \[]types.Role | required                    | Roles for the token: built-in, or a custom role of the config                                       |
+| --subject     | u     | string        | required                    | Subject for the token (e.g., user ID or unique identifier)                                          |
+| --permissions | p     | \[]string     | omitempty,dive,permission   | Direct permissions, which override the roles; osapi controller role get --name admin lists each one |
+| --targets     | t     | \[]string     | omitempty,dive,target_scope | Hosts the token may act on: hostnames and labels, such as group:web; without it, each host          |
 
 ## [osapi controller token validate](../../usage/cli/controller/token/validate.md)
 

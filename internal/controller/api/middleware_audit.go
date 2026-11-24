@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"go.opentelemetry.io/otel/trace"
@@ -89,7 +91,7 @@ func auditMiddleware(
 				return err
 			}
 
-			roles, _ := c.Get(ContextKeyRoles).([]string)
+			roles, _ := c.Get(ContextKeyRoles).([]types.Role)
 			targets, _ := c.Get(ContextKeyTargets).([]string)
 
 			// v5 returns the bare http.ResponseWriter from Response().

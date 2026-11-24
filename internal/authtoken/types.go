@@ -23,6 +23,8 @@ package authtoken
 import (
 	"log/slog"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -68,8 +70,8 @@ func (k Keys) Lookup(
 
 // CustomClaims defines the structure of your token claims
 type CustomClaims struct {
-	Roles       []string `json:"roles"                 validate:"required,dive,required"`
-	Permissions []string `json:"permissions,omitempty"`
+	Roles       []types.Role `json:"roles"                 validate:"required,dive,required"`
+	Permissions []string     `json:"permissions,omitempty"`
 	// Targets are the hosts that the token may act on: hostnames and
 	// labels, such as web-01 or group:web. A token without targets acts on
 	// each host.

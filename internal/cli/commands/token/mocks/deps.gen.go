@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	authtoken "github.com/osapi-io/osapi/internal/authtoken"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,7 +43,7 @@ func (m *MockTokens) EXPECT() *MockTokensMockRecorder {
 }
 
 // Generate mocks base method.
-func (m *MockTokens) Generate(key authtoken.Key, roles []string, subject string, permissions, targets []string) (string, error) {
+func (m *MockTokens) Generate(key authtoken.Key, roles []types.Role, subject string, permissions, targets []string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Generate", key, roles, subject, permissions, targets)
 	ret0, _ := ret[0].(string)

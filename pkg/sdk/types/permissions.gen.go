@@ -141,13 +141,3 @@ func (Permission) Values() []Permission {
 func (p Permission) Valid() bool {
 	return slices.Contains(p.Values(), p)
 }
-
-// Built-in role constants, one for each built-in role.
-const (
-	RoleAdmin      Role = "admin"
-	RoleOperator   Role = "operator"
-	RoleAutomation Role = "automation"
-	RoleAuditor    Role = "auditor"
-	RoleRead       Role = "read"
-	RoleObserver   Role = "observer"
-)

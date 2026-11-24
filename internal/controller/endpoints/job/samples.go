@@ -70,7 +70,7 @@ var (
 				ID:        "7c9e6679-7425-40de-944b-e07fc1f90ae7",
 				Status:    "failed",
 				Created:   "2026-01-15T09:41:03Z",
-				Target:    "_all",
+				Target:    string(types.TargetAll),
 				Operation: &Operation{Type: "node.package.update"},
 				Error:     "apt-get: unable to lock the administration directory",
 			},

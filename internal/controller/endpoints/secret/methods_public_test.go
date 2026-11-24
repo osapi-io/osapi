@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -585,7 +587,7 @@ func token(
 	perms ...string,
 ) string {
 	t, _ := authtoken.New(slog.Default()).
-		Generate(signingKey, []string{"observer"}, "test", perms, nil)
+		Generate(signingKey, []types.Role{types.RoleObserver}, "test", perms, nil)
 
 	return t
 }

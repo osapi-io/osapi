@@ -63,7 +63,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	s.Require().Len(got.Roles, len(authtoken.Roles()))
 	for i, r := range authtoken.Roles() {
 		perms, _ := authtoken.RolePermissions(r)
-		s.Equal(string(r), got.Roles[i].Name, "the roles, in order")
+		s.Equal(r, got.Roles[i].Name, "the roles, in order")
 		s.Equal(authtoken.RoleDescription(r), got.Roles[i].Description)
 		s.Equal(perms, got.Roles[i].Permissions)
 		s.Contains(got.Roles[i].Permissions, types.PermCatalogRead,

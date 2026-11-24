@@ -420,7 +420,7 @@ func Screen(
 		}
 	}
 
-	target := "_all"
+	target := types.TargetAll
 	if len(hosts) == 1 {
 		target, _, _ = strings.Cut(hosts[0], ":")
 	}

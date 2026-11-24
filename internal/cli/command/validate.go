@@ -275,11 +275,13 @@ var flagTypes = map[reflect.Type]bool{
 // Flaggable reports whether a flag can hold a value of type t: the types
 // that the command generator builds a flag for, and a named type of a
 // closed set, such as Parent, which is a string flag that the command
-// converts. The behavior DSL asks it, so the two cannot disagree.
+// converts, and a list of one, such as []types.Role. The behavior DSL asks
+// it, so the two cannot disagree.
 func Flaggable(
 	t reflect.Type,
 ) bool {
-	return flagTypes[t] || NamedString(t)
+	return flagTypes[t] || NamedString(t) ||
+		t.Kind() == reflect.Slice && NamedString(t.Elem())
 }
 
 // NamedString reports whether t is a named type of a closed set: a type

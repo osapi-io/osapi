@@ -58,7 +58,7 @@ var sampleCatalog = CatalogResponse{
 	Areas:       []CatalogArea{{Name: "node", Label: "Node"}},
 	Permissions: []types.Permission{types.PermHostnameRead, types.PermHostnameWrite},
 	Roles: []CatalogRole{{
-		Name:        "observer",
+		Name:        types.RoleObserver,
 		Description: "A dashboard or a monitor.",
 		Permissions: []types.Permission{types.PermHealthRead},
 	}},

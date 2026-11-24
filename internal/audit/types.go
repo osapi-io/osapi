@@ -36,7 +36,7 @@ type Entry struct {
 	// User is the authenticated subject (from JWT sub claim).
 	User string `json:"user"`
 	// Roles are the roles from the JWT token.
-	Roles []string `json:"roles"`
+	Roles []types.Role `json:"roles"`
 	// Targets are the target scope from the JWT token, empty when the token
 	// acts on each host.
 	Targets []string `json:"targets,omitempty"`

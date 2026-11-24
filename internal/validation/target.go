@@ -158,7 +158,7 @@ func validTarget(
 ) bool {
 	target := fl.Field().String()
 
-	if target == "_any" || target == "_all" {
+	if target == types.TargetAny || target == types.TargetAll {
 		return !allAgentsPending(ctx, target)
 	}
 
@@ -295,14 +295,14 @@ func PendingTarget(
 		return "", false
 	}
 
-	if target == "_any" || target == "_all" {
+	if target == types.TargetAny || target == types.TargetAll {
 		for _, a := range agents {
 			if a.State != types.AgentPending {
 				return "", false
 			}
 		}
 
-		return "_all", true
+		return types.TargetAll, true
 	}
 
 	for _, a := range agents {
@@ -326,7 +326,7 @@ func ResolveTarget(
 	ctx context.Context,
 	target string,
 ) string {
-	if target == "_any" || target == "_all" {
+	if target == types.TargetAny || target == types.TargetAll {
 		return target
 	}
 
@@ -398,7 +398,7 @@ func InScope(
 		return true
 	}
 
-	if target == "_any" || target == "_all" {
+	if target == types.TargetAny || target == types.TargetAll {
 		return false
 	}
 

@@ -29,9 +29,9 @@ import (
 // from the root of the repository.
 const GoFile = "pkg/sdk/types/permissions.gen.go"
 
-// Go is the SDK's constant for each permission, from AllPermissions, and for
-// each built-in role, from Roles: a behavior's permission has one, as an
-// endpoint group's does. go generate ./internal/behaviors/all writes it to
+// Go is the SDK's constant for each permission, from AllPermissions: a
+// behavior's permission has one, as an endpoint group's does. The built-in
+// roles are written by hand in pkg/sdk/types. go generate ./internal/behaviors/all writes it to
 // GoFile, and a test fails when the file is stale.
 func Go() string {
 	var sb strings.Builder
@@ -49,13 +49,8 @@ func Go() string {
 	}
 	sb.WriteString("\t}\n}\n\n// Valid reports whether p is a permission that osapi knows.\n")
 	sb.WriteString(
-		"func (p Permission) Valid() bool {\n\treturn slices.Contains(p.Values(), p)\n}\n\n",
+		"func (p Permission) Valid() bool {\n\treturn slices.Contains(p.Values(), p)\n}\n",
 	)
-	sb.WriteString("// Built-in role constants, one for each built-in role.\nconst (\n")
-	for _, r := range Roles() {
-		fmt.Fprintf(&sb, "\tRole%s Role = %q\n", capital(string(r)), r)
-	}
-	sb.WriteString(")\n")
 	// The source is a const block of names and strings, which formats.
 	out, _ := format.Source([]byte(sb.String()))
 

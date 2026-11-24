@@ -20,7 +20,11 @@
 
 package token
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // The sample outputs of the examples, which the docs page of each command
 // shows as the CLI prints it. Their times are in UTC.
@@ -33,13 +37,13 @@ var (
 		Token:   sampleToken,
 		KeyID:   "2026-11",
 		Subject: "user123",
-		Roles:   []string{"read"},
+		Roles:   []types.Role{types.RoleRead},
 	}
 
 	sampleClaims = Claims{
 		KeyID:                "2026-11",
 		Subject:              "user123",
-		Roles:                []string{"read"},
+		Roles:                []types.Role{types.RoleRead},
 		EffectivePermissions: []string{"file:read", "health:read", "status:read"},
 		Audience:             []string{"osapi"},
 		IssuedAt:             time.Date(2026, time.January, 15, 9, 0, 0, 0, time.UTC),

@@ -159,6 +159,13 @@ func Commands(
 				return jen.Id(fld.Name).Op(":").
 					Qual(fld.Type.PkgPath(), fld.Type.Name()).Call(jen.Id(local))
 			}
+			// A list of one, such as []types.Role, takes the flag's strings
+			// through command.Strings.
+			if fld.Type.Kind() == reflect.Slice && command.NamedString(fld.Type.Elem()) {
+				return jen.Id(fld.Name).Op(":").Qual(commandPath, "Strings").
+					Types(jen.Qual(fld.Type.Elem().PkgPath(), fld.Type.Elem().Name())).
+					Call(jen.Id(local))
+			}
 
 			return jen.Id(fld.Name).Op(":").Id(local)
 		}

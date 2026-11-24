@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -217,7 +219,8 @@ func (s *MethodsPublicTestSuite) TestGet() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms, nil)
+	t, _ := authtoken.New(slog.Default()).
+		Generate(signingKey, []types.Role{types.RoleRead}, "test", perms, nil)
 
 	return t
 }

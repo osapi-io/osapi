@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/sdk/gen/sdkmodel"
@@ -454,7 +456,7 @@ func writeMain(
 		target = []jen.Code{
 			jen.Id("target").Op(":=").Qual("os", "Getenv").Call(jen.Lit("OSAPI_TARGET")),
 			jen.If(jen.Id("target").Op("==").Lit("")).Block(
-				jen.Id("target").Op("=").Lit("_any"),
+				jen.Id("target").Op("=").Lit(string(types.TargetAny)),
 			),
 			jen.Line(),
 		}

@@ -107,7 +107,7 @@ func ScopeMiddleware(
 			// The permissions go in the context too, for a check in the
 			// handler, such as secret:use for a reference to a secret.
 			resolved := authtoken.ResolvePermissions(
-				authtoken.RolesOf(claims.Roles),
+				claims.Roles,
 				authtoken.PermissionsOf(claims.Permissions),
 				customRoles,
 			)
