@@ -179,10 +179,13 @@ type Exec interface {
 	// the standard error and the exit code apart, for a command whose
 	// caller gets all three, such as docker exec. A command that exits
 	// with a code other than 0 is not an error: err is a failure to run it.
+	// stdin, when it is not empty, goes to the program's standard input, as
+	// RunPrivilegedCmdWithStdin gives it.
 	RunPrivilegedCmdFull(
 		ctx context.Context,
 		name string,
 		args []string,
+		stdin string,
 	) (stdout string, stderr string, exitCode int, err error)
 	// RunCmdFull runs name with args as the agent's own user, in cwd when it
 	// is not empty, for at most timeout seconds, and returns its standard

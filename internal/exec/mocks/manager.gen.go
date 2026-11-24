@@ -87,9 +87,9 @@ func (mr *MockManagerMockRecorder) RunPrivilegedCmd(ctx, name, args any) *gomock
 }
 
 // RunPrivilegedCmdFull mocks base method.
-func (m *MockManager) RunPrivilegedCmdFull(ctx context.Context, name string, args []string) (string, string, int, error) {
+func (m *MockManager) RunPrivilegedCmdFull(ctx context.Context, name string, args []string, stdin string) (string, string, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RunPrivilegedCmdFull", ctx, name, args)
+	ret := m.ctrl.Call(m, "RunPrivilegedCmdFull", ctx, name, args, stdin)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(int)
@@ -98,9 +98,9 @@ func (m *MockManager) RunPrivilegedCmdFull(ctx context.Context, name string, arg
 }
 
 // RunPrivilegedCmdFull indicates an expected call of RunPrivilegedCmdFull.
-func (mr *MockManagerMockRecorder) RunPrivilegedCmdFull(ctx, name, args any) *gomock.Call {
+func (mr *MockManagerMockRecorder) RunPrivilegedCmdFull(ctx, name, args, stdin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdFull", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmdFull), ctx, name, args)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdFull", reflect.TypeOf((*MockManager)(nil).RunPrivilegedCmdFull), ctx, name, args, stdin)
 }
 
 // RunPrivilegedCmdWithStdin mocks base method.

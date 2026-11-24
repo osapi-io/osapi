@@ -379,8 +379,8 @@ func (h *fakeHost) commands(
 		}).
 		AnyTimes()
 
-	m.EXPECT().RunPrivilegedCmdFull(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, name string, args []string) (string, string, int, error) {
+	m.EXPECT().RunPrivilegedCmdFull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, name string, args []string, _ string) (string, string, int, error) {
 			h.check(name, true)
 			out, err := run(ctx, name, args)
 

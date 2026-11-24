@@ -30,17 +30,21 @@ var sudoProgram = "sudo"
 // sudo when privilege escalation is on, and gives the standard output, the
 // standard error and the exit code apart. An exit code other than 0 is not
 // an error.
+//
+// stdin, when it is not empty, goes to the command's standard input: how a
+// command gets a secret, which must never be in its arguments.
 func (e *Exec) RunPrivilegedCmdFull(
 	ctx context.Context,
 	name string,
 	args []string,
+	stdin string,
 ) (string, string, int, error) {
 	if e.sudo {
 		args = append([]string{name}, args...)
 		name = sudoProgram
 	}
-	// RunCmdFull gives a result also with an error.
-	result, err := e.RunCmdFull(ctx, name, args, "", 0)
+	// runFull gives a result also with an error.
+	result, err := e.runFull(ctx, name, args, "", 0, stdin)
 
 	return result.Stdout, result.Stderr, result.ExitCode, err
 }

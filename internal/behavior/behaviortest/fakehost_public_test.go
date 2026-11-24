@@ -56,7 +56,7 @@ func (p probe) run(
 	case "stdin":
 		return p.h.Exec.RunPrivilegedCmdWithStdin(ctx, "tee", []string{"/x"}, "secret")
 	case "full":
-		out, _, code, err := p.h.Exec.RunPrivilegedCmdFull(ctx, "tee", []string{"/y"})
+		out, _, code, err := p.h.Exec.RunPrivilegedCmdFull(ctx, "tee", []string{"/y"}, "")
 
 		return fmt.Sprintf("%s code=%d", out, code), err
 	case "fullcmd":

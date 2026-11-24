@@ -41,6 +41,19 @@ func (e *Exec) RunCmdFull(
 	cwd string,
 	timeout int,
 ) (*CmdResult, error) {
+	return e.runFull(ctx, name, args, cwd, timeout, "")
+}
+
+// runFull is RunCmdFull with stdin written to the command's standard input
+// when it is not empty. It never logs stdin, which can hold a secret.
+func (e *Exec) runFull(
+	ctx context.Context,
+	name string,
+	args []string,
+	cwd string,
+	timeout int,
+	stdin string,
+) (*CmdResult, error) {
 	if timeout <= 0 {
 		timeout = 30
 	}
@@ -51,6 +64,10 @@ func (e *Exec) RunCmdFull(
 	cmd := exec.CommandContext(ctx, name, args...)
 	if cwd != "" {
 		cmd.Dir = cwd
+	}
+
+	if stdin != "" {
+		cmd.Stdin = strings.NewReader(stdin)
 	}
 
 	var stdout, stderr bytes.Buffer
