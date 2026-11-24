@@ -43,8 +43,12 @@ The rules:
   Use one word, such as pending or drain.
 - `action`: A method with an Action has a key: an input field tagged in:"path".
   Fix: Tag the field the action is on in:"path", or use Sub for a fixed path.
-- `key`: An input has at most one field tagged in:"path". Fix: Tag one field
-  in:"path"; a group has one key.
+- `key`: An input has at most one field tagged in:"path" besides the fields of
+  the Prefix, or .Key names each of them in the order of the path. Each field
+  that .Key or the Prefix names is an in:"path" field of the input, is not a
+  secret, and is named once. Fix: Tag one field in:"path". For a key with more
+  than one field, such as a key in a vault, name each in order with
+  .Key("vault", "key").
 - `id`: Each operationId is used once, and starts with a capital letter, as each
   operationId of the API does. Fix: Give the method its own ID with .ID, in
   Pascal case, such as GetAgents.

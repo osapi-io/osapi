@@ -84,6 +84,31 @@ Ask the code and the binary before you read prose:
 5. A new operation changes the API: run `TestJoinedSpec` with `-update`, and
    keep the diff.
 
+## A key of more than one field
+
+A key is the `in:"path"` fields that name what a method acts on. Most keys are
+one field, such as `{hostname}`. A key that is unique only in the thing that
+holds it, such as a key in a vault, has more than one field. Name each field
+with `.Key`, in the order of the path:
+
+```go
+endpoint.Get[GetInput, SecretInfo]("get").
+    Key("vault", "key"). // GET /api/secret/{vault}/{key}
+    Handle(Get),
+endpoint.Get[ListInput, SecretListResponse]("list").
+    Key("vault"). // GET /api/secret/{vault}: the keys of one vault
+    Handle(List),
+```
+
+Each field is `in:"path"` in the input. The last field names what the method
+acts on: a method with no body prints its value, such as
+`[ok] registry-token deleted`. `dsl endpoint validate` refuses, under the rule
+`key`, a field that the input does not have in the path, a field that `.Key`
+names twice, a `secret.Value` field, and a second path field with no `.Key`. A
+method with one key field can leave out `.Key`, but the scaffold writes it.
+`dsl endpoint method get` shows the key as `Keys`. Do not put the holder in a
+query parameter: the path keeps the key a resource of its own.
+
 ## Move a hand-written group
 
 Do the groups in the order of the design page. A move is two pull requests: the
@@ -104,10 +129,11 @@ The spec:
    words.
 3. Write `<group>.go`. Copy `Title` and `Tag` from the hand-written spec. The
    UI's client files get their names from them. Give each method the operationId
-   of the hand-written spec with `.ID`. Use `.Sub` for a fixed segment and
-   `.Action` for a segment after the key. Map each 400 that the method decides,
-   404, 409 and 503 with `.Errors`. A status whose body is the method's output,
-   such as a probe's 503, is `.Answers`, not an error.
+   of the hand-written spec with `.ID`. Use `.Sub` for a fixed segment, `.Key`
+   for a key of more than one path field, and `.Action` for a segment after the
+   key. Map each 400 that the method decides, 404, 409 and 503 with `.Errors`. A
+   status whose body is the method's output, such as a probe's 503, is
+   `.Answers`, not an error.
 4. Add the import to `internal/controller/endpoints/all/all.go`, and a row to
    `moving` in `internal/controller/endpoints/all/parity_public_test.go`.
 5. Run the checks until they pass.
@@ -228,6 +254,7 @@ each question.
 | Which errors can it return, and what does each mean to the caller? | `.Errors`: 400 (`Invalid`) for a request it cannot do, 404 when it is not there, 409 for a state that does not allow it, 503 when a backend is not set. A failure of the controller is a 500, never a 409. A status with the output as its body, such as a probe's 503, is `.Answers` |
 | Does a success answer 201 or 204?                                  | `.Status`: 201 when it creates a resource, with `.Location` naming the output field of its ID; 204 when it has nothing to return, such as a delete or an action. Never 202: each method answers when its work is done                                                                 |
 | Is it a list?                                                      | Its output is `items` and `total_items`                                                                                                                                                                                                                                               |
+| Is its key unique only in the thing that holds it?                 | `.Key("holder", "key")`, in the order of the path, such as `.Key("vault", "key")` for `/api/secret/{vault}/{key}`                                                                                                                                                                     |
 
 The conventions of the API are in `components/osapi/api.md` in osapi-io/specs.
 `TestConventions` in `internal/apicontract` fails on an operation that breaks

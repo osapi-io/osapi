@@ -24,7 +24,9 @@ package widget
 type ListInput struct{}
 
 // GetInput names the item to read. The field tagged in:"path" is the key
-// of the path, and each field becomes a flag of the CLI command.
+// of the path, which Key names, and each field becomes a flag of the CLI
+// command. A key of more than one field, such as a key in a vault, names
+// each in the order of the path: Key("vault", "key").
 type GetInput struct {
 	Name string `json:"name" in:"path" validate:"required,min=1,max=255" doc:"The name of the item." example:"example"`
 }

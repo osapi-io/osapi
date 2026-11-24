@@ -25,6 +25,9 @@ import (
 	"log/slog"
 	"os"
 
+	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
+	"github.com/osapi-io/osapi/internal/secret/vault"
+
 	fileEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/file"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
@@ -38,7 +41,6 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/notify"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/secret/vault"
 )
 
 // ExportNewMetricsProvider calls newMetricsProvider.
@@ -106,6 +108,13 @@ func ExportFileDeps(
 	stateBucket string,
 ) fileEndpoint.Deps {
 	return fileDeps(nc, objBucket, stateBucket)
+}
+
+// ExportSecretDeps calls secretDeps with the vaults.
+func ExportSecretDeps(
+	vaults *vault.Set,
+) secretEndpoint.Deps {
+	return secretDeps(handlerDeps{vaults: vaults})
 }
 
 // ExportHandlers calls handlers with the parts that a test sets.

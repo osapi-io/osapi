@@ -29,5 +29,6 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/file"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/job"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 )

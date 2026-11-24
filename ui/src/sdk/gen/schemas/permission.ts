@@ -14,6 +14,7 @@ export type Permission = typeof Permission[keyof typeof Permission];
 export const Permission = {
   'health:read': 'health:read',
   'trace:read': 'trace:read',
+  'secret:use': 'secret:use',
   'certificate:read': 'certificate:read',
   'certificate:write': 'certificate:write',
   'command:execute': 'command:execute',
@@ -69,4 +70,6 @@ export const Permission = {
   'catalog:read': 'catalog:read',
   'job:read': 'job:read',
   'job:write': 'job:write',
+  'secret:read': 'secret:read',
+  'secret:write': 'secret:write',
 } as const;

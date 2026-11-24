@@ -78,7 +78,7 @@ func (s *AreaPublicTestSuite) TestList() {
 	}{
 		{
 			name: "when it lists the areas in order",
-			want: "services, software, config, node, logs, networking, security, containers, objectstore, command, hardware, audit, fleet",
+			want: "services, software, config, node, logs, networking, security, containers, objectstore, secrets, command, hardware, audit, fleet",
 		},
 	}
 	for _, tt := range tests {

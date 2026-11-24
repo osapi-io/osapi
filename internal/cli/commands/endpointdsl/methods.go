@@ -167,12 +167,22 @@ func MethodGet(
 		words = append(words, sub)
 	}
 	out := MethodOutput{
-		Name: m.Name, Doc: m.CommandShort(), Long: m.CommandLong(),
-		HTTPMethod: m.HTTPMethod(), Route: g.Path(m), Permission: string(g.Permission(m)),
-		OperationID: m.OperationID(g), Command: strings.Join(append(words, m.CommandName()), " "),
-		InputType: behavior.TypeName(m.In), OutputType: behavior.TypeName(m.Out),
-		Fields: []Field{}, Results: behaviordsl.Results(output), Examples: []Example{},
-		Input: input, Output: output,
+		Name:        m.Name,
+		Doc:         m.CommandShort(),
+		Long:        m.CommandLong(),
+		HTTPMethod:  m.HTTPMethod(),
+		Route:       g.Path(m),
+		Keys:        keysOf(m),
+		Permission:  string(g.Permission(m)),
+		OperationID: m.OperationID(g),
+		Command:     strings.Join(append(words, m.CommandName()), " "),
+		InputType:   behavior.TypeName(m.In),
+		OutputType:  behavior.TypeName(m.Out),
+		Fields:      []Field{},
+		Results:     behaviordsl.Results(output),
+		Examples:    []Example{},
+		Input:       input,
+		Output:      output,
 	}
 	for _, dc := range g.Declared() {
 		if dc.Where == g.Name+" "+m.Name {
@@ -305,4 +315,16 @@ func Validate(
 	}
 
 	return out, command.Fail()
+}
+
+// keysOf are the path fields of the key of m, in the order of the path; an
+// empty list when it has none, so that --json has [] and not null.
+func keysOf(
+	m *endpoint.Method,
+) []string {
+	if keys := m.Keys(); len(keys) > 0 {
+		return keys
+	}
+
+	return []string{}
 }

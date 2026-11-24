@@ -1112,6 +1112,65 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Secrets",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/osapi",
+          key: "secrets-gen-api-osapi",
+        },
+        {
+          type: "category",
+          label: "Secret",
+          key: "secrets-secret",
+          link: {
+            type: "doc",
+            id: "gen/api/secret-management-api-secret-operations",
+          },
+          items: [
+            {
+              type: "doc",
+              id: "gen/api/get-secret-vaults",
+              label: "List the vaults",
+              className: "api-method get",
+              key: "secrets-secret-management-api-secret-operations-gen-api-get-secret-vaults",
+            },
+            {
+              type: "doc",
+              id: "gen/api/get-secrets",
+              label: "List the keys of a vault",
+              className: "api-method get",
+              key: "secrets-secret-management-api-secret-operations-gen-api-get-secrets",
+            },
+            {
+              type: "doc",
+              id: "gen/api/delete-secret",
+              label: "Delete a key",
+              className: "api-method delete",
+              key: "secrets-secret-management-api-secret-operations-gen-api-delete-secret",
+            },
+            {
+              type: "doc",
+              id: "gen/api/get-secret",
+              label: "Get the metadata of a key",
+              className: "api-method get",
+              key: "secrets-secret-management-api-secret-operations-gen-api-get-secret",
+            },
+            {
+              type: "doc",
+              id: "gen/api/put-secret",
+              label: "Write the value of a key",
+              className: "api-method put",
+              key: "secrets-secret-management-api-secret-operations-gen-api-put-secret",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Command",
       collapsible: true,
       collapsed: true,

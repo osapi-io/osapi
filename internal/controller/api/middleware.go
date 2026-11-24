@@ -110,9 +110,12 @@ func ScopeMiddleware(
 				customRoles,
 			)
 			ctx.SetRequest(ctx.Request().WithContext(
-				authtoken.WithPermissions(
-					authtoken.WithTargets(ctx.Request().Context(), claims.Targets),
-					resolved,
+				authtoken.WithSubject(
+					authtoken.WithPermissions(
+						authtoken.WithTargets(ctx.Request().Context(), claims.Targets),
+						resolved,
+					),
+					claims.Subject,
 				),
 			))
 

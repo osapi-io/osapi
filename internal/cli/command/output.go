@@ -694,7 +694,7 @@ func keyOf(
 	m Command,
 	in any,
 ) string {
-	key := m.Key()
+	key := m.KeyField()
 	v := reflect.ValueOf(in)
 	if key != "" && v.Kind() == reflect.Struct {
 		for i := range v.NumField() {
@@ -713,7 +713,7 @@ func keyOf(
 func keyName(
 	m Command,
 ) string {
-	if k := m.Key(); k != "" {
+	if k := m.KeyField(); k != "" {
 		return k
 	}
 

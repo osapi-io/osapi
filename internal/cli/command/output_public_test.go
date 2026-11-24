@@ -85,7 +85,7 @@ type keyed struct {
 	key string
 }
 
-func (k keyed) Key() string { return k.key }
+func (k keyed) KeyField() string { return k.key }
 
 // outGroup is a registered group with the methods under test.
 type outGroup struct {

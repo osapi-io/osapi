@@ -27,6 +27,7 @@ export * from './power-api-power-operations/power-api-power-operations';
 export * from './process-api-process-operations/process-api-process-operations';
 export * from './route-api-route-operations/route-api-route-operations';
 export * from './schedule-api-schedule-operations/schedule-api-schedule-operations';
+export * from './secret-management-api-secret-operations/secret-management-api-secret-operations';
 export * from './service-api-service-operations/service-api-service-operations';
 export * from './source-api-source-operations/source-api-source-operations';
 export * from './sshkey-api-sshkey-operations/sshkey-api-sshkey-operations';

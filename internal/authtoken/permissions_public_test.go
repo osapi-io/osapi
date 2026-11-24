@@ -375,6 +375,9 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 					"a command in a container is admin only",
 				)
 				s.NotContains(perms, client.PermCommandShell)
+				s.Contains(perms, client.PermSecretRead, "the names of the secrets")
+				s.NotContains(perms, client.PermSecretWrite, "a value is a write")
+				s.NotContains(perms, client.PermSecretUse, "no action takes a secret")
 			},
 		},
 		{
@@ -397,6 +400,9 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				s.NotContains(perms, client.PermScheduleWrite, "a cron entry runs as any user")
 				s.Contains(perms, client.PermFileWrite, "a file stays with automation")
 				s.Contains(perms, client.PermJobWrite)
+				s.Contains(perms, client.PermSecretRead)
+				s.Contains(perms, client.PermSecretWrite)
+				s.Contains(perms, client.PermSecretUse, "a secret goes into a write")
 			},
 		},
 		{
@@ -409,6 +415,9 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				s.NotContains(perms, client.PermAuditRead)
 				s.Contains(perms, client.PermAdmissionRead)
 				s.Contains(perms, client.PermLogRead, "read keeps logs, files and processes")
+				s.Contains(perms, client.PermSecretRead, "the names, and no value")
+				s.NotContains(perms, client.PermSecretWrite)
+				s.NotContains(perms, client.PermSecretUse)
 			},
 		},
 		{

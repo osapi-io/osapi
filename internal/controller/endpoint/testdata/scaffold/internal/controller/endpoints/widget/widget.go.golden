@@ -45,6 +45,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example(""),
 	endpoint.Get[GetInput, WidgetItem]("get").
 		Handle(Get).
+		Key("name").
 		Describe("Get one widget item").
 		Errors(endpoint.NotFound(ErrNotFound, "No item with that name.")).
 		Fails("a name over 255 characters", GetInput{Name: strings.Repeat("a", 256)}).

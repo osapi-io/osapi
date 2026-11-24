@@ -56,6 +56,13 @@ func (s *HandlersPublicTestSuite) TestSecretsDeps() {
 	s.Equal(set, controller.ExportSecretsDeps(set).Vaults)
 }
 
+func (s *HandlersPublicTestSuite) TestSecretDeps() {
+	s.Nil(controller.ExportSecretDeps(nil).Vaults, "no set is a nil interface")
+	set, err := vault.Open(context.Background(), vault.Env{}, nil)
+	s.Require().NoError(err)
+	s.Equal(set, controller.ExportSecretDeps(set).Vaults)
+}
+
 func (s *HandlersPublicTestSuite) TestTraceReader() {
 	s.Nil(controller.ExportTraceReader(config.TracingConfig{}), "no URL is no backend")
 	s.IsType(

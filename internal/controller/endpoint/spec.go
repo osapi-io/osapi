@@ -168,6 +168,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.CommandSub("word")`,
+			Does: "Puts the CLI command under a word that is not a segment of the path: osapi client <group> <word> <method>. The word needs a SubDoc, as a Sub does.",
+			When: "When the command names a resource that the path does not, such as vault in osapi client secret vault list for GET /api/secret.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Key("field", ...)`,
+			Does: "Names the in:\"path\" fields of the key, in the order of the path: /api/<group>[/<segment>]/{field}/.../{key}. The last field names what the method acts on, as the CLI line of a method with no body says. Without it, the key is the one in:\"path\" field that the Prefix does not name. endpoint validate checks that each named field is a path field of the input, is not a secret, and is named once, and that no other path field is left out.",
+			When: "For a key that is unique only in the thing that holds it, such as a key in a vault: .Key(\"vault\", \"key\") for /api/secret/{vault}/{key}. A list of the keys of one vault names only the holder: .Key(\"vault\").",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Action("segment")`,
 			Does: "Puts a segment after the key: /api/<group>/{key}/<segment>.",
 			When: "For an action on one thing, such as /api/agent/{hostname}/drain. Needs a key.",
@@ -392,6 +404,12 @@ var Spec = guide.Spec{
 			Name: "Traces",
 			Does: "The TraceReader: it reads one trace from the tracing backend that the config names, for osapi client file stale list.",
 			When: "For the telemetry group.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Vaults",
+			Does: "The vaults of controller.secrets.vaults, by name: each vault's spec, and the vault.Vault that gets, puts, deletes and lists its keys. handlers.go gives the vault.Set that the controller opens at startup.",
+			When: "For the secret group. A handler reads the metadata of a key from List, so that no method reads a value that it does not give.",
 		},
 		{
 			Kind: KindTag,

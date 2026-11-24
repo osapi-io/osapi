@@ -564,8 +564,8 @@ func (m *LocalMethod) Output() reflect.Type {
 	return m.Out
 }
 
-// Key is "": a local command acts on no item of an API.
-func (m *LocalMethod) Key() string {
+// KeyField is "": a local command acts on no item of an API.
+func (m *LocalMethod) KeyField() string {
 	return ""
 }
 

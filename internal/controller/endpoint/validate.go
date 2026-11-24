@@ -179,8 +179,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleKey,
-		Requires: "An input has at most one field tagged in:\"path\".",
-		Fix:      "Tag one field in:\"path\"; a group has one key.",
+		Requires: "An input has at most one field tagged in:\"path\" besides the fields of the Prefix, or .Key names each of them in the order of the path. Each field that .Key or the Prefix names is an in:\"path\" field of the input, is not a secret, and is named once.",
+		Fix:      "Tag one field in:\"path\". For a key with more than one field, such as a key in a vault, name each in order with .Key(\"vault\", \"key\").",
 	},
 	{
 		Rule:     RuleID,
@@ -291,16 +291,16 @@ func Validate(
 		}
 		names[m.Name] = true
 
-		for _, seg := range []string{m.sub, m.action} {
+		for _, seg := range []string{m.sub, m.action, m.cmdSub} {
 			if seg != "" && !name.MatchString(seg) {
 				add(m.Name, RuleSegment,
 					fmt.Sprintf("path segment %q is not lowercase letters and digits.", seg))
 			}
 		}
-		if m.action != "" && m.Key() == "" {
+		if m.action != "" && len(m.Keys()) == 0 {
 			add(m.Name, RuleAction, "the method has an action but no key.")
 		}
-		if seg := m.sub; seg != "" && seg != m.CommandName() && g.SubDocs[seg] == "" {
+		if seg := m.SubPath(); seg != "" && seg != m.CommandName() && g.SubDocs[seg] == "" {
 			add(m.Name, RuleSubDoc, fmt.Sprintf("the Sub segment %q has no SubDoc.", seg))
 		}
 
@@ -355,21 +355,17 @@ func Validate(
 				"Location names %s, which is not a json field of %s.", l, m.Out))
 		}
 
-		keys := 0
-		paths := map[string]bool{}
+		paths := map[string]reflect.StructField{}
 		for _, f := range fields(m.In) {
 			if f.Tag.Get("in") == "path" {
-				paths[jsonName(f)] = true
-				if !slices.Contains(m.prefix, jsonName(f)) {
-					keys++
-				}
+				paths[jsonName(f)] = f
 			}
 		}
-		if keys > 1 {
-			add(m.Name, RuleKey, "the input has more than one path field besides the prefix.")
+		for _, msg := range keyProblems(m, paths) {
+			add(m.Name, RuleKey, msg)
 		}
 		for _, p := range m.prefix {
-			if !paths[p] {
+			if _, ok := paths[p]; !ok {
 				add(
 					m.Name,
 					RuleKey,
@@ -514,6 +510,55 @@ func SentEmpty(
 		}
 		if !slices.Contains(strings.Split(opts, ","), "omitempty") {
 			out = append(out, name)
+		}
+	}
+
+	return out
+}
+
+// keyProblems are what is wrong with the key of m: a field that .Key names
+// and the input does not have in the path, a field named twice, a secret,
+// and a path field that is neither the prefix's nor a field of the key.
+func keyProblems(
+	m *Method,
+	paths map[string]reflect.StructField,
+) []string {
+	var out []string
+	if len(m.keys) == 0 {
+		extra := 0
+		for name := range paths {
+			if !slices.Contains(m.prefix, name) {
+				extra++
+			}
+		}
+		if extra > 1 {
+			out = append(out, "the input has more than one path field besides the prefix; "+
+				"name each in order with .Key.")
+		}
+
+		return out
+	}
+	seen := map[string]bool{}
+	for _, k := range m.keys {
+		f, ok := paths[k]
+		switch {
+		case seen[k]:
+			out = append(out, "Key names {"+k+"} twice.")
+		case !ok:
+			out = append(out, "Key names {"+k+"}, and the input has no path field "+k+".")
+		case f.Type == reflect.TypeFor[secret.Value]():
+			out = append(out, "Key names {"+k+"}, which is a secret; a URL goes in logs.")
+		}
+		seen[k] = true
+	}
+	names := make([]string, 0, len(paths))
+	for n := range paths {
+		names = append(names, n)
+	}
+	slices.Sort(names)
+	for _, f := range names {
+		if !seen[f] && !slices.Contains(m.prefix, f) {
+			out = append(out, "path field "+f+" is not in Key or the prefix.")
 		}
 	}
 
