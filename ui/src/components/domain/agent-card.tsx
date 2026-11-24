@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { AgentInfoState } from "@/sdk/gen/schemas";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,10 @@ export function AgentCard({
     null,
   );
 
-  const isPending = agent.state === "Pending";
-  const isDrained = agent.state === "Draining" || agent.state === "Cordoned";
+  const isPending = agent.state === AgentInfoState.Pending;
+  const isDrained =
+    agent.state === AgentInfoState.Draining ||
+    agent.state === AgentInfoState.Cordoned;
   const canWrite = canCall("drainAgent");
   const badgeVariant = statusVariant(agent.state);
   // The API lists only the conditions that hold.
@@ -61,7 +64,7 @@ export function AgentCard({
   // drain when the agent is Cordoned, its jobs stopped, not when it is
   // only Draining.
   const caughtUp =
-    (pending === "drain" && agent.state === "Cordoned") ||
+    (pending === "drain" && agent.state === AgentInfoState.Cordoned) ||
     (pending === "undrain" && !isDrained);
 
   useEffect(() => {
@@ -70,7 +73,7 @@ export function AgentCard({
     const giveUp = setTimeout(() => {
       setNote({
         text:
-          pending === "drain" && agent.state === "Draining"
+          pending === "drain" && agent.state === AgentInfoState.Draining
             ? `${agent.hostname} is still draining: its jobs have not stopped.`
             : `${agent.hostname} has not picked up the ${pending} yet; it applies at the agent's next heartbeat.`,
         error: true,
@@ -122,7 +125,7 @@ export function AgentCard({
   // else the state the agent reports.
   const shownState =
     pending === "drain"
-      ? "Draining"
+      ? AgentInfoState.Draining
       : pending === "undrain"
         ? "Undraining"
         : agent.state;
@@ -138,7 +141,7 @@ export function AgentCard({
           {agent.hostname}
         </CardTitle>
         <div className="ml-auto flex items-center gap-1.5">
-          {shownState && shownState !== "Ready" ? (
+          {shownState && shownState !== AgentInfoState.Ready ? (
             <Badge variant={pending ? "pending" : statusVariant(shownState)}>
               {shownState}
             </Badge>

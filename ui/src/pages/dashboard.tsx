@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from "react";
+import { AgentInfoState } from "@/sdk/gen/schemas";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { ContentArea } from "@/components/layout/content-area";
 import { AgentCard } from "@/components/domain/agent-card";
@@ -111,7 +112,7 @@ export function Dashboard() {
 
   // Filter out pending agents — they're managed in Admin > Admission.
   const activeAgents = useMemo(
-    () => agents.filter((a) => a.state !== "Pending"),
+    () => agents.filter((a) => a.state !== AgentInfoState.Pending),
     [agents],
   );
 

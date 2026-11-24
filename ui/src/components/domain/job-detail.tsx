@@ -1,4 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
+import { JobDetailResponseAgentStatesItemStatus } from "@/sdk/gen/schemas";
 import { getJobByID } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
 import type { JobDetailResponse } from "@/sdk/gen/schemas";
 import { Badge } from "@/components/ui/badge";
@@ -200,9 +201,10 @@ export function JobView({ job }: { job: JobDetailResponse }) {
   // The API sorts both by hostname.
   const states = job.agent_states ?? [];
   const responses = job.responses ?? [];
-  const count = (status: string) =>
+  const count = (status: JobDetailResponseAgentStatesItemStatus) =>
     states.filter((s) => s.status === status).length;
-  const skipped = count("skipped");
+  const S = JobDetailResponseAgentStatesItemStatus;
+  const skipped = count(S.skipped);
 
   return (
     <div className="space-y-3">
@@ -228,7 +230,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
             [
               "Agents",
               states.length > 1 &&
-                `${states.length} total (${count("completed")} completed, ${count("failed")} failed, ${count("started")} processing${skipped > 0 ? `, ${skipped} skipped` : ""})`,
+                `${states.length} total (${count(S.completed)} completed, ${count(S.failed)} failed, ${count(S.started)} processing${skipped > 0 ? `, ${skipped} skipped` : ""})`,
             ],
           ]}
         />

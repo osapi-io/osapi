@@ -5,6 +5,15 @@
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** An RFC 3339 time as local "2006-01-02 15:04:05", as FormatTime prints it. */
+/**
+ * The label of a value of a generated enum: partial_failure is
+ * "Partial failure", Ready is "Ready".
+ */
+export function enumLabel(value: string): string {
+  const s = value.replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function formatTime(s?: string): string {
   if (!s) return "";
   const d = new Date(s);

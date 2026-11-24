@@ -157,12 +157,12 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### JobDetailResponseAgentStates
 
-| Field      | Type     | Description |
-| ---------- | -------- | ----------- |
-| `Duration` | `string` |             |
-| `Error`    | `string` |             |
-| `Hostname` | `string` |             |
-| `Status`   | `string` |             |
+| Field      | Type     | Description                                                                                                                                  |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Duration` | `string` |                                                                                                                                              |
+| `Error`    | `string` |                                                                                                                                              |
+| `Hostname` | `string` |                                                                                                                                              |
+| `Status`   | `string` | How far the agent got: acknowledged, started, completed, failed or skipped. It is one of: acknowledged, started, completed, failed, skipped. |
 
 ### JobDetailResponseOperation
 

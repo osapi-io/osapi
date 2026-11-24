@@ -65,7 +65,16 @@ components:
               hostname:
                 type: string
               status:
+                description: 'How far the agent got: acknowledged, started, completed, failed or skipped.'
+                enum:
+                  - acknowledged
+                  - started
+                  - completed
+                  - failed
+                  - skipped
                 type: string
+                x-oapi-codegen-extra-tags:
+                  validate: omitempty,oneof=acknowledged started completed failed skipped
             required:
               - hostname
             type: object

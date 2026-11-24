@@ -104,7 +104,7 @@ type Response = struct {
 // AgentState is how far one agent got, in place in the spec.
 type AgentState = struct {
 	Hostname string `json:"hostname"`
-	Status   string `json:"status,omitempty"   render:"status"`
+	Status   string `json:"status,omitempty"   render:"status" validate:"omitempty,oneof=acknowledged started completed failed skipped" doc:"How far the agent got: acknowledged, started, completed, failed or skipped."`
 	Duration string `json:"duration,omitempty" render:"duration"`
 	Error    string `json:"error,omitempty"`
 }

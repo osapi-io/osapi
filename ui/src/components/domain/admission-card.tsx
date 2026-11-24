@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GetAdmissionsState } from "@/sdk/gen/schemas";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,7 +183,7 @@ export function AdmissionCard({
                   Cancel
                 </Button>
               </>
-            ) : record.state === "pending" ? (
+            ) : record.state === GetAdmissionsState.pending ? (
               <>
                 <Button
                   variant="ghost"
@@ -204,7 +205,7 @@ export function AdmissionCard({
               </>
             ) : (
               <>
-                {record.state === "admitted" && (
+                {record.state === GetAdmissionsState.admitted && (
                   <Button
                     variant="ghost"
                     size="sm"

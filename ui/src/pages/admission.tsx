@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { enumLabel } from "@/lib/format";
+import { GetAdmissionsState } from "@/sdk/gen/schemas";
 import { ContentArea } from "@/components/layout/content-area";
 import { AdmissionCard } from "@/components/domain/admission-card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -14,12 +16,10 @@ import { getAdmissions } from "@/sdk/gen/admission-api-admission/admission-api-a
 
 // The sections, in the order a reader acts on them: what waits for a
 // decision first, then what is in, then what was kept out.
-const sections = [
-  { state: "pending", title: "Pending" },
-  { state: "admitted", title: "Admitted" },
-  { state: "rejected", title: "Rejected" },
-  { state: "revoked", title: "Revoked" },
-] as const;
+const sections = Object.values(GetAdmissionsState).map((state) => ({
+  state,
+  title: enumLabel(state),
+}));
 
 export function Admission() {
   const { canCall } = useAuth();

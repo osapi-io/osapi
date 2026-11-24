@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { enumLabel } from "@/lib/format";
+import { GetJobsStatus } from "@/sdk/gen/schemas";
 import { Link, useParams } from "react-router-dom";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,13 +46,11 @@ type Job = NonNullable<ListJobsResponse["items"]>[number];
 const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All Statuses" },
-  { value: "submitted", label: "Submitted" },
-  { value: "processing", label: "Processing" },
-  { value: "completed", label: "Completed" },
-  { value: "failed", label: "Failed" },
-  { value: "partial_failure", label: "Partial Failure" },
-  { value: "skipped", label: "Skipped" },
+  { value: "", label: "All statuses" },
+  ...Object.values(GetJobsStatus).map((v) => ({
+    value: v,
+    label: enumLabel(v),
+  })),
 ];
 
 // LinkedJob is the job that /admin/jobs/:id names, such as the job of a
@@ -356,8 +356,8 @@ export function Jobs() {
                         header: "Actions",
                         align: "right" as const,
                         cell: (job: Job) =>
-                          (job.status === "failed" ||
-                            job.status === "partial_failure") && (
+                          (job.status === GetJobsStatus.failed ||
+                            job.status === GetJobsStatus.partial_failure) && (
                             <div className="flex items-center justify-end gap-1">
                               <IconButton
                                 icon={RefreshCw}
