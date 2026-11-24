@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Security | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/security"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Security | OSAPI"><meta data-rh="true" name="description" content="Four things control what can occur on a host:"><meta data-rh="true" property="og:description" content="Four things control what can occur on a host:"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/security"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/security" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/security" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Security","item":"https://osapi-io.github.io/osapi/sidebar/architecture/security"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.f4b42682.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.861e2c74.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.6d19c133.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.359ef24c.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -22,9 +22,10 @@
 <p>Each request makes a record.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="who-sends-the-request">Who sends the request<a href="#who-sends-the-request" class="hash-link" aria-label="Direct link to Who sends the request" title="Direct link to Who sends the request" translate="no">​</a></h2>
 <p>Each API request has a JWT. The key of the controller signs it
-(<code>controller.api.security.signing_key</code>, HS256). <code>osapi token generate</code> makes a
-token with roles, a subject and, if you want, a fixed list of permissions.
-<code>osapi token validate</code> shows what a token gives. The CLI sends the token in
+(<code>controller.api.security.signing_key</code>, HS256).
+<code>osapi controller token generate</code> makes a token with roles, a subject and, if
+you want, a fixed list of permissions. <code>osapi controller token validate</code> shows
+what a token gives. The CLI sends the token in
 <code>controller.client.security.bearer_token</code>. Only the liveness probe and the
 readiness probe, <code>/api/health</code> and <code>/api/health/ready</code>, answer without a token.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-client-can-do">What the client can do<a href="#what-the-client-can-do" class="hash-link" aria-label="Direct link to What the client can do" title="Direct link to What the client can do" translate="no">​</a></h2>
@@ -33,8 +34,8 @@ readiness probe, <code>/api/health</code> and <code>/api/health/ready</code>, an
 list of permissions:</p>
 <ul>
 <li class=""><strong>Built-in roles</strong>: <code>admin</code>, <code>operator</code>, <code>automation</code>, <code>auditor</code>, <code>read</code> and
-<code>observer</code>. <code>osapi token roles list</code> prints each permission and the role that
-gives it, as the binary that you run has them.</li>
+<code>observer</code>. <code>osapi controller role list</code> prints each permission and the role
+that gives it, as the binary that you run has them.</li>
 <li class=""><strong>Custom roles.</strong> You define them in <code>controller.api.security.roles</code>. Each one
 is a list of permissions. A custom role with the name of a built-in role
 replaces the built-in role.</li>
@@ -56,9 +57,9 @@ work until an administrator accepts it:</p>
 <code>agent.pki.key_dir</code>.</li>
 <li class="">It sends an enrollment request and waits. <code>osapi client admission list</code> shows
 it as pending.</li>
-<li class="">An administrator runs <code>osapi agent admission get</code> on the machine, and admits
-it with the fingerprint that the command prints. The controller admits it
-only when the fingerprint is the one of the key in the request. Or the
+<li class="">An administrator runs <code>osapi agent key fingerprint</code> on the machine, and
+admits it with the fingerprint that the command prints. The controller admits
+it only when the fingerprint is the one of the key in the request. Or the
 controller admits each agent itself, with <code>controller.pki.auto_admit</code>.</li>
 <li class="">After that, the controller signs each job. The agent refuses a job that the
 controller did not sign. The agent signs its results and its heartbeats.</li>

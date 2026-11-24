@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Developing a skill | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/skills"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Developing a skill | OSAPI"><meta data-rh="true" name="description" content="A skill tells an agent how to do one kind of work with osapi. The osapi binary"><meta data-rh="true" property="og:description" content="A skill tells an agent how to do one kind of work with osapi. The osapi binary"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/skills"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/skills" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/skills" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Developing a skill","item":"https://osapi-io.github.io/osapi/sidebar/development/skills"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.f4b42682.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.861e2c74.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.6d19c133.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.359ef24c.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -16,16 +16,16 @@
 embeds each skill. The binary is the only source of a skill.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-the-skills-are">Where the skills are<a href="#where-the-skills-are" class="hash-link" aria-label="Direct link to Where the skills are" title="Direct link to Where the skills are" translate="no">​</a></h2>
 <p>The skills are in <code>internal/skills/resources/</code>. Each skill is one directory:</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">internal/skills/resources/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  skills/                  the skills that osapi init installs</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    osapi/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    osapi-operations/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  dev-skills/              the skills for a person who changes osapi</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-a-behavior/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      SKILL.md             the frontmatter and the procedure</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      references/          files that the procedure sends the agent to</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      evals/               the requests that measure the skill, and run.sh</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-a-command/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-a-dsl/           what the three DSLs share, and how to add a DSL</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-an-endpoint/</span><br></div></code></pre></div></div>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">internal/skills/resources/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  skills/                  the skills that osapi skill install installs</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    osapi/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    osapi-operations/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  dev-skills/              the skills for a person who changes osapi</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-a-behavior/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      SKILL.md             the frontmatter and the procedure</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      references/          files that the procedure sends the agent to</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      evals/               the requests that measure the skill, and run.sh</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-a-command/</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-a-dsl/           what the three DSLs share, and how to add a DSL</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    build-an-endpoint/</span><br></div></code></pre></div></div>
 <p><code>internal/skills</code> embeds all of <code>resources/</code>. It also has the code that installs
-the skills (<code>osapi init</code>) and serves them (<code>osapi skill</code>).</p>
+the skills (<code>osapi skill install</code>) and serves them (<code>osapi skill</code>).</p>
 <ul>
-<li class=""><code>osapi init</code> writes each skill in <code>skills/</code> into a repository.</li>
+<li class=""><code>osapi skill install</code> writes each skill in <code>skills/</code> into a repository.</li>
 <li class=""><code>osapi skill list</code> lists each skill. <code>osapi skill get --name &lt;skill&gt;</code> prints
 its <code>SKILL.md</code>, and <code>--reference &lt;file&gt;</code> prints one of its other files.</li>
 </ul>
-<p>A skill in <code>dev-skills/</code> is only for a checkout of osapi. <code>osapi init</code> does not
-install it. The checkout has a short pointer at
+<p>A skill in <code>dev-skills/</code> is only for a checkout of osapi. <code>osapi skill install</code>
+does not install it. The checkout has a short pointer at
 <code>.claude/skills/&lt;skill&gt;/SKILL.md</code>. The pointer has the frontmatter of the skill,
 so that agents find it. Its body tells the agent to run
 <code>go run . skill get --name &lt;skill&gt;</code> and obey the output.</p>
@@ -33,9 +33,9 @@ so that agents find it. Its body tells the agent to run
 <p>The embedded skills are how a person and an agent learn osapi. Thus a change to
 osapi that adds or changes a command, a flag, a DSL option or a check updates
 each skill that tells about it, in the same pull request. That includes the
-skills that <code>osapi init</code> installs, not only the skills in <code>dev-skills/</code>. Do not
-wait until a feature is complete. Write in the skill what is not built yet, so
-that an agent stops there and does not build around it.</p>
+skills that <code>osapi skill install</code> installs, not only the skills in
+<code>dev-skills/</code>. Do not wait until a feature is complete. Write in the skill what
+is not built yet, so that an agent stops there and does not build around it.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="change-a-skill">Change a skill<a href="#change-a-skill" class="hash-link" aria-label="Direct link to Change a skill" title="Direct link to Change a skill" translate="no">​</a></h2>
 <ol>
 <li class="">

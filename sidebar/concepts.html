@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Core concepts | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/concepts"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Core concepts | OSAPI"><meta data-rh="true" name="description" content="These are the parts of osapi. Each section tells what the part is and where to"><meta data-rh="true" property="og:description" content="These are the parts of osapi. Each section tells what the part is and where to"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/concepts"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/concepts" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/concepts" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Core concepts","item":"https://osapi-io.github.io/osapi/sidebar/concepts"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.f4b42682.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.861e2c74.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.6d19c133.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.359ef24c.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -27,7 +27,7 @@ from the definition:</p>
 </ul>
 <p>The examples of a behavior are also its tests. Thus the docs page shows what
 really runs.</p>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi behavior list                  </span><span class="token comment" style="color:#8a8a8a;font-style:italic"># each behavior in this build</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi behavior get </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">sysctl</span><span class="token plain">     </span><span class="token comment" style="color:#8a8a8a;font-style:italic"># its methods, inputs, platforms and permissions</span><br></div></code></pre></div></div>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi dsl behavior list                  </span><span class="token comment" style="color:#8a8a8a;font-style:italic"># each behavior in this build</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi dsl behavior get </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">sysctl</span><span class="token plain">     </span><span class="token comment" style="color:#8a8a8a;font-style:italic"># its methods, inputs, platforms and permissions</span><br></div></code></pre></div></div>
 <p>Refer to <a class="" href="/osapi/sidebar/reference/behaviors">Behaviors</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="method">Method<a href="#method" class="hash-link" aria-label="Direct link to Method" title="Direct link to Method" translate="no">​</a></h2>
 <p>A behavior has methods. A method is a read or a write:</p>
@@ -37,7 +37,7 @@ really runs.</p>
 again with the same input, it reports <code>changed: false</code>.</li>
 </ul>
 <p>A method has a typed input and a typed output. The agent reads them with
-<code>osapi behavior get --json</code> before it makes a request.</p>
+<code>osapi dsl behavior get --json</code> before it makes a request.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="building-block">Building block<a href="#building-block" class="hash-link" aria-label="Direct link to Building block" title="Direct link to Building block" translate="no">​</a></h2>
 <p>A building block is an internal behavior. Only other behaviors use it, on the
 same host and in the same job. It has no route and no command.</p>
@@ -87,7 +87,8 @@ agent in one process, for a test.</p>
 agent signs each answer. Refer to
 <a class="" href="/osapi/sidebar/features/platform/agent-identity">Agent identity</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="skill">Skill<a href="#skill" class="hash-link" aria-label="Direct link to Skill" title="Direct link to Skill" translate="no">​</a></h2>
-<p>A skill tells an agent how to use osapi. <code>osapi init</code> installs two skills:</p>
+<p>A skill tells an agent how to use osapi. <code>osapi skill install</code> installs two
+skills:</p>
 <ul>
 <li class=""><code>osapi</code>, which reads and changes hosts</li>
 <li class=""><code>osapi-operations</code>, which runs osapi itself</li>

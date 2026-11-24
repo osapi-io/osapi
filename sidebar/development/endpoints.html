@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Building an endpoint | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/endpoints"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Building an endpoint | OSAPI"><meta data-rh="true" name="description" content="An endpoint is one operation of the controller itself, such as GET /api/agent"><meta data-rh="true" property="og:description" content="An endpoint is one operation of the controller itself, such as GET /api/agent"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/endpoints"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/endpoints" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/endpoints" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Building an endpoint","item":"https://osapi-io.github.io/osapi/sidebar/development/endpoints"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.f4b42682.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.861e2c74.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.6d19c133.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.359ef24c.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -25,20 +25,19 @@ group. The handlers are typed Go functions.
 <code>internal/controller/endpoints/agent</code> is a complete group.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="steps">Steps<a href="#steps" class="hash-link" aria-label="Direct link to Steps" title="Direct link to Steps" translate="no">​</a></h2>
 <ol>
-<li class="">Write the layout: <code>go run . controller endpoint create --name &lt;group&gt;</code>.</li>
+<li class="">Write the layout: <code>go run . dsl endpoint create --name &lt;group&gt;</code>.</li>
 <li class="">Read the <a class="" href="/osapi/sidebar/development/dsl/endpoint">Endpoint DSL</a> reference, or
-<code>go run . controller endpoint spec get</code>. It lists each part of the DSL, what
-it does and when to use it.</li>
+<code>go run . dsl endpoint spec get</code>. It lists each part of the DSL, what it does
+and when to use it.</li>
 <li class="">Change the definition, the types and the handlers.</li>
 <li class="">Run <code>just generate</code>.</li>
-<li class="">Run <code>go run . controller endpoint validate</code>. Each problem ends with its fix,
-and <code>--help</code> lists each rule.</li>
+<li class="">Run <code>go run . dsl endpoint validate</code>. Each problem ends with its fix, and
+<code>--help</code> lists each rule.</li>
 <li class="">Run the tests of the group.</li>
 </ol>
-<p><code>go run . controller endpoint get --name &lt;group&gt;</code> shows the routes, permissions
-and operationIds of a group.
-<code>go run . controller endpoint openapi get --name &lt;group&gt;</code> shows the spec that
-the definition makes.</p>
+<p><code>go run . dsl endpoint get --name &lt;group&gt;</code> shows the routes, permissions and
+operationIds of a group. <code>go run . dsl endpoint openapi get --name &lt;group&gt;</code>
+shows the spec that the definition makes.</p>
 <p>The <code>build-an-endpoint</code> <a class="" href="/osapi/sidebar/development/skills">skill</a> gives the same steps to an agent.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/development/behaviors"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Building a behavior</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/development/commands"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Building a command</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#steps" class="table-of-contents__link toc-highlight">Steps</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
