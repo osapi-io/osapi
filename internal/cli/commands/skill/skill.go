@@ -18,9 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package token is the token group of local commands: osapi controller token generate,
-// roles list and validate, which sign and read the bearer tokens of the API
-// with the signing key of the config. They run in the CLI, and call no API.
 // Package skill is the skill group: osapi skill list and get, which show the
 // agent skills that this binary has, and osapi skill install, which installs
 // them into a repository.

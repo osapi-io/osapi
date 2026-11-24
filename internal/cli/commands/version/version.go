@@ -18,9 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package token is the token group of local commands: osapi controller token generate,
-// roles list and validate, which sign and read the bearer tokens of the API
-// with the signing key of the config. They run in the CLI, and call no API.
 // Package version is the version group: osapi version, which prints the
 // build of the binary.
 package version
