@@ -25,16 +25,16 @@ func (s *AgentService) List(
 	return send[ListAgentsResponse](ctx, s.client, http.MethodGet, "/api/agent", nil, nil)
 }
 
-// Status is the operation GetAgentStatus: show the health of each agent.
+// Facts is the operation GetAgentFacts: list the fact keys.
 //
-// Each agent, with each of its sub-components, from the health status of the
-// controller.
+// Returns the fact keys that an input can refer to as @fact.<key>: the
+// built-in keys and the custom keys that agents register.
 //
-// It sends GET /api/agent/status, and needs the permission health:read.
-func (s *AgentService) Status(
+// It sends GET /api/agent/facts, and needs the permission agent:read.
+func (s *AgentService) Facts(
 	ctx context.Context,
-) (*Response[ComponentList], error) {
-	return send[ComponentList](ctx, s.client, http.MethodGet, "/api/agent/status", nil, nil)
+) (*Response[FactKeysResponse], error) {
+	return send[FactKeysResponse](ctx, s.client, http.MethodGet, "/api/agent/facts", nil, nil)
 }
 
 // Get is the operation GetAgentDetails: get agent details.

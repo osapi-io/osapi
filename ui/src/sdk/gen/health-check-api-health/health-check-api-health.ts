@@ -6,6 +6,7 @@
  */
 import type {
   ErrorResponse,
+  GetHealthStatusParams,
   HealthResponse,
   ReadyResponse,
   StatusResponse
@@ -109,6 +110,11 @@ export type getHealthStatusResponse200 = {
   status: 200
 }
 
+export type getHealthStatusResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
 export type getHealthStatusResponse401 = {
   data: ErrorResponse
   status: 401
@@ -127,27 +133,34 @@ export type getHealthStatusResponse500 = {
 export type getHealthStatusResponseSuccess = (getHealthStatusResponse200) & {
   headers: Headers;
 };
-export type getHealthStatusResponseError = (getHealthStatusResponse401 | getHealthStatusResponse403 | getHealthStatusResponse500) & {
+export type getHealthStatusResponseError = (getHealthStatusResponse400 | getHealthStatusResponse401 | getHealthStatusResponse403 | getHealthStatusResponse500) & {
   headers: Headers;
 };
 
 export type getHealthStatusResponse = (getHealthStatusResponseSuccess | getHealthStatusResponseError)
 
-export const getGetHealthStatusUrl = () => {
+export const getGetHealthStatusUrl = (params?: GetHealthStatusParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/health/status`
+  return stringifiedParams.length > 0 ? `/api/health/status?${stringifiedParams}` : `/api/health/status`
 }
 
 /**
  * Returns per-component health status with system metrics. Requires authentication.
  * @summary System status and component health
  */
-export const getHealthStatus = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getHealthStatusResponse> => {
+export const getHealthStatus = async (params?: GetHealthStatusParams, options?: Parameters<typeof apiFetch>[1]): Promise<getHealthStatusResponse> => {
 
-  return apiFetch<getHealthStatusResponse>(getGetHealthStatusUrl(),
+  return apiFetch<getHealthStatusResponse>(getGetHealthStatusUrl(params),
   {
     ...options,
     method: 'GET'

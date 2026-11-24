@@ -85,8 +85,8 @@ its commands read.
 
 ### `SubDoc("segment", "short")`
 
-Is the one line of help of the command that a Sub segment makes, such as trace
-in osapi client telemetry trace. Without it, the command says &lt;Segment&gt;
+Is the one line of help of the command that a Sub segment makes, such as stale
+in osapi client file stale. Without it, the command says &lt;Segment&gt;
 commands.
 
 Use: For each Sub segment of the group, so its command says what it holds.
@@ -155,8 +155,8 @@ Puts a fixed segment after the group's name, before the key:
 the method's name, the CLI command is under it too: osapi client &lt;group&gt;
 &lt;segment&gt; &lt;method&gt;.
 
-Use: For a path beside the key, such as /api/agent/pending, or before it, such
-as /api/telemetry/trace/&#123;id&#125;.
+Use: For a path beside the key, such as /api/agent/pending, or with no key, such
+as /api/file/stale.
 
 ### `.Action("segment")`
 
@@ -464,7 +464,7 @@ Use: For a group that reports whether a part of osapi is up.
 ### `Traces`
 
 The TraceReader: it reads one trace from the tracing backend that the config
-names, for osapi client telemetry trace get.
+names, for osapi client file stale list.
 
 Use: For the telemetry group.
 

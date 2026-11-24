@@ -31,7 +31,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/area"
-	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -54,6 +53,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.CommandLong(
 		"Most commands read the NATS KV heartbeat registry directly, and make no job.",
 	),
+	endpoint.SubDoc("facts", "Read the keys of @fact references"),
 	endpoint.Title("Agent Management API"),
 	endpoint.Tag("agent_operations", "Agent",
 		"Operations related to agent discovery and details."),
@@ -62,18 +62,21 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[MemoryResponse]("Memory usage information."),
 	endpoint.Doc[OSInfoResponse]("Operating system information."),
 	endpoint.Doc[RouteResponse]("A network routing table entry."),
-	endpoint.Get[StatusInput, health.ComponentList]("status").
-		Handle(Status).
-		Sub("status").
-		ID("GetAgentStatus").
-		Describe("Show the health of each agent").
-		Explain("Each agent, with each of its sub-components, from the health status of the controller.").
-		Returns("Each agent component, with its sub-components.").
-		Permission(client.PermHealthRead).
-		Command("Show the health of each agent",
-			"Each agent, with its process CPU and memory and each of its sub-components, from the\nhealth status of the controller. agent list shows the host of each agent.").
+	endpoint.Get[FactsInput, FactKeysResponse]("facts").
+		Handle(Facts).
+		Sub("facts").
+		Use("list").
+		ID("GetAgentFacts").
+		Permission(client.PermAgentRead).
+		Describe("List the fact keys").
+		Explain("Returns the fact keys that an input can refer to as @fact.<key>: the "+
+			"built-in keys and the custom keys that agents register.").
+		Returns("The fact keys.").
+		Command("List the fact keys",
+			"Lists each fact key that an input can refer to as @fact.<key>, with\n"+
+				"its description.").
 		Example("").
-		Prints(sampleStatus).
+		Prints(sampleFacts).
 		Example("--json"),
 	endpoint.Get[ListInput, ListAgentsResponse]("list").
 		Notes("The `--json` output has more system facts that the agent collects:\n"+

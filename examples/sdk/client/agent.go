@@ -29,7 +29,7 @@ var examples = []struct {
 	run  func(ctx context.Context, c *client.Client) error
 }{
 	{"list", "List active agents", runList},
-	{"status", "Show the health of each agent", runStatus},
+	{"facts", "List the fact keys", runFacts},
 	{"get", "Get agent details", runGet},
 	{"drain", "Drain an agent", runDrain},
 	{"undrain", "Undrain an agent", runUndrain},
@@ -48,12 +48,12 @@ func runList(
 	return show(resp.Data)
 }
 
-// runStatus runs the example status: show the health of each agent.
-func runStatus(
+// runFacts runs the example facts: list the fact keys.
+func runFacts(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Agent.Status(ctx)
+	resp, err := c.Agent.Facts(ctx)
 	if err != nil {
 		return err
 	}

@@ -52,7 +52,7 @@ var Verbs = map[string]bool{
 
 // Actions are the commands that do something a CRUD verb does not say.
 // Add one here only for a real action, never for a noun: list the noun's
-// items with list under it instead, such as facts keys list.
+// items with list under it instead, such as agent facts list.
 var Actions = map[string]bool{
 	"admit": true, "reject": true, "revoke": true, "drain": true, "undrain": true, "retry": true,
 	"export": true, "exec": true, "shell": true, "start": true, "stop": true,

@@ -105,8 +105,8 @@ job.process
 
 The two `exec netplan` spans under `behavior.netplan.update` are
 `netplan generate` and `netplan apply`. A span does not record the arguments of
-a command. `osapi client telemetry trace get --id <trace>` prints the tree. A
-span of a step that failed has the error status.
+a command. `osapi client trace get --id <trace>` prints the tree. A span of a
+step that failed has the error status.
 
 ### The audit log
 

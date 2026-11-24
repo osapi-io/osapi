@@ -50,7 +50,7 @@ type Group struct {
 	// CommandLong sets.
 	CommandLong string
 	// SubDocs are the one line of help of each command that a Sub makes,
-	// such as trace in osapi client telemetry trace, which SubDoc sets.
+	// such as stale in osapi client file stale, which SubDoc sets.
 	SubDocs map[string]string
 	// Prefix is the part of each path between /api/ and the name, such as
 	// next/node/{hostname}. Each {field} in it is a path field of each
@@ -196,7 +196,7 @@ func CommandLong(
 }
 
 // SubDoc is the one line of help of the command that the Sub segment makes,
-// such as trace in osapi client telemetry trace.
+// such as stale in osapi client file stale.
 func SubDoc(
 	segment string,
 	short string,
@@ -493,7 +493,7 @@ func Delete[In, Out any](
 }
 
 // Sub puts a fixed segment after the group's name, such as pending in
-// /api/agent/pending, or trace in /api/telemetry/trace/{id}.
+// /api/agent/pending, or facts in /api/agent/facts.
 func (m *Method) Sub(
 	segment string,
 ) *Method {

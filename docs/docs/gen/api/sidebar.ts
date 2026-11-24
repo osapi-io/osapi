@@ -1334,46 +1334,10 @@ const sidebar: SidebarsConfig = {
             },
             {
               type: "doc",
-              id: "gen/api/get-agent-status",
-              label: "Show the health of each agent",
+              id: "gen/api/get-agent-facts",
+              label: "List the fact keys",
               className: "api-method get",
-              key: "fleet-agent-management-api-agent-operations-gen-api-get-agent-status",
-            },
-          ],
-        },
-        {
-          type: "category",
-          label: "Controller",
-          key: "fleet-controller",
-          link: {
-            type: "doc",
-            id: "gen/api/controller-api-controller",
-          },
-          items: [
-            {
-              type: "doc",
-              id: "gen/api/get-controller-status",
-              label: "Show the health of the controller",
-              className: "api-method get",
-              key: "fleet-controller-api-controller-gen-api-get-controller-status",
-            },
-          ],
-        },
-        {
-          type: "category",
-          label: "Facts",
-          key: "fleet-facts",
-          link: {
-            type: "doc",
-            id: "gen/api/facts-api-facts",
-          },
-          items: [
-            {
-              type: "doc",
-              id: "gen/api/get-fact-keys",
-              label: "List available fact keys",
-              className: "api-method get",
-              key: "fleet-facts-api-facts-gen-api-get-fact-keys",
+              key: "fleet-agent-management-api-agent-operations-gen-api-get-agent-facts",
             },
           ],
         },
@@ -1450,29 +1414,11 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "category",
-          label: "NATS",
-          key: "fleet-nats",
+          label: "Trace",
+          key: "fleet-trace",
           link: {
             type: "doc",
-            id: "gen/api/nats-api-nats",
-          },
-          items: [
-            {
-              type: "doc",
-              id: "gen/api/get-nats-status",
-              label: "Show the health of the NATS server",
-              className: "api-method get",
-              key: "fleet-nats-api-nats-gen-api-get-nats-status",
-            },
-          ],
-        },
-        {
-          type: "category",
-          label: "Telemetry",
-          key: "fleet-telemetry",
-          link: {
-            type: "doc",
-            id: "gen/api/telemetry-api-telemetry",
+            id: "gen/api/trace-api-trace",
           },
           items: [
             {
@@ -1480,7 +1426,7 @@ const sidebar: SidebarsConfig = {
               id: "gen/api/get-trace",
               label: "Get the spans of a trace",
               className: "api-method get",
-              key: "fleet-telemetry-api-telemetry-gen-api-get-trace",
+              key: "fleet-trace-api-trace-gen-api-get-trace",
             },
           ],
         },

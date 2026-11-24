@@ -64,19 +64,19 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 	s.ctrl.Finish()
 }
 
-func (s *MethodsPublicTestSuite) TestComponents() {
+func (s *MethodsPublicTestSuite) TestStatusComponent() {
 	tests := []struct {
 		name string
 		kind string
 		want []string
 	}{
 		{
-			name: "when components have the type, each is in the list",
+			name: "when components have the type, the registry has only those",
 			kind: "agent",
 			want: []string{"web-01", "web-02"},
 		},
 		{
-			name: "when none has the type, the list is empty, not null",
+			name: "when none has the type, the registry is empty, not null",
 			kind: "nothing",
 			want: []string{},
 		},
@@ -97,11 +97,13 @@ func (s *MethodsPublicTestSuite) TestComponents() {
 					{Type: "agent", Hostname: "web-02"},
 				}})
 
-			got := health.Components(context.Background(), s.reporter, tc.kind)
+			got, err := health.Status(context.Background(),
+				health.Deps{Health: s.reporter}, health.StatusInput{Component: tc.kind})
+			s.Require().NoError(err)
 
-			s.NotNil(got.Items)
+			s.NotNil(got.Registry)
 			hosts := []string{}
-			for _, e := range got.Items {
+			for _, e := range got.Registry {
 				hosts = append(hosts, e.Hostname)
 			}
 			s.Equal(tc.want, hosts)

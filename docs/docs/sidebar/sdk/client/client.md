@@ -153,16 +153,13 @@ the spec.
 
 ### Fleet
 
-| Service                           | Description                                                          |
-| --------------------------------- | -------------------------------------------------------------------- |
-| [Admission](fleet/admission.md)   | Admit, reject and revoke the nodes that ask to join.                 |
-| [Agent](fleet/agent.md)           | Operations related to agent discovery and details.                   |
-| [Controller](fleet/controller.md) | The controller of the fleet.                                         |
-| [Facts](fleet/facts.md)           | Fact key discovery for @fact. references.                            |
-| [Health](fleet/health.md)         | Health check endpoints for liveness, readiness, and detailed status. |
-| [Job](fleet/job.md)               | Operations related to the job queue.                                 |
-| [NATS](fleet/nats.md)             | The NATS server of the fleet.                                        |
-| [Telemetry](fleet/telemetry.md)   | Telemetry endpoints, such as the spans of a trace.                   |
+| Service                         | Description                                                          |
+| ------------------------------- | -------------------------------------------------------------------- |
+| [Admission](fleet/admission.md) | Admit, reject and revoke the nodes that ask to join.                 |
+| [Agent](fleet/agent.md)         | Operations related to agent discovery and details.                   |
+| [Health](fleet/health.md)       | Health check endpoints for liveness, readiness, and detailed status. |
+| [Job](fleet/job.md)             | Operations related to the job queue.                                 |
+| [Trace](fleet/trace.md)         | The spans of a trace.                                                |
 
 <!-- /osapi:sdk-services -->
 

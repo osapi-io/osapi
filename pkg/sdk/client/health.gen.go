@@ -5,6 +5,7 @@ package client
 import (
 	"context"
 	"net/http"
+	"net/url"
 )
 
 // HealthService calls the API's Health group: health check endpoints for
@@ -35,6 +36,15 @@ func (s *HealthService) Ready(
 	return send[ReadyResponse](ctx, s.client, http.MethodGet, "/api/health/ready", nil, nil)
 }
 
+// HealthStatusParams are the parameters of HealthService.Status that a request
+// can leave out.
+type HealthStatusParams struct {
+	// Component is the component of the query: show only the components of this
+	// type: controller, nats or agent. The other parts of the status stay. The
+	// zero value leaves it out.
+	Component string
+}
+
 // Status is the operation GetHealthStatus: system status and component health.
 //
 // Returns per-component health status with system metrics. Requires
@@ -43,6 +53,11 @@ func (s *HealthService) Ready(
 // It sends GET /api/health/status, and needs the permission health:read.
 func (s *HealthService) Status(
 	ctx context.Context,
+	params HealthStatusParams,
 ) (*Response[StatusResponse], error) {
-	return send[StatusResponse](ctx, s.client, http.MethodGet, "/api/health/status", nil, nil)
+	q := url.Values{}
+	if params.Component != "" {
+		q.Set("component", params.Component)
+	}
+	return send[StatusResponse](ctx, s.client, http.MethodGet, "/api/health/status", q, nil)
 }

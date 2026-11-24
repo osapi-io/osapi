@@ -123,7 +123,7 @@ func init() {
 	// The generated commands of the endpoint groups go under client. A group
 	// that also has hand-written commands, such as agent with status,
 	// is named, so its generated commands join that command; so is
-	// a command that a generated one goes under, such as telemetry trace.
+	// a command that a generated one goes under, such as file stale.
 	endpointcommand.Use(func() endpointcommand.Caller { return sdkClient })
 	if err := clicommand.Attach(clientCmd, clicommand.Deps{
 		JSON:      func() bool { return jsonOutput },

@@ -77,11 +77,13 @@ var Group = endpoint.Register(endpoint.Define(
 		Notes("Each sub-component is under its component, as a tree, with its address\n"+
 			"and its URL. The checks tell if the controller can reach NATS and the KV\n"+
 			"buckets. The output also has the counts of the job queue, the streams, the\n"+
-			"KV buckets and the Object Stores. The command needs a token. `controller\n"+
-			"status`, `nats status` and `agent status` show one type of component. Use\n"+
+			"KV buckets and the Object Stores. The command needs a token. --component\n"+
+			"shows one type of component: controller, nats or agent. Use\n"+
 			"`osapi client agent list` for the labels and the OS of each agent. When a\n"+
 			"check fails, the overall status is `degraded`, and the check shows the error.").
 		Example("").
 		Prints(sampleStatus).
-		Example("--json"),
+		Example("--component agent").
+		Example("--json").
+		Fails("a component that is not controller, nats or agent", StatusInput{Component: "disk"}),
 ))

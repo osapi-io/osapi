@@ -21,7 +21,7 @@ Manage the agents in the fleet: discovery, drain and PKI enrollment.
 
 | NAME    | VERB | PATH                                    | PERMISSION  | OPERATION ID    |
 | ------- | ---- | --------------------------------------- | ----------- | --------------- |
-| status  | GET  | /api/agent/status                       | health:read | GetAgentStatus  |
+| facts   | GET  | /api/agent/facts                        | agent:read  | GetAgentFacts   |
 | list    | GET  | /api/agent                              | agent:read  | GetAgents       |
 | get     | GET  | /api/agent/&#123;hostname&#125;         | agent:read  | GetAgentDetails |
 | drain   | POST | /api/agent/&#123;hostname&#125;/drain   | agent:write | DrainAgent      |
@@ -31,7 +31,7 @@ Manage the agents in the fleet: discovery, drain and PKI enrollment.
 
 | NAME    | INPUT                                 | OUTPUT                                                                                                                                                                                                                                                                                                                                   |
 | ------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| status  | StatusInput                           | ComponentList &#123; total_items, items &#125;                                                                                                                                                                                                                                                                                           |
+| facts   | FactsInput                            | FactKeysResponse &#123; items, total_items &#125;                                                                                                                                                                                                                                                                                        |
 | list    | ListInput                             | ListAgentsResponse &#123; items, total_items &#125;                                                                                                                                                                                                                                                                                      |
 | get     | GetInput &#123; hostname\* &#125;     | AgentInfo &#123; hostname, machine_id, state, conditions, labels, started_at, load_average, os_info, version, fingerprint, registered_at, uptime, memory, architecture, kernel_version, cpu_count, fqdn, service_mgr, package_mgr, primary_interface, interfaces, routes, missing_programs, facts, timeline, key_stored, verified &#125; |
 | drain   | DrainInput &#123; hostname\* &#125;   |                                                                                                                                                                                                                                                                                                                                          |

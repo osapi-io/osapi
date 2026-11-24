@@ -188,16 +188,6 @@ tags:
     x-displayName: Agent
     x-osapi-area: fleet
     x-osapi-group: agent
-  - description: The controller of the fleet.
-    name: Controller_API_controller
-    x-displayName: Controller
-    x-osapi-area: fleet
-    x-osapi-group: controller
-  - description: Fact key discovery for @fact. references.
-    name: Facts_API_facts
-    x-displayName: Facts
-    x-osapi-area: fleet
-    x-osapi-group: facts
   - description: Health check endpoints for liveness, readiness, and detailed status.
     name: Health_Check_API_health
     x-displayName: Health
@@ -208,16 +198,11 @@ tags:
     x-displayName: Job
     x-osapi-area: fleet
     x-osapi-group: job
-  - description: The NATS server of the fleet.
-    name: NATS_API_nats
-    x-displayName: NATS
+  - description: The spans of a trace.
+    name: Trace_API_trace
+    x-displayName: Trace
     x-osapi-area: fleet
-    x-osapi-group: nats
-  - description: Telemetry endpoints, such as the spans of a trace.
-    name: Telemetry_API_telemetry
-    x-displayName: Telemetry
-    x-osapi-area: fleet
-    x-osapi-group: telemetry
+    x-osapi-group: trace
 paths:
   /api/admission:
     get:
@@ -876,17 +861,17 @@ paths:
           input:
             hostname: web-01
       x-osapi-method: undrain
-  /api/agent/status:
+  /api/agent/facts:
     get:
-      description: Each agent, with each of its sub-components, from the health status of the controller.
-      operationId: GetAgentStatus
+      description: 'Returns the fact keys that an input can refer to as @fact.<key>: the built-in keys and the custom keys that agents register.'
+      operationId: GetAgentFacts
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ComponentList'
-          description: Each agent component, with its sub-components.
+                $ref: '#/components/schemas/FactKeysResponse'
+          description: The fact keys.
         "401":
           content:
             application/json:
@@ -907,15 +892,15 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - health:read
-      summary: Show the health of each agent
+            - agent:read
+      summary: List the fact keys
       tags:
         - Agent_Management_API_agent_operations
       x-osapi-area: fleet
       x-osapi-examples:
-        - doc: Show the health of each agent
+        - doc: List the fact keys
           input: {}
-      x-osapi-method: status
+      x-osapi-method: facts
   /api/audit:
     get:
       description: Returns a paginated list of audit log entries, newest first. A token with a target scope gets only the entries of requests to a target in its scope, and the total includes only those entries.
@@ -1147,86 +1132,6 @@ paths:
         - doc: Export all audit log entries
           input: {}
       x-osapi-method: export
-  /api/controller/status:
-    get:
-      description: Each controller, with each of its sub-components, from the health status of the controller.
-      operationId: GetControllerStatus
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ComponentList'
-          description: Each controller component, with its sub-components.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - health:read
-      summary: Show the health of the controller
-      tags:
-        - Controller_API_controller
-      x-osapi-area: fleet
-      x-osapi-examples:
-        - doc: Show the health of the controller
-          input: {}
-      x-osapi-method: status
-  /api/facts/keys:
-    get:
-      description: Returns the list of fact keys that can be used in @fact. references. Includes built-in keys and any custom keys registered by agents.
-      operationId: GetFactKeys
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FactKeysResponse'
-          description: List of available fact keys.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - agent:read
-      summary: List available fact keys
-      tags:
-        - Facts_API_facts
-      x-osapi-area: fleet
-      x-osapi-examples:
-        - doc: List available fact keys
-          input: {}
-      x-osapi-method: list
   /api/file:
     get:
       description: List all files stored in the Object Store.
@@ -1710,6 +1615,18 @@ paths:
     get:
       description: Returns per-component health status with system metrics. Requires authentication.
       operationId: GetHealthStatus
+      parameters:
+        - description: 'Show only the components of this type: controller, nats or agent. The other parts of the status stay.'
+          in: query
+          name: component
+          schema:
+            enum:
+              - controller
+              - nats
+              - agent
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=controller nats agent
       responses:
         "200":
           content:
@@ -1717,6 +1634,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
           description: The status of each component. A component that is not healthy makes the overall status degraded; the request still succeeds.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
         "401":
           content:
             application/json:
@@ -1745,6 +1668,9 @@ paths:
       x-osapi-examples:
         - doc: System status and component health
           input: {}
+        - doc: System status and component health, with --component agent
+          input:
+            component: agent
       x-osapi-method: status
   /api/job:
     get:
@@ -2023,47 +1949,7 @@ paths:
           input:
             id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: retry
-  /api/nats/status:
-    get:
-      description: The NATS server, with each of its sub-components, from the health status of the controller.
-      operationId: GetNATSStatus
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ComponentList'
-          description: Each nats component, with its sub-components.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - health:read
-      summary: Show the health of the NATS server
-      tags:
-        - NATS_API_nats
-      x-osapi-area: fleet
-      x-osapi-examples:
-        - doc: Show the health of the NATS server
-          input: {}
-      x-osapi-method: status
-  /api/telemetry/trace/{id}:
+  /api/trace/{id}:
     get:
       description: Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet. A token with a target scope gets a trace only when each target that the trace records is in its scope.
       operationId: GetTrace
@@ -2132,7 +2018,7 @@ paths:
             - trace:read
       summary: Get the spans of a trace
       tags:
-        - Telemetry_API_telemetry
+        - Trace_API_trace
       x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get the spans of a trace
@@ -8761,67 +8647,33 @@ components:
         - hostname
         - state
       type: object
-    ComponentEntry:
+    FactKeyEntry:
       properties:
-        address:
-          description: Listen address of a sub-component, such as :8080.
+        builtin:
+          description: Whether this is a built-in fact key.
+          type: boolean
+        description:
+          description: Human-readable description of the fact.
           type: string
-        age:
-          description: Time since component started.
-          example: 7h 6m
+        key:
+          description: The fact key, such as 'interface.primary'.
           type: string
-        components:
-          description: The sub-components of the component, such as its api and its metrics server, sorted by name.
-          items:
-            $ref: '#/components/schemas/ComponentEntry'
-          type: array
-        conditions:
-          description: Active conditions.
-          items:
-            type: string
-          type: array
-        cpu_percent:
-          description: Process CPU usage percentage.
-          example: 2.1
-          type: number
-        hostname:
-          description: Component hostname.
-          example: web-01
-          type: string
-        mem_bytes:
-          description: Process RSS memory in bytes.
-          example: 134217728
-          format: int64
-          type: integer
-        status:
-          description: Component status.
-          example: Ready
-          type: string
-        type:
-          description: Component type (agent, controller, nats), or the name of a sub-component, such as api.
-          example: agent
-          type: string
-        url:
-          description: Where a person opens a sub-component, from its url config key.
-          type: string
-        version:
-          description: Build version of the component's binary.
-          example: v0.2.1-0.20261119003517-f6bc5af55ceb
-          type: string
+      required:
+        - key
       type: object
-    ComponentList:
+    FactKeysResponse:
       properties:
         items:
-          description: Each component of the type, with its sub-components.
+          description: Available fact keys for @fact. references.
           items:
-            $ref: '#/components/schemas/ComponentEntry'
+            $ref: '#/components/schemas/FactKeyEntry'
           type: array
         total_items:
-          description: The number of components of the type.
+          description: Total number of fact keys.
           type: integer
       required:
-        - total_items
         - items
+        - total_items
       type: object
     ListAgentsResponse:
       properties:
@@ -9131,34 +8983,6 @@ components:
         - method
         - duration_ms
       type: object
-    FactKeyEntry:
-      properties:
-        builtin:
-          description: Whether this is a built-in fact key.
-          type: boolean
-        description:
-          description: Human-readable description of the fact.
-          type: string
-        key:
-          description: The fact key, such as 'interface.primary'.
-          type: string
-      required:
-        - key
-      type: object
-    FactKeysResponse:
-      properties:
-        items:
-          description: Available fact keys for @fact. references.
-          items:
-            $ref: '#/components/schemas/FactKeyEntry'
-          type: array
-        total_items:
-          description: Total number of fact keys.
-          type: integer
-      required:
-        - items
-        - total_items
-      type: object
     FileInfo:
       properties:
         content_type:
@@ -9362,6 +9186,54 @@ components:
       required:
         - name
         - status
+      type: object
+    ComponentEntry:
+      properties:
+        address:
+          description: Listen address of a sub-component, such as :8080.
+          type: string
+        age:
+          description: Time since component started.
+          example: 7h 6m
+          type: string
+        components:
+          description: The sub-components of the component, such as its api and its metrics server, sorted by name.
+          items:
+            $ref: '#/components/schemas/ComponentEntry'
+          type: array
+        conditions:
+          description: Active conditions.
+          items:
+            type: string
+          type: array
+        cpu_percent:
+          description: Process CPU usage percentage.
+          example: 2.1
+          type: number
+        hostname:
+          description: Component hostname.
+          example: web-01
+          type: string
+        mem_bytes:
+          description: Process RSS memory in bytes.
+          example: 134217728
+          format: int64
+          type: integer
+        status:
+          description: Component status.
+          example: Ready
+          type: string
+        type:
+          description: Component type (agent, controller, nats), or the name of a sub-component, such as api.
+          example: agent
+          type: string
+        url:
+          description: Where a person opens a sub-component, from its url config key.
+          type: string
+        version:
+          description: Build version of the component's binary.
+          example: v0.2.1-0.20261119003517-f6bc5af55ceb
+          type: string
       type: object
     HealthResponse:
       properties:
@@ -14262,12 +14134,9 @@ x-tagGroups:
     tags:
       - Admission_API_admission
       - Agent_Management_API_agent_operations
-      - Controller_API_controller
-      - Facts_API_facts
       - Health_Check_API_health
       - Job_Management_API_job_operations
-      - NATS_API_nats
-      - Telemetry_API_telemetry
+      - Trace_API_trace
 x-osapi-areas:
   - name: services
     label: Services

@@ -51,8 +51,8 @@ The rules:
   method's types. A group with a handler Uses a type. Fix: Add .Handle(fn) to
   each method, with the signature that the message names, and
   endpoint.Uses\[Deps]() to Define.
-- `subdoc`: Each Sub segment that makes a command of its own, such as trace in
-  osapi client telemetry trace get, has a SubDoc: the one line of help of that
+- `subdoc`: Each Sub segment that makes a command of its own, such as stale in
+  osapi client file stale list, has a SubDoc: the one line of help of that
   command. Fix: Add endpoint.SubDoc("segment", "...") to Define, with what the
   segment's commands do, such as Read a trace from the tracing backend.
 - `validate`: Each input field has a validate tag: its rules, or omitempty for

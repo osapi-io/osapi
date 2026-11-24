@@ -32,7 +32,7 @@ export function SignIn() {
     // still means the signature and expiry are good.
     setChecking(true);
     try {
-      const res = await getHealthStatus({
+      const res = await getHealthStatus(undefined, {
         headers: { Authorization: `Bearer ${trimmed}` },
       });
       if (res.status === 401) {

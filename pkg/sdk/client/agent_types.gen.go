@@ -98,6 +98,27 @@ type AgentInfo struct {
 	Version string `json:"version,omitempty"`
 }
 
+// FactKeyEntry is the FactKeyEntry of the spec.
+type FactKeyEntry struct {
+	// Whether this is a built-in fact key.
+	Builtin bool `json:"builtin,omitempty"`
+
+	// Human-readable description of the fact.
+	Description string `json:"description,omitempty"`
+
+	// The fact key, such as 'interface.primary'.
+	Key string `json:"key"`
+}
+
+// FactKeysResponse is the FactKeysResponse of the spec.
+type FactKeysResponse struct {
+	// Available fact keys for @fact. references.
+	Items []FactKeyEntry `json:"items"`
+
+	// Total number of fact keys.
+	TotalItems int `json:"total_items"`
+}
+
 // ListAgentsResponse is the ListAgentsResponse of the spec.
 type ListAgentsResponse struct {
 	// The active agents.

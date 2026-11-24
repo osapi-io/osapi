@@ -190,7 +190,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleSubDoc,
-		Requires: "Each Sub segment that makes a command of its own, such as trace in osapi client telemetry trace get, has a SubDoc: the one line of help of that command.",
+		Requires: "Each Sub segment that makes a command of its own, such as stale in osapi client file stale list, has a SubDoc: the one line of help of that command.",
 		Fix:      "Add endpoint.SubDoc(\"segment\", \"...\") to Define, with what the segment's commands do, such as Read a trace from the tracing backend.",
 	},
 	{

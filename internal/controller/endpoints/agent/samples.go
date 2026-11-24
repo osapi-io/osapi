@@ -22,8 +22,6 @@ package agent
 
 import (
 	"time"
-
-	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
 // The sample answers of the examples, which the docs page of each command
@@ -68,22 +66,4 @@ var (
 	}
 
 	sampleList = ListAgentsResponse{Items: []AgentInfo{sampleWeb01, sampleMac01}, TotalItems: 2}
-
-	sampleStatus = health.ComponentList{
-		TotalItems: 2,
-		Items: []health.ComponentEntry{
-			{
-				Type: "agent", Hostname: "web-01", Status: "ok", Age: "51h2m",
-				CPUPercent: 0.4, MemBytes: 31457280, Version: "v1.4.0",
-				Components: []health.ComponentEntry{
-					{Type: "heartbeat", Status: "ok"},
-					{Type: "facts", Status: "ok"},
-				},
-			},
-			{
-				Type: "agent", Hostname: "mac-01", Status: "ok", Age: "1h30m",
-				CPUPercent: 0.7, MemBytes: 28311552, Version: "v1.4.0",
-			},
-		},
-	}
 )

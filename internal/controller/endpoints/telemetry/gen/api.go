@@ -9,14 +9,14 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 )
 
-// Routes are the telemetry group's endpoints, as its definition declares them.
+// Routes are the trace group's endpoints, as its definition declares them.
 func Routes(
 	s *server.Server,
 ) []server.Route {
 	return []server.Route{
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/telemetry/trace/:id",
+			Path:       "/api/trace/:id",
 			Permission: "trace:read",
 			Handler:    server.Serve(s, telemetry.Group, "get", telemetry.Get, decodeGet),
 		},
