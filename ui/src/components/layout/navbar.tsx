@@ -15,7 +15,8 @@ import {
 import { cn } from "@/lib/cn";
 import { IconButton } from "@/components/ui/icon-button";
 import { useAuth } from "@/hooks/use-auth";
-import { ROLES, type Permission } from "@/lib/permissions";
+import { ROLES } from "@/lib/permissions";
+import type { OperationId } from "@/lib/operations.gen";
 import { Badge } from "@/components/ui/badge";
 import { Dropdown } from "@/components/ui/dropdown";
 import { useOutsideClick } from "@/hooks/use-outside-click";
@@ -26,28 +27,50 @@ const navItems = [
   { to: "/plans/new", label: "Plans", icon: ListChecks },
 ];
 
-// Each link shows to a user with its permission. A link without one shows to
-// a user who can read the audit log, as the whole menu did before.
+// Each link shows to a user who may call the operation that its page reads,
+// the same check that the page makes. A link without an operation calls no
+// API, such as Roles, which shows the generated role table.
 const adminLinks: {
   to: string;
   label: string;
   icon: typeof FileText;
-  perm?: Permission;
+  operation?: OperationId;
 }[] = [
-  { to: "/admin/audit", label: "Audit Log", icon: FileText },
-  { to: "/admin/admission", label: "Admission", icon: ShieldAlert },
-  { to: "/admin/jobs", label: "Jobs", icon: Briefcase },
+  {
+    to: "/admin/audit",
+    label: "Audit Log",
+    icon: FileText,
+    operation: "getAuditLogs",
+  },
+  {
+    to: "/admin/admission",
+    label: "Admission",
+    icon: ShieldAlert,
+    operation: "getAdmissions",
+  },
+  { to: "/admin/jobs", label: "Jobs", icon: Briefcase, operation: "getJobs" },
   { to: "/admin/roles", label: "Roles", icon: Shield },
-  { to: "/admin/traces", label: "Traces", icon: GitBranch, perm: "trace:read" },
+  {
+    to: "/admin/traces",
+    label: "Traces",
+    icon: GitBranch,
+    operation: "getTrace",
+  },
 ];
 
 export function Navbar() {
   const location = useLocation();
-  const { role, roleOverride, setRoleOverride, clearToken, can, tokenRoles } =
-    useAuth();
+  const {
+    role,
+    roleOverride,
+    setRoleOverride,
+    clearToken,
+    canCall,
+    tokenRoles,
+  } = useAuth();
   const isTokenAdmin = tokenRoles.includes("admin");
-  const visibleLinks = adminLinks.filter((link) =>
-    can(link.perm ?? "audit:read"),
+  const visibleLinks = adminLinks.filter(
+    (link) => !link.operation || canCall(link.operation),
   );
   const showAdmin = visibleLinks.length > 0;
   const [adminOpen, setAdminOpen] = useState(false);

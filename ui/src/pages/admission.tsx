@@ -22,7 +22,7 @@ const sections = [
 ] as const;
 
 export function Admission() {
-  const { can } = useAuth();
+  const { canCall } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [records, setRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export function Admission() {
     };
   }, [fetchRecords]);
 
-  if (!can("admission:read")) {
+  if (!canCall("getAdmissions")) {
     return <PermissionDenied title="Admission" what="admission records" />;
   }
 
@@ -93,7 +93,7 @@ export function Admission() {
                 <AdmissionCard
                   key={r.machine_id}
                   record={r}
-                  canWrite={can("admission:write")}
+                  canWrite={canCall("admitMachine")}
                   onRefresh={fetchRecords}
                 />
               ))}
