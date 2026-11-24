@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Core concepts | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/concepts"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Core concepts | OSAPI"><meta data-rh="true" name="description" content="These are the parts of osapi. Each section tells what the part is and where to"><meta data-rh="true" property="og:description" content="These are the parts of osapi. Each section tells what the part is and where to"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/concepts"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/concepts" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/concepts" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Core concepts","item":"https://osapi-io.github.io/osapi/sidebar/concepts"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.d6e6422c.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.725f322c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.64f2108f.js" defer="defer"></script>
 </head>
 <body>
@@ -83,9 +83,8 @@ block the others. osapi keeps each job, and the audit log records each request.<
 <p>The controller serves the API and puts jobs on the queue. An agent runs on each
 host and does the work. <code>osapi start</code> runs the queue, the controller and an
 agent in one process, for a test.</p>
-<p>Each agent has an identity. With PKI on, the controller signs each job, and an
-agent signs each answer. Refer to
-<a class="" href="/osapi/sidebar/features/platform/agent-identity">Agent identity</a>.</p>
+<p>Each agent has an identity. The controller signs each job, and an agent signs
+each answer. Refer to <a class="" href="/osapi/sidebar/features/platform/agent-identity">Agent identity</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="skill">Skill<a href="#skill" class="hash-link" aria-label="Direct link to Skill" title="Direct link to Skill" translate="no">​</a></h2>
 <p>A skill tells an agent how to use osapi. <code>osapi skill install</code> installs two
 skills:</p>

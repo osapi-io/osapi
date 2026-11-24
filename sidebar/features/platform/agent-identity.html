@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.d6e6422c.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.725f322c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.64f2108f.js" defer="defer"></script>
 </head>
 <body>
@@ -37,15 +37,15 @@ can identify an agent when its hostname changes. The management dashboard shows
 the machine ID and the fingerprint on the agent cards. Use the Admin &gt;
 Enrollment page to manage pending agents.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="pki-enrollment">PKI enrollment<a href="#pki-enrollment" class="hash-link" aria-label="Direct link to PKI enrollment" title="Direct link to PKI enrollment" translate="no">​</a></h2>
-<p>When <code>pki.enabled</code> is true on the controller and on the agent, osapi uses
-Ed25519 key pairs. They give each agent a cryptographic identity, and they sign
-the jobs.</p>
+<p>PKI is always on. osapi uses Ed25519 key pairs. They give each agent a
+cryptographic identity, and they sign the jobs. An agent takes no job until the
+controller admits it.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="enrollment-flow">Enrollment flow<a href="#enrollment-flow" class="hash-link" aria-label="Direct link to Enrollment flow" title="Direct link to Enrollment flow" translate="no">​</a></h3>
 <p>Enrollment uses an accept and reject model, like Salt:</p>
 <ol>
 <li class="">
 <p><strong>The agent makes its keys.</strong> When the agent starts for the first time, it
-makes two keys in <code>agent.pki.key_dir</code> (<code>/etc/osapi/pki</code> by default):</p>
+makes two keys in <code>agent.pki.key_dir</code> (<code>/etc/osapi/pki/agent</code> by default):</p>
 
 
 
@@ -133,21 +133,17 @@ not use this in production.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cli-commands">CLI commands<a href="#cli-commands" class="hash-link" aria-label="Direct link to CLI commands" title="Direct link to CLI commands" translate="no">​</a></h3>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token comment" style="color:#8a8a8a;font-style:italic"># On the machine: show its machine ID, encryption key and key fingerprint</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi agent key fingerprint</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># List the machines that wait for a decision</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client admission list </span><span class="token parameter variable" style="color:#6b5cff">--state</span><span class="token plain"> pending</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># Admit a machine, with the fingerprint that the machine printed</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client admission admit --machine-id </span><span class="token operator" style="color:#8a8a8a">&lt;</span><span class="token plain">machine-id</span><span class="token operator" style="color:#8a8a8a">&gt;</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token parameter variable" style="color:#6b5cff">--fingerprint</span><span class="token plain"> SHA256:a1b2c3</span><span class="token punctuation" style="color:#8a8a8a">..</span><span class="token plain">.</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># Reject a machine, with the reason</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client admission reject --machine-id </span><span class="token operator" style="color:#8a8a8a">&lt;</span><span class="token plain">machine-id</span><span class="token operator" style="color:#8a8a8a">&gt;</span><span class="token plain"> </span><span class="token parameter variable" style="color:#6b5cff">--reason</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&quot;unknown host&quot;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># Revoke an admitted machine that is not trusted: its key stops verifying at</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># once, and a record shows it if it asks again</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client admission revoke --machine-id </span><span class="token operator" style="color:#8a8a8a">&lt;</span><span class="token plain">machine-id</span><span class="token operator" style="color:#8a8a8a">&gt;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># Delete a machine that goes away on purpose, such as before a rebuild: its key</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># and each record of it go, and it is new if it asks again</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client admission delete --machine-id </span><span class="token operator" style="color:#8a8a8a">&lt;</span><span class="token plain">machine-id</span><span class="token operator" style="color:#8a8a8a">&gt;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token comment" style="color:#8a8a8a;font-style:italic"># Show the local controller key fingerprint</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi controller key fingerprint</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="job-signing">Job signing<a href="#job-signing" class="hash-link" aria-label="Direct link to Job signing" title="Direct link to Job signing" translate="no">​</a></h2>
-<p>When <code>controller.pki.enabled</code> is true, the controller signs each job payload
-with its Ed25519 private key before it stores the job in the KV bucket. The
-payload is in a <code>SignedEnvelope</code>:</p>
+<p>The controller signs each job payload with its Ed25519 private key before it
+stores the job in the KV bucket. The payload is in a <code>SignedEnvelope</code>:</p>
 <div class="language-json codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-json codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token punctuation" style="color:#8a8a8a">{</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token property" style="color:#00d5ff">&quot;payload&quot;</span><span class="token operator" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&quot;&lt;raw job JSON&gt;&quot;</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token property" style="color:#00d5ff">&quot;signature&quot;</span><span class="token operator" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&quot;&lt;Ed25519 signature bytes&gt;&quot;</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token property" style="color:#00d5ff">&quot;fingerprint&quot;</span><span class="token operator" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&quot;sha256:a1b2c3...&quot;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token punctuation" style="color:#8a8a8a">}</span><br></div></code></pre></div></div>
 <p>Agents also sign their job responses with their own key pair before they write
 them to the KV bucket. They use the same envelope.</p>
-<p>When PKI is disabled on one side, that side does not sign and does not verify.
-osapi stores and processes the jobs and the responses as plain JSON, without an
-envelope.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="verification-and-failures">Verification and failures<a href="#verification-and-failures" class="hash-link" aria-label="Direct link to Verification and failures" title="Direct link to Verification and failures" translate="no">​</a></h3>
-<p>When <code>agent.pki.enabled</code> is true, the agent verifies the envelope of each job
-before it runs the operation. Verification fails closed: the agent rejects the
-job and does not run it unless the job passes all checks. The agent writes one
-of three reasons to the log and records it as the termination reason of the job.
-Thus an operator can tell them apart:</p>
+<p>The agent verifies the envelope of each job before it runs the operation.
+Verification fails closed: the agent rejects the job and does not run it unless
+the job passes all checks. The agent writes one of three reasons to the log and
+records it as the termination reason of the job. Thus an operator can tell them
+apart:</p>
 <ul>
 <li class=""><strong>Not enrolled.</strong> The agent has no controller public key yet, because
 enrollment is pending or did not complete. osapi reports this separately from
@@ -162,15 +158,13 @@ period. Refer to <a href="#key-rotation" class="">Key rotation</a>.</li>
 <p>The controller also verifies the signature on the job response of an agent
 before it uses it as a result. A response that fails verification is a failed or
 missing result, never a successful result.</p>
-<p>When PKI is disabled, none of this applies. There is no envelope to verify, so
-osapi rejects nothing because of a signature.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="registration-signing">Registration signing<a href="#registration-signing" class="hash-link" aria-label="Direct link to Registration signing" title="Direct link to Registration signing" translate="no">​</a></h2>
 <p>An agent sends more than job responses. At each heartbeat, it writes its own
 entry in the agent registry again. Targeting reads that entry. It reads the
 hostname that a job names and the labels that a label target selects. It also
 reads the scheduling state, which decides if the agent can get work.</p>
-<p>When <code>agent.pki.enabled</code> is true, the agent signs the routing fields of its
-registration with its own key pair. The signature includes:</p>
+<p>The agent signs the routing fields of its registration with its own key pair.
+The signature includes:</p>
 
 
 
@@ -266,34 +260,24 @@ get the new public key of the controller in an updated enrollment response.
 Then they change to the new key.</li>
 <li class="">After the grace period, osapi accepts only the new key.</li>
 </ol>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rollout">Rollout<a href="#rollout" class="hash-link" aria-label="Direct link to Rollout" title="Direct link to Rollout" translate="no">​</a></h2>
-<p>Verification on the agent fails closed. Thus the order is important when you
-enable <code>agent.pki.enabled</code> on a fleet:</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="upgrade-a-fleet">Upgrade a fleet<a href="#upgrade-a-fleet" class="hash-link" aria-label="Direct link to Upgrade a fleet" title="Direct link to Upgrade a fleet" translate="no">​</a></h2>
+<p>PKI is always on, and the settings <code>controller.pki.enabled</code> and
+<code>agent.pki.enabled</code> do not exist. Remove them from <code>osapi.yaml</code>: the config
+check refuses a key that it does not know. Do these steps in this order:</p>
 <ol>
-<li class="">Enable <code>controller.pki.enabled</code> first. Make sure that the agents complete
-enrollment and show as accepted (<code>osapi client agent list</code>).</li>
-<li class="">Then enable <code>agent.pki.enabled</code>. An agent that did not complete enrollment
-has no public key of the controller. If you enable PKI on it before
-enrollment completes, it rejects each job as &quot;not enrolled&quot; until enrollment
-completes.</li>
+<li class="">Upgrade the controller. It makes its key pair in <code>controller.pki.key_dir</code> at
+its first start, and signs each job from then on.</li>
+<li class="">Upgrade each agent. At its first start, the agent makes its keys in
+<code>agent.pki.key_dir</code> (<code>/etc/osapi/pki/agent</code> by default), and asks to join. It
+takes no job until the controller admits it.</li>
+<li class="">Admit each agent: read <code>osapi client admission list --state pending</code>, and
+admit each machine with the fingerprint that <code>osapi agent key fingerprint</code>
+prints on it. Set <code>controller.pki.auto_admit</code> only on a test fleet.</li>
 </ol>
-<p>An upgrade does not change these settings. An agent that the controller accepted
-before the key store started has no stored key. Thus it reports
-<code>key_stored: false</code>, and its registration does not decide anything when the
-controller verifies. Nothing starts to refuse work at a time that nobody
-selected. Do these steps in this order:</p>
-<ol>
-<li class="">Enable <code>controller.pki.enabled</code>. The controller starts to record the key of
-each agent when it accepts the enrollment.</li>
-<li class="">Read <code>osapi client agent list</code>. Each agent that still shows
-<code>key_stored: false</code> did not enroll after the store started.</li>
-<li class="">Enroll those agents again. Watch the field change as the controller accepts
-each one.</li>
-<li class="">When all of the fleet reports <code>key_stored: true</code> and <code>verified: true</code>, enable
-<code>agent.pki.enabled</code>.</li>
-</ol>
-<p>If you do step 4 first, the fleet refuses work: the agents verify the jobs
-before the controller can verify the agents.</p>
+<p>The agent and the controller have different key directories. The agent keeps the
+public key of the controller as <code>controller.pub</code> in its directory, and the
+controller keeps its own key with the same name in its directory. An agent and a
+controller on one host thus do not read the key of the other.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="configuration">Configuration<a href="#configuration" class="hash-link" aria-label="Direct link to Configuration" title="Direct link to Configuration" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="agent-pki">Agent PKI<a href="#agent-pki" class="hash-link" aria-label="Direct link to Agent PKI" title="Direct link to Agent PKI" translate="no">​</a></h3>
 
@@ -315,14 +299,7 @@ before the controller can verify the agents.</p>
 
 
 
-
-
-
-
-
-
-
-<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>agent.pki.enabled</code></td><td>bool</td><td><code>false</code></td><td><code>OSAPI_AGENT_PKI_ENABLED</code></td><td>Enable PKI enrollment and job signature verification.</td></tr><tr><td><code>agent.pki.key_dir</code></td><td>string</td><td><code>/etc/osapi/pki</code></td><td><code>OSAPI_AGENT_PKI_KEY_DIR</code></td><td>Directory for agent keypair storage.</td></tr></tbody></table>
+<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>agent.pki.key_dir</code></td><td>string</td><td><code>/etc/osapi/pki/agent</code></td><td><code>OSAPI_AGENT_PKI_KEY_DIR</code></td><td>Directory for agent keypair storage.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="controller-pki">Controller PKI<a href="#controller-pki" class="hash-link" aria-label="Direct link to Controller PKI" title="Direct link to Controller PKI" translate="no">​</a></h3>
 
 
@@ -364,14 +341,7 @@ before the controller can verify the agents.</p>
 
 
 
-
-
-
-
-
-
-
-<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>controller.pki.enabled</code></td><td>bool</td><td><code>false</code></td><td><code>OSAPI_CONTROLLER_PKI_ENABLED</code></td><td>Enable PKI enrollment and job signing.</td></tr><tr><td><code>controller.pki.key_dir</code></td><td>string</td><td><code>/etc/osapi/pki</code></td><td><code>OSAPI_CONTROLLER_PKI_KEY_DIR</code></td><td>Directory for controller keypair storage.</td></tr><tr><td><code>controller.pki.auto_admit</code></td><td>bool</td><td><code>false</code></td><td><code>OSAPI_CONTROLLER_PKI_AUTO_ADMIT</code></td><td>Admit each machine that asks to join, with no operator (dev/test only).</td></tr><tr><td><code>controller.pki.rotation_grace_period</code></td><td>string</td><td><code>24h</code></td><td><code>OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD</code></td><td>Grace period during key rotation where both old and new keys are accepted. Go duration format.</td></tr><tr><td><code>controller.pki.delete_after</code></td><td>string</td><td>none</td><td><code>OSAPI_CONTROLLER_PKI_DELETE_AFTER</code></td><td>Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format.</td></tr></tbody></table>
+<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>controller.pki.key_dir</code></td><td>string</td><td><code>/etc/osapi/pki</code></td><td><code>OSAPI_CONTROLLER_PKI_KEY_DIR</code></td><td>Directory for controller keypair storage.</td></tr><tr><td><code>controller.pki.auto_admit</code></td><td>bool</td><td><code>false</code></td><td><code>OSAPI_CONTROLLER_PKI_AUTO_ADMIT</code></td><td>Admit each machine that asks to join, with no operator (dev/test only).</td></tr><tr><td><code>controller.pki.rotation_grace_period</code></td><td>string</td><td><code>24h</code></td><td><code>OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD</code></td><td>Grace period during key rotation where both old and new keys are accepted. Go duration format.</td></tr><tr><td><code>controller.pki.delete_after</code></td><td>string</td><td>none</td><td><code>OSAPI_CONTROLLER_PKI_DELETE_AFTER</code></td><td>Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format.</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-does-not-change">What does not change<a href="#what-does-not-change" class="hash-link" aria-label="Direct link to What does not change" title="Direct link to What does not change" translate="no">​</a></h2>
 <ul>
 <li class=""><strong>JWT authentication.</strong> The HMAC-SHA256 JWT tokens for API authentication do
@@ -380,6 +350,6 @@ agents. It does not replace JWT.</li>
 <li class=""><strong>NATS transport.</strong> NATS connections still use their own authentication
 (<code>none</code>, <code>user_pass</code>, <code>nkey</code> or <code>creds</code>). PKI operates on the job payloads,
 not on the transport.</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/platform/agent-hardening"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent Hardening</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/platform/agent-lifecycle"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent lifecycle</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#machine-identity" class="table-of-contents__link toc-highlight">Machine identity</a><ul><li><a href="#cli-targeting" class="table-of-contents__link toc-highlight">CLI targeting</a></li></ul></li><li><a href="#pki-enrollment" class="table-of-contents__link toc-highlight">PKI enrollment</a><ul><li><a href="#enrollment-flow" class="table-of-contents__link toc-highlight">Enrollment flow</a></li><li><a href="#an-agent-admitted-before-the-encryption-key" class="table-of-contents__link toc-highlight">An agent admitted before the encryption key</a></li><li><a href="#auto-admit-mode" class="table-of-contents__link toc-highlight">Auto-admit mode</a></li><li><a href="#cli-commands" class="table-of-contents__link toc-highlight">CLI commands</a></li></ul></li><li><a href="#job-signing" class="table-of-contents__link toc-highlight">Job signing</a><ul><li><a href="#verification-and-failures" class="table-of-contents__link toc-highlight">Verification and failures</a></li></ul></li><li><a href="#registration-signing" class="table-of-contents__link toc-highlight">Registration signing</a><ul><li><a href="#what-the-controller-checks" class="table-of-contents__link toc-highlight">What the controller checks</a></li><li><a href="#check-the-state-of-a-fleet" class="table-of-contents__link toc-highlight">Check the state of a fleet</a></li></ul></li><li><a href="#key-rotation" class="table-of-contents__link toc-highlight">Key rotation</a></li><li><a href="#rollout" class="table-of-contents__link toc-highlight">Rollout</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#agent-pki" class="table-of-contents__link toc-highlight">Agent PKI</a></li><li><a href="#controller-pki" class="table-of-contents__link toc-highlight">Controller PKI</a></li></ul></li><li><a href="#what-does-not-change" class="table-of-contents__link toc-highlight">What does not change</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/platform/agent-hardening"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent Hardening</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/platform/agent-lifecycle"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent lifecycle</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#machine-identity" class="table-of-contents__link toc-highlight">Machine identity</a><ul><li><a href="#cli-targeting" class="table-of-contents__link toc-highlight">CLI targeting</a></li></ul></li><li><a href="#pki-enrollment" class="table-of-contents__link toc-highlight">PKI enrollment</a><ul><li><a href="#enrollment-flow" class="table-of-contents__link toc-highlight">Enrollment flow</a></li><li><a href="#an-agent-admitted-before-the-encryption-key" class="table-of-contents__link toc-highlight">An agent admitted before the encryption key</a></li><li><a href="#auto-admit-mode" class="table-of-contents__link toc-highlight">Auto-admit mode</a></li><li><a href="#cli-commands" class="table-of-contents__link toc-highlight">CLI commands</a></li></ul></li><li><a href="#job-signing" class="table-of-contents__link toc-highlight">Job signing</a><ul><li><a href="#verification-and-failures" class="table-of-contents__link toc-highlight">Verification and failures</a></li></ul></li><li><a href="#registration-signing" class="table-of-contents__link toc-highlight">Registration signing</a><ul><li><a href="#what-the-controller-checks" class="table-of-contents__link toc-highlight">What the controller checks</a></li><li><a href="#check-the-state-of-a-fleet" class="table-of-contents__link toc-highlight">Check the state of a fleet</a></li></ul></li><li><a href="#key-rotation" class="table-of-contents__link toc-highlight">Key rotation</a></li><li><a href="#upgrade-a-fleet" class="table-of-contents__link toc-highlight">Upgrade a fleet</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#agent-pki" class="table-of-contents__link toc-highlight">Agent PKI</a></li><li><a href="#controller-pki" class="table-of-contents__link toc-highlight">Controller PKI</a></li></ul></li><li><a href="#what-does-not-change" class="table-of-contents__link toc-highlight">What does not change</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
