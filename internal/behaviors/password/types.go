@@ -19,12 +19,14 @@
 // DEALINGS IN THE SOFTWARE.
 package password
 
+import "github.com/osapi-io/osapi/internal/secret"
+
 // UpdateInput sets the password of a user. The caller sends password; the
 // controller's step hashes it into password_hash.
 type UpdateInput struct {
-	Name         string `json:"name"                    validate:"required,max=32,account_name" doc:"The user, such as alice"`
-	Password     string `json:"password,omitempty"      validate:"omitempty,no_linebreak"       doc:"The new password, which osapi hashes on the controller"           secret:"true"`
-	PasswordHash string `json:"password_hash,omitempty" validate:"omitempty"                    doc:"The sha512-crypt hash of the password, which the controller sets"               before:"set"`
+	Name         string       `json:"name"                    validate:"required,max=32,account_name" doc:"The user, such as alice"`
+	Password     secret.Value `json:"password,omitempty"      validate:"omitempty,no_linebreak"       doc:"The new password, which osapi hashes on the controller"`
+	PasswordHash string       `json:"password_hash,omitempty" validate:"omitempty"                    doc:"The sha512-crypt hash of the password, which the controller sets" before:"set"`
 }
 
 // Result is what update reports for the user.

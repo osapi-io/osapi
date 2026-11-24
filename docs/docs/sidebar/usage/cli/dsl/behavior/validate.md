@@ -92,18 +92,22 @@ The rules:
   .Fails("&lt;what is wrong&gt;", &lt;Input&gt;&#123;...&#125;) to the method,
   with the other fields valid and the field's value breaking the rule that the
   message names, such as a name of 256 characters for max=255.
-- `secret`: No input field is both secret:"true" and telemetry:"attr". Fix:
-  Remove telemetry:"attr" from the secret field. A secret is never recorded on a
-  span.
+- `secret`: No secret.Value input field is tagged telemetry:"attr", is the key
+  of a method that the API serves, or is an input of a read that the API serves:
+  the key goes in the path and a read's input in the query, and a URL goes in
+  logs. Fix: Remove telemetry:"attr" from the secret field, give the method a
+  key that is not a secret, or make the method a write, which sends its input in
+  the body.
 - `before`: A .Before step is func(context.Context, In) (In, error), on a method
-  that the API serves and that has a secret:"true" input field. Each input field
+  that the API serves and that has a secret.Value input field. Each input field
   tagged before:"set" has a step to set it. Fix: Give the step the method's
-  input type in and out, serve the behavior, mark the plain secret
-  secret:"true", and tag only the fields that the step fills before:"set".
-- `tag`: Each struct tag of an input field has a known key (behavior.KnownTags),
-  secret is "true" and telemetry is "attr". Fix: Correct the key or the value. A
-  misspelled secret tag puts the field in the audit log, and a misspelled
-  telemetry tag leaves it off the span.
+  input type in and out, serve the behavior, give the plain secret the type
+  secret.Value, and tag only the fields that the step fills before:"set".
+- `tag`: Each struct tag of an input field has a known key (command.KnownTags),
+  and telemetry is "attr". A secret is the type secret.Value: the tag secret is
+  not a key. Fix: Correct the key or the value: a misspelled telemetry tag
+  leaves the field off the span. Give a secret the type secret.Value of
+  internal/secret in place of the tag secret:"true".
 - `surface`: A behavior with CLI also has API, and a behavior with API has an
   Area of the UI. An internal behavior has no API or CLI. Each input field of a
   CLI behavior has a type a flag holds: string, bool, int, \[]string,

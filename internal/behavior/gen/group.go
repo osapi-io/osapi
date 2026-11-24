@@ -239,7 +239,7 @@ func requestFields(
 			continue
 		}
 		tags := map[string]string{"json": fld.Tag.Get("json")}
-		for _, k := range []string{"validate", "doc", "example", "default", "pattern", "secret"} {
+		for _, k := range []string{"validate", "doc", "example", "default", "pattern"} {
 			if v, ok := fld.Tag.Lookup(k); ok {
 				tags[k] = v
 			}

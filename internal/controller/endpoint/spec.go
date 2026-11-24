@@ -395,6 +395,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: "secret.Value",
+			Does: "Not a tag: the type of an input field that holds a secret, from internal/secret; map[string]secret.Value is a map of them. It is a reference, secret://<vault>/<key>, or the value. The spec makes it a string of format password, writeOnly and x-osapi-secret, and its description says what it takes. The audit redacts it by name, but keeps a reference. The CLI flag takes a reference, or - to read the value from standard input, and refuses a value. Its String, Format, MarshalJSON and LogValue give the reference or [redacted]; Reveal gives the value. The route refuses a reference until a vault exists. The secret rule refuses one in:\"path\" or in:\"query\", or with telemetry:\"attr\".",
+			When: "On each input that holds a password, a key or a token. Not a string: a string whose name is on the audit denylist fails TestSecretsAreTyped.",
+		},
+		{
+			Kind: KindCheck,
+			Name: "SecretFields()",
+			Does: "The json names of each secret.Value input field of each registered group, a behavior's group too, at each depth. The audit summary redacts each, with its fixed denylist.",
+			When: "Nothing to call: give a secret field the type, and the audit finds it.",
+		},
+		{
+			Kind: KindTag,
 			Name: `in:"path"`,
 			Does: "Makes the input field the key: {name} in the path. It is required. A method has at most one, besides the fields that the group's Prefix names.",
 			When: "For the field that names the thing, such as hostname or id.",

@@ -35,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type provider struct{}
@@ -348,9 +349,9 @@ func sortedBody(
 
 // pwIn is the input of a write whose controller step hashes its password.
 type pwIn struct {
-	Name         string `json:"name"`
-	Password     string `json:"password,omitempty"      secret:"true"`
-	PasswordHash string `json:"password_hash,omitempty"               before:"set"`
+	Name         string       `json:"name"`
+	Password     secret.Value `json:"password,omitempty"`
+	PasswordHash string       `json:"password_hash,omitempty" before:"set"`
 }
 
 func setPassword(context.Context, provider, pwIn) (kvOut, error) { return kvOut{}, nil }

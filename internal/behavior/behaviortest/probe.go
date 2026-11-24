@@ -31,6 +31,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // probeMark is in every probe, so a probe that got through is found by it.
@@ -113,7 +114,7 @@ func probe(
 ) string {
 	// The API, the agent and behavior.Call refuse an input that breaks its
 	// rules, so no probe can reach the host with one.
-	data, _ := json.Marshal(input)
+	data, _ := json.Marshal(secret.Plain(input))
 	if m.Check(context.Background(), data) != nil {
 		return ""
 	}

@@ -208,7 +208,15 @@ an output becomes a JSON field and a table column.
 | `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                                                                                                                                                             |
 | `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag.                                                                                                                                   |
 | `template:"vars"`  | input  | A Go template, whose `.Vars` are in the input field `vars` (a `map[string]string`). The API refuses one that does not parse, or that reads a field or a var it does not have. `osapi dsl behavior spec get` lists what a template reads. |
-| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                                                                                                                                                              |
+
+A secret is a type, not a tag. Give an input that holds a password, a key or a
+token the type `secret.Value` of `internal/secret`, or `map[string]secret.Value`
+for a map of them, such as the environment of a container. The type keeps it out
+of the audit log, the traces and the chain records, makes it write-only in the
+spec, and makes its flag take a reference, `secret://<vault>/<key>`, or `-` to
+read the value from standard input. The provider reads it with `Reveal`.
+`osapi dsl behavior validate` refuses one with `telemetry:"attr"`, one that is
+the key, and one in a read, because the key and a read's input go in the URL.
 
 A write's output has a `changed` bool. The table shows it as the row's status,
 `changed` or `ok`, rather than as a column. An output that is a slice becomes

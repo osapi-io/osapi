@@ -31,6 +31,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -83,6 +84,12 @@ func Run(
 	}
 	if err := Check(ctx, in); err != nil {
 		return err
+	}
+	// A command resolves a reference from the vaults of its config, and no
+	// config has a vault yet (osapi #1241): a reference names a vault that
+	// does not exist.
+	if refs := secret.References(in); len(refs) > 0 {
+		return secret.Unresolved(refs[0])
 	}
 	d, err := g.deps()
 	if err != nil {

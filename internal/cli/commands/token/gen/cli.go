@@ -27,13 +27,17 @@ var tokenGenerateCmd = &cobra.Command{
 }
 
 var tokenValidateCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mKey ID:\x1b[0m                 2026-11\n  \x1b[38;2;10;143;176mSubject:\x1b[0m                user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m                  read\n  \x1b[38;2;10;143;176mEffective permissions:\x1b[0m  file:read, health:read, status:read\n  \x1b[38;2;10;143;176mAudience:\x1b[0m               osapi\n  \x1b[38;2;10;143;176mIssued at:\x1b[0m              2026-01-15 09:00:00\n  \x1b[38;2;10;143;176mExpires at:\x1b[0m             2026-04-15 09:00:00\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"kid\": \"2026-11\",\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ],\n  \"effective_permissions\": [\n    \"file:read\",\n    \"health:read\",\n    \"status:read\"\n  ],\n  \"audience\": [\n    \"osapi\"\n  ],\n  \"issued_at\": \"2026-01-15T09:00:00Z\",\n  \"expires_at\": \"2026-04-15T09:00:00Z\"\n}\n```"},
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi controller token validate --token -\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mKey ID:\x1b[0m                 2026-11\n  \x1b[38;2;10;143;176mSubject:\x1b[0m                user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m                  read\n  \x1b[38;2;10;143;176mEffective permissions:\x1b[0m  file:read, health:read, status:read\n  \x1b[38;2;10;143;176mAudience:\x1b[0m               osapi\n  \x1b[38;2;10;143;176mIssued at:\x1b[0m              2026-01-15 09:00:00\n  \x1b[38;2;10;143;176mExpires at:\x1b[0m             2026-04-15 09:00:00\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"kid\": \"2026-11\",\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ],\n  \"effective_permissions\": [\n    \"file:read\",\n    \"health:read\",\n    \"status:read\"\n  ],\n  \"audience\": [\n    \"osapi\"\n  ],\n  \"issued_at\": \"2026-01-15T09:00:00Z\",\n  \"expires_at\": \"2026-04-15T09:00:00Z\"\n}\n```"},
 	Args:        cobra.NoArgs,
-	Example:     "  osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...",
+	Example:     "  osapi controller token validate --token -",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		tokenFlag, _ := cmd.Flags().GetString("token")
+		tokenFlagValue, ok := clicommand.Secret(cmd, "token", tokenFlag)
+		if !ok {
+			return nil
+		}
 
-		return clicommand.Run(cmd, token.Group, "validate", token.ValidateInput{Token: tokenFlag})
+		return clicommand.Run(cmd, token.Group, "validate", token.ValidateInput{Token: tokenFlagValue})
 	},
 	Short: "Validate a token for authenticity and claims",
 	Use:   "validate",
@@ -46,7 +50,7 @@ func init() {
 	_ = tokenGenerateCmd.MarkFlagRequired("subject")
 	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi controller role get --name admin lists each one")
 	tokenGenerateCmd.Flags().StringSliceP("targets", "t", nil, "Hosts the token may act on: hostnames and labels, such as group:web; without it, each host")
-	tokenValidateCmd.Flags().StringP("token", "t", "", "The Token string")
+	tokenValidateCmd.Flags().StringP("token", "t", "", "The token (a secret: secret://<vault>/<key>, or - to read it from standard input)")
 	_ = tokenValidateCmd.MarkFlagRequired("token")
 	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenValidateCmd)
 }

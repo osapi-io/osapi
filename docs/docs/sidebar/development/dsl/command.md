@@ -227,6 +227,20 @@ Names the field, its flag (with _ as -) and its key in the JSON of the output.
 
 Use: On each field.
 
+### `secret.Value`
+
+Not a tag: the type of an input field that holds a secret, from internal/secret;
+map\[string]secret.Value is a map of them. Its flag takes a reference,
+secret://&lt;vault&gt;/&lt;key&gt;, or - to read the value from standard input;
+a map flag takes NAME=secret://&lt;vault&gt;/&lt;key&gt;. The command refuses a
+literal value, which the shell history keeps. Its String, Format, MarshalJSON
+and LogValue give the reference or \[redacted]; Reveal gives the value. Run
+refuses a reference until the config has a vault. The secret rule refuses one
+with telemetry:"attr".
+
+Use: On each input that holds a password, a key or a token. Not a string: a
+string whose name is on the audit denylist fails TestSecretsAreTyped.
+
 ### `doc:"..."`
 
 Is the help of the field's flag. A rule of oneof adds its values in brackets.

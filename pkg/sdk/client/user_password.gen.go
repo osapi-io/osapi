@@ -20,7 +20,8 @@ type UserPasswordUpdateInput struct {
 	// The name of the path: the user, such as alice.
 	Name string `json:"-"`
 
-	// The new password, which osapi hashes on the controller.
+	// The new password, which osapi hashes on the controller. A secret: a
+	// reference, secret://<vault>/<key>, or the value.
 	Password string `json:"password,omitempty"`
 }
 

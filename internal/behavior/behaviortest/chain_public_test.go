@@ -30,6 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type echoIn struct {
@@ -73,6 +74,19 @@ func callerGet(
 	}
 
 	return behavior.Call(ctx, echo, echoGet, echoP{}, in)
+}
+
+// keyIn has a secret, which leakyGet gives to echo as its text.
+type keyIn struct {
+	Key secret.Value `json:"key"`
+}
+
+func leakyGet(
+	ctx context.Context,
+	p echoP,
+	in keyIn,
+) (echoOut, error) {
+	return behavior.Call(ctx, echo, echoGet, p, echoIn{Text: in.Key.Reveal()})
 }
 
 func caller(
@@ -161,6 +175,22 @@ func (s *ChainPublicTestSuite) TestChainProblems() {
 				Behavior: "unused", Rule: behavior.RuleUsed,
 				Message: "unused requires echo, and no example calls it",
 				Fix:     behavior.ChainChecks.Fix(behavior.RuleUsed),
+			},
+		},
+		{
+			name: "when a call gives a secret to a field that is not a secret, it is the secret rule",
+			b: behavior.Define("leaky", "Gives its key to echo", behavior.Node,
+				behavior.Requires(echo),
+				behavior.Platform("debian", func(host.Host) (echoP, error) { return echoP{}, nil }),
+				behavior.Read("get", leakyGet).
+					Example("A key", keyIn{Key: "PRIVATE-KEY"}, echoOut{Text: "PRIVATE-KEY"}),
+			),
+			want: behavior.Problem{
+				Behavior: "leaky",
+				Method:   "get",
+				Rule:     behavior.RuleSecret,
+				Message:  `example "A key": leaky get gives its secret key to echo get field text, which is not a secret.Value`,
+				Fix:      behavior.ChainChecks.Fix(behavior.RuleSecret),
 			},
 		},
 		{

@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
@@ -235,6 +236,13 @@ func (s *LocalPublicTestSuite) TestRun() {
 	noUses := command.Define("zzrun", "Run",
 		command.Method[greetIn, greetOut]("get").Handle(greetEmpty),
 	)
+	secretGroup := command.Define("zzrun", "Run",
+		command.Uses[struct{}](),
+		command.Method[secretIn, greetOut]("get").
+			Handle(func(context.Context, struct{}, secretIn) (greetOut, error) {
+				return greetOut{}, nil
+			}),
+	)
 
 	tests := []struct {
 		name    string
@@ -274,6 +282,13 @@ func (s *LocalPublicTestSuite) TestRun() {
 			method: "get",
 			in:     greetIn{Name: "cy"},
 			want:   `{"text":"cy"}`,
+		},
+		{
+			name:    "when a secret is a reference, no vault resolves it",
+			group:   secretGroup,
+			method:  "get",
+			in:      secretIn{Token: "secret://default/token"},
+			wantErr: `secret://default/token: the vault "default" does not exist`,
 		},
 		{
 			name:    "when the method is not in the group",
@@ -403,4 +418,9 @@ func TestLocalPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(LocalPublicTestSuite))
+}
+
+// secretIn is an input with a secret, which a command resolves itself.
+type secretIn struct {
+	Token secret.Value `json:"token" validate:"omitempty" doc:"The token"`
 }

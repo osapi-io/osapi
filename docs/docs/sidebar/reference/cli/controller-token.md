@@ -43,6 +43,6 @@ Generate and validate API tokens.
 
 ### Flags (1)
 
-| FLAG    | SHORT | TYPE   | VALIDATE | HELP             |
-| ------- | ----- | ------ | -------- | ---------------- |
-| --token | t     | string | required | The Token string |
+| FLAG    | SHORT | TYPE         | VALIDATE | HELP      |
+| ------- | ----- | ------------ | -------- | --------- |
+| --token | t     | secret.Value | required | The token |

@@ -88,13 +88,13 @@ shows what a role grants.
 
 ## Flags
 
-| Flag            | Description                                                                          | Default |
-| --------------- | ------------------------------------------------------------------------------------ | ------- |
-| `--command`     | The command and its arguments (required)                                             |         |
-| `--env`         | Environment variables for the command (secret: kept out of the audit log and traces) |         |
-| `--name`        | The container's name or ID (required)                                                |         |
-| `-T, --target`  | Target: _all, _any, hostname, or label (group:web.dev)                               | `_all`  |
-| `--working-dir` | The directory the command runs in                                                    |         |
+| Flag            | Description                                                                              | Default |
+| --------------- | ---------------------------------------------------------------------------------------- | ------- |
+| `--command`     | The command and its arguments (required)                                                 |         |
+| `--env`         | Environment variables for the command (secrets: NAME=secret://&lt;vault&gt;/&lt;key&gt;) |         |
+| `--name`        | The container's name or ID (required)                                                    |         |
+| `-T, --target`  | Target: _all, _any, hostname, or label (group:web.dev)                                   | `_all`  |
+| `--working-dir` | The directory the command runs in                                                        |         |
 
 ## Global flags
 

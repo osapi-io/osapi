@@ -19,9 +19,10 @@ type CLIPublicTestSuite struct {
 // TestCommands runs each example's command line and checks the request it sends.
 func (s *CLIPublicTestSuite) TestCommands() {
 	tests := []struct {
-		name string
-		args []string
-		want commandtest.Request
+		name  string
+		args  []string
+		stdin string
+		want  commandtest.Request
 	}{
 		{
 			name: "when the example \"A host with users\" is run",
@@ -51,8 +52,9 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
-			name: "when the example \"Add a user with a shell, groups and a password\" is run",
-			args: []string{"node", "user", "create", "--target", "server1", "--name", "osapitest", "--shell", "/bin/sh", "--groups", "root", "--password", "osapi-test-password"},
+			name:  "when the example \"Add a user with a shell, groups and a password\" is run",
+			args:  []string{"node", "user", "create", "--target", "server1", "--name", "osapitest", "--shell", "/bin/sh", "--groups", "root", "--password", "-"},
+			stdin: "osapi-test-password",
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/node/server1/user",
@@ -135,7 +137,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Equal(tc.want, commandtest.Sent(s.T(), tc.args))
+			s.Equal(tc.want, commandtest.SentWith(s.T(), tc.args, tc.stdin))
 		})
 	}
 }

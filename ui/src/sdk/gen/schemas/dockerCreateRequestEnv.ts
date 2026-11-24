@@ -6,6 +6,6 @@
  */
 
 /**
- * The environment variables of the container
+ * The environment variables of the container. A secret: a reference, secret://<vault>/<key>, or the value.
  */
 export type DockerCreateRequestEnv = {[key: string]: string};

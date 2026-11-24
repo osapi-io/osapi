@@ -43,7 +43,8 @@ type UserCreateInput struct {
 	// The user to add, such as alice.
 	Name string `json:"name"`
 
-	// Its password, which osapi hashes on the controller; none when empty.
+	// Its password, which osapi hashes on the controller; none when empty. A
+	// secret: a reference, secret://<vault>/<key>, or the value.
 	Password string `json:"password,omitempty"`
 
 	// Its login shell, such as /bin/bash; the system's default when empty.

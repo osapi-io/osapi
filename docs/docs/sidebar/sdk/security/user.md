@@ -79,7 +79,7 @@ Add a user with a shell, groups and a password, `go run user.go create-2`:
 resp, err := c.User.Create(ctx, target, client.UserCreateInput{
 	Groups:   []string{"root"},
 	Name:     "osapitest",
-	Password: "osapi-test-password",
+	Password: "-",
 	Shell:    "/bin/sh",
 })
 ```
@@ -222,16 +222,16 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UserCreateInput
 
-| Field      | Type       | Description                                                          |
-| ---------- | ---------- | -------------------------------------------------------------------- |
-| `GID`      | `int`      | Its primary group ID; a group of its own when it is 0.               |
-| `Groups`   | `[]string` | The groups it is a member of, besides its primary group.             |
-| `Home`     | `string`   | Its home directory; /home/<name> when empty.                         |
-| `Name`     | `string`   | The user to add, such as alice.                                      |
-| `Password` | `string`   | Its password, which osapi hashes on the controller; none when empty. |
-| `Shell`    | `string`   | Its login shell, such as /bin/bash; the system's default when empty. |
-| `System`   | `bool`     | Add it as a system user, with an ID from the system range.           |
-| `UID`      | `int`      | Its numeric user ID; the system assigns one when it is 0.            |
+| Field      | Type       | Description                                                                                                                       |
+| ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `GID`      | `int`      | Its primary group ID; a group of its own when it is 0.                                                                            |
+| `Groups`   | `[]string` | The groups it is a member of, besides its primary group.                                                                          |
+| `Home`     | `string`   | Its home directory; /home/<name> when empty.                                                                                      |
+| `Name`     | `string`   | The user to add, such as alice.                                                                                                   |
+| `Password` | `string`   | Its password, which osapi hashes on the controller; none when empty. A secret: a reference, secret://<vault>/<key>, or the value. |
+| `Shell`    | `string`   | Its login shell, such as /bin/bash; the system's default when empty.                                                              |
+| `System`   | `bool`     | Add it as a system user, with an ID from the system range.                                                                        |
+| `UID`      | `int`      | Its numeric user ID; the system assigns one when it is 0.                                                                         |
 
 ### UserResult
 

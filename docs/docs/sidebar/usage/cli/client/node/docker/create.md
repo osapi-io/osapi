@@ -143,7 +143,7 @@ It needs the `docker:write` permission.
 | `--command`            | The command, in place of the image's own                                                         |         |
 | `--container-hostname` | The hostname inside the container                                                                |         |
 | `--dns`                | The DNS servers of the container                                                                 |         |
-| `--env`                | The environment variables of the container (secret: kept out of the audit log and traces)        |         |
+| `--env`                | The environment variables of the container (secrets: NAME=secret://&lt;vault&gt;/&lt;key&gt;)    |         |
 | `--image`              | The image to run, such as alpine:3.20; docker pulls it when the host does not have it (required) |         |
 | `--name`               | The container's name (required)                                                                  |         |
 | `--ports`              | The published ports, each host:container, such as 8080:80                                        |         |

@@ -32,14 +32,15 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/password"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // pwIn is the input of a method whose controller step hashes a password:
 // the caller sends password, and the agent gets only password_hash.
 type pwIn struct {
-	Name         string `json:"name"                    validate:"required"  doc:"The user"     telemetry:"attr"`
-	Password     string `json:"password,omitempty"      validate:"omitempty" doc:"The password"                  secret:"true"`
-	PasswordHash string `json:"password_hash,omitempty" validate:"omitempty" doc:"The hash"                                    before:"set"`
+	Name         string       `json:"name"                    validate:"required"  doc:"The user"     telemetry:"attr"`
+	Password     secret.Value `json:"password,omitempty"      validate:"omitempty" doc:"The password"`
+	PasswordHash string       `json:"password_hash,omitempty" validate:"omitempty" doc:"The hash"                      before:"set"`
 }
 
 func setPassword(
@@ -55,7 +56,7 @@ func hashStep(
 	_ context.Context,
 	in pwIn,
 ) (pwIn, error) {
-	hash, err := password.Hash(in.Password)
+	hash, err := password.Hash(in.Password.Reveal())
 	if err != nil {
 		return pwIn{}, err
 	}

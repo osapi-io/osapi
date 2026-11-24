@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -94,6 +95,10 @@ const AreasExtension = "x-osapi-areas"
 // operations start at. The SDK names its services from it, as the tag's
 // x-displayName is a title for a person, such as Package updates.
 const GroupExtension = "x-osapi-group"
+
+// SecretExtension marks a field, or the value of a map, of type
+// secret.Value: a reference, secret://<vault>/<key>, or the value.
+const SecretExtension = "x-osapi-secret"
 
 // OpenAPI is the group's part of the spec. It has the shared ErrorResponse
 // schema, so the spec stands alone.
@@ -359,6 +364,13 @@ func (b *builder) inline(
 	if t == reflect.TypeFor[time.Time]() {
 		return openapi3.NewDateTimeSchema(), nil
 	}
+	if t == reflect.TypeFor[secret.Value]() {
+		s := openapi3.NewStringSchema().WithFormat("password")
+		s.WriteOnly = true
+		s.Extensions = map[string]any{SecretExtension: true}
+
+		return s, nil
+	}
 	switch t.Kind() {
 	case reflect.String:
 		return openapi3.NewStringSchema(), nil
@@ -477,12 +489,6 @@ func constrained(
 	if p := f.Tag.Get("pattern"); p != "" {
 		s.Value.Pattern = p
 	}
-	// A secret is write-only, so a client never shows it, and a password,
-	// so a form hides it.
-	if f.Tag.Get("secret") == "true" {
-		s.Value.WriteOnly = true
-		s.Value.Format = "password"
-	}
 	// A path parameter is always given, so a default means nothing there:
 	// the CLI's default, such as --target _all, comes from the tag itself.
 	if d, ok := f.Tag.Lookup("default"); ok && f.Tag.Get("in") != "path" {
@@ -494,6 +500,17 @@ func constrained(
 	}
 	if property && v != "" {
 		s.Value.Extensions = extension(v)
+	}
+	// A secret is write-only, so a client never shows it, and a password,
+	// so a form hides it. Its description says what it takes. A map of
+	// secrets has the same schema for each value.
+	if secret.Is(f.Type) {
+		s.Value.WriteOnly = true
+		if s.Value.Extensions == nil {
+			s.Value.Extensions = map[string]any{}
+		}
+		s.Value.Extensions[SecretExtension] = true
+		s.Value.Description = secret.Describe(s.Value.Description)
 	}
 
 	return s, nil

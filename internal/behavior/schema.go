@@ -26,6 +26,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
@@ -50,8 +51,11 @@ type Schema struct {
 	MinItems             *int     `json:"minItems,omitempty"`
 	MaxItems             *int     `json:"maxItems,omitempty"`
 	// WriteOnly marks a value a client sends and is never shown back, such as
-	// a field tagged secret.
+	// a secret.
 	WriteOnly bool `json:"writeOnly,omitempty"`
+	// Secret marks a secret.Value: a reference, secret://<vault>/<key>, or
+	// the value.
+	Secret bool `json:"x-osapi-secret,omitempty"`
 	// Validate is the field's whole validate tag, which the spec carries in
 	// rule.Extension.
 	Validate string `json:"-"`
@@ -73,6 +77,9 @@ func schemaFor(
 ) (*Schema, error) {
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
+	}
+	if t == reflect.TypeFor[secret.Value]() {
+		return &Schema{Type: "string", Format: "password", WriteOnly: true, Secret: true}, nil
 	}
 
 	switch t.Kind() {
@@ -137,8 +144,9 @@ func structSchema(
 			fs.Description = doc
 		}
 		if Secret(f) {
-			fs.Format = "password"
 			fs.WriteOnly = true
+			fs.Secret = true
+			fs.Description = secret.Describe(fs.Description)
 		}
 
 		fs.Validate = f.Tag.Get("validate")
@@ -225,13 +233,13 @@ func (t target) Bound(
 	}
 }
 
-// Secret reports whether f carries a secret, tagged secret:"true". A secret
-// is redacted from the audit log, marked write-only in the spec, and never
-// recorded on a span.
+// Secret reports whether f carries a secret: its type is secret.Value, or
+// a map, a slice or a pointer of it. A secret is redacted from the audit
+// log, marked write-only in the spec, and never recorded on a span.
 func Secret(
 	f reflect.StructField,
 ) bool {
-	return f.Tag.Get("secret") == "true"
+	return secret.Is(f.Type)
 }
 
 // TypeName is the name of t as a type list shows it: []Entry for a list.

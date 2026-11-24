@@ -195,6 +195,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: "secret.Value",
+			Does: "Not a tag: the type of an input field that holds a secret, from internal/secret; map[string]secret.Value is a map of them. Its flag takes a reference, secret://<vault>/<key>, or - to read the value from standard input; a map flag takes NAME=secret://<vault>/<key>. The command refuses a literal value, which the shell history keeps. Its String, Format, MarshalJSON and LogValue give the reference or [redacted]; Reveal gives the value. Run refuses a reference until the config has a vault. The secret rule refuses one with telemetry:\"attr\".",
+			When: "On each input that holds a password, a key or a token. Not a string: a string whose name is on the audit denylist fails TestSecretsAreTyped.",
+		},
+		{
+			Kind: KindTag,
 			Name: `doc:"..."`,
 			Does: "Is the help of the field's flag. A rule of oneof adds its values in brackets.",
 			When: "On each input field: a capital letter first and no period at the end.",

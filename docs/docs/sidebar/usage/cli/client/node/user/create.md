@@ -19,7 +19,7 @@ osapi client node user create [flags]
 osapi client node user create --target web-01 --name osapitest
 
 # Add a user with a shell, groups and a password
-osapi client node user create --target web-01 --name osapitest --shell /bin/sh --groups root --password osapi-test-password
+osapi client node user create --target web-01 --name osapitest --shell /bin/sh --groups root --password -
 
 # Add a system user with its IDs and its home
 osapi client node user create --target web-01 --name osapitest --uid 1999 --gid 100 --home /home/osapitest --system
@@ -75,7 +75,7 @@ With `--json`, the API's response:
 Add a user with a shell, groups and a password, on one host:
 
 ```ansi
-$ osapi client node user create --target web-01 --name osapitest --shell /bin/sh --groups root --password osapi-test-password
+$ osapi client node user create --target web-01 --name osapitest --shell /bin/sh --groups root --password -
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -86,7 +86,7 @@ $ osapi client node user create --target web-01 --name osapitest --shell /bin/sh
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node user create --target _all --name osapitest --shell /bin/sh --groups root --password osapi-test-password
+$ osapi client node user create --target _all --name osapitest --shell /bin/sh --groups root --password -
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -220,7 +220,7 @@ The command fails in these cases:
 | A shell with a line break         | `--name osapitest --shell "/bin/a\nb"`                        | no_linebreak |
 | A group that is an option         | `--name osapitest --groups -r`                                | account_name |
 | A group longer than 32 characters | `--name osapitest --groups aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max          |
-| A password with a line break      | `--name osapitest --password "a\nb"`                          | no_linebreak |
+| A password with a line break      | `--name osapitest --password -`                               | no_linebreak |
 | A hash that is not a crypt hash   | `--name osapitest`                                            | crypt hash   |
 
 ## Permission
@@ -230,17 +230,17 @@ shows what a role grants.
 
 ## Flags
 
-| Flag           | Description                                                                                                        | Default |
-| -------------- | ------------------------------------------------------------------------------------------------------------------ | ------- |
-| `--gid`        | Its primary group ID; a group of its own when it is 0                                                              |         |
-| `--groups`     | The groups it is a member of, besides its primary group                                                            |         |
-| `--home`       | Its home directory; /home/&lt;name&gt; when empty                                                                  |         |
-| `--name`       | The user to add, such as alice (required)                                                                          |         |
-| `--password`   | Its password, which osapi hashes on the controller; none when empty (secret: kept out of the audit log and traces) |         |
-| `--shell`      | Its login shell, such as /bin/bash; the system's default when empty                                                |         |
-| `--system`     | Add it as a system user, with an ID from the system range                                                          |         |
-| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev)                                                             | `_all`  |
-| `--uid`        | Its numeric user ID; the system assigns one when it is 0                                                           |         |
+| Flag           | Description                                                                                                                                             | Default |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--gid`        | Its primary group ID; a group of its own when it is 0                                                                                                   |         |
+| `--groups`     | The groups it is a member of, besides its primary group                                                                                                 |         |
+| `--home`       | Its home directory; /home/&lt;name&gt; when empty                                                                                                       |         |
+| `--name`       | The user to add, such as alice (required)                                                                                                               |         |
+| `--password`   | Its password, which osapi hashes on the controller; none when empty (a secret: secret://&lt;vault&gt;/&lt;key&gt;, or - to read it from standard input) |         |
+| `--shell`      | Its login shell, such as /bin/bash; the system's default when empty                                                                                     |         |
+| `--system`     | Add it as a system user, with an ID from the system range                                                                                               |         |
+| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev)                                                                                                  | `_all`  |
+| `--uid`        | Its numeric user ID; the system assigns one when it is 0                                                                                                |         |
 
 ## Global flags
 

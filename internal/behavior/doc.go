@@ -101,8 +101,10 @@
 //	render:"..."      on an output: "-" hides the column; bytes, age, status
 //	telemetry:"attr"  on an input: recorded on the method's span; the field
 //	                  a method names with Key is recorded without it
-//	secret:"true"     on an input: redacted from the audit log, write-only in
-//	                  the spec, never on a span
+//
+// A secret is a type, not a tag: an input field of type secret.Value, or a
+// map of them, is redacted from the audit log, write-only in the spec,
+// never on a span, and a reference or [redacted] in a chain record.
 //
 // A custom validate rule needs a schema, from Validator or rule.Register, so
 // the spec checks what the server does.

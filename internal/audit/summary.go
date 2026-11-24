@@ -23,9 +23,12 @@ package audit
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 const (
@@ -60,6 +63,14 @@ var sensitiveFields = map[string]bool{
 	"authorization": true,
 }
 
+// SensitiveFields are the names of the fixed denylist: the names whose
+// values the summary redacts in each request. A guard of the DSLs reads it:
+// a string input field with one of these names holds a secret, and is a
+// secret.Value. It is a copy.
+func SensitiveFields() map[string]bool {
+	return maps.Clone(sensitiveFields)
+}
+
 // Summarize returns what a request asked for, in a form an audit log can keep:
 // the JSON body with sensitive values replaced and the whole thing capped.
 //
@@ -86,9 +97,12 @@ func Summarize(
 	// marshalJSON is the package's existing seam, in stream_store.go. Reaching
 	// this failure needs it: a value that came from json.Unmarshal always
 	// marshals again.
-	// A behavior's secret fields are redacted by name too, beside the fixed
-	// list, so a behavior never edits this file.
-	encoded, err := marshalJSON(redactValue(parsed, behavior.SecretFields()))
+	// The secret.Value fields of a behavior and of an endpoint group are
+	// redacted by name too, beside the fixed list, so neither edits this
+	// file.
+	secrets := endpoint.SecretFields()
+	maps.Copy(secrets, behavior.SecretFields())
+	encoded, err := marshalJSON(redactValue(parsed, secrets))
 	if err != nil {
 		return fmt.Sprintf("[unsummarizable json, %d bytes]", len(body))
 	}
@@ -114,7 +128,8 @@ func describeContentType(
 
 // redactValue walks a decoded body and replaces the values of sensitive fields,
 // at every depth, because a password nested inside a list of users is still a
-// password.
+// password. A reference, secret://<vault>/<key>, is not a value: it stays, so
+// the entry shows which secret the request used.
 func redactValue(
 	v any,
 	secrets map[string]bool,
@@ -125,7 +140,7 @@ func redactValue(
 
 		for k, inner := range value {
 			if sensitiveFields[strings.ToLower(k)] || secrets[k] {
-				out[k] = redacted
+				out[k] = redactSecret(inner)
 
 				continue
 			}
@@ -145,6 +160,29 @@ func redactValue(
 	}
 
 	return v
+}
+
+// redactSecret is the value of a sensitive field as the summary keeps it:
+// a reference as it is, an object of them, such as the env of a container,
+// with each value redacted but a reference, and anything else redacted.
+func redactSecret(
+	v any,
+) any {
+	switch value := v.(type) {
+	case string:
+		if secret.Value(value).IsReference() {
+			return value
+		}
+	case map[string]any:
+		out := make(map[string]any, len(value))
+		for k, inner := range value {
+			out[k] = redactSecret(inner)
+		}
+
+		return out
+	}
+
+	return redacted
 }
 
 // truncate caps a summary and says that it did, so a reader does not mistake a

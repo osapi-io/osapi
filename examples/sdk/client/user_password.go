@@ -40,7 +40,7 @@ func runUpdate(
 ) error {
 	resp, err := c.UserPassword.Update(ctx, target, client.UserPasswordUpdateInput{
 		Name:     "osapitest",
-		Password: "osapi-test-password",
+		Password: "-",
 	})
 	if err != nil {
 		return err

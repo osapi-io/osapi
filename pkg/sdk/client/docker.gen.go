@@ -59,7 +59,8 @@ type DockerCreateInput struct {
 	// The DNS servers of the container.
 	DNS []string `json:"dns,omitempty"`
 
-	// The environment variables of the container.
+	// The environment variables of the container. A secret: a reference,
+	// secret://<vault>/<key>, or the value.
 	Env map[string]string `json:"env,omitempty"`
 
 	// The image to run, such as alpine:3.20; docker pulls it when the host does
@@ -134,7 +135,8 @@ type DockerExecInput struct {
 	// The command and its arguments.
 	Command []string `json:"command"`
 
-	// Environment variables for the command.
+	// Environment variables for the command. A secret: a reference,
+	// secret://<vault>/<key>, or the value.
 	Env map[string]string `json:"env,omitempty"`
 
 	// The directory the command runs in.

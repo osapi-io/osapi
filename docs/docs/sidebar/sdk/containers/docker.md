@@ -235,17 +235,17 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### DockerCreateInput
 
-| Field               | Type                | Description                                                                            |
-| ------------------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `AutoStart`         | `bool`              | Start the container once it is created.                                                |
-| `Command`           | `[]string`          | The command, in place of the image's own.                                              |
-| `ContainerHostname` | `string`            | The hostname inside the container.                                                     |
-| `DNS`               | `[]string`          | The DNS servers of the container.                                                      |
-| `Env`               | `map[string]string` | The environment variables of the container.                                            |
-| `Image`             | `string`            | The image to run, such as alpine:3.20; docker pulls it when the host does not have it. |
-| `Name`              | `string`            | The container's name.                                                                  |
-| `Ports`             | `[]string`          | The published ports, each host:container, such as 8080:80.                             |
-| `Volumes`           | `[]string`          | The bind mounts, each host:container, such as /srv/data:/data.                         |
+| Field               | Type                | Description                                                                                              |
+| ------------------- | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `AutoStart`         | `bool`              | Start the container once it is created.                                                                  |
+| `Command`           | `[]string`          | The command, in place of the image's own.                                                                |
+| `ContainerHostname` | `string`            | The hostname inside the container.                                                                       |
+| `DNS`               | `[]string`          | The DNS servers of the container.                                                                        |
+| `Env`               | `map[string]string` | The environment variables of the container. A secret: a reference, secret://<vault>/<key>, or the value. |
+| `Image`             | `string`            | The image to run, such as alpine:3.20; docker pulls it when the host does not have it.                   |
+| `Name`              | `string`            | The container's name.                                                                                    |
+| `Ports`             | `[]string`          | The published ports, each host:container, such as 8080:80.                                               |
+| `Volumes`           | `[]string`          | The bind mounts, each host:container, such as /srv/data:/data.                                           |
 
 ### DockerEntry
 
@@ -268,12 +268,12 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### DockerExecInput
 
-| Field        | Type                | Description                                       |
-| ------------ | ------------------- | ------------------------------------------------- |
-| `Name`       | `string`            | The name of the path. The container's name or ID. |
-| `Command`    | `[]string`          | The command and its arguments.                    |
-| `Env`        | `map[string]string` | Environment variables for the command.            |
-| `WorkingDir` | `string`            | The directory the command runs in.                |
+| Field        | Type                | Description                                                                                         |
+| ------------ | ------------------- | --------------------------------------------------------------------------------------------------- |
+| `Name`       | `string`            | The name of the path. The container's name or ID.                                                   |
+| `Command`    | `[]string`          | The command and its arguments.                                                                      |
+| `Env`        | `map[string]string` | Environment variables for the command. A secret: a reference, secret://<vault>/<key>, or the value. |
+| `WorkingDir` | `string`            | The directory the command runs in.                                                                  |
 
 ### DockerExecResult
 

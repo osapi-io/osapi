@@ -27,6 +27,7 @@ import (
 	"slices"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // ChainRun is one example of a method, run on a fake host, with each Call
@@ -62,12 +63,8 @@ func Chains(
 			if problem != "" {
 				continue
 			}
-			root := &behavior.Step{
-				Behavior: b.Name,
-				Method:   m.Name,
-				Input:    behavior.Redact(ex.Input),
-			}
-			data, _ := json.Marshal(ex.Input)
+			root := behavior.NewStep(b.Name, m.Name, ex.Input)
+			data, _ := json.Marshal(secret.Plain(ex.Input))
 			out, err := m.Invoke(behavior.Record(context.Background(), root), p, data)
 			if err != nil {
 				root.Error = err.Error()
@@ -85,8 +82,9 @@ func Chains(
 }
 
 // ChainProblems are the problems of the chain rules that need a run of the
-// examples of b: a call to a behavior that the caller does not require, and
-// a requirement of b that no example calls. osapi dsl chain validate
+// examples of b: a call to a behavior that the caller does not require, a
+// call that gives a secret to a field that is not a secret.Value, and a
+// requirement of b that no example calls. osapi dsl chain validate
 // reports them, and Run fails the tests of b on them.
 func ChainProblems(
 	b *behavior.Behavior,
@@ -105,6 +103,13 @@ func ChainProblems(
 		for _, c := range s.Steps {
 			if s.Behavior == b.Name {
 				called[c.Behavior] = true
+			}
+			for _, leak := range behavior.SecretLeaks(s, c) {
+				add(
+					run.Method,
+					behavior.RuleSecret,
+					fmt.Sprintf("example %q: %s", run.Example, leak),
+				)
 			}
 			if caller != nil &&
 				!slices.ContainsFunc(caller.Requires, func(r *behavior.Behavior) bool {

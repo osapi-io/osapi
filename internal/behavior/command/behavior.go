@@ -36,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // Flag is one CLI flag derived from an input field.
@@ -79,8 +80,11 @@ func Flags(
 		}
 
 		usage := f.Tag.Get("doc")
-		if behavior.Secret(f) {
-			usage += " (secret: kept out of the audit log and traces)"
+		switch f.Type {
+		case reflect.TypeFor[secret.Value]():
+			usage += clicommand.SecretHelp
+		case reflect.TypeFor[map[string]secret.Value]():
+			usage += clicommand.SecretsHelp
 		}
 		// A required flag says so through MarkFlagRequired, which --help
 		// shows, as each command's flag does.
@@ -100,7 +104,8 @@ func Flags(
 }
 
 // Args are the flags that set input's non-zero fields, as a command line
-// takes them.
+// takes them. A secret is its reference, or - for a literal value, which
+// the command reads from standard input: Stdin is what it reads.
 func Args(
 	input any,
 ) []string {
@@ -116,10 +121,14 @@ func Args(
 			continue
 		}
 		if f.Kind == reflect.Map {
-			pairs, _ := fv.Interface().(map[string]string)
-			for _, k := range slices.Sorted(maps.Keys(pairs)) {
-				args = append(args, "--"+f.Name, k+"="+pairs[k])
+			for _, k := range slices.Sorted(maps.Keys(pairs(fv))) {
+				args = append(args, "--"+f.Name, k+"="+pairs(fv)[k])
 			}
+
+			continue
+		}
+		if s, ok := fv.Interface().(secret.Value); ok {
+			args = append(args, "--"+f.Name, flagOf(s))
 
 			continue
 		}
@@ -143,6 +152,55 @@ func Args(
 	}
 
 	return args
+}
+
+// Stdin is what the command line of Args reads from standard input: the
+// literal value of input's secret field, or "" when it has none. A command
+// reads one value from standard input, so a second literal is not read.
+func Stdin(
+	input any,
+) string {
+	if input == nil {
+		return ""
+	}
+	v := reflect.ValueOf(input)
+	for _, f := range Flags(v.Type()) {
+		if s, ok := v.Field(f.Index).Interface().(secret.Value); ok && s != "" && !s.IsReference() {
+			return s.Reveal()
+		}
+	}
+
+	return ""
+}
+
+// flagOf is a secret as its flag takes it: its reference, or - for a
+// literal, which the command reads from standard input.
+func flagOf(
+	s secret.Value,
+) string {
+	if s.IsReference() {
+		return s.Reveal()
+	}
+
+	return clicommand.Stdin
+}
+
+// pairs is a map flag's value as key=value pairs: a map of secrets gives
+// each reference, or - for a literal, which the command refuses.
+func pairs(
+	fv reflect.Value,
+) map[string]string {
+	if m, ok := fv.Interface().(map[string]secret.Value); ok {
+		out := make(map[string]string, len(m))
+		for k, s := range m {
+			out[k] = flagOf(s)
+		}
+
+		return out
+	}
+	m, _ := fv.Interface().(map[string]string)
+
+	return m
 }
 
 // Columns are the output fields that a behavior's result table shows, in

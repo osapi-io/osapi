@@ -39,6 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/telemetry/respspan"
 )
 
@@ -197,6 +198,15 @@ func Serve[D, In, Out any](
 		if !ok {
 			return c.JSON(http.StatusBadRequest,
 				endpoint.ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
+		}
+		// The controller has no vault yet (osapi #1241), so a reference
+		// names a vault that does not exist: it is refused, not sent as the
+		// value.
+		if refs := secret.References(in); len(refs) > 0 {
+			return c.JSON(http.StatusBadRequest, endpoint.ErrorResponse{
+				Error:  secret.Unresolved(refs[0]).Error(),
+				Reason: endpoint.ReasonInvalidRequest,
+			})
 		}
 
 		out, err := run(c.Request().Context(), deps, in)

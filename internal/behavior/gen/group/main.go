@@ -231,6 +231,14 @@ func commands(
 		return err
 	}
 
+	// A secret's example reads its value from standard input, so the table
+	// has a column for it only when an example does.
+	stdin := false
+	for _, bm := range b.Methods {
+		for _, ex := range bm.Examples {
+			stdin = stdin || command.Stdin(ex.Input) != ""
+		}
+	}
 	var rows []jen.Code
 	for _, bm := range b.Methods {
 		m := g.Method(bm.Name)
@@ -250,15 +258,20 @@ func commands(
 			for _, a := range args {
 				lits = append(lits, jen.Lit(a))
 			}
-			rows = append(rows, genutil.Multi("{", "}",
-				jen.Id("name").Op(":").Lit("when the example "+strconv.Quote(ex.Doc)+" is run"),
+			row := []jen.Code{
+				jen.Id("name").Op(":").Lit("when the example " + strconv.Quote(ex.Doc) + " is run"),
 				jen.Id("args").Op(":").Index().String().Values(lits...),
-				jen.Id("want").Op(":").Qual(commandtestPath, "Request").Add(genutil.Multi("{", "}",
+			}
+			if in := command.Stdin(ex.Input); in != "" {
+				row = append(row, jen.Id("stdin").Op(":").Lit(in))
+			}
+			row = append(row, jen.Id("want").Op(":").Qual(commandtestPath, "Request").Add(
+				genutil.Multi("{", "}",
 					jen.Id("Method").Op(":").Lit(m.HTTPMethod()),
 					jen.Id("Path").Op(":").Lit(path),
 					jen.Id("Body").Op(":").Lit(string(body)),
-				)),
-			))
+				)))
+			rows = append(rows, genutil.Multi("{", "}", row...))
 		}
 	}
 
@@ -267,20 +280,21 @@ func commands(
 	t.Type().Id("CLIPublicTestSuite").Struct(jen.Qual("github.com/stretchr/testify/suite", "Suite"))
 	t.Line()
 	t.Comment("TestCommands runs each example's command line and checks the request it sends.")
+	fields := []jen.Code{jen.Id("name").String(), jen.Id("args").Index().String()}
+	sent := jen.Qual(commandtestPath, "Sent").
+		Call(jen.Id("s").Dot("T").Call(), jen.Id("tc").Dot("args"))
+	if stdin {
+		fields = append(fields, jen.Id("stdin").String())
+		sent = jen.Qual(commandtestPath, "SentWith").Call(
+			jen.Id("s").Dot("T").Call(), jen.Id("tc").Dot("args"), jen.Id("tc").Dot("stdin"))
+	}
+	fields = append(fields, jen.Id("want").Qual(commandtestPath, "Request"))
 	t.Func().Params(jen.Id("s").Op("*").Id("CLIPublicTestSuite")).Id("TestCommands").Params().Block(
-		jen.Id("tests").Op(":=").Index().Struct(
-			jen.Id("name").String(),
-			jen.Id("args").Index().String(),
-			jen.Id("want").Qual(commandtestPath, "Request"),
-		).Add(genutil.Multi("{", "}", rows...)),
+		jen.Id("tests").Op(":=").Index().Struct(fields...).Add(genutil.Multi("{", "}", rows...)),
 		jen.Line(),
 		jen.For(jen.List(jen.Id("_"), jen.Id("tc")).Op(":=").Range().Id("tests")).Block(
 			jen.Id("s").Dot("Run").Call(jen.Id("tc").Dot("name"), jen.Func().Params().Block(
-				jen.Id("s").Dot("Equal").Call(
-					jen.Id("tc").Dot("want"),
-					jen.Qual(commandtestPath, "Sent").
-						Call(jen.Id("s").Dot("T").Call(), jen.Id("tc").Dot("args")),
-				),
+				jen.Id("s").Dot("Equal").Call(jen.Id("tc").Dot("want"), sent),
 			)),
 		),
 	)

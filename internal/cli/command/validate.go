@@ -32,6 +32,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 )
@@ -147,6 +148,8 @@ const (
 	RuleSays     = "says"
 	RuleSubDoc   = "subdoc"
 	RulePrints   = "prints"
+	// RuleSecret: a secret.Value input field is not tagged telemetry:"attr".
+	RuleSecret = "secret"
 )
 
 // Checks are the rules Validate applies. osapi dsl command validate --help
@@ -186,8 +189,13 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleFlag,
-		Requires: "Each value is a flag: the input is a struct, each field has a json name that is its flag with _ as -, no flag or in tag, and a type a flag holds (string, bool, int, []string, map[string]string or []byte). A command takes no positional argument.",
+		Requires: "Each value is a flag: the input is a struct, each field has a json name that is its flag with _ as -, no flag or in tag, and a type a flag holds (string, bool, int, []string, map[string]string, []byte, secret.Value or map[string]secret.Value). A command takes no positional argument.",
 		Fix:      "Make the input a struct, tag each field json:\"name\", drop the flag and in tags, and use one of the flag types.",
+	},
+	{
+		Rule:     RuleSecret,
+		Requires: "No secret.Value input field is tagged telemetry:\"attr\": a span is no place for a secret. A secret flag takes a reference, secret://<vault>/<key>, or - to read the value from standard input, and the command resolves a reference itself.",
+		Fix:      "Remove telemetry:\"attr\" from the secret field.",
 	},
 	{
 		Rule:     RuleDoc,
@@ -257,6 +265,10 @@ var flagTypes = map[reflect.Type]bool{
 	reflect.TypeFor[[]string]():          true,
 	reflect.TypeFor[map[string]string](): true,
 	reflect.TypeFor[[]byte]():            true,
+	// A secret is a string flag, and a map of secrets a key=value flag:
+	// the command reads each as Secret and Secrets read it.
+	reflect.TypeFor[secret.Value]():            true,
+	reflect.TypeFor[map[string]secret.Value](): true,
 }
 
 // Flaggable reports whether a flag can hold a value of type t: the types
@@ -359,6 +371,10 @@ func Validate(
 			}
 			if f.Tag.Get("doc") == "" {
 				add(m.Name, RuleDoc, "input field "+FlagName(f)+" has no doc.")
+			}
+			if secret.Is(f.Type) && f.Tag.Get("telemetry") == "attr" {
+				add(m.Name, RuleSecret, "input field "+FlagName(f)+
+					" is a secret and tagged telemetry:\"attr\"; a secret is never recorded on a span.")
 			}
 		}
 		for _, f := range rule.Untagged(m.In) {
@@ -594,7 +610,7 @@ func TagProblems(
 // field gets nothing from it.
 var KnownTags = []string{
 	"before", "default", "doc", "empty", "example", "flag", "in", "json", "label",
-	"mapstructure", "none", "param", "pattern", "prefix", "render", "secret",
+	"mapstructure", "none", "param", "pattern", "prefix", "render",
 	"short", "table", "telemetry", "template", "title", "validate", "yaml",
 }
 

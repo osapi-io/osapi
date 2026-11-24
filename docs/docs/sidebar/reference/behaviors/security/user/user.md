@@ -156,17 +156,17 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (9)
 
-| FIELD         | TYPE    | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                         |
-| ------------- | ------- | -------- | ------------------------------------------------ | ------------------------------------------------------------------- |
-| name          | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to add, such as alice                                      |
-| uid           | integer | no       | min 0                                            | Its numeric user ID; the system assigns one when it is 0            |
-| gid           | integer | no       | min 0                                            | Its primary group ID; a group of its own when it is 0               |
-| home          | string  | no       | pattern ^\[^\r\n]\*$                             | Its home directory; /home/&lt;name&gt; when empty                   |
-| shell         | string  | no       | pattern ^\[^\r\n]\*$                             | Its login shell, such as /bin/bash; the system's default when empty |
-| groups        | array   | no       |                                                  | The groups it is a member of, besides its primary group             |
-| system        | boolean | no       |                                                  | Add it as a system user, with an ID from the system range           |
-| password      | string  | no       | pattern ^\[^\r\n]\*$, format password            | Its password, which osapi hashes on the controller; none when empty |
-| password_hash | string  | no       |                                                  | The sha512-crypt hash of the password, which the controller sets    |
+| FIELD         | TYPE    | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                                                                                                   |
+| ------------- | ------- | -------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| name          | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to add, such as alice                                                                                                                |
+| uid           | integer | no       | min 0                                            | Its numeric user ID; the system assigns one when it is 0                                                                                      |
+| gid           | integer | no       | min 0                                            | Its primary group ID; a group of its own when it is 0                                                                                         |
+| home          | string  | no       | pattern ^\[^\r\n]\*$                             | Its home directory; /home/&lt;name&gt; when empty                                                                                             |
+| shell         | string  | no       | pattern ^\[^\r\n]\*$                             | Its login shell, such as /bin/bash; the system's default when empty                                                                           |
+| groups        | array   | no       |                                                  | The groups it is a member of, besides its primary group                                                                                       |
+| system        | boolean | no       |                                                  | Add it as a system user, with an ID from the system range                                                                                     |
+| password      | string  | no       | pattern ^\[^\r\n]\*$, format password            | Its password, which osapi hashes on the controller; none when empty. A secret: a reference, secret://&lt;vault&gt;/&lt;key&gt;, or the value. |
+| password_hash | string  | no       |                                                  | The sha512-crypt hash of the password, which the controller sets                                                                              |
 
 ### Output (2)
 
@@ -177,12 +177,12 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (4)
 
-| EXAMPLE                                        | INPUT                                                                                                                                                                                          | OUTPUT                        |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Add a user                                     | name=osapitest                                                                                                                                                                                 | name=osapitest, changed=true  |
-| Add a user with a shell, groups and a password | name=osapitest, shell=/bin/sh, groups=\[root], password=osapi-test-password, password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true  |
-| Add a system user with its IDs and its home    | name=osapitest, uid=1999, gid=100, home=/home/osapitest, system=true                                                                                                                           | name=osapitest, changed=true  |
-| A user that the host has                       | name=osapitest                                                                                                                                                                                 | name=osapitest, changed=false |
+| EXAMPLE                                        | INPUT                                                                                                                                                                                  | OUTPUT                        |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Add a user                                     | name=osapitest                                                                                                                                                                         | name=osapitest, changed=true  |
+| Add a user with a shell, groups and a password | name=osapitest, shell=/bin/sh, groups=\[root], password=\[redacted], password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true  |
+| Add a system user with its IDs and its home    | name=osapitest, uid=1999, gid=100, home=/home/osapitest, system=true                                                                                                                   | name=osapitest, changed=true  |
+| A user that the host has                       | name=osapitest                                                                                                                                                                         | name=osapitest, changed=false |
 
 ## Method update
 

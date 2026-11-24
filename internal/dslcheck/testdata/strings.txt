@@ -53,6 +53,8 @@ behavior.Method.Runs(programs []string)	program	a program name, which preflight 
 behavior.Method.RunsPrograms []string	program	a program name, which preflight and the fake host check
 behavior.Method.Sudo(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Method.SudoPrograms []string	program	a program name, which preflight and the fake host check
+behavior.NewStep(behavior string)	identity	a name that the registry, the route or the command path holds
+behavior.NewStep(method string)	identity	a name that the registry, the route or the command path holds
 behavior.NotLive(why string)	free text	prose for a page or a message
 behavior.PlatformPrograms.Programs []string	program	a program name, which preflight and the fake host check
 behavior.Prints(command string)	fixture	what an example sets up or expects
@@ -161,6 +163,10 @@ command.Run(method string)	identity	a name that the registry, the route or the c
 command.Scaffold(doc string)	free text	prose for a page or a message
 command.Scaffold(group string)	identity	a name that the registry, the route or the command path holds
 command.Scaffold(root string)	path pattern	a path or a path.Match pattern
+command.Secret(flag string)	boundary	the value of a secret flag: a reference, or - for standard input, which Secret checks
+command.Secret(name string)	identity	the name of the flag, for its error
+command.Secrets(flags map[string]string)	boundary	the values of a flag of a map of secrets: each a reference, which Secrets checks
+command.Secrets(name string)	identity	the name of the flag, for its error
 command.Serve(method string)	identity	a name that the registry, the route or the command path holds
 command.SetTraceID(id string)	identity	a name that the registry, the route or the command path holds
 command.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds

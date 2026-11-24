@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	user "github.com/osapi-io/osapi/internal/behaviors/user"
 	"github.com/osapi-io/osapi/internal/behaviors/user/gen"
+	secret "github.com/osapi-io/osapi/internal/secret"
 )
 
 type APICreatePublicTestSuite struct {
@@ -77,7 +78,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				user.CreateInput{
 					Groups:       []string{"root"},
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 					Shell:        "/bin/sh",
 				},
@@ -100,7 +101,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				user.CreateInput{
 					Groups:       []string{"root"},
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 					Shell:        "/bin/sh",
 				},

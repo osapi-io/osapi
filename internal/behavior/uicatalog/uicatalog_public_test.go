@@ -31,6 +31,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/uicatalog"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type provider struct{}
@@ -42,7 +43,7 @@ type itemIn struct {
 	On     bool              `json:"on"     validate:"omitempty"           doc:"Whether"`
 	Tags   []string          `json:"tags"   validate:"omitempty"           doc:"Tags"`
 	Labels map[string]string `json:"labels" validate:"omitempty"           doc:"Labels"`
-	Token  string            `json:"token"  validate:"omitempty"           doc:"A secret" secret:"true"`
+	Token  secret.Value      `json:"token"  validate:"omitempty"           doc:"A secret"`
 	Skip   string            `json:"-"`
 	_      string
 }
@@ -83,8 +84,8 @@ type CatalogPublicTestSuite struct {
 // that the method's .Before step sets.
 func (s *CatalogPublicTestSuite) TestCatalogLeavesOutWhatTheStepSets() {
 	type pwIn struct {
-		Password string `json:"password" doc:"The password" secret:"true"`
-		Hash     string `json:"hash"     doc:"The hash"                   before:"set"`
+		Password secret.Value `json:"password" doc:"The password"`
+		Hash     string       `json:"hash"     doc:"The hash"     before:"set"`
 	}
 	b := behavior.Define("acct", "Accounts", behavior.Node, behavior.API, behavior.Area("config"),
 		behavior.Write("update", func(context.Context, struct{}, pwIn) (struct{}, error) {
@@ -115,7 +116,7 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 		behavior.Platform[any, provider](behavior.PlatformDebian, build),
 		behavior.Platform[any, provider](behavior.PlatformDarwin, build),
 		behavior.Read("list", read).
-			Example("Lists the items", itemIn{Name: "a"}, []row{{Name: "a"}}),
+			Example("Lists the items", itemIn{Name: "a", Token: "s3cret"}, []row{{Name: "a"}}),
 		behavior.Write("update", write).Key("name").On(behavior.PlatformDebian),
 		behavior.Read("get", none),
 		behavior.Action("restart", write).Disrupts("It stops the item"),

@@ -7916,7 +7916,7 @@ paths:
               - root
             hostname: web-01
             name: osapitest
-            password: osapi-test-password
+            password: '-'
             shell: /bin/sh
         - doc: Add a system user with its IDs and its home
           input:
@@ -8202,7 +8202,7 @@ paths:
           input:
             hostname: web-01
             name: osapitest
-            password: osapi-test-password
+            password: '-'
       x-osapi-method: update
   /api/node/{hostname}/user/{name}/sshkey:
     delete:
@@ -10339,13 +10339,16 @@ components:
             validate: omitempty,dive,ip
         env:
           additionalProperties:
+            format: password
             type: string
-          description: The environment variables of the container
-          format: password
+            writeOnly: true
+            x-osapi-secret: true
+          description: 'The environment variables of the container. A secret: a reference, secret://<vault>/<key>, or the value.'
           type: object
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty
+          x-osapi-secret: true
         image:
           description: The image to run, such as alpine:3.20; docker pulls it when the host does not have it
           pattern: ^[a-zA-Z0-9][a-zA-Z0-9._/:@-]*$
@@ -10485,13 +10488,16 @@ components:
             validate: required,min=1
         env:
           additionalProperties:
+            format: password
             type: string
-          description: Environment variables for the command
-          format: password
+            writeOnly: true
+            x-osapi-secret: true
+          description: 'Environment variables for the command. A secret: a reference, secret://<vault>/<key>, or the value.'
           type: object
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty
+          x-osapi-secret: true
         working_dir:
           description: The directory the command runs in
           pattern: ^/
@@ -13606,13 +13612,14 @@ components:
           x-oapi-codegen-extra-tags:
             validate: required,max=32,account_name
         password:
-          description: Its password, which osapi hashes on the controller; none when empty
+          description: 'Its password, which osapi hashes on the controller; none when empty. A secret: a reference, secret://<vault>/<key>, or the value.'
           format: password
           pattern: ^[^\r\n]*$
           type: string
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty,no_linebreak
+          x-osapi-secret: true
         shell:
           description: Its login shell, such as /bin/bash; the system's default when empty
           pattern: ^[^\r\n]*$
@@ -13788,13 +13795,14 @@ components:
     UserPasswordUpdateRequest:
       properties:
         password:
-          description: The new password, which osapi hashes on the controller
+          description: 'The new password, which osapi hashes on the controller. A secret: a reference, secret://<vault>/<key>, or the value.'
           format: password
           pattern: ^[^\r\n]*$
           type: string
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty,no_linebreak
+          x-osapi-secret: true
       type: object
     UserPasswordUpdateResponse:
       properties:

@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type ChainPublicTestSuite struct {
@@ -112,8 +113,8 @@ func (s *ChainPublicTestSuite) TestRecord() {
 }
 
 type loginIn struct {
-	User     string `json:"user"`
-	Password string `json:"password,omitempty" secret:"true"`
+	User     string       `json:"user"`
+	Password secret.Value `json:"password,omitempty"`
 }
 
 func (s *ChainPublicTestSuite) TestRedact() {
@@ -128,6 +129,74 @@ func (s *ChainPublicTestSuite) TestRedact() {
 	)
 	s.Equal("text", behavior.Redact("text"))
 	s.Nil(behavior.Redact(nil))
+}
+
+type keyIn struct {
+	Key   secret.Value `json:"key"`
+	Token secret.Value `json:"token"`
+	Name  string       `json:"name"`
+}
+
+type fileIn struct {
+	Path    string            `json:"path"`
+	Content string            `json:"content"`
+	Data    []byte            `json:"data"`
+	Env     map[string]string `json:"env"`
+	Any     any               `json:"any"`
+	Nested  *struct {
+		Lines []string `json:"lines"`
+	} `json:"nested"`
+	Kept   secret.Value `json:"kept"`
+	hidden string
+}
+
+func (s *ChainPublicTestSuite) TestSecretLeaks() {
+	parent := behavior.NewStep("certificate", "create", keyIn{
+		Key: "PRIVATE-KEY", Token: "secret://default/token", Name: "web",
+	})
+	s.Equal(map[string]any{"key": "[redacted]", "token": "secret://default/token", "name": "web"},
+		parent.Input, "the step records the reference, or [redacted]")
+
+	tests := []struct {
+		name  string
+		child any
+		want  []string
+	}{
+		{
+			name: "when the child gets the secret in a secret.Value, nothing leaks",
+			child: fileIn{
+				Path: "/etc/key", Kept: "PRIVATE-KEY", Content: "secret://default/token",
+				hidden: "PRIVATE-KEY",
+			},
+		},
+		{
+			name: "when the child gets the secret in a field of another type, it leaks",
+			child: fileIn{
+				Content: "-----BEGIN-----\nPRIVATE-KEY\n",
+				Data:    []byte("PRIVATE-KEY"),
+				Env:     map[string]string{"KEY": "PRIVATE-KEY"},
+				Any:     "PRIVATE-KEY",
+				Nested: &struct {
+					Lines []string `json:"lines"`
+				}{Lines: []string{"PRIVATE-KEY"}},
+			},
+			want: []string{
+				"certificate create gives its secret key to managedfile update field content, which is not a secret.Value",
+				"certificate create gives its secret key to managedfile update field data, which is not a secret.Value",
+				"certificate create gives its secret key to managedfile update field env.KEY, which is not a secret.Value",
+				"certificate create gives its secret key to managedfile update field any, which is not a secret.Value",
+				"certificate create gives its secret key to managedfile update field nested.lines, which is not a secret.Value",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			child := behavior.NewStep("managedfile", "update", tc.child)
+			s.Equal(tc.want, behavior.SecretLeaks(parent, child))
+		})
+	}
+	s.Empty(behavior.SecretLeaks(behavior.NewStep("a", "b", nil), behavior.NewStep("c", "d", nil)))
 }
 
 func (s *ChainPublicTestSuite) TestChainProblems() {

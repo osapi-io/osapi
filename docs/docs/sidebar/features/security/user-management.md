@@ -90,9 +90,9 @@ $ osapi client node user create --target web-01 \
 # Lock the password of a user
 $ osapi client node user update --target web-01 --name deploy --lock locked
 
-# Set the password of a user
+# Set the password of a user, from standard input
 $ osapi client node user password update --target web-01 \
-    --name deploy --password 'newpass123'
+    --name deploy --password - < password.txt
 
 # Delete a user
 $ osapi client node user delete --target web-01 --name deploy

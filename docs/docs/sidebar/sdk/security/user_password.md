@@ -42,7 +42,7 @@ Set a password, `go run user_password.go update`:
 ```go
 resp, err := c.UserPassword.Update(ctx, target, client.UserPasswordUpdateInput{
 	Name:     "osapitest",
-	Password: "osapi-test-password",
+	Password: "-",
 })
 ```
 
@@ -62,10 +62,10 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UserPasswordUpdateInput
 
-| Field      | Type     | Description                                             |
-| ---------- | -------- | ------------------------------------------------------- |
-| `Name`     | `string` | The name of the path. The user, such as alice.          |
-| `Password` | `string` | The new password, which osapi hashes on the controller. |
+| Field      | Type     | Description                                                                                                          |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Name`     | `string` | The name of the path. The user, such as alice.                                                                       |
+| `Password` | `string` | The new password, which osapi hashes on the controller. A secret: a reference, secret://<vault>/<key>, or the value. |
 
 ## Example
 

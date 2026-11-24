@@ -62,11 +62,15 @@ var dockerCreateCmd = &cobra.Command{
 		dns, _ := cmd.Flags().GetStringSlice("dns")
 		command, _ := cmd.Flags().GetStringSlice("command")
 		env, _ := cmd.Flags().GetStringToString("env")
+		envValue, ok := clicommand.Secrets(cmd, "env", env)
+		if !ok {
+			return
+		}
 		ports, _ := cmd.Flags().GetStringSlice("ports")
 		volumes, _ := cmd.Flags().GetStringSlice("volumes")
 		autoStart, _ := cmd.Flags().GetBool("auto-start")
 
-		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: DockerCreateRequest{Name: name, Image: image, HostName: hostName, DNS: dns, Command: command, Env: env, Ports: ports, Volumes: volumes, AutoStart: autoStart}})
+		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: DockerCreateRequest{Name: name, Image: image, HostName: hostName, DNS: dns, Command: command, Env: envValue, Ports: ports, Volumes: volumes, AutoStart: autoStart}})
 	},
 	Short: "Create a container",
 	Use:   "create",
@@ -140,9 +144,13 @@ var dockerExecCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		command, _ := cmd.Flags().GetStringSlice("command")
 		env, _ := cmd.Flags().GetStringToString("env")
+		envValue, ok := clicommand.Secrets(cmd, "env", env)
+		if !ok {
+			return
+		}
 		workingDir, _ := cmd.Flags().GetString("working-dir")
 
-		endpointcommand.Run(cmd, Group, "exec", ExecRequest{Hostname: hostname, Name: name, Body: DockerExecRequest{Command: command, Env: env, WorkingDir: workingDir}})
+		endpointcommand.Run(cmd, Group, "exec", ExecRequest{Hostname: hostname, Name: name, Body: DockerExecRequest{Command: command, Env: envValue, WorkingDir: workingDir}})
 	},
 	Short: "Run a command in a container",
 	Use:   "exec",
@@ -162,7 +170,7 @@ func init() {
 	dockerCreateCmd.Flags().String("container-hostname", "", "The hostname inside the container")
 	dockerCreateCmd.Flags().StringSlice("dns", nil, "The DNS servers of the container")
 	dockerCreateCmd.Flags().StringSlice("command", nil, "The command, in place of the image's own")
-	dockerCreateCmd.Flags().StringToString("env", nil, "The environment variables of the container (secret: kept out of the audit log and traces)")
+	dockerCreateCmd.Flags().StringToString("env", nil, "The environment variables of the container (secrets: NAME=secret://<vault>/<key>)")
 	dockerCreateCmd.Flags().StringSlice("ports", nil, "The published ports, each host:container, such as 8080:80")
 	dockerCreateCmd.Flags().StringSlice("volumes", nil, "The bind mounts, each host:container, such as /srv/data:/data")
 	dockerCreateCmd.Flags().Bool("auto-start", false, "Start the container once it is created")
@@ -181,7 +189,7 @@ func init() {
 	_ = dockerExecCmd.MarkFlagRequired("name")
 	dockerExecCmd.Flags().StringSlice("command", nil, "The command and its arguments")
 	_ = dockerExecCmd.MarkFlagRequired("command")
-	dockerExecCmd.Flags().StringToString("env", nil, "Environment variables for the command (secret: kept out of the audit log and traces)")
+	dockerExecCmd.Flags().StringToString("env", nil, "Environment variables for the command (secrets: NAME=secret://<vault>/<key>)")
 	dockerExecCmd.Flags().String("working-dir", "", "The directory the command runs in")
 	clicommand.AddCommands(Group, dockerListCmd, dockerGetCmd, dockerCreateCmd, dockerDeleteCmd, dockerStartCmd, dockerStopCmd, dockerExecCmd)
 }

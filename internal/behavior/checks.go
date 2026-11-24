@@ -123,18 +123,18 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleSecret,
-		Requires: "No input field is both secret:\"true\" and telemetry:\"attr\".",
-		Fix:      "Remove telemetry:\"attr\" from the secret field. A secret is never recorded on a span.",
+		Requires: "No secret.Value input field is tagged telemetry:\"attr\", is the key of a method that the API serves, or is an input of a read that the API serves: the key goes in the path and a read's input in the query, and a URL goes in logs.",
+		Fix:      "Remove telemetry:\"attr\" from the secret field, give the method a key that is not a secret, or make the method a write, which sends its input in the body.",
 	},
 	{
 		Rule:     RuleBefore,
-		Requires: "A .Before step is func(context.Context, In) (In, error), on a method that the API serves and that has a secret:\"true\" input field. Each input field tagged before:\"set\" has a step to set it.",
-		Fix:      "Give the step the method's input type in and out, serve the behavior, mark the plain secret secret:\"true\", and tag only the fields that the step fills before:\"set\".",
+		Requires: "A .Before step is func(context.Context, In) (In, error), on a method that the API serves and that has a secret.Value input field. Each input field tagged before:\"set\" has a step to set it.",
+		Fix:      "Give the step the method's input type in and out, serve the behavior, give the plain secret the type secret.Value, and tag only the fields that the step fills before:\"set\".",
 	},
 	{
 		Rule:     RuleTag,
-		Requires: "Each struct tag of an input field has a known key (behavior.KnownTags), secret is \"true\" and telemetry is \"attr\".",
-		Fix:      "Correct the key or the value. A misspelled secret tag puts the field in the audit log, and a misspelled telemetry tag leaves it off the span.",
+		Requires: "Each struct tag of an input field has a known key (command.KnownTags), and telemetry is \"attr\". A secret is the type secret.Value: the tag secret is not a key.",
+		Fix:      "Correct the key or the value: a misspelled telemetry tag leaves the field off the span. Give a secret the type secret.Value of internal/secret in place of the tag secret:\"true\".",
 	},
 	{
 		Rule:     RuleSurface,

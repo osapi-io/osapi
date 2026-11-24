@@ -110,6 +110,12 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
   rule `root`. A new word under `osapi` is a decision of the owner: ask, and do
   not add one.
 - Each value is a flag. A command takes no positional argument.
+- A value that is a secret, such as a token, has the type `secret.Value`
+  (`internal/secret`), not `string`. Its flag takes `-` to read the value from
+  standard input, or a reference, and refuses a value, which the shell history
+  keeps. The handler reads it with `Reveal`. `TestSecretsAreTyped` in
+  `internal/dslcheck` fails a `string` input whose name is on the audit
+  denylist, such as `token`.
 - The last word of each command is a verb or an action. A noun goes before the
   verb with `.Sub`, such as `dsl behavior method get`. Give the noun's command
   its help with `command.SubDoc("method", "...")`; validate fails a Sub without

@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path"
 	"reflect"
 	"runtime"
@@ -33,6 +34,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -73,6 +75,11 @@ var ChainChecks = guide.Checks{
 		Requires: "An example calls each behavior that a behavior requires. A requirement that no example calls is not tested, or is not needed.",
 		Fix:      "Add an example whose provider calls the required behavior, or remove the requirement.",
 	},
+	{
+		Rule:     RuleSecret,
+		Requires: "A call gives a secret of its input only to a secret.Value field of the behavior that it calls. A field of another type, such as a string, records the value in its chain record, its span or an audit entry. The examples run each chain, so their tests check it.",
+		Fix:      "Give the field of the called behavior the type secret.Value, and read it there with Reveal.",
+	},
 }
 
 // ChainProblems are the problems of the chain rules that hold when the
@@ -103,14 +110,26 @@ type Step struct {
 	// test, which compares the same chain run after run.
 	Duration time.Duration `json:"-"`
 
-	mu sync.Mutex
+	// raw is the input as the call got it, with each secret's value, for
+	// SecretLeaks. It is never marshaled.
+	raw any
+	mu  sync.Mutex
+}
+
+// NewStep is the step of a call of method of the behavior with in: the
+// root of a chain, which each Call under it adds its step to.
+func NewStep(
+	behavior string,
+	method string,
+	in any,
+) *Step {
+	return &Step{Behavior: behavior, Method: method, Input: Redact(in), raw: in}
 }
 
 // Wire are the calls that s made, as a job's response carries them: each
 // step's behavior, method, whether it changed the host, its error and its
-// duration. The input and the output stay out: an input is redacted only by
-// its top-level secret tags, an output not at all, and the content of a
-// managed file can be large. The job's request and response have the input
+// duration. The input and the output stay out: an output is not redacted,
+// and the content of a managed file can be large. The job's request and response have the input
 // and the output of the method at the top.
 func (s *Step) Wire() []client.Step {
 	s.mu.Lock()
@@ -163,35 +182,92 @@ func Record(
 	return context.WithValue(ctx, stepKey{}, s)
 }
 
-// Redact is in as a step records it: a struct with each field tagged
-// secret:"true" as [redacted], as the audit log and the spans leave it out.
-// Anything else is in unchanged.
+// Redact is in as a step records it: when it holds a secret.Value, its
+// JSON as a map, in which each secret is its reference or [redacted], at
+// each depth. Anything else is in unchanged.
 func Redact(
 	in any,
 ) any {
 	t := reflect.TypeOf(in)
-	if t == nil || t.Kind() != reflect.Struct {
-		return in
-	}
-	var secrets []string
-	for i := range t.NumField() {
-		if f := t.Field(i); Secret(f) {
-			secrets = append(secrets, strings.Split(f.Tag.Get("json"), ",")[0])
-		}
-	}
-	if len(secrets) == 0 {
+	if t == nil || len(secret.Fields(t)) == 0 {
 		return in
 	}
 	data, _ := json.Marshal(in)
-	var fields map[string]any
+	var fields any
 	_ = json.Unmarshal(data, &fields)
-	for _, name := range secrets {
-		if _, ok := fields[name]; ok {
-			fields[name] = "[redacted]"
-		}
-	}
 
 	return fields
+}
+
+// SecretLeaks are the secrets that the call of parent gives to a field of
+// the call of child that is not a secret.Value: a literal value of a secret
+// field of the parent's input, in a string of the child's input. The child
+// records such a field in its chain record, its span or an audit entry, so
+// a chain gives a secret only to a secret.Value. The examples run each
+// chain, so their tests check it, under RuleSecret.
+func SecretLeaks(
+	parent *Step,
+	child *Step,
+) []string {
+	secrets := map[string]string{}
+	strs(reflect.ValueOf(parent.raw), "", func(path string, value string, isSecret bool) {
+		if isSecret && value != "" && !secret.Value(value).IsReference() {
+			secrets[value] = path
+		}
+	})
+	var leaks []string
+	strs(reflect.ValueOf(child.raw), "", func(path string, value string, isSecret bool) {
+		if isSecret || value == "" {
+			return
+		}
+		for _, v := range slices.Sorted(maps.Keys(secrets)) {
+			if strings.Contains(value, v) {
+				leaks = append(leaks, fmt.Sprintf(
+					"%s %s gives its secret %s to %s %s field %s, which is not a secret.Value",
+					parent.Behavior, parent.Method, secrets[v], child.Behavior, child.Method, path))
+			}
+		}
+	})
+
+	return leaks
+}
+
+// strs calls fn with each string in v, at each depth, with its path of
+// JSON names and whether it is a secret.Value.
+func strs(
+	v reflect.Value,
+	path string,
+	fn func(path string, value string, isSecret bool),
+) {
+	if !v.IsValid() {
+		return
+	}
+	switch v.Kind() {
+	case reflect.String:
+		fn(path, v.String(), v.Type() == reflect.TypeFor[secret.Value]())
+	case reflect.Pointer, reflect.Interface:
+		strs(v.Elem(), path, fn)
+	case reflect.Struct:
+		for i := range v.NumField() {
+			if f := v.Type().Field(i); f.IsExported() {
+				strs(v.Field(i), strings.TrimPrefix(path+"."+JSONName(f), "."), fn)
+			}
+		}
+	case reflect.Slice, reflect.Array:
+		if b, ok := v.Interface().([]byte); ok {
+			fn(path, string(b), false)
+
+			return
+		}
+		for i := range v.Len() {
+			strs(v.Index(i), path, fn)
+		}
+	case reflect.Map:
+		iter := v.MapRange()
+		for iter.Next() {
+			strs(iter.Value(), path+"."+fmt.Sprint(iter.Key().Interface()), fn)
+		}
+	}
 }
 
 // Tree is b and the behaviors that it calls, down the chain:
@@ -374,7 +450,7 @@ func Call[P any, In any, Out any](
 
 	var step *Step
 	if parent, ok := ctx.Value(stepKey{}).(*Step); ok {
-		step = &Step{Behavior: b.Name, Method: m.Name, Input: Redact(in)}
+		step = NewStep(b.Name, m.Name, in)
 		parent.add(step)
 		ctx = Record(ctx, step)
 	}

@@ -32,6 +32,7 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type ValidatePublicTestSuite struct {
@@ -107,7 +108,7 @@ type noFields struct{}
 
 // onlySecret is an input whose only field is a secret.
 type onlySecret struct {
-	Password string `json:"password" secret:"true" validate:"omitempty" doc:"test"`
+	Password secret.Value `json:"password" validate:"omitempty" doc:"test"`
 }
 
 // taggedName is an input whose name is tagged for the span.
@@ -743,7 +744,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleBefore, behavior.RuleBefore},
 		},
 		{
-			name: "when an input field's secret tag is not true",
+			name: "when an input field has the old secret tag, which is not a key",
 			b: behavior.Define(
 				"sysctl",
 				"x",
@@ -766,7 +767,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleTag},
 		},
 		{
-			name: "when an output field's secret tag is not true",
+			name: "when an output field has the old secret tag, which is not a key",
 			b: behavior.Define(
 				"sysctl",
 				"x",
@@ -777,7 +778,55 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 				}).
 					Describe("Get"),
 			),
+			wantRules: []string{behavior.RuleOutputShape},
+		},
+		{
+			name: "when an output field's telemetry tag is not attr",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Read("get", func(context.Context, fakeProvider, getIn) (badTelemetryOut, error) {
+					return badTelemetryOut{}, nil
+				}).
+					Describe("Get"),
+			),
 			wantRules: []string{behavior.RuleTag},
+		},
+		{
+			name: "when a served read takes a secret, which goes in its query",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area(area.Config),
+				behavior.Read("list", func(context.Context, fakeProvider, onlySecret) ([]entry, error) {
+					return nil, nil
+				}).
+					Describe("List"),
+			),
+			wantRules: []string{behavior.RuleSecret},
+		},
+		{
+			name: "when the key of a served write is a secret, which goes in its path",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area(area.Config),
+				behavior.Write("update", func(context.Context, fakeProvider, secretKeyIn) (result, error) {
+					return result{}, nil
+				}).
+					Describe("Update").
+					Key("password").
+					Fails("no password", secretKeyIn{}, "required"),
+			),
+			wantRules: []string{behavior.RuleSecret},
 		},
 		{
 			name: "when an input field's telemetry tag is not attr",
@@ -999,8 +1048,12 @@ func TestValidatePublicTestSuite(
 	suite.Run(t, new(ValidatePublicTestSuite))
 }
 
+type secretKeyIn struct {
+	Password secret.Value `json:"password" validate:"required" doc:"test"`
+}
+
 type badSecretIn struct {
-	Key string `json:"key" validate:"required" doc:"The key" secret:"True"`
+	Key string `json:"key" validate:"required" doc:"The key" secret:"true"`
 }
 
 type badTelemetryIn struct {
@@ -1017,8 +1070,12 @@ type badKeyIn struct {
 	Key string `json:"key" validate:"required" doc:"The key" secrte:"true"`
 }
 
+type badTelemetryOut struct {
+	Key string `json:"key" doc:"The key" telemetry:"atr"`
+}
+
 type badSecretOut struct {
-	Key string `json:"key" doc:"The key" secret:"yes"`
+	Key string `json:"key" doc:"The key" secret:"true"`
 }
 
 type badBeforeIn struct {

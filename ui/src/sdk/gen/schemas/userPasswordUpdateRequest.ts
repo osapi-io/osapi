@@ -7,7 +7,7 @@
 
 export interface UserPasswordUpdateRequest {
   /**
-     * The new password, which osapi hashes on the controller
+     * The new password, which osapi hashes on the controller. A secret: a reference, secret://<vault>/<key>, or the value.
      * @pattern ^[^\r\n]*$
      */
   password?: string;

@@ -36,6 +36,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -413,6 +414,22 @@ func All() []*Group {
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out
+}
+
+// SecretFields are the JSON names of every secret.Value input field, at each
+// depth, across the methods of every registered group: a behavior's group
+// too. The audit log redacts each by name.
+func SecretFields() map[string]bool {
+	names := map[string]bool{}
+	for _, g := range All() {
+		for _, m := range g.Methods {
+			for _, name := range secret.Fields(m.In) {
+				names[name] = true
+			}
+		}
+	}
+
+	return names
 }
 
 // Method is one endpoint of a group. Get, Post, Put and Delete make one;

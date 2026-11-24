@@ -34,6 +34,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // Run checks b with Check and reports each problem as a test error. It also
@@ -211,7 +212,7 @@ func checkRefusal(
 	// provider need not check it again. Otherwise the provider refuses it: a
 	// rule no tag can say, or a check it makes as well, such as of a
 	// program's argument.
-	data, _ := json.Marshal(r.Input)
+	data, _ := json.Marshal(secret.Plain(r.Input))
 	if err := m.Check(
 		context.Background(),
 		data,
@@ -323,7 +324,7 @@ func call(
 	p any,
 	input any,
 ) (any, error) {
-	data, _ := json.Marshal(input)
+	data, _ := json.Marshal(secret.Plain(input))
 
 	return m.Invoke(context.Background(), p, data)
 }
@@ -419,7 +420,7 @@ func checkRefusalChecked(
 	}
 	// An input that JSON cannot encode has no schema, which behavior
 	// validate refuses first.
-	data, _ := json.Marshal(r.Input)
+	data, _ := json.Marshal(secret.Plain(r.Input))
 	if m.Check(context.Background(), data) == nil {
 		return behavior.TestFailure(behavior.TestRefusal, fmt.Sprintf(
 			"the input breaks %s, and Method.Check passed it: the agent and behavior.Call would run it",

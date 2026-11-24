@@ -35,6 +35,7 @@ import (
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 const (
@@ -110,11 +111,30 @@ func Commands(
 					jen.If(jen.Op("!").Id("ok")).Block(ret(isLocal)))
 				help = "Path to the local file with " + strings.ToLower(help[:1]) + help[1:]
 			}
+			// A secret is a reference, or - for standard input: Secret and
+			// Secrets refuse a literal value, which the shell history keeps.
+			switch fld.Type {
+			case reflect.TypeFor[secret.Value]():
+				flagValue := local
+				local += "Value"
+				reads = append(reads,
+					jen.List(jen.Id(local), jen.Id("ok")).Op(":=").
+						Qual(commandPath, "Secret").
+						Call(jen.Id("cmd"), jen.Lit(flag), jen.Id(flagValue)),
+					jen.If(jen.Op("!").Id("ok")).Block(ret(isLocal)))
+				help += command.SecretHelp
+			case reflect.TypeFor[map[string]secret.Value]():
+				flagValue := local
+				local += "Value"
+				reads = append(reads,
+					jen.List(jen.Id(local), jen.Id("ok")).Op(":=").
+						Qual(commandPath, "Secrets").
+						Call(jen.Id("cmd"), jen.Lit(flag), jen.Id(flagValue)),
+					jen.If(jen.Op("!").Id("ok")).Block(ret(isLocal)))
+				help += command.SecretsHelp
+			}
 			if values := oneOf(fld); values != "" {
 				help += " (" + values + ")"
-			}
-			if fld.Tag.Get("secret") == "true" {
-				help += " (secret: kept out of the audit log and traces)"
 			}
 			usage := jen.Lit(help)
 			declare := jen.Id(name).Dot("Flags").Call().Dot(kind).Call(jen.Lit(flag), zero, usage)

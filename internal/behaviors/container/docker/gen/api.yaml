@@ -69,13 +69,16 @@ components:
             validate: omitempty,dive,ip
         env:
           additionalProperties:
+            format: password
             type: string
-          description: The environment variables of the container
-          format: password
+            writeOnly: true
+            x-osapi-secret: true
+          description: 'The environment variables of the container. A secret: a reference, secret://<vault>/<key>, or the value.'
           type: object
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty
+          x-osapi-secret: true
         image:
           description: The image to run, such as alpine:3.20; docker pulls it when the host does not have it
           pattern: ^[a-zA-Z0-9][a-zA-Z0-9._/:@-]*$
@@ -215,13 +218,16 @@ components:
             validate: required,min=1
         env:
           additionalProperties:
+            format: password
             type: string
-          description: Environment variables for the command
-          format: password
+            writeOnly: true
+            x-osapi-secret: true
+          description: 'Environment variables for the command. A secret: a reference, secret://<vault>/<key>, or the value.'
           type: object
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty
+          x-osapi-secret: true
         working_dir:
           description: The directory the command runs in
           pattern: ^/

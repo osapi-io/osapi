@@ -20,6 +20,8 @@
 
 package user
 
+import "github.com/osapi-io/osapi/internal/secret"
+
 // ListInput is list's input: it takes none.
 type ListInput struct{}
 
@@ -32,15 +34,15 @@ type GetInput struct {
 // controller's step hashes it into password_hash, so the agent, the job data
 // and NATS have only the hash.
 type CreateInput struct {
-	Name         string   `json:"name"                    validate:"required,max=32,account_name"        doc:"The user to add, such as alice"                                      telemetry:"attr"`
-	UID          int      `json:"uid,omitempty"           validate:"omitempty,min=0"                     doc:"Its numeric user ID; the system assigns one when it is 0"`
-	GID          int      `json:"gid,omitempty"           validate:"omitempty,min=0"                     doc:"Its primary group ID; a group of its own when it is 0"`
-	Home         string   `json:"home,omitempty"          validate:"omitempty,startswith=/,no_linebreak" doc:"Its home directory; /home/<name> when empty"`
-	Shell        string   `json:"shell,omitempty"         validate:"omitempty,startswith=/,no_linebreak" doc:"Its login shell, such as /bin/bash; the system's default when empty"`
-	Groups       []string `json:"groups,omitempty"        validate:"omitempty,dive,max=32,account_name"  doc:"The groups it is a member of, besides its primary group"`
-	System       bool     `json:"system,omitempty"        validate:"omitempty"                           doc:"Add it as a system user, with an ID from the system range"`
-	Password     string   `json:"password,omitempty"      validate:"omitempty,no_linebreak"              doc:"Its password, which osapi hashes on the controller; none when empty"                  secret:"true"`
-	PasswordHash string   `json:"password_hash,omitempty" validate:"omitempty"                           doc:"The sha512-crypt hash of the password, which the controller sets"                                   before:"set"`
+	Name         string       `json:"name"                    validate:"required,max=32,account_name"        doc:"The user to add, such as alice"                                      telemetry:"attr"`
+	UID          int          `json:"uid,omitempty"           validate:"omitempty,min=0"                     doc:"Its numeric user ID; the system assigns one when it is 0"`
+	GID          int          `json:"gid,omitempty"           validate:"omitempty,min=0"                     doc:"Its primary group ID; a group of its own when it is 0"`
+	Home         string       `json:"home,omitempty"          validate:"omitempty,startswith=/,no_linebreak" doc:"Its home directory; /home/<name> when empty"`
+	Shell        string       `json:"shell,omitempty"         validate:"omitempty,startswith=/,no_linebreak" doc:"Its login shell, such as /bin/bash; the system's default when empty"`
+	Groups       []string     `json:"groups,omitempty"        validate:"omitempty,dive,max=32,account_name"  doc:"The groups it is a member of, besides its primary group"`
+	System       bool         `json:"system,omitempty"        validate:"omitempty"                           doc:"Add it as a system user, with an ID from the system range"`
+	Password     secret.Value `json:"password,omitempty"      validate:"omitempty,no_linebreak"              doc:"Its password, which osapi hashes on the controller; none when empty"`
+	PasswordHash string       `json:"password_hash,omitempty" validate:"omitempty"                           doc:"The sha512-crypt hash of the password, which the controller sets"                     before:"set"`
 }
 
 // UpdateInput changes a user. An empty field keeps what the user has.

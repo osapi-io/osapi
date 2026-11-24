@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/apicontract"
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type EndpointPublicTestSuite struct {
@@ -834,6 +835,17 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when a secret is in the URL or on a span",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[secretInURLIn, Node]("get"),
+			),
+			want: []string{
+				"input field id is a secret in the path; a URL goes in logs.",
+				"input field token is a secret in the query; a URL goes in logs.",
+				`input field token is a secret and tagged telemetry:"attr"; a secret is never recorded on a span.`,
+			},
+		},
+		{
 			name: "when an example names a flag that the command does not have",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.SubDoc("one", "One node"),
@@ -1020,6 +1032,12 @@ func TestEndpointPublicTestSuite(
 
 type badInIn struct {
 	Q string `json:"q,omitempty" in:"qeury" validate:"omitempty" doc:"A filter"`
+}
+
+type secretInURLIn struct {
+	ID    secret.Value `json:"id"              in:"path"  validate:"required"`
+	Token secret.Value `json:"token,omitempty" in:"query" validate:"omitempty" telemetry:"attr"`
+	Body  secret.Value `json:"body,omitempty"             validate:"omitempty"`
 }
 
 type exampleIn struct {

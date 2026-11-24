@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	password "github.com/osapi-io/osapi/internal/behaviors/password"
 	"github.com/osapi-io/osapi/internal/behaviors/password/gen"
+	secret "github.com/osapi-io/osapi/internal/secret"
 )
 
 type APIUpdatePublicTestSuite struct {
@@ -40,7 +41,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
@@ -61,7 +62,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
@@ -84,7 +85,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 				servertest.Skipped("server1"),
@@ -105,7 +106,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 				servertest.Failed("server1", "boom"),
@@ -126,7 +127,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 				servertest.TimedOut("server1"),
@@ -147,7 +148,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 			).Fails(servertest.ErrUnreachable),
@@ -166,7 +167,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 			).Fails(servertest.ErrUnreachable),
@@ -308,7 +309,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 				"password.update",
 				password.UpdateInput{
 					Name:         "osapitest",
-					Password:     "osapi-test-password",
+					Password:     secret.Value("osapi-test-password"),
 					PasswordHash: "$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1",
 				},
 				servertest.Skipped("server1"),
