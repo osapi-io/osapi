@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check a config file before osapi starts with it."><meta data-rh="true" property="og:description" content="Check a config file before osapi starts with it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Config","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/config/"},{"@type":"ListItem","position":4,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.78bc7ace.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.8da20c71.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.37cd2521.js" defer="defer"></script>
 </head>
 <body>
@@ -41,6 +41,13 @@ takes, and what its type needs, such as the key of a nats vault. Fix: Correct
 the vault that the message names. osapi config get --key
 controller.secrets.vaults describes a vault, and the message names the types
 and the settings that there are.</li>
+<li class=""><code>reference</code>: Each reference, secret://&lt;vault&gt;/&lt;key&gt;, is in a
+secret field that can take one, and names a vault of controller.secrets.vaults
+and a key of 1 to 128 letters, digits, - or _. A NATS password cannot be a
+reference, because osapi needs it to connect to NATS before it can read a
+vault. Fix: Add the vault that the reference names to
+controller.secrets.vaults, or correct the reference. For a NATS password, put
+the value in the file or in its environment variable.</li>
 </ul>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi config validate</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
