@@ -73,6 +73,33 @@ bearer token can be a reference to a key in a vault, such as
 [References in the config](../../usage/configuration.md#references-in-the-config)
 tells which settings take one.
 
+## Write and read a secret
+
+`osapi client secret` writes the value of a key, and reads the metadata of each
+key: its version, when it changed and who changed it. No command and no API
+answer gives a value. Give the value on standard input:
+
+```bash
+osapi client secret update --vault default --key registry-token --value - < token.txt
+osapi client secret list --vault default
+osapi client secret vault list
+```
+
+Each write is a new version of the key. `osapi client secret delete` deletes a
+key. The Secrets page of the UI, in the Admin menu, lists the keys of a vault,
+writes a value with a password field and deletes a key.
+
+The permissions:
+
+| Permission     | Built-in roles                            | Lets a token                           |
+| -------------- | ----------------------------------------- | -------------------------------------- |
+| `secret:read`  | `admin`, `operator`, `automation`, `read` | list the vaults and the keys of each   |
+| `secret:write` | `admin`, `automation`                     | write and delete a key                 |
+| `secret:use`   | `admin`, `automation`                     | give a reference to a secret in a call |
+
+A reference as the value of `osapi client secret update` resolves too, so it
+copies the value of that key. It needs `secret:use`, as each reference does.
+
 ## What comes next
 
 The `secret` commands and values sealed to the agent that uses them are in

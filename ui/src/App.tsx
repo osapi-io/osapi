@@ -14,6 +14,7 @@ import { Audit } from "./pages/audit";
 import { Traces } from "./pages/traces";
 import { Jobs } from "./pages/jobs";
 import { Admission } from "./pages/admission";
+import { Secrets } from "./pages/secrets";
 import { SignIn } from "./pages/sign-in";
 
 // The pages of the behaviors and the plans load their code on the first
@@ -71,6 +72,7 @@ function AuthenticatedPages() {
             <Route path="/admin/traces/:id" element={<Traces />} />
             <Route path="/admin/roles" element={<Roles />} />
             <Route path="/admin/admission" element={<Admission />} />
+            <Route path="/admin/secrets" element={<Secrets />} />
           </Routes>
         </Suspense>
       </PageLayout>

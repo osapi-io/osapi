@@ -11,6 +11,7 @@ import {
   Shield,
   ShieldAlert,
   GitBranch,
+  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { IconButton } from "@/components/ui/icon-button";
@@ -49,6 +50,12 @@ const adminLinks: {
     operation: "GetAdmissions",
   },
   { to: "/admin/jobs", label: "Jobs", icon: Briefcase, operation: "GetJobs" },
+  {
+    to: "/admin/secrets",
+    label: "Secrets",
+    icon: KeyRound,
+    operation: "GetSecretVaults",
+  },
   { to: "/admin/roles", label: "Roles", icon: Shield },
   {
     to: "/admin/traces",
