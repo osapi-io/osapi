@@ -66,7 +66,9 @@ func (s *VaultsPublicTestSuite) vaultProblems(
 ) []config.Problem {
 	var c config.Config
 	c.Controller.API.Port = 8080
-	c.Controller.API.Security.SigningKey = "0123456789abcdef0123456789abcdef"
+	c.Controller.API.Security.SigningKeys = []config.SigningKey{
+		{ID: "k1", Key: "0123456789abcdef0123456789abcdef"},
+	}
 	c.Controller.Client.Security.BearerToken = "token"
 	c.Controller.NATS.Port = 4222
 	c.Agent.NATS.Port = 4222
