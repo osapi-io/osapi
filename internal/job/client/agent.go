@@ -140,21 +140,13 @@ func (c *Client) WriteJobResponse(
 	responseJSON, _ := json.Marshal(response)
 
 	// Sign the response with the key of the agent.
-	kvPayload := responseJSON
-	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(
-			c.pkiSigner,
-			c.machineID,
-			responseJSON,
-		)
-		if signErr != nil {
-			return fmt.Errorf("failed to sign response: %w", signErr)
-		}
-		kvPayload = signed
+	kvPayload, err := c.sign(responseJSON)
+	if err != nil {
+		return fmt.Errorf("failed to sign response: %w", err)
 	}
 
 	// Store in KV
-	_, err := c.natsClient.KVPut(ctx, c.jobsBucket, responseKey, kvPayload)
+	_, err = c.natsClient.KVPut(ctx, c.jobsBucket, responseKey, kvPayload)
 	if err != nil {
 		return fmt.Errorf("failed to store job response: %w", err)
 	}
@@ -418,15 +410,15 @@ func agentInfoFromRegistration(
 // The fingerprint needs no separate check. It is inside the signed bytes, so a
 // wrong one would have to be signed by the right key.
 //
-// With no store wired the controller is not enforcing, and every registration
-// is trusted exactly as it was before verification existed.
+// A job client with no store, which is not the controller's, trusts no
+// registration: PKI is always on.
 func (c *Client) applyRegistrationTrust(
 	ctx context.Context,
 	reg *job.AgentRegistration,
 	info *job.AgentInfo,
 ) {
 	if c.agentKeyStore == nil {
-		info.Verified = true
+		info.Verified = false
 		info.KeyStored = false
 
 		return

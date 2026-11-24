@@ -225,7 +225,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				// Mock job data retrieval
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.test-job-123").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "test-job-123",
 						"operation": {
 							"type": "network.ping.do",
@@ -273,7 +273,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				// Mock job data retrieval
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.test-job-456").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "test-job-456",
 						"operation": {
 							"type": "node.unsupported.get",
@@ -351,7 +351,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("invalid-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.invalid-job").
-					Return([]byte(`invalid json`), nil)
+					Return(signedJob(`invalid json`), nil)
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
@@ -369,7 +369,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("missing-id-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.missing-id-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"operation": {
 							"type": "network.ping.do",
 							"data": {"address": "1.1.1.1"}
@@ -392,7 +392,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("missing-op-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.missing-op-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "missing-op-job"
 					}`), nil)
 			},
@@ -412,7 +412,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("missing-type-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.missing-type-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "missing-type-job",
 						"operation": {
 							"data": {}
@@ -435,7 +435,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("invalid-type-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.invalid-type-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "invalid-type-job",
 						"operation": {
 							"type": "invalid",
@@ -459,7 +459,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("ack-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.ack-err-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "ack-err-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -496,7 +496,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("start-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.start-err-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "start-err-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -533,7 +533,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("comp-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.comp-err-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "comp-err-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -570,7 +570,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("fail-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fail-err-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "fail-err-job",
 						"operation": {
 							"type": "node.unsupported.get",
@@ -613,7 +613,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("skip-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.skip-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "skip-job",
 						"operation": {
 							"type": "node.ntp.get",
@@ -653,7 +653,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("skip-err-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.skip-err-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "skip-err-job",
 						"operation": {
 							"type": "node.ntp.get",
@@ -694,7 +694,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("fact-resolve-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fact-resolve-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "fact-resolve-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -733,7 +733,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("fact-nil-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fact-nil-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "fact-nil-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -775,7 +775,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				s.expectNotAnswered("fact-fail-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.fact-fail-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "fact-fail-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -815,7 +815,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				// Mock successful job processing
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.storage-fail-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "storage-fail-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -863,7 +863,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.storage-fail-double-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "storage-fail-double-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -943,7 +943,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.check-err-job").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "check-err-job",
 						"operation": {
 							"type": "network.ping.do",
@@ -1006,7 +1006,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.modify-job-123").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "modify-job-123",
 						"operation": {
 							"type": "network.ping.do",
@@ -1124,22 +1124,15 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 		validateFunc func(string)
 	}{
 		{
-			name: "when PKI disabled passes through raw data",
+			name: "when the agent has no keys refuses each job",
 			setupPKI: func() *pki.Manager {
 				return nil
 			},
 			data: func() []byte {
-				return []byte(
-					`{"id":"test","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
-				)
+				return signedJob(`{"id":"test"}`)
 			},
-			expectError: false,
-			validateFunc: func(got string) {
-				s.Equal(
-					`{"id":"test","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
-					got,
-				)
-			},
+			expectError: true,
+			errorMsg:    "agent not enrolled",
 		},
 		{
 			name: "when valid signed envelope with correct controller key",
@@ -1314,9 +1307,13 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 	m := pki.New(memfs.New(), "/tmp/pki", "agent", pki.WithEncryptionKey())
 	s.Require().NoError(m.LoadOrGenerate())
 	m.SetControllerPublicKey(controllerPub)
+	// noXKey is an enrolled agent with no X25519 key.
+	noXKey := pki.New(memfs.New(), "/tmp/pki", "agent")
+	s.Require().NoError(noXKey.LoadOrGenerate())
+	noXKey.SetControllerPublicKey(controllerPub)
 
 	// jobData is the job jobID with its job key sealed to the agent m.
-	jobData := func(jobID string, sign bool) []byte {
+	jobData := func(jobID string) []byte {
 		sealer, err := seal.New(jobID)
 		s.Require().NoError(err)
 		key, err := sealer.KeyFor(m.EncryptionPublicKey())
@@ -1330,9 +1327,6 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 				"sealed_from": sealer.From(),
 			},
 		})
-		if !sign {
-			return payload
-		}
 		envelope, _ := json.Marshal(job.SignedEnvelope{
 			Payload:     payload,
 			Signature:   ed25519.Sign(controllerPriv, payload),
@@ -1357,6 +1351,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 		{
 			name:       "when the agent has no encryption key, the job fails and does not run",
 			jobID:      "sealed-none",
+			pki:        noXKey,
 			wantStatus: "failed",
 		},
 	}
@@ -1370,7 +1365,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 			s.expectNotAnswered(tt.jobID)
 			s.mockJobClient.EXPECT().
 				GetJobData(gomock.Any(), "jobs."+tt.jobID).
-				Return(jobData(tt.jobID, tt.pki != nil), nil)
+				Return(jobData(tt.jobID), nil)
 			for _, event := range []string{"acknowledged", "started", tt.wantStatus} {
 				s.mockJobClient.EXPECT().
 					WriteStatusEvent(gomock.Any(), tt.jobID, event, gomock.Any(), gomock.Any()).

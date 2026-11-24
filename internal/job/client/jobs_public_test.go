@@ -59,7 +59,7 @@ func (s *JobsPublicTestSuite) SetupTest() {
 		StreamName: "JOBS",
 	}
 	var err error
-	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
+	s.jobsClient, err = newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 }
 
@@ -110,7 +110,7 @@ func (s *JobsPublicTestSuite) TestNew() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFunc(client.New(slog.Default(), s.mockNATSClient, tt.opts))
+			tt.validateFunc(newTrusted(s.mockNATSClient, tt.opts))
 		})
 	}
 }
@@ -2457,7 +2457,7 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			c, err := newTrusted(s.mockNATSClient, opts)
 			s.Require().NoError(err)
 
 			tt.validateFunc(c.CreateJob(s.ctx, tt.opData, tt.target))
@@ -2479,22 +2479,13 @@ func (s *JobsPublicTestSuite) TestSetPKISigner() {
 
 	tests := []struct {
 		name         string
-		buildOpts    func() *client.Options
-		wireFn       func(c *client.Client)
+		signer       client.PKISigner
+		wantErr      error
 		validateFunc func(storedJobData []byte)
 	}{
 		{
-			name: "when signer is set after construction signing turns on",
-			buildOpts: func() *client.Options {
-				return &client.Options{
-					Timeout:    30 * time.Second,
-					JobsBucket: "jobs",
-					StreamName: "JOBS",
-				}
-			},
-			wireFn: func(c *client.Client) {
-				c.SetPKISigner(signer)
-			},
+			name:   "when signer is set after construction signing turns on",
+			signer: signer,
 			validateFunc: func(storedJobData []byte) {
 				var envelope job.SignedEnvelope
 				s.NoError(json.Unmarshal(storedJobData, &envelope))
@@ -2503,34 +2494,27 @@ func (s *JobsPublicTestSuite) TestSetPKISigner() {
 			},
 		},
 		{
-			name: "when signer is cleared after construction signing turns off",
-			buildOpts: func() *client.Options {
-				return &client.Options{
-					Timeout:    30 * time.Second,
-					JobsBucket: "jobs",
-					StreamName: "JOBS",
-					PKISigner:  signer,
-				}
-			},
-			wireFn: func(c *client.Client) {
-				c.SetPKISigner(nil)
-			},
-			validateFunc: func(storedJobData []byte) {
-				var jobData map[string]interface{}
-				s.NoError(json.Unmarshal(storedJobData, &jobData))
-				// A signed envelope would carry "signature" and
-				// "fingerprint" fields instead of the job fields below.
-				s.Contains(jobData, "operation")
-				s.NotContains(jobData, "signature")
-			},
+			name:    "when signer is cleared after construction the job client writes no job",
+			wantErr: client.ErrNoSigner,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			c, err := client.New(slog.Default(), s.mockNATSClient, tt.buildOpts())
+			c, err := newTrusted(s.mockNATSClient, &client.Options{
+				Timeout:    30 * time.Second,
+				JobsBucket: "jobs",
+				StreamName: "JOBS",
+			})
 			s.Require().NoError(err)
-			tt.wireFn(c)
+			c.SetPKISigner(tt.signer)
+
+			if tt.wantErr != nil {
+				_, err = c.CreateJob(s.ctx, opData, "_any")
+				s.ErrorIs(err, tt.wantErr)
+
+				return
+			}
 
 			var storedJobData []byte
 			s.mockNATSClient.EXPECT().
@@ -2550,130 +2534,6 @@ func (s *JobsPublicTestSuite) TestSetPKISigner() {
 			s.Require().NoError(err)
 
 			tt.validateFunc(storedJobData)
-		})
-	}
-}
-
-func (s *JobsPublicTestSuite) TestGetJobStatusWithPKISigner() {
-	signer, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
-	jobID := "pki-job-123"
-
-	tests := []struct {
-		name         string
-		setupMocks   func()
-		validateFunc func(qj *job.QueuedJob)
-	}{
-		{
-			name: "when response has signed envelope unwraps successfully",
-			setupMocks: func() {
-				// Job entry.
-				jobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				jobEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
-					`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
-					jobID,
-				)))
-				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "jobs", "jobs."+jobID).
-					Return(jobEntry, nil)
-
-				// Status keys — empty.
-				statusLister := []string{}
-				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "jobs", "status."+jobID+".>").
-					Return(statusLister, nil)
-
-				// Response keys — one signed response.
-				responseKey := "responses." + jobID + ".server1.12345"
-				responseLister := []string{responseKey}
-				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "jobs", "responses."+jobID+".>").
-					Return(responseLister, nil)
-
-				// The response entry is a signed envelope.
-				inner := []byte(
-					`{"status":"completed","hostname":"server1","data":{"hostname":"web-01"}}`,
-				)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
-
-				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				respEntry.EXPECT().Value().Return(wrapped)
-				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "jobs", responseKey).
-					Return(respEntry, nil)
-			},
-			validateFunc: func(qj *job.QueuedJob) {
-				s.Require().NotNil(qj)
-				s.Len(qj.Responses, 1)
-				resp, ok := qj.Responses["server1"]
-				s.True(ok)
-				s.Equal("completed", string(resp.Status))
-			},
-		},
-		{
-			name: "when response envelope has invalid signature skips response",
-			setupMocks: func() {
-				// Job entry.
-				jobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				jobEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
-					`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
-					jobID,
-				)))
-				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "jobs", "jobs."+jobID).
-					Return(jobEntry, nil)
-
-				// Status keys — empty.
-				statusLister := []string{}
-				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "jobs", "status."+jobID+".>").
-					Return(statusLister, nil)
-
-				// Response keys — one response with tampered signature.
-				responseKey := "responses." + jobID + ".server1.12345"
-				responseLister := []string{responseKey}
-				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "jobs", "responses."+jobID+".>").
-					Return(responseLister, nil)
-
-				// Build a valid signed envelope then corrupt the signature.
-				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
-				var envelope job.SignedEnvelope
-				_ = json.Unmarshal(wrapped, &envelope)
-				envelope.Signature[0] ^= 0xFF
-				corrupted, _ := json.Marshal(envelope)
-
-				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				respEntry.EXPECT().Value().Return(corrupted)
-				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "jobs", responseKey).
-					Return(respEntry, nil)
-			},
-			validateFunc: func(qj *job.QueuedJob) {
-				// unwrapSignedEnvelope returns an error for the bad signature,
-				// so getJobResponses skips this response.
-				s.Require().NotNil(qj)
-				s.Len(qj.Responses, 0)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupMocks()
-
-			opts := &client.Options{
-				Timeout:    30 * time.Second,
-				JobsBucket: "jobs",
-				StreamName: "JOBS",
-				PKISigner:  signer,
-			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
-			s.Require().NoError(err)
-
-			qj, err := c.GetJobStatus(s.ctx, jobID)
-			s.NoError(err)
-			tt.validateFunc(qj)
 		})
 	}
 }
@@ -2731,13 +2591,90 @@ func (s *JobsPublicTestSuite) TestSignedJobRecord() {
 				Return([]string{}, nil).
 				AnyTimes()
 
-			c, err := client.New(slog.Default(), s.mockNATSClient, &client.Options{
+			c, err := newTrusted(s.mockNATSClient, &client.Options{
 				Timeout:    30 * time.Second,
 				JobsBucket: "jobs",
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			})
 			s.Require().NoError(err)
+
+			tt.validateFunc(c.GetJobStatus(s.ctx, jobID))
+		})
+	}
+}
+
+// TestWithoutKeys reads with a job client that is missing a key: with no
+// signer it reads no job record, and with no agent keys it reports no
+// response, so no value is read unverified.
+func (s *JobsPublicTestSuite) TestWithoutKeys() {
+	jobID := "no-keys-1"
+	record := []byte(fmt.Sprintf(
+		`{"id":"%s","status":"unprocessed","created":"2026-11-18T20:57:13Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
+		jobID,
+	))
+	responseKey := "responses." + jobID + ".server1.12345"
+
+	tests := []struct {
+		name         string
+		signer       client.PKISigner
+		setupMocks   func()
+		validateFunc func(qj *job.QueuedJob, err error)
+	}{
+		{
+			name: "when the job client has no signer, it reads no job record",
+			setupMocks: func() {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(controllerSigned(record))
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs."+jobID).
+					Return(entry, nil)
+			},
+			validateFunc: func(_ *job.QueuedJob, err error) {
+				s.ErrorIs(err, client.ErrNoSigner)
+			},
+		},
+		{
+			name:   "when the job client has no agent keys, it reports no response",
+			signer: testSigner{},
+			setupMocks: func() {
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(controllerSigned(record))
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs."+jobID).
+					Return(entry, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status."+jobID+".>").
+					Return([]string{}, nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "responses."+jobID+".>").
+					Return([]string{responseKey}, nil)
+				respEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				respEntry.EXPECT().Value().Return(
+					agentSigned([]byte(`{"status":"completed","hostname":"server1"}`)),
+				)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", responseKey).
+					Return(respEntry, nil)
+			},
+			validateFunc: func(qj *job.QueuedJob, err error) {
+				s.Require().NoError(err)
+				s.Empty(qj.Responses)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.setupMocks()
+
+			c, err := client.New(slog.Default(), s.mockNATSClient, &client.Options{
+				Timeout:    30 * time.Second,
+				JobsBucket: "jobs",
+				StreamName: "JOBS",
+			})
+			s.Require().NoError(err)
+			c.SetPKISigner(tt.signer)
 
 			tt.validateFunc(c.GetJobStatus(s.ctx, jobID))
 		})
@@ -2814,7 +2751,7 @@ func (s *JobsPublicTestSuite) TestSetAgentKeyStoreAndMachineID() {
 				JobsBucket: "jobs",
 				StreamName: "JOBS",
 			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			c, err := newTrusted(s.mockNATSClient, opts)
 			s.Require().NoError(err)
 			tt.wireFn(c)
 
@@ -2950,7 +2887,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
 				JobsBucket: "jobs",
 				StreamName: "JOBS",
 			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			c, err := newTrusted(s.mockNATSClient, opts)
 			s.Require().NoError(err)
 			c.SetAgentKeyStore(store)
 

@@ -57,6 +57,9 @@ func startEnrollment(
 	if err := keys.LoadOrGenerate(); err != nil {
 		return nil, fmt.Errorf("load or generate controller keypair: %w", err)
 	}
+	// The controller verifies the job records that it signed with its own
+	// key: a reader refuses a record that it cannot verify.
+	keys.SetControllerPublicKey(keys.PublicKey())
 
 	log.Info(
 		"controller PKI initialized",

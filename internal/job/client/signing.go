@@ -63,41 +63,30 @@ func wrapInSignedEnvelope(
 	return envelopeJSON, nil
 }
 
-// unwrapSignedEnvelope attempts to unwrap a SignedEnvelope. If the data
-// is not a signed envelope (missing required fields), it returns the
-// original data unchanged with isEnvelope=false. If it is a signed
-// envelope, it verifies the signature against the provided public key
-// and returns the inner payload.
+// unwrapSignedEnvelope is the payload of data, a SignedEnvelope, after its
+// signature verifies with pubKey. Data that is not a signed envelope, and
+// a missing key, are errors: no path returns a payload unverified.
 func unwrapSignedEnvelope(
 	data []byte,
 	pubKey ed25519.PublicKey,
-) (payload []byte, isEnvelope bool, err error) {
+) ([]byte, error) {
 	var envelope job.SignedEnvelope
-	if jsonErr := json.Unmarshal(data, &envelope); jsonErr != nil {
-		return data, false, nil
+	if err := json.Unmarshal(data, &envelope); err != nil ||
+		len(envelope.Payload) == 0 || len(envelope.Signature) == 0 || envelope.Fingerprint == "" {
+		return nil, ErrNotSigned
 	}
-
-	// Check if this looks like a signed envelope by verifying required
-	// fields are present.
-	if len(envelope.Payload) == 0 || len(envelope.Signature) == 0 || envelope.Fingerprint == "" {
-		return data, false, nil
-	}
-
-	// If no public key is available, return the payload without verification.
 	if len(pubKey) == 0 {
-		return envelope.Payload, true, nil
+		return nil, ErrNoSigner
 	}
-
-	// Verify the signature.
 	if !ed25519.Verify(pubKey, envelope.Payload, envelope.Signature) {
-		return nil, true, fmt.Errorf("invalid signature on signed envelope")
+		return nil, fmt.Errorf("invalid signature on signed envelope")
 	}
 
-	return envelope.Payload, true, nil
+	return envelope.Payload, nil
 }
 
 // verifyAgentResponse checks a response against the key stored for the agent
-// that claims to have sent it, and returns the inner payload.
+// that claims to have sent it, and returns the response in its payload.
 //
 // The envelope's machine ID is self-reported, so it is used only to choose
 // which stored record to verify against: a response naming another agent is
@@ -112,7 +101,7 @@ func verifyAgentResponse(
 	ctx context.Context,
 	store AgentKeyStore,
 	data []byte,
-) ([]byte, error) {
+) (*job.Response, error) {
 	var envelope job.SignedEnvelope
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return nil, ErrResponseNotSigned
@@ -165,5 +154,5 @@ func verifyAgentResponse(
 		)
 	}
 
-	return envelope.Payload, nil
+	return &response, nil
 }

@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"testing"
 	"time"
 
@@ -60,7 +59,7 @@ func (s *AgentTimelinePublicTestSuite) newClientWithState() *client.Client {
 		JobsBucket:  "jobs",
 		StateBucket: "state",
 	}
-	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	c, err := newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 
 	return c
@@ -71,7 +70,7 @@ func (s *AgentTimelinePublicTestSuite) newClientWithoutState() *client.Client {
 		Timeout:    30 * time.Second,
 		JobsBucket: "jobs",
 	}
-	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	c, err := newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 
 	return c

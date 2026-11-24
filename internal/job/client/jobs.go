@@ -95,17 +95,9 @@ func (c *Client) CreateJob(
 	}
 
 	// Sign the job data with the key of the controller.
-	kvPayload := jobWithStatusJSON
-	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(
-			c.pkiSigner,
-			c.machineID,
-			jobWithStatusJSON,
-		)
-		if signErr != nil {
-			return nil, fmt.Errorf("failed to sign job data: %w", signErr)
-		}
-		kvPayload = signed
+	kvPayload, err := c.sign(jobWithStatusJSON)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign job data: %w", err)
 	}
 
 	// Store job in KV with immutable key format
@@ -926,34 +918,10 @@ func (c *Client) getJobResponses(
 			continue
 		}
 
-		// Verify against the responding agent's stored key when enforcing,
-		// otherwise unwrap as before.
-		responseData := entry.Value()
-
-		switch {
-		case c.agentKeyStore != nil:
-			verified, verifyErr := verifyAgentResponse(
-				ctx,
-				c.agentKeyStore,
-				responseData,
-			)
-			if verifyErr != nil {
-				continue
-			}
-			responseData = verified
-		case c.pkiSigner != nil:
-			unwrapped, _, unwrapErr := unwrapSignedEnvelope(
-				responseData,
-				c.pkiSigner.ControllerPublicKey(),
-			)
-			if unwrapErr != nil {
-				continue
-			}
-			responseData = unwrapped
-		}
-
-		var response job.Response
-		if err := json.Unmarshal(responseData, &response); err != nil {
+		// A response that does not verify against the stored key of the
+		// agent is not reported.
+		response, verifyErr := c.verifyResponse(ctx, entry.Value())
+		if verifyErr != nil {
 			continue
 		}
 
@@ -961,7 +929,7 @@ func (c *Client) getJobResponses(
 		keyParts := strings.Split(key, ".")
 		if len(keyParts) >= 3 {
 			hostname := keyParts[2]
-			responses[hostname] = response
+			responses[hostname] = *response
 		}
 	}
 
@@ -971,17 +939,18 @@ func (c *Client) getJobResponses(
 // jobRecord is the stored record of a job. The controller writes the
 // record inside a signed envelope, so the record is the envelope's
 // payload, its signature checked with the controller's key. A job client
-// with no signer, as in a test, reads the value as the record itself.
+// with no signer refuses each record.
 func (c *Client) jobRecord(
 	value []byte,
 ) (map[string]interface{}, error) {
-	if c.pkiSigner != nil {
-		payload, _, err := unwrapSignedEnvelope(value, c.pkiSigner.ControllerPublicKey())
-		if err != nil {
-			return nil, fmt.Errorf("failed to verify job data: %w", err)
-		}
-		value = payload
+	if c.pkiSigner == nil {
+		return nil, fmt.Errorf("failed to verify job data: %w", ErrNoSigner)
 	}
+	payload, err := unwrapSignedEnvelope(value, c.pkiSigner.ControllerPublicKey())
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify job data: %w", err)
+	}
+	value = payload
 
 	var jobData map[string]interface{}
 	if err := json.Unmarshal(value, &jobData); err != nil {

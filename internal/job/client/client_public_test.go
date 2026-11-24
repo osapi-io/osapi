@@ -27,7 +27,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -100,7 +99,7 @@ func (s *ClientPublicTestSuite) SetupTest() {
 		StreamName: "JOBS",
 	}
 	var err error
-	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
+	s.jobsClient, err = newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 }
 
@@ -585,7 +584,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 					StreamName:     "JOBS",
 					RegistryBucket: "registry",
 				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				c, err := newTrusted(s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
@@ -621,7 +620,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 					StreamName:     "JOBS",
 					RegistryBucket: "registry",
 				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				c, err := newTrusted(s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
@@ -655,7 +654,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 					JobsBucket: "jobs",
 					StreamName: "JOBS",
 				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				c, err := newTrusted(s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
@@ -713,7 +712,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 					StreamName:     "JOBS",
 					RegistryBucket: "registry",
 				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				c, err := newTrusted(s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
@@ -751,7 +750,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 					JobsBucket: "jobs",
 					StreamName: "JOBS",
 				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				c, err := newTrusted(s.mockNATSClient, opts)
 				s.Require().NoError(err)
 
 				setupPublishAndCollectMocks(
@@ -1177,7 +1176,7 @@ func (s *ClientPublicTestSuite) newClient(
 		StreamName:     "JOBS",
 		RegistryBucket: registry,
 	}
-	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	c, err := newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 
 	return c
@@ -1258,7 +1257,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 				StreamName: "JOBS",
 				PKISigner:  signer,
 			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			c, err := newTrusted(s.mockNATSClient, opts)
 			s.Require().NoError(err)
 
 			tt.setupMocks()
@@ -1289,93 +1288,6 @@ func (s *ClientPublicTestSuite) TearDownSubTest() {
 	client.ResetSigningMarshalFn()
 }
 
-func (s *ClientPublicTestSuite) TestQueryWithPKISignerUnwrapPaths() {
-	const (
-		target    = "server1"
-		category  = "node"
-		operation = job.OperationType("node.hostname.get")
-		subject   = "jobs.query.host.server1"
-	)
-
-	signer, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
-
-	tests := []struct {
-		name         string
-		responseData func() []byte
-		wantErr      string
-		validateFunc func(jobID string, resp *job.Response)
-	}{
-		{
-			name: "when response is a valid signed envelope unwraps successfully",
-			responseData: func() []byte {
-				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
-				return wrapped
-			},
-			validateFunc: func(_ string, resp *job.Response) {
-				s.NotNil(resp)
-				s.Equal(job.StatusCompleted, resp.Status)
-			},
-		},
-		{
-			name: "when response envelope has invalid signature the job fails",
-			responseData: func() []byte {
-				// Build an envelope with a tampered signature so verification fails.
-				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", inner)
-				var envelope job.SignedEnvelope
-				_ = json.Unmarshal(wrapped, &envelope)
-				envelope.Signature[0] ^= 0xFF
-				corrupted, _ := json.Marshal(envelope)
-				return corrupted
-			},
-			// A forged or corrupted response must never be treated as a
-			// successful result: Query returns an error instead of a
-			// response built from unverified data.
-			wantErr: "response signature verification failed",
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			opts := &client.Options{
-				Timeout:    30 * time.Second,
-				JobsBucket: "jobs",
-				StreamName: "JOBS",
-				PKISigner:  signer,
-			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
-			s.Require().NoError(err)
-
-			// KV Put succeeds (signed envelope).
-			s.mockNATSClient.EXPECT().
-				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
-				Return(uint64(1), nil)
-			s.mockNATSClient.EXPECT().
-				Publish(gomock.Any(), subject, gomock.Any()).
-				Return(nil)
-
-			mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-			mockEntry.EXPECT().Value().Return(tt.responseData())
-			ch := make(chan jetstream.KeyValueEntry, 1)
-			ch <- mockEntry
-
-			s.mockNATSClient.EXPECT().
-				KVWatch(gomock.Any(), "jobs", gomock.Any()).
-				Return(ch, nil)
-
-			jobID, resp, err := c.Query(s.ctx, target, category, operation, nil)
-			if tt.wantErr != "" {
-				s.Error(err)
-				s.Contains(err.Error(), tt.wantErr)
-				return
-			}
-			s.NoError(err)
-			tt.validateFunc(jobID, resp)
-		})
-	}
-}
-
 func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 	const (
 		target    = "_all"
@@ -1386,105 +1298,12 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 
 	signer, _ := newSigner(gomock.NewController(s.T()))
 
-	// Use a signer with ControllerPublicKey set so verification is attempted.
-	signerWithCtrl, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
-
 	tests := []struct {
 		name         string
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(responses map[string]*job.Response)
 	}{
-		{
-			name: "when PKI signs and unwraps broadcast responses",
-			setupMocks: func() {
-				// Registry returns one agent.
-				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
-
-				opts := &client.Options{
-					Timeout:        30 * time.Second,
-					JobsBucket:     "jobs",
-					StreamName:     "JOBS",
-					PKISigner:      signerWithCtrl,
-					RegistryBucket: "registry",
-				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
-				s.Require().NoError(err)
-				s.jobsClient = c
-
-				// KV Put succeeds.
-				s.mockNATSClient.EXPECT().
-					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), subject, gomock.Any()).
-					Return(nil)
-
-				// Return a signed envelope response.
-				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signerWithCtrl, "", inner)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return(wrapped)
-				ch := make(chan jetstream.KeyValueEntry, 1)
-				ch <- mockEntry
-
-				s.mockNATSClient.EXPECT().
-					KVWatch(gomock.Any(), "jobs", gomock.Any()).
-					Return(ch, nil)
-			},
-			validateFunc: func(responses map[string]*job.Response) {
-				s.Len(responses, 1)
-				s.Equal(job.StatusCompleted, responses["server1"].Status)
-			},
-		},
-		{
-			name: "when broadcast response has invalid signature the agent times out",
-			setupMocks: func() {
-				// Registry returns one agent.
-				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1"})
-
-				opts := &client.Options{
-					Timeout:        1 * time.Second,
-					JobsBucket:     "jobs",
-					StreamName:     "JOBS",
-					PKISigner:      signerWithCtrl,
-					RegistryBucket: "registry",
-				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
-				s.Require().NoError(err)
-				s.jobsClient = c
-
-				// KV Put succeeds.
-				s.mockNATSClient.EXPECT().
-					KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
-					Return(uint64(1), nil)
-				s.mockNATSClient.EXPECT().
-					Publish(gomock.Any(), subject, gomock.Any()).
-					Return(nil)
-
-				// Return a signed envelope with tampered signature.
-				inner := []byte(`{"status":"completed","hostname":"server1"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signerWithCtrl, "", inner)
-				var envelope job.SignedEnvelope
-				_ = json.Unmarshal(wrapped, &envelope)
-				envelope.Signature[0] ^= 0xFF
-				corrupted, _ := json.Marshal(envelope)
-
-				mockEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry.EXPECT().Value().Return(corrupted)
-				ch := make(chan jetstream.KeyValueEntry, 1)
-				ch <- mockEntry
-
-				s.mockNATSClient.EXPECT().
-					KVWatch(gomock.Any(), "jobs", gomock.Any()).
-					Return(ch, nil)
-			},
-			// A forged or corrupted response is dropped rather than kept
-			// as an unverified result: it never counts toward server1's
-			// reply, so the broadcast times out with none received.
-			expectedErr: "no agents responded",
-		},
 		{
 			name: "when PKI signing marshal fails returns error",
 			setupMocks: func() {
@@ -1498,7 +1317,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 					StreamName: "JOBS",
 					PKISigner:  signer,
 				}
-				c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+				c, err := newTrusted(s.mockNATSClient, opts)
 				s.Require().NoError(err)
 				s.jobsClient = c
 			},
@@ -1530,7 +1349,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithPKISigner() {
 
 func (s *ClientPublicTestSuite) TestQueryWatchEndsEarly() {
 	s.Run("when the watch ends before a response waits for the timeout", func() {
-		c, err := client.New(slog.Default(), s.mockNATSClient, &client.Options{
+		c, err := newTrusted(s.mockNATSClient, &client.Options{
 			Timeout:    50 * time.Millisecond,
 			JobsBucket: "jobs",
 			StreamName: "JOBS",
@@ -1599,7 +1418,7 @@ func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
 		StreamName:     "JOBS",
 		TargetResolver: resolver,
 	}
-	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	c, err := newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 
 	_, resp, err := c.Query(s.ctx, hostname, category, operation, nil)
@@ -1925,7 +1744,7 @@ func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
 				JobsBucket: "jobs",
 				StreamName: "JOBS",
 			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			c, err := newTrusted(s.mockNATSClient, opts)
 			s.Require().NoError(err)
 			c.SetAgentKeyStore(store)
 
@@ -2047,7 +1866,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 				StreamName:     "JOBS",
 				RegistryBucket: "registry",
 			}
-			c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+			c, err := newTrusted(s.mockNATSClient, opts)
 			s.Require().NoError(err)
 			c.SetAgentKeyStore(store)
 

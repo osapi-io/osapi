@@ -24,7 +24,6 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -74,7 +73,7 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 		name         string
 		setupData    func() []byte
 		setupMock    func()
-		validateFunc func([]byte, error)
+		validateFunc func(*job.Response, error)
 	}{
 		{
 			name: "accepts a response signed by the agent's stored key",
@@ -94,11 +93,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 					[]byte(`{"status":"completed","hostname":"web-01"}`),
 				)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().NoError(err)
-
-				var response job.Response
-				s.Require().NoError(json.Unmarshal(payload, &response))
+				s.Require().NotNil(response)
 				s.Equal(job.StatusCompleted, response.Status)
 				s.Equal("web-01", response.Hostname)
 			},
@@ -125,9 +122,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 					[]byte(`{"status":"completed","hostname":"web-01"}`),
 				)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseSignatureInvalid)
 			},
 		},
@@ -152,9 +149,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 					[]byte(`{"status":"completed","hostname":"web-01"}`),
 				)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseHostnameMismatch)
 				s.Contains(err.Error(), "evil-01")
 				s.Contains(err.Error(), "web-01")
@@ -174,9 +171,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 					[]byte(`{"status":"completed","hostname":"web-01"}`),
 				)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseKeyUnknown)
 				s.NotErrorIs(err, client.ErrResponseSignatureInvalid)
 			},
@@ -195,9 +192,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 					[]byte(`{"status":"completed","hostname":"web-01"}`),
 				)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseStoreUnavailable)
 				s.NotErrorIs(err, client.ErrResponseKeyUnknown)
 			},
@@ -207,9 +204,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 			setupData: func() []byte {
 				return []byte(`not json at all`)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseNotSigned)
 			},
 		},
@@ -218,9 +215,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 			setupData: func() []byte {
 				return []byte(`{"status":"completed","hostname":"web-01"}`)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseNotSigned)
 			},
 		},
@@ -237,9 +234,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 					[]byte(`{"status":"completed","hostname":"web-01"}`),
 				)
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseNotSigned)
 			},
 		},
@@ -257,9 +254,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 
 				return s.signedResponse(signer, "machine-001", []byte(`[1,2,3]`))
 			},
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseNotSigned)
 				s.Contains(err.Error(), "not a response")
 			},
@@ -356,22 +353,22 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponseDuringRotati
 	tests := []struct {
 		name         string
 		until        time.Time
-		validateFunc func([]byte, error)
+		validateFunc func(*job.Response, error)
 	}{
 		{
 			name:  "a response signed with the replaced key verifies inside the window",
 			until: now.Add(time.Hour),
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().NoError(err)
-				s.NotEmpty(payload)
+				s.NotEmpty(response)
 			},
 		},
 		{
 			name:  "the same response is a mismatch once the window lapses",
 			until: now.Add(-time.Second),
-			validateFunc: func(payload []byte, err error) {
+			validateFunc: func(response *job.Response, err error) {
 				s.Require().Error(err)
-				s.Nil(payload)
+				s.Nil(response)
 				s.Require().ErrorIs(err, client.ErrResponseSignatureInvalid)
 			},
 		},

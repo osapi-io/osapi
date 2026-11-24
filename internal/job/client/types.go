@@ -95,9 +95,8 @@ func (k *AgentKey) AcceptableKeys(
 	return keys
 }
 
-// AgentKeyStore looks up an accepted agent's key by machine ID. Nil when the
-// controller is not enforcing response verification, which leaves behaviour
-// exactly as it was before verification existed.
+// AgentKeyStore looks up an accepted agent's key by machine ID. A job client
+// with no store refuses each response of an agent.
 //
 // Implemented on the controller by the enrollment watcher, which is the only
 // thing allowed to write the underlying records.
@@ -113,12 +112,19 @@ type AgentKeyStore interface {
 // forged, and both from a store that cannot be read. None of them ever means
 // "treat as verified".
 var (
-	// ErrNoAgentKeys means a job with a secret, on a job client with no
-	// agent keys to seal it to. The controller always has them; a secret
-	// never goes in a job in plain text.
-	ErrNoAgentKeys = errors.New(
-		"the job has a secret, and the job client has no agent keys to seal it to",
-	)
+	// ErrNoSigner means a job client with no signing key: it writes no job
+	// and no response, and reads no record or response, because each one
+	// is signed. The controller and an enrolled agent always have one.
+	ErrNoSigner = errors.New("the job client has no signing key")
+
+	// ErrNoAgentKeys means a job client with no agent keys: it refuses a
+	// job with a secret, which it cannot seal, and each response of an
+	// agent, which it cannot verify. The controller always has them.
+	ErrNoAgentKeys = errors.New("the job client has no agent keys")
+
+	// ErrNotSigned means a stored value that is not a signed envelope. A
+	// reader refuses it.
+	ErrNotSigned = errors.New("the value is not a signed envelope")
 
 	// ErrResponseNotSigned means the response carried no signed envelope.
 	// Expected from an agent that has not been upgraded; never accepted
@@ -308,15 +314,16 @@ type JobClient interface {
 	// not always available at client construction time, so this is called
 	// once one is: on the controller when the enrollment watcher loads the
 	// controller keypair, and on the agent when PKI enrollment loads the
-	// agent keypair. Passing nil disables signing and verification.
+	// agent keypair. Until then, or with nil, the job client writes no job
+	// and no response, and reads no job record.
 	SetPKISigner(
 		signer PKISigner,
 	)
 
 	// SetAgentKeyStore wires the store used to verify agent responses. Like
 	// the signer, it is not available at construction: on the controller it
-	// arrives with the enrollment watcher. Passing nil leaves responses
-	// unverified, which is the behaviour before this feature.
+	// arrives with the enrollment watcher. Until then, or with nil, the job
+	// client refuses each response of an agent.
 	SetAgentKeyStore(
 		store AgentKeyStore,
 	)

@@ -52,7 +52,7 @@ func ExportVerifyAgentResponse(
 	ctx context.Context,
 	store AgentKeyStore,
 	data []byte,
-) ([]byte, error) {
+) (*job.Response, error) {
 	return verifyAgentResponse(ctx, store, data)
 }
 
@@ -60,7 +60,7 @@ func ExportVerifyAgentResponse(
 func ExportUnwrapSignedEnvelope(
 	data []byte,
 	pubKey []byte,
-) ([]byte, bool, error) {
+) ([]byte, error) {
 	return unwrapSignedEnvelope(data, pubKey)
 }
 

@@ -62,7 +62,7 @@ func (s *MeterPublicTestSuite) SetupTest() {
 		JobsBucket: "jobs",
 	}
 	var err error
-	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
+	s.jobsClient, err = newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 }
 

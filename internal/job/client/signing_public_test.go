@@ -158,117 +158,69 @@ func (s *SigningPublicTestSuite) TestWrapInSignedEnvelope() {
 
 func (s *SigningPublicTestSuite) TestUnwrapSignedEnvelope() {
 	signer, pubKey := newSigner(gomock.NewController(s.T()))
+	wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", []byte(`{"id":"test"}`))
+	otherPub, _, _ := ed25519.GenerateKey(rand.Reader)
 
 	tests := []struct {
-		name         string
-		setupData    func() []byte
-		pubKey       ed25519.PublicKey
-		wantEnv      bool
-		expectError  bool
-		errorMsg     string
-		validateFunc func([]byte)
+		name    string
+		data    []byte
+		pubKey  ed25519.PublicKey
+		want    []byte
+		wantErr error
+		errText string
 	}{
 		{
-			name: "when valid signed envelope with correct key",
-			setupData: func() []byte {
-				payload := []byte(`{"id":"test"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", payload)
-				return wrapped
-			},
-			pubKey:      pubKey,
-			wantEnv:     true,
-			expectError: false,
-			validateFunc: func(got []byte) {
-				s.Equal([]byte(`{"id":"test"}`), got)
-			},
+			name:   "when the envelope verifies with the key, it is the payload",
+			data:   wrapped,
+			pubKey: pubKey,
+			want:   []byte(`{"id":"test"}`),
 		},
 		{
-			name: "when valid signed envelope with nil key skips verification",
-			setupData: func() []byte {
-				payload := []byte(`{"id":"test"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", payload)
-				return wrapped
-			},
-			pubKey:      nil,
-			wantEnv:     true,
-			expectError: false,
-			validateFunc: func(got []byte) {
-				s.Equal([]byte(`{"id":"test"}`), got)
-			},
+			name:    "when there is no key, it is refused",
+			data:    wrapped,
+			wantErr: client.ErrNoSigner,
 		},
 		{
-			name: "when valid signed envelope with wrong key fails verification",
-			setupData: func() []byte {
-				payload := []byte(`{"id":"test"}`)
-				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "", payload)
-				return wrapped
-			},
-			pubKey: func() ed25519.PublicKey {
-				otherPub, _, _ := ed25519.GenerateKey(rand.Reader)
-				return otherPub
-			}(),
-			wantEnv:     true,
-			expectError: true,
-			errorMsg:    "invalid signature",
-			validateFunc: func(got []byte) {
-				s.Equal([]byte(nil), got)
-			},
+			name:    "when the key is a different one, it is refused",
+			data:    wrapped,
+			pubKey:  otherPub,
+			errText: "invalid signature",
 		},
 		{
-			name: "when raw JSON passes through as non-envelope",
-			setupData: func() []byte {
-				return []byte(`{"id":"test","operation":{"type":"node.hostname.get"}}`)
-			},
-			pubKey:      pubKey,
-			wantEnv:     false,
-			expectError: false,
-			validateFunc: func(got []byte) {
-				s.Equal([]byte(`{"id":"test","operation":{"type":"node.hostname.get"}}`), got)
-			},
+			name:    "when the value is plain JSON, it is refused",
+			data:    []byte(`{"id":"test","operation":{"type":"node.hostname.get"}}`),
+			pubKey:  pubKey,
+			wantErr: client.ErrNotSigned,
 		},
 		{
-			name: "when invalid JSON passes through as non-envelope",
-			setupData: func() []byte {
-				return []byte(`not json at all`)
-			},
-			pubKey:      pubKey,
-			wantEnv:     false,
-			expectError: false,
-			validateFunc: func(got []byte) {
-				s.Equal([]byte(`not json at all`), got)
-			},
+			name:    "when the value is not JSON, it is refused",
+			data:    []byte(`not json at all`),
+			pubKey:  pubKey,
+			wantErr: client.ErrNotSigned,
 		},
 		{
-			name: "when envelope-like JSON with empty payload passes through",
-			setupData: func() []byte {
-				return []byte(`{"payload":"","signature":"","fingerprint":""}`)
-			},
-			pubKey:      pubKey,
-			wantEnv:     false,
-			expectError: false,
-			validateFunc: func(got []byte) {
-				s.Equal([]byte(`{"payload":"","signature":"","fingerprint":""}`), got)
-			},
+			name:    "when the envelope has empty fields, it is refused",
+			data:    []byte(`{"payload":"","signature":"","fingerprint":""}`),
+			pubKey:  pubKey,
+			wantErr: client.ErrNotSigned,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			data := tt.setupData()
+			payload, err := client.ExportUnwrapSignedEnvelope(tt.data, tt.pubKey)
 
-			payload, isEnvelope, err := client.ExportUnwrapSignedEnvelope(data, tt.pubKey)
-
-			if tt.expectError {
-				s.Error(err)
-				if tt.errorMsg != "" {
-					s.Contains(err.Error(), tt.errorMsg)
-				}
-				return
+			switch {
+			case tt.wantErr != nil:
+				s.ErrorIs(err, tt.wantErr)
+				s.Nil(payload)
+			case tt.errText != "":
+				s.ErrorContains(err, tt.errText)
+				s.Nil(payload)
+			default:
+				s.Require().NoError(err)
+				s.Equal(tt.want, payload)
 			}
-
-			s.NoError(err)
-			s.Equal(tt.wantEnv, isEnvelope)
-			tt.validateFunc(payload)
 		})
 	}
 }
@@ -277,14 +229,11 @@ func (s *SigningPublicTestSuite) TestRoundTrip() {
 	signer, pubKey := newSigner(gomock.NewController(s.T()))
 	originalPayload := []byte(`{"id":"round-trip-test","status":"unprocessed"}`)
 
-	// Wrap
 	wrapped, err := client.ExportWrapInSignedEnvelope(signer, "", originalPayload)
 	s.NoError(err)
 
-	// Unwrap with correct key
-	unwrapped, isEnvelope, err := client.ExportUnwrapSignedEnvelope(wrapped, pubKey)
+	unwrapped, err := client.ExportUnwrapSignedEnvelope(wrapped, pubKey)
 	s.NoError(err)
-	s.True(isEnvelope)
 	s.Equal(originalPayload, unwrapped)
 }
 
