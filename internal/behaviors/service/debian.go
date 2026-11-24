@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"strings"
 
 	"github.com/avfs/avfs"
@@ -192,7 +193,8 @@ func (d *debian) Deploy(
 }
 
 // Remove stops and disables the service, drops its unit file and reloads
-// systemd. A service with no unit file is unchanged. When the reload fails,
+// systemd. A service with no unit file is unchanged, and a record of a unit
+// file that is not on the host is dropped. When the reload fails,
 // the unit file is put back with its record marked, so a retry removes it
 // and reloads again.
 func (d *debian) Remove(
@@ -205,6 +207,15 @@ func (d *debian) Remove(
 	path := unitPath(name)
 	rec, owned, err := d.record(ctx, path)
 	if err != nil || !owned {
+		return false, err
+	}
+	if _, err := d.fs.Stat(path); errors.Is(err, fs.ErrNotExist) {
+		// A record of a unit file that is not on the host, such as the
+		// record that a VM built again with the same name keeps, is
+		// dropped. systemctl fails on a unit file that is not there.
+		_, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, d.files,
+			managedfile.DeleteInput{Path: path})
+
 		return false, err
 	}
 	unit := prefix + name + ".service"
