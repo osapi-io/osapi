@@ -118,7 +118,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("sshkey_operations", "User SSH key", "The authorized SSH keys of a user"),
 	endpoint.CommandNotes("The [sshkey behavior](../../../../../../reference/behaviors/security/user/sshkey/sshkey.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, UserSshkeyCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeUserSshkey").

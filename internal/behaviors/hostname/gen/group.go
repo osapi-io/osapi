@@ -86,7 +86,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("hostname_operations", "Hostname", "Get or set the hostname of target hosts"),
 	endpoint.CommandNotes("The [hostname behavior](../../../../../reference/behaviors/config/hostname/hostname.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, HostnameGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeHostname").

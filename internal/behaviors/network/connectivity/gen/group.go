@@ -63,7 +63,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("connectivity_operations", "Connectivity", "Whether the host reaches an address, by ICMP ping"),
 	endpoint.CommandNotes("The [connectivity behavior](../../../../../reference/behaviors/networking/connectivity/connectivity.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Post[PingRequest, ConnectivityPingResponse]("ping").
 		Handle(HandlePing).
 		ID("PostNodeConnectivityPing").

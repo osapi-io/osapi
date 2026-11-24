@@ -51,7 +51,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("memory_operations", "Memory", "Get the memory usage of target hosts"),
 	endpoint.CommandNotes("The [memory behavior](../../../../../reference/behaviors/hardware/memory/memory.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, MemoryGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeMemory").

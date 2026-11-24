@@ -164,7 +164,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("certificate_operations", "Certificate", "The certificate authorities that the host trusts"),
 	endpoint.CommandNotes("The [certificate behavior](../../../../../reference/behaviors/security/certificate/certificate.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, CertificateCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeCertificate").

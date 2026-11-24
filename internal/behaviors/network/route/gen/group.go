@@ -152,7 +152,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("route_operations", "Interface route", "The routes of an interface"),
 	endpoint.CommandNotes("The [route behavior](../../../../../../reference/behaviors/networking/interface/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, InterfaceRouteCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeInterfaceRoute").

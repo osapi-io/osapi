@@ -59,7 +59,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("log_operations", "Log", "The entries of the systemd journal"),
 	endpoint.CommandNotes("The [log behavior](../../../../../reference/behaviors/logs/log/log.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, LogCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeLog").

@@ -46,17 +46,6 @@ const RowStatusDoc = "What happened on the host: ok, the operation ran and succe
 	"failed, it ran and did not succeed; skipped, the host's OS family does not support it; " +
 	"timeout, the host did not answer, so nobody knows whether it ran."
 
-// RowStatuses are the values of types.RowStatus, the enum of its schema.
-func RowStatuses() []string {
-	values := types.RowStatus("").Values()
-	out := make([]string, 0, len(values))
-	for _, v := range values {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
 // ErrInvalid is an input that the route's validate tags cannot see as
 // wrong: a template that reads a var that its behavior does not have, or an
 // input that the host refuses, such as a path that is a directory. The

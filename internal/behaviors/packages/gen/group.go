@@ -134,7 +134,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("package_operations", "Package", "The packages installed on the host"),
 	endpoint.CommandNotes("The [package behavior](../../../../../reference/behaviors/software/package/package.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, PackageCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodePackage").

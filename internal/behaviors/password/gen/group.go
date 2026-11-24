@@ -60,7 +60,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("password_operations", "User password", "The password of a user"),
 	endpoint.CommandNotes("The [password behavior](../../../../../../reference/behaviors/security/user/password/password.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Put[UpdateRequest, UserPasswordUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeUserPassword").

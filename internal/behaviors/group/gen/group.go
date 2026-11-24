@@ -159,7 +159,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("group_operations", "Group", "The groups of the host"),
 	endpoint.CommandNotes("The [group behavior](../../../../../reference/behaviors/security/group/group.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, GroupCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeGroup").

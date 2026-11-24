@@ -62,7 +62,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("status_operations", "Status", "The status summary of a node"),
 	endpoint.CommandNotes("The [status behavior](../../../../../reference/behaviors/node/status/status.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, StatusGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeStatus").
