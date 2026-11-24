@@ -26,8 +26,8 @@ import (
 
 // natsCmd represents the nats command.
 var natsCmd = &cobra.Command{
-	Use:   "nats",
-	Short: "Run the embedded NATS server, or prepare a NATS server that osapi does not run",
+	Use: "nats",
+	// Its help is its purpose in command.RootGroups, which DescribeRoot gives it.
 }
 
 func init() {

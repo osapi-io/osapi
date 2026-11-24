@@ -50,7 +50,7 @@ type Summary struct {
 
 // GetInput names the group.
 type GetInput struct {
-	Name string `json:"name" validate:"required" doc:"The command path of the group, such as token or agent"`
+	Name string `json:"name" validate:"required" doc:"The command path of the group, such as controller token or agent"`
 }
 
 // GetOutput is a group and each of its commands.
@@ -73,13 +73,13 @@ type Command struct {
 
 // MethodInput is the local group and the method to show.
 type MethodInput struct {
-	Name   string `json:"name"   validate:"required" doc:"The command path of the local group, such as token"`
-	Method string `json:"method" validate:"required" doc:"The method, such as list or roles get, from osapi cli command get"`
+	Name   string `json:"name"   validate:"required" doc:"The command path of the local group, such as controller token"`
+	Method string `json:"method" validate:"required" doc:"The method, such as list or roles get, from osapi dsl command get"`
 }
 
 // MethodOutput is one method of a local group in full: its command, its
 // flags with their checks, its output, its examples and what it refuses.
-// It is the shape of osapi behavior method get and osapi controller
+// It is the shape of osapi dsl behavior method get and osapi controller
 // endpoint method get. --json has the JSON Schema of the output.
 type MethodOutput struct {
 	_          struct{}         `title:"Method"`
@@ -118,8 +118,9 @@ type Flag struct {
 
 // CreateInput is the name and the doc of the group to create.
 type CreateInput struct {
-	Name        string `json:"name"        validate:"required" doc:"The group's name: its command under osapi"`
-	Description string `json:"description" validate:"required" doc:"What the group is, in one line"`
+	Name        string `json:"name"        validate:"required"                                 doc:"The group's name: its command under osapi"`
+	Description string `json:"description" validate:"required"                                 doc:"What the group is, in one line"`
+	Under       string `json:"under"       validate:"required,oneof=agent controller dsl nats" doc:"The word of the root that the group goes under, where it runs: agent, controller, dsl or nats"`
 }
 
 // CreateOutput is the files that create wrote, and the steps after it.

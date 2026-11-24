@@ -184,7 +184,7 @@ func resolveRequires(
 		if b == nil {
 			return nil, fmt.Errorf(
 				"requires %q, which is not a registered behavior: "+
-					"osapi behavior list names each one", n)
+					"osapi dsl behavior list names each one", n)
 		}
 		if len(b.Methods) == 0 {
 			return nil, fmt.Errorf("requires %q, which has no method to call", n)

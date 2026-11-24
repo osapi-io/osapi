@@ -73,14 +73,14 @@ type AdmissionAdmitInput struct {
 	// The machine_id of the path: the machine ID of the node.
 	MachineID string `json:"-"`
 
-	// The fingerprint that osapi agent admission get prints on the machine.
+	// The fingerprint that osapi agent key fingerprint prints on the machine.
 	Fingerprint string `json:"fingerprint"`
 }
 
 // Admit is the operation AdmitMachine: admit a pending machine.
 //
 // Admits a pending machine. The fingerprint must be the one that `osapi agent
-// admission get` prints on the machine: it proves that the request came from
+// key fingerprint` prints on the machine: it proves that the request came from
 // the machine the operator is looking at.
 //
 // It sends POST /api/admission/{machine_id}/admit, and needs the permission

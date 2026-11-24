@@ -170,7 +170,7 @@ func (sc groupScaffold) groupFile() *jen.File {
 	f.Line()
 	comments(f,
 		"Group is the "+sc.name+" group's definition. The routes, the spec, the CLI",
-		"commands and their pages come from it. osapi controller endpoint spec get",
+		"commands and their pages come from it. osapi dsl endpoint spec get",
 		"lists every option.",
 	)
 	f.Var().Id("Group").Op("=").Add(e("Register").Call(e("Define").Add(multiline("(", ")",

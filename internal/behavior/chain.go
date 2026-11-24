@@ -49,8 +49,8 @@ const (
 )
 
 // ChainChecks are the rules of a chain: the behaviors that a behavior
-// requires, and the calls that it makes to them. osapi behavior chain
-// validate checks each one; behavior validate checks the ones that hold
+// requires, and the calls that it makes to them. osapi dsl chain
+// validate checks each one; dsl behavior validate checks the ones that hold
 // when the behaviors are built, and go test checks the ones that need a run.
 var ChainChecks = guide.Checks{
 	{
@@ -91,7 +91,7 @@ func ChainProblems() []Problem {
 
 // A Step is one call of a method in a chain, with the calls it made. The
 // examples record them: Record gives a context, and each Call under it adds
-// its step, so osapi behavior chain get shows what each call sent and got.
+// its step, so osapi dsl chain get shows what each call sent and got.
 type Step struct {
 	Behavior string  `json:"behavior"`
 	Method   string  `json:"method"`
@@ -237,7 +237,7 @@ func Requires(
 }
 
 // Internal marks a behavior that only other behaviors use. It gets no route,
-// no command, no spec and no permissions; behavior list and behavior get still
+// no command, no spec and no permissions; dsl behavior list and dsl behavior get still
 // show it, with what uses it. A primitive can start internal and be exposed
 // later by removing the option.
 var Internal Option = optionFunc(func(b *Behavior) { b.Internal = true })
@@ -416,7 +416,7 @@ const (
 
 // ChainSpec is every term of a chain: what one is, how a behavior builds on
 // others, how it calls them, and what happens when a step fails. osapi
-// behavior chain spec get prints it, with the building blocks of the binary.
+// dsl chain spec get prints it, with the building blocks of the binary.
 var ChainSpec = guide.Spec{
 	Kinds: []guide.Kind{
 		{Kind: KindChain, Title: "What a chain is"},
@@ -429,19 +429,19 @@ var ChainSpec = guide.Spec{
 			Kind: KindChain,
 			Name: "A chain",
 			Does: "The behaviors that a behavior calls, and the ones that they call: dns calls netplan, and netplan calls managedfile. The chain has the name of the behavior at its top. It is not declared on its own: Requires on each behavior makes it.",
-			When: "osapi behavior chain list shows each chain; osapi behavior chain get --name <behavior> shows its tree.",
+			When: "osapi dsl chain list shows each chain; osapi dsl chain get --name <behavior> shows its tree.",
 		},
 		{
 			Kind: KindChain,
 			Name: "The calls of an example",
-			Does: "osapi behavior chain get runs each example of the behavior on the fake host that go test uses, and records each Call: the behavior, the method, the input, and the output or the error. Thus the tree shows what the code does now.",
+			Does: "osapi dsl chain get runs each example of the behavior on the fake host that go test uses, and records each Call: the behavior, the method, the input, and the output or the error. Thus the tree shows what the code does now.",
 			When: "To see what a behavior sends to the behaviors that it calls, before a change or when one fails.",
 		},
 		{
 			Kind: KindCompose,
 			Name: "Use a building block",
 			Does: "A building block is an internal behavior that does one generic job, such as writing a file that osapi manages. Its spans, checks and records come with it. \"Building blocks\" lists the ones in this binary.",
-			When: "Before a provider does generic work itself: a managed file, a service reload, a call to an outside API. Require the block with Requires, and call it with Call. osapi behavior create --requires <block> writes the Requires, the host.Require and a field of the provider; you write each Call.",
+			When: "Before a provider does generic work itself: a managed file, a service reload, a call to an outside API. Require the block with Requires, and call it with Call. osapi dsl behavior create --requires <block> writes the Requires, the host.Require and a field of the provider; you write each Call.",
 		},
 		{
 			Kind: KindCompose,
@@ -509,7 +509,7 @@ func CurrentChainSpec() guide.Spec {
 			Kind: KindBlock,
 			Name: b.Name,
 			Does: b.Doc + ". Methods: " + strings.Join(names, ", ") + ".",
-			When: "Require it, and call its methods with Call. osapi behavior get --name " +
+			When: "Require it, and call its methods with Call. osapi dsl behavior get --name " +
 				b.Name + " shows its inputs.",
 		})
 	}

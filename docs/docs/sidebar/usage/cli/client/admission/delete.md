@@ -35,8 +35,8 @@ With `--json`, the command prints:
 
 ## Permission
 
-It needs the `admission:write` permission. `osapi token roles get --name <role>`
-shows what a role grants.
+It needs the `admission:write` permission.
+`osapi controller role get --name <role>` shows what a role grants.
 
 ## Flags
 

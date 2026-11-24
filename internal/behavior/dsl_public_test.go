@@ -69,7 +69,7 @@ func (s *DSLPublicTestSuite) TestBehavior() {
 
 	d := s.lookup("behavior")
 	s.True(d.ServesAPI())
-	s.Equal([]string{"behavior"}, d.Command)
+	s.Equal([]string{"dsl", "behavior"}, d.Command)
 	s.Equal([]dsl.Declared{
 		{Permission: client.Permission("zzserved:read"), Where: "behavior zzserved get"},
 		{
@@ -89,7 +89,7 @@ func (s *DSLPublicTestSuite) TestBehavior() {
 func (s *DSLPublicTestSuite) TestChain() {
 	d := s.lookup("chain")
 	s.False(d.ServesAPI())
-	s.Equal([]string{"behavior", "chain"}, d.Command)
+	s.Equal([]string{"dsl", "chain"}, d.Command)
 	s.Len(d.Without, 3)
 	for _, c := range []string{dsl.CommandCreate, dsl.CommandMethod, dsl.CommandOpenAPI} {
 		s.NotEmpty(d.Without[c])

@@ -38,7 +38,7 @@ const (
 	KindGenerated  = "generated"
 )
 
-// Spec is every term of the endpoint DSL. osapi controller endpoint spec get
+// Spec is every term of the endpoint DSL. osapi dsl endpoint spec get
 // prints it, so an author, or an agent, learns the DSL from the binary that
 // it builds. A test fails on an exported option, method or refinement of
 // this package without an entry.
@@ -250,7 +250,7 @@ var Spec = guide.Spec{
 			Does: "Names the permission the method needs, in place of <group>:read or <group>:write. " +
 				"It takes a client.Permission: use a Perm constant of pkg/sdk/client, not a string. " +
 				"The constant is Perm, then the resource and the verb, such as PermAgentRead; " +
-				"osapi token roles get --name admin lists each permission. " +
+				"osapi controller role get --name admin lists each permission. " +
 				"It must be one that a group, a behavior or the hand-written domains declare: " +
 				"a test fails on a name that nothing declares, because no role grants it.",
 			When: "When a different permission covers it, such as agent:read for facts, or trace:read for telemetry.",
@@ -260,7 +260,7 @@ var Spec = guide.Spec{
 			Name: ".AdminOnly()",
 			Does: "Makes the method's permission one that only the admin role grants. By the rule, " +
 				"admin gets each permission; operator each read and each execute permission, and automation each read and each write permission, that is not admin only; read each read that is not admin only; auditor and observer get their lists; a shell permission is admin only with no mark. " +
-				"Each method with the same permission must agree. osapi token roles get --name automation " +
+				"Each method with the same permission must agree. osapi controller role get --name automation " +
 				"shows what a role gets.",
 			When: "For a trust decision or a record of who did what, such as admission:write, " +
 				"agent:write or audit:read.",
@@ -493,7 +493,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "SentEmpty(fields)",
-			Does: "The optional rule: each optional field of a request body, with omitempty in its validate tag and none in its json tag, which a client would send as \"\" or 0. controller endpoint validate checks each write with it, and behavior validate checks each behavior write's body with the same func.",
+			Does: "The optional rule: each optional field of a request body, with omitempty in its validate tag and none in its json tag, which a client would send as \"\" or 0. dsl endpoint validate checks each write with it, and dsl behavior validate checks each behavior write's body with the same func.",
 			When: "Add ,omitempty to the json tag of each field it names.",
 		},
 		{
@@ -504,7 +504,7 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi controller endpoint openapi get --name <group>",
+			Name: "osapi dsl endpoint openapi get --name <group>",
 			Does: "Prints the group's spec, as the definition makes it.",
 			When: "To read the prose beside the hand-written spec.",
 		},
@@ -517,7 +517,7 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi controller endpoint create --name <group> --description \"...\"",
+			Name: "osapi dsl endpoint create --name <group> --description \"...\"",
 			Does: "Writes a new group under internal/controller/endpoints/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/controller/endpoints/all. It builds, validates and passes its tests; endpoint-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/controller/endpoints/all and just generate, and change it.",
 		},

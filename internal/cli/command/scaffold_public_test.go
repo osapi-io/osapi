@@ -74,7 +74,7 @@ func (s *ScaffoldPublicTestSuite) checkout(
 func (s *ScaffoldPublicTestSuite) TestGolden() {
 	root := s.checkout(allGo)
 
-	files, err := command.Scaffold(root, "widget", "Widgets of this host")
+	files, err := command.Scaffold(root, "widget", "Widgets of this host", command.ParentController)
 	s.Require().NoError(err)
 
 	for _, rel := range files {
@@ -97,8 +97,17 @@ func (s *ScaffoldPublicTestSuite) TestScaffoldErrors() {
 		setup   func() string
 		gname   string
 		doc     string
+		under   command.Parent
 		wantErr string
 	}{
+		{
+			name:    "when under is not a word that a local group goes under",
+			setup:   func() string { return s.checkout(allGo) },
+			gname:   "widget",
+			doc:     "x",
+			under:   "client",
+			wantErr: `under "client" is not a word of the root that a local group goes under: agent, controller, dsl, nats`,
+		},
 		{
 			name:    "when the name is not a Go package name",
 			setup:   func() string { return s.checkout(allGo) },
@@ -208,7 +217,11 @@ func (s *ScaffoldPublicTestSuite) TestScaffoldErrors() {
 		s.Run(tc.name, func() {
 			root := tc.setup()
 
-			_, err := command.Scaffold(root, tc.gname, tc.doc)
+			under := tc.under
+			if under == "" {
+				under = command.ParentDSL
+			}
+			_, err := command.Scaffold(root, tc.gname, tc.doc, under)
 
 			s.ErrorContains(err, tc.wantErr)
 		})

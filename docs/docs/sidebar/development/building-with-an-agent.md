@@ -16,8 +16,8 @@ agents, the jobs or the audit log, is an endpoint. A second skill,
 `build-an-endpoint`, covers it in the same way. The endpoint DSL makes the spec
 of a group today, and the skill says to stop at the parts that are not built
 yet. A command that runs in the CLI and calls no API, such as
-`osapi token generate`, is a local command. A third skill, `build-a-command`,
-covers it.
+`osapi controller token generate`, is a local command. A third skill,
+`build-a-command`, covers it.
 
 ## Set it up
 
@@ -25,8 +25,8 @@ Open a checkout of osapi with a coding agent. `.claude/skills/build-a-behavior/`
 is a short pointer to the skill, and `.agents/skills` links to it. When the
 request is about a behavior, the agent loads the pointer. The pointer tells it
 to run `go run . skill get --name build-a-behavior`, and the binary prints the
-skill. Thus the binary is the only source of the skill. `osapi init` does not
-install it, because it is to change osapi, not to use it. Refer to
+skill. Thus the binary is the only source of the skill. `osapi skill install`
+does not install it, because it is to change osapi, not to use it. Refer to
 [osapi skill](../usage/cli/skill/skill.mdx). Build the binary one time, because
 the binary embeds the UI:
 
@@ -64,14 +64,14 @@ before it writes code, with a recommendation for each:
 
 ## What it writes, and how it proves it
 
-It runs `osapi behavior create`. Then it writes the settings, the types, the
+It runs `osapi dsl behavior create`. Then it writes the settings, the types, the
 provider, the methods and the definition, with examples that are also the tests.
 Then it runs the same checks as a person:
 
 ```bash
 go generate ./internal/behaviors/all
 mise exec -- just generate        # the spec, SDK and UI clients, API docs
-go run . behavior validate
+go run . dsl behavior validate
 mise exec -- just test            # every check, 100% coverage per behavior
 ```
 
@@ -84,7 +84,7 @@ through, or a program that runs without a declaration. The table of the skill
 gives the fix for each one.
 
 To review the result, read the definition in `internal/behaviors/<name>/`. Then
-read `osapi behavior get --name <name>` and the generated page under
+read `osapi dsl behavior get --name <name>` and the generated page under
 [Behaviors](../reference/behaviors/behaviors.mdx). osapi generates all of the
 rest of the change from those.
 

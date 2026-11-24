@@ -142,6 +142,9 @@ command.LocalMethod.Name string	identity	a name that the registry, the route or 
 command.LocalMethod.Says(text string)	free text	prose for a page or a message
 command.LocalMethod.Short(text string)	free text	prose for a page or a message
 command.LocalMethod.Sub(segment string)	identity	a name that the registry, the route or the command path holds
+command.Root(word string)	identity	a name that the registry, the route or the command path holds
+command.RootGroup.Name string	identity	a name that the registry, the route or the command path holds
+command.RootGroup.Purpose string	free text	prose for a page or a message
 command.LogLine.Msg string	fixture	what an example sets up or expects
 command.Long(text string)	free text	prose for a page or a message
 command.Lookup(path string)	identity	a command path

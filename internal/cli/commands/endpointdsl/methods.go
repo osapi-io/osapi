@@ -69,7 +69,7 @@ func find(
 	}
 
 	return nil, fmt.Errorf(
-		"no endpoint group named %q: osapi controller endpoint list shows them",
+		"no endpoint group named %q: osapi dsl endpoint list shows them",
 		name,
 	)
 }
@@ -148,7 +148,7 @@ func MethodGet(
 	}
 	if m == nil {
 		return MethodOutput{}, fmt.Errorf(
-			"endpoint group %s has no method %q: osapi controller endpoint get --name %s shows them",
+			"endpoint group %s has no method %q: osapi dsl endpoint get --name %s shows them",
 			g.Name,
 			in.Method,
 			g.Name,
@@ -264,7 +264,7 @@ func Create(
 		"go generate ./internal/controller/endpoints/all",
 		"mise exec -- just generate",
 		"go test ./internal/controller/endpoints/" + in.Name + "/...",
-		"go run . controller endpoint validate",
+		"go run . dsl endpoint validate",
 	} {
 		out.Next = append(out.Next, Step{Command: step})
 	}

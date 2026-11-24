@@ -103,7 +103,7 @@ not use this in production.
 
 ```bash
 # On the machine: show its machine ID and key fingerprint
-osapi agent admission get
+osapi agent key fingerprint
 
 # List the machines that wait for a decision
 osapi client admission list --state pending

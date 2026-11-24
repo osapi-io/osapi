@@ -20,13 +20,26 @@
 
 package clidocs
 
-// GenerateInput is where to write the pages.
+// GenerateInput is the root of the repository whose pages to write.
 type GenerateInput struct {
+	Root string `json:"root" validate:"omitempty" doc:"Root of the osapi repository" default:"."`
+}
+
+// GenerateOutput is how many pages of each kind generate wrote.
+type GenerateOutput struct {
+	_         struct{} `title:"Docs"`
+	CLI       int      `             json:"cli"       label:"CLI pages"`
+	DSL       int      `             json:"dsl"       label:"DSL pages"`
+	Reference int      `             json:"reference" label:"Reference pages"`
+}
+
+// CLIInput is where to write the pages.
+type CLIInput struct {
 	Dir string `json:"dir" validate:"omitempty" doc:"Directory of the CLI reference pages" default:"docs/docs/sidebar/usage/cli"`
 }
 
-// GenerateOutput is where the pages are, and how many there are.
-type GenerateOutput struct {
+// CLIOutput is where the pages are, and how many there are.
+type CLIOutput struct {
 	_     struct{} `title:"CLI reference"`
 	Dir   string   `                      json:"dir"`
 	Pages int      `                      json:"pages"`

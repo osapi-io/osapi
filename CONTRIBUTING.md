@@ -81,9 +81,9 @@ source, and the binary serves it.
 **A change updates the skills in the same pull request.** A new or changed
 command, flag, DSL option or check changes what a person or an agent can do with
 osapi. Thus it changes each embedded skill that tells about it: the skills that
-`osapi init` installs (`skills/`) and the skills for a checkout of osapi
-(`dev-skills/`). Do this also when the feature is not complete. Write in the
-skill what is not built yet, so that an agent stops there.
+`osapi skill install` installs (`skills/`) and the skills for a checkout of
+osapi (`dev-skills/`). Do this also when the feature is not complete. Write in
+the skill what is not built yet, so that an agent stops there.
 [Developing a skill][developing-a-skill] tells how.
 
 ## Setup
@@ -98,8 +98,7 @@ just deps
 ## Project structure
 
 - **`cmd/`.** The root command, the wiring of the CLI, and the Cobra commands
-  that no definition makes yet (`node agent`, `controller start`,
-  `nats server`).
+  that no definition makes yet (`node agent`, `controller start`, `nats start`).
 - **`internal/cli/command/`.** The command DSL: a definition of a group of local
   commands, which run in the CLI and call no API, and the runtime of each
   generated command. The endpoint and behavior commands use its runtime too.
@@ -147,8 +146,8 @@ just deps
 - **`internal/cli/`.** The output of the CLI: the theme, tables, help, errors
   and logs.
 - **`internal/skills/`.** The agent skills, in `resources/`, and the code that
-  installs them (`osapi init`) and serves them (`osapi skill`). Each skill is
-  one directory, with its references and its evals.
+  installs them (`osapi skill install`) and serves them (`osapi skill`). Each
+  skill is one directory, with its references and its evals.
   [Developing a skill][developing-a-skill] tells how to change, add and measure
   a skill.
 - **`pkg/sdk/`.** The Go SDK. A program uses it to access the REST API.
@@ -193,8 +192,8 @@ just deps
   `//go:embed resources/...`. Do not put embedded files in `cmd/`, or in a
   package that only passes them to a different package. The current resources:
   - `internal/skills/resources/`: the agent skills. `skills/` has the skills
-    that `osapi init` installs. `dev-skills/` has the skills that `osapi skill`
-    serves to a checkout of osapi.
+    that `osapi skill install` installs. `dev-skills/` has the skills that
+    `osapi skill` serves to a checkout of osapi.
   - `internal/agent/resources/templates/`: the protected `osapi/` objects that
     the agent puts in the object store.
   - `ui/dist/`: the build of the UI, which `ui` embeds.
@@ -262,8 +261,8 @@ command, or the command in `cmd/` when no definition makes it, then run
   `create`, `update` or `delete`, or an action that a CRUD verb does not say,
   such as `drain`, `exec` or `restart`. A noun is never the verb: list a noun's
   items with `list` under it. A local command has the same shape, such as
-  `token roles list`. `TestCommandShape` in `cmd/help_style_test.go` and
-  `osapi cli command validate` fail on a verb that is not in `command.Verbs` or
+  `controller role list`. `TestCommandShape` in `cmd/help_style_test.go` and
+  `osapi dsl command validate` fail on a verb that is not in `command.Verbs` or
   `command.Actions`, in `internal/cli/command/validate.go`. Add an action there
   only for a real action.
 - Mark a required flag with `MarkFlagRequired`. `--help` and the page say
@@ -282,10 +281,10 @@ command, or the command in `cmd/` when no definition makes it, then run
   `go generate ./internal/behaviors/all`, then `just cli-docs-generate`.
 - A new command that runs in the CLI and calls no API is a local command. Write
   it with the command DSL, in a group under `internal/cli/commands/`, not as a
-  file in `cmd/`. Start a group with `osapi cli command create`, then run
+  file in `cmd/`. Start a group with `osapi dsl command create`, then run
   `go generate ./internal/cli/commands/all` and `just cli-docs-generate`.
-  `osapi cli command spec get` lists each part of the DSL, and
-  `osapi cli command validate` checks each group. The `build-a-command` skill
+  `osapi dsl command spec get` lists each part of the DSL, and
+  `osapi dsl command validate` checks each group. The `build-a-command` skill
   has the steps.
 
 ```bash
@@ -392,16 +391,16 @@ The generators that use jen:
 
 - `internal/behavior/gen` writes the routes, the handlers, the CLI commands and
   the tests of each behavior.
-- `osapi behavior create` writes the first files of a new behavior, from
+- `osapi dsl behavior create` writes the first files of a new behavior, from
   `internal/behavior/scaffold_files.go`.
 - `internal/cli/command/gen` writes the CLI commands of each local group, each
   endpoint group and each behavior.
-- `osapi cli command create` writes the first files of a new local group, from
+- `osapi dsl command create` writes the first files of a new local group, from
   `internal/cli/command/scaffold_files.go`, with golden copies in
   `internal/cli/command/testdata/scaffold/`.
 
 A generator built with jen is hard to read as the code that it writes. Thus the
-output of `osapi behavior create` has golden copies in
+output of `osapi dsl behavior create` has golden copies in
 `internal/behavior/testdata/scaffold/`, and a test compares them. When you
 change the scaffold, run the test with `-update`. The diff of the golden files
 shows the change to the files that a person gets.
@@ -636,7 +635,7 @@ to run the controller on your machine. The file also has a placeholder
 that the key signs:
 
 ```bash
-export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=$(./osapi token generate \
+export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=$(./osapi controller token generate \
   -f configs/osapi.yaml --roles admin --subject dev --json | jq -r .token)
 ```
 
@@ -743,19 +742,19 @@ an operation that breaks one:
 - A list of the controller answers `items` and `total_items`.
 
 The operations of the controller itself, such as the agents and the jobs, move
-to definitions in `internal/controller/endpoints/`. `osapi controller endpoint`
-lists them, and `osapi controller endpoint spec get` lists each part of the DSL.
+to definitions in `internal/controller/endpoints/`. `osapi dsl endpoint` lists
+them, and `osapi dsl endpoint spec get` lists each part of the DSL.
 `TestEndpointParity` holds the spec of each group that moves to its hand-written
 spec, until the group moves. The agent group is served, and its commands are
 made, from its definition: `go generate ./internal/controller/endpoints/all`
 writes its spec, routes, decoders and CLI commands under `gen/`, and
 `just generate` joins its spec into the main one. A command prints from the
 output type of its method. The tags of each field set how the value prints, and
-`osapi cli command spec get` has each tag. No command writes its own output:
+`osapi dsl command spec get` has each tag. No command writes its own output:
 when the type does not have the shape, change the type. A list of the row's own
 type prints as a tree. The group's commands need no file in `cmd/`: the group's
 one line, `CommandLong` and `SubDoc` give the help of its command and of each
-`.Sub` segment. A new group starts from `osapi controller endpoint create`, and
+`.Sub` segment. A new group starts from `osapi dsl endpoint create`, and
 `just endpoint-scaffold-check` holds what it writes to its tests. The
 `build-an-endpoint` skill has the steps.
 

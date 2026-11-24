@@ -22,8 +22,6 @@ package clidocs
 
 // The sample outputs of the examples, which the docs page of each command
 // shows as the CLI prints it.
-var (
-	sampleGenerate  = GenerateOutput{Dir: "docs/docs/sidebar/usage/cli", Pages: 171}
-	sampleDSL       = DSLOutput{Dir: "docs/docs/sidebar/development/dsl", Pages: 7}
-	sampleReference = ReferenceOutput{Pages: 73}
-)
+// sampleGenerate is the sample output of generate, which the docs page of
+// the command shows as the CLI prints it.
+var sampleGenerate = GenerateOutput{CLI: 244, DSL: 4, Reference: 93}

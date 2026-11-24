@@ -245,8 +245,8 @@ func TypeName(
 	return t.Name()
 }
 
-// Shape is t with the fields of its schema s, as behavior get and
-// controller endpoint get show a type: CreateInput { key*, value* }, with
+// Shape is t with the fields of its schema s, as dsl behavior get and
+// dsl endpoint get show a type: CreateInput { key*, value* }, with
 // each required field of an input marked *.
 func Shape(
 	t reflect.Type,

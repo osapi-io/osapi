@@ -14,10 +14,10 @@ gives the output that the example declares. Thus a behavior for Debian that runs
 exists. Only CI runs the real commands: its `Integration` step runs the write
 examples as root on a throwaway Linux runner.
 
-`osapi behavior spec get` lists each service of the host under "The host a
+`osapi dsl behavior spec get` lists each service of the host under "The host a
 provider gets", and a test fails when a service has no entry there.
 `go doc ./internal/behavior/host Host` tells what each service is.
-`behavior get --name <name>` tells what a building block accepts. This page
+`dsl behavior get --name <name>` tells what a building block accepts. This page
 tells the two things that they do not tell: how the tests replace each service,
 and what to copy.
 
@@ -29,7 +29,7 @@ and what to copy.
 | `h.Exec`, with each program declared by `behavior.Runs`, or `behavior.Sudo` if it runs as root | A mock that records each command line and answers with what the example declares | `Prints` for an output, `PrintsAfter` for one that changes once a command has run; `Ran` after |
 | A gohai collector, with `h.Sources()`, for each read of a fact                                 | The collector, reading the fake filesystem and the mock commands                 | `Exists` and `Prints` for what gohai reads                                                     |
 | `h.Objects`, through the `object` building block                                               | The objects that the example stores                                              | `Stored` before the call                                                                       |
-| A building block, through `behavior.Requires` and `host.Require`                               | The building block's real provider, on the same fake host                        | Whatever that provider's own calls need; its `behavior get` lists them                         |
+| A building block, through `behavior.Requires` and `host.Require`                               | The building block's real provider, on the same fake host                        | Whatever that provider's own calls need; its `dsl behavior get` lists them                     |
 | `h.Time()`, never `time.Now`                                                                   | `behaviortest.Now`, 2026-01-02 03:04:05 UTC                                      | An output computed from that time, such as an uptime from a boot time                          |
 | `host.Settings[Settings](h)`                                                                   | The defaults                                                                     |                                                                                                |
 | `h.Platform`, `h.Hostname`                                                                     | Each platform the behavior declares; `behaviortest.Hostname`                     |                                                                                                |
@@ -49,8 +49,8 @@ The shape of the provider comes from the location of the truth about what it
 manages. Find that location first.
 
 **A file that osapi writes.** Require `managedfile` and write through it.
-`behavior get --name managedfile` shows what it accepts, for example the owner
-and the mode of the file. It compares before it writes. Thus a second run
+`dsl behavior get --name managedfile` shows what it accepts, for example the
+owner and the mode of the file. It compares before it writes. Thus a second run
 reports `changed: false`. It also keeps the record that the controller uses to
 report drift. sysctl is this case. Copy `internal/behaviors/sysctl`.
 

@@ -35,7 +35,7 @@ graph TD
     N --> A3["Agent, db-01"]
 ```
 
-1. Run `osapi nats server start` on the NATS host, or use a cluster that exists.
+1. Run `osapi nats start` on the NATS host, or use a cluster that exists.
 1. Run `osapi controller start` on the host that serves the API. The controller
    and NATS can be on the same host.
 1. Run `osapi agent start` on each managed host, with `agent.nats` set to the
@@ -84,7 +84,7 @@ report `skipped`. To manage a host, run the agent on the host.
 osapi config validate          # the config file, checked the way start checks it
 osapi client health status     # every component and its parts, across hosts
 osapi client agent list        # every agent, its labels and conditions
-osapi behavior list            # what this build can manage
+osapi dsl behavior list            # what this build can manage
 ```
 
 ## Design details

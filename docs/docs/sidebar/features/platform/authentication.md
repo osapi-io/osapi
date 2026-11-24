@@ -12,7 +12,7 @@ osapi uses **HMAC-SHA256 (HS256)** symmetric signatures. The same `signing_key`
 makes and verifies tokens:
 
 ```
-osapi token generate ──[signs with signing_key]──> JWT
+osapi controller token generate ──[signs with signing_key]──> JWT
 Client ──[sends JWT]──> API Server ──[verifies with signing_key]──> Allow/Deny
 ```
 
@@ -37,8 +37,8 @@ A token carries four pieces of authorization data:
 - **Subject** (`sub` claim): the identity of the user, for the audit log
 
 Generate tokens with the CLI. Refer to
-[CLI Reference](../../usage/cli/token/token.mdx) for usage and examples, or the
-[API Reference](/category/api) for the REST endpoints.
+[CLI Reference](../../usage/cli/controller/token/token.mdx) for usage and
+examples, or the [API Reference](/category/api) for the REST endpoints.
 
 ### Permission resolution
 
@@ -65,7 +65,7 @@ A role applies to each host. To give a team access to its own hosts only, give
 its token a target scope:
 
 ```bash
-osapi token generate --subject team-web --roles operator \
+osapi controller token generate --subject team-web --roles operator \
     -t group:web -t web-01
 ```
 
@@ -110,8 +110,8 @@ config can add more. To see the roles, and then each permission that a role
 grants, as the binary you run has them:
 
 ```bash
-osapi token roles list
-osapi token roles get --name operator
+osapi controller role list
+osapi controller role get --name operator
 ```
 
 Use these commands, because the permissions change when osapi gets new behaviors
@@ -156,7 +156,8 @@ permission admin only too, such as `admission:write`, `agent:write` and
 permission `<name>:execute`. `file:write`, `package:write` and `sysctl:write`
 stay with `automation`, and each of them can reach root: give `automation` only
 to what you trust as root.
-[`token roles get`](../../usage/cli/token/roles/get.md) shows the result.
+[`controller role get`](../../usage/cli/controller/role/get.md) shows the
+result.
 
 `command:execute` and `command:shell` are two different permissions.
 `command:execute` controls the `exec` endpoint, which takes an argument list.
@@ -203,7 +204,7 @@ controller:
   client:
     security:
       # JWT for client requests (REQUIRED)
-      # Generate with: osapi token generate
+      # Generate with: osapi controller token generate
       bearer_token: '<jwt>'
 ```
 
@@ -230,8 +231,8 @@ authenticates the agent-controller relationship over NATS. Refer to
 
 - [Agent Identity & PKI](agent-identity.md): machine-ID identity, PKI
   enrollment, job signing
-- [CLI Reference](../../usage/cli/token/token.mdx): token generation and
-  validation commands
+- [CLI Reference](../../usage/cli/controller/token/token.mdx): token generation
+  and validation commands
 - [API Reference](/category/api): REST API documentation
 - [Configuration](../../usage/configuration.md): full configuration reference
 - [Architecture](../../architecture/architecture.md): system design overview

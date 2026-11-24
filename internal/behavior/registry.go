@@ -38,7 +38,7 @@ var (
 //
 // A behavior is registered when its package is imported, and
 // internal/behaviors/all imports every one. Registering two behaviors with the same
-// name keeps the last; behavior validate reports the clash.
+// name keeps the last; dsl behavior validate reports the clash.
 func Register(
 	b *Behavior,
 ) *Behavior {

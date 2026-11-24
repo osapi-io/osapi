@@ -8,7 +8,7 @@
       "refusals": true,
       "expected_output": "internal/cli/commands/greet with a get method, its input and output types, a refusal for no name, its tests, and every check passing.",
       "assertions": [
-        "cli command validate passes",
+        "dsl command validate passes",
         "the group is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/cli/commands/all passes",
@@ -26,7 +26,7 @@
       "refusals": true,
       "expected_output": "internal/cli/commands/checksum with a get method that takes its file system from Deps, a test that gives it files, a refusal for no file, and every check passing.",
       "assertions": [
-        "cli command validate passes",
+        "dsl command validate passes",
         "the group is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/cli/commands/all passes",

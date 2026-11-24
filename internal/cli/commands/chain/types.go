@@ -48,7 +48,7 @@ type Summary struct {
 
 // GetInput names the behavior at the top of the chain.
 type GetInput struct {
-	Name string `json:"name" validate:"required" doc:"The behavior, from osapi behavior chain list"`
+	Name string `json:"name" validate:"required" doc:"The behavior, from osapi dsl chain list"`
 }
 
 // GetOutput is one chain: its tree, and the calls that each example of the

@@ -106,7 +106,7 @@ func Get(
 	g := find(in.Name)
 	if g == nil {
 		return GetOutput{}, fmt.Errorf(
-			"no group named %q: osapi cli command list shows them",
+			"no group named %q: osapi dsl command list shows them",
 			in.Name,
 		)
 	}
@@ -191,15 +191,15 @@ func MethodGet(
 	g := find(in.Name)
 	if g == nil {
 		return MethodOutput{}, fmt.Errorf(
-			"no group named %q: osapi cli command list shows them",
+			"no group named %q: osapi dsl command list shows them",
 			in.Name,
 		)
 	}
 	lg, ok := g.(*command.LocalGroup)
 	if !ok {
 		return MethodOutput{}, fmt.Errorf(
-			"%s is the group of an endpoint or a behavior: osapi controller endpoint method get "+
-				"or osapi behavior method get shows its methods",
+			"%s is the group of an endpoint or a behavior: osapi dsl endpoint method get "+
+				"or osapi dsl behavior method get shows its methods",
 			in.Name,
 		)
 	}
@@ -211,7 +211,7 @@ func MethodGet(
 	}
 	if m == nil {
 		return MethodOutput{}, fmt.Errorf(
-			"group %s has no method %q: osapi cli command get --name %s shows them",
+			"group %s has no method %q: osapi dsl command get --name %s shows them",
 			in.Name, in.Method, in.Name,
 		)
 	}
@@ -250,7 +250,7 @@ func Create(
 	d Deps,
 	in CreateInput,
 ) (CreateOutput, error) {
-	files, err := command.Scaffold(d.Dir, in.Name, in.Description)
+	files, err := command.Scaffold(d.Dir, in.Name, in.Description, command.Parent(in.Under))
 	if err != nil {
 		return CreateOutput{}, err
 	}
@@ -261,7 +261,7 @@ func Create(
 	for _, step := range []string{
 		"go generate ./internal/cli/commands/all",
 		"go test ./internal/cli/commands/" + in.Name + "/...",
-		"go run . cli command validate",
+		"go run . dsl command validate",
 		"mise exec -- just cli-docs-generate",
 	} {
 		out.Next = append(out.Next, Step{Command: step})

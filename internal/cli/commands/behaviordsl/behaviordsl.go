@@ -36,10 +36,11 @@ var Group = command.Register(command.Define(
 	"behavior",
 	"List, describe and validate the behaviors this binary has",
 	command.Long("A behavior is one thing that osapi manages on a host, for example kernel\n"+
-		"parameters. [Behaviors](../../../architecture/behaviors.md) tells more.\n"+
+		"parameters. [Behaviors](../../../../architecture/behaviors.md) tells more.\n"+
 		"These commands read the definitions in the binary. Thus they need no config\n"+
 		"file and no controller. What they print always agrees with the build that\n"+
 		"you run."),
+	command.Under(command.ParentDSL),
 	command.Uses[Deps](),
 	command.SubDoc("method", "Show one method of a behavior in full"),
 	command.SubDoc("openapi", "Print a served behavior's part of the OpenAPI spec"),
@@ -67,7 +68,7 @@ var Group = command.Register(command.Define(
 			"platform, this one reports `skipped` there too. **Used by** lists the\n"+
 			"behaviors built on this one. A behavior with `Internal: yes` has no route,\n"+
 			"no command and no permission. Only the behaviors under **Used by** call\n"+
-			"it. `osapi behavior method get` shows one method in full: its fields with\n"+
+			"it. `osapi dsl behavior method get` shows one method in full: its fields with\n"+
 			"their constraints, its output and its examples.").
 		Example("--name sysctl").
 		Prints(sampleGet).
@@ -104,12 +105,12 @@ var Group = command.Register(command.Define(
 			"belongs to a group, such as `network`, is nested under it: its routes are\n"+
 			"`/api/node/{hostname}/network/<name>`, its commands `osapi client node\n"+
 			"network <name>`, and its directory `internal/behaviors/network/<name>/`.\n"+
-			"[Your first behavior](../../../development/your-first-behavior.md) walks\n"+
+			"[Your first behavior](../../../../development/your-first-behavior.md) walks\n"+
 			"through the rest.\n\n"+
 			"A new behavior is one an operator calls, with an API and commands. Work\n"+
 			"that two behaviors share, such as writing a file, becomes an internal\n"+
 			"behavior that the two require: add `behavior.Internal` to it then, and\n"+
-			"`behavior.Requires` to each user. `osapi behavior validate` fails an\n"+
+			"`behavior.Requires` to each user. `osapi dsl behavior validate` fails an\n"+
 			"internal behavior that no behavior requires.\n\n"+
 			"`--requires` names the behaviors that the new one is built on. For each,\n"+
 			"it writes `behavior.Requires`, the `host.Require` in the builder and a\n"+
@@ -129,7 +130,7 @@ var Group = command.Register(command.Define(
 		Long("Print each part of the behavior DSL, what it makes osapi do and when to use\n"+
 			"it. The list comes from this binary. Thus it agrees with the build that you\n"+
 			"run. Read it before you write a behavior, then check the result with\n"+
-			"`osapi behavior validate`.").
+			"`osapi dsl behavior validate`.").
 		Example("").
 		Prints(sampleSpec).
 		Example("--json").
@@ -137,13 +138,13 @@ var Group = command.Register(command.Define(
 	command.Method[ValidateInput, ValidateOutput]("validate").
 		Short("Check every behavior against the rules the platform relies on").
 		Long("It prints each problem with its behavior, method, rule and message, then\n"+
-			"the fix of each rule, and exits 1 when a rule fails. `osapi behavior spec\n"+
+			"the fix of each rule, and exits 1 when a rule fails. `osapi dsl behavior spec\n"+
 			"get` describes each part of a behavior.\n\n"+
 			"The rules:\n\n"+behavior.Checks.Help()+"\n"+
 			"`go test` runs the examples and refusals of each behavior on a fake host,\n"+
 			"and checks these. Each failure ends with its fix:\n\n"+behavior.TestChecks.Help()+
 			"\n`go test` also checks the chain rules that need a run of the examples.\n"+
-			"`osapi behavior chain validate` checks them too:\n\n"+runChainChecks().Help()).
+			"`osapi dsl chain validate` checks them too:\n\n"+runChainChecks().Help()).
 		Example("").
 		Prints(sampleValidate).
 		Example("--json").

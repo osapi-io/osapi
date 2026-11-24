@@ -78,7 +78,7 @@ With `--json`, the API's response:
 
 ## Permission
 
-It needs the `source:read` permission. `osapi token roles get --name <role>`
+It needs the `source:read` permission. `osapi controller role get --name <role>`
 shows what a role grants.
 
 ## Flags

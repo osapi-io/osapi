@@ -6,7 +6,7 @@ controller:
     url: http://0.0.0.0:8080
     security:
       # Placeholder: a client request with it fails authentication. Generate
-      # a token with: osapi token generate --roles admin --subject <you>
+      # a token with: osapi controller token generate --roles admin --subject <you>
       # or set it via the OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN env var.
       bearer_token: CHANGE_ME_GENERATE_WITH_OSAPI_TOKEN_GENERATE
   # Embedded management UI served at / (API at /api/).

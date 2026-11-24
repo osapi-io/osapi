@@ -80,7 +80,7 @@ type Operation struct {
 type DSL struct {
 	// Name is the DSL, such as behavior.
 	Name string
-	// Command is the words of the command of its group, such as controller
+	// Command is the words of the command of its group, such as dsl
 	// endpoint.
 	Command []string
 	// Skill is the dev skill that teaches it, such as build-a-behavior.

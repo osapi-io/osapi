@@ -49,13 +49,14 @@ graph TD
 
 ## What it means for an operator
 
-- **The binary describes itself.** `osapi behavior list` and
-  `osapi behavior get --name <name>` show each behavior that this build has: its
-  routes, permissions, platforms, settings and types. You do not need to look in
-  a different place, and the answer always agrees with the build that you run.
+- **The binary describes itself.** `osapi dsl behavior list` and
+  `osapi dsl behavior get --name <name>` show each behavior that this build has:
+  its routes, permissions, platforms, settings and types. You do not need to
+  look in a different place, and the answer always agrees with the build that
+  you run.
 - **The permissions come from the methods.** The permissions of a behavior are
   `<name>:read` and `<name>:write`. The built-in roles give them.
-  `osapi token roles list` lists each permission of each role.
+  `osapi controller role list` lists each permission of each role.
 - **Skipped is not failed.** In a fleet with more than one platform, the hosts
   that a behavior does not run on report `skipped`. When the agent starts, it
   writes to the log the behaviors that it cannot run.
@@ -84,31 +85,32 @@ graph LR
   is no second job and no extra round trip.
 - **A required behavior without a provider on the platform** makes the behavior
   that requires it unsupported there too. Its methods report `skipped`.
-- **`behavior validate` fails** when a requirement is not registered, and when
-  requirements make a cycle.
-- **`behavior get` and the Behaviors pages** show what each behavior uses, and
-  what uses it.
+- **`dsl behavior validate` fails** when a requirement is not registered, and
+  when requirements make a cycle.
+- **`dsl behavior get` and the Behaviors pages** show what each behavior uses,
+  and what uses it.
 
 The behaviors that a behavior calls, and the ones that they call, are a
 **chain**: `dns → netplan → managedfile`. The chain has the name of the behavior
 at its top. It is not declared on its own: `Requires` on each behavior makes it.
-`osapi behavior chain` shows and checks the chains:
+`osapi dsl chain` shows and checks the chains:
 
-- `osapi behavior chain list` shows each chain as a tree, and what calls each
+- `osapi dsl chain list` shows each chain as a tree, and what calls each
   building block.
-- `osapi behavior chain get --name dns` runs each example of dns on the fake
-  host that `go test` uses, and shows each call that it makes: what each call
-  sends and gets. Thus it shows what the code does now.
-- `osapi behavior chain validate` checks the chain rules. A required behavior is
+- `osapi dsl chain get --name dns` runs each example of dns on the fake host
+  that `go test` uses, and shows each call that it makes: what each call sends
+  and gets. Thus it shows what the code does now.
+- `osapi dsl chain validate` checks the chain rules. A required behavior is
   registered, and no requirement makes a cycle. An internal behavior has a
   behavior that requires it. A provider calls only the behaviors that its
   behavior requires. An example calls each behavior that a behavior requires.
-- `osapi behavior chain spec get` tells how to build a chain, what happens when
-  a step fails, and the building blocks of the binary.
+- `osapi dsl chain spec get` tells how to build a chain, what happens when a
+  step fails, and the building blocks of the binary.
 
 A behavior that only other behaviors use is **internal**. `managedfile` has no
 route, no command and no permissions, because only other behaviors call it.
-`behavior list` and its docs page still show it, with the behaviors that use it.
+`dsl behavior list` and its docs page still show it, with the behaviors that use
+it.
 
 A chain across hosts or across steps is a workflow, not a requirement. In a
 workflow, the output of one call is the input of the next call.

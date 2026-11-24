@@ -11,7 +11,7 @@
 | Permissions       | `internal/authtoken/permissions.go`             | Declares the permission of each method that the API serves           |
 | Generation        | `internal/cli/command/gen/genfile`              | Writes its generated files through `genfile.Writer`                  |
 | Scaffold          | `<dsl> create`, and a `*-scaffold-check` recipe | Writes a new definition that builds and passes its tests             |
-| Docs page         | `cmd/commands.go` (`dslPages`), `cli docs dsl`  | Adds its `Spec` as a page under `development/dsl/`                   |
+| Docs page         | `cmd/commands.go` (`dslPages`), `docs dsl`      | Adds its `Spec` as a page under `development/dsl/`                   |
 | Skill             | `internal/skills/resources/dev-skills/`         | Adds a skill that sends an agent to the learning commands            |
 
 ## Spec and checks
@@ -86,7 +86,7 @@ checkout and runs the tests of what it wrote. `behavior-scaffold-check`,
 ## Docs and skills
 
 Each page of a DSL under `development/dsl/` comes from its `Spec`.
-`cli docs dsl generate` writes them from the list in `dslPages` in
+`dsl docs generate` writes them from the list in `dslPages` in
 `cmd/commands.go`, and `cli-docs-gen-check` fails when a page differs from the
 binary. A generated page starts with the `guide.Generated` comment, and the
 generator removes a page with the comment that it did not write. A hand-written
@@ -100,8 +100,8 @@ prints one.
 ## Records at run time
 
 `behavior.Record` gives a context, and each `behavior.Call` under it adds a
-`behavior.Step`. Today the examples and `osapi behavior chain get` use it, on
-the fake host of the tests. A real job that records its steps is planned in
+`behavior.Step`. Today the examples and `osapi dsl chain get` use it, on the
+fake host of the tests. A real job that records its steps is planned in
 [osapi-io/osapi#1076](https://github.com/osapi-io/osapi/issues/1076). A new DSL
 whose definitions run on the agent records its calls the same way.
 

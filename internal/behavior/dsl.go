@@ -27,7 +27,7 @@ import (
 func init() {
 	dsl.Register(dsl.DSL{
 		Name:        "behavior",
-		Command:     []string{"behavior"},
+		Command:     []string{"dsl", "behavior"},
 		Skill:       "build-a-behavior",
 		Page:        "behavior.md",
 		Permissions: declaredPermissions,
@@ -36,7 +36,7 @@ func init() {
 	})
 	dsl.Register(dsl.DSL{
 		Name:    "chain",
-		Command: []string{"behavior", "chain"},
+		Command: []string{"dsl", "chain"},
 		Skill:   "build-a-behavior",
 		Page:    "chain.md",
 		Without: map[string]string{

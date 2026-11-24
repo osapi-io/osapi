@@ -9,20 +9,21 @@ parameters. You write it one time, as a Go definition. osapi builds these parts
 from the definition: the API routes, the dispatch of the agent, the CLI
 commands, the OpenAPI spec, the docs pages and the telemetry. It also builds the
 tests of each layer above the provider. A new behavior is one directory under
-`internal/behaviors/` and one import line. `osapi behavior create` writes both.
+`internal/behaviors/` and one import line. `osapi dsl behavior create` writes
+both.
 
 osapi serves a behavior under `/api` and `osapi client node`, next to the
 hand-written domains that did not move yet. A behavior that replaces a
 hand-written domain deletes that domain in the same change: the two never run
 side by side. `internal/behaviors/sysctl` is the reference.
-`osapi behavior spec get` lists each option, and `go doc ./internal/behavior`
-shows the Go API, with examples that run as tests.
+`osapi dsl behavior spec get` lists each option, and
+`go doc ./internal/behavior` shows the Go API, with examples that run as tests.
 
 ## The layout
 
 Every behavior has the same files, so a reader, a reviewer or an agent finds the
 same thing in the same place.
-`osapi behavior create --name <name> --description "..."` writes them, as a
+`osapi dsl behavior create --name <name> --description "..."` writes them, as a
 working behavior that keeps a value in a file. The name is the route, the
 command and the docs page. The Go package and its directory are the name too,
 unless `--package` names a different one. A name that is a Go keyword needs
@@ -52,7 +53,7 @@ Each file with code has a test with its name. The provider of a platform is
 `<platform>.go`. The definition declares it with `behavior.Platform`. On a
 platform without a provider, the methods report `skipped`.
 
-`osapi behavior create` also registers the behavior with one blank import in
+`osapi dsl behavior create` also registers the behavior with one blank import in
 `internal/behaviors/all/all.go`. Run
 `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all` after
 it, for the mock and the `gen/` directory. Nothing else outside the directory
@@ -150,10 +151,11 @@ behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
     managedfile.UpdateInput{Path: path, Content: c})
 ```
 
-`osapi behavior create --requires managedfile` writes the `behavior.Requires`,
-the `host.Require` in the builder and a provider field for each behavior that it
-names. You write the calls. Until an example calls managedfile, the tests of the
-new behavior fail the rule `used`, and its message tells you what to add.
+`osapi dsl behavior create --requires managedfile` writes the
+`behavior.Requires`, the `host.Require` in the builder and a provider field for
+each behavior that it names. You write the calls. Until an example calls
+managedfile, the tests of the new behavior fail the rule `used`, and its message
+tells you what to add.
 
 `behavior.Call` runs the method inside its own span, so a trace shows
 `behavior.managedfile.update` under `behavior.sysctl.create`. A direct call of
@@ -164,20 +166,20 @@ The agent and the fake host both build the provider of a required behavior
 before the behavior that requires it. A behavior that only other behaviors use
 is `behavior.Internal`. It has examples and tests like the others, and a docs
 page that tells what uses it. It has no route, command or permissions.
-`behavior validate` fails when a requirement is not registered, when
+`dsl behavior validate` fails when a requirement is not registered, when
 requirements make a cycle, and when an internal behavior has nothing that
 requires it. sysctl requires `managedfile`, and it is the example.
 
 A behavior is internal when an operator would never call it, and it is a piece
 of work that other behaviors share, such as writing a file.
-`osapi behavior create` writes a behavior that an operator calls. Make shared
-work internal when a second behavior needs it.
+`osapi dsl behavior create` writes a behavior that an operator calls. Make
+shared work internal when a second behavior needs it.
 
 A behavior declares the paths it writes, also when a required behavior does the
 write. managedfile declares `behavior.Writes("*")`, because it writes the path
 its caller names, and sysctl declares `/etc/sysctl.d/osapi-*.conf`. Thus
-`osapi behavior get --name sysctl` shows the files sysctl changes, and the spans
-under its own:
+`osapi dsl behavior get --name sysctl` shows the files sysctl changes, and the
+spans under its own:
 
 ```text
 Telemetry:
@@ -187,10 +189,9 @@ Telemetry:
 ```
 
 The behaviors that a behavior calls, and the ones that they call, are its chain.
-`osapi behavior chain get --name <name>` shows each call that its examples make,
-and `osapi behavior chain validate` checks the chain rules. The
-[Chains](dsl/chain.md) reference has how to build one, and each building block
-of the build.
+`osapi dsl chain get --name <name>` shows each call that its examples make, and
+`osapi dsl chain validate` checks the chain rules. The [Chains](dsl/chain.md)
+reference has how to build one, and each building block of the build.
 
 ## types.go: the contract
 
@@ -198,15 +199,15 @@ The tags of the input and output types hold all of the contract. Each field of
 an input becomes a request field, a CLI flag and a spec property. Each field of
 an output becomes a JSON field and a table column.
 
-| Tag                | On     | Becomes                                                                                                                                                                                                                              |
-| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                                                                                                                                                         |
-| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                                                                                                                                                    |
-| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                                                                                                                                              |
-| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                                                                                                                                                         |
-| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag.                                                                                                                               |
-| `template:"vars"`  | input  | A Go template, whose `.Vars` are in the input field `vars` (a `map[string]string`). The API refuses one that does not parse, or that reads a field or a var it does not have. `osapi behavior spec get` lists what a template reads. |
-| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                                                                                                                                                          |
+| Tag                | On     | Becomes                                                                                                                                                                                                                                  |
+| ------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                                                                                                                                                             |
+| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                                                                                                                                                        |
+| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                                                                                                                                                  |
+| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                                                                                                                                                             |
+| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag.                                                                                                                                   |
+| `template:"vars"`  | input  | A Go template, whose `.Vars` are in the input field `vars` (a `map[string]string`). The API refuses one that does not parse, or that reads a field or a var it does not have. `osapi dsl behavior spec get` lists what a template reads. |
+| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                                                                                                                                                              |
 
 A write's output has a `changed` bool. The table shows it as the row's status,
 `changed` or `ok`, rather than as a column. An output that is a slice becomes
@@ -221,14 +222,14 @@ Thus the spec never checks less than the server.
 With `CLI`, each input field is a flag. A flag holds a `string`, a `bool`, an
 `int`, a `[]string`, a `map[string]string` or a `[]byte`, a file. The CLI owns
 that list and its generator builds each one, so an `int64` or a `float64` fails
-`osapi behavior validate`.
+`osapi dsl behavior validate`.
 
 The generated layers need each field in a form they can build.
-`osapi behavior validate` fails a definition that breaks one of these rules:
+`osapi dsl behavior validate` fails a definition that breaks one of these rules:
 
 | Rule       | Requires                                                                                                                                                      |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`     | The behavior and its group are lowercase letters and digits, with no dash. A Go keyword, such as `package`, takes `osapi behavior create --package`           |
+| `name`     | The behavior and its group are lowercase letters and digits, with no dash. A Go keyword, such as `package`, takes `osapi dsl behavior create --package`       |
 | `input`    | Each input field has a `json` name and a `doc`, no `default` (the server does not apply it), no array, and is not named `hostname` or `target`                |
 | `optional` | An optional field of a write's body, `validate:"omitempty,..."`, is `json:"name,omitempty"` too, so the client does not send `""`. The endpoint layer owns it |
 | `key`      | A key is `validate:"required"`: it is a path segment                                                                                                          |
@@ -237,7 +238,7 @@ The generated layers need each field in a form they can build.
 
 Each rule that another layer owns is asked of that layer. Flags and `render`
 values are the CLI's, and the `optional` rule is the endpoint layer's. Thus
-`behavior validate` and the other layer cannot disagree.
+`dsl behavior validate` and the other layer cannot disagree.
 
 ## methods.go and provider.go
 
@@ -291,7 +292,7 @@ Written once in the platform, so a behavior writes none of it:
   action. The built-in roles get them by a rule: `admin` gets each, `operator`
   the reads and the actions, `automation` the reads and the writes, and `read`
   the reads. A method marked `AdminOnly` gives its permission only to `admin`.
-  Do not add the permission to a role. `osapi token roles get --name <role>`
+  Do not add the permission to a role. `osapi controller role get --name <role>`
   shows them.
 - **Audit entries**, through the same middleware as every route.
 
@@ -384,29 +385,30 @@ error that a struct of strings cannot cause.
 ```bash
 go generate ./internal/behaviors/all  # write gen/ and the spec; just cli-docs-generate writes the pages
 just cli-docs-generate                # write the CLI pages of the commands
-osapi behavior spec get               # each part of the DSL, and when to use it
-osapi behavior validate               # the definition's rules, each with its fix
-osapi behavior get --name sysctl      # surfaces, routes, schemas, as registered
+osapi dsl behavior spec get               # each part of the DSL, and when to use it
+osapi dsl behavior validate               # the definition's rules, each with its fix
+osapi dsl behavior get --name sysctl      # surfaces, routes, schemas, as registered
 just behavior-gen-check               # fails when generated files are stale
 just behavior-cover-check             # fails when a behavior is below 100% coverage
 just behavior-scaffold-check          # fails when a new behavior fails its tests
 ```
 
-`osapi behavior validate` checks each definition against its rules. It exits 1
-when one fails, and names the behavior, the method, the rule and the fix. The
+`osapi dsl behavior validate` checks each definition against its rules. It exits
+1 when one fails, and names the behavior, the method, the rule and the fix. The
 tests of each behavior run its examples on a fake host, and each failure ends
-with its fix too. `osapi behavior validate --help` lists each rule and each test
-check, from the same tables that the checks use. Thus the list cannot be out of
-date. `osapi behavior spec get` lists each part of the DSL, the generated paths
-and what the platform cannot do yet.
+with its fix too. `osapi dsl behavior validate --help` lists each rule and each
+test check, from the same tables that the checks use. Thus the list cannot be
+out of date. `osapi dsl behavior spec get` lists each part of the DSL, the
+generated paths and what the platform cannot do yet.
 
 `just test` runs `behavior-gen-check`. Thus a behavior that changed without
 `go generate` fails CI. It also runs `behavior-cover-check`. Thus a behavior
 whose examples and tests miss a line fails CI too. It also runs
-`behavior-scaffold-check`, which makes a behavior with `osapi behavior create`
-in a copy of the checkout and runs its tests. Thus the behavior that you start
-from passes each check. It also makes a behavior with `--requires managedfile`,
-and checks that the only test that fails is the rule `used`.
+`behavior-scaffold-check`, which makes a behavior with
+`osapi dsl behavior create` in a copy of the checkout and runs its tests. Thus
+the behavior that you start from passes each check. It also makes a behavior
+with `--requires managedfile`, and checks that the only test that fails is the
+rule `used`.
 
 A behavior that replaces a hand-written domain changes the full spec. The API
 contract test, `TestJoinedSpec` in `internal/apicontract`, then fails, and its
@@ -414,15 +416,15 @@ golden diff is the change to the API: write it again with `-update` and read it.
 
 ## Generated, never edited
 
-| File                                                            | From                                                                                                                                                             |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `internal/behaviors/<name>/gen/*.go`                            | the definition, its types and its examples, built with jen                                                                                                       |
-| `internal/behaviors/<name>/gen/api.yaml`                        | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group`                                                                            |
-| `internal/controller/api/gen/api.yaml`                          | the hand-written specs and every `gen/api.yaml`, by `just generate`                                                                                              |
-| `internal/behaviors/<name>/mocks/provider.gen.go`               | the Provider interface, by mockgen                                                                                                                               |
-| `internal/behaviors/all/gen/gen.go`                             | every behavior with `API` or `CLI`                                                                                                                               |
-| `docs/docs/sidebar/reference/behaviors/<area>/<name>/<name>.md` | `osapi behavior get` and `method get`, as markdown, by `just cli-docs-generate`, in the folder of the behavior's area, or of `internal` for an internal behavior |
-| `docs/docs/sidebar/usage/cli/client/...`                        | the generated commands, by `just cli-docs-generate`                                                                                                              |
+| File                                                            | From                                                                                                                                                                 |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `internal/behaviors/<name>/gen/*.go`                            | the definition, its types and its examples, built with jen                                                                                                           |
+| `internal/behaviors/<name>/gen/api.yaml`                        | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group`                                                                                |
+| `internal/controller/api/gen/api.yaml`                          | the hand-written specs and every `gen/api.yaml`, by `just generate`                                                                                                  |
+| `internal/behaviors/<name>/mocks/provider.gen.go`               | the Provider interface, by mockgen                                                                                                                                   |
+| `internal/behaviors/all/gen/gen.go`                             | every behavior with `API` or `CLI`                                                                                                                                   |
+| `docs/docs/sidebar/reference/behaviors/<area>/<name>/<name>.md` | `osapi dsl behavior get` and `method get`, as markdown, by `just cli-docs-generate`, in the folder of the behavior's area, or of `internal` for an internal behavior |
+| `docs/docs/sidebar/usage/cli/client/...`                        | the generated commands, by `just cli-docs-generate`                                                                                                                  |
 
 `gen/cli.go` puts the docs of a method on its command. `.Describe` is the
 `Short` of the command, `.Explain` is its `Long`, and the examples are its

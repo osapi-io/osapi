@@ -109,7 +109,7 @@ var notDSL = map[string]bool{
 
 // TestSpecCoversTheDSL fails on an exported function of the package, or an
 // exported method of LocalMethod, that the spec has no term for. Thus osapi
-// cli command spec get cannot fall behind the code.
+// dsl command spec get cannot fall behind the code.
 func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 	entries, err := os.ReadDir(".")
 	s.Require().NoError(err)

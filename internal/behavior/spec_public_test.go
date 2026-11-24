@@ -293,7 +293,7 @@ func (s *SpecPublicTestSuite) TestCurrentChainSpec() {
 	s.Require().Len(blocks, 1, "only an internal behavior is a building block")
 	s.Equal("files", blocks[0].Name)
 	s.Equal("Files it keeps. Methods: get, update.", blocks[0].Does)
-	s.Contains(blocks[0].When, "osapi behavior get --name files")
+	s.Contains(blocks[0].When, "osapi dsl behavior get --name files")
 	s.Empty(behavior.ChainSpec.Of(behavior.KindBlock), "ChainSpec itself is not changed")
 	for _, t := range behavior.ChainSpec.Terms {
 		s.NotEmpty(t.Does, t.Name)

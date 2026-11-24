@@ -26,7 +26,7 @@ import (
 )
 
 // Checks are the rules that Validate applies, in the order that a behavior is
-// usually written. behavior validate --help prints each one, and each problem
+// usually written. dsl behavior validate --help prints each one, and each problem
 // that Validate reports carries the fix of its rule. Thus an author, or an
 // agent, can read the rules before it breaks one. Each Rule constant has one
 // entry; a test fails on a rule without one.
@@ -34,7 +34,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleName,
 		Requires: "The behavior, its group and each method have a name of lowercase letters and digits, starting with a letter: the generators make Go names of it, so a dash does not compile. No behavior or group is named all.",
-		Fix:      "Rename it, such as sysctl or updatepackages. A name that is a Go keyword, such as package, takes osapi behavior create --package for its Go package.",
+		Fix:      "Rename it, such as sysctl or updatepackages. A name that is a Go keyword, such as package, takes osapi dsl behavior create --package for its Go package.",
 	},
 	{
 		Rule:     RulePlacement,
@@ -59,7 +59,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleVerb,
 		Requires: "A read is named list, get or status. A write is named create, update or delete. An action, declared with Action, is named for what it does with one of the CLI's actions, such as restart, and not with a standard verb.",
-		Fix:      "Rename the method to the standard verb that the message names, or declare a write named for what it does with behavior.Action and a name from osapi cli command spec get.",
+		Fix:      "Rename the method to the standard verb that the message names, or declare a write named for what it does with behavior.Action and a name from osapi dsl command spec get.",
 	},
 	{
 		Rule:     RuleRoute,
@@ -83,7 +83,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleOutputShape,
-		Requires: "Each output is a struct or a list of structs, with no field named hostname, status or error. Each field has a json name, no field is an array, and each render tag is one the output knows (osapi cli command spec get lists them).",
+		Requires: "Each output is a struct or a list of structs, with no field named hostname, status or error. Each field has a json name, no field is an array, and each render tag is one the output knows (osapi dsl command spec get lists them).",
 		Fix:      "Put the value in a struct, rename a field that has one of those names, tag each field json:\"name\", use a slice for an array, and use a render value the output knows.",
 	},
 	{
@@ -108,7 +108,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleOptional,
-		Requires: "An optional field of a write's request body, with omitempty in its validate tag, has omitempty in its json tag too, so the client leaves it out when it is empty. The endpoint DSL owns the rule; controller endpoint validate checks it the same way.",
+		Requires: "An optional field of a write's request body, with omitempty in its validate tag, has omitempty in its json tag too, so the client leaves it out when it is empty. The endpoint DSL owns the rule; dsl endpoint validate checks it the same way.",
 		Fix:      "Add ,omitempty to the field's json tag, such as json:\"version,omitempty\".",
 	},
 	{
@@ -160,14 +160,14 @@ var Checks = guide.Checks{
 		Rule: RuleRequires,
 		Requires: ChainChecks.Requires(
 			RuleRequires,
-		) + " The chain layer owns this rule: osapi behavior chain validate.",
+		) + " The chain layer owns this rule: osapi dsl chain validate.",
 		Fix: ChainChecks.Fix(RuleRequires),
 	},
 	{
 		Rule: RuleInternal,
 		Requires: ChainChecks.Requires(
 			RuleInternal,
-		) + " The chain layer owns this rule: osapi behavior chain validate.",
+		) + " The chain layer owns this rule: osapi dsl chain validate.",
 		Fix: ChainChecks.Fix(RuleInternal),
 	},
 	{
@@ -211,7 +211,7 @@ const (
 )
 
 // TestChecks are what the tests of every behavior check, when go test runs
-// its examples and refusals on a fake host. behavior validate --help prints
+// its examples and refusals on a fake host. dsl behavior validate --help prints
 // each one, and the message of each failure ends with its fix.
 var TestChecks = guide.Checks{
 	{

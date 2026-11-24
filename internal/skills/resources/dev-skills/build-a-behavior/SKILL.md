@@ -1,6 +1,6 @@
 ---
 name: build-a-behavior
-description: Build or change an osapi behavior, the typed definition under internal/behaviors/<name>/ that osapi's API routes, agent dispatch, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests are generated from. Use when asked to add a behavior, manage something new on a host, add a method or a setting to a behavior, give a behavior a provider for another platform, or when a behavior fails osapi behavior validate, behavior-gen-check or its tests. Also use to decide whether something should be a behavior at all, whether it should be internal or served, which platforms it runs on, whether it should require another behavior or be split into an internal one, and whether it belongs in osapi-orchestrator instead. Not for operations that run on the controller itself, such as the agents, the jobs and the audit log, which the build-an-endpoint skill covers.
+description: Build or change an osapi dsl behavior, the typed definition under internal/behaviors/<name>/ that osapi's API routes, agent dispatch, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests are generated from. Use when asked to add a behavior, manage something new on a host, add a method or a setting to a behavior, give a behavior a provider for another platform, or when a behavior fails osapi dsl behavior validate, behavior-gen-check or its tests. Also use to decide whether something should be a behavior at all, whether it should be internal or served, which platforms it runs on, whether it should require another behavior or be split into an internal one, and whether it belongs in osapi-orchestrator instead. Not for operations that run on the controller itself, such as the agents, the jobs and the audit log, which the build-an-endpoint skill covers.
 ---
 
 # Build a behavior
@@ -12,12 +12,12 @@ definition.
 This skill gives a procedure and decisions. It is not a catalog. The platform
 tells about itself:
 
-- `behavior spec get` tells each part of the DSL, what it does and when to use
-  it, the generated paths and what the platform cannot do yet.
-- `behavior validate --help` tells each rule and each test check, with its fix.
-  Each failure also ends with its fix.
-- `behavior list` and `behavior get` tell what each behavior accepts and does.
-  This includes the building blocks.
+- `dsl behavior spec get` tells each part of the DSL, what it does and when to
+  use it, the generated paths and what the platform cannot do yet.
+- `dsl behavior validate --help` tells each rule and each test check, with its
+  fix. Each failure also ends with its fix.
+- `dsl behavior list` and `dsl behavior get` tell what each behavior accepts and
+  does. This includes the building blocks.
 
 A behavior is work on a host. An operation that runs on the controller itself,
 such as the agents, the jobs or the audit log, is an endpoint. The
@@ -40,20 +40,20 @@ Run tools through `mise exec --`, as the repository's AGENTS.md says.
 Ask the code and the binary before you read prose. Each one answers one
 question:
 
-| Question                                                                                                    | Ask                                                                                                                         |
-| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| What options, methods, example parts and tags exist, and when to use each                                   | `go run . behavior spec get`                                                                                                |
-| What rules and test checks a behavior must pass, and the fix of each                                        | `go run . behavior validate --help`                                                                                         |
-| What a provider builder gets from the agent                                                                 | `go doc ./internal/behavior/host Host`                                                                                      |
-| Which facts of the host gohai reads, how a provider builds each collector, and what an example must give it | `go run . behavior spec get`, under "gohai collectors"                                                                      |
-| What behaviors exist already                                                                                | `go run . behavior list`                                                                                                    |
-| Which building blocks do generic work, such as a managed file, and when to make a new one                   | `go run . behavior chain spec get`, under "Building on other behaviors" and "Building blocks"                               |
-| What a behavior that requires others sends to them, and gets back                                           | `go run . behavior chain get --name <name>`: each example's calls, with their inputs and outputs; `--json` has them in full |
-| What one accepts and does: routes, fields, platforms, sudo, what it uses                                    | `go run . behavior get --name <name> --json`, building blocks included                                                      |
-| Whether a definition breaks a rule                                                                          | `go run . behavior validate`                                                                                                |
-| A complete example of every part                                                                            | `internal/behaviors/sysctl`                                                                                                 |
-| How tests fake each host service, and which pattern to copy for each kind of state                          | [references/services.md](references/services.md)                                                                            |
-| The walkthrough, with a worked behavior                                                                     | `docs/docs/sidebar/development/your-first-behavior.md`                                                                      |
+| Question                                                                                                    | Ask                                                                                                                    |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| What options, methods, example parts and tags exist, and when to use each                                   | `go run . dsl behavior spec get`                                                                                       |
+| What rules and test checks a behavior must pass, and the fix of each                                        | `go run . dsl behavior validate --help`                                                                                |
+| What a provider builder gets from the agent                                                                 | `go doc ./internal/behavior/host Host`                                                                                 |
+| Which facts of the host gohai reads, how a provider builds each collector, and what an example must give it | `go run . dsl behavior spec get`, under "gohai collectors"                                                             |
+| What behaviors exist already                                                                                | `go run . dsl behavior list`                                                                                           |
+| Which building blocks do generic work, such as a managed file, and when to make a new one                   | `go run . dsl chain spec get`, under "Building on other behaviors" and "Building blocks"                               |
+| What a behavior that requires others sends to them, and gets back                                           | `go run . dsl chain get --name <name>`: each example's calls, with their inputs and outputs; `--json` has them in full |
+| What one accepts and does: routes, fields, platforms, sudo, what it uses                                    | `go run . dsl behavior get --name <name> --json`, building blocks included                                             |
+| Whether a definition breaks a rule                                                                          | `go run . dsl behavior validate`                                                                                       |
+| A complete example of every part                                                                            | `internal/behaviors/sysctl`                                                                                            |
+| How tests fake each host service, and which pattern to copy for each kind of state                          | [references/services.md](references/services.md)                                                                       |
+| The walkthrough, with a worked behavior                                                                     | `docs/docs/sidebar/development/your-first-behavior.md`                                                                 |
 
 ## Decide first
 
@@ -62,21 +62,21 @@ declaration. Thus an incorrect guess becomes an incorrect API, and other code
 then uses that API. Ask only what the request does not tell you. Give your
 recommendation with each question. Say which declaration the answer becomes.
 
-| Ask                                                                                                                                                                                                        | Why it matters                                                                                                                                                                        | Answer becomes                                                                                                                                                                                                                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Does the work occur on a host, or on the controller, such as reading the registry or the job queue?                                                                                                        | A behavior changes or reads a host; the controller's own operations are endpoints                                                                                                     | This skill, or the build-an-endpoint skill                                                                                                                                                                                                                                                                                                                      |
-| Is there one close already? Check `go run . behavior list --json`.                                                                                                                                         | Two behaviors managing the same thing disagree about its state                                                                                                                        | Extend that one: a method, a field or a platform                                                                                                                                                                                                                                                                                                                |
-| Who calls it: operators, or only other behaviors? Would an operator ever call it from the CLI or the API? Is it only a piece of work other behaviors share, such as writing a file or reloading a service? | An operator needs routes, commands and permissions; a building block must not have them. `behavior validate` fails an internal behavior that no behavior requires                     | `behavior.API` and `behavior.CLI` when an operator calls it, or `behavior.Internal` when only other behaviors do                                                                                                                                                                                                                                                |
-| Which hosts does it run on?                                                                                                                                                                                | Every other platform reports `skipped`, never fails                                                                                                                                   | `behavior.Platform("debian", ...)` per distribution, `"linux"` for every Linux host without its own, `"darwin"` for macOS                                                                                                                                                                                                                                       |
-| Does one method run on fewer hosts than the others?                                                                                                                                                        | That method reports `skipped` elsewhere, and its examples run only there                                                                                                              | `.On(behavior.PlatformDebian)` on the method, and `.Sudo` or `.Runs` on the method for a program only it runs. `hostname` is the example                                                                                                                                                                                                                        |
-| Does part of the work exist as an internal behavior? `behavior list` marks them `(internal)`.                                                                                                              | Copying it means two copies of the hard part                                                                                                                                          | `behavior create --requires <that>` writes `behavior.Requires(that.Behavior)`, the `host.Require` in the builder and a provider field. You write the calls: call each of its methods with `behavior.Call(ctx, that.Behavior, that.Method, provider, in)`, so the trace shows the call as its own step and its input is validated. A direct call fails the tests |
-| Would a second behavior need part of what this one does?                                                                                                                                                   | The rule of two: the second need is when shared work becomes its own behavior                                                                                                         | Build that part as an internal behavior first, then require it                                                                                                                                                                                                                                                                                                  |
-| Does a value change per call, or stay the same on a host?                                                                                                                                                  | A setting is agent config; an input is part of each request                                                                                                                           | An input field, or a field in `settings.go`                                                                                                                                                                                                                                                                                                                     |
-| Which input names the thing a call acts on, such as a key or a path?                                                                                                                                       | A trace shows it, so a reader sees what each call changed. `behavior validate` fails a write that records nothing                                                                     | `.Key("key")`, or `telemetry:"attr"` on a method without a key                                                                                                                                                                                                                                                                                                  |
-| Which programs does it run, which as root, and does it take a secret?                                                                                                                                      | The agent checks each is installed and sudo allows it; secrets are kept out of the audit log and traces                                                                               | `behavior.Runs("program")`, or `behavior.Sudo("program")` for root; `secret:"true"` on the field                                                                                                                                                                                                                                                                |
-| Which files does it write, remove or change the mode of, and does it keep a record in the file-state bucket?                                                                                               | Each one is a span in a trace, and the examples fail on a path or a record that is not declared. Declare the paths even when a required behavior, such as managedfile, does the write | `behavior.Writes("/etc/x.d/osapi-*.conf")`, and `behavior.KeepsState` for a record                                                                                                                                                                                                                                                                              |
-| Is it one host, one step?                                                                                                                                                                                  | A behavior acts on one host inside one job                                                                                                                                            | If it spans hosts or orders several steps, it is an osapi-orchestrator workflow, not a behavior                                                                                                                                                                                                                                                                 |
-| Does it need anything that `behavior spec get` lists under "Not supported yet"?                                                                                                                            | The platform cannot express it, and wiring around that breaks the generated layers                                                                                                    | Stop and tell the user what is missing                                                                                                                                                                                                                                                                                                                          |
+| Ask                                                                                                                                                                                                        | Why it matters                                                                                                                                                                        | Answer becomes                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does the work occur on a host, or on the controller, such as reading the registry or the job queue?                                                                                                        | A behavior changes or reads a host; the controller's own operations are endpoints                                                                                                     | This skill, or the build-an-endpoint skill                                                                                                                                                                                                                                                                                                                          |
+| Is there one close already? Check `go run . dsl behavior list --json`.                                                                                                                                     | Two behaviors managing the same thing disagree about its state                                                                                                                        | Extend that one: a method, a field or a platform                                                                                                                                                                                                                                                                                                                    |
+| Who calls it: operators, or only other behaviors? Would an operator ever call it from the CLI or the API? Is it only a piece of work other behaviors share, such as writing a file or reloading a service? | An operator needs routes, commands and permissions; a building block must not have them. `dsl behavior validate` fails an internal behavior that no behavior requires                 | `behavior.API` and `behavior.CLI` when an operator calls it, or `behavior.Internal` when only other behaviors do                                                                                                                                                                                                                                                    |
+| Which hosts does it run on?                                                                                                                                                                                | Every other platform reports `skipped`, never fails                                                                                                                                   | `behavior.Platform("debian", ...)` per distribution, `"linux"` for every Linux host without its own, `"darwin"` for macOS                                                                                                                                                                                                                                           |
+| Does one method run on fewer hosts than the others?                                                                                                                                                        | That method reports `skipped` elsewhere, and its examples run only there                                                                                                              | `.On(behavior.PlatformDebian)` on the method, and `.Sudo` or `.Runs` on the method for a program only it runs. `hostname` is the example                                                                                                                                                                                                                            |
+| Does part of the work exist as an internal behavior? `dsl behavior list` marks them `(internal)`.                                                                                                          | Copying it means two copies of the hard part                                                                                                                                          | `dsl behavior create --requires <that>` writes `behavior.Requires(that.Behavior)`, the `host.Require` in the builder and a provider field. You write the calls: call each of its methods with `behavior.Call(ctx, that.Behavior, that.Method, provider, in)`, so the trace shows the call as its own step and its input is validated. A direct call fails the tests |
+| Would a second behavior need part of what this one does?                                                                                                                                                   | The rule of two: the second need is when shared work becomes its own behavior                                                                                                         | Build that part as an internal behavior first, then require it                                                                                                                                                                                                                                                                                                      |
+| Does a value change per call, or stay the same on a host?                                                                                                                                                  | A setting is agent config; an input is part of each request                                                                                                                           | An input field, or a field in `settings.go`                                                                                                                                                                                                                                                                                                                         |
+| Which input names the thing a call acts on, such as a key or a path?                                                                                                                                       | A trace shows it, so a reader sees what each call changed. `dsl behavior validate` fails a write that records nothing                                                                 | `.Key("key")`, or `telemetry:"attr"` on a method without a key                                                                                                                                                                                                                                                                                                      |
+| Which programs does it run, which as root, and does it take a secret?                                                                                                                                      | The agent checks each is installed and sudo allows it; secrets are kept out of the audit log and traces                                                                               | `behavior.Runs("program")`, or `behavior.Sudo("program")` for root; `secret:"true"` on the field                                                                                                                                                                                                                                                                    |
+| Which files does it write, remove or change the mode of, and does it keep a record in the file-state bucket?                                                                                               | Each one is a span in a trace, and the examples fail on a path or a record that is not declared. Declare the paths even when a required behavior, such as managedfile, does the write | `behavior.Writes("/etc/x.d/osapi-*.conf")`, and `behavior.KeepsState` for a record                                                                                                                                                                                                                                                                                  |
+| Is it one host, one step?                                                                                                                                                                                  | A behavior acts on one host inside one job                                                                                                                                            | If it spans hosts or orders several steps, it is an osapi-orchestrator workflow, not a behavior                                                                                                                                                                                                                                                                     |
+| Does it need anything that `dsl behavior spec get` lists under "Not supported yet"?                                                                                                                        | The platform cannot express it, and wiring around that breaks the generated layers                                                                                                    | Stop and tell the user what is missing                                                                                                                                                                                                                                                                                                                              |
 
 Then decide how it operates. This decides the provider and its examples. Read
 [references/services.md](references/services.md) first. Then select the pattern
@@ -126,12 +126,12 @@ the spec does not build. The endpoint DSL and the behavior DSL use the same
 rules; `spec` prints them under `validate:"..."`.
 
 Name and shape each field so the generated layers can build it.
-`behavior validate` fails each of these, and its message ends with the fix:
+`dsl behavior validate` fails each of these, and its message ends with the fix:
 
 - **The name of the behavior** is lowercase letters and digits, with no dash:
   the generators make Go names of it. It is the route, the command and the
   permission. A name that is a Go keyword, such as `package`, keeps its name and
-  takes `osapi behavior create --package <go-package>` for the directory.
+  takes `osapi dsl behavior create --package <go-package>` for the directory.
 - **Each input field** has a `json` name and a `doc`, and no `default`, which
   the server does not apply. Make the provider treat the empty value as the
   default, and say in the `doc` what it is. No input field is named `hostname`
@@ -179,8 +179,8 @@ that a match defines. `netplan status` lists only the interfaces that netplan
 manages, so a behavior asks gohai whether the host has an interface.
 
 A provider reads the host through gohai, never directly. Find the fact under
-"gohai collectors" in `go run . behavior spec get`. Build that collector in the
-builder with the constructor that the spec gives, such as
+"gohai collectors" in `go run . dsl behavior spec get`. Build that collector in
+the builder with the constructor that the spec gives, such as
 `dns.NewWith(h.Sources())`, so the provider reads the host that the agent or the
 test gives. Each example's fake host gives what the collector reads: an `Exists`
 for each file and a `Prints` for each command that the spec lists for the
@@ -189,9 +189,9 @@ platform. A fact that no collector has is a change to gohai first, by its
 to work around a missing fact.
 
 The behaviors that a behavior calls, and the ones that they call, are its chain.
-`go run . behavior chain list` shows each chain, and
-`go run . behavior chain validate` checks it: each requirement is called by an
-example, and a provider calls only the behaviors that it requires.
+`go run . dsl chain list` shows each chain, and `go run . dsl chain validate`
+checks it: each requirement is called by an example, and a provider calls only
+the behaviors that it requires.
 
 A write example runs on a live host in the integration tests. Thus it uses an
 item that it cannot harm, such as `osapi0`, a dummy interface that the
@@ -201,7 +201,7 @@ default route, goes in a unit test of the provider, not in an example.
 ## Build a new one
 
 1. Write it:
-   `go run . behavior create --name <name> --description "<one line>"`, with
+   `go run . dsl behavior create --name <name> --description "<one line>"`, with
    `--group <group>` for a behavior nested under one, such as `network`, and
    `--package <go-package>` when the name is a Go keyword, such as
    `--name package --package packages` (the directory is then that package), and
@@ -219,10 +219,10 @@ default route, goes in a unit test of the provider, not in an example.
    then `behavior.go`. Use the host only through `host.Host`. Then the fake host
    can test it. Compare before you act. Then a second run reports
    `changed: false`. A building block's own fields, such as what `managedfile`
-   accepts, come from `behavior get` on it.
+   accepts, come from `dsl behavior get` on it.
 3. Give each method a useful example. The example names the host that it runs on
    and the changes on that host. Declare what the method refuses with `.Fails`.
-   `behavior spec get` lists the parts of an example. The examples run the
+   `dsl behavior spec get` lists the parts of an example. The examples run the
    provider on a fake host and become the generated HTTP and CLI tests.
 4. Keep a test for every file with code, named for it: `methods_public_test.go`
    on the mocked provider, and `<platform>_public_test.go` for what an example
@@ -233,11 +233,11 @@ default route, goes in a unit test of the provider, not in an example.
 ## Design docs
 
 AGENTS.md puts the design in `osapi-io/specs` before you build. For a behavior,
-the definition is the design. The generated pages and `behavior get` publish its
-methods, types, settings, examples and refusals. The page of the behavior has
-its platforms, settings and the behaviors it uses. The CLI page of each method
-has its examples, what each example does on the host, its refusals and its
-permission. Thus a new behavior does not need its own specs page. Change
+the definition is the design. The generated pages and `dsl behavior get` publish
+its methods, types, settings, examples and refusals. The page of the behavior
+has its platforms, settings and the behaviors it uses. The CLI page of each
+method has its examples, what each example does on the host, its refusals and
+its permission. Thus a new behavior does not need its own specs page. Change
 `components/osapi/behaviors.md` in specs only when the work changes the platform
 itself: a new option, rule, surface or check that every behavior gets.
 
@@ -247,7 +247,7 @@ itself: a new option, rule, surface or check that every behavior gets.
 go generate ./internal/behaviors/all
 mise exec -- just generate   # joins its spec into the main one: SDK, UI, API docs and CLI pages
 go test ./internal/apicontract/   # the contract of the API; -update when the change is on purpose
-go run . behavior validate
+go run . dsl behavior validate
 go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
 ```
@@ -259,9 +259,9 @@ alone: a live host has its own files and programs, and only a call can put it in
 the state the example needs. A behavior with no `delete` gets its item back
 after each example, through `get` and `update`.
 
-A failure of `behavior validate` or of a behavior's tests ends with its fix.
-`go run . behavior validate --help` lists each rule and each test check before
-you break one. The failures below come from elsewhere:
+A failure of `dsl behavior validate` or of a behavior's tests ends with its fix.
+`go run . dsl behavior validate --help` lists each rule and each test check
+before you break one. The failures below come from elsewhere:
 
 | Failure names                                     | It means                                                                                                                                                                                                                                        |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -275,13 +275,13 @@ you break one. The failures below come from elsewhere:
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node`                                                                                                                                                                                               |
 | `a behavior is below 100% coverage`               | A branch no test reaches: add an example, or a case to the test named for the file                                                                                                                                                              |
 
-Never edit a path that `behavior spec get` lists under "Generated, never
+Never edit a path that `dsl behavior spec get` lists under "Generated, never
 edited". Change the definition and generate. Do not write CLI docs for a
 behavior.
 
 ## Not yet
 
-`behavior spec get` lists what the platform cannot express yet, under "Not
+`dsl behavior spec get` lists what the platform cannot express yet, under "Not
 supported yet". If a request needs one, say so and stop. Do not build around it.
 
 A behavior needs no edits outside its directory. The only exception is a package

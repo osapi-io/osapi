@@ -20,7 +20,7 @@ The rules:
   the environment applied. Fix: Set the key to a value that its rule allows.
   osapi config get --key &lt;key&gt; shows its rule, type and default.
 - `setting`: Each setting of a behavior, under behaviors.&lt;name&gt;, passes
-  its validate rule. Fix: Set the key to a value that its rule allows. osapi
+  its validate rule. Fix: Set the key to a value that its rule allows. osapi dsl
   behavior get --name &lt;name&gt; lists the settings of the behavior.
 - `bucket`: Each NATS bucket has its own name. A shared bucket mixes the keys of
   two roles. Fix: Give one of the two keys that the message names a different

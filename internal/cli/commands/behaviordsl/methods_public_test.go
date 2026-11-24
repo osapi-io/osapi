@@ -131,7 +131,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			name: "when no behavior has the name, it says to list them",
 			in:   behaviordsl.GetInput{Name: "nosuch"},
 			validateFunc: func(_ behaviordsl.GetOutput, err error) {
-				s.ErrorContains(err, "osapi behavior list")
+				s.ErrorContains(err, "osapi dsl behavior list")
 			},
 		},
 		{
@@ -200,7 +200,7 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 			name: "when the behavior has no such method, it says how to list them",
 			in:   behaviordsl.MethodInput{Name: "sysctl", Method: "nosuch"},
 			validateFunc: func(_ behaviordsl.MethodOutput, err error) {
-				s.ErrorContains(err, "osapi behavior get --name sysctl")
+				s.ErrorContains(err, "osapi dsl behavior get --name sysctl")
 			},
 		},
 		{
@@ -267,7 +267,7 @@ func (s *MethodsPublicTestSuite) TestOpenAPIGet() {
 			name: "when there is no such behavior, it says how to list them",
 			in:   behaviordsl.GetInput{Name: "nope"},
 			validateFunc: func(_ behaviordsl.OpenAPIOutput, err error) {
-				s.ErrorContains(err, "osapi behavior list")
+				s.ErrorContains(err, "osapi dsl behavior list")
 			},
 		},
 	}

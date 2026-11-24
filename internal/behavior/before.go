@@ -51,7 +51,7 @@ func SetByBefore(
 // the caller sent into the input that the agent gets, such as a password
 // into its hash. The job data, which NATS and the job KV keep, then has no
 // plain secret: each field tagged secret:"true" must be empty after the
-// step, and the job is not queued when one is not. behavior validate checks
+// step, and the job is not queued when one is not. dsl behavior validate checks
 // fn's signature.
 func (m *Method) Before(
 	fn any,

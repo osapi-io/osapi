@@ -29,7 +29,7 @@ Thus:
 - A job to more than one host, such as `--target _all`, runs the chain on each
   host. Each host has its own chain record.
 
-`osapi behavior chain list` shows each chain in this build.
+`osapi dsl chain list` shows each chain in this build.
 [Chains](../../reference/chains/chains.mdx) shows each chain, with each call
 that its examples make.
 

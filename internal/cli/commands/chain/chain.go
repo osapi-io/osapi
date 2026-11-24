@@ -25,13 +25,13 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 )
 
-// Group is the chain group's definition: osapi behavior chain. A chain is
+// Group is the chain group's definition: osapi dsl chain. A chain is
 // the behaviors that a behavior calls on the same host, in the same job,
 // and the ones that those call.
 var Group = command.Register(command.Define(
 	"chain",
 	"Show and check the chains of behaviors that a behavior calls",
-	command.Under(command.ParentBehavior),
+	command.Under(command.ParentDSL),
 	command.Long("A behavior that requires others calls them on the same host, in the same\n"+
 		"job: dns calls netplan, and netplan calls managedfile. That is a chain, named\n"+
 		"by the behavior at its top. `behavior.Requires` on each behavior makes it;\n"+
@@ -64,7 +64,7 @@ var Group = command.Register(command.Define(
 	command.Method[ValidateInput, ValidateOutput]("validate").
 		Short("Check every chain against the chain rules").
 		Long("It prints each problem with its behavior, method, rule and message, then\n"+
-			"the fix of each rule, and exits 1 when a rule fails. `osapi behavior\n"+
+			"the fix of each rule, and exits 1 when a rule fails. `osapi dsl behavior\n"+
 			"validate` checks the rules that hold when the behaviors are built, and\n"+
 			"`go test` checks the ones that need a run of the examples.\n\n"+
 			"The rules:\n\n"+behavior.ChainChecks.Help()).
@@ -78,7 +78,7 @@ var Group = command.Register(command.Define(
 		Long("Print what a chain is, how a behavior builds on others and calls them, what\n"+
 			"happens when a step fails, and each building block of this binary. Read it\n"+
 			"before a behavior requires another, then check the result with `osapi\n"+
-			"behavior chain validate`.").
+			"dsl chain validate`.").
 		Example("").
 		Prints(sampleSpec).
 		Example("--json").

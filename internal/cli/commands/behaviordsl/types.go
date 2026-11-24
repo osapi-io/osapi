@@ -48,7 +48,7 @@ type Summary struct {
 
 // GetInput names the behavior.
 type GetInput struct {
-	Name string `json:"name" validate:"required" doc:"The behavior, from osapi behavior list"`
+	Name string `json:"name" validate:"required" doc:"The behavior, from osapi dsl behavior list"`
 }
 
 // GetOutput is a behavior: where osapi serves it, where it runs, what it
@@ -127,8 +127,8 @@ type OpenAPIOutput struct {
 
 // MethodInput is the behavior and the method to show.
 type MethodInput struct {
-	Name   string `json:"name"   validate:"required" doc:"The behavior, from osapi behavior list"`
-	Method string `json:"method" validate:"required" doc:"The method, from osapi behavior get"`
+	Name   string `json:"name"   validate:"required" doc:"The behavior, from osapi dsl behavior list"`
+	Method string `json:"method" validate:"required" doc:"The method, from osapi dsl behavior get"`
 }
 
 // MethodOutput is one method in full: where it is served, its fields with

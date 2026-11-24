@@ -9,7 +9,7 @@ export interface CallRow {
 
 /**
  * The calls of a method as rows of a tree, each after the call that made
- * it, as osapi behavior chain get prints them.
+ * it, as osapi dsl chain get prints them.
  */
 export function callRows(calls: readonly CatalogCall[], depth = 0): CallRow[] {
   return calls.flatMap((call) => [

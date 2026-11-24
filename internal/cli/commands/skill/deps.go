@@ -18,16 +18,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package token is the token group of local commands: osapi token generate,
+// Package token is the token group of local commands: osapi controller token generate,
 // roles list and validate, which sign and read the bearer tokens of the API
 // with the signing key of the config. They run in the CLI, and call no API.
 package skill
 
-import "io/fs"
+import (
+	"io/fs"
 
-// Deps is what the skill group's methods read: the skills that osapi init
-// installs, and the skills for developing osapi itself.
+	"github.com/avfs/avfs"
+)
+
+// Deps is what the skill group's methods use: the skills that osapi skill
+// install installs, the skills for developing osapi itself, the file system
+// that install writes to, and the version of the binary.
 type Deps struct {
 	Installed fs.FS
 	Dev       fs.FS
+	FS        avfs.VFS
+	Version   func() string
 }

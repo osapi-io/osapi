@@ -70,8 +70,8 @@ for id in "${ids[@]}"; do
 		check "$id" "the answer names the missing action method" \
 			"python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get(\"result\",\"\"))' '$out/$id.session.json' | grep -qiE 'not yet|action method|cannot express|can.t express'"
 	else
-		check "$id" "behavior validate passes" "go run . behavior validate"
-		check "$id" "the behavior is registered under its name" "go run . behavior get --name $b --json"
+		check "$id" "dsl behavior validate passes" "go run . dsl behavior validate"
+		check "$id" "the behavior is registered under its name" "go run . dsl behavior get --name $b --json"
 		check "$id" "its package tests pass with 100% coverage" "go test -cover ./internal/behaviors/$dir/ | tee /dev/stderr | grep -q 'coverage: 100.0%'"
 		check "$id" "every test in internal/behaviors/all passes" "go test -count=1 ./internal/behaviors/all/"
 		check "$id" "generated files are current" "before=\$(git status --porcelain); go generate ./internal/behaviors/all && mise exec -- just cli-docs-generate && [ \"\$before\" = \"\$(git status --porcelain)\" ]"
@@ -82,10 +82,10 @@ for id in "${ids[@]}"; do
 		[ -n "$sudo" ] && check "$id" "$sudo is declared with behavior.Sudo" "grep -rq 'behavior.Sudo(\"$sudo\"' internal/behaviors/$dir/"
 		[ "$(field "$id" refusals)" = "True" ] && check "$id" "at least one refusal is declared with Fails" "grep -rqE '(^|[.[:space:]])Fails\\(' internal/behaviors/$dir/"
 		[ "$(field "$id" internal)" = "True" ] && check "$id" "it is internal: no API, no CLI, no gen/ directory" \
-			"go run . behavior get --name $b --json | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d[\"internal\"] and not d[\"api\"] and not d[\"cli\"] else 1)' && [ ! -d internal/behaviors/$dir/gen ]"
+			"go run . dsl behavior get --name $b --json | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d[\"internal\"] and not d[\"api\"] and not d[\"cli\"] else 1)' && [ ! -d internal/behaviors/$dir/gen ]"
 		requires=$(field "$id" requires)
 		[ -n "$requires" ] && check "$id" "it requires $requires" \
-			"go run . behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if \"$requires\" in json.load(sys.stdin)[\"uses\"] else 1)'"
+			"go run . dsl behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if \"$requires\" in json.load(sys.stdin)[\"uses\"] else 1)'"
 		[ "$(field "$id" secret)" = "True" ] && check "$id" "the token input is tagged secret" \
 			"grep -rq 'secret:\"true\"' internal/behaviors/$dir/types.go"
 		group=$(field "$id" group)
@@ -93,7 +93,7 @@ for id in "${ids[@]}"; do
 			"grep -rqE 'behavior.Under\(behavior.Group[A-Z]' internal/behaviors/$dir/behavior.go && [ -d internal/behaviors/$dir ]"
 		platforms=$(field "$id" platforms)
 		[ -n "$platforms" ] && check "$id" "its only platform is $platforms" \
-			"go run . behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)[\"platforms\"] == [\"$platforms\"] else 1)'"
+			"go run . dsl behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)[\"platforms\"] == [\"$platforms\"] else 1)'"
 	fi
 
 	(cd "$work" && git status --porcelain --untracked-files=all) >"$out/$id.changed.txt"

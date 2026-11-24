@@ -11,8 +11,9 @@ controller checks it before a host sees it.
 ## Set it up
 
 1. Run osapi and make a token, as [Get started](../intro.md#get-started) shows.
-2. In the repository the agent works in, run [`osapi init`](cli/init.md). It
-   installs two skills and points the tool's instructions file at them.
+2. In the repository the agent works in, run
+   [`osapi skill install`](cli/skill/install.md). It installs two skills and
+   points the tool's instructions file at them.
 3. Start the agent in that repository, with the token in its environment as
    `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN`.
 
@@ -28,8 +29,8 @@ controller checks it before a host sees it.
 | `claude` (default) | `.claude/skills/osapi/` | `CLAUDE.md`       |
 | `codex`            | `.agents/skills/osapi/` | `AGENTS.md`       |
 
-Run `osapi init` again after you upgrade osapi, so that the skills agree with
-the binary.
+Run `osapi skill install` again after you upgrade osapi, so that the skills
+agree with the binary.
 
 ## What to ask
 
@@ -48,8 +49,8 @@ It does not guess. Before it runs an operation it reads its contract from the
 binary:
 
 ```bash
-osapi behavior list --json                                      # every behavior and its methods
-osapi behavior method get --name sysctl --method update --json  # one method's input and output schema
+osapi dsl behavior list --json                                      # every behavior and its methods
+osapi dsl behavior method get --name sysctl --method update --json  # one method's input and output schema
 osapi help --json                                               # every command, flag and error shape
 ```
 
@@ -65,8 +66,8 @@ The agent can do exactly what its token's roles and permissions allow, and the
 controller checks every request. Give it the least it needs:
 
 ```bash
-osapi token generate -r read -u agent@example.com                        # look, never change
-osapi token generate -p sysctl:read -p sysctl:write -u agent@example.com # one area only
+osapi controller token generate -r read -u agent@example.com                        # look, never change
+osapi controller token generate -p sysctl:read -p sysctl:write -u agent@example.com # one area only
 ```
 
 `command:execute` and `command:shell` let a token run commands it supplies,

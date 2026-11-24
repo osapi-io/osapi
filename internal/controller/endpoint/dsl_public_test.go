@@ -42,7 +42,7 @@ func (s *EndpointPublicTestSuite) TestDSL() {
 		}
 	}
 	s.Require().True(d.ServesAPI())
-	s.Equal([]string{"controller", "endpoint"}, d.Command)
+	s.Equal([]string{"dsl", "endpoint"}, d.Command)
 
 	var perms []dsl.Declared
 	for _, p := range d.Permissions() {

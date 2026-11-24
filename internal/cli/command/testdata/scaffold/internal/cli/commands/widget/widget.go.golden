@@ -28,10 +28,11 @@ import (
 )
 
 // Group is the widget group's definition. The commands, their flags,
-// their help and their pages come from it. osapi cli command spec get lists
+// their help and their pages come from it. osapi dsl command spec get lists
 // every option.
 var Group = command.Register(command.Define(
 	"widget", "Widgets of this host",
+	command.Under(command.ParentController),
 	command.Uses[Deps](),
 	command.Method[ListInput, WidgetList]("list").
 		Short("List the widget items").

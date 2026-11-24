@@ -36,10 +36,10 @@ import (
 var Group = command.Register(command.Define(
 	"endpoint",
 	"List, describe and validate the controller's own endpoints, and print their DSL",
-	command.Under(command.ParentController),
+	command.Under(command.ParentDSL),
 	command.Long("An endpoint is one operation of the controller itself, such as\n"+
 		"`GET /api/agent`. It runs on the controller, not on a host. Work on a host\n"+
-		"is a behavior: see `osapi behavior`. These commands read the definitions in\n"+
+		"is a behavior: see `osapi dsl behavior`. These commands read the definitions in\n"+
 		"the binary. Thus they need no config file and no running controller."),
 	command.Uses[Deps](),
 	command.SubDoc(
@@ -56,7 +56,7 @@ var Group = command.Register(command.Define(
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
 		Short("Describe one endpoint group: its routes, permissions and operation IDs").
-		Long("`osapi controller endpoint openapi get` prints the group's part of the\n"+
+		Long("`osapi dsl endpoint openapi get` prints the group's part of the\n"+
 			"OpenAPI spec.").
 		Example("--name agent").
 		Prints(sampleGet).
@@ -68,7 +68,7 @@ var Group = command.Register(command.Define(
 		Short("Show one method of an endpoint group: its route, fields, output, examples and errors").
 		Long("Each input field shows where the request carries it: the path, the query,\n"+
 			"a form or the body. `--json` has the JSON Schema of the input and the\n"+
-			"output. `osapi behavior method get` shows a method of a behavior the same\n"+
+			"output. `osapi dsl behavior method get` shows a method of a behavior the same\n"+
 			"way.").
 		Example("--name agent --method drain").
 		Prints(sampleMethod).
@@ -93,7 +93,7 @@ var Group = command.Register(command.Define(
 			"`internal/controller/endpoints/all`. The group has a list and a get, an\n"+
 			"empty `Deps` and the tests of its methods. Then run the steps that it\n"+
 			"prints. While its `Deps` is empty, the controller needs no wiring.\n"+
-			"`osapi controller endpoint spec get` lists each part of the DSL.").
+			"`osapi dsl endpoint spec get` lists each part of the DSL.").
 		Example(`--name trace --description "The traces of the controller"`).
 		Prints(sampleCreate).
 		Fails("no name", CreateInput{Description: "x"}).
@@ -105,7 +105,7 @@ var Group = command.Register(command.Define(
 		Long("Print each part of the endpoint DSL, what it makes osapi do and when to use\n"+
 			"it, and what it cannot do yet. The list comes from this binary. Thus it\n"+
 			"agrees with the build that you run. Read it before you write a group, then\n"+
-			"check the result with `osapi controller endpoint validate`.").
+			"check the result with `osapi dsl endpoint validate`.").
 		Example("").
 		Prints(sampleSpec).
 		Example("--json").
@@ -113,7 +113,7 @@ var Group = command.Register(command.Define(
 	command.Method[ValidateInput, ValidateOutput]("validate").
 		Short("Check every endpoint group against the rules of a definition").
 		Long("It prints each problem with its group, method, rule and message, then the\n"+
-			"fix of each rule, and exits 1 when a rule fails. `osapi controller endpoint\n"+
+			"fix of each rule, and exits 1 when a rule fails. `osapi dsl endpoint\n"+
 			"spec get` describes each part of a group.\n\n"+
 			"The rules:\n\n"+endpoint.Checks.Help()).
 		Example("").

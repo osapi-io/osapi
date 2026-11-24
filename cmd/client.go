@@ -54,8 +54,8 @@ var (
 
 // clientCmd represents the client command.
 var clientCmd = &cobra.Command{
-	Use:   "client",
-	Short: "Call the osapi REST API",
+	Use: "client",
+	// Its help is its purpose in command.RootGroups, which DescribeRoot gives it.
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 		var err error
 		tracerShutdown, err = tracing.InitTracer(

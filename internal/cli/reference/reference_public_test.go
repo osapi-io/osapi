@@ -128,6 +128,8 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		root := s.read(dir, "cli.mdx")
 		s.Contains(root, "# CLI\n\nManage hosts.\n")
 		s.Contains(root, "<DocCardList />")
+		s.Contains(root, "| Command | Purpose |\n| --- | --- |\n", "the root lists each word")
+		s.Contains(root, "| `osapi version` | Show the version |\n")
 		s.Contains(root, "| `-j, --json` | Enable JSON output |  |")
 
 		group := s.read(dir, "node/node.mdx")

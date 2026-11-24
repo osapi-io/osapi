@@ -63,7 +63,7 @@ function Platforms({ names }: { names: readonly string[] }) {
 }
 
 /**
- * BehaviorPage is one behavior, as osapi behavior get and chain get print
+ * BehaviorPage is one behavior, as osapi dsl behavior get and chain get print
  * it: what it manages, its area, platforms, and the behaviors that it calls
  * and that call it, then each method as a signature, with its permission
  * against the viewer's role, its platforms, its chain and its examples.

@@ -26,7 +26,7 @@ import "time"
 type GenerateInput struct {
 	Roles       []string `json:"roles"       short:"r" validate:"required"                    doc:"Roles for the token: built-in, or a custom role of the config"`
 	Subject     string   `json:"subject"     short:"u" validate:"required"                    doc:"Subject for the token (e.g., user ID or unique identifier)"`
-	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"   doc:"Direct permissions, which override the roles; osapi token roles get --name admin lists each one"`
+	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"   doc:"Direct permissions, which override the roles; osapi controller role get --name admin lists each one"`
 	Targets     []string `json:"targets"     short:"t" validate:"omitempty,dive,target_scope" doc:"Hosts the token may act on: hostnames and labels, such as group:web; without it, each host"`
 }
 
@@ -37,32 +37,6 @@ type GenerateOutput struct {
 	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions,omitempty"`
 	Targets     []string `json:"targets,omitempty"`
-}
-
-// RolesInput is the input of roles list, which has none.
-type RolesInput struct{}
-
-// Role is one role, with what it grants.
-type Role struct {
-	_ struct{} `title:"Role"`
-	// Name is the role's name, such as admin.
-	Name string `json:"name"`
-	// Source is built-in, or config for a custom role of the config.
-	Source string `json:"source"`
-	// Permissions are what the role grants. roles get shows them; a table
-	// of roles leaves them out, because they are many.
-	Permissions []string `json:"permissions" table:"-"`
-}
-
-// RoleInput names the role to read.
-type RoleInput struct {
-	Name string `json:"name" validate:"required" doc:"The role, such as admin, or a custom role of the config."`
-}
-
-// RolesOutput is each role: the built-in ones, then those of the config.
-type RolesOutput struct {
-	_     struct{} `title:"Roles"`
-	Roles []Role   `              json:"roles"`
 }
 
 // ValidateInput is the token to check.

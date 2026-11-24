@@ -19,19 +19,18 @@ group. The handlers are typed Go functions.
 
 ## Steps
 
-1. Write the layout: `go run . controller endpoint create --name <group>`.
+1. Write the layout: `go run . dsl endpoint create --name <group>`.
 2. Read the [Endpoint DSL](dsl/endpoint.md) reference, or
-   `go run . controller endpoint spec get`. It lists each part of the DSL, what
-   it does and when to use it.
+   `go run . dsl endpoint spec get`. It lists each part of the DSL, what it does
+   and when to use it.
 3. Change the definition, the types and the handlers.
 4. Run `just generate`.
-5. Run `go run . controller endpoint validate`. Each problem ends with its fix,
-   and `--help` lists each rule.
+5. Run `go run . dsl endpoint validate`. Each problem ends with its fix, and
+   `--help` lists each rule.
 6. Run the tests of the group.
 
-`go run . controller endpoint get --name <group>` shows the routes, permissions
-and operationIds of a group.
-`go run . controller endpoint openapi get --name <group>` shows the spec that
-the definition makes.
+`go run . dsl endpoint get --name <group>` shows the routes, permissions and
+operationIds of a group. `go run . dsl endpoint openapi get --name <group>`
+shows the spec that the definition makes.
 
 The `build-an-endpoint` [skill](skills.md) gives the same steps to an agent.

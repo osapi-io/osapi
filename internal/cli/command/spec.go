@@ -39,7 +39,7 @@ const (
 	KindGenerated  = "generated"
 )
 
-// Spec is every term of the command DSL. osapi cli command spec get prints it,
+// Spec is every term of the command DSL. osapi dsl command spec get prints it,
 // so an author, or an agent, learns the DSL from the binary that it builds.
 // A test fails on an exported option, method or refinement of this package
 // without an entry.
@@ -60,7 +60,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindDefinition,
 			Name: `Register(Define(name, doc, options...))`,
-			Does: "Declares a group of local commands and adds it to the registry. A local command runs in the CLI process and calls no API, such as osapi token generate. Its command is osapi <name>, and doc is its help.",
+			Does: "Declares a group of local commands and adds it to the registry. A local command runs in the CLI process and calls no API, such as osapi controller token generate. Its command is osapi <name>, and doc is its help.",
 			When: "One time, in <group>.go under internal/cli/commands/<group>: var Group = command.Register(command.Define(...)). Add its import to internal/cli/commands/all. A command that calls the API is an endpoint or a behavior, not a local command.",
 		},
 
@@ -85,26 +85,26 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Flat()`,
-			Does: "Makes the group add no word of its own: each method is a command under the group's parent, the root or the words of Under. A command directly under the root has a word of command.Roots, such as version; any other has a verb or an action. The group's name stays its identity, for cli command get --name and its package.",
+			Does: "Makes the group add no word of its own: each method is a command under the group's parent, the root or the words of Under. A command directly under the root is a leaf of command.RootGroups, such as version; any other has a verb or an action. The group's name stays its identity, for dsl command get --name and its package.",
 			When: "For a command that stands alone, such as osapi version, or that goes under a parent that holds other things, such as osapi controller start. Not for a family of commands under one noun, such as token.",
 		},
 		{
 			Kind: KindOption,
 			Name: `SubDoc("segment", "short")`,
-			Does: "Is the one line of help of the command that a Sub segment makes, such as roles in osapi token roles list. validate fails a Sub segment that makes a command and has none.",
+			Does: "Is the one line of help of the command that a Sub segment makes, such as roles in osapi controller role list. validate fails a Sub segment that makes a command and has none.",
 			When: "For each Sub segment of the group whose word is not the method's.",
 		},
 		{
 			Kind: KindOption,
 			Name: `Under(Parent, ...)`,
-			Does: "Puts the group's command under the command of the words, such as ParentController for osapi controller endpoint. Use a Parent constant: validate refuses a word outside KnownParents, because Attach makes a word that has no command, so a misspelled word was a new command with no error. Attach uses a hand-written command that cmd/commands.go names.",
+			Does: "Puts the group's command under the command of the words, such as ParentController for osapi dsl endpoint. Use a Parent constant: validate refuses a word outside KnownParents, because Attach makes a word that has no command, so a misspelled word was a new command with no error. Attach uses a hand-written command that cmd/commands.go names.",
 			When: "When the commands belong to a command that is there already, such as controller. Without it, the group is under the root.",
 		},
 
 		{
 			Kind: KindMethod,
 			Name: `Process("name")`,
-			Does: "A command, osapi <group> <name>, that runs a process until the command's context ends, such as osapi nats server start. It has no input and no output type; .Setup sets what it runs, and .Logs gives its page the lines that it writes when it starts. The context is the one the root makes and cancels on SIGINT or SIGTERM.",
+			Does: "A command, osapi <group> <name>, that runs a process until the command's context ends, such as osapi nats start. It has no input and no output type; .Setup sets what it runs, and .Logs gives its page the lines that it writes when it starts. The context is the one the root makes and cancels on SIGINT or SIGTERM.",
 			When: "For a command that starts a component and runs until a signal. Its name is an action, such as start.",
 		},
 		{
@@ -171,7 +171,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Sub("segment")`,
-			Does: "Puts the command under a command of its own in the group: osapi <group> <segment> <method>, such as token roles list. The method's identity is its segment and its name, so a group can have get and spec get.",
+			Does: "Puts the command under a command of its own in the group: osapi <group> <segment> <method>, such as controller role list. The method's identity is its segment and its name, so a group can have get and spec get.",
 			When: "When the command is about a noun of the group: the noun is the Sub, and the method is the verb.",
 		},
 		{
@@ -336,7 +336,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindDeps,
 			Name: "*cobra.Command",
-			Does: "The root command of the CLI, for a group that reads the tree of commands, such as cli docs and cli command.",
+			Does: "The root command of the CLI, for a group that reads the tree of commands, such as docs and dsl command.",
 			When: "Only to read the commands of this binary.",
 		},
 		{
@@ -354,19 +354,31 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindCheck,
+			Name: "Root(word) and RootGroups",
+			Does: "Where a command goes. The words under osapi are a closed list, each with its purpose: controller, agent or nats for the process or the files of that component on this host, config for the config that each component reads, dsl for the definitions of osapi, skill for the skills in the binary, and client for a call to the API. Only start and version are commands of the root. A local group calls no API, so it is never under client. Under client, the words follow the API path. dsl command validate refuses a group whose first word is not one of them, under the rule root, and TestCommandShape fails on any other word under osapi.",
+			When: "Before you name a group: put it Under the component whose process or files it works on, or Under dsl for a command for authors. A new word under osapi is a decision of the owner.",
+		},
+		{
+			Kind: KindWiring,
+			Name: "DescribeRoot(root)",
+			Does: "Gives each command under the root the purpose of its word in RootGroups as its help. Thus osapi --help and the CLI page of the docs site list each word with its purpose from one list.",
+			When: "Once, in cmd/root.go, after each group is attached. Write a purpose in RootGroups, not in a Short of a root command.",
+		},
+		{
+			Kind: KindCheck,
 			Name: "Flaggable(type)",
-			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string or []byte, a file. The command generator builds a flag of each, and behavior validate asks it of each CLI behavior's input, so the two agree.",
+			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string or []byte, a file. The command generator builds a flag of each, and dsl behavior validate asks it of each CLI behavior's input, so the two agree.",
 			When: "Give an input field one of those types.",
 		},
 		{
 			Kind: KindCheck,
 			Name: "TagProblems(type)",
-			Does: "Each output tag, such as render, that the output does not know, in the type and the types it holds: the check that cli command validate makes of a registered command. behavior validate asks it of each behavior's output, so its author sees the problem in the validator they run.",
-			When: "Use a render value that cli command spec get lists.",
+			Does: "Each output tag, such as render, that the output does not know, in the type and the types it holds: the check that dsl command validate makes of a registered command. dsl behavior validate asks it of each behavior's output, so its author sees the problem in the validator they run.",
+			When: "Use a render value that dsl command spec get lists.",
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi cli command validate",
+			Name: "osapi dsl command validate",
 			Does: "Checks every local group against the rules of a definition, and the output of every group: each output tag is one the output knows, and each method with no output says what occurred. Each problem names the rule and ends with its fix. validate --help lists each rule. go generate fails on a local group that breaks one.",
 			When: "After each change to a group.",
 		},
@@ -390,19 +402,19 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi cli command create --name <group> --description \"...\"",
-			Does: "Writes a new group under internal/cli/commands/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/cli/commands/all. It builds, validates and passes its tests; command-scaffold-check in just test holds it to that.",
+			Name: "osapi dsl command create --name <group> --description \"...\" --under <word>",
+			Does: "Writes a new group under internal/cli/commands/<group>, Under the word of the root that --under names (agent, controller, dsl or nats): a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/cli/commands/all. It builds, validates and passes its tests; command-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/cli/commands/all and just cli-docs-generate, and change it.",
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi cli command get --name <group>",
+			Name: "osapi dsl command get --name <group>",
 			Does: "Describes a group, local, endpoint or behavior: each command and its one line of help. A local group's commands also have their flags and the inputs they refuse.",
 			When: "To see a group's commands, and the flags and refusals of a local group.",
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi cli command list",
+			Name: "osapi dsl command list",
 			Does: "Lists each command of the binary, and the layer that made it: command, endpoint, behavior, or hand-written.",
 			When: "To see what a definition makes, and what is still written by hand in cmd/.",
 		},

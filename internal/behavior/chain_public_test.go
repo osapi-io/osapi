@@ -141,7 +141,7 @@ func (s *ChainPublicTestSuite) TestChainProblems() {
 		rules[p.Rule] = true
 	}
 	s.Equal(map[string]bool{behavior.RuleRequires: true, behavior.RuleInternal: true}, rules,
-		"only the chain rules: the writes rule is behavior validate's")
+		"only the chain rules: the writes rule is dsl behavior validate's")
 	for _, p := range behavior.ChainProblems() {
 		s.Equal(behavior.ChainChecks.Fix(p.Rule), p.Fix)
 	}

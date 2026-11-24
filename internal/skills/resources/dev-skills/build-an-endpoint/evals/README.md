@@ -7,8 +7,8 @@ checks. When it stops, `run.sh` checks what it left:
 
 | Check                                       | How                                                                  |
 | ------------------------------------------- | -------------------------------------------------------------------- |
-| The definition breaks no rule               | `go run . controller endpoint validate`                              |
-| It is registered under its name             | `go run . controller endpoint get --name <group> --json`             |
+| The definition breaks no rule               | `go run . dsl endpoint validate`                                     |
+| It is registered under its name             | `go run . dsl endpoint get --name <group> --json`                    |
 | Its own tests pass with 100% coverage       | `go test -cover ./internal/controller/endpoints/<group>/`            |
 | Every group is valid and mounted            | `go test ./internal/controller/endpoints/all/`                       |
 | Generated files are current                 | `just generate` and `just cli-docs-generate` change nothing          |

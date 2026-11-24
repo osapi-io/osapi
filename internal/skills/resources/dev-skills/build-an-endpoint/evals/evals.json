@@ -7,7 +7,7 @@
       "group": "buildinfo",
       "expected_output": "internal/controller/endpoints/buildinfo with one GET, its input and output types, the tests of its handler, and every check passing.",
       "assertions": [
-        "controller endpoint validate passes",
+        "dsl endpoint validate passes",
         "the group is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/controller/endpoints/all passes",
@@ -25,7 +25,7 @@
       "refusals": true,
       "expected_output": "internal/controller/endpoints/notes with list, a create that answers 201, a delete that answers 204, a Deps with a store interface and its mockgen mock, refusals for a bad ID, and every check passing.",
       "assertions": [
-        "controller endpoint validate passes",
+        "dsl endpoint validate passes",
         "the group is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/controller/endpoints/all passes",

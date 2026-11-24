@@ -16,9 +16,10 @@ Each request makes a record.
 ## Who sends the request
 
 Each API request has a JWT. The key of the controller signs it
-(`controller.api.security.signing_key`, HS256). `osapi token generate` makes a
-token with roles, a subject and, if you want, a fixed list of permissions.
-`osapi token validate` shows what a token gives. The CLI sends the token in
+(`controller.api.security.signing_key`, HS256).
+`osapi controller token generate` makes a token with roles, a subject and, if
+you want, a fixed list of permissions. `osapi controller token validate` shows
+what a token gives. The CLI sends the token in
 `controller.client.security.bearer_token`. Only the liveness probe and the
 readiness probe, `/api/health` and `/api/health/ready`, answer without a token.
 
@@ -29,8 +30,8 @@ Each operation needs one permission, for example `sysctl:read` or
 list of permissions:
 
 - **Built-in roles**: `admin`, `operator`, `automation`, `auditor`, `read` and
-  `observer`. `osapi token roles list` prints each permission and the role that
-  gives it, as the binary that you run has them.
+  `observer`. `osapi controller role list` prints each permission and the role
+  that gives it, as the binary that you run has them.
 - **Custom roles.** You define them in `controller.api.security.roles`. Each one
   is a list of permissions. A custom role with the name of a built-in role
   replaces the built-in role.
@@ -55,9 +56,9 @@ work until an administrator accepts it:
    `agent.pki.key_dir`.
 1. It sends an enrollment request and waits. `osapi client admission list` shows
    it as pending.
-1. An administrator runs `osapi agent admission get` on the machine, and admits
-   it with the fingerprint that the command prints. The controller admits it
-   only when the fingerprint is the one of the key in the request. Or the
+1. An administrator runs `osapi agent key fingerprint` on the machine, and
+   admits it with the fingerprint that the command prints. The controller admits
+   it only when the fingerprint is the one of the key in the request. Or the
    controller admits each agent itself, with `controller.pki.auto_admit`.
 1. After that, the controller signs each job. The agent refuses a job that the
    controller did not sign. The agent signs its results and its heartbeats.

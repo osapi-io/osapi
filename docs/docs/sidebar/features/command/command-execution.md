@@ -111,7 +111,7 @@ controller:
 Or grant it directly on a token:
 
 ```bash
-osapi token generate -r read -u user@example.com \
+osapi controller token generate -r read -u user@example.com \
   -p command:execute -p command:shell
 ```
 

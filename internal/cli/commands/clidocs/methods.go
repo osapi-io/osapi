@@ -37,36 +37,69 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
-// Generate writes the page of each command of the binary into the
-// directory, and removes each page there that no command has.
+// The directories of the generated pages, under the root of the repository.
+const (
+	cliDir = "docs/docs/sidebar/usage/cli"
+	dslDir = "docs/docs/sidebar/development/dsl"
+)
+
+// Generate writes each generated page of the docs site under in.Root: the
+// page of each command, of each DSL and of the reference.
 func Generate(
-	_ context.Context,
+	ctx context.Context,
 	d Deps,
 	in GenerateInput,
 ) (GenerateOutput, error) {
+	root := in.Root
+	if root == "" {
+		root = "."
+	}
+	c, err := WriteCLI(ctx, d, CLIInput{Dir: filepath.Join(root, cliDir)})
+	if err != nil {
+		return GenerateOutput{}, err
+	}
+	ds, err := WriteDSL(ctx, d, DSLInput{Dir: filepath.Join(root, dslDir)})
+	if err != nil {
+		return GenerateOutput{}, err
+	}
+	ref, err := WriteReference(ctx, d, ReferenceInput{Root: root})
+	if err != nil {
+		return GenerateOutput{}, err
+	}
+
+	return GenerateOutput{CLI: c.Pages, DSL: ds.Pages, Reference: ref.Pages}, nil
+}
+
+// WriteCLI writes the page of each command of the binary into the
+// directory, and removes each page there that no command has.
+func WriteCLI(
+	_ context.Context,
+	d Deps,
+	in CLIInput,
+) (CLIOutput, error) {
 	dir := in.Dir
 	if dir == "" {
-		dir = "docs/docs/sidebar/usage/cli"
+		dir = cliDir
 	}
 	n, err := reference.Write(d.Root, dir)
 	if err != nil {
-		return GenerateOutput{}, fmt.Errorf("write the CLI reference into %s: %w", dir, err)
+		return CLIOutput{}, fmt.Errorf("write the CLI reference into %s: %w", dir, err)
 	}
 
-	return GenerateOutput{Dir: dir, Pages: n}, nil
+	return CLIOutput{Dir: dir, Pages: n}, nil
 }
 
-// GenerateDSL writes a page for each DSL of the binary into in.Dir, and removes each
+// WriteDSL writes a page for each DSL of the binary into in.Dir, and removes each
 // generated page there that no DSL has. A page that a person wrote, with no
 // guide.Generated line, stays.
-func GenerateDSL(
+func WriteDSL(
 	_ context.Context,
 	d Deps,
 	in DSLInput,
 ) (DSLOutput, error) {
 	dir := in.Dir
 	if dir == "" {
-		dir = "docs/docs/sidebar/development/dsl"
+		dir = dslDir
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return DSLOutput{}, fmt.Errorf("write the DSL pages into %s: %w", dir, err)
@@ -110,12 +143,12 @@ var referenceDirs = []string{
 // and its place in the sidebar.
 const categoryFile = "_category_.json"
 
-// GenerateReference writes each page of the reference, from the outputs of
+// WriteReference writes each page of the reference, from the outputs of
 // the commands that show it, and removes each generated page there that no
 // command writes now. A _category_.json in a folder under a reference
 // directory is generated too: one that no command writes now is removed,
 // then each folder that is empty.
-func GenerateReference(
+func WriteReference(
 	_ context.Context,
 	d Deps,
 	in ReferenceInput,

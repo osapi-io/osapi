@@ -1,10 +1,10 @@
 # Components
 
-| Component   | Start one                 | Listens on, by default       |
-| ----------- | ------------------------- | ---------------------------- |
-| NATS server | `osapi nats server start` | 4222 (`nats.server.port`)    |
-| Controller  | `osapi controller start`  | 8080 (`controller.api.port`) |
-| Agent       | `osapi agent start`       | no API port                  |
+| Component   | Start one                | Listens on, by default       |
+| ----------- | ------------------------ | ---------------------------- |
+| NATS server | `osapi nats start`       | 4222 (`nats.server.port`)    |
+| Controller  | `osapi controller start` | 8080 (`controller.api.port`) |
+| Agent       | `osapi agent start`      | no API port                  |
 
 `osapi start` runs all three in one process, which is the usual way on a single
 host. Run them separately to put the NATS server and controller on one host and

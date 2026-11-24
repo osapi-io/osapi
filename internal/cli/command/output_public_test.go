@@ -398,8 +398,8 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		{
 			name:   "when a section has more than its list, its values print, then its list",
 			method: "described",
-			answer: `{"name":"token","commands":[{"command":"osapi token list","method":"list","flags":[{"flag":"--x"}]}]}`,
-			want:   "# Zzderive\nName: token\n# osapi token list\nMethod: list\n# Flags (1)\nFLAG\n--x\n",
+			answer: `{"name":"token","commands":[{"command":"osapi controller token list","method":"list","flags":[{"flag":"--x"}]}]}`,
+			want:   "# Zzderive\nName: token\n# osapi controller token list\nMethod: list\n# Flags (1)\nFLAG\n--x\n",
 		},
 		{
 			name:   "when the method answers nothing, one line names the key and what it did",

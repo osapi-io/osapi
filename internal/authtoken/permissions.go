@@ -142,7 +142,7 @@ func init() {
 		Tag:     PermissionRule,
 		Check:   func(p string) bool { return slices.Contains(AllPermissions(), Permission(p)) },
 		Schema:  rule.None,
-		Message: "is not a permission: osapi token roles get --name admin lists each one",
+		Message: "is not a permission: osapi controller role get --name admin lists each one",
 	})
 }
 

@@ -64,8 +64,9 @@ type scaffoldSource struct {
 
 // groupScaffold is what a new group is called.
 type groupScaffold struct {
-	name string
-	doc  string
+	name  string
+	doc   string
+	under Parent
 }
 
 func (sc groupScaffold) pkg() string {
@@ -165,11 +166,12 @@ func (sc groupScaffold) groupFile() *jen.File {
 
 	comments(f,
 		"Group is the "+sc.name+" group's definition. The commands, their flags,",
-		"their help and their pages come from it. osapi cli command spec get lists",
+		"their help and their pages come from it. osapi dsl command spec get lists",
 		"every option.",
 	)
 	f.Var().Id("Group").Op("=").Add(c("Register").Call(c("Define").Add(multiline("(", ")",
 		jen.Lit(sc.name).Op(",").Lit(sc.doc),
+		c("Under").Call(c(parentIdents[sc.under])),
 		c("Uses").Index(jen.Id("Deps")).Call(),
 		c("Method").Index(jen.List(jen.Id("ListInput"), jen.Id(sc.typeName("List")))).
 			Call(jen.Lit("list")).

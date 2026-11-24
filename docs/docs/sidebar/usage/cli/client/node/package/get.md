@@ -167,8 +167,8 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `package:read` permission. `osapi token roles get --name <role>`
-shows what a role grants.
+It needs the `package:read` permission.
+`osapi controller role get --name <role>` shows what a role grants.
 
 ## Flags
 

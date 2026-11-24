@@ -23,7 +23,7 @@ export function checkTokenFormat(raw: string): TokenCheck {
     return {
       ok: false,
       error:
-        "The token has a space or a line break in it, usually from a wrapped line in the terminal. Copy it again, e.g. osapi token generate ... | awk '/Token:/{print $2}' | pbcopy",
+        "The token has a space or a line break in it, usually from a wrapped line in the terminal. Copy it again, e.g. osapi controller token generate ... | awk '/Token:/{print $2}' | pbcopy",
     };
   }
 
@@ -55,7 +55,7 @@ export function checkTokenFormat(raw: string): TokenCheck {
     return {
       ok: false,
       error:
-        "Token is missing roles claim. Generate one with: osapi token generate",
+        "Token is missing roles claim. Generate one with: osapi controller token generate",
     };
   }
 

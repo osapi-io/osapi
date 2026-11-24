@@ -27,11 +27,11 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/command"
 )
 
-// agentCmd is the agent's command. Its start is the agent group of the
-// command DSL, and its admission is written here.
+// agentCmd is the agent's command. Its start and its key are groups of the
+// command DSL.
 var agentCmd = &cobra.Command{
-	Use:   "agent",
-	Short: "Manage the agent process",
+	Use: "agent",
+	// Its help is its purpose in command.RootGroups, which DescribeRoot gives it.
 	Long: "The agent runs on each managed host, processes jobs, and reports status back\n" +
 		"to the control plane.",
 }

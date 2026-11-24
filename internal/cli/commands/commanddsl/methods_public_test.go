@@ -76,6 +76,7 @@ func (g apiGroup) Commands() []command.Command {
 
 var (
 	widget = command.Register(command.Define("zzwidget", "Widgets",
+		command.Under(command.ParentDSL),
 		command.Uses[struct{}](),
 		command.Method[widgetIn, widgetOut]("get").Short("Get a widget").
 			Example("--name a").Prints(widgetOut{}).Fails("no name", widgetIn{}).Handle(widgetGet),
@@ -86,6 +87,7 @@ var (
 
 	// zzmore has a process, a method that says a state, and one under a Sub.
 	_ = command.Register(command.Define("zzmore", "More",
+		command.Under(command.ParentDSL),
 		command.Uses[struct{}](),
 		command.SubDoc("keys", "The keys"),
 		command.Process("start").Short("Start it").Flag("controller.api.port").
@@ -135,10 +137,10 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 	}{
 		{
 			name: "when the method has flags, each has its check, with the output and examples",
-			in:   commanddsl.MethodInput{Name: "zzwidget", Method: "get"},
+			in:   commanddsl.MethodInput{Name: "dsl zzwidget", Method: "get"},
 			validateFunc: func(got commanddsl.MethodOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal("osapi zzwidget get", got.Command)
+				s.Equal("osapi dsl zzwidget get", got.Command)
 				s.Equal("Get a widget", got.Doc)
 				s.Equal("--name", got.Flags[0].Flag)
 				s.Equal("required", got.Flags[0].Validate)
@@ -151,7 +153,7 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 		},
 		{
 			name: "when the method is a process, it has its config keys and no output",
-			in:   commanddsl.MethodInput{Name: "zzmore", Method: "start"},
+			in:   commanddsl.MethodInput{Name: "dsl zzmore", Method: "start"},
 			validateFunc: func(got commanddsl.MethodOutput, err error) {
 				s.Require().NoError(err)
 				s.True(got.Process)
@@ -162,15 +164,15 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 		},
 		{
 			name: "when the method says a state, and is under a Sub, both show",
-			in:   commanddsl.MethodInput{Name: "zzmore", Method: "keys get"},
+			in:   commanddsl.MethodInput{Name: "dsl zzmore", Method: "keys get"},
 			validateFunc: func(got commanddsl.MethodOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal("osapi zzmore keys get", got.Command)
+				s.Equal("osapi dsl zzmore keys get", got.Command)
 			},
 		},
 		{
 			name: "when the method says a state, it is its line",
-			in:   commanddsl.MethodInput{Name: "zzmore", Method: "drain"},
+			in:   commanddsl.MethodInput{Name: "dsl zzmore", Method: "drain"},
 			validateFunc: func(got commanddsl.MethodOutput, err error) {
 				s.Require().NoError(err)
 				s.Equal("draining", got.Says)
@@ -180,21 +182,21 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 			name: "when the group calls the API, it points at its own method get",
 			in:   commanddsl.MethodInput{Name: "zzremote", Method: "get"},
 			validateFunc: func(_ commanddsl.MethodOutput, err error) {
-				s.ErrorContains(err, "osapi controller endpoint method get")
+				s.ErrorContains(err, "osapi dsl endpoint method get")
 			},
 		},
 		{
 			name: "when the group has no such method, it says how to list them",
-			in:   commanddsl.MethodInput{Name: "zzwidget", Method: "nope"},
+			in:   commanddsl.MethodInput{Name: "dsl zzwidget", Method: "nope"},
 			validateFunc: func(_ commanddsl.MethodOutput, err error) {
-				s.ErrorContains(err, "osapi cli command get --name zzwidget")
+				s.ErrorContains(err, "osapi dsl command get --name dsl zzwidget")
 			},
 		},
 		{
 			name: "when there is no such group, it says how to list them",
 			in:   commanddsl.MethodInput{Name: "nope", Method: "get"},
 			validateFunc: func(_ commanddsl.MethodOutput, err error) {
-				s.ErrorContains(err, "osapi cli command list")
+				s.ErrorContains(err, "osapi dsl command list")
 			},
 		},
 	}
@@ -214,7 +216,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 	for _, it := range got.Items {
 		layers[it.Command] = it.Layer
 	}
-	s.Equal(commanddsl.LayerCommand, layers["osapi zzwidget get"])
+	s.Equal(commanddsl.LayerCommand, layers["osapi dsl zzwidget get"])
 	s.Equal(commanddsl.LayerEndpoint, layers["osapi client zzremote get"])
 	s.Equal(commanddsl.LayerBehavior, layers["osapi client zzbehave get"])
 	s.Equal(commanddsl.LayerHandWritten, layers["osapi hand"])
@@ -234,12 +236,12 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	}{
 		{
 			name: "when the group is local, each command has its flags and refusals",
-			in:   commanddsl.GetInput{Name: "zzwidget"},
+			in:   commanddsl.GetInput{Name: "dsl zzwidget"},
 			validateFunc: func(got commanddsl.GetOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal("zzwidget", got.Name)
+				s.Equal("dsl zzwidget", got.Name)
 				s.Require().Len(got.Commands, 2)
-				s.Equal("osapi zzwidget get", got.Commands[0].Command)
+				s.Equal("osapi dsl zzwidget get", got.Commands[0].Command)
 				s.Equal([]string{"no name"}, got.Commands[0].Fails)
 				s.Equal([]commanddsl.Flag{
 					{
@@ -265,7 +267,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			name: "when no group has the name, it says to list them",
 			in:   commanddsl.GetInput{Name: "nosuch"},
 			validateFunc: func(_ commanddsl.GetOutput, err error) {
-				s.ErrorContains(err, "osapi cli command list")
+				s.ErrorContains(err, "osapi dsl command list")
 			},
 		},
 	}
@@ -289,14 +291,14 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	d.Dir = dir
 
 	got, err := commanddsl.Create(context.Background(), d,
-		commanddsl.CreateInput{Name: "gizmo", Description: "Gizmos"})
+		commanddsl.CreateInput{Name: "gizmo", Description: "Gizmos", Under: "controller"})
 	s.Require().NoError(err)
 	s.Equal("gizmo", got.Name)
 	s.NotEmpty(got.Files)
 	s.Contains(got.Next, commanddsl.Step{Command: "go test ./internal/cli/commands/gizmo/..."})
 
 	_, err = commanddsl.Create(context.Background(), d,
-		commanddsl.CreateInput{Name: "Bad", Description: "x"})
+		commanddsl.CreateInput{Name: "Bad", Description: "x", Under: "controller"})
 	s.Error(err)
 }
 

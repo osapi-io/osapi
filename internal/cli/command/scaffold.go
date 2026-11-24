@@ -35,8 +35,27 @@ const module = "github.com/osapi-io/osapi"
 // allFile registers every local group, one blank import each.
 const allFile = "internal/cli/commands/all/all.go"
 
+// parentIdents are the Parent constants that a scaffold writes, by word.
+var parentIdents = map[Parent]string{
+	ParentAgent:      "ParentAgent",
+	ParentController: "ParentController",
+	ParentDSL:        "ParentDSL",
+	ParentNATS:       "ParentNATS",
+}
+
+// parentWords are the words of KnownParents, for a message.
+func parentWords() []string {
+	out := make([]string, 0, len(KnownParents()))
+	for _, p := range KnownParents() {
+		out = append(out, string(p))
+	}
+
+	return out
+}
+
 // Scaffold writes a new local group's layout under
-// internal/cli/commands/<name>/ in the osapi checkout at root, and
+// internal/cli/commands/<name>/ in the osapi checkout at root, Under the
+// word of the root that under names, such as controller, and
 // registers it in internal/cli/commands/all. It returns the files
 // written, relative to root, the registration last. Everything is rendered
 // and checked before anything is written, so a taken name or a root that is
@@ -45,7 +64,13 @@ func Scaffold(
 	root string,
 	group string,
 	doc string,
+	under Parent,
 ) ([]string, error) {
+	if parentIdents[under] == "" {
+		return nil, fmt.Errorf(
+			"under %q is not a word of the root that a local group goes under: %s",
+			under, strings.Join(parentWords(), ", "))
+	}
 	if !name.MatchString(group) {
 		return nil, fmt.Errorf(
 			"name %q must be lowercase letters and digits, starting with a letter", group)
@@ -77,7 +102,7 @@ func Scaffold(
 		rel  string
 		data []byte
 	}
-	sources := scaffoldSources(groupScaffold{name: group, doc: doc})
+	sources := scaffoldSources(groupScaffold{name: group, doc: doc, under: under})
 	files := make([]file, 0, len(sources)+1)
 	for _, src := range sources {
 		data, err := renderGo(src.file)

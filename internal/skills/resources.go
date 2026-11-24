@@ -26,14 +26,14 @@ import (
 )
 
 // The skill files that this package owns. resources/skills has the skills
-// that osapi init installs. resources/dev-skills has the skills for a person
+// that osapi skill install installs. resources/dev-skills has the skills for a person
 // who changes osapi itself, such as build-a-behavior. Each skill keeps all of
 // its files in its directory, also its evals/.
 //
 //go:embed resources/skills resources/dev-skills
 var resources embed.FS
 
-// Installed returns the skills that osapi init installs, one directory for each
+// Installed returns the skills that osapi skill install installs, one directory for each
 // skill.
 func Installed() fs.FS {
 	sub, _ := fs.Sub(resources, "resources/skills")
@@ -41,7 +41,7 @@ func Installed() fs.FS {
 	return sub
 }
 
-// Dev returns the skills for a person who changes osapi itself. osapi init does
+// Dev returns the skills for a person who changes osapi itself. osapi skill install does
 // not install them. osapi skill serves them.
 func Dev() fs.FS {
 	sub, _ := fs.Sub(resources, "resources/dev-skills")

@@ -28,7 +28,7 @@ import (
 
 // Behavior is the motd definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
-// the provider are built from it. osapi behavior spec get lists every option.
+// the provider are built from it. osapi dsl behavior spec get lists every option.
 var Behavior = behavior.Register(behavior.Define(
 	"motd", "The \"message\" shown at login",
 	behavior.Node,

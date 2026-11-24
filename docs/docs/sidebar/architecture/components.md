@@ -6,7 +6,7 @@ sidebar_position: 2
 
 osapi is one binary that runs three processes. The processes can be on one host
 or on many hosts. `osapi start` runs the three processes in one process. Use it
-on a single host. `osapi nats server start`, `osapi controller start` and
+on a single host. `osapi nats start`, `osapi controller start` and
 `osapi agent start` run each process alone.
 
 ## NATS server

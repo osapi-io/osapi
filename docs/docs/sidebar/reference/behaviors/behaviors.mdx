@@ -33,13 +33,13 @@ The binary describes its own behaviors. Thus the answer is always correct for
 the build that you run:
 
 ```bash
-osapi behavior list                                      # every behavior, internal ones marked
-osapi behavior get --name sysctl                         # surfaces, platforms, chains, methods, settings
-osapi behavior method get --name sysctl --method create  # one method's input and output
-osapi behavior validate                                  # the rules every definition must meet
+osapi dsl behavior list                                      # every behavior, internal ones marked
+osapi dsl behavior get --name sysctl                         # surfaces, platforms, chains, methods, settings
+osapi dsl behavior method get --name sysctl --method create  # one method's input and output
+osapi dsl behavior validate                                  # the rules every definition must meet
 ```
 
-`behavior get --json` prints the input and the output of each method as JSON
+`dsl behavior get --json` prints the input and the output of each method as JSON
 Schema. It also prints the route, the command, the permission, the examples and
 the refusals. An agent reads this before it calls a method.
 
