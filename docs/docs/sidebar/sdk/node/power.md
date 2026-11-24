@@ -100,14 +100,20 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### PowerResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Action`   | `string` | reboot or shutdown.                                                                    |
-| `Changed`  | `bool`   | Always true: each run changes the host.                                                |
-| `Delay`    | `int`    | Seconds before the host goes down.                                                     |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Action`   | `string`            | reboot or shutdown.                                                                    |
+| `Changed`  | `bool`              | Always true: each run changes the host.                                                |
+| `Delay`    | `int`               | Seconds before the host goes down.                                                     |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Status`   | `PowerResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### PowerResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### PowerShutdownInput
 

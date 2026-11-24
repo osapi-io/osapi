@@ -27,8 +27,19 @@ type ServiceEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ServiceEntryStatus `json:"status"`
 }
+
+// ServiceEntryStatus: The status of the operation for this host.
+type ServiceEntryStatus string
+
+// The values of ServiceEntryStatus.
+const (
+	ServiceEntryStatusOk      ServiceEntryStatus = "ok"
+	ServiceEntryStatusFailed  ServiceEntryStatus = "failed"
+	ServiceEntryStatusSkipped ServiceEntryStatus = "skipped"
+	ServiceEntryStatusTimeout ServiceEntryStatus = "timeout"
+)
 
 // ServiceResult is the ServiceResult of the spec.
 type ServiceResult struct {
@@ -46,5 +57,16 @@ type ServiceResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status ServiceResultStatus `json:"status"`
 }
+
+// ServiceResultStatus: The status of the operation for this host.
+type ServiceResultStatus string
+
+// The values of ServiceResultStatus.
+const (
+	ServiceResultStatusOk      ServiceResultStatus = "ok"
+	ServiceResultStatusFailed  ServiceResultStatus = "failed"
+	ServiceResultStatusSkipped ServiceResultStatus = "skipped"
+	ServiceResultStatusTimeout ServiceResultStatus = "timeout"
+)

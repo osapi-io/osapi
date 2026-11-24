@@ -107,15 +107,21 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ImageEntry
 
-| Field        | Type     | Description                                                                            |
-| ------------ | -------- | -------------------------------------------------------------------------------------- |
-| `Error`      | `string` | Error message if the agent failed.                                                     |
-| `Hostname`   | `string` | Hostname of the agent that produced this result.                                       |
-| `ID`         | `string` | The image's ID.                                                                        |
-| `Repository` | `string` | Its repository, such as alpine.                                                        |
-| `Size`       | `string` | Its size, as docker prints it, such as 7.8MB.                                          |
-| `Status`     | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Tag`        | `string` | Its tag, such as 3.20.                                                                 |
+| Field        | Type               | Description                                                                            |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------- |
+| `Error`      | `string`           | Error message if the agent failed.                                                     |
+| `Hostname`   | `string`           | Hostname of the agent that produced this result.                                       |
+| `ID`         | `string`           | The image's ID.                                                                        |
+| `Repository` | `string`           | Its repository, such as alpine.                                                        |
+| `Size`       | `string`           | Its size, as docker prints it, such as 7.8MB.                                          |
+| `Status`     | `ImageEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Tag`        | `string`           | Its tag, such as 3.20.                                                                 |
+
+### ImageEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ImagePullInput
 
@@ -125,25 +131,37 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ImagePullResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the pull got a new image: false when the host had it already.                  |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Image`    | `string` | The image.                                                                             |
-| `ImageID`  | `string` | The ID of the image that the host has now.                                             |
-| `Size`     | `int64`  | Its size in bytes.                                                                     |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                    | Description                                                                            |
+| ---------- | ----------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                  | Whether the pull got a new image: false when the host had it already.                  |
+| `Error`    | `string`                | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                | Hostname of the agent that produced this result.                                       |
+| `Image`    | `string`                | The image.                                                                             |
+| `ImageID`  | `string`                | The ID of the image that the host has now.                                             |
+| `Size`     | `int64`                 | Its size in bytes.                                                                     |
+| `Status`   | `ImagePullResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### ImagePullResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ImageResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Image`    | `string` | The image.                                                                             |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`              | Whether the host changed.                                                              |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Image`    | `string`            | The image.                                                                             |
+| `Status`   | `ImageResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### ImageResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

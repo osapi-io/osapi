@@ -21,7 +21,7 @@ type CommandResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status CommandResultStatus `json:"status"`
 
 	// What it wrote to standard error.
 	Stderr string `json:"stderr,omitempty"`
@@ -29,3 +29,14 @@ type CommandResult struct {
 	// What it wrote to standard output.
 	Stdout string `json:"stdout,omitempty"`
 }
+
+// CommandResultStatus: The status of the operation for this host.
+type CommandResultStatus string
+
+// The values of CommandResultStatus.
+const (
+	CommandResultStatusOk      CommandResultStatus = "ok"
+	CommandResultStatusFailed  CommandResultStatus = "failed"
+	CommandResultStatusSkipped CommandResultStatus = "skipped"
+	CommandResultStatusTimeout CommandResultStatus = "timeout"
+)

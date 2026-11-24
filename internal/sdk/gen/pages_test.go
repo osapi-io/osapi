@@ -116,7 +116,10 @@ func (s *PagesTestSuite) TestRunPages() {
 				s.Contains(dns, "| `InterfaceName` | `string` | The interface_name of the path. |")
 				s.Contains(dns, "### DnsEntry\n\nThe resolvers of one host.\n")
 				s.Contains(dns, "It is one of: ok, failed.")
-				s.Contains(dns, "### DnsKind\n\nThe kind of a resolver.\n\nA `string`.\n")
+				s.Contains(
+					dns,
+					"### DnsKind\n\nThe kind of a resolver.\n\nA `string`, one of `static`, `dhcp`.\n",
+				)
 				s.Contains(dns, "[`examples/sdk/client/network_dns.go`]("+exampleURL+
 					"network_dns.go) runs each example of this page.")
 			},

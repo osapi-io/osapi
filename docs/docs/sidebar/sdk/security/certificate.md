@@ -193,30 +193,42 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CertificateEntry
 
-| Field         | Type     | Description                                                                               |
-| ------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `Enabled`     | `bool`   | Whether the host trusts it: false for a system CA that the trust store turns off.         |
-| `Error`       | `string` | Error message if the agent failed.                                                        |
-| `Fingerprint` | `string` | The SHA-256 of the certificate, in hex.                                                   |
-| `Hostname`    | `string` | Hostname of the agent that produced this result.                                          |
-| `Managed`     | `bool`   | Whether osapi deployed it, and its writes change it.                                      |
-| `Name`        | `string` | The CA: the name it was deployed with for a CA that osapi deployed, else its file's name. |
-| `NotAfter`    | `string` | When it expires.                                                                          |
-| `Object`      | `string` | The object that osapi deployed it from.                                                   |
-| `Path`        | `string` | The file, or on macOS the keychain, that has it.                                          |
-| `Source`      | `string` | system for a CA of the distribution, local for one an administrator added.                |
-| `Status`      | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout.    |
-| `Subject`     | `string` | Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US.             |
+| Field         | Type                     | Description                                                                               |
+| ------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
+| `Enabled`     | `bool`                   | Whether the host trusts it: false for a system CA that the trust store turns off.         |
+| `Error`       | `string`                 | Error message if the agent failed.                                                        |
+| `Fingerprint` | `string`                 | The SHA-256 of the certificate, in hex.                                                   |
+| `Hostname`    | `string`                 | Hostname of the agent that produced this result.                                          |
+| `Managed`     | `bool`                   | Whether osapi deployed it, and its writes change it.                                      |
+| `Name`        | `string`                 | The CA: the name it was deployed with for a CA that osapi deployed, else its file's name. |
+| `NotAfter`    | `string`                 | When it expires.                                                                          |
+| `Object`      | `string`                 | The object that osapi deployed it from.                                                   |
+| `Path`        | `string`                 | The file, or on macOS the keychain, that has it.                                          |
+| `Source`      | `string`                 | system for a CA of the distribution, local for one an administrator added.                |
+| `Status`      | `CertificateEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout.    |
+| `Subject`     | `string`                 | Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US.             |
+
+### CertificateEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### CertificateResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The CA.                                                                                |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                      | Description                                                                            |
+| ---------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                    | Whether the host changed.                                                              |
+| `Error`    | `string`                  | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                  | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`                  | The CA.                                                                                |
+| `Status`   | `CertificateResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### CertificateResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### CertificateUpdateInput
 

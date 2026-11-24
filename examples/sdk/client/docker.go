@@ -59,7 +59,7 @@ func runList2(
 	c *client.Client,
 	target string,
 ) error {
-	resp, err := c.Docker.List(ctx, target, client.DockerListParams{State: "stopped"})
+	resp, err := c.Docker.List(ctx, target, client.DockerListParams{State: client.GetNodeDockerState("stopped")})
 	if err != nil {
 		return err
 	}

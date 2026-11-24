@@ -42,7 +42,7 @@ type HealthStatusParams struct {
 	// Component is the component of the query: show only the components of this
 	// type: controller, nats or agent. The other parts of the status stay. The
 	// zero value leaves it out.
-	Component string
+	Component GetHealthStatusComponent
 }
 
 // Status is the operation GetHealthStatus: system status and component health.
@@ -57,7 +57,7 @@ func (s *HealthService) Status(
 ) (*Response[StatusResponse], error) {
 	q := url.Values{}
 	if params.Component != "" {
-		q.Set("component", params.Component)
+		q.Set("component", string(params.Component))
 	}
 	return send[StatusResponse](ctx, s.client, http.MethodGet, "/api/health/status", q, nil)
 }

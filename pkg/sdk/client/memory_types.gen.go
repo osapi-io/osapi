@@ -15,5 +15,16 @@ type MemoryEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status MemoryEntryStatus `json:"status"`
 }
+
+// MemoryEntryStatus: The status of the operation for this host.
+type MemoryEntryStatus string
+
+// The values of MemoryEntryStatus.
+const (
+	MemoryEntryStatusOk      MemoryEntryStatus = "ok"
+	MemoryEntryStatusFailed  MemoryEntryStatus = "failed"
+	MemoryEntryStatusSkipped MemoryEntryStatus = "skipped"
+	MemoryEntryStatusTimeout MemoryEntryStatus = "timeout"
+)

@@ -43,11 +43,22 @@ type DockerEntry struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status DockerEntryStatus `json:"status"`
 
 	// What docker says of its state, such as Up 2 minutes.
 	Summary string `json:"summary,omitempty"`
 }
+
+// DockerEntryStatus: The status of the operation for this host.
+type DockerEntryStatus string
+
+// The values of DockerEntryStatus.
+const (
+	DockerEntryStatusOk      DockerEntryStatus = "ok"
+	DockerEntryStatusFailed  DockerEntryStatus = "failed"
+	DockerEntryStatusSkipped DockerEntryStatus = "skipped"
+	DockerEntryStatusTimeout DockerEntryStatus = "timeout"
+)
 
 // DockerExecResult is the DockerExecResult of the spec.
 type DockerExecResult struct {
@@ -65,7 +76,7 @@ type DockerExecResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status DockerExecResultStatus `json:"status"`
 
 	// What the command wrote to standard error.
 	Stderr string `json:"stderr,omitempty"`
@@ -73,6 +84,17 @@ type DockerExecResult struct {
 	// What the command wrote to standard output.
 	Stdout string `json:"stdout,omitempty"`
 }
+
+// DockerExecResultStatus: The status of the operation for this host.
+type DockerExecResultStatus string
+
+// The values of DockerExecResultStatus.
+const (
+	DockerExecResultStatusOk      DockerExecResultStatus = "ok"
+	DockerExecResultStatusFailed  DockerExecResultStatus = "failed"
+	DockerExecResultStatusSkipped DockerExecResultStatus = "skipped"
+	DockerExecResultStatusTimeout DockerExecResultStatus = "timeout"
+)
 
 // DockerResult is the DockerResult of the spec.
 type DockerResult struct {
@@ -93,5 +115,27 @@ type DockerResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status DockerResultStatus `json:"status"`
 }
+
+// DockerResultStatus: The status of the operation for this host.
+type DockerResultStatus string
+
+// The values of DockerResultStatus.
+const (
+	DockerResultStatusOk      DockerResultStatus = "ok"
+	DockerResultStatusFailed  DockerResultStatus = "failed"
+	DockerResultStatusSkipped DockerResultStatus = "skipped"
+	DockerResultStatusTimeout DockerResultStatus = "timeout"
+)
+
+// GetNodeDockerState: Only the containers in this state: running, stopped or
+// all, the default.
+type GetNodeDockerState string
+
+// The values of GetNodeDockerState.
+const (
+	GetNodeDockerStateRunning GetNodeDockerState = "running"
+	GetNodeDockerStateStopped GetNodeDockerState = "stopped"
+	GetNodeDockerStateAll     GetNodeDockerState = "all"
+)

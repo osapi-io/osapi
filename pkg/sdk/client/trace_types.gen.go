@@ -91,8 +91,17 @@ type TraceSpan struct {
 	StartTime time.Time `json:"start_time"`
 
 	// Whether the work of the span failed. It is one of: ok, error.
-	Status string `json:"status"`
+	Status TraceSpanStatus `json:"status"`
 
 	// The error of a failed span.
 	StatusMessage string `json:"status_message,omitempty"`
 }
+
+// TraceSpanStatus: Whether the work of the span failed.
+type TraceSpanStatus string
+
+// The values of TraceSpanStatus.
+const (
+	TraceSpanStatusOk    TraceSpanStatus = "ok"
+	TraceSpanStatusError TraceSpanStatus = "error"
+)

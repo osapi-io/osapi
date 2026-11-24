@@ -235,7 +235,8 @@ type Param struct {
 	ArgName string
 	// Doc is the description of the parameter.
 	Doc string
-	// Type is the type of the parameter: a string, an int or a bool.
+	// Type is the type of the parameter: a string, an int, a bool, or a
+	// Named enum of strings.
 	Type *TypeRef
 	// Required is true when the request must have it.
 	Required bool
@@ -567,16 +568,22 @@ func (b *builder) method(
 	byName := map[string]*Param{}
 	for _, ref := range op.Parameters {
 		p := ref.Value
-		t, err := b.ref(p.Schema, "")
+		// An enum of a parameter is a type with the name of the operation
+		// and the parameter, as the UI's generator names it, such as
+		// GetJobsStatus.
+		t, err := b.ref(p.Schema, op.OperationID+GoName(p.Name))
 		if err != nil {
 			return nil, fmt.Errorf("parameter %s: %w", p.Name, err)
 		}
-		if t.Kind != Scalar {
+		if t.Kind != Scalar && (t.Kind != Named || b.types[t.Name].Scalar == "") {
 			return nil, fmt.Errorf(
 				"parameter %s is a %s, not a string, a number or a bool",
 				p.Name,
 				t,
 			)
+		}
+		if t.Kind == Named && b.types[t.Name].Doc == "" {
+			b.types[t.Name].Doc = p.Description
 		}
 		param := &Param{
 			Name:     p.Name,
@@ -705,8 +712,8 @@ func sortedCodes(
 
 // ref is the Go type of s. A schema of the components is a Named type, or a
 // Collection when it is the {job_id, results} answer of a node. An object
-// with properties inside a schema is a Named type too, with the name
-// inline.
+// with properties or a string enum inside a schema is a Named type too, with
+// the name inline. An enum with no name is a string.
 func (b *builder) ref(
 	s *openapi3.SchemaRef,
 	inline string,
@@ -735,6 +742,14 @@ func (b *builder) ref(
 	switch {
 	case v.Type == nil || len(v.Type.Slice()) == 0:
 		return &TypeRef{Kind: Any}, nil
+	case v.Type.Is(openapi3.TypeString) && len(v.Enum) > 0 && inline != "":
+		// An enum inside a schema is a type of its own, with the name that
+		// the UI's generator gives it, such as AgentInfoState.
+		if err := b.named(inline, v); err != nil {
+			return nil, err
+		}
+
+		return &TypeRef{Kind: Named, Name: inline}, nil
 	case v.Type.Is(openapi3.TypeString):
 		switch v.Format {
 		case "date-time":
@@ -753,7 +768,13 @@ func (b *builder) ref(
 	case v.Type.Is(openapi3.TypeBoolean):
 		return &TypeRef{Kind: Scalar, Name: "bool"}, nil
 	case v.Type.Is(openapi3.TypeArray):
-		elem, err := b.ref(v.Items, inline)
+		// An item has the name of the list and Item, as the UI's generator
+		// names it, such as JobDetailResponseAgentStatesItem.
+		item := inline
+		if item != "" {
+			item += "Item"
+		}
+		elem, err := b.ref(v.Items, item)
 		if err != nil {
 			return nil, err
 		}
@@ -859,7 +880,8 @@ func (b *builder) fields(
 			Default:  s.Properties[p].Value.Default,
 		}
 		// A schema of the components with an enum is a type of its own,
-		// which has the values, so a field of it does not list them.
+		// which has the values and its doc, so a field of it does not list
+		// them. A field lists the values of an enum that it defines.
 		if s.Properties[p].Ref == "" {
 			for _, e := range s.Properties[p].Value.Enum {
 				f.Enum = append(f.Enum, fmt.Sprint(e))

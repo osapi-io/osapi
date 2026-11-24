@@ -49,7 +49,7 @@ type AuditEntry struct {
 	// The calls of other behaviors that the method of the job made, for each host
 	// that answered before the request returned, also when one failed. Absent when
 	// no host made a call.
-	Steps []AuditEntrySteps `json:"steps,omitempty"`
+	Steps []AuditEntryStepsItem `json:"steps,omitempty"`
 
 	// The target scope of the JWT token, absent when the token acts on each host.
 	Targets []string `json:"targets,omitempty"`
@@ -70,8 +70,8 @@ type AuditEntryResponse struct {
 	Entry AuditEntry `json:"entry"`
 }
 
-// AuditEntrySteps is the AuditEntrySteps of the spec.
-type AuditEntrySteps struct {
+// AuditEntryStepsItem is the AuditEntryStepsItem of the spec.
+type AuditEntryStepsItem struct {
 	// The host that answered the job.
 	Hostname string `json:"hostname"`
 

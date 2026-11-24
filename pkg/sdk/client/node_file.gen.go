@@ -40,7 +40,7 @@ type NodeFileUpdateInput struct {
 	// How the object is written: raw as it is, or template rendered with .Facts,
 	// .Vars and .Hostname; the object's own when empty. It is one of: raw,
 	// template.
-	ContentType string `json:"content_type,omitempty"`
+	ContentType FileUpdateRequestContentType `json:"content_type,omitzero"`
 
 	// Group that owns the file; left as written when empty.
 	Group string `json:"group,omitempty"`

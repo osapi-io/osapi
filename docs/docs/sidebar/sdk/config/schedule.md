@@ -86,7 +86,7 @@ A script that runs daily, `go run schedule.go create-2`:
 
 ```go
 resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-	Interval: "daily",
+	Interval: client.ScheduleCreateRequestInterval("daily"),
 	Name:     "osapitest",
 	Object:   "osapitest.sh",
 })
@@ -96,7 +96,7 @@ A template, rendered with its vars, `go run schedule.go create-3`:
 
 ```go
 resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-	ContentType: "template",
+	ContentType: client.ScheduleCreateRequestContentType("template"),
 	Name:        "osapitest",
 	Object:      "osapitest.tmpl",
 	Schedule:    "0 2 * * *",
@@ -222,50 +222,81 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ScheduleCreateInput
 
-| Field         | Type                | Description                                                                                                                                        |
-| ------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ContentType` | `string`            | The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty. It is one of: raw, template. |
-| `Interval`    | `string`            | The interval of a script in /etc/cron.daily and the like; give it or schedule. It is one of: hourly, daily, weekly, monthly.                       |
-| `Name`        | `string`            | The entry, and its file name, such as backup.                                                                                                      |
-| `Object`      | `string`            | The object that holds the entry, from osapi client file upload.                                                                                    |
-| `Schedule`    | `string`            | A cron expression, such as */5 * * * *; give it or interval.                                                                                       |
-| `User`        | `string`            | The user the entry runs as.                                                                                                                        |
-| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                                              |
+| Field         | Type                               | Description                                                                                                                                        |
+| ------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `ScheduleCreateRequestContentType` | The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty. It is one of: raw, template. |
+| `Interval`    | `ScheduleCreateRequestInterval`    | The interval of a script in /etc/cron.daily and the like; give it or schedule. It is one of: hourly, daily, weekly, monthly.                       |
+| `Name`        | `string`                           | The entry, and its file name, such as backup.                                                                                                      |
+| `Object`      | `string`                           | The object that holds the entry, from osapi client file upload.                                                                                    |
+| `Schedule`    | `string`                           | A cron expression, such as */5 * * * *; give it or interval.                                                                                       |
+| `User`        | `string`                           | The user the entry runs as.                                                                                                                        |
+| `Vars`        | `map[string]string`                | The vars of a template, as key=value.                                                                                                              |
+
+### ScheduleCreateRequestContentType
+
+The content type: raw, or template to render the object with the agent's facts
+and vars; the object's own when empty.
+
+A `string`, one of `raw`, `template`.
+
+### ScheduleCreateRequestInterval
+
+The interval of a script in /etc/cron.daily and the like; give it or schedule.
+
+A `string`, one of `hourly`, `daily`, `weekly`, `monthly`.
 
 ### ScheduleEntry
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Interval` | `string` | Its interval, for a script in /etc/cron.daily and the like.                            |
-| `Name`     | `string` | The entry.                                                                             |
-| `Object`   | `string` | The object it was deployed from.                                                       |
-| `Schedule` | `string` | Its cron expression, for an entry in /etc/cron.d.                                      |
-| `Source`   | `string` | Where its file is: cron.d, or the interval.                                            |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `User`     | `string` | The user it runs as.                                                                   |
+| Field      | Type                  | Description                                                                            |
+| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`              | Error message if the agent failed.                                                     |
+| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
+| `Interval` | `string`              | Its interval, for a script in /etc/cron.daily and the like.                            |
+| `Name`     | `string`              | The entry.                                                                             |
+| `Object`   | `string`              | The object it was deployed from.                                                       |
+| `Schedule` | `string`              | Its cron expression, for an entry in /etc/cron.d.                                      |
+| `Source`   | `string`              | Where its file is: cron.d, or the interval.                                            |
+| `Status`   | `ScheduleEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `User`     | `string`              | The user it runs as.                                                                   |
+
+### ScheduleEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ScheduleResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The entry.                                                                             |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                   | Description                                                                            |
+| ---------- | ---------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                 | Whether the host changed.                                                              |
+| `Error`    | `string`               | Error message if the agent failed.                                                     |
+| `Hostname` | `string`               | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`               | The entry.                                                                             |
+| `Status`   | `ScheduleResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### ScheduleResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ScheduleUpdateInput
 
-| Field         | Type                | Description                                                                                  |
-| ------------- | ------------------- | -------------------------------------------------------------------------------------------- |
-| `Name`        | `string`            | The name of the path. The entry, such as backup.                                             |
-| `ContentType` | `string`            | The content type, raw or template; the object's own when empty. It is one of: raw, template. |
-| `Object`      | `string`            | The object to deploy; the entry's own when empty.                                            |
-| `Schedule`    | `string`            | A new cron expression; the entry's own when empty.                                           |
-| `User`        | `string`            | The user the entry runs as; the entry's own when empty.                                      |
-| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                        |
+| Field         | Type                               | Description                                                                                  |
+| ------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| `Name`        | `string`                           | The name of the path. The entry, such as backup.                                             |
+| `ContentType` | `ScheduleUpdateRequestContentType` | The content type, raw or template; the object's own when empty. It is one of: raw, template. |
+| `Object`      | `string`                           | The object to deploy; the entry's own when empty.                                            |
+| `Schedule`    | `string`                           | A new cron expression; the entry's own when empty.                                           |
+| `User`        | `string`                           | The user the entry runs as; the entry's own when empty.                                      |
+| `Vars`        | `map[string]string`                | The vars of a template, as key=value.                                                        |
+
+### ScheduleUpdateRequestContentType
+
+The content type, raw or template; the object's own when empty.
+
+A `string`, one of `raw`, `template`.
 
 ## Example
 

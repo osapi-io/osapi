@@ -151,25 +151,37 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### NtpResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type              | Description                                                                            |
+| ---------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`            | Whether the host changed.                                                              |
+| `Error`    | `string`          | Error message if the agent failed.                                                     |
+| `Hostname` | `string`          | Hostname of the agent that produced this result.                                       |
+| `Status`   | `NtpResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### NtpResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### NtpStatus
 
-| Field           | Type       | Description                                                                            |
-| --------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `CurrentSource` | `string`   | The source that chrony follows now.                                                    |
-| `Error`         | `string`   | Error message if the agent failed.                                                     |
-| `Hostname`      | `string`   | Hostname of the agent that produced this result.                                       |
-| `Offset`        | `string`   | The offset of the system clock from NTP time, such as +0.000003422s.                   |
-| `Servers`       | `[]string` | The sources that chrony has.                                                           |
-| `Status`        | `string`   | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Stratum`       | `int`      | The NTP stratum of the host.                                                           |
-| `Synchronized`  | `bool`     | Whether chrony is synchronized to a source.                                            |
+| Field           | Type              | Description                                                                            |
+| --------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `CurrentSource` | `string`          | The source that chrony follows now.                                                    |
+| `Error`         | `string`          | Error message if the agent failed.                                                     |
+| `Hostname`      | `string`          | Hostname of the agent that produced this result.                                       |
+| `Offset`        | `string`          | The offset of the system clock from NTP time, such as +0.000003422s.                   |
+| `Servers`       | `[]string`        | The sources that chrony has.                                                           |
+| `Status`        | `NtpStatusStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Stratum`       | `int`             | The NTP stratum of the host.                                                           |
+| `Synchronized`  | `bool`            | Whether chrony is synchronized to a source.                                            |
+
+### NtpStatusStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

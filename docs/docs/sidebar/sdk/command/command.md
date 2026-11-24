@@ -112,16 +112,22 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CommandResult
 
-| Field        | Type     | Description                                                                            |
-| ------------ | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`    | `bool`   | Whether the host changed: true, since a command can change anything.                   |
-| `DurationMS` | `int64`  | How long it ran, in milliseconds.                                                      |
-| `Error`      | `string` | Error message if the agent failed.                                                     |
-| `ExitCode`   | `int`    | Its exit code.                                                                         |
-| `Hostname`   | `string` | Hostname of the agent that produced this result.                                       |
-| `Status`     | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Stderr`     | `string` | What it wrote to standard error.                                                       |
-| `Stdout`     | `string` | What it wrote to standard output.                                                      |
+| Field        | Type                  | Description                                                                            |
+| ------------ | --------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`    | `bool`                | Whether the host changed: true, since a command can change anything.                   |
+| `DurationMS` | `int64`               | How long it ran, in milliseconds.                                                      |
+| `Error`      | `string`              | Error message if the agent failed.                                                     |
+| `ExitCode`   | `int`                 | Its exit code.                                                                         |
+| `Hostname`   | `string`              | Hostname of the agent that produced this result.                                       |
+| `Status`     | `CommandResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Stderr`     | `string`              | What it wrote to standard error.                                                       |
+| `Stdout`     | `string`              | What it wrote to standard output.                                                      |
+
+### CommandResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### CommandShellInput
 

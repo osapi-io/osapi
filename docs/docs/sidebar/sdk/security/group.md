@@ -171,14 +171,20 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### GroupAccount
 
-| Field      | Type       | Description                                                                            |
-| ---------- | ---------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`   | Error message if the agent failed.                                                     |
-| `GID`      | `int`      | Its numeric group ID.                                                                  |
-| `Hostname` | `string`   | Hostname of the agent that produced this result.                                       |
-| `Members`  | `[]string` | The users it has as members, besides those whose primary group it is.                  |
-| `Name`     | `string`   | The group.                                                                             |
-| `Status`   | `string`   | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                 | Description                                                                            |
+| ---------- | -------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`             | Error message if the agent failed.                                                     |
+| `GID`      | `int`                | Its numeric group ID.                                                                  |
+| `Hostname` | `string`             | Hostname of the agent that produced this result.                                       |
+| `Members`  | `[]string`           | The users it has as members, besides those whose primary group it is.                  |
+| `Name`     | `string`             | The group.                                                                             |
+| `Status`   | `GroupAccountStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### GroupAccountStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### GroupCreateInput
 
@@ -190,13 +196,19 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### GroupResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The group.                                                                             |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`              | Whether the host changed.                                                              |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`            | The group.                                                                             |
+| `Status`   | `GroupResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### GroupResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### GroupUpdateInput
 

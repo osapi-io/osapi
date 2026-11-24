@@ -81,7 +81,7 @@ func runCreate2(
 	target string,
 ) error {
 	resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-		Interval: "daily",
+		Interval: client.ScheduleCreateRequestInterval("daily"),
 		Name:     "osapitest",
 		Object:   "osapitest.sh",
 	})
@@ -99,7 +99,7 @@ func runCreate3(
 	target string,
 ) error {
 	resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-		ContentType: "template",
+		ContentType: client.ScheduleCreateRequestContentType("template"),
 		Name:        "osapitest",
 		Object:      "osapitest.tmpl",
 		Schedule:    "0 2 * * *",

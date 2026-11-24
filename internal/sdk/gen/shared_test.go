@@ -211,6 +211,21 @@ func (s *SharedTestSuite) TestNamedValue() {
 	s.Equal("", zeroJSON(named))
 }
 
+func (s *SharedTestSuite) TestPathCodeEnum() {
+	mode := &sdkmodel.Param{
+		Name:    "mode",
+		ArgName: "mode",
+		Type:    &sdkmodel.TypeRef{Kind: sdkmodel.Named, Name: "Mode"},
+	}
+	m := &sdkmodel.Method{Path: "/api/x/{mode}", PathParams: []*sdkmodel.Param{mode}}
+
+	s.Equal(
+		`"/api/x/" + url.PathEscape(string(mode))`,
+		fmt.Sprintf("%#v", jen.Null().Add(pathCode(m))),
+		"an enum of the path is its text, escaped",
+	)
+}
+
 func TestSharedTestSuite(
 	t *testing.T,
 ) {

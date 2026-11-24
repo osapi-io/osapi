@@ -342,26 +342,38 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ServiceEntry
 
-| Field         | Type     | Description                                                                            |
-| ------------- | -------- | -------------------------------------------------------------------------------------- |
-| `Description` | `string` | The Description= of its unit.                                                          |
-| `Enabled`     | `bool`   | Whether it starts at boot: the state of its unit file.                                 |
-| `Error`       | `string` | Error message if the agent failed.                                                     |
-| `Hostname`    | `string` | Hostname of the agent that produced this result.                                       |
-| `Managed`     | `bool`   | Whether osapi deployed it, so its writes and actions act on it.                        |
-| `Name`        | `string` | The service, without .service.                                                         |
-| `State`       | `string` | What systemd says it does now, such as running, exited or dead.                        |
-| `Status`      | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field         | Type                 | Description                                                                            |
+| ------------- | -------------------- | -------------------------------------------------------------------------------------- |
+| `Description` | `string`             | The Description= of its unit.                                                          |
+| `Enabled`     | `bool`               | Whether it starts at boot: the state of its unit file.                                 |
+| `Error`       | `string`             | Error message if the agent failed.                                                     |
+| `Hostname`    | `string`             | Hostname of the agent that produced this result.                                       |
+| `Managed`     | `bool`               | Whether osapi deployed it, so its writes and actions act on it.                        |
+| `Name`        | `string`             | The service, without .service.                                                         |
+| `State`       | `string`             | What systemd says it does now, such as running, exited or dead.                        |
+| `Status`      | `ServiceEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### ServiceEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ServiceResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The service.                                                                           |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                  | Description                                                                            |
+| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                | Whether the host changed.                                                              |
+| `Error`    | `string`              | Error message if the agent failed.                                                     |
+| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`              | The service.                                                                           |
+| `Status`   | `ServiceResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### ServiceResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ServiceUpdateInput
 

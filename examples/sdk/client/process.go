@@ -70,7 +70,7 @@ func runSignal(
 ) error {
 	resp, err := c.Process.Signal(ctx, target, client.ProcessSignalInput{
 		PID:    1234,
-		Signal: "TERM",
+		Signal: client.ProcessSignalRequestSignal("TERM"),
 	})
 	if err != nil {
 		return err

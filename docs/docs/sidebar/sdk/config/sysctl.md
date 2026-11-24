@@ -200,24 +200,36 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### SysctlEntry
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Key`      | `string` | Parameter name.                                                                        |
-| `Managed`  | `bool`   | Whether osapi manages it: a file of its own sets it at boot.                           |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Value`    | `string` | Current runtime value.                                                                 |
+| Field      | Type                | Description                                                                            |
+| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`            | Error message if the agent failed.                                                     |
+| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
+| `Key`      | `string`            | Parameter name.                                                                        |
+| `Managed`  | `bool`              | Whether osapi manages it: a file of its own sets it at boot.                           |
+| `Status`   | `SysctlEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Value`    | `string`            | Current runtime value.                                                                 |
+
+### SysctlEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### SysctlMutationResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Key`      | `string` | Parameter name.                                                                        |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                         | Description                                                                            |
+| ---------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                       | Whether the host changed.                                                              |
+| `Error`    | `string`                     | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                     | Hostname of the agent that produced this result.                                       |
+| `Key`      | `string`                     | Parameter name.                                                                        |
+| `Status`   | `SysctlMutationResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### SysctlMutationResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### SysctlUpdateInput
 

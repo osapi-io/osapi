@@ -21,8 +21,19 @@ type GroupAccount struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status GroupAccountStatus `json:"status"`
 }
+
+// GroupAccountStatus: The status of the operation for this host.
+type GroupAccountStatus string
+
+// The values of GroupAccountStatus.
+const (
+	GroupAccountStatusOk      GroupAccountStatus = "ok"
+	GroupAccountStatusFailed  GroupAccountStatus = "failed"
+	GroupAccountStatusSkipped GroupAccountStatus = "skipped"
+	GroupAccountStatusTimeout GroupAccountStatus = "timeout"
+)
 
 // GroupResult is the GroupResult of the spec.
 type GroupResult struct {
@@ -40,5 +51,16 @@ type GroupResult struct {
 
 	// The status of the operation for this host. It is one of: ok, failed,
 	// skipped, timeout.
-	Status string `json:"status"`
+	Status GroupResultStatus `json:"status"`
 }
+
+// GroupResultStatus: The status of the operation for this host.
+type GroupResultStatus string
+
+// The values of GroupResultStatus.
+const (
+	GroupResultStatusOk      GroupResultStatus = "ok"
+	GroupResultStatusFailed  GroupResultStatus = "failed"
+	GroupResultStatusSkipped GroupResultStatus = "skipped"
+	GroupResultStatusTimeout GroupResultStatus = "timeout"
+)

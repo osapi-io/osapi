@@ -32,7 +32,7 @@ type LogListParams struct {
 
 	// Priority is the priority of the query: only the entries at this priority or
 	// above. The zero value leaves it out.
-	Priority string
+	Priority GetNodeLogPriority
 }
 
 // List is the operation GetNodeLog: list the entries of the journal.
@@ -60,7 +60,7 @@ func (s *LogService) List(
 		q.Set("since", params.Since)
 	}
 	if params.Priority != "" {
-		q.Set("priority", params.Priority)
+		q.Set("priority", string(params.Priority))
 	}
 	return send[Collection[LogEntry]](ctx, s.client, http.MethodGet, "/api/node/"+url.PathEscape(hostname)+"/log", q, nil)
 }

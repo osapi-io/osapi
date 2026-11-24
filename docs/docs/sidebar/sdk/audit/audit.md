@@ -124,24 +124,24 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### AuditEntry
 
-| Field            | Type                | Description                                                                                                                                                                   |
-| ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Chain`          | `[]string`          | The steps on one line for each host, such as web-01: managedfile update (changed).                                                                                            |
-| `DurationMS`     | `int64`             | Request duration in milliseconds.                                                                                                                                             |
-| `ID`             | `string`            | Unique identifier for the audit entry.                                                                                                                                        |
-| `JobID`          | `string`            | The job this request created, absent when it created none. Joins the entry to that job's own status timeline.                                                                 |
-| `Method`         | `string`            | HTTP method.                                                                                                                                                                  |
-| `OperationID`    | `string`            | OpenAPI operation ID.                                                                                                                                                         |
-| `Path`           | `string`            | Request URL path.                                                                                                                                                             |
-| `RequestSummary` | `string`            | What the request asked for, with sensitive values replaced. Recorded for methods that change something.                                                                       |
-| `ResponseCode`   | `int`               | HTTP response status code.                                                                                                                                                    |
-| `Roles`          | `[]string`          | Roles from the JWT token.                                                                                                                                                     |
-| `SourceIP`       | `string`            | Client IP address.                                                                                                                                                            |
-| `Steps`          | `[]AuditEntrySteps` | The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call. |
-| `Targets`        | `[]string`          | The target scope of the JWT token, absent when the token acts on each host.                                                                                                   |
-| `Timestamp`      | `time.Time`         | When the request was processed.                                                                                                                                               |
-| `TraceID`        | `string`            | OpenTelemetry trace ID for correlation.                                                                                                                                       |
-| `User`           | `string`            | Authenticated user (JWT subject).                                                                                                                                             |
+| Field            | Type                    | Description                                                                                                                                                                   |
+| ---------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Chain`          | `[]string`              | The steps on one line for each host, such as web-01: managedfile update (changed).                                                                                            |
+| `DurationMS`     | `int64`                 | Request duration in milliseconds.                                                                                                                                             |
+| `ID`             | `string`                | Unique identifier for the audit entry.                                                                                                                                        |
+| `JobID`          | `string`                | The job this request created, absent when it created none. Joins the entry to that job's own status timeline.                                                                 |
+| `Method`         | `string`                | HTTP method.                                                                                                                                                                  |
+| `OperationID`    | `string`                | OpenAPI operation ID.                                                                                                                                                         |
+| `Path`           | `string`                | Request URL path.                                                                                                                                                             |
+| `RequestSummary` | `string`                | What the request asked for, with sensitive values replaced. Recorded for methods that change something.                                                                       |
+| `ResponseCode`   | `int`                   | HTTP response status code.                                                                                                                                                    |
+| `Roles`          | `[]string`              | Roles from the JWT token.                                                                                                                                                     |
+| `SourceIP`       | `string`                | Client IP address.                                                                                                                                                            |
+| `Steps`          | `[]AuditEntryStepsItem` | The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call. |
+| `Targets`        | `[]string`              | The target scope of the JWT token, absent when the token acts on each host.                                                                                                   |
+| `Timestamp`      | `time.Time`             | When the request was processed.                                                                                                                                               |
+| `TraceID`        | `string`                | OpenTelemetry trace ID for correlation.                                                                                                                                       |
+| `User`           | `string`                | Authenticated user (JWT subject).                                                                                                                                             |
 
 ### AuditEntryResponse
 
@@ -149,7 +149,7 @@ The fields of each type are the properties of its schema in the API's spec.
 | ------- | ------------ | ----------- |
 | `Entry` | `AuditEntry` |             |
 
-### AuditEntrySteps
+### AuditEntryStepsItem
 
 | Field      | Type     | Description                                        |
 | ---------- | -------- | -------------------------------------------------- |

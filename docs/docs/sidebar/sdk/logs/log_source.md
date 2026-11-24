@@ -47,12 +47,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### LogSourceSource
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The syslog identifier, such as sshd.                                                   |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                    | Description                                                                            |
+| ---------- | ----------------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`                | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`                | The syslog identifier, such as sshd.                                                   |
+| `Status`   | `LogSourceSourceStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### LogSourceSourceStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

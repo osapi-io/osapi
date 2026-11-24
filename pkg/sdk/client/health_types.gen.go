@@ -76,6 +76,17 @@ type ComponentEntry struct {
 	Version string `json:"version,omitempty"`
 }
 
+// GetHealthStatusComponent: Show only the components of this type: controller,
+// nats or agent. The other parts of the status stay.
+type GetHealthStatusComponent string
+
+// The values of GetHealthStatusComponent.
+const (
+	GetHealthStatusComponentController GetHealthStatusComponent = "controller"
+	GetHealthStatusComponentNATS       GetHealthStatusComponent = "nats"
+	GetHealthStatusComponentAgent      GetHealthStatusComponent = "agent"
+)
+
 // HealthResponse is the HealthResponse of the spec.
 type HealthResponse struct {
 	// Health status.

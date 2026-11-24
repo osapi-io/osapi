@@ -47,7 +47,7 @@ resp, err := c.Admission.List(ctx, client.AdmissionListParams{})
 List admission records, with --state pending, `go run admission.go list-2`:
 
 ```go
-resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: "pending"})
+resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: client.GetAdmissionsState("pending")})
 ```
 
 ### Get
@@ -217,6 +217,12 @@ The fields of each type are the properties of its schema in the API's spec.
 | ----------- | -------- | ---------------------------------------------------------------- |
 | `MachineID` | `string` | The machine_id of the path. The machine ID of the node.          |
 | `Reason`    | `string` | Why the machine is rejected; the machine and the record keep it. |
+
+### GetAdmissionsState
+
+Only the records in this state: pending, admitted, rejected or revoked.
+
+A `string`, one of `pending`, `admitted`, `rejected`, `revoked`.
 
 ### ListAdmissionResponse
 

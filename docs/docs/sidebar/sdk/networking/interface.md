@@ -112,7 +112,7 @@ A dummy interface with a static address, `go run interface.go create`:
 resp, err := c.Interface.Create(ctx, target, client.InterfaceCreateInput{
 	Addresses: []string{"10.0.1.5/24"},
 	Name:      "osapi0",
-	Type:      "dummy",
+	Type:      client.InterfaceCreateRequestType("dummy"),
 })
 ```
 
@@ -125,7 +125,7 @@ resp, err := c.Interface.Create(ctx, target, client.InterfaceCreateInput{
 	MACAddress: "52:54:00:aa:bb:cc",
 	MTU:        9000,
 	Name:       "osapi0",
-	Type:       "dummy",
+	Type:       client.InterfaceCreateRequestType("dummy"),
 })
 ```
 
@@ -167,7 +167,7 @@ Move an interface to DHCP, `go run interface.go update`:
 resp, err := c.Interface.Update(ctx, target, client.InterfaceUpdateInput{
 	DHCP4: true,
 	Name:  "osapi0",
-	Type:  "dummy",
+	Type:  client.InterfaceUpdateRequestType("dummy"),
 })
 ```
 
@@ -204,60 +204,86 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### InterfaceCreateInput
 
-| Field        | Type       | Description                                                                                                                                       |
-| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Name`       | `string`   | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                                     |
-| `Addresses`  | `[]string` | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                                      |
-| `DHCP4`      | `bool`     | Take an IPv4 address from DHCP.                                                                                                                   |
-| `DHCP6`      | `bool`     | Take an IPv6 address from DHCP.                                                                                                                   |
-| `Gateway4`   | `string`   | The IPv4 default gateway.                                                                                                                         |
-| `Gateway6`   | `string`   | The IPv6 default gateway.                                                                                                                         |
-| `MACAddress` | `string`   | The MAC address to set.                                                                                                                           |
-| `MTU`        | `int`      | The MTU, from 68 to 9000.                                                                                                                         |
-| `Type`       | `string`   | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
-| `Wakeonlan`  | `bool`     | Turn on wake-on-LAN.                                                                                                                              |
+| Field        | Type                         | Description                                                                                                                                       |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Name`       | `string`                     | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                                     |
+| `Addresses`  | `[]string`                   | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                                      |
+| `DHCP4`      | `bool`                       | Take an IPv4 address from DHCP.                                                                                                                   |
+| `DHCP6`      | `bool`                       | Take an IPv6 address from DHCP.                                                                                                                   |
+| `Gateway4`   | `string`                     | The IPv4 default gateway.                                                                                                                         |
+| `Gateway6`   | `string`                     | The IPv6 default gateway.                                                                                                                         |
+| `MACAddress` | `string`                     | The MAC address to set.                                                                                                                           |
+| `MTU`        | `int`                        | The MTU, from 68 to 9000.                                                                                                                         |
+| `Type`       | `InterfaceCreateRequestType` | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
+| `Wakeonlan`  | `bool`                       | Turn on wake-on-LAN.                                                                                                                              |
+
+### InterfaceCreateRequestType
+
+The type: ethernet, the default, for an interface the host has, or dummy for a
+dummy interface that netplan makes.
+
+A `string`, one of `ethernet`, `dummy`.
 
 ### InterfaceEntry
 
-| Field       | Type       | Description                                                                            |
-| ----------- | ---------- | -------------------------------------------------------------------------------------- |
-| `Addresses` | `[]string` | Each of its addresses, in CIDR notation.                                               |
-| `DHCP4`     | `bool`     | Whether DHCP gave it an IPv4 address: a route of it has proto dhcp.                    |
-| `Error`     | `string`   | Error message if the agent failed.                                                     |
-| `Hostname`  | `string`   | Hostname of the agent that produced this result.                                       |
-| `IPv4`      | `string`   | Its first IPv4 address that is not link-local.                                         |
-| `IPv6`      | `string`   | Its first IPv6 address that is not link-local.                                         |
-| `MAC`       | `string`   | Its MAC address; empty for one without, such as lo.                                    |
-| `MTU`       | `int`      | Its MTU.                                                                               |
-| `Name`      | `string`   | The interface.                                                                         |
-| `Primary`   | `bool`     | Whether it has the default route.                                                      |
-| `State`     | `string`   | up or down.                                                                            |
-| `Status`    | `string`   | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field       | Type                   | Description                                                                            |
+| ----------- | ---------------------- | -------------------------------------------------------------------------------------- |
+| `Addresses` | `[]string`             | Each of its addresses, in CIDR notation.                                               |
+| `DHCP4`     | `bool`                 | Whether DHCP gave it an IPv4 address: a route of it has proto dhcp.                    |
+| `Error`     | `string`               | Error message if the agent failed.                                                     |
+| `Hostname`  | `string`               | Hostname of the agent that produced this result.                                       |
+| `IPv4`      | `string`               | Its first IPv4 address that is not link-local.                                         |
+| `IPv6`      | `string`               | Its first IPv6 address that is not link-local.                                         |
+| `MAC`       | `string`               | Its MAC address; empty for one without, such as lo.                                    |
+| `MTU`       | `int`                  | Its MTU.                                                                               |
+| `Name`      | `string`               | The interface.                                                                         |
+| `Primary`   | `bool`                 | Whether it has the default route.                                                      |
+| `State`     | `string`               | up or down.                                                                            |
+| `Status`    | `InterfaceEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### InterfaceEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### InterfaceResult
 
-| Field      | Type     | Description                                                                            |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`   | Whether the host changed.                                                              |
-| `Error`    | `string` | Error message if the agent failed.                                                     |
-| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string` | The interface.                                                                         |
-| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type                    | Description                                                                            |
+| ---------- | ----------------------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`                  | Whether the host changed.                                                              |
+| `Error`    | `string`                | Error message if the agent failed.                                                     |
+| `Hostname` | `string`                | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string`                | The interface.                                                                         |
+| `Status`   | `InterfaceResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### InterfaceResultStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### InterfaceUpdateInput
 
-| Field        | Type       | Description                                                                                                                                       |
-| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Name`       | `string`   | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                                     |
-| `Addresses`  | `[]string` | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                                      |
-| `DHCP4`      | `bool`     | Take an IPv4 address from DHCP.                                                                                                                   |
-| `DHCP6`      | `bool`     | Take an IPv6 address from DHCP.                                                                                                                   |
-| `Gateway4`   | `string`   | The IPv4 default gateway.                                                                                                                         |
-| `Gateway6`   | `string`   | The IPv6 default gateway.                                                                                                                         |
-| `MACAddress` | `string`   | The MAC address to set.                                                                                                                           |
-| `MTU`        | `int`      | The MTU, from 68 to 9000.                                                                                                                         |
-| `Type`       | `string`   | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
-| `Wakeonlan`  | `bool`     | Turn on wake-on-LAN.                                                                                                                              |
+| Field        | Type                         | Description                                                                                                                                       |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Name`       | `string`                     | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                                     |
+| `Addresses`  | `[]string`                   | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                                      |
+| `DHCP4`      | `bool`                       | Take an IPv4 address from DHCP.                                                                                                                   |
+| `DHCP6`      | `bool`                       | Take an IPv6 address from DHCP.                                                                                                                   |
+| `Gateway4`   | `string`                     | The IPv4 default gateway.                                                                                                                         |
+| `Gateway6`   | `string`                     | The IPv6 default gateway.                                                                                                                         |
+| `MACAddress` | `string`                     | The MAC address to set.                                                                                                                           |
+| `MTU`        | `int`                        | The MTU, from 68 to 9000.                                                                                                                         |
+| `Type`       | `InterfaceUpdateRequestType` | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
+| `Wakeonlan`  | `bool`                       | Turn on wake-on-LAN.                                                                                                                              |
+
+### InterfaceUpdateRequestType
+
+The type: ethernet, the default, for an interface the host has, or dummy for a
+dummy interface that netplan makes.
+
+A `string`, one of `ethernet`, `dummy`.
 
 ## Example
 

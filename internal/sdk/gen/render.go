@@ -22,6 +22,7 @@ package main
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -98,6 +99,7 @@ func newFile() *jen.File {
 
 // typeUsers is the services that use each type, by the type's name, through
 // a method's parameters, body or result, or a field of a type they use.
+// A parameter's type is an enum, such as GetJobsStatus.
 func typeUsers(
 	m *sdkmodel.Model,
 ) map[string]map[string]bool {
@@ -129,6 +131,9 @@ func typeUsers(
 	}
 	for _, s := range m.Services {
 		for _, meth := range s.Methods {
+			for _, p := range append(slices.Clone(meth.PathParams), meth.Query...) {
+				visit(s.Name, p.Type)
+			}
 			if meth.Input != nil {
 				for _, f := range meth.Input.Fields {
 					visit(s.Name, f.Type)
@@ -362,8 +367,8 @@ func pathCode(
 		if m.Input != nil && p != m.Target() {
 			v = jen.Id("input").Dot(p.GoName)
 		}
-		if p.Type.Name == "string" {
-			parts = append(parts, jen.Qual("net/url", "PathEscape").Call(v))
+		if p.Type.Kind == sdkmodel.Named || p.Type.Name == "string" {
+			parts = append(parts, jen.Qual("net/url", "PathEscape").Call(format(p.Type, v)))
 		} else {
 			parts = append(parts, format(p.Type, v))
 		}
@@ -379,11 +384,15 @@ func pathCode(
 	return out
 }
 
-// format is the text of v, a scalar of type t, for a path or a query.
+// format is the text of v, a scalar or an enum of type t, for a path or a
+// query.
 func format(
 	t *sdkmodel.TypeRef,
 	v *jen.Statement,
 ) jen.Code {
+	if t.Kind == sdkmodel.Named {
+		return jen.String().Call(v)
+	}
 	switch t.Name {
 	case "int":
 		return jen.Qual("strconv", "Itoa").Call(v)
@@ -399,10 +408,13 @@ func format(
 	}
 }
 
-// zero is the zero value of a scalar of type t.
+// zero is the zero value of a scalar or an enum of type t.
 func zero(
 	t *sdkmodel.TypeRef,
 ) jen.Code {
+	if t.Kind == sdkmodel.Named {
+		return jen.Lit("")
+	}
 	switch t.Name {
 	case "string":
 		return jen.Lit("")

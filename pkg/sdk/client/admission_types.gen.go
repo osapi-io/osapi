@@ -48,6 +48,18 @@ type Admission struct {
 	State string `json:"state"`
 }
 
+// GetAdmissionsState: Only the records in this state: pending, admitted,
+// rejected or revoked.
+type GetAdmissionsState string
+
+// The values of GetAdmissionsState.
+const (
+	GetAdmissionsStatePending  GetAdmissionsState = "pending"
+	GetAdmissionsStateAdmitted GetAdmissionsState = "admitted"
+	GetAdmissionsStateRejected GetAdmissionsState = "rejected"
+	GetAdmissionsStateRevoked  GetAdmissionsState = "revoked"
+)
+
 // ListAdmissionResponse is the ListAdmissionResponse of the spec.
 type ListAdmissionResponse struct {
 	// The admission records, in hostname order.

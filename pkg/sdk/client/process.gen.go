@@ -52,7 +52,7 @@ type ProcessSignalInput struct {
 
 	// The signal: TERM, KILL, HUP, INT, USR1 or USR2. It is one of: TERM, KILL,
 	// HUP, INT, USR1, USR2.
-	Signal string `json:"signal"`
+	Signal ProcessSignalRequestSignal `json:"signal"`
 }
 
 // Signal is the operation PostNodeProcessSignal: send a signal to a process.

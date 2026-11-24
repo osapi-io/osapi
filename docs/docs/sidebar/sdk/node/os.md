@@ -45,12 +45,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### OsEntry
 
-| Field      | Type      | Description                                                                            |
-| ---------- | --------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`  | Error message if the agent failed.                                                     |
-| `Hostname` | `string`  | Hostname of the agent that produced this result.                                       |
-| `OSInfo`   | `Release` |                                                                                        |
-| `Status`   | `string`  | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type            | Description                                                                            |
+| ---------- | --------------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string`        | Error message if the agent failed.                                                     |
+| `Hostname` | `string`        | Hostname of the agent that produced this result.                                       |
+| `OSInfo`   | `Release`       |                                                                                        |
+| `Status`   | `OsEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### OsEntryStatus
+
+The status of the operation for this host.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### Release
 
