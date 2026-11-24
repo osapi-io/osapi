@@ -1,5 +1,7 @@
-import { Input, Textarea } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/input";
 import { FactInput } from "@/components/ui/fact-input";
+import { SecretInput } from "@/components/ui/secret-input";
+import { useSecretRefs } from "@/hooks/use-secret-refs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dropdown } from "@/components/ui/dropdown";
 import { TagInput } from "@/components/ui/tag-input";
@@ -36,10 +38,12 @@ function tags(raw: unknown): string[] {
 /**
  * The form of a step, from the input of its method: a select for a field
  * with fixed values, tags for a list, a checkbox for a flag, JSON for an
- * object, and a text field that takes a @fact. reference for the rest. The
+ * object, a secret field that takes a secret:// reference from a picker,
+ * and a text field that takes a @fact. reference for the rest. The
  * doc of each field stays under it, so it does not go when a person types.
  */
 export function StepForm({ stepId, method, data, onChange }: StepFormProps) {
+  const secrets = useSecretRefs();
   if (method.fields.length === 0) {
     return (
       <Text variant="muted" size="sm" as="p">
@@ -105,12 +109,13 @@ export function StepForm({ stepId, method, data, onChange }: StepFormProps) {
           );
         } else if (f.secret) {
           control = (
-            <Input
+            <SecretInput
               id={id}
-              type="password"
               label={label}
               value={(value as string) ?? ""}
-              onChange={(e) => update(f.name, e.target.value)}
+              onChange={(v) => update(f.name, v)}
+              refs={secrets.refs}
+              picker={secrets.allowed}
             />
           );
         } else {
