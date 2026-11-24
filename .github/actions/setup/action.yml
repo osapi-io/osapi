@@ -5,6 +5,25 @@ description: >-
   the built UI, which the Go code embeds, and the Linux tuning that the tests
   need. Each job of the Go workflow that compiles Go starts with it.
 
+inputs:
+  js:
+    description: >-
+      Install Node.js and Bun. A check that formats or generates pages runs
+      Prettier through Bun. The unit shards set it to false.
+    default: "true"
+  ui:
+    description: >-
+      Install the packages of the UI, for the job of the UI checks, which lints,
+      type-checks and tests it. No job builds the UI: the embed needs a file in
+      ui/dist, not the built UI, and no Go test reads it. A release builds the
+      UI in goreleaser's before hook.
+    default: "false"
+
+outputs:
+  go-cache-key:
+    description: The key of the shared Go cache, for the cache job that saves it.
+    value: ${{ steps.go-cache.outputs.key }}
+
 runs:
   using: composite
   steps:
@@ -12,11 +31,34 @@ runs:
       uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
+        # setup-go keys its cache on go.sum alone and saves it only on a miss,
+        # so it was saved once and stayed cold. The shared cache below
+        # replaces it.
+        cache: false
+    # One Go cache for every job: the modules and the compiled packages,
+    # keyed on go.sum and the week. The cache job of go.yml saves it on main
+    # when the key is new; every job restores the newest one.
+    - name: The key of the Go cache
+      id: go-cache
+      shell: bash
+      run: echo "key=go-${{ runner.os }}-${{ hashFiles('go.sum') }}-$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+    - name: Restore the Go cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ steps.go-cache.outputs.key }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ hashFiles('go.sum') }}-
+          go-${{ runner.os }}-
     - name: Set up Node.js
+      if: inputs.js == 'true'
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: 24
     - name: Install Bun
+      if: inputs.js == 'true'
       uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
     - name: Install just
       uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
@@ -27,6 +69,8 @@ runs:
       shell: bash
       run: |
         just go-deps
-        just react-deps
-        just react-build
+        if [ "${{ inputs.ui }}" = "true" ]; then
+          just react-deps
+        fi
+        mkdir -p ui/dist && touch ui/dist/.keep
         just linux-tune

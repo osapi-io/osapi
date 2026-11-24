@@ -231,7 +231,7 @@ func waitForReady(
 	timeout time.Duration,
 ) error {
 	deadline := time.Now().Add(timeout)
-	url := controllerURL + "/health/ready"
+	url := controllerURL + "/api/health/ready"
 
 	for time.Now().Before(deadline) {
 		resp, err := http.Get(url) //nolint:gosec

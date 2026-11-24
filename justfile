@@ -73,12 +73,15 @@ test: linux-tune
     just react-build
     just go-test
 
-# The checks of `just test`, which the shared go-test runs and CI reads
-# (`just go-ci-checks`): the quick checks share one job, and each slow check is
-# a job. A check added here runs on a laptop and in CI, with no change to the
-# workflow.
-go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-unit react-generate-check go-mod-check go-pkg-check"
+# The checks of `just test`, which the shared go-test runs. In CI the quick
+# checks share one job; .github/workflows/go.yml names each slow check, and
+# its quick job fails when a check here is not in the workflow.
+go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-lint react-typecheck react-unit react-generate-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check sdk-gen-check"
+# One unit shard for each 13000 lines of test code, up to go_shard_max (10).
+# Test code fell to about 133000 lines as behaviors moved to generated tests,
+# and the shared 20000 gave 7 shards of over 3 minutes each.
+go_shard_weight := "13000"
 
 # Fail when a behavior that osapi dsl behavior create writes does not pass its tests
 #
@@ -428,3 +431,9 @@ linux-tune:
 
 [windows]
 linux-tune:
+
+# Type-check the UI with no bundle. CI runs it; a release bundles the UI with
+# react-build in goreleaser's before hook.
+[group('react')]
+react-typecheck:
+    cd {{ react_dir }} && bunx tsc -b
