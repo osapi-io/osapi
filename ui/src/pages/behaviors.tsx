@@ -8,7 +8,7 @@ import { BehaviorList } from "@/components/domain/behavior-list";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useAuth } from "@/hooks/use-auth";
 import { behaviorMatches } from "@/lib/catalog-index";
-import { permitted } from "@/lib/permissions";
+import { permitted, type Permission } from "@/lib/permissions";
 
 /**
  * Behaviors is the catalog: what osapi manages on a host, by area. Each
@@ -20,7 +20,7 @@ export function Behaviors() {
   const { can } = useAuth();
   const [query, setQuery] = useState("");
   const allowed = useCallback(
-    (permission: string | undefined) => permitted(permission, can),
+    (permission: Permission | undefined) => permitted(permission, can),
     [can],
   );
 

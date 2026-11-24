@@ -45,22 +45,25 @@ The Traces page in the Admin menu shows the span tree of a trace by its ID. It
 needs `trace:read`.
 
 A permission has the form `resource:verb`, as in the Go model of osapi, for
-example `agent:read`, `file:write`, `command:execute` and `docker:execute`. The
-UI's list of permissions and the permissions of each role are in
-`ui/src/lib/permissions.gen.ts`, which `go generate ./internal/behaviors/all`
-writes from the Go model. Do not edit it. The permission of each method comes
-from the catalog of the behaviors, `ui/src/lib/catalog.gen.ts`, which the same
-command writes. The UI shows a method that your role cannot run as faint, with a
+example `agent:read`, `file:write`, `command:execute` and `docker:execute`.
+After sign-in, the UI loads the catalog once from `GET /api/catalog`
+(`osapi client catalog get`), through the generated client, and shows a spinner
+until it has it. The catalog has the behaviors with the permission of each
+method, the permissions, the built-in roles with the permissions of each, the
+permission of each operation, the tones of the statuses and the counts, and the
+host families. The controller builds it from its registries, so no file of the
+UI holds a copy. Each built-in role has `catalog:read`. A custom role needs it
+to use the UI. The UI shows a method that your role cannot run as faint, with a
 lock icon, and you cannot add it to a plan. The controller makes the same check
 on each request.
 
 A page and its link in the Admin menu check the operation that the page calls,
-with `canCall` of `useAuth`, such as `canCall("getAdmissions")`. The permission
-comes from `OPERATION_PERMISSIONS` in `ui/src/lib/operations.gen.ts`, which
-`go generate ./internal/authtoken/gen/operations` writes from the endpoint
-groups and the behaviors. Thus the link and the page cannot disagree. Do not
-type a permission into a page: `lib/can-call.test.ts` fails on `can("...")`.
-Roles calls no API, so each role sees it.
+with `canCall` of `useAuth`, such as `canCall("GetAdmissions")`. The permission
+comes from the operations of the catalog. The type of the operation ID is the
+`OperationID` enum of the spec, so a name that the API does not have fails the
+type check. Thus the link and the page cannot disagree. Do not type a permission
+into a page: `lib/can-call.test.ts` fails on `can("...")`. Roles calls no API,
+so each role sees it.
 
 ## Pages
 

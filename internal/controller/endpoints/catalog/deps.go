@@ -18,31 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Command operations writes the UI's permission of each operation from the
-// endpoint groups and the behaviors.
-package main
+package catalog
 
-//go:generate go run . --root ../../../..
-
-import (
-	"flag"
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"github.com/osapi-io/osapi/internal/authtoken"
-	_ "github.com/osapi-io/osapi/internal/behaviors/all"
-	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
-)
-
-func main() {
-	root := flag.String("root", ".", "The root of the osapi repository")
-	flag.Parse()
-
-	path := filepath.Join(*root, authtoken.OperationsFile)
-	text := authtoken.OperationsTypeScript(authtoken.Operations())
-	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
+// Deps is what the group's handlers use, such as the job client. Give
+// each one as an interface, so a test can fake it. While it is empty, the
+// controller needs no wiring; once it has a field, give it in
+// internal/controller/handlers.go, as agentDeps does.
+type Deps struct{}

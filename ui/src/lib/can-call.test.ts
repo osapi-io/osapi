@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 // A page and its menu link ask canCall of the API operation that they call,
-// so the permission comes from the generated OPERATION_PERMISSIONS. A
+// so the permission comes from the operations of the catalog. A
 // permission typed by hand drifts: the Admin menu once showed Admission to
 // each role with audit:read, and the page refused the auditor (#1232).
 describe("the UI checks the permissions of the operations it calls", () => {

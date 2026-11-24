@@ -59,6 +59,7 @@ const (
 	PermAgentRead           Permission = "agent:read"
 	PermAgentWrite          Permission = "agent:write"
 	PermAuditRead           Permission = "audit:read"
+	PermCatalogRead         Permission = "catalog:read"
 	PermJobRead             Permission = "job:read"
 	PermJobWrite            Permission = "job:write"
 )

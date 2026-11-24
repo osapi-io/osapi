@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { catalogIndex, type StepDef } from "@/lib/catalog-index";
+import type { StepDef } from "@/lib/catalog-index";
+import { testIndex as catalogIndex } from "@/test/catalog";
 import type { AgentInfo } from "@/sdk/gen/schemas";
 import {
   defaultTarget,
@@ -126,12 +127,13 @@ describe("platforms", () => {
     expect(hostPlatform(agent("x"))).toBeUndefined();
   });
 
-  test("a method runs on the hosts that its runsOn names", () => {
-    expect(runsOnHost(["debian"], "debian")).toBe(true);
-    expect(runsOnHost(["debian"], "suse")).toBe(false);
-    expect(runsOnHost(["debian", "fedora", "*"], "nixos")).toBe(true);
-    expect(runsOnHost(["debian"], "nixos")).toBe(false);
-    expect(runsOnHost(["debian", "*"], "darwin")).toBe(false);
+  test("a method runs on the hosts that its runs_on names", () => {
+    const families = catalogIndex.hostFamilies;
+    expect(runsOnHost(["debian"], "debian", families)).toBe(true);
+    expect(runsOnHost(["debian"], "suse", families)).toBe(false);
+    expect(runsOnHost(["debian", "fedora", "*"], "nixos", families)).toBe(true);
+    expect(runsOnHost(["debian"], "nixos", families)).toBe(false);
+    expect(runsOnHost(["debian", "*"], "darwin", families)).toBe(false);
   });
 });
 
@@ -169,6 +171,7 @@ describe("preflight", () => {
       catalogIndex.step,
       (p) => p.endsWith(":read"),
       agents,
+      catalogIndex.hostFamilies,
     );
     const dns = check.permissions.find((p) => p.permission === "dns:write");
     expect(dns?.allowed).toBe(false);

@@ -10,7 +10,7 @@ export function useHealth(intervalMs = 10000) {
     async () =>
       unwrap<StatusResponse>(await getHealthStatus(), "Failed to fetch health"),
     [],
-    { enabled: canCall("getHealthStatus"), intervalMs },
+    { enabled: canCall("GetHealthStatus"), intervalMs },
   );
   return { data, error, loading };
 }

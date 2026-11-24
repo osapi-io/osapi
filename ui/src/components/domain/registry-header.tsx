@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { ComponentEntry } from "@/sdk/gen/schemas";
-import { statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 import { formatBytes } from "@/lib/format";
 
 // RegistryHeader is one row of osapi client health status's component
@@ -14,6 +14,7 @@ export function RegistryHeader({
   // reference is the controller's version, which the page header shows.
   reference?: string;
 }) {
+  const statusColor = useStatus();
   if (!entry) return null;
   return (
     <div className="border-b border-border/30 px-3 py-2 text-xs">
@@ -27,7 +28,9 @@ export function RegistryHeader({
           </span>
         )}
         {entry.status && (
-          <Badge variant={statusVariant(entry.status)}>{entry.status}</Badge>
+          <Badge variant={statusColor.variant(entry.status)}>
+            {entry.status}
+          </Badge>
         )}
         {entry.conditions && entry.conditions.length > 0 && (
           <span className="text-status-pending">

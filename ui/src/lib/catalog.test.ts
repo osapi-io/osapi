@@ -13,11 +13,11 @@ const method: CatalogMethod = {
   name: "update",
   kind: "write",
   doc: "Set the servers",
-  httpMethod: "PUT",
+  http_method: "PUT",
   path: "/api/node/{hostname}/dns/{interface_name}",
-  permission: "network:write",
+  permission: "dns:write",
   platforms: ["debian"],
-  runsOn: ["debian"],
+  runs_on: ["debian"],
   input: "UpdateInput { interface_name*, servers, override }",
   output: "Result { changed }",
   fields: [
@@ -53,7 +53,7 @@ describe("a method's request", () => {
     const read: CatalogMethod = {
       ...method,
       kind: "read",
-      httpMethod: "GET",
+      http_method: "GET",
       path: "/api/node/{hostname}/package",
       fields: [
         { name: "names", in: "query", kind: "list", required: false, doc: "" },

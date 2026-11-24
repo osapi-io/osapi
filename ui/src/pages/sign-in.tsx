@@ -5,13 +5,13 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { InfoBox } from "@/components/ui/info-box";
-import { useAuth } from "@/hooks/use-auth";
+import { useSession } from "@/hooks/use-session";
 import { checkTokenFormat } from "@/lib/token-format";
 import { getHealthStatus } from "@/sdk/gen/health-check-api-health/health-check-api-health";
 import { Key, LogIn } from "lucide-react";
 
 export function SignIn() {
-  const { setToken } = useAuth();
+  const { setToken } = useSession();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
 

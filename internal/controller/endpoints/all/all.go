@@ -25,6 +25,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/catalog"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/file"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/job"

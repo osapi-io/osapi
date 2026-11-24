@@ -1,104 +1,46 @@
 // ---------------------------------------------------------------------------
-// The catalog of the behaviors, generated from the registry in catalog.gen.ts
+// The catalog of the behaviors, which the controller serves at
+// GET /api/catalog (useCatalog)
 //
 // Each behavior that the API serves is in it, with each of its methods: the
 // form that the method's input makes, the route that runs it, its permission,
 // the platforms that it runs on, the behaviors that it calls, its examples,
 // and the columns of the rows that it answers. A behavior that changes
-// changes its page and its steps; nobody edits the UI.
+// changes its page and its steps; nobody edits the UI. The types come from
+// the spec, through the generated client.
 // ---------------------------------------------------------------------------
 
-export interface CatalogField {
-  readonly name: string;
-  readonly in: "path" | "query" | "body";
-  readonly kind: "string" | "number" | "bool" | "list" | "object";
-  readonly required: boolean;
-  readonly doc: string;
-  readonly options?: readonly string[];
-  readonly secret?: boolean;
-}
+import type {
+  CatalogBehavior,
+  CatalogCall,
+  CatalogColumn,
+  CatalogExample,
+  CatalogField,
+  CatalogMethod,
+  CatalogMethodKind,
+} from "@/sdk/gen/schemas";
 
-/**
- * A field of the rows that a method answers, as the CLI's output shows it:
- * its label, its render tag, such as bytes, and for an object or a list of
- * objects the columns of the object.
- */
-export interface CatalogColumn {
-  readonly name: string;
-  readonly label: string;
-  readonly doc: string;
-  readonly render?: string;
-  readonly kind: "value" | "values" | "object" | "list";
-  readonly columns?: readonly CatalogColumn[];
-}
-
-/** A call that a method makes to another behavior, with its own calls. */
-export interface CatalogCall {
-  readonly behavior: string;
-  readonly method: string;
-  readonly calls?: readonly CatalogCall[];
-}
-
-export interface CatalogExample {
-  readonly doc: string;
-  readonly input: unknown;
-  readonly output?: unknown;
-}
+export type {
+  CatalogBehavior,
+  CatalogCall,
+  CatalogColumn,
+  CatalogExample,
+  CatalogField,
+  CatalogMethod,
+};
 
 /**
  * What a method does to a host: a read changes nothing, a write changes what
  * the host is configured to be, and an action makes something happen, such
  * as a restart or a reboot. It is the verb of the method's permission.
  */
-export type MethodKind = "read" | "write" | "action";
+export type MethodKind = CatalogMethodKind;
 
 export const methodKindLabels: Record<MethodKind, string> = {
   read: "Read",
   write: "Write",
   action: "Action",
 };
-
-export interface CatalogMethod {
-  readonly name: string;
-  readonly kind: MethodKind;
-  readonly doc: string;
-  readonly long?: string;
-  readonly httpMethod?: string;
-  readonly path?: string;
-  readonly permission?: string;
-  readonly platforms: readonly string[];
-  /**
-   * The host platforms that it runs on, as the agent decides, and "*" for a
-   * Linux host whose platform gohai has no family for.
-   */
-  readonly runsOn: readonly string[];
-  /** The input type and its fields, a required one marked *. */
-  readonly input: string;
-  /** The output type and its fields. */
-  readonly output: string;
-  readonly fields: readonly CatalogField[];
-  readonly columns: readonly CatalogColumn[];
-  readonly calls: readonly CatalogCall[];
-  readonly examples: readonly CatalogExample[];
-  readonly disruptive?: boolean;
-  readonly disruption?: string;
-}
-
-export interface CatalogBehavior {
-  readonly name: string;
-  readonly title: string;
-  /** The area, or "" for an internal behavior. */
-  readonly area: string;
-  readonly doc: string;
-  /** Only other behaviors call it: it has no route. */
-  readonly internal: boolean;
-  readonly parent?: string;
-  readonly platforms: readonly string[];
-  readonly uses: readonly string[];
-  readonly usedBy: readonly string[];
-  readonly chain: string;
-  readonly methods: readonly CatalogMethod[];
-}
 
 /** The name of a method in words: update is Update. */
 export function methodLabel(name: string): string {
@@ -185,8 +127,8 @@ export function methodRequest(
     }
   }
   const qs = query.toString();
-  const init: RequestInit = { method: method.httpMethod };
-  if (method.httpMethod !== "GET" && Object.keys(body).length > 0) {
+  const init: RequestInit = { method: method.http_method };
+  if (method.http_method !== "GET" && Object.keys(body).length > 0) {
     init.body = JSON.stringify(body);
   }
   return { url: qs ? `${path}?${qs}` : path, init };

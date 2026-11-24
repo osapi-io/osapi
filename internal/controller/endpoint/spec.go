@@ -88,6 +88,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Enum[T](values)`,
+			Does: "Makes T, a named string type, a schema of the components, with the values that values returns as its enum. values runs when the spec is built, after each group and behavior registered. orval makes a union type of the values, and the SDK a string type.",
+			When: "For a field whose values are a set that osapi knows, such as a permission or an operation ID, so a client checks a value when it compiles.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Example[T]("field", "example")`,
 			Does: "Gives the field of T with that json name its example in the schema.",
 			When: "For an example with a double quote, such as a JSON document. A struct tag cannot keep the backslash of a quote, because the formatters drop it.",

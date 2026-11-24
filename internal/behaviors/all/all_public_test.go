@@ -36,7 +36,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
-	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
@@ -58,36 +57,17 @@ func (s *AllPublicTestSuite) TestEveryBehaviorIsValid() {
 	}
 }
 
-// TestUIPermissionsAreCurrent checks that the UI's permissions, which go
-// generate writes from internal/authtoken, are what a token can have now.
-func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
-	got, err := os.ReadFile(filepath.Join("..", "..", "..", authtoken.TypeScriptFile))
-	s.Require().NoError(err)
-	s.Equal(authtoken.TypeScript(), string(got),
-		"%s is stale: run go generate ./internal/behaviors/all", authtoken.TypeScriptFile)
-}
-
-// TestUIOperationsAreCurrent checks that the UI's permission of each
-// operation, which go generate writes from the definitions, is what the
-// full spec says, and that the file is current.
-func (s *AllPublicTestSuite) TestUIOperationsAreCurrent() {
-	root := filepath.Join("..", "..", "..")
-	got := authtoken.Operations()
+// TestOperationsAgreeWithTheSpec checks that the permission of each
+// operation, which the catalog endpoint serves from the definitions, is
+// what the full spec says.
+func (s *AllPublicTestSuite) TestOperationsAgreeWithTheSpec() {
 	spec, err := os.ReadFile(
-		filepath.Join(root, "internal", "controller", "api", "gen", "api.yaml"),
+		filepath.Join("..", "..", "..", "internal", "controller", "api", "gen", "api.yaml"),
 	)
 	s.Require().NoError(err)
 	full, err := authtoken.OperationPermissions(spec)
 	s.Require().NoError(err)
-	s.Equal(full, got, "the definitions agree with the full spec")
-	file, err := os.ReadFile(filepath.Join(root, authtoken.OperationsFile))
-	s.Require().NoError(err)
-	s.Equal(
-		authtoken.OperationsTypeScript(got),
-		string(file),
-		"%s is stale: run go generate ./internal/authtoken/gen/operations",
-		authtoken.OperationsFile,
-	)
+	s.Equal(full, authtoken.Operations(), "the definitions agree with the full spec")
 }
 
 // TestPermissionsAreDeclared checks the permissions of every registered
@@ -106,15 +86,6 @@ func (s *AllPublicTestSuite) TestSDKPermissionsAreCurrent() {
 	s.Require().NoError(err)
 	s.Equal(authtoken.Go(), string(got),
 		"%s is stale: run go generate ./internal/behaviors/all", authtoken.GoFile)
-}
-
-// TestUIStatusesAreCurrent checks that the UI's status tones, which go
-// generate writes from internal/cli, are the tones the CLI prints now.
-func (s *AllPublicTestSuite) TestUIStatusesAreCurrent() {
-	got, err := os.ReadFile(filepath.Join("..", "..", "..", cli.StatusTypeScriptFile))
-	s.Require().NoError(err)
-	s.Equal(cli.StatusTypeScript(), string(got),
-		"%s is stale: run go generate ./internal/behaviors/all", cli.StatusTypeScriptFile)
 }
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {

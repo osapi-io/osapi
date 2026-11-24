@@ -116,7 +116,7 @@ export function GenericRowsResult({
                   ? "skipped"
                   : failed
                     ? "failed"
-                    : def.httpMethod !== "GET"
+                    : def.http_method !== "GET"
                       ? changed
                         ? "changed"
                         : "unchanged"
@@ -126,7 +126,7 @@ export function GenericRowsResult({
             {host.error && host.status !== "skipped" && (
               <HostError>{host.error}</HostError>
             )}
-            {!(def.httpMethod !== "GET") &&
+            {!(def.http_method !== "GET") &&
               visible.map((r) => (
                 <div
                   key={JSON.stringify(r)}

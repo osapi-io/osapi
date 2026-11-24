@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatAgeSince, formatBytes } from "@/lib/format";
 import { Monitor, Clock, Cpu, Pause, Play, Loader2 } from "lucide-react";
 import type { AgentInfo, ComponentEntry } from "@/sdk/gen/schemas";
-import { statusDot, statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 
 interface AgentCardProps {
   agent: AgentInfo;
@@ -39,12 +39,13 @@ export function AgentCard({
   onRefresh,
 }: AgentCardProps) {
   const { canCall } = useAuth();
+  const statusColor = useStatus();
   const isPending = agent.state === AgentInfoState.Pending;
   const isDrained =
     agent.state === AgentInfoState.Draining ||
     agent.state === AgentInfoState.Cordoned;
-  const canWrite = canCall("drainAgent");
-  const badgeVariant = statusVariant(agent.state);
+  const canWrite = canCall("DrainAgent");
+  const badgeVariant = statusColor.variant(agent.state);
   // The API lists only the conditions that hold.
   const activeConditions = agent.conditions ?? [];
 
@@ -71,7 +72,9 @@ export function AgentCard({
         </CardTitle>
         <div className="ml-auto flex items-center gap-1.5">
           {shownState && shownState !== AgentInfoState.Ready ? (
-            <Badge variant={pending ? "pending" : statusVariant(shownState)}>
+            <Badge
+              variant={pending ? "pending" : statusColor.variant(shownState)}
+            >
               {shownState}
             </Badge>
           ) : (
@@ -171,7 +174,7 @@ export function AgentCard({
           <div className="mt-2 flex items-center gap-3">
             {components.map((comp) => (
               <div key={comp.type} className="flex items-center gap-1 text-xs">
-                <HealthDot status={statusDot(comp.status)} />
+                <HealthDot status={statusColor.dot(comp.status)} />
                 <span className="text-text-muted">{comp.type}</span>
               </div>
             ))}

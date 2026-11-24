@@ -18,19 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package uicatalog_test
+package catalog_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
-	"github.com/osapi-io/osapi/internal/behavior/uicatalog"
-	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/catalog"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi/internal/secret"
 )
 
@@ -76,13 +75,13 @@ func build(any) (provider, error) { return provider{}, nil }
 // noRuns is a registry whose examples call nothing.
 func noRuns(*behavior.Behavior) []behaviortest.ChainRun { return nil }
 
-type CatalogPublicTestSuite struct {
+type BehaviorsPublicTestSuite struct {
 	suite.Suite
 }
 
-// TestCatalogLeavesOutWhatTheStepSets: the form of a method has no field
+// TestBehaviorsLeaveOutWhatTheStepSets: the form of a method has no field
 // that the method's .Before step sets.
-func (s *CatalogPublicTestSuite) TestCatalogLeavesOutWhatTheStepSets() {
+func (s *BehaviorsPublicTestSuite) TestBehaviorsLeaveOutWhatTheStepSets() {
 	type pwIn struct {
 		Password secret.Value `json:"password" doc:"The password"`
 		Hash     string       `json:"hash"     doc:"The hash"     before:"set"`
@@ -92,13 +91,13 @@ func (s *CatalogPublicTestSuite) TestCatalogLeavesOutWhatTheStepSets() {
 			return struct{}{}, nil
 		}),
 	)
-	got := uicatalog.Catalog([]*behavior.Behavior{b}, noRuns)
+	got := catalog.Behaviors([]*behavior.Behavior{b}, noRuns)
 	s.Require().Len(got, 1)
 	s.Require().Len(got[0].Methods[0].Fields, 1)
 	s.Equal("password", got[0].Methods[0].Fields[0].Name)
 }
 
-func (s *CatalogPublicTestSuite) TestCatalog() {
+func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	inner := behavior.Define(
 		"inner",
 		"Inner items",
@@ -144,7 +143,7 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 		}
 	}
 
-	got := uicatalog.Catalog([]*behavior.Behavior{b, inner, child, cliOnly}, runs)
+	got := catalog.Behaviors([]*behavior.Behavior{b, inner, child, cliOnly}, runs)
 	s.Require().Len(got, 3, "a behavior that only the CLI has is not in the catalog")
 
 	item := got[0]
@@ -165,18 +164,22 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 	s.Equal("read", list.Kind)
 	s.Equal("GET", list.HTTPMethod)
 	s.Equal("/api/node/{hostname}/item", list.Path)
-	s.Equal("item:read", list.Permission)
+	s.Equal(client.Permission("item:read"), list.Permission)
 	s.Equal([]string{"debian", "darwin"}, list.Platforms)
 	s.Equal("itemIn { name*, mode, count, on, tags, labels, token }", list.Input)
 	s.Equal("[]row { name, changed, size, usage, disks, tags, ptr, hidden }", list.Output)
-	s.Equal([]uicatalog.Example{
+	s.Equal([]catalog.CatalogExample{
 		{Doc: "Lists the items", Input: map[string]any{
 			"name": "a", "mode": "", "count": float64(0), "on": false, "tags": nil,
 			"labels": nil, "token": "[redacted]",
 		}, Output: []row{{Name: "a"}}},
 	}, list.Examples, "an example's secret is redacted")
-	s.Equal([]uicatalog.Call{}, list.Calls, "a method whose examples call nothing has no calls")
-	s.Equal([]uicatalog.Field{
+	s.Equal(
+		[]catalog.CatalogCall{},
+		list.Calls,
+		"a method whose examples call nothing has no calls",
+	)
+	s.Equal([]catalog.CatalogField{
 		{Name: "name", In: "query", Kind: "string", Required: true, Doc: "The item"},
 		{Name: "mode", In: "query", Kind: "string", Doc: "The mode", Options: []string{"a", "b"}},
 		{Name: "count", In: "query", Kind: "number", Doc: "How many"},
@@ -185,10 +188,10 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 		{Name: "labels", In: "query", Kind: "object", Doc: "Labels"},
 		{Name: "token", In: "query", Kind: "string", Doc: "A secret", Secret: true},
 	}, list.Fields)
-	total := []uicatalog.Column{
+	total := []catalog.CatalogColumn{
 		{Name: "total", Label: "Total", Doc: "Total bytes", Render: "bytes", Kind: "value"},
 	}
-	s.Equal([]uicatalog.Column{
+	s.Equal([]catalog.CatalogColumn{
 		{Name: "name", Label: "Name", Doc: "The item", Kind: "value"},
 		{Name: "changed", Label: "Changed", Doc: "Whether the host changed", Kind: "value"},
 		{Name: "size", Label: "Bytes", Doc: "Its size", Render: "bytes", Kind: "value"},
@@ -204,8 +207,8 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 	s.Equal([]string{"debian"}, update.Platforms, "On limits the platforms")
 	s.Equal("path", update.Fields[0].In, "the key goes in the path")
 	s.Equal("body", update.Fields[1].In, "a write's other fields go in the body")
-	s.Equal([]uicatalog.Call{
-		{Behavior: "inner", Method: "list", Calls: []uicatalog.Call{
+	s.Equal([]catalog.CatalogCall{
+		{Behavior: "inner", Method: "list", Calls: []catalog.CatalogCall{
 			{Behavior: "deep", Method: "get"},
 			{Behavior: "deep", Method: "set"},
 		}},
@@ -220,7 +223,7 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 	s.Equal("action", restart.Kind)
 	s.True(restart.Disruptive)
 	s.Equal("It stops the item", restart.Disruption)
-	s.Equal("item:execute", restart.Permission)
+	s.Equal(client.Permission("item:execute"), restart.Permission)
 
 	s.Equal("action", item.Methods[4].Kind, "the verb of the permission decides the kind")
 
@@ -232,26 +235,10 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 	s.Equal([]string{}, in.Platforms)
 
 	s.Equal("item", got[2].Parent)
-
-	ts := uicatalog.TypeScript(got)
-	s.Contains(ts, `export const CATALOG: readonly CatalogBehavior[] = [`)
-	s.Contains(ts, `  {"name":"item","title":"Item","area":"hardware"`)
-	s.Contains(ts, `export type BehaviorName = "item" | "inner" | "part";`)
-	s.Contains(ts, "export const AREAS = [\n  {\"name\":\"services\",\"label\":\"Services\"},\n")
-	s.Contains(ts, "  {\"name\":\"fleet\",\"label\":\"Fleet\"},\n] as const;\n")
-	s.Contains(ts, `export type AreaName = (typeof AREAS)[number]["name"];`)
 }
 
-// TestFileIsCurrent: the UI's file is what the registry makes.
-func (s *CatalogPublicTestSuite) TestFileIsCurrent() {
-	ts := uicatalog.TypeScript(uicatalog.Catalog(behavior.All(), behaviortest.Chains))
-	file, err := os.ReadFile("../../../" + uicatalog.File)
-	s.Require().NoError(err)
-	s.Equal(ts, string(file), "run go generate ./internal/behaviors/all")
-}
-
-func TestCatalogPublicTestSuite(
+func TestBehaviorsPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(CatalogPublicTestSuite))
+	suite.Run(t, new(BehaviorsPublicTestSuite))
 }

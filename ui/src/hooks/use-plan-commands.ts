@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
+import type { Permission } from "@/lib/permissions";
 import { useCommands } from "@/hooks/use-commands";
 import type { StepDef } from "@/lib/catalog-index";
 
@@ -9,7 +10,7 @@ interface PlanCommands {
   clear: () => void;
   showYAML: () => void;
   defs: readonly StepDef[];
-  allowed: (permission?: string) => boolean;
+  allowed: (permission?: Permission) => boolean;
   add: (def: StepDef) => void;
 }
 

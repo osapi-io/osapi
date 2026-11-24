@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
 import { AdmissionCard } from "@/components/domain/admission-card";
 import type { Admission } from "@/sdk/gen/schemas";
+import { WithCatalog } from "@/test/with-catalog";
 
 const record: Admission = {
   machine_id: "d530664edc1c431eb5ef1e9dfd6617a5",
@@ -15,7 +16,9 @@ const record: Admission = {
 
 describe("AdmissionCard", () => {
   test("shows the fingerprint and the encryption key that it covers", () => {
-    render(<AdmissionCard record={record} canWrite={false} />);
+    render(<AdmissionCard record={record} canWrite={false} />, {
+      wrapper: WithCatalog,
+    });
     expect(screen.getByText("Fingerprint")).toBeTruthy();
     expect(screen.getByText("Encryption key")).toBeTruthy();
     expect(screen.getByText("XA7NTLWJ2ECILFDLHORN...")).toBeTruthy();
@@ -27,6 +30,7 @@ describe("AdmissionCard", () => {
         record={{ ...record, encryption_key: undefined }}
         canWrite={false}
       />,
+      { wrapper: WithCatalog },
     );
     expect(screen.queryByText("Encryption key")).toBeNull();
   });

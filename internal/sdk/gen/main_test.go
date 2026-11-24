@@ -95,6 +95,13 @@ func (s *MainTestSuite) TestRun() {
 					`"/api/node/"+url.PathEscape(hostname)+"/network/dns/"+url.PathEscape(interfaceName)`,
 				)
 				s.Contains(dns, "the permission dns:read.")
+				s.Contains(s.read("network_dns_types.gen.go"),
+					"// DnsKind: The kind of a resolver.\ntype DnsKind string\n",
+					"a string schema is a string type")
+				s.Contains(
+					s.read("network_dns_types.gen.go"),
+					"Kind DnsKind `json:\"kind,omitzero\"`",
+				)
 				job := s.read("job.gen.go")
 				s.Contains(job, "type JobListParams struct {")
 				s.Contains(job, `q.Set("limit", strconv.Itoa(params.Limit))`)

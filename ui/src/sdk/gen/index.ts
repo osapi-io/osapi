@@ -1,6 +1,7 @@
 export * from './admission-api-admission/admission-api-admission';
 export * from './agent-management-api-agent-operations/agent-management-api-agent-operations';
 export * from './audit-log-api-audit/audit-log-api-audit';
+export * from './catalog-api-catalog/catalog-api-catalog';
 export * from './certificate-api-certificate-operations/certificate-api-certificate-operations';
 export * from './command-api-command-operations/command-api-command-operations';
 export * from './connectivity-api-connectivity-operations/connectivity-api-connectivity-operations';

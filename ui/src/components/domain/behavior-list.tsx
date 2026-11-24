@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import type { Permission } from "@/lib/permissions";
 import { ListBox } from "@/components/ui/list-box";
 import { ChevronRight, CornerDownRight, Lock } from "lucide-react";
 import { SectionLabel } from "@/components/ui/section-label";
@@ -14,7 +15,7 @@ interface BehaviorListProps {
   note?: string;
   behaviors: CatalogBehavior[];
   /** Whether the viewer's role may run a method that needs the permission. */
-  allowed: (permission: string | undefined) => boolean;
+  allowed: (permission: Permission | undefined) => boolean;
 }
 
 /**
@@ -57,7 +58,7 @@ function BehaviorRow({
   allowed,
 }: {
   behavior: CatalogBehavior;
-  allowed: (permission: string | undefined) => boolean;
+  allowed: (permission: Permission | undefined) => boolean;
 }) {
   const locked = b.methods.map((m) => !b.internal && !allowed(m.permission));
   const none = !b.internal && locked.every(Boolean);

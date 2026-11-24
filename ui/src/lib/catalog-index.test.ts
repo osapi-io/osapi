@@ -1,14 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { AREAS } from "@/lib/catalog.gen";
 import {
   behaviorMatches,
   buildIndex,
-  catalogIndex,
   nested,
   permissionKind,
   stepMatches,
 } from "@/lib/catalog-index";
 import type { CatalogBehavior } from "@/lib/catalog";
+import { testCatalog, testIndex as catalogIndex } from "@/test/catalog";
 
 const behavior = (
   name: string,
@@ -21,16 +20,18 @@ const behavior = (
   internal: false,
   platforms: [],
   uses: [],
-  usedBy: [],
+  used_by: [],
   chain: name,
   methods: [],
   ...extra,
 });
 
 describe("the catalog", () => {
-  test("has a section for each area with a behavior, in the order of AREAS", () => {
+  test("has a section for each area with a behavior, in the order of the areas", () => {
     const names = catalogIndex.sections.map((s) => s.area);
-    const order = AREAS.map((a) => a.name).filter((a) => names.includes(a));
+    const order = testCatalog.areas
+      .map((a) => a.name)
+      .filter((a) => names.includes(a));
     expect(names).toEqual(order);
     expect(names).not.toContain("fleet");
   });
@@ -101,8 +102,27 @@ describe("nested", () => {
 
 describe("buildIndex", () => {
   test("leaves out an area with no behavior", () => {
-    const index = buildIndex([behavior("dns")]);
+    const index = buildIndex({ ...testCatalog, behaviors: [behavior("dns")] });
     expect(index.sections.map((s) => s.area)).toEqual(["networking"]);
+  });
+
+  test("indexes the roles, the operations and the tones", () => {
+    expect(catalogIndex.roles.map((r) => r.name)).toEqual([
+      "admin",
+      "read",
+      "observer",
+    ]);
+    expect(catalogIndex.roles[2].permissions.has("agent:read")).toBe(true);
+    expect(catalogIndex.operations.get("GetCatalog")).toBe("catalog:read");
+    expect(catalogIndex.statusTones.failed).toBe("err");
+    expect(catalogIndex.countTones.skipped).toBe("warn");
+    expect(catalogIndex.hostFamilies).toContain("darwin");
+    expect(catalogIndex.permissions).toContain("catalog:read");
+  });
+
+  test("leaves out a step of the controller whose operation it does not have", () => {
+    const index = buildIndex({ ...testCatalog, operations: [] });
+    expect(index.step("objectstore.list")).toBeUndefined();
   });
 });
 

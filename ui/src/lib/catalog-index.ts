@@ -1,21 +1,28 @@
 // ---------------------------------------------------------------------------
 // The catalog, indexed for the pages: the behaviors by name, the sections of
-// the Behaviors page by area, and the definition of each step that a plan
-// can run, by its run name, such as dns.update.
+// the Behaviors page by area, the definition of each step that a plan can
+// run, by its run name, such as dns.update, the roles, the permission of
+// each operation, and the tones of the statuses and the counts.
 // ---------------------------------------------------------------------------
 
-import { AREAS, CATALOG, type AreaName } from "@/lib/catalog.gen";
 import {
   methodLabel,
   type CatalogBehavior,
   type CatalogMethod,
   type MethodKind,
 } from "@/lib/catalog";
-import { OPERATION_PERMISSIONS, type OperationId } from "@/lib/operations.gen";
+import { rolesOf, type RoleDefinition } from "@/lib/permissions";
+import type { Tones } from "@/lib/status";
+import type {
+  CatalogArea,
+  CatalogResponse,
+  OperationID,
+  Permission,
+} from "@/sdk/gen/schemas";
 
 /** The behaviors of one area, in the order of the registry. */
 export interface CatalogSection {
-  area: AreaName;
+  area: string;
   label: string;
   behaviors: CatalogBehavior[];
 }
@@ -34,8 +41,8 @@ export interface StepDef {
   label: string;
   kind: MethodKind;
   doc: string;
-  permission?: string;
-  area: AreaName;
+  permission?: Permission;
+  area: string;
   /** It runs on the controller, not on the hosts: it takes no target. */
   controller: boolean;
   behavior?: CatalogBehavior;
@@ -51,27 +58,27 @@ export interface StepDef {
 const CONTROLLER_STEPS: {
   method: string;
   doc: string;
-  operation: OperationId;
+  operation: OperationID;
 }[] = [
   {
     method: "list",
     doc: "List the files in the object store",
-    operation: "getFiles",
+    operation: "GetFiles",
   },
   {
     method: "upload",
     doc: "Upload a file to the object store",
-    operation: "postFile",
+    operation: "PostFile",
   },
   {
     method: "delete",
     doc: "Delete a file from the object store",
-    operation: "deleteFileByName",
+    operation: "DeleteFileByName",
   },
   {
     method: "stale",
     doc: "List the deployments whose file changed after they were deployed",
-    operation: "getFileStale",
+    operation: "GetFileStale",
   },
 ];
 
@@ -107,6 +114,20 @@ export function nested(behaviors: CatalogBehavior[]): CatalogBehavior[] {
 
 export interface CatalogIndex {
   behaviors: readonly CatalogBehavior[];
+  /** Each area, in order, with its label. */
+  areas: readonly CatalogArea[];
+  /** Each permission that osapi knows. */
+  permissions: readonly Permission[];
+  /** The built-in roles, in order; the last has the least. */
+  roles: RoleDefinition[];
+  /** The permission of each operation that needs one. */
+  operations: ReadonlyMap<OperationID, Permission>;
+  /** The tone of each status word, as the CLI colors it. */
+  statusTones: Tones;
+  /** The tone of a count above zero, by what it counts. */
+  countTones: Tones;
+  /** The host platforms that gohai names; runs_on has "*" for any other Linux. */
+  hostFamilies: readonly string[];
   /** The sections of the Behaviors page: each area with a behavior. */
   sections: CatalogSection[];
   /** The behaviors that only other behaviors call. */
@@ -117,15 +138,17 @@ export interface CatalogIndex {
   step: (run: string) => StepDef | undefined;
 }
 
-/** The catalog indexed for the pages, from the behaviors given. */
-export function buildIndex(
-  behaviors: readonly CatalogBehavior[],
-): CatalogIndex {
+/** The catalog that the controller serves, indexed for the pages. */
+export function buildIndex(catalog: CatalogResponse): CatalogIndex {
+  const behaviors = catalog.behaviors;
+  const operations = new Map(
+    catalog.operations.map((o) => [o.id, o.permission]),
+  );
   const byName = new Map(behaviors.map((b) => [b.name, b]));
   const served = behaviors.filter((b) => !b.internal);
   const steps: StepDef[] = [];
   const sections: CatalogSection[] = [];
-  for (const a of AREAS) {
+  for (const a of catalog.areas) {
     const inArea = nested(served.filter((b) => b.area === a.name));
     for (const b of inArea) {
       for (const m of b.methods) {
@@ -145,7 +168,8 @@ export function buildIndex(
     }
     if (a.name === "objectstore") {
       for (const c of CONTROLLER_STEPS) {
-        const permission = OPERATION_PERMISSIONS[c.operation];
+        const permission = operations.get(c.operation);
+        if (!permission) continue;
         steps.push({
           run: runName("objectstore", c.method),
           title: "Object store",
@@ -165,6 +189,13 @@ export function buildIndex(
   const stepByRun = new Map(steps.map((s) => [s.run, s]));
   return {
     behaviors,
+    areas: catalog.areas,
+    permissions: catalog.permissions,
+    roles: rolesOf(catalog.roles),
+    operations,
+    statusTones: catalog.status_tones as Tones,
+    countTones: catalog.count_tones as Tones,
+    hostFamilies: catalog.host_families,
     sections,
     internal: behaviors.filter((b) => b.internal),
     behavior: (name) => byName.get(name),
@@ -172,9 +203,6 @@ export function buildIndex(
     step: (run) => stepByRun.get(run),
   };
 }
-
-/** The catalog of the registry, indexed once. */
-export const catalogIndex = buildIndex(CATALOG);
 
 /** The words of a query: "dns update" and "dns.update" are dns and update. */
 function words(query: string): string[] {

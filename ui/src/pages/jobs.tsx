@@ -24,7 +24,7 @@ import {
   retryJobByID,
 } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
 import type { ListJobsResponse } from "@/sdk/gen/schemas";
-import { statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
 import { DataTable } from "@/components/ui/data-table";
@@ -50,6 +50,7 @@ export function Jobs() {
   const { id: linkedId } = useParams();
   useVimScroll();
   const { canCall } = useAuth();
+  const statusColor = useStatus();
 
   const [offset, setOffset] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
@@ -69,7 +70,7 @@ export function Jobs() {
         "Failed to fetch jobs",
       ),
     [offset, statusFilter],
-    { enabled: canCall("getJobs") },
+    { enabled: canCall("GetJobs") },
   );
   const { data, loading } = jobs;
   const error = actionError ?? jobs.error;
@@ -117,7 +118,7 @@ export function Jobs() {
     }
   };
 
-  if (!canCall("getJobs")) {
+  if (!canCall("GetJobs")) {
     return <PermissionDenied title="Jobs" what="jobs" />;
   }
 
@@ -215,7 +216,7 @@ export function Jobs() {
                 {
                   header: "Status",
                   cell: (job: Job) => (
-                    <Badge variant={statusVariant(job.status)}>
+                    <Badge variant={statusColor.variant(job.status)}>
                       {job.status}
                     </Badge>
                   ),
@@ -244,7 +245,7 @@ export function Jobs() {
                     </Text>
                   ),
                 },
-                ...(canCall("retryJobByID")
+                ...(canCall("RetryJobByID")
                   ? [
                       {
                         header: "Actions",

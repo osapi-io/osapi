@@ -32,13 +32,13 @@ export function Admission() {
         "Failed to fetch admission records",
       ).items ?? [],
     [],
-    { enabled: canCall("getAdmissions") },
+    { enabled: canCall("GetAdmissions") },
   );
   const records = admissions.data ?? [];
   const { error, loading } = admissions;
   const fetchRecords = admissions.refresh;
 
-  if (!canCall("getAdmissions")) {
+  if (!canCall("GetAdmissions")) {
     return <PermissionDenied title="Admission" what="admission records" />;
   }
 
@@ -73,7 +73,7 @@ export function Admission() {
                 <AdmissionCard
                   key={r.machine_id}
                   record={r}
-                  canWrite={canCall("admitMachine")}
+                  canWrite={canCall("AdmitMachine")}
                   onRefresh={fetchRecords}
                 />
               ))}

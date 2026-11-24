@@ -34,6 +34,9 @@ import (
 
 	"github.com/dave/jennifer/jen"
 
+	// The behaviors register their permissions and operations, which the
+	// enums of a spec, such as the catalog's Permission, list.
+	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	commandgen "github.com/osapi-io/osapi/internal/cli/command/gen"
 	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"

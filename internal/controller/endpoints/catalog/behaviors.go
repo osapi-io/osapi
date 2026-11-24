@@ -18,127 +18,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package uicatalog writes the UI's catalog of the behaviors: for each
-// behavior, its title, area, platforms and the behaviors that it calls, and
-// for each method its verb, permission, route, signature, form, result
-// columns, chain and examples. The Behaviors and Plans pages read it, so a
-// behavior that changes changes the UI, and nobody edits the UI by hand.
-package uicatalog
+package catalog
 
 import (
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 )
 
-// File is where the UI keeps the catalog, from the root of the repository.
-const File = "ui/src/lib/catalog.gen.ts"
-
-// Field is one input field of a step's form.
-type Field struct {
-	Name     string   `json:"name"`
-	In       string   `json:"in"`
-	Kind     string   `json:"kind"`
-	Required bool     `json:"required"`
-	Doc      string   `json:"doc"`
-	Options  []string `json:"options,omitempty"`
-	Secret   bool     `json:"secret,omitempty"`
-}
-
-// Column is one field of the rows that a method answers, as the CLI's
-// output shows it: its label, and its render tag, such as bytes. A field
-// that holds an object or a list of objects has the columns of the object,
-// so the UI shows it as the CLI does, with no card of its own.
-type Column struct {
-	Name    string   `json:"name"`
-	Label   string   `json:"label"`
-	Doc     string   `json:"doc"`
-	Render  string   `json:"render,omitempty"`
-	Kind    string   `json:"kind"`
-	Columns []Column `json:"columns,omitempty"`
-}
-
-// Call is one call that a method makes to another behavior, with the calls
-// that it makes in turn, as the examples of the method record them.
-type Call struct {
-	Behavior string `json:"behavior"`
-	Method   string `json:"method"`
-	Calls    []Call `json:"calls,omitempty"`
-}
-
-// Example is one example of a method: what it does, its input and its
-// output.
-type Example struct {
-	Doc    string `json:"doc"`
-	Input  any    `json:"input"`
-	Output any    `json:"output,omitempty"`
-}
-
-// Method is one method of a behavior, as the UI shows and runs it.
-type Method struct {
-	Name string `json:"name"`
-	// Kind is what the method does to a host: read, write, or action, by
-	// the verb of its permission.
-	Kind       string   `json:"kind"`
-	Doc        string   `json:"doc"`
-	Long       string   `json:"long,omitempty"`
-	HTTPMethod string   `json:"httpMethod,omitempty"`
-	Path       string   `json:"path,omitempty"`
-	Permission string   `json:"permission,omitempty"`
-	Platforms  []string `json:"platforms"`
-	// RunsOn are the host platforms that the method runs on, as the agent
-	// decides, of behavior.HostFamilies, and "*" when it runs on a Linux host
-	// whose platform is none of them.
-	RunsOn     []string  `json:"runsOn"`
-	Input      string    `json:"input"`
-	Output     string    `json:"output"`
-	Fields     []Field   `json:"fields"`
-	Columns    []Column  `json:"columns"`
-	Calls      []Call    `json:"calls"`
-	Examples   []Example `json:"examples"`
-	Disruptive bool      `json:"disruptive,omitempty"`
-	Disruption string    `json:"disruption,omitempty"`
-}
-
-// Behavior is one behavior, as the UI shows it. An internal behavior is in
-// the catalog so a chain can name it, but it has no route: only another
-// behavior calls it.
-type Behavior struct {
-	Name      string   `json:"name"`
-	Title     string   `json:"title"`
-	Area      string   `json:"area"`
-	Doc       string   `json:"doc"`
-	Internal  bool     `json:"internal"`
-	Parent    string   `json:"parent,omitempty"`
-	Platforms []string `json:"platforms"`
-	Uses      []string `json:"uses"`
-	UsedBy    []string `json:"usedBy"`
-	Chain     string   `json:"chain"`
-	Methods   []Method `json:"methods"`
-}
-
 // Runs are the runs of the examples of a behavior, with the calls that each
 // made: behaviortest.Chains.
 type Runs func(b *behavior.Behavior) []behaviortest.ChainRun
 
-// Catalog is each behavior that the API serves, and each internal behavior,
+// Behaviors is each behavior that the API serves, and each internal behavior,
 // in the order of all.
-func Catalog(
+func Behaviors(
 	all []*behavior.Behavior,
 	runs Runs,
-) []Behavior {
-	out := []Behavior{}
+) []CatalogBehavior {
+	out := []CatalogBehavior{}
 	for _, b := range all {
 		if !b.API && !b.Internal {
 			continue
 		}
-		cb := Behavior{
+		cb := CatalogBehavior{
 			Name:      b.Name,
 			Title:     b.Title,
 			Area:      string(b.Area),
@@ -148,7 +54,7 @@ func Catalog(
 			Uses:      names(b.Requires),
 			UsedBy:    names(behavior.RequiredBy(b)),
 			Chain:     behavior.Tree(b),
-			Methods:   []Method{},
+			Methods:   []CatalogMethod{},
 		}
 		if b.Parent != nil {
 			cb.Parent = b.Parent.Name
@@ -156,7 +62,7 @@ func Catalog(
 		for _, pp := range b.Platforms {
 			cb.Platforms = append(cb.Platforms, string(pp.Name))
 		}
-		calls := map[string][]Call{}
+		calls := map[string][]CatalogCall{}
 		for _, r := range runs(b) {
 			calls[r.Method] = merge(calls[r.Method], r.Root.Steps)
 		}
@@ -194,9 +100,9 @@ func runsOn(
 func method(
 	b *behavior.Behavior,
 	m *behavior.Method,
-	calls []Call,
-) Method {
-	cm := Method{
+	calls []CatalogCall,
+) CatalogMethod {
+	cm := CatalogMethod{
 		Name:       m.Name,
 		Kind:       kindOf(m),
 		Doc:        m.Doc,
@@ -207,17 +113,17 @@ func method(
 		Fields:     fields(m),
 		Columns:    columns(m.Out),
 		Calls:      calls,
-		Examples:   []Example{},
+		Examples:   []CatalogExample{},
 		Disruptive: m.Disruptive,
 		Disruption: m.Disruption,
 	}
 	if cm.Calls == nil {
-		cm.Calls = []Call{}
+		cm.Calls = []CatalogCall{}
 	}
 	if b.API {
 		cm.HTTPMethod = m.HTTPMethod()
 		cm.Path = b.Path(m)
-		cm.Permission = string(b.Permission(m.PermissionVerb()))
+		cm.Permission = b.Permission(m.PermissionVerb())
 	}
 	cm.RunsOn = runsOn(b, m)
 	for _, pp := range b.Platforms {
@@ -226,7 +132,7 @@ func method(
 		}
 	}
 	for _, ex := range m.Examples {
-		cm.Examples = append(cm.Examples, Example{
+		cm.Examples = append(cm.Examples, CatalogExample{
 			Doc:    ex.Doc,
 			Input:  behavior.Redact(ex.Input),
 			Output: ex.Output,
@@ -256,9 +162,9 @@ func kindOf(
 // gains the calls under it, and a new one goes at the end, so each call
 // that any example made shows once, in the order that they first ran.
 func merge(
-	calls []Call,
+	calls []CatalogCall,
 	steps []*behavior.Step,
-) []Call {
+) []CatalogCall {
 	for _, s := range steps {
 		i := -1
 		for j, c := range calls {
@@ -269,7 +175,7 @@ func merge(
 			}
 		}
 		if i < 0 {
-			calls = append(calls, Call{Behavior: s.Behavior, Method: s.Method})
+			calls = append(calls, CatalogCall{Behavior: s.Behavior, Method: s.Method})
 			i = len(calls) - 1
 		}
 		calls[i].Calls = merge(calls[i].Calls, s.Steps)
@@ -294,8 +200,8 @@ func names(
 // or a body field of a write.
 func fields(
 	m *behavior.Method,
-) []Field {
-	out := []Field{}
+) []CatalogField {
+	out := []CatalogField{}
 	t := m.In
 	for t != nil && t.Kind() == reflect.Pointer {
 		t = t.Elem()
@@ -317,7 +223,7 @@ func fields(
 			in = "query"
 		}
 		rules := f.Tag.Get("validate")
-		field := Field{
+		field := CatalogField{
 			Name:     name,
 			In:       in,
 			Kind:     kind(f.Type),
@@ -362,7 +268,7 @@ func kind(
 // render tags. A struct field, or a list of structs, has its own columns.
 func columns(
 	t reflect.Type,
-) []Column {
+) []CatalogColumn {
 	e := t
 	for e.Kind() == reflect.Pointer || e.Kind() == reflect.Slice {
 		e = e.Elem()
@@ -375,9 +281,9 @@ func columns(
 	}
 
 	cols := clicommand.Columns(t)
-	out := make([]Column, 0, len(cols))
+	out := make([]CatalogColumn, 0, len(cols))
 	for _, c := range cols {
-		col := Column{
+		col := CatalogColumn{
 			Name:   c.JSON,
 			Label:  c.Label,
 			Doc:    docs[c.JSON],
@@ -412,46 +318,4 @@ func elem(
 	}
 
 	return t
-}
-
-// TypeScript is the catalog as the UI's CATALOG, the union of the names of
-// the behaviors, and area.All as the UI's AREAS: the sections of the
-// Behaviors page, with their labels, in their order.
-func TypeScript(
-	catalog []Behavior,
-) string {
-	var sb strings.Builder
-	sb.WriteString("// Code generated by go generate ./internal/behaviors/all. DO NOT EDIT.\n")
-	sb.WriteString("// From the behavior registry, by internal/behavior/uicatalog.\n\n")
-	sb.WriteString("import type { CatalogBehavior } from \"./catalog\";\n\n")
-	names := make([]string, 0, len(catalog))
-	sb.WriteString("export const CATALOG: readonly CatalogBehavior[] = [\n")
-	for _, b := range catalog {
-		// A Behavior is strings, bools, lists of them and the inputs and
-		// outputs of examples, which encode, as the tests of each example
-		// encode them.
-		data, _ := json.Marshal(b)
-		fmt.Fprintf(&sb, "  %s,\n", data)
-		names = append(names, fmt.Sprintf("%q", b.Name))
-	}
-	sb.WriteString("];\n\n")
-	fmt.Fprintf(&sb, "export type BehaviorName = %s;\n\n", strings.Join(names, " | "))
-	sb.WriteString("export const AREAS = [\n")
-	for _, a := range area.All {
-		// An Area is two strings, which always encode.
-		data, _ := json.Marshal(a)
-		fmt.Fprintf(&sb, "  %s,\n", data)
-	}
-	sb.WriteString("] as const;\n\n")
-	sb.WriteString("export type AreaName = (typeof AREAS)[number][\"name\"];\n\n")
-	sb.WriteString(
-		"/** The host platforms that gohai names; runsOn has \"*\" for any other Linux. */\n",
-	)
-	sb.WriteString("export const HOST_FAMILIES: readonly string[] = [\n")
-	for _, f := range behavior.HostFamilies {
-		fmt.Fprintf(&sb, "  %q,\n", f)
-	}
-	sb.WriteString("];\n")
-
-	return sb.String()
 }

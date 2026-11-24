@@ -560,6 +560,45 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.InDelta(0.0, *sample.Properties["ratio"].Value.Min, 0)
 }
 
+// shade is a named string type with an enum.
+type shade string
+
+// palette holds shades: in a field, in a list and in a map.
+type palette struct {
+	Main   shade            `json:"main"    doc:"The main shade."`
+	Others []shade          `json:"others"  doc:"The other shades."`
+	ByName map[string]shade `json:"by_name" doc:"The shades by name."`
+}
+
+// TestEnum makes a named string type a schema of the components, once, with
+// the values its func gives when the spec is built.
+func (s *EndpointPublicTestSuite) TestEnum() {
+	calls := 0
+	g := endpoint.Define("paint", "The paints",
+		endpoint.Doc[shade]("A shade."),
+		endpoint.Enum[shade](func() []string {
+			calls++
+
+			return []string{"red", "blue"}
+		}),
+		endpoint.Get[noInput, palette]("get"),
+	)
+	s.Zero(calls, "the values wait for the spec")
+	doc, err := endpoint.OpenAPI(g)
+	s.Require().NoError(err)
+
+	s.Equal(1, calls, "the schema is added once")
+	sh := doc.Components.Schemas["shade"].Value
+	s.Equal("A shade.", sh.Description)
+	s.Equal([]any{"red", "blue"}, sh.Enum)
+	s.True(sh.Type.Is("string"))
+	p := doc.Components.Schemas["palette"].Value
+	s.Equal("#/components/schemas/shade", p.Properties["main"].Ref)
+	s.Equal("#/components/schemas/shade", p.Properties["others"].Value.Items.Ref)
+	s.Equal("#/components/schemas/shade",
+		p.Properties["by_name"].Value.AdditionalProperties.Schema.Ref)
+}
+
 // TestBodyValidateTags holds a body field to its whole validate tag: the
 // items of an array, a pattern from startswith, and the tag in the extension.
 // TestPrefix puts a group under a prefix whose {field} is a shared path

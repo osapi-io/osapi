@@ -2,7 +2,9 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PageLayout } from "./components/layout/page-layout";
 import { AuthProvider } from "./lib/auth";
-import { useAuth } from "@/hooks/use-auth";
+import { SessionProvider } from "./lib/session";
+import { CatalogProvider } from "./lib/catalog-provider";
+import { useSession } from "@/hooks/use-session";
 import { CommandRegistryProvider } from "./lib/command-registry";
 import { Dashboard } from "./pages/dashboard";
 import { Spinner } from "./components/ui/spinner";
@@ -14,8 +16,8 @@ import { Jobs } from "./pages/jobs";
 import { Admission } from "./pages/admission";
 import { SignIn } from "./pages/sign-in";
 
-// The pages that read the catalog load it on their first visit: it is most
-// of the size of the UI, and the dashboard does not need it.
+// The pages of the behaviors and the plans load their code on the first
+// visit; the dashboard does not need it.
 const Behaviors = lazy(() =>
   import("./pages/behaviors").then((m) => ({ default: m.Behaviors })),
 );
@@ -27,12 +29,24 @@ const Plan = lazy(() =>
 );
 
 function AuthenticatedApp() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSession();
 
+  // The sign-in page needs no catalog. After sign-in, CatalogProvider loads
+  // it once, and each page under it reads it.
   if (!isAuthenticated) {
     return <SignIn />;
   }
 
+  return (
+    <CatalogProvider>
+      <AuthProvider>
+        <AuthenticatedPages />
+      </AuthProvider>
+    </CatalogProvider>
+  );
+}
+
+function AuthenticatedPages() {
   return (
     <PlanProvider>
       <PageLayout>
@@ -66,12 +80,12 @@ function AuthenticatedApp() {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <SessionProvider>
       <BrowserRouter>
         <CommandRegistryProvider>
           <AuthenticatedApp />
         </CommandRegistryProvider>
       </BrowserRouter>
-    </AuthProvider>
+    </SessionProvider>
   );
 }

@@ -146,7 +146,7 @@ export function MethodCard({
             <p>
               <span className="inline-block w-12 text-text-muted">route</span>
               <span className="font-semibold text-text">
-                {m.httpMethod}
+                {m.http_method}
               </span>{" "}
               <span className="text-text-muted">{m.path}</span>
             </p>

@@ -23,7 +23,7 @@ import {
   revokeMachine,
   deleteMachine,
 } from "@/sdk/gen/admission-api-admission/admission-api-admission";
-import { statusVariant } from "@/lib/status";
+import { useStatus } from "@/hooks/use-status";
 import { formatAgeSince, shortFingerprint } from "@/lib/format";
 
 interface AdmissionCardProps {
@@ -48,6 +48,7 @@ export function AdmissionCard({
   onRefresh,
 }: AdmissionCardProps) {
   const [form, setForm] = useState<Form>(null);
+  const statusColor = useStatus();
   const [value, setValue] = useState("");
   const [acting, setActing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +100,9 @@ export function AdmissionCard({
               <HealthDot status={record.online} />
             </span>
           )}
-          <Badge variant={statusVariant(record.state)}>{record.state}</Badge>
+          <Badge variant={statusColor.variant(record.state)}>
+            {record.state}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-1.5">

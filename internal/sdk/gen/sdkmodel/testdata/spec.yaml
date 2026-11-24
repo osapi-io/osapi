@@ -204,6 +204,11 @@ components:
         status:
           type: string
           enum: [ok, failed]
+        kind: {$ref: '#/components/schemas/DnsKind'}
+    DnsKind:
+      type: string
+      description: The kind of a resolver
+      enum: [static, dhcp]
     DnsUpdateRequest:
       type: object
       properties:

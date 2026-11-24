@@ -306,6 +306,11 @@ func servicePage(
 			if doc := sentence(t.Doc); doc != "" {
 				b.WriteString(doc + "\n\n")
 			}
+			if t.Scalar != "" {
+				fmt.Fprintf(&b, "A `%s`.\n", t.Scalar)
+
+				continue
+			}
 			b.WriteString("| Field | Type | Description |\n| --- | --- | --- |\n")
 			for _, f := range t.Fields {
 				fmt.Fprintf(&b, "| `%s` | `%s` | %s |\n", f.GoName, f.Type, cell(fieldDoc(f)))
