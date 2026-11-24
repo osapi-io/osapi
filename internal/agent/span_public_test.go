@@ -46,7 +46,6 @@ import (
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type SpanPublicTestSuite struct {

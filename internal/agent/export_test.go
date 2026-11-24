@@ -60,7 +60,6 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	memProv "github.com/osapi-io/osapi/internal/provider/node/memory"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // SetEmbeddedFS overrides the embedded filesystem for testing.

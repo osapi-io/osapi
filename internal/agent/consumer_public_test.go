@@ -44,7 +44,6 @@ import (
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type ConsumerPublicTestSuite struct {

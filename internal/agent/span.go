@@ -27,7 +27,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // identityAttrs tell which agent ran a job: the hostname that it answers to,

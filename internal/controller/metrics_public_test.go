@@ -39,7 +39,6 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type MetricsPublicTestSuite struct {

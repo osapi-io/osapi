@@ -37,7 +37,6 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // natsStatus is the part of a NATS client that the health metrics read.

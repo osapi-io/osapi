@@ -285,8 +285,8 @@ func (s *MethodsPublicTestSuite) TestSpecConditionType() {
 	doc, err := endpoint.OpenAPI(health.Group)
 	s.Require().NoError(err)
 
-	conditions := make([]any, 0, len(types.ConditionTypes))
-	for _, v := range types.ConditionTypes {
+	conditions := make([]any, 0, len(types.ConditionType("").Values()))
+	for _, v := range types.ConditionType("").Values() {
 		conditions = append(conditions, string(v))
 	}
 	s.Equal(conditions, doc.Components.Schemas["ConditionType"].Value.Enum)

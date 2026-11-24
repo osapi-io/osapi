@@ -42,7 +42,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/secret/seal"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Errors returned by unwrapJobEnvelope. Each names a distinct rejection

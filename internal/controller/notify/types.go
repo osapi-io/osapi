@@ -32,7 +32,7 @@ import (
 
 // ConditionComponentUnreachable is the condition of a component whose
 // heartbeat expired. Only the notifier sends it: no component reports it, so
-// it is not one of types.ConditionTypes.
+// it is not one of types.ConditionType values.
 const ConditionComponentUnreachable types.ConditionType = "ComponentUnreachable"
 
 // ConditionEvent represents a condition state transition on a component.

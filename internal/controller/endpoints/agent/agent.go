@@ -45,26 +45,6 @@ var (
 	ErrState = errors.New("agent is not in a state that allows it")
 )
 
-// agentStates are the values of types.AgentState.
-func agentStates() []string {
-	values := make([]string, 0, len(types.AgentStates))
-	for _, s := range types.AgentStates {
-		values = append(values, string(s))
-	}
-
-	return values
-}
-
-// conditionTypes are the values of types.ConditionType.
-func conditionTypes() []string {
-	values := make([]string, 0, len(types.ConditionTypes))
-	for _, c := range types.ConditionTypes {
-		values = append(values, string(c))
-	}
-
-	return values
-}
-
 // Group is the agent group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"agent",
@@ -78,11 +58,9 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Tag("agent_operations", "Agent",
 		"Operations related to agent discovery and details."),
 	endpoint.Uses[Deps](),
-	endpoint.Enum[types.AgentState](agentStates),
 	endpoint.Doc[types.AgentState](
 		"The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.",
 	),
-	endpoint.Enum[types.ConditionType](conditionTypes),
 	endpoint.Doc[types.ConditionType]("A condition that an agent or a component evaluates."),
 	endpoint.Doc[LoadAverageResponse]("The system load averages for 1, 5, and 15 minutes."),
 	endpoint.Doc[MemoryResponse]("Memory usage information."),

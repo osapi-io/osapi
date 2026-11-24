@@ -114,7 +114,7 @@ func (s AgentJobStatus) Valid() bool {
 	return slices.Contains(s.Values(), s)
 }
 
-// AgentState is the scheduling state of an agent, one of AgentStates.
+// AgentState is the scheduling state of an agent, one of its Values.
 type AgentState string
 
 // The scheduling states of an agent.
@@ -133,7 +133,7 @@ const (
 )
 
 // ConditionType is a node or process condition that the agent evaluates,
-// one of ConditionTypes.
+// one of its Values.
 type ConditionType string
 
 // The conditions that an agent evaluates.
@@ -156,12 +156,26 @@ const (
 	ConditionProcessHighCPU ConditionType = "ProcessHighCPU"
 )
 
-// AgentStates are each scheduling state of an agent.
-var AgentStates = []AgentState{AgentReady, AgentDraining, AgentCordoned, AgentPending}
+// Values are each scheduling state of an agent.
+func (AgentState) Values() []AgentState {
+	return []AgentState{AgentReady, AgentDraining, AgentCordoned, AgentPending}
+}
 
-// ConditionTypes are each condition that an agent evaluates.
-var ConditionTypes = []ConditionType{
-	ConditionMemoryPressure, ConditionHighLoad, ConditionDiskPressure,
-	ConditionDrainStuck, ConditionConsumersUnavailable,
-	ConditionProcessMemoryPressure, ConditionProcessHighCPU,
+// Valid is whether s is one of Values.
+func (s AgentState) Valid() bool {
+	return slices.Contains(s.Values(), s)
+}
+
+// Values are each condition that an agent evaluates.
+func (ConditionType) Values() []ConditionType {
+	return []ConditionType{
+		ConditionMemoryPressure, ConditionHighLoad, ConditionDiskPressure,
+		ConditionDrainStuck, ConditionConsumersUnavailable,
+		ConditionProcessMemoryPressure, ConditionProcessHighCPU,
+	}
+}
+
+// Valid is whether c is one of Values.
+func (c ConditionType) Valid() bool {
+	return slices.Contains(c.Values(), c)
 }

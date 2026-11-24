@@ -28,8 +28,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/metric"
 

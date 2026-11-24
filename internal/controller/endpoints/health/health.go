@@ -29,16 +29,6 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// conditionTypes are the values of types.ConditionType.
-func conditionTypes() []string {
-	values := make([]string, 0, len(types.ConditionTypes))
-	for _, c := range types.ConditionTypes {
-		values = append(values, string(c))
-	}
-
-	return values
-}
-
 // Group is the health group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"health", "Check the health of the controller",
@@ -47,7 +37,6 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Tag("health", "Health",
 		"Health check endpoints for liveness, readiness, and detailed status."),
 	endpoint.Uses[Deps](),
-	endpoint.Enum[types.ConditionType](conditionTypes),
 	endpoint.Doc[types.ConditionType]("A condition that an agent or a component evaluates."),
 	endpoint.Get[LivenessInput, HealthResponse]("liveness").
 		Handle(Liveness).
