@@ -56,22 +56,11 @@ jobs:
         run: just react-build
       - name: Linux tuning
         run: just linux-tune
-      # The interface write examples configure osapi0, a dummy interface, so
-      # they never change the runner's own network.
-      - name: Dummy interface
-        run: sudo ip link add osapi0 type dummy
-      # The ntp examples run chronyc and write to /etc/chrony/sources.d, so
-      # the runner needs chrony.
-      - name: chrony
-        run: sudo apt-get update && sudo apt-get install -y chrony
-      # The user create examples run useradd --create-home, which copies
-      # /etc/skel. The runner's /etc/skel holds its toolchains for new users,
-      # and the first copy took more than the job's 30 seconds. The examples
-      # need a home, not the toolchains.
-      - name: Empty /etc/skel
-        run: |
-          sudo du -sh /etc/skel || true
-          sudo find /etc/skel -mindepth 1 -delete
+      # The host setup of the write examples: the osapi0 dummy interface,
+      # chrony, and an empty /etc/skel. osapi-lab runs the same script on its
+      # target VM.
+      - name: Prepare the host
+        run: sudo OSAPI_PREPARE_EMPTY_SKEL=1 test/integration/prepare-host.sh
       # As root, with the behavior write examples on: the runner is thrown
       # away after the job, so they may change its kernel parameters and /etc.
       - name: Integration
