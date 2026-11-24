@@ -416,6 +416,39 @@ func ExpectedAgentHostnames(
 	return hostnames
 }
 
+// Recipients are the agents that a job to target can reach: each agent
+// that takes jobs for _all, _any or a label, and the agent whose machine ID
+// is resolved, or whose hostname is target, for one host. The controller
+// seals the secrets of the job to each of them.
+func Recipients(
+	agents []AgentInfo,
+	target string,
+	resolved string,
+) []AgentInfo {
+	routingType, key, value := ParseTarget(target)
+
+	var out []AgentInfo
+	for _, a := range agents {
+		switch routingType {
+		case AnyHost, BroadcastHost:
+			if agentCanReceiveJobs(a.State) {
+				out = append(out, a)
+			}
+		case "label":
+			if v, ok := a.Labels[key]; ok && agentCanReceiveJobs(a.State) &&
+				(v == value || strings.HasPrefix(v, value+".")) {
+				out = append(out, a)
+			}
+		default:
+			if a.MachineID == resolved || a.Hostname == target {
+				out = append(out, a)
+			}
+		}
+	}
+
+	return out
+}
+
 // ApplyNamespaceToInfraName prefixes an infrastructure name (stream, KV bucket)
 // with the namespace. Returns the name unchanged if namespace is empty.
 //

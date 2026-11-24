@@ -97,15 +97,16 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 		validateFunc func(*client.AgentKey, error)
 	}{
 		{
-			name:      "returns the stored key and the enrolled hostname",
+			name:      "returns the stored key, the enrolled hostname and the encryption key",
 			machineID: "machine-001",
 			setupMock: func() {
 				record := admission.AcceptedAgent{
-					MachineID:   "machine-001",
-					Hostname:    "web-01",
-					PublicKey:   s.pubKey,
-					Fingerprint: pki.FingerprintOf(s.pubKey),
-					AcceptedAt:  s.fixedTime,
+					MachineID:     "machine-001",
+					Hostname:      "web-01",
+					PublicKey:     s.pubKey,
+					EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+					Fingerprint:   pki.FingerprintOf(s.pubKey),
+					AcceptedAt:    s.fixedTime,
 				}
 				data, err := json.Marshal(record)
 				s.Require().NoError(err)
@@ -121,6 +122,10 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 				s.Equal("machine-001", key.MachineID)
 				s.Equal("web-01", key.Hostname)
 				s.Equal(ed25519.PublicKey(s.pubKey), key.PublicKey)
+				s.Equal(
+					"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+					key.EncryptionKey,
+				)
 			},
 		},
 		{

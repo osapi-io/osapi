@@ -66,10 +66,10 @@ Enrollment uses an accept and reject model, like Salt:
    | `agent.pub`  | 0644 | The public half of the signing key.            |
    | `agent.xkey` | 0600 | X25519 encryption key, as an nkeys curve seed. |
 
-   One key does not do both jobs. The signing key signs. The encryption key is
-   for the secrets that the controller will seal for this agent. The controller
-   does not seal a value yet. The agent makes each key only when its file does
-   not exist.
+   One key does not do both jobs. The signing key signs. The encryption key
+   opens the secrets that the controller seals for this agent
+   ([Secrets](secrets.md#sealed-values)). The agent makes each key only when its
+   file does not exist.
 
    The user that runs the agent must own the directory. The agent does not
    replace a key that it cannot read, or half of a key pair, or an `agent.xkey`

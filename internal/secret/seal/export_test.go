@@ -18,40 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package client_test
+package seal
 
-import (
-	"testing"
+import "github.com/nats-io/nkeys"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/secret"
-)
-
-type MarshalDataPublicTestSuite struct {
-	suite.Suite
-}
-
-// TestMarshalData: the job carries each secret as the caller sent it, so
-// the agent gives the provider the value and not [redacted], until the
-// controller seals it (osapi #1247).
-func (s *MarshalDataPublicTestSuite) TestMarshalData() {
-	type createInput struct {
-		Name string                  `json:"name"`
-		Env  map[string]secret.Value `json:"env,omitempty"`
-	}
-
-	data, err := client.ExportMarshalData(createInput{
-		Name: "app", Env: map[string]secret.Value{"TOKEN": "hunter2"},
-	})
-
-	s.Require().NoError(err)
-	s.JSONEq(`{"name":"app","env":{"TOKEN":"hunter2"}}`, string(data))
-}
-
-func TestMarshalDataPublicTestSuite(
-	t *testing.T,
+// SetCreateCurveKeys replaces the function that makes an X25519 key.
+func SetCreateCurveKeys(
+	fn func() (nkeys.KeyPair, error),
 ) {
-	suite.Run(t, new(MarshalDataPublicTestSuite))
+	createCurveKeys = fn
+}
+
+// ResetCreateCurveKeys restores the function that makes an X25519 key.
+func ResetCreateCurveKeys() {
+	createCurveKeys = nkeys.CreateCurveKeys
 }

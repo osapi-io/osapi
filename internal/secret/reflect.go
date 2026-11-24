@@ -119,19 +119,37 @@ func Resolve(
 	x any,
 	fn func(ref string) (string, error),
 ) error {
+	return Map(x, func(v Value) (Value, error) {
+		if !v.IsReference() {
+			return v, nil
+		}
+		value, err := fn(string(v))
+
+		return Value(value), err
+	})
+}
+
+// Map replaces each Value in *x that is not empty, at each depth, with the
+// Value that fn gives for it: the agent opens each sealed value with it.
+// x is a pointer. The first error of fn stops it, and is its error, and
+// the Value that failed stays as it was.
+func Map(
+	x any,
+	fn func(v Value) (Value, error),
+) error {
 	var err error
 	set(reflect.ValueOf(x), func(v Value) Value {
-		if err != nil || !v.IsReference() {
+		if err != nil || v.IsZero() {
 			return v
 		}
-		value, e := fn(string(v))
+		out, e := fn(v)
 		if e != nil {
 			err = e
 
 			return v
 		}
 
-		return Value(value)
+		return out
 	})
 
 	return err
@@ -177,6 +195,18 @@ func set(
 			v.SetMapIndex(iter.Key(), e)
 		}
 	}
+}
+
+// Has reports whether x holds a Value that is not empty, at each depth.
+func Has(
+	x any,
+) bool {
+	has := false
+	walk(reflect.ValueOf(x), func(v Value) {
+		has = has || !v.IsZero()
+	})
+
+	return has
 }
 
 // walk calls fn with each Value in v, at each depth.
@@ -225,6 +255,16 @@ func walk(
 func Plain(
 	x any,
 ) any {
+	return PlainFunc(x, func(v Value) string { return string(v) })
+}
+
+// PlainFunc is Plain, with each Value that is not empty as fn gives it:
+// the job client seals each value of a job with it. An empty Value stays
+// empty.
+func PlainFunc(
+	x any,
+	fn func(v Value) string,
+) any {
 	if x == nil {
 		return nil
 	}
@@ -234,7 +274,7 @@ func Plain(
 		return x
 	}
 
-	return convert(v, t).Interface()
+	return convert(v, t, fn).Interface()
 }
 
 // plainTypes are the plain types that plainType made, by the type that
@@ -332,6 +372,7 @@ func plainFields(
 func convert(
 	v reflect.Value,
 	t reflect.Type,
+	fn func(Value) string,
 ) reflect.Value {
 	if v.Type() == t {
 		return v
@@ -339,35 +380,37 @@ func convert(
 	out := reflect.New(t).Elem()
 	switch v.Kind() {
 	case reflect.String:
-		out.SetString(v.String())
+		if v.String() != "" {
+			out.SetString(fn(Value(v.String())))
+		}
 	case reflect.Pointer:
 		if !v.IsNil() {
 			out.Set(reflect.New(t.Elem()))
-			out.Elem().Set(convert(v.Elem(), t.Elem()))
+			out.Elem().Set(convert(v.Elem(), t.Elem(), fn))
 		}
 	case reflect.Slice:
 		if !v.IsNil() {
 			out.Set(reflect.MakeSlice(t, v.Len(), v.Len()))
 			for i := range v.Len() {
-				out.Index(i).Set(convert(v.Index(i), t.Elem()))
+				out.Index(i).Set(convert(v.Index(i), t.Elem(), fn))
 			}
 		}
 	case reflect.Array:
 		for i := range v.Len() {
-			out.Index(i).Set(convert(v.Index(i), t.Elem()))
+			out.Index(i).Set(convert(v.Index(i), t.Elem(), fn))
 		}
 	case reflect.Map:
 		if !v.IsNil() {
 			out.Set(reflect.MakeMapWithSize(t, v.Len()))
 			iter := v.MapRange()
 			for iter.Next() {
-				out.SetMapIndex(iter.Key(), convert(iter.Value(), t.Elem()))
+				out.SetMapIndex(iter.Key(), convert(iter.Value(), t.Elem(), fn))
 			}
 		}
 	case reflect.Struct:
 		for i := range t.NumField() {
 			f := t.Field(i)
-			out.Field(i).Set(convert(v.FieldByName(f.Name), f.Type))
+			out.Field(i).Set(convert(v.FieldByName(f.Name), f.Type, fn))
 		}
 	}
 

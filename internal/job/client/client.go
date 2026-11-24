@@ -35,6 +35,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/secret/seal"
 )
 
 // Client provides methods for publishing job requests and retrieving responses.
@@ -174,19 +175,11 @@ func (c *Client) Query(
 	operation job.OperationType,
 	data any,
 ) (string, *job.Response, error) {
-	dataBytes, err := marshalData(data)
-	if err != nil {
-		return "", nil, fmt.Errorf("marshal data: %w", err)
-	}
-
-	req := &job.Request{
-		Type:      job.TypeQuery,
-		Category:  category,
-		Operation: operation,
-		Data:      json.RawMessage(dataBytes),
-	}
-
 	resolved := c.resolveTarget(ctx, target)
+	req, err := c.request(ctx, job.TypeQuery, target, resolved, category, operation, data)
+	if err != nil {
+		return "", nil, err
+	}
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
 	// The span records the target that the caller gave, such as debian-1;
 	// the subject has the machine ID that it resolves to.
@@ -211,19 +204,11 @@ func (c *Client) QueryBroadcast(
 	operation job.OperationType,
 	data any,
 ) (string, map[string]*job.Response, error) {
-	dataBytes, err := marshalData(data)
-	if err != nil {
-		return "", nil, fmt.Errorf("marshal data: %w", err)
-	}
-
-	req := &job.Request{
-		Type:      job.TypeQuery,
-		Category:  category,
-		Operation: operation,
-		Data:      json.RawMessage(dataBytes),
-	}
-
 	resolved := c.resolveTarget(ctx, target)
+	req, err := c.request(ctx, job.TypeQuery, target, resolved, category, operation, data)
+	if err != nil {
+		return "", nil, err
+	}
 	subject := job.BuildSubjectFromTarget(job.JobsQueryPrefix, resolved)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
@@ -241,19 +226,11 @@ func (c *Client) Modify(
 	operation job.OperationType,
 	data any,
 ) (string, *job.Response, error) {
-	dataBytes, err := marshalData(data)
-	if err != nil {
-		return "", nil, fmt.Errorf("marshal data: %w", err)
-	}
-
-	req := &job.Request{
-		Type:      job.TypeModify,
-		Category:  category,
-		Operation: operation,
-		Data:      json.RawMessage(dataBytes),
-	}
-
 	resolved := c.resolveTarget(ctx, target)
+	req, err := c.request(ctx, job.TypeModify, target, resolved, category, operation, data)
+	if err != nil {
+		return "", nil, err
+	}
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
 	// The span records the target that the caller gave, such as debian-1;
 	// the subject has the machine ID that it resolves to.
@@ -278,19 +255,11 @@ func (c *Client) ModifyBroadcast(
 	operation job.OperationType,
 	data any,
 ) (string, map[string]*job.Response, error) {
-	dataBytes, err := marshalData(data)
-	if err != nil {
-		return "", nil, fmt.Errorf("marshal data: %w", err)
-	}
-
-	req := &job.Request{
-		Type:      job.TypeModify,
-		Category:  category,
-		Operation: operation,
-		Data:      json.RawMessage(dataBytes),
-	}
-
 	resolved := c.resolveTarget(ctx, target)
+	req, err := c.request(ctx, job.TypeModify, target, resolved, category, operation, data)
+	if err != nil {
+		return "", nil, err
+	}
 	subject := job.BuildSubjectFromTarget(job.JobsModifyPrefix, resolved)
 	jobID, responses, err := c.publishAndCollect(ctx, subject, target, req)
 	if err != nil {
@@ -308,10 +277,6 @@ func (c *Client) publishAndWait(
 	target string,
 	req *job.Request,
 ) (string, *job.Response, error) {
-	// Generate job ID if not provided
-	if req.JobID == "" {
-		req.JobID = uuid.New().String()
-	}
 	req.Timestamp = time.Now()
 
 	jobID := req.JobID
@@ -323,10 +288,7 @@ func (c *Client) publishAndWait(
 	audit.RecordJobID(ctx, jobID)
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
-	operationData := map[string]interface{}{
-		"type": req.Operation,
-		"data": req.Data,
-	}
+	operationData := operation(req)
 
 	// Store immutable job data in KV (same structure as CreateJob)
 	jobData := map[string]interface{}{
@@ -483,10 +445,6 @@ func (c *Client) publishAndCollect(
 	target string,
 	req *job.Request,
 ) (string, map[string]*job.Response, error) {
-	// Generate job ID if not provided
-	if req.JobID == "" {
-		req.JobID = uuid.New().String()
-	}
 	req.Timestamp = time.Now()
 
 	jobID := req.JobID
@@ -498,10 +456,7 @@ func (c *Client) publishAndCollect(
 	audit.RecordJobID(ctx, jobID)
 	createdTime := req.Timestamp.Format(time.RFC3339)
 
-	operationData := map[string]interface{}{
-		"type": req.Operation,
-		"data": req.Data,
-	}
+	operationData := operation(req)
 
 	// Store immutable job data in KV
 	jobData := map[string]interface{}{
@@ -713,12 +668,91 @@ func (c *Client) publishAndCollect(
 	}
 }
 
-// marshalData is the JSON of a job's data. A secret.Value marshals its
-// value, which the agent gives to the provider, and not [redacted]: until
-// the controller seals each secret of the job (osapi #1247), the job and
-// the job KV keep it as the caller sent it.
-func marshalData(
+// operation is the operation of the job data in the KV: its type, its
+// data, and the sealed job keys when the data has sealed secrets.
+func operation(
+	req *job.Request,
+) map[string]interface{} {
+	op := map[string]interface{}{
+		"type": req.Operation,
+		"data": req.Data,
+	}
+	if len(req.SealedKeys) > 0 {
+		op["sealed_keys"] = req.SealedKeys
+		op["sealed_from"] = req.SealedFrom
+	}
+
+	return op
+}
+
+// newSealer makes the Sealer of a job. A test replaces it.
+var newSealer = seal.New
+
+// request is the job of data for target, which resolves to resolved, with
+// a new job ID. When the controller verifies its agents (PKI) and data
+// holds a secret, each secret of the data is sealed with a new job key,
+// and the job key is sealed to each agent that the target can reach and
+// that has an encryption key: JetStream and the job KV never see the
+// value. Without PKI, no agent has an encryption key, so the data keeps
+// each value as the caller sent it.
+func (c *Client) request(
+	ctx context.Context,
+	typ job.Type,
+	target string,
+	resolved string,
+	category string,
+	operation job.OperationType,
 	data any,
-) ([]byte, error) {
-	return json.Marshal(secret.Plain(data))
+) (*job.Request, error) {
+	req := &job.Request{
+		JobID:     uuid.New().String(),
+		Type:      typ,
+		Category:  category,
+		Operation: operation,
+	}
+	if c.agentKeyStore == nil || !secret.Has(data) {
+		dataBytes, err := json.Marshal(secret.Plain(data))
+		if err != nil {
+			return nil, fmt.Errorf("marshal data: %w", err)
+		}
+		req.Data = dataBytes
+
+		return req, nil
+	}
+
+	sealer, err := newSealer(req.JobID)
+	if err != nil {
+		return nil, err
+	}
+	dataBytes, err := json.Marshal(secret.PlainFunc(data, sealer.Value))
+	if err != nil {
+		return nil, fmt.Errorf("marshal data: %w", err)
+	}
+	req.Data = dataBytes
+	req.SealedFrom = sealer.From()
+	req.SealedKeys = map[string]string{}
+
+	agents, err := c.ListAgents(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list the agents to seal the job to: %w", err)
+	}
+	for _, a := range job.Recipients(agents, target, resolved) {
+		key, err := c.agentKeyStore.LookupAgentKey(ctx, a.MachineID)
+		if err != nil || key.EncryptionKey == "" {
+			// The agent reports the job as not sealed to it, and does
+			// not run it.
+			c.logger.WarnContext(ctx, "the job is not sealed to an agent with no encryption key",
+				slog.String("job_id", req.JobID),
+				slog.String("machine_id", a.MachineID))
+
+			continue
+		}
+		sealed, err := sealer.KeyFor(key.EncryptionKey)
+		if err != nil {
+			return nil, err
+		}
+		req.SealedKeys[a.MachineID] = sealed
+	}
+
+	return req, nil
 }

@@ -27,6 +27,7 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/agent"
@@ -34,6 +35,8 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/secret/seal"
 )
 
 type greeter interface{ Greet(name string) string }
@@ -70,6 +73,18 @@ func greetConcrete(
 	return greetOut{Text: g.Greet(in.Name)}, nil
 }
 
+type loginIn struct {
+	Token secret.Value `json:"token"`
+}
+
+func login(
+	_ context.Context,
+	g greeter,
+	in loginIn,
+) (greetOut, error) {
+	return greetOut{Text: g.Greet(in.Token.Reveal())}, nil
+}
+
 func build(
 	p english,
 	err error,
@@ -88,6 +103,7 @@ func (s *ProcessorBehaviorPublicTestSuite) SetupTest() {
 		behavior.Read("get", greet),
 		behavior.Read("list", greetConcrete),
 		behavior.Read("show", greet).On("debian"),
+		behavior.Read("login", login),
 	))
 	behavior.Register(behavior.Define("broken", "Fails to build", behavior.Node,
 		behavior.Platform("test", build(english{}, errors.New("no socket"))),
@@ -200,6 +216,81 @@ func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
 				s.ErrorIs(err, provider.ErrUnsupported)
 			case tc.wantErr != "":
 				s.ErrorContains(err, tc.wantErr)
+			default:
+				s.Require().NoError(err)
+				s.JSONEq(tc.want, string(out))
+			}
+		})
+	}
+}
+
+// TestSealedSecrets: the dispatch opens each sealed secret of the job with
+// the Opener of the job, before the provider runs.
+func (s *ProcessorBehaviorPublicTestSuite) TestSealedSecrets() {
+	own, err := nkeys.CreateCurveKeys()
+	s.Require().NoError(err)
+	pub, _ := own.PublicKey()
+	sealer, err := seal.New("job-1")
+	s.Require().NoError(err)
+	key, err := sealer.KeyFor(pub)
+	s.Require().NoError(err)
+	opener, err := seal.Open("job-1", key, sealer.From(), own)
+	s.Require().NoError(err)
+	sealed := map[string]string{"m-1": key}
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		data    string
+		want    string
+		wantErr error
+		errText string
+	}{
+		{
+			name: "when the job has a sealed secret, the provider gets its value",
+			ctx:  seal.WithOpener(context.Background(), opener),
+			data: `{"token":"` + sealer.Value("web") + `"}`,
+			want: `{"text":"hello web"}`,
+		},
+		{
+			name:    "when the job was not sealed to this agent, it does not run",
+			ctx:     context.Background(),
+			data:    `{"token":"` + sealer.Value("web") + `"}`,
+			wantErr: seal.ErrNotSealedToAgent,
+		},
+		{
+			name:    "when the input is not the method's, it is invalid",
+			ctx:     seal.WithOpener(context.Background(), opener),
+			data:    `{"token":1}`,
+			wantErr: behavior.ErrInvalid,
+		},
+		{
+			name:    "when a secret is not sealed, it does not run",
+			ctx:     seal.WithOpener(context.Background(), opener),
+			data:    `{"token":"web"}`,
+			errText: "a secret of the job is not sealed",
+		},
+	}
+
+	process := agent.NewBehaviorProcessor(
+		agent.BuildBehaviorProviders(host.Host{Platform: "test"}, slog.Default()),
+		slog.Default(),
+	)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			out, err := process(tc.ctx, job.Request{
+				JobID:      "job-1",
+				Operation:  "greeting.login",
+				Data:       json.RawMessage(tc.data),
+				SealedKeys: sealed,
+				SealedFrom: sealer.From(),
+			})
+
+			switch {
+			case tc.wantErr != nil:
+				s.ErrorIs(err, tc.wantErr)
+			case tc.errText != "":
+				s.EqualError(err, tc.errText)
 			default:
 				s.Require().NoError(err)
 				s.JSONEq(tc.want, string(out))

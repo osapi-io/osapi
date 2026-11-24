@@ -107,11 +107,11 @@ func (s *BeforePublicTestSuite) TestRunBefore() {
 			},
 		},
 		{
-			name: "when the step leaves the secret set, the job is not made",
+			name: "when the step leaves the secret set, the job gets it, for the controller to seal",
 			step: func(_ context.Context, in pwIn) (pwIn, error) { return in, nil },
 			validateFunc: func(out any, err error) {
-				s.Nil(out)
-				s.ErrorContains(err, "left the secret field password set")
+				s.Require().NoError(err)
+				s.Equal(secret.Value("hunter2"), out.(pwIn).Password)
 			},
 		},
 	}

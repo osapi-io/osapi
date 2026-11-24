@@ -25,6 +25,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/secret/seal"
 )
 
 // ExportSanitizeKeyForNATS exposes the private sanitizeKeyForNATS for testing.
@@ -113,9 +116,30 @@ func ResetNewFn() {
 // ExportEndCollectSpan exposes endCollectSpan for testing.
 var ExportEndCollectSpan = endCollectSpan
 
-// ExportMarshalData exposes the private marshalData for testing.
-func ExportMarshalData(
+// ExportOperation exposes operation for testing.
+var ExportOperation = operation
+
+// ExportRequest calls request.
+func (c *Client) ExportRequest(
+	ctx context.Context,
+	typ job.Type,
+	target string,
+	resolved string,
+	category string,
+	op job.OperationType,
 	data any,
-) ([]byte, error) {
-	return marshalData(data)
+) (*job.Request, error) {
+	return c.request(ctx, typ, target, resolved, category, op, data)
+}
+
+// SetNewSealer replaces the function that makes the Sealer of a job.
+func SetNewSealer(
+	fn func(jobID string) (*seal.Sealer, error),
+) {
+	newSealer = fn
+}
+
+// ResetNewSealer restores the function that makes the Sealer of a job.
+func ResetNewSealer() {
+	newSealer = seal.New
 }

@@ -26,12 +26,15 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/secret/seal"
 )
 
 // BehaviorProviders are the providers the agent built for every registered
@@ -136,17 +139,49 @@ func NewBehaviorProcessor(
 			slog.String("operation", b.Operation(m)),
 		)
 
+		data := req.Data
+		if len(req.SealedKeys) > 0 {
+			opened, err := openSecrets(ctx, m, data)
+			if err != nil {
+				return nil, err
+			}
+			data = opened
+		}
+
 		// The API checked the input before it queued the job, but a job can
 		// reach NATS another way, so the agent checks it again.
-		if err := m.Check(ctx, req.Data); err != nil {
+		if err := m.Check(ctx, data); err != nil {
 			return nil, err
 		}
 
-		out, err := m.Invoke(ctx, p, req.Data)
+		out, err := m.Invoke(ctx, p, data)
 		if err != nil {
 			return nil, err
 		}
 
 		return json.Marshal(out)
 	}
+}
+
+// openSecrets is data, the input of m, with each sealed secret opened with
+// the Opener of the job. The values live only in the input of this one
+// call: the agent writes them to no log, state or result.
+func openSecrets(
+	ctx context.Context,
+	m *behavior.Method,
+	data json.RawMessage,
+) (json.RawMessage, error) {
+	o := seal.OpenerFrom(ctx)
+	if o == nil {
+		return nil, seal.ErrNotSealedToAgent
+	}
+	in := reflect.New(m.In)
+	if err := json.Unmarshal(data, in.Interface()); err != nil {
+		return nil, fmt.Errorf("%w: %s", behavior.ErrInvalid, err)
+	}
+	if err := secret.Map(in.Interface(), o.Value); err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(secret.Plain(in.Elem().Interface()))
 }

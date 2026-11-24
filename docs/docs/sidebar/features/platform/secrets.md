@@ -7,8 +7,11 @@ tells what osapi does with a secret now.
 
 A behavior input that holds a secret, such as the `--env` of
 `osapi client node docker create`, stays out of the audit log and the traces.
-The value is still in the job data in NATS. Thus do not give a long-lived token
-to a behavior input.
+When `controller.pki.enabled` is true, it also stays out of NATS: the controller
+seals the value to each agent that the target names, and only those agents can
+open it. [Sealed values](#sealed-values) has how. When PKI is off, no agent has
+an encryption key. Then the job data in NATS has the value as plain text, so do
+not give a long-lived token to a behavior input.
 
 A password is the exception. `osapi client node user create` and
 `osapi client node user password update` send the password to the controller,
@@ -47,9 +50,9 @@ The target scope of the token applies too, as to each request. A vault with
 `targets` gives its secrets to one host or to a label, such as `group:prod`. A
 target such as `_all` is not in them, so give the host or the label.
 
-The value is in the job data in NATS, as a value that you give is. Thus a
-reference keeps the value out of the request, the shell history and the audit
-log, but not out of NATS.
+A reference keeps the value out of the request, the shell history and the audit
+log. The controller then seals the value in the job, as it seals a value that
+you give.
 
 The audit log records a reference as it is, so an entry shows which secret a
 request used, on which target. It records `[redacted]` in place of a value.
@@ -104,8 +107,30 @@ On the Plans page of the UI, a secret field of a step has a key button that
 lists the reference of each key. A plan holds only references: Export YAML
 writes `<secret>` for a value that you typed.
 
+## Sealed values
+
+When `controller.pki.enabled` is true, the controller seals each secret of a job
+before it stores the job. `osapi client job get` then shows each secret as
+`sealed:` and ciphertext, and the job has a `sealed_keys` map with one entry for
+each agent that can open it. The job data in JetStream and in the job KV never
+has the value.
+
+The controller seals the job to each agent that the target names when it queues
+the job, and that has an encryption key:
+
+- An agent that joins after that has no key in the job. It fails the job with
+  the reason `the job was not sealed to this agent`, and does not run it. Run
+  the job again.
+- An agent that was admitted before agents had an encryption key has no key in
+  the job either. Enroll it again, as
+  [Agent identity](agent-identity.md#an-agent-admitted-before-the-encryption-key)
+  tells.
+
+A password is not sealed: the controller hashes it, and the job has only the
+hash.
+
 ## What comes next
 
-Values sealed to the agent that uses them are in progress, in
+More parts of the secrets are in progress, in
 [osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This page tells
 how to use each part when it is built.
