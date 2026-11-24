@@ -22,51 +22,95 @@ package types
 
 import "slices"
 
-// JobStatus represents the status of a job in the OSAPI system.
-// These values match the status strings returned by the REST API.
+// JobStatus is the status of a job: what the controller computes from the
+// status events of each agent that the job went to. It is one of Values.
 type JobStatus string
 
+// The statuses of a job.
 const (
-	// JobStatusSubmitted indicates the job is queued but no agent has
-	// acknowledged it yet.
+	// JobStatusSubmitted is a job in the queue that no agent has taken.
 	JobStatusSubmitted JobStatus = "submitted"
-	// JobStatusAcknowledged indicates an agent received the job.
-	JobStatusAcknowledged JobStatus = "acknowledged"
-	// JobStatusStarted indicates the agent has begun processing.
-	JobStatusStarted JobStatus = "started"
-	// JobStatusProcessing indicates the job is currently being processed.
+	// JobStatusProcessing is a job that an agent acknowledged or started.
 	JobStatusProcessing JobStatus = "processing"
-	// JobStatusCompleted indicates the job completed successfully.
+	// JobStatusCompleted is a job that each agent completed, or completed
+	// or skipped.
 	JobStatusCompleted JobStatus = "completed"
-	// JobStatusFailed indicates the job failed during processing.
+	// JobStatusFailed is a job that failed on each agent that did not skip
+	// it.
 	JobStatusFailed JobStatus = "failed"
-	// JobStatusSkipped indicates the job was skipped because the operation
-	// is not supported on the target OS family.
-	JobStatusSkipped JobStatus = "skipped"
-	// JobStatusTimeout indicates the agent never answered. Distinct from
-	// failed, which means the operation ran and did not succeed: a timeout
-	// says nothing about whether it ran, so an operator has to go and look.
-	JobStatusTimeout JobStatus = "timeout"
-	// JobStatusPartialFailure indicates some agents completed and some
-	// failed in a broadcast operation.
+	// JobStatusPartialFailure is a job that completed on some agents and
+	// failed on others.
 	JobStatusPartialFailure JobStatus = "partial_failure"
-	// JobStatusRetried indicates the job was retried after a failure.
-	JobStatusRetried JobStatus = "retried"
-	// JobStatusPending indicates the job is queued but not yet processed.
-	JobStatusPending JobStatus = "pending"
+	// JobStatusSkipped is a job that each agent skipped, because the
+	// operation is not supported on its OS family.
+	JobStatusSkipped JobStatus = "skipped"
 )
 
-// Values are each status of a job.
+// Values are the statuses of a job, in the order of their life.
 func (JobStatus) Values() []JobStatus {
 	return []JobStatus{
-		JobStatusSubmitted, JobStatusAcknowledged, JobStatusStarted,
-		JobStatusProcessing, JobStatusCompleted, JobStatusFailed, JobStatusSkipped,
-		JobStatusTimeout, JobStatusPartialFailure, JobStatusRetried, JobStatusPending,
+		JobStatusSubmitted,
+		JobStatusProcessing,
+		JobStatusCompleted,
+		JobStatusFailed,
+		JobStatusPartialFailure,
+		JobStatusSkipped,
 	}
 }
 
-// Valid reports whether s is one of the statuses of a job.
+// Valid is whether s is one of Values.
 func (s JobStatus) Valid() bool {
+	return slices.Contains(s.Values(), s)
+}
+
+// AgentJobStatus is the status of a job on one host: the event that a
+// status key of the job records, the state of an agent, and the status of an
+// agent's response. The controller records submitted and retried for the
+// host _api, and an agent records the others. It is one of Values.
+type AgentJobStatus string
+
+// The statuses of a job on a host.
+const (
+	// AgentJobStatusSubmitted is the event of the controller that put the
+	// job in the queue.
+	AgentJobStatusSubmitted AgentJobStatus = "submitted"
+	// AgentJobStatusAcknowledged is an agent that received the job.
+	AgentJobStatusAcknowledged AgentJobStatus = "acknowledged"
+	// AgentJobStatusStarted is an agent that started the operation.
+	AgentJobStatusStarted AgentJobStatus = "started"
+	// AgentJobStatusCompleted is an agent that completed the operation.
+	AgentJobStatusCompleted AgentJobStatus = "completed"
+	// AgentJobStatusFailed is an agent on which the operation failed.
+	AgentJobStatusFailed AgentJobStatus = "failed"
+	// AgentJobStatusSkipped is an agent that skipped the operation, because
+	// it is not supported on the OS family of the host.
+	AgentJobStatusSkipped AgentJobStatus = "skipped"
+	// AgentJobStatusRetried is the event of the controller that sent the
+	// job again as a new job.
+	AgentJobStatusRetried AgentJobStatus = "retried"
+	// AgentJobStatusTimeout is a host whose agent did not answer in time.
+	// The controller sets it on the response, and no event records it.
+	// Distinct from failed, which means the operation ran and did not
+	// succeed: a timeout says nothing about whether it ran.
+	AgentJobStatusTimeout AgentJobStatus = "timeout"
+)
+
+// Values are the statuses of a job on a host, in the order of their life.
+func (AgentJobStatus) Values() []AgentJobStatus {
+	return []AgentJobStatus{
+		AgentJobStatusSubmitted,
+		AgentJobStatusAcknowledged,
+		AgentJobStatusStarted,
+		AgentJobStatusCompleted,
+		AgentJobStatusFailed,
+		AgentJobStatusSkipped,
+		AgentJobStatusRetried,
+		AgentJobStatusTimeout,
+	}
+}
+
+// Valid is whether s is one of Values.
+func (s AgentJobStatus) Valid() bool {
 	return slices.Contains(s.Values(), s)
 }
 

@@ -5,7 +5,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { unwrap, usePolling } from "@/hooks/use-polling";
 import { useJob } from "@/hooks/use-job";
 import { enumLabel } from "@/lib/format";
-import { GetJobsStatus } from "@/sdk/gen/schemas";
+import { JobStatus } from "@/sdk/gen/schemas";
 import { useParams } from "react-router-dom";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,7 +40,7 @@ const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
-  ...Object.values(GetJobsStatus).map((v) => ({
+  ...Object.values(JobStatus).map((v) => ({
     value: v,
     label: enumLabel(v),
   })),
@@ -65,7 +65,7 @@ export function Jobs() {
         await getJobs({
           limit: PAGE_SIZE,
           offset,
-          ...(statusFilter ? { status: statusFilter as GetJobsStatus } : {}),
+          ...(statusFilter ? { status: statusFilter as JobStatus } : {}),
         }),
         "Failed to fetch jobs",
       ),

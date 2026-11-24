@@ -40,6 +40,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/secret/seal"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Errors returned by unwrapJobEnvelope. Each names a distinct rejection
@@ -127,7 +128,7 @@ func (a *Agent) unwrapJobEnvelope(
 func (a *Agent) writeStatusEvent(
 	ctx context.Context,
 	jobID string,
-	event string,
+	event types.AgentJobStatus,
 	data map[string]interface{},
 ) error {
 	// Use cached hostname resolved at startup.
@@ -371,7 +372,7 @@ func (a *Agent) handleJobMessage(
 	if err := a.writeStatusEvent(
 		ctx,
 		jobKey,
-		string(job.StatusAcknowledged),
+		types.AgentJobStatusAcknowledged,
 		map[string]interface{}{
 			"subject":   msg.Subject(),
 			"category":  jobRequest.Category,
@@ -428,7 +429,7 @@ func (a *Agent) handleJobMessage(
 
 	// Write started event
 	startTime := time.Now()
-	if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusStarted), map[string]interface{}{
+	if err := a.writeStatusEvent(ctx, jobKey, types.AgentJobStatusStarted, map[string]interface{}{
 		"pid": os.Getpid(),
 	}); err != nil {
 		a.logger.ErrorContext(
@@ -446,7 +447,6 @@ func (a *Agent) handleJobMessage(
 	hostname := a.hostname
 	response := job.Response{
 		JobID:     jobRequest.JobID,
-		Status:    job.StatusProcessing,
 		Hostname:  hostname,
 		Timestamp: time.Now(),
 	}
@@ -477,7 +477,7 @@ func (a *Agent) handleJobMessage(
 			slog.String("operation", jobRequest.Operation),
 			slog.String("error", err.Error()),
 		)
-		response.Status = job.StatusSkipped
+		response.Status = types.AgentJobStatusSkipped
 		response.Error = err.Error()
 		response.ErrorCode = job.ErrorCodeUnsupported
 	} else if err != nil {
@@ -489,11 +489,11 @@ func (a *Agent) handleJobMessage(
 			slog.String("operation", jobRequest.Operation),
 			slog.String("error", err.Error()),
 		)
-		response.Status = job.StatusFailed
+		response.Status = types.AgentJobStatusFailed
 		response.Error = err.Error()
 		response.ErrorCode = classifyProviderError(err)
 	} else {
-		response.Status = job.StatusCompleted
+		response.Status = types.AgentJobStatusCompleted
 		response.Data = result
 
 		// Extract "changed" from result data for mutation operations
@@ -512,7 +512,7 @@ func (a *Agent) handleJobMessage(
 	}
 	if a.jobsProcessed != nil {
 		status := "completed"
-		if response.Status == job.StatusFailed {
+		if response.Status == types.AgentJobStatusFailed {
 			status = "failed"
 		}
 		a.jobsProcessed.Add(ctx, 1,
@@ -530,7 +530,7 @@ func (a *Agent) handleJobMessage(
 	}
 
 	err = a.jobClient.WriteJobResponse(ctx, jobKey, hostname,
-		response.Data, string(response.Status), errorMsg, response.ErrorCode, response.Changed,
+		response.Data, response.Status, errorMsg, response.ErrorCode, response.Changed,
 		response.Steps)
 	if err != nil {
 		// The operation already ran. Returning an error here would leave
@@ -550,7 +550,7 @@ func (a *Agent) handleJobMessage(
 		if statusErr := a.writeStatusEvent(
 			ctx,
 			jobKey,
-			string(job.StatusFailed),
+			types.AgentJobStatusFailed,
 			map[string]interface{}{
 				"error":       fmt.Sprintf("failed to store job response: %s", err.Error()),
 				"duration_ms": time.Since(startTime).Milliseconds(),
@@ -567,22 +567,32 @@ func (a *Agent) handleJobMessage(
 
 	// Write terminal status event after the response is persisted.
 	switch response.Status {
-	case job.StatusFailed:
-		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusFailed), map[string]interface{}{
-			"error":       response.Error,
-			"duration_ms": time.Since(startTime).Milliseconds(),
-		}); err != nil {
+	case types.AgentJobStatusFailed:
+		if err := a.writeStatusEvent(
+			ctx,
+			jobKey,
+			types.AgentJobStatusFailed,
+			map[string]interface{}{
+				"error":       response.Error,
+				"duration_ms": time.Since(startTime).Milliseconds(),
+			},
+		); err != nil {
 			a.logger.ErrorContext(
 				ctx,
 				"failed to write failed event",
 				slog.String("error", err.Error()),
 			)
 		}
-	case job.StatusSkipped:
-		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusSkipped), map[string]interface{}{
-			"error":       response.Error,
-			"duration_ms": time.Since(startTime).Milliseconds(),
-		}); err != nil {
+	case types.AgentJobStatusSkipped:
+		if err := a.writeStatusEvent(
+			ctx,
+			jobKey,
+			types.AgentJobStatusSkipped,
+			map[string]interface{}{
+				"error":       response.Error,
+				"duration_ms": time.Since(startTime).Milliseconds(),
+			},
+		); err != nil {
 			a.logger.ErrorContext(
 				ctx,
 				"failed to write skipped event",
@@ -593,7 +603,7 @@ func (a *Agent) handleJobMessage(
 		if err := a.writeStatusEvent(
 			ctx,
 			jobKey,
-			string(job.StatusCompleted),
+			types.AgentJobStatusCompleted,
 			map[string]interface{}{
 				"duration_ms": time.Since(startTime).Milliseconds(),
 				"result_size": len(result),

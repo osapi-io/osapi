@@ -1701,15 +1701,9 @@ paths:
           in: query
           name: status
           schema:
-            enum:
-              - submitted
-              - processing
-              - completed
-              - failed
-              - partial_failure
-            type: string
+            $ref: '#/components/schemas/JobStatus'
           x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=submitted processing completed failed partial_failure
+            validate: omitempty,enum
         - description: Maximum number of jobs per page (1-100).
           in: query
           name: limit
@@ -10263,17 +10257,17 @@ components:
           description: Number of jobs currently processing.
           example: 2
           type: integer
+        submitted:
+          description: Number of jobs that no agent has taken.
+          example: 5
+          type: integer
         total:
           description: Total number of jobs.
           example: 100
           type: integer
-        unprocessed:
-          description: Number of unprocessed jobs.
-          example: 5
-          type: integer
       required:
         - total
-        - unprocessed
+        - submitted
         - processing
         - completed
         - failed
@@ -10417,6 +10411,18 @@ components:
         - bytes
         - consumers
       type: object
+    AgentJobStatus:
+      description: The status of a job on one host. The controller records submitted and retried; an agent records acknowledged, started, completed, failed or skipped; and timeout is a host whose agent did not answer in time.
+      enum:
+        - submitted
+        - acknowledged
+        - started
+        - completed
+        - failed
+        - skipped
+        - retried
+        - timeout
+      type: string
     CreateJobResponse:
       properties:
         job_id:
@@ -10432,9 +10438,7 @@ components:
           format: int64
           type: integer
         status:
-          description: Initial status of the job.
-          example: unprocessed
-          type: string
+          $ref: '#/components/schemas/JobStatus'
         timestamp:
           description: Creation timestamp.
           example: "2025-06-14T10:00:00Z"
@@ -10456,16 +10460,7 @@ components:
               hostname:
                 type: string
               status:
-                description: 'How far the agent got: acknowledged, started, completed, failed or skipped.'
-                enum:
-                  - acknowledged
-                  - started
-                  - completed
-                  - failed
-                  - skipped
-                type: string
-                x-oapi-codegen-extra-tags:
-                  validate: omitempty,oneof=acknowledged started completed failed skipped
+                $ref: '#/components/schemas/AgentJobStatus'
             required:
               - hostname
             type: object
@@ -10517,7 +10512,7 @@ components:
               hostname:
                 type: string
               status:
-                type: string
+                $ref: '#/components/schemas/AgentJobStatus'
               steps:
                 description: The calls of other behaviors that the method made on the host, also when one failed.
                 items:
@@ -10530,8 +10525,7 @@ components:
         result:
           description: The result data if completed.
         status:
-          description: Current status of the job.
-          type: string
+          $ref: '#/components/schemas/JobStatus'
         target:
           description: 'The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered.'
           type: string
@@ -10543,8 +10537,7 @@ components:
                 description: Error details if applicable.
                 type: string
               event:
-                description: Event type (submitted, acknowledged, started, completed, failed, retried).
-                type: string
+                $ref: '#/components/schemas/AgentJobStatus'
               hostname:
                 description: Agent or source that generated the event.
                 type: string
@@ -10560,6 +10553,16 @@ components:
           description: Last update timestamp.
           type: string
       type: object
+    JobStatus:
+      description: 'The status of a job, which the controller computes from what each agent did: submitted, processing, completed, failed, partial_failure (completed on some agents and failed on others) or skipped (each agent skipped it).'
+      enum:
+        - submitted
+        - processing
+        - completed
+        - failed
+        - partial_failure
+        - skipped
+      type: string
     ListJobsResponse:
       properties:
         items:
@@ -10569,7 +10572,7 @@ components:
         status_counts:
           additionalProperties:
             type: integer
-          description: Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass, with no extra reads.
+          description: Count of all jobs by status. Derived from key names during the listing pass, with no extra reads.
           example:
             completed: 30
             failed: 3

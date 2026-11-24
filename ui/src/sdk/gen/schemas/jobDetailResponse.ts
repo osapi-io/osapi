@@ -8,6 +8,7 @@ import type { JobDetailResponseAgentStatesItem } from './jobDetailResponseAgentS
 import type { JobDetailResponseOperation } from './jobDetailResponseOperation';
 import type { JobDetailResponseResponsesItem } from './jobDetailResponseResponsesItem';
 import type { JobDetailResponseTimelineItem } from './jobDetailResponseTimelineItem';
+import type { JobStatus } from './jobStatus';
 
 export interface JobDetailResponse {
   /** How far each agent got, by hostname. */
@@ -30,8 +31,7 @@ export interface JobDetailResponse {
   responses?: JobDetailResponseResponsesItem[];
   /** The result data if completed. */
   result?: unknown;
-  /** Current status of the job. */
-  status?: string;
+  status?: JobStatus;
   /** The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered. */
   target?: string;
   /** Chronological sequence of job lifecycle events. */

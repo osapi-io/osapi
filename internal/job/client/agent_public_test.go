@@ -77,7 +77,7 @@ func (s *AgentPublicTestSuite) TestWriteStatusEvent() {
 	tests := []struct {
 		name         string
 		jobID        string
-		event        string
+		event        types.AgentJobStatus
 		hostname     string
 		data         map[string]interface{}
 		kvError      error
@@ -191,7 +191,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 		jobID        string
 		hostname     string
 		responseData []byte
-		status       string
+		status       types.AgentJobStatus
 		errorMsg     string
 		errorCode    job.ErrorCode
 		changed      *bool
@@ -337,7 +337,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISigner() {
 		jobID        string
 		hostname     string
 		responseData []byte
-		status       string
+		status       types.AgentJobStatus
 		errorMsg     string
 		changed      *bool
 		setup        func(*jobmocks.MockNATSClient)

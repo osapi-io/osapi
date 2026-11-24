@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -55,7 +56,7 @@ func runList2(
 ) error {
 	resp, err := c.Job.List(ctx, client.JobListParams{
 		Limit:  3,
-		Status: client.GetJobsStatus("completed"),
+		Status: types.JobStatus("completed"),
 	})
 	if err != nil {
 		return err

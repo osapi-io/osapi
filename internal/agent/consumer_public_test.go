@@ -43,6 +43,7 @@ import (
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type ConsumerPublicTestSuite struct {
@@ -672,20 +673,20 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 
 				// Mock status event writes
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-key", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-key", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-key", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-key", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-key", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-key", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Mock response write
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-key", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-key", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {

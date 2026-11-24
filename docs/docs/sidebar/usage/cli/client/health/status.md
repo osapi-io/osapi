@@ -40,12 +40,12 @@ $ osapi client health status
   [1magent[0m       [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m-[0m           [38;2;138;138;138m51h2m[0m  0.40   30.0 MB  v1.4.0
 
 [1;38;2;69;174;23mJobs:[0m
-  [38;2;58;143;20mTotal:[0m        128
-  [38;2;58;143;20mUnprocessed:[0m  3
-  [38;2;58;143;20mProcessing:[0m   1
-  [38;2;58;143;20mCompleted:[0m    121
-  [38;2;58;143;20mFailed:[0m       3
-  [38;2;58;143;20mDLQ:[0m          0
+  [38;2;58;143;20mTotal:[0m       128
+  [38;2;58;143;20mSubmitted:[0m   3
+  [38;2;58;143;20mProcessing:[0m  1
+  [38;2;58;143;20mCompleted:[0m   121
+  [38;2;58;143;20mFailed:[0m      3
+  [38;2;58;143;20mDLQ:[0m         0
 
 [1;38;2;107;92;255mStreams (1):[0m
   [38;2;89;76;216mNAME  [0m[38;2;89;76;216mMESSAGES  [0m[38;2;89;76;216mBYTES     [0m[38;2;89;76;216mCONSUMERS[0m
@@ -111,7 +111,7 @@ With `--json`, the API's response:
   ],
   "jobs": {
     "total": 128,
-    "unprocessed": 3,
+    "submitted": 3,
     "processing": 1,
     "completed": 121,
     "failed": 3,

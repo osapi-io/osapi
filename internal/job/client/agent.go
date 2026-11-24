@@ -62,7 +62,9 @@ func (c *Client) HasJobResponse(
 // This eliminates race conditions by never updating existing keys.
 func (c *Client) WriteStatusEvent(
 	ctx context.Context,
-	jobID, event, hostname string,
+	jobID string,
+	event types.AgentJobStatus,
+	hostname string,
 	data map[string]interface{},
 ) error {
 	// Capture time once for consistency across key and payload
@@ -101,7 +103,7 @@ func (c *Client) WriteStatusEvent(
 	c.logger.Debug(
 		"wrote status event",
 		slog.String("job_id", jobID),
-		slog.String("event", event),
+		slog.String("event", string(event)),
 		slog.String("hostname", hostname),
 		slog.String("key", statusKey),
 	)
@@ -114,7 +116,7 @@ func (c *Client) WriteJobResponse(
 	ctx context.Context,
 	jobID, hostname string,
 	responseData []byte,
-	status string,
+	status types.AgentJobStatus,
 	errorMsg string,
 	errorCode job.ErrorCode,
 	changed *bool,
@@ -126,7 +128,7 @@ func (c *Client) WriteJobResponse(
 
 	// Build response structure
 	response := job.Response{
-		Status:    job.Status(status),
+		Status:    status,
 		Data:      responseData,
 		Error:     errorMsg,
 		ErrorCode: errorCode,
@@ -155,7 +157,7 @@ func (c *Client) WriteJobResponse(
 		"wrote job response",
 		slog.String("job_id", jobID),
 		slog.String("hostname", hostname),
-		slog.String("status", status),
+		slog.String("status", string(status)),
 		slog.String("key", responseKey),
 	)
 

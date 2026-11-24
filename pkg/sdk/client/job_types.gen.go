@@ -12,24 +12,14 @@ type CreateJobResponse struct {
 	// The KV revision number.
 	Revision int64 `json:"revision,omitempty"`
 
-	// Initial status of the job.
-	Status string `json:"status"`
+	// The status of a job, which the controller computes from what each agent did:
+	// submitted, processing, completed, failed, partial_failure (completed on some
+	// agents and failed on others) or skipped (each agent skipped it).
+	Status types.JobStatus `json:"status"`
 
 	// Creation timestamp.
 	Timestamp string `json:"timestamp,omitempty"`
 }
-
-// GetJobsStatus: Filter jobs by status.
-type GetJobsStatus string
-
-// The values of GetJobsStatus.
-const (
-	GetJobsStatusSubmitted      GetJobsStatus = "submitted"
-	GetJobsStatusProcessing     GetJobsStatus = "processing"
-	GetJobsStatusCompleted      GetJobsStatus = "completed"
-	GetJobsStatusFailed         GetJobsStatus = "failed"
-	GetJobsStatusPartialFailure GetJobsStatus = "partial_failure"
-)
 
 // JobDetailResponse is the JobDetailResponse of the spec.
 type JobDetailResponse struct {
@@ -66,8 +56,10 @@ type JobDetailResponse struct {
 	// The result data if completed.
 	Result any `json:"result,omitempty"`
 
-	// Current status of the job.
-	Status string `json:"status,omitempty"`
+	// The status of a job, which the controller computes from what each agent did:
+	// submitted, processing, completed, failed, partial_failure (completed on some
+	// agents and failed on others) or skipped (each agent skipped it).
+	Status types.JobStatus `json:"status,omitzero"`
 
 	// The target the request gave: _any, _all, a hostname, or a label such as
 	// group:web.dev. A job stored before targets were kept has the host that
@@ -93,23 +85,11 @@ type JobDetailResponseAgentStatesItem struct {
 	// Hostname is the property hostname.
 	Hostname string `json:"hostname"`
 
-	// How far the agent got: acknowledged, started, completed, failed or skipped.
-	// It is one of: acknowledged, started, completed, failed, skipped.
-	Status JobDetailResponseAgentStatesItemStatus `json:"status,omitzero"`
+	// The status of a job on one host. The controller records submitted and
+	// retried; an agent records acknowledged, started, completed, failed or
+	// skipped; and timeout is a host whose agent did not answer in time.
+	Status types.AgentJobStatus `json:"status,omitzero"`
 }
-
-// JobDetailResponseAgentStatesItemStatus: How far the agent got: acknowledged,
-// started, completed, failed or skipped.
-type JobDetailResponseAgentStatesItemStatus string
-
-// The values of JobDetailResponseAgentStatesItemStatus.
-const (
-	JobDetailResponseAgentStatesItemStatusAcknowledged JobDetailResponseAgentStatesItemStatus = "acknowledged"
-	JobDetailResponseAgentStatesItemStatusStarted      JobDetailResponseAgentStatesItemStatus = "started"
-	JobDetailResponseAgentStatesItemStatusCompleted    JobDetailResponseAgentStatesItemStatus = "completed"
-	JobDetailResponseAgentStatesItemStatusFailed       JobDetailResponseAgentStatesItemStatus = "failed"
-	JobDetailResponseAgentStatesItemStatusSkipped      JobDetailResponseAgentStatesItemStatus = "skipped"
-)
 
 // JobDetailResponseOperation: What the job asked for, with each secret masked.
 type JobDetailResponseOperation struct {
@@ -135,8 +115,10 @@ type JobDetailResponseResponsesItem struct {
 	// Hostname is the property hostname.
 	Hostname string `json:"hostname"`
 
-	// Status is the property status.
-	Status string `json:"status,omitempty"`
+	// The status of a job on one host. The controller records submitted and
+	// retried; an agent records acknowledged, started, completed, failed or
+	// skipped; and timeout is a host whose agent did not answer in time.
+	Status types.AgentJobStatus `json:"status,omitzero"`
 
 	// The calls of other behaviors that the method made on the host, also when one
 	// failed.
@@ -149,8 +131,10 @@ type JobDetailResponseTimelineItem struct {
 	// Error details if applicable.
 	Error string `json:"error,omitempty"`
 
-	// Event type (submitted, acknowledged, started, completed, failed, retried).
-	Event string `json:"event,omitempty"`
+	// The status of a job on one host. The controller records submitted and
+	// retried; an agent records acknowledged, started, completed, failed or
+	// skipped; and timeout is a host whose agent did not answer in time.
+	Event types.AgentJobStatus `json:"event,omitzero"`
 
 	// Agent or source that generated the event.
 	Hostname string `json:"hostname,omitempty"`
@@ -167,9 +151,8 @@ type ListJobsResponse struct {
 	// Items is the property items.
 	Items []JobDetailResponse `json:"items,omitempty"`
 
-	// Count of all jobs by status (submitted, processing, completed, failed,
-	// partial_failure). Derived from key names during the listing pass, with no
-	// extra reads.
+	// Count of all jobs by status. Derived from key names during the listing pass,
+	// with no extra reads.
 	StatusCounts map[string]int `json:"status_counts,omitempty"`
 
 	// Total number of jobs matching the filter.

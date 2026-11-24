@@ -155,17 +155,17 @@ components:
           description: Number of jobs currently processing.
           example: 2
           type: integer
+        submitted:
+          description: Number of jobs that no agent has taken.
+          example: 5
+          type: integer
         total:
           description: Total number of jobs.
           example: 100
           type: integer
-        unprocessed:
-          description: Number of unprocessed jobs.
-          example: 5
-          type: integer
       required:
         - total
-        - unprocessed
+        - submitted
         - processing
         - completed
         - failed

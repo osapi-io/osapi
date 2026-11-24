@@ -45,7 +45,7 @@ func (s *EnumsPublicTestSuite) TestValid() {
 		{name: "when a reason is not listed", valid: types.Reason("not_manged").Valid},
 		{name: "when a permission is listed", valid: types.PermFileRead.Valid, want: true},
 		{name: "when a permission is not listed", valid: types.Permission("helth:read").Valid},
-		{name: "when a job status is listed", valid: types.JobStatusTimeout.Valid, want: true},
+		{name: "when a job status is listed", valid: types.JobStatusSkipped.Valid, want: true},
 		{name: "when a job status is not listed", valid: types.JobStatus("done").Valid},
 	}
 	for _, tc := range tests {

@@ -64,11 +64,11 @@ var (
 			},
 		},
 		Jobs: &JobStats{
-			Total:       128,
-			Completed:   121,
-			Failed:      3,
-			Processing:  1,
-			Unprocessed: 3,
+			Total:      128,
+			Completed:  121,
+			Failed:     3,
+			Processing: 1,
+			Submitted:  3,
 		},
 		Streams: []StreamInfo{{Name: "JOBS", Messages: 128, Bytes: 262144, Consumers: 2}},
 		KVBuckets: []KVBucketInfo{

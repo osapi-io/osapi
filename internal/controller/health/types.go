@@ -88,12 +88,12 @@ type ConsumerDetail struct {
 
 // JobMetrics holds job queue statistics.
 type JobMetrics struct {
-	Total       int
-	Unprocessed int
-	Processing  int
-	Completed   int
-	Failed      int
-	DLQ         int
+	Total      int
+	Submitted  int
+	Processing int
+	Completed  int
+	Failed     int
+	DLQ        int
 }
 
 // AgentMetrics holds agent fleet statistics.

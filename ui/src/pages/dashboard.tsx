@@ -115,7 +115,7 @@ export function Dashboard() {
                   <>
                     of {health.jobs.total}:{" "}
                     <Count n={health.jobs.completed} kind="completed" />,{" "}
-                    <Count n={health.jobs.unprocessed} kind="unprocessed" />
+                    <Count n={health.jobs.submitted} kind="submitted" />
                   </>
                 }
               />

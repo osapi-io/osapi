@@ -165,7 +165,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			validateFunc: func(jobID string, resp *job.Response) {
 				s.NotEmpty(jobID)
 				s.NotNil(resp)
-				s.Equal(job.StatusCompleted, resp.Status)
+				s.Equal(types.AgentJobStatusCompleted, resp.Status)
 			},
 		},
 		{
@@ -199,7 +199,7 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			validateFunc: func(jobID string, resp *job.Response) {
 				s.NotEmpty(jobID)
 				s.NotNil(resp)
-				s.Equal(job.StatusSkipped, resp.Status)
+				s.Equal(types.AgentJobStatusSkipped, resp.Status)
 				s.Equal("unsupported", resp.Error)
 			},
 		},
@@ -399,7 +399,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 				s.Contains(results, "server1")
-				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Equal(types.AgentJobStatusCompleted, results["server1"].Status)
 			},
 		},
 		{
@@ -434,7 +434,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
-				s.Equal(job.StatusFailed, results["server1"].Status)
+				s.Equal(types.AgentJobStatusFailed, results["server1"].Status)
 				s.Equal("provider error", results["server1"].Error)
 			},
 		},
@@ -461,7 +461,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
-				s.Equal(job.StatusSkipped, results["server1"].Status)
+				s.Equal(types.AgentJobStatusSkipped, results["server1"].Status)
 			},
 		},
 		{
@@ -504,9 +504,9 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.NotEmpty(jobID)
 				s.Len(results, 2)
 				s.Contains(results, "server1")
-				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Equal(types.AgentJobStatusCompleted, results["server1"].Status)
 				s.Contains(results, "server2")
-				s.Equal(job.StatusFailed, results["server2"].Status)
+				s.Equal(types.AgentJobStatusFailed, results["server2"].Status)
 				s.Equal("provider error", results["server2"].Error)
 			},
 		},
@@ -602,7 +602,7 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 2)
-				s.Equal(job.StatusTimeout, results["server2"].Status)
+				s.Equal(types.AgentJobStatusTimeout, results["server2"].Status)
 			},
 		},
 		{
@@ -732,11 +732,11 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				s.NotEmpty(jobID)
 				s.Len(results, 2)
 				s.Contains(results, "server1")
-				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Equal(types.AgentJobStatusCompleted, results["server1"].Status)
 				s.Contains(results, "server2")
 				// An agent that never answered is a timeout, not a failure:
 				// nobody knows whether the operation ran.
-				s.Equal(job.StatusTimeout, results["server2"].Status)
+				s.Equal(types.AgentJobStatusTimeout, results["server2"].Status)
 				s.Equal(job.ErrorCodeTimeout, results["server2"].ErrorCode)
 				s.Equal("timeout: agent did not respond", results["server2"].Error)
 			},
@@ -854,7 +854,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			validateFunc: func(jobID string, resp *job.Response) {
 				s.NotEmpty(jobID)
 				s.NotNil(resp)
-				s.Equal(job.StatusCompleted, resp.Status)
+				s.Equal(types.AgentJobStatusCompleted, resp.Status)
 			},
 		},
 		{
@@ -888,7 +888,7 @@ func (s *ClientPublicTestSuite) TestModify() {
 			validateFunc: func(jobID string, resp *job.Response) {
 				s.NotEmpty(jobID)
 				s.NotNil(resp)
-				s.Equal(job.StatusSkipped, resp.Status)
+				s.Equal(types.AgentJobStatusSkipped, resp.Status)
 				s.Equal("unsupported", resp.Error)
 			},
 		},
@@ -1015,7 +1015,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
 				s.Contains(results, "server1")
-				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Equal(types.AgentJobStatusCompleted, results["server1"].Status)
 			},
 		},
 		{
@@ -1050,7 +1050,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
-				s.Equal(job.StatusFailed, results["server1"].Status)
+				s.Equal(types.AgentJobStatusFailed, results["server1"].Status)
 				s.Equal("permission denied", results["server1"].Error)
 			},
 		},
@@ -1077,7 +1077,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 			validateFunc: func(jobID string, results map[string]*job.Response) {
 				s.NotEmpty(jobID)
 				s.Len(results, 1)
-				s.Equal(job.StatusSkipped, results["server1"].Status)
+				s.Equal(types.AgentJobStatusSkipped, results["server1"].Status)
 			},
 		},
 		{
@@ -1120,9 +1120,9 @@ func (s *ClientPublicTestSuite) TestModifyBroadcast() {
 				s.NotEmpty(jobID)
 				s.Len(results, 2)
 				s.Contains(results, "server1")
-				s.Equal(job.StatusCompleted, results["server1"].Status)
+				s.Equal(types.AgentJobStatusCompleted, results["server1"].Status)
 				s.Contains(results, "server2")
-				s.Equal(job.StatusFailed, results["server2"].Status)
+				s.Equal(types.AgentJobStatusFailed, results["server2"].Status)
 				s.Equal("permission denied", results["server2"].Error)
 			},
 		},
@@ -1234,7 +1234,7 @@ func (s *ClientPublicTestSuite) TestQueryWithPKISigner() {
 			validateFunc: func(jobID string, resp *job.Response) {
 				s.NotEmpty(jobID)
 				s.NotNil(resp)
-				s.Equal(job.StatusCompleted, resp.Status)
+				s.Equal(types.AgentJobStatusCompleted, resp.Status)
 			},
 		},
 		{
@@ -1424,7 +1424,7 @@ func (s *ClientPublicTestSuite) TestQueryWithTargetResolver() {
 	_, resp, err := c.Query(s.ctx, hostname, category, operation, nil)
 	s.NoError(err)
 	s.NotNil(resp)
-	s.Equal(job.StatusCompleted, resp.Status)
+	s.Equal(types.AgentJobStatusCompleted, resp.Status)
 }
 
 func TestClientPublicTestSuite(
@@ -1687,7 +1687,7 @@ func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
 			},
 			validateFunc: func(resp *job.Response) {
 				s.Require().NotNil(resp)
-				s.Equal(job.StatusCompleted, resp.Status)
+				s.Equal(types.AgentJobStatusCompleted, resp.Status)
 			},
 		},
 		{
@@ -1816,7 +1816,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			},
 			validateFunc: func(responses map[string]*job.Response) {
 				s.Len(responses, 1)
-				s.Equal(job.StatusCompleted, responses["server1"].Status)
+				s.Equal(types.AgentJobStatusCompleted, responses["server1"].Status)
 			},
 		},
 		{

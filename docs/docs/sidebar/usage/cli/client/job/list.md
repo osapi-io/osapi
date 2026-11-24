@@ -123,11 +123,11 @@ shows what a role grants.
 
 ## Flags
 
-| Flag       | Description                                                                       | Default |
-| ---------- | --------------------------------------------------------------------------------- | ------- |
-| `--limit`  | Maximum number of jobs per page (1-100)                                           | `10`    |
-| `--offset` | Number of jobs to skip for pagination                                             |         |
-| `--status` | Filter jobs by status (submitted, processing, completed, failed, partial_failure) |         |
+| Flag       | Description                                                                                | Default |
+| ---------- | ------------------------------------------------------------------------------------------ | ------- |
+| `--limit`  | Maximum number of jobs per page (1-100)                                                    | `10`    |
+| `--offset` | Number of jobs to skip for pagination                                                      |         |
+| `--status` | Filter jobs by status (submitted, processing, completed, failed, partial_failure, skipped) |         |
 
 ## Global flags
 

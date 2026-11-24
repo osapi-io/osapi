@@ -24,6 +24,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Deps is what the job group's handlers use.
@@ -36,7 +37,7 @@ type Deps struct {
 type Jobs interface {
 	ListJobs(
 		ctx context.Context,
-		statusFilter string,
+		statusFilter types.JobStatus,
 		limit int,
 		offset int,
 		keep func(target string) bool,

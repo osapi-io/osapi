@@ -59,8 +59,11 @@ var (
 	}
 
 	sampleList = ListJobsResponse{
-		TotalItems:   2,
-		StatusCounts: map[string]int{"completed": 1, "failed": 1},
+		TotalItems: 2,
+		StatusCounts: map[types.JobStatus]int{
+			types.JobStatusCompleted: 1,
+			types.JobStatusFailed:    1,
+		},
 		Items: []JobDetailResponse{
 			sampleDetail,
 			{
@@ -76,7 +79,7 @@ var (
 
 	sampleRetry = CreateJobResponse{
 		JobID:     "9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6",
-		Status:    "created",
+		Status:    types.JobStatusSubmitted,
 		Revision:  42,
 		Timestamp: "2026-01-15T10:00:00Z",
 	}

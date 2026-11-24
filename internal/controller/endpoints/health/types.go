@@ -96,12 +96,12 @@ type ObjectStoreInfo struct {
 
 // JobStats is the count of the jobs in each state.
 type JobStats struct {
-	Total       int `json:"total"       doc:"Total number of jobs."                    example:"100"`
-	Unprocessed int `json:"unprocessed" doc:"Number of unprocessed jobs."              example:"5"`
-	Processing  int `json:"processing"  doc:"Number of jobs currently processing."     example:"2"`
-	Completed   int `json:"completed"   doc:"Number of completed jobs."                example:"90"`
-	Failed      int `json:"failed"      doc:"Number of failed jobs."                   example:"3"`
-	DLQ         int `json:"dlq"         doc:"Number of jobs in the dead letter queue." example:"0"`
+	Total      int `json:"total"      doc:"Total number of jobs."                    example:"100"`
+	Submitted  int `json:"submitted"  doc:"Number of jobs that no agent has taken."  example:"5"`
+	Processing int `json:"processing" doc:"Number of jobs currently processing."     example:"2"`
+	Completed  int `json:"completed"  doc:"Number of completed jobs."                example:"90"`
+	Failed     int `json:"failed"     doc:"Number of failed jobs."                   example:"3"`
+	DLQ        int `json:"dlq"        doc:"Number of jobs in the dead letter queue." example:"0"`
 }
 
 // AgentStats is the count of the agents, with each one.

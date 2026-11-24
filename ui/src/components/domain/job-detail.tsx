@@ -1,4 +1,4 @@
-import { JobDetailResponseAgentStatesItemStatus } from "@/sdk/gen/schemas";
+import { AgentJobStatus } from "@/sdk/gen/schemas";
 import type { JobDetailResponse } from "@/sdk/gen/schemas";
 import { Badge } from "@/components/ui/badge";
 import { IdBadge } from "@/components/ui/id-badge";
@@ -88,9 +88,9 @@ export function JobView({ job }: { job: JobDetailResponse }) {
   // The API sorts both by hostname.
   const states = job.agent_states ?? [];
   const responses = job.responses ?? [];
-  const count = (status: JobDetailResponseAgentStatesItemStatus) =>
+  const count = (status: AgentJobStatus) =>
     states.filter((s) => s.status === status).length;
-  const S = JobDetailResponseAgentStatesItemStatus;
+  const S = AgentJobStatus;
   const skipped = count(S.skipped);
 
   return (

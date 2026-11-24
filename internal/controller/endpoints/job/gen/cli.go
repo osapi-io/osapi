@@ -9,6 +9,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/job"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var jobListCmd = &cobra.Command{
@@ -24,7 +25,7 @@ var jobListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 
-		endpointcommand.Run(cmd, job.Group, "list", job.ListInput{Status: status, Limit: limit, Offset: offset})
+		endpointcommand.Run(cmd, job.Group, "list", job.ListInput{Status: types.JobStatus(status), Limit: limit, Offset: offset})
 	},
 	Short: "List jobs",
 	Use:   "list",
@@ -67,7 +68,7 @@ var jobDeleteCmd = &cobra.Command{
 var jobRetryCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "job:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000\n\x1b[1;38;2;0;213;255mJob:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mJob ID:\x1b[0m    9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6\n  \x1b[38;2;10;143;176mStatus:\x1b[0m    created\n  \x1b[38;2;10;143;176mRevision:\x1b[0m  42\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6\",\n  \"status\": \"created\",\n  \"revision\": 42,\n  \"timestamp\": \"2026-01-15T10:00:00Z\"\n}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000\n\x1b[1;38;2;0;213;255mJob:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mJob ID:\x1b[0m    9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6\n  \x1b[38;2;10;143;176mStatus:\x1b[0m    \x1b[38;5;222msubmitted\x1b[0m\n  \x1b[38;2;10;143;176mRevision:\x1b[0m  42\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6\",\n  \"status\": \"submitted\",\n  \"revision\": 42,\n  \"timestamp\": \"2026-01-15T10:00:00Z\"\n}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000",
@@ -83,7 +84,7 @@ var jobRetryCmd = &cobra.Command{
 }
 
 func init() {
-	jobListCmd.Flags().String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure)")
+	jobListCmd.Flags().String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure, skipped)")
 	jobListCmd.Flags().Int("limit", 10, "Maximum number of jobs per page (1-100)")
 	jobListCmd.Flags().Int("offset", 0, "Number of jobs to skip for pagination")
 	jobGetCmd.Flags().String("id", "", "UUID of the job to retrieve")

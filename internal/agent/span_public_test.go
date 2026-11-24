@@ -44,6 +44,7 @@ import (
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type SpanPublicTestSuite struct {
@@ -114,7 +115,7 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 	}{
 		{
 			name:        "when a write completes records the status and changed",
-			response:    job.Response{Status: job.StatusCompleted, Changed: &changed},
+			response:    job.Response{Status: types.AgentJobStatusCompleted, Changed: &changed},
 			requestType: job.TypeModify,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(
@@ -126,15 +127,18 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 		},
 		{
 			name:        "when a read completes records only the status",
-			response:    job.Response{Status: job.StatusCompleted},
+			response:    job.Response{Status: types.AgentJobStatusCompleted},
 			requestType: job.TypeQuery,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(map[string]string{"job.status": "completed"}, attrs(span.Attributes()))
 			},
 		},
 		{
-			name:        "when the job fails marks the span as an error",
-			response:    job.Response{Status: job.StatusFailed, Error: "permission denied"},
+			name: "when the job fails marks the span as an error",
+			response: job.Response{
+				Status: types.AgentJobStatusFailed,
+				Error:  "permission denied",
+			},
 			requestType: job.TypeModify,
 			validate: func(span sdktrace.ReadOnlySpan) {
 				s.Equal(map[string]string{"job.status": "failed"}, attrs(span.Attributes()))
@@ -145,7 +149,7 @@ func (s *SpanPublicTestSuite) TestRecordOutcome() {
 		{
 			name: "when the host skips adds an event and is not an error",
 			response: job.Response{
-				Status: job.StatusSkipped,
+				Status: types.AgentJobStatusSkipped,
 				Error:  "operation not supported on this OS family",
 			},
 			requestType: job.TypeQuery,
@@ -221,7 +225,7 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 		Return(nil).
 		AnyTimes()
 	jobs.EXPECT().
-		WriteJobResponse(gomock.Any(), "trace-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+		WriteJobResponse(gomock.Any(), "trace-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil)
 
 	msg := agentmocks.NewMockMsg(ctrl)

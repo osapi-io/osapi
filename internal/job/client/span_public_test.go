@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // SpanPublicTestSuite checks the controller half of the span tree of a
@@ -330,8 +331,8 @@ func (s *SpanPublicTestSuite) TestEndCollectSpan() {
 		_, span := otel.Tracer("test").Start(context.Background(), "job.collect")
 
 		client.ExportEndCollectSpan(span, 2, map[string]*job.Response{
-			"web-01": {Status: job.StatusCompleted},
-			"web-02": {Status: job.StatusTimeout},
+			"web-01": {Status: types.AgentJobStatusCompleted},
+			"web-02": {Status: types.AgentJobStatusTimeout},
 		})
 
 		got := s.spans()["job.collect"]

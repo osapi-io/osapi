@@ -4,14 +4,14 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { JobStatus } from './jobStatus';
 
 export interface CreateJobResponse {
   /** Unique identifier for the created job. */
   job_id: string;
   /** The KV revision number. */
   revision?: number;
-  /** Initial status of the job. */
-  status: string;
+  status: JobStatus;
   /** Creation timestamp. */
   timestamp?: string;
 }

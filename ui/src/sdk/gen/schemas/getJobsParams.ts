@@ -4,11 +4,11 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GetJobsStatus } from './getJobsStatus';
+import type { JobStatus } from './jobStatus';
 
 export type GetJobsParams = {
   /** Filter jobs by status. */
-  status?: GetJobsStatus;
+  status?: JobStatus;
   /**
    * Maximum number of jobs per page (1-100).
    * @minimum 1

@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ErrorsPublicTestSuite covers the failure a job becomes on the controller: the
@@ -95,7 +96,7 @@ func (s *ErrorsPublicTestSuite) TestResponseError() {
 		{
 			name: "an agent that never answered",
 			resp: &job.Response{
-				Status:    job.StatusTimeout,
+				Status:    types.AgentJobStatusTimeout,
 				Error:     "timeout: agent did not respond",
 				ErrorCode: job.ErrorCodeTimeout,
 				Hostname:  "web-02",

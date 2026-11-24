@@ -160,18 +160,17 @@ func statusStyle(
 // A zero is dim whatever it counts: nothing happened. A kind not here is
 // plain. The UI reads the same map, from the catalog endpoint.
 var CountTones = map[string]string{
-	"completed":   ToneOK,
-	"ok":          ToneOK,
-	"changed":     ToneOK,
-	"failed":      ToneErr,
-	"timeout":     ToneErr,
-	"dlq":         ToneErr,
-	"errors":      ToneErr,
-	"submitted":   ToneWarn,
-	"unprocessed": ToneWarn,
-	"pending":     ToneWarn,
-	"partial":     ToneWarn,
-	"skipped":     ToneWarn,
+	"completed": ToneOK,
+	"ok":        ToneOK,
+	"changed":   ToneOK,
+	"failed":    ToneErr,
+	"timeout":   ToneErr,
+	"dlq":       ToneErr,
+	"errors":    ToneErr,
+	"submitted": ToneWarn,
+	"pending":   ToneWarn,
+	"partial":   ToneWarn,
+	"skipped":   ToneWarn,
 }
 
 // Count renders a count of kind, such as 3 failed, in the style of what it

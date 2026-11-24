@@ -47,7 +47,7 @@ List jobs, with --status completed --limit 3, `go run job.go list-2`:
 ```go
 resp, err := c.Job.List(ctx, client.JobListParams{
 	Limit:  3,
-	Status: client.GetJobsStatus("completed"),
+	Status: types.JobStatus("completed"),
 })
 ```
 
@@ -127,55 +127,51 @@ resp, err := c.Job.Retry(ctx, client.JobRetryInput{ID: "550e8400-e29b-41d4-a716-
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### AgentJobStatus
+
+The status of a job on one host. The controller records submitted and retried;
+an agent records acknowledged, started, completed, failed or skipped; and
+timeout is a host whose agent did not answer in time.
+
+A `string`, one of `submitted`, `acknowledged`, `started`, `completed`,
+`failed`, `skipped`, `retried`, `timeout`.
+
 ### CreateJobResponse
 
-| Field       | Type     | Description                            |
-| ----------- | -------- | -------------------------------------- |
-| `JobID`     | `string` | Unique identifier for the created job. |
-| `Revision`  | `int64`  | The KV revision number.                |
-| `Status`    | `string` | Initial status of the job.             |
-| `Timestamp` | `string` | Creation timestamp.                    |
-
-### GetJobsStatus
-
-Filter jobs by status.
-
-A `string`, one of `submitted`, `processing`, `completed`, `failed`,
-`partial_failure`.
+| Field       | Type        | Description                                                                                                                                                                                                                |
+| ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `JobID`     | `string`    | Unique identifier for the created job.                                                                                                                                                                                     |
+| `Revision`  | `int64`     | The KV revision number.                                                                                                                                                                                                    |
+| `Status`    | `JobStatus` | The status of a job, which the controller computes from what each agent did: submitted, processing, completed, failed, partial_failure (completed on some agents and failed on others) or skipped (each agent skipped it). |
+| `Timestamp` | `string`    | Creation timestamp.                                                                                                                                                                                                        |
 
 ### JobDetailResponse
 
-| Field         | Type                                 | Description                                                                                                                                                      |
-| ------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AgentStates` | `[]JobDetailResponseAgentStatesItem` | How far each agent got, by hostname.                                                                                                                             |
-| `Chain`       | `[]string`                           | The calls of other behaviors that the method made on each host, one line for each host, such as web-01: netplan update (changed) → managedfile update (changed). |
-| `Changed`     | `bool`                               | Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs.                                                        |
-| `Created`     | `string`                             | Creation timestamp.                                                                                                                                              |
-| `Error`       | `string`                             | Error message if failed.                                                                                                                                         |
-| `Hostname`    | `string`                             | Agent hostname that processed the job.                                                                                                                           |
-| `ID`          | `string`                             | Unique identifier of the job.                                                                                                                                    |
-| `Operation`   | `JobDetailResponseOperation`         | What the job asked for, with each secret masked.                                                                                                                 |
-| `Responses`   | `[]JobDetailResponseResponsesItem`   | What each agent answered, by hostname.                                                                                                                           |
-| `Result`      | `any`                                | The result data if completed.                                                                                                                                    |
-| `Status`      | `string`                             | Current status of the job.                                                                                                                                       |
-| `Target`      | `string`                             | The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered.         |
-| `Timeline`    | `[]JobDetailResponseTimelineItem`    | Chronological sequence of job lifecycle events.                                                                                                                  |
-| `UpdatedAt`   | `string`                             | Last update timestamp.                                                                                                                                           |
+| Field         | Type                                 | Description                                                                                                                                                                                                                |
+| ------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AgentStates` | `[]JobDetailResponseAgentStatesItem` | How far each agent got, by hostname.                                                                                                                                                                                       |
+| `Chain`       | `[]string`                           | The calls of other behaviors that the method made on each host, one line for each host, such as web-01: netplan update (changed) → managedfile update (changed).                                                           |
+| `Changed`     | `bool`                               | Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs.                                                                                                                  |
+| `Created`     | `string`                             | Creation timestamp.                                                                                                                                                                                                        |
+| `Error`       | `string`                             | Error message if failed.                                                                                                                                                                                                   |
+| `Hostname`    | `string`                             | Agent hostname that processed the job.                                                                                                                                                                                     |
+| `ID`          | `string`                             | Unique identifier of the job.                                                                                                                                                                                              |
+| `Operation`   | `JobDetailResponseOperation`         | What the job asked for, with each secret masked.                                                                                                                                                                           |
+| `Responses`   | `[]JobDetailResponseResponsesItem`   | What each agent answered, by hostname.                                                                                                                                                                                     |
+| `Result`      | `any`                                | The result data if completed.                                                                                                                                                                                              |
+| `Status`      | `JobStatus`                          | The status of a job, which the controller computes from what each agent did: submitted, processing, completed, failed, partial_failure (completed on some agents and failed on others) or skipped (each agent skipped it). |
+| `Target`      | `string`                             | The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered.                                                                   |
+| `Timeline`    | `[]JobDetailResponseTimelineItem`    | Chronological sequence of job lifecycle events.                                                                                                                                                                            |
+| `UpdatedAt`   | `string`                             | Last update timestamp.                                                                                                                                                                                                     |
 
 ### JobDetailResponseAgentStatesItem
 
-| Field      | Type                                     | Description                                                                                                                                  |
-| ---------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Duration` | `string`                                 |                                                                                                                                              |
-| `Error`    | `string`                                 |                                                                                                                                              |
-| `Hostname` | `string`                                 |                                                                                                                                              |
-| `Status`   | `JobDetailResponseAgentStatesItemStatus` | How far the agent got: acknowledged, started, completed, failed or skipped. It is one of: acknowledged, started, completed, failed, skipped. |
-
-### JobDetailResponseAgentStatesItemStatus
-
-How far the agent got: acknowledged, started, completed, failed or skipped.
-
-A `string`, one of `acknowledged`, `started`, `completed`, `failed`, `skipped`.
+| Field      | Type             | Description                                                                                                                                                                                                    |
+| ---------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Duration` | `string`         |                                                                                                                                                                                                                |
+| `Error`    | `string`         |                                                                                                                                                                                                                |
+| `Hostname` | `string`         |                                                                                                                                                                                                                |
+| `Status`   | `AgentJobStatus` | The status of a job on one host. The controller records submitted and retried; an agent records acknowledged, started, completed, failed or skipped; and timeout is a host whose agent did not answer in time. |
 
 ### JobDetailResponseOperation
 
@@ -188,24 +184,24 @@ What the job asked for, with each secret masked.
 
 ### JobDetailResponseResponsesItem
 
-| Field      | Type     | Description                                                                          |
-| ---------- | -------- | ------------------------------------------------------------------------------------ |
-| `Changed`  | `bool`   |                                                                                      |
-| `Data`     | `any`    | Agent result data.                                                                   |
-| `Error`    | `string` |                                                                                      |
-| `Hostname` | `string` |                                                                                      |
-| `Status`   | `string` |                                                                                      |
-| `Steps`    | `[]Step` | The calls of other behaviors that the method made on the host, also when one failed. |
+| Field      | Type             | Description                                                                                                                                                                                                    |
+| ---------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`           |                                                                                                                                                                                                                |
+| `Data`     | `any`            | Agent result data.                                                                                                                                                                                             |
+| `Error`    | `string`         |                                                                                                                                                                                                                |
+| `Hostname` | `string`         |                                                                                                                                                                                                                |
+| `Status`   | `AgentJobStatus` | The status of a job on one host. The controller records submitted and retried; an agent records acknowledged, started, completed, failed or skipped; and timeout is a host whose agent did not answer in time. |
+| `Steps`    | `[]Step`         | The calls of other behaviors that the method made on the host, also when one failed.                                                                                                                           |
 
 ### JobDetailResponseTimelineItem
 
-| Field       | Type     | Description                                                                |
-| ----------- | -------- | -------------------------------------------------------------------------- |
-| `Error`     | `string` | Error details if applicable.                                               |
-| `Event`     | `string` | Event type (submitted, acknowledged, started, completed, failed, retried). |
-| `Hostname`  | `string` | Agent or source that generated the event.                                  |
-| `Message`   | `string` | Human-readable description of the event.                                   |
-| `Timestamp` | `string` | ISO 8601 timestamp of the event.                                           |
+| Field       | Type             | Description                                                                                                                                                                                                    |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Error`     | `string`         | Error details if applicable.                                                                                                                                                                                   |
+| `Event`     | `AgentJobStatus` | The status of a job on one host. The controller records submitted and retried; an agent records acknowledged, started, completed, failed or skipped; and timeout is a host whose agent did not answer in time. |
+| `Hostname`  | `string`         | Agent or source that generated the event.                                                                                                                                                                      |
+| `Message`   | `string`         | Human-readable description of the event.                                                                                                                                                                       |
+| `Timestamp` | `string`         | ISO 8601 timestamp of the event.                                                                                                                                                                               |
 
 ### JobRetryInput
 
@@ -214,13 +210,22 @@ What the job asked for, with each secret masked.
 | `ID`             | `string` | The id of the path. UUID of the job to retry.                                            |
 | `TargetHostname` | `string` | The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev. |
 
+### JobStatus
+
+The status of a job, which the controller computes from what each agent did:
+submitted, processing, completed, failed, partial_failure (completed on some
+agents and failed on others) or skipped (each agent skipped it).
+
+A `string`, one of `submitted`, `processing`, `completed`, `failed`,
+`partial_failure`, `skipped`.
+
 ### ListJobsResponse
 
-| Field          | Type                  | Description                                                                                                                                                   |
-| -------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Items`        | `[]JobDetailResponse` |                                                                                                                                                               |
-| `StatusCounts` | `map[string]int`      | Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass, with no extra reads. |
-| `TotalItems`   | `int`                 | Total number of jobs matching the filter.                                                                                                                     |
+| Field          | Type                  | Description                                                                                       |
+| -------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
+| `Items`        | `[]JobDetailResponse` |                                                                                                   |
+| `StatusCounts` | `map[string]int`      | Count of all jobs by status. Derived from key names during the listing pass, with no extra reads. |
+| `TotalItems`   | `int`                 | Total number of jobs matching the filter.                                                         |
 
 ### Step
 

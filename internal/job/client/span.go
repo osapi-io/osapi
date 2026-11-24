@@ -29,6 +29,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // tracerName names the spans of the job client in a trace.
@@ -90,7 +91,7 @@ func endCollectSpan(
 ) {
 	timedOut := 0
 	for hostname, r := range responses {
-		if r.Status == job.StatusTimeout {
+		if r.Status == types.AgentJobStatusTimeout {
 			timedOut++
 			span.AddEvent("job.timeout", trace.WithAttributes(
 				attribute.String("osapi.agent.hostname", hostname),
