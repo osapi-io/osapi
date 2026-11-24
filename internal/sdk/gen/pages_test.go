@@ -74,13 +74,7 @@ func (s *PagesTestSuite) SetupTest() {
 	s.write(pageDir+"/"+libraryDir+"/"+categoryFile, "{}\n")
 	s.write(pageDir+"/pantry/"+categoryFile, "{}\n")
 	s.write(pageDir+"/pantry/jar.md", pageHeader+"\na page of an area that is gone\n")
-	s.write(
-		exampleDir+"/file_upload.go",
-		"package main\n\nc.File.Upload(ctx)\nc.File.GetChanged(ctx)\n",
-	)
 	s.write(exampleDir+"/go.mod", "module examples\n")
-	// A directory with the name of a program is not a program.
-	s.Require().NoError(os.MkdirAll(filepath.Join(s.root, exampleDir, "dir.go"), 0o755))
 }
 
 func (s *PagesTestSuite) page(
@@ -147,15 +141,19 @@ func (s *PagesTestSuite) TestRunPages() {
 					"| [`Upload(ctx, name)`](#upload) | `*Response[FileUploadResponse]` | "+
 						" | Upload sends a file. |",
 				)
-				s.Contains(file, "Upload sends a file. It reads all of it first.\n\n### GetChanged")
+				s.Contains(file, "Upload sends a file. It reads all of it first.\n\n"+
+					"The examples of the method's definition:\n\n"+
+					"Upload a file, `go run file.go upload`:\n\n```go\n"+
+					"content, err := os.ReadFile(\"/tmp/a.conf\")\nif err != nil {\n\treturn err\n}\n\n"+
+					"resp, err := c.File.Upload(ctx, \"a.conf\", \"raw\", bytes.NewReader(content))\n```\n\n"+
+					"### GetChanged")
 				s.Contains(file, "| [`GetChanged(ctx)`](#getchanged) | `error` |  | "+
 					"GetChanged compares the content with the stored file. |")
 				s.Contains(file, "It is not an operation of the API: it runs in the client.")
 				s.Contains(file, "| [`Wait()`](#wait) |  |")
 				s.NotContains(file, "send(")
-				s.Contains(file, "[`examples/sdk/client/file_upload.go`]("+exampleURL+
-					"file_upload.go) calls the methods that a person wrote.")
-				s.NotContains(file, "runs each example of this page")
+				s.Contains(file, "[`examples/sdk/client/file.go`]("+exampleURL+
+					"file.go) runs each example of this page.")
 			},
 		},
 		{
@@ -269,10 +267,6 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 			s.ErrorContains(generate(s.root, true), tc.wantErr)
 		})
 	}
-}
-
-func (s *PagesTestSuite) TestExamplesSection() {
-	s.Empty(examplesSection(nil, false, nil), "a service with no program has no section")
 }
 
 func TestPagesTestSuite(

@@ -132,6 +132,17 @@ func (s *ModelPublicTestSuite) TestNew() {
 				upload := services["File"].Methods[0]
 				s.True(upload.Multipart)
 				s.Equal("FileUploadResponse", upload.Result.String())
+				s.Require().Len(upload.Form, 3)
+				s.Equal("content_type", upload.Form[0].Name)
+				s.Equal("raw", upload.Form[0].Default)
+				s.True(upload.Form[1].File)
+				args, err := upload.FormArgs()
+				s.Require().NoError(err)
+				names := make([]string, 0, len(args))
+				for _, f := range args {
+					names = append(names, f.Name)
+				}
+				s.Equal([]string{"name", "content_type", "file"}, names)
 			},
 		},
 		{
@@ -155,7 +166,7 @@ func (s *ModelPublicTestSuite) TestNew() {
 					{Doc: "Every job", Input: map[string]any{}},
 					{Doc: "Three jobs", Input: map[string]any{"limit": float64(3), "all": true}},
 				}, list.Examples)
-				s.Empty(services["File"].Methods[0].Examples)
+				s.Len(services["File"].Methods[0].Examples, 1)
 			},
 		},
 		{
@@ -374,12 +385,72 @@ func (s *ModelPublicTestSuite) TestNewErrors() {
 			},
 			want: "the body is not JSON and not a multipart form",
 		},
+		{
+			name: "when a field of a form has a type with no Go type",
+			edit: func(text string) string {
+				return strings.Replace(text, "content_type: {type: string, default: raw}",
+					"content_type: {type: \"null\"}", 1)
+			},
+			want: "form: UploadForm.content_type: a schema of type [null]",
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			_, err := sdkmodel.New(s.load(tc.edit))
 			s.ErrorContains(err, tc.want)
+		})
+	}
+}
+
+func (s *ModelPublicTestSuite) TestFormArgs() {
+	str := &sdkmodel.TypeRef{Kind: sdkmodel.Scalar, Name: "string"}
+	file := &sdkmodel.Field{Name: "file", Type: str, File: true}
+	tests := []struct {
+		name    string
+		method  *sdkmodel.Method
+		want    []string
+		wantErr string
+	}{
+		{
+			name: "when a key is in the path, it comes first",
+			method: &sdkmodel.Method{
+				PathParams: []*sdkmodel.Param{{Name: "name", GoName: "Name", Type: str}},
+				Form: []*sdkmodel.Field{
+					{Name: "content_type", Type: str},
+					file,
+					{Name: "mode", Type: str, Required: true},
+				},
+			},
+			want: []string{"name", "mode", "content_type", "file"},
+		},
+		{
+			name:    "when the form has no file",
+			method:  &sdkmodel.Method{Form: []*sdkmodel.Field{{Name: "name", Type: str}}},
+			wantErr: "the form has 0 files, not one",
+		},
+		{
+			name:    "when the form has two files",
+			method:  &sdkmodel.Method{Form: []*sdkmodel.Field{file, file}},
+			wantErr: "the form has 2 files, not one",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got, err := tc.method.FormArgs()
+
+			if tc.wantErr != "" {
+				s.EqualError(err, tc.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			names := make([]string, 0, len(got))
+			for _, f := range got {
+				names = append(names, f.Name)
+			}
+			s.Equal(tc.want, names)
 		})
 	}
 }

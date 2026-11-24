@@ -90,6 +90,9 @@ paths:
     post:
       operationId: PostFile
       x-osapi-method: upload
+      x-osapi-examples:
+        - doc: Upload a file
+          input: {name: a.conf, file: /tmp/a.conf}
       tags: [File_API]
       x-osapi-area: files
       requestBody:
@@ -97,7 +100,10 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required: [name, file]
               properties:
+                name: {type: string}
+                content_type: {type: string, default: raw}
                 file: {type: string, format: binary}
       responses:
         "200":

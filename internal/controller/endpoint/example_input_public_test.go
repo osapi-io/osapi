@@ -114,11 +114,14 @@ func (s *ExampleInputPublicTestSuite) TestExamples() {
 			want:   nil,
 		},
 		{
-			name: "when the body is a multipart form, the SDK has no method to call",
+			name: "when the body is a multipart form, the file is the path its flag names",
 			method: endpoint.Post[specExampleForm, Node](
 				"upload",
-			).Example("--name a --file /tmp/a"),
-			want: nil,
+			).Describe("Upload a file").Example("--name a --file /tmp/a"),
+			want: []endpoint.SpecExample{{
+				Doc:   "Upload a file",
+				Input: map[string]any{"name": "a", "file": "/tmp/a"},
+			}},
 		},
 	}
 

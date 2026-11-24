@@ -13,6 +13,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -29,8 +30,11 @@ var examples = []struct {
 	run  func(ctx context.Context, c *client.Client) error
 }{
 	{"list", "List stored files", runList},
+	{"upload", "Upload a file", runUpload},
+	{"upload-2", "Upload a file, with --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template", runUpload2},
 	{"stale", "List stale file deployments", runStale},
 	{"get", "Get file metadata", runGet},
+	{"update", "Replace a file", runUpdate},
 	{"delete", "Delete a file", runDelete},
 }
 
@@ -40,6 +44,42 @@ func runList(
 	c *client.Client,
 ) error {
 	resp, err := c.File.List(ctx)
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runUpload runs the example upload: upload a file.
+func runUpload(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	content, err := os.ReadFile("/tmp/app.conf")
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.File.Upload(ctx, "app.conf", "raw", bytes.NewReader(content))
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runUpload2 runs the example upload-2: upload a file, with --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template.
+func runUpload2(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	content, err := os.ReadFile("/tmp/app.conf.tmpl")
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.File.Upload(ctx, "app.conf.tmpl", "template", bytes.NewReader(content))
 	if err != nil {
 		return err
 	}
@@ -66,6 +106,24 @@ func runGet(
 	c *client.Client,
 ) error {
 	resp, err := c.File.Get(ctx, "app.conf")
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runUpdate runs the example update: replace a file.
+func runUpdate(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	content, err := os.ReadFile("/tmp/app.conf")
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.File.Update(ctx, "app.conf", "raw", bytes.NewReader(content))
 	if err != nil {
 		return err
 	}

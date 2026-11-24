@@ -47,6 +47,9 @@ type call struct {
 	Method *sdkmodel.Method
 	// Code is the call, such as c.NetworkDNS.Get(ctx, target, "eth0").
 	Code *jen.Statement
+	// Pre is the statements before the call, such as the read of the file
+	// that an upload sends, or nil.
+	Pre []jen.Code
 }
 
 // calls is each example of each method of s that the SDK has, in the order
@@ -56,11 +59,8 @@ func calls(
 ) ([]*call, error) {
 	var out []*call
 	for _, m := range s.Methods {
-		if m.Multipart {
-			continue
-		}
 		for i, ex := range m.Examples {
-			code, err := callCode(s, m, ex)
+			code, pre, err := callCode(s, m, ex)
 			if err != nil {
 				return nil, fmt.Errorf("%s.%s: example %q: %w", s.Name, m.Name, ex.Doc, err)
 			}
@@ -70,6 +70,7 @@ func calls(
 				Doc:    ex.Doc,
 				Method: m,
 				Code:   code,
+				Pre:    pre,
 			}
 			if i > 0 {
 				c.Name += "-" + strconv.Itoa(i+1)
@@ -82,9 +83,74 @@ func calls(
 	return out, nil
 }
 
-// callCode is the call of m with the input of ex. The target of a node's
-// method is the variable target, which the program reads from OSAPI_TARGET.
+// callCode is the call of m with the input of ex, and the statements that
+// come before it. The target of a node's method is the variable target,
+// which the program reads from OSAPI_TARGET.
 func callCode(
+	s *sdkmodel.Service,
+	m *sdkmodel.Method,
+	ex *sdkmodel.Example,
+) (*jen.Statement, []jen.Code, error) {
+	if m.Multipart {
+		return formCall(s, m, ex)
+	}
+	code, err := jsonCall(s, m, ex)
+
+	return code, nil, err
+}
+
+// formCall is the call of m, a method that sends a multipart form, with
+// the input of ex, and the read of the file that it sends. The method has
+// the arguments that FormArgs gives. A field that ex does not set has its
+// default.
+func formCall(
+	s *sdkmodel.Service,
+	m *sdkmodel.Method,
+	ex *sdkmodel.Example,
+) (*jen.Statement, []jen.Code, error) {
+	fields, err := m.FormArgs()
+	if err != nil {
+		return nil, nil, err
+	}
+	args := []jen.Code{jen.Id("ctx")}
+	var pre []jen.Code
+	for _, f := range fields {
+		v, ok := ex.Input[f.Name]
+		switch {
+		case f.File:
+			path, isPath := v.(string)
+			if !isPath {
+				return nil, nil, fmt.Errorf("it has no path of %s", f.Name)
+			}
+			pre = []jen.Code{
+				jen.List(jen.Id("content"), jen.Err()).Op(":=").
+					Qual("os", "ReadFile").Call(jen.Lit(path)),
+				jen.If(jen.Err().Op("!=").Nil()).Block(jen.Return(jen.Err())),
+				jen.Line(),
+			}
+			args = append(args, jen.Qual("bytes", "NewReader").Call(jen.Id("content")))
+
+			continue
+		case !ok && f.Default != nil:
+			v = f.Default
+		case !ok && f.Required:
+			return nil, nil, fmt.Errorf("it has no %s", f.Name)
+		case !ok:
+			v = zeroJSON(f.Type)
+		}
+		code, err := value(f.Type, v)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%s: %w", f.Name, err)
+		}
+		args = append(args, code)
+	}
+
+	return jen.Id("c").Dot(s.Name).Dot(m.Name).Call(args...), pre, nil
+}
+
+// jsonCall is the call of m, a method that the generator writes, with the
+// input of ex.
+func jsonCall(
 	s *sdkmodel.Service,
 	m *sdkmodel.Method,
 	ex *sdkmodel.Example,
@@ -142,6 +208,25 @@ func required(
 	}
 
 	return value(p.Type, v)
+}
+
+// zeroJSON is the value of JSON that a field of type t has when nothing sets
+// it: "", false or 0 for a scalar, and nil for any other type, which value
+// refuses.
+func zeroJSON(
+	t *sdkmodel.TypeRef,
+) any {
+	if t.Kind != sdkmodel.Scalar {
+		return nil
+	}
+	switch t.Name {
+	case "string":
+		return ""
+	case "bool":
+		return false
+	}
+
+	return float64(0)
 }
 
 // structValue is a value of the SDK's struct name, with the fields of ex
@@ -315,7 +400,7 @@ func exampleFile(
 	for _, c := range cs {
 		f.Line()
 		f.Comment(c.Func + " runs the example " + c.Name + ": " + lowerFirst(sentence(c.Doc)))
-		var body []jen.Code
+		body := append([]jen.Code{}, c.Pre...)
 		if c.Method.Result == nil {
 			body = append(body,
 				jen.If(jen.Err().Op(":=").Add(c.Code), jen.Err().Op("!=").Nil()).Block(

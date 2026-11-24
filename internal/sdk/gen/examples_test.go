@@ -85,9 +85,16 @@ func (s *ExamplesTestSuite) TestRun() {
 			},
 		},
 		{
-			name: "when a service has no example, it has no program, and the old one goes",
+			name: "when a method sends a form, the program reads the file and calls it",
 			validateFunc: func() {
-				s.NoFileExists(filepath.Join(s.root, exampleDir, "file.go"))
+				file := s.readExample("file.go")
+				s.Contains(file, `content, err := os.ReadFile("/tmp/a.conf")`)
+				s.Contains(file, `c.File.Upload(ctx, "a.conf", "raw", bytes.NewReader(content))`)
+			},
+		},
+		{
+			name: "when a service of the last run is gone, its program goes",
+			validateFunc: func() {
 				s.NoFileExists(filepath.Join(s.root, exampleDir, "gone.go"))
 				s.FileExists(filepath.Join(s.root, exampleDir, "go.mod"))
 			},
@@ -99,6 +106,17 @@ func (s *ExamplesTestSuite) TestRun() {
 			tc.validateFunc()
 		})
 	}
+}
+
+func (s *ExamplesTestSuite) TestRunNoExample() {
+	s.write(exampleDir+"/file.go", header+"\n\npackage main\n")
+	s.edit("      x-osapi-examples:\n        - doc: Upload a file\n"+
+		"          input: {name: a.conf, file: /tmp/a.conf}\n", "")
+
+	s.Require().NoError(generate(s.root, false))
+
+	s.NoFileExists(filepath.Join(s.root, exampleDir, "file.go"),
+		"a service with no example has no program, and the old one goes")
 }
 
 func (s *ExamplesTestSuite) TestRunErrors() {
@@ -185,6 +203,18 @@ func (s *ExamplesTestSuite) TestCallCode() {
 		Name:  "Create",
 		Input: &sdkmodel.Type{Name: "AgentCreateInput", Fields: []*sdkmodel.Field{tags}},
 	}
+	form := func(fields ...*sdkmodel.Field) *sdkmodel.Method {
+		return &sdkmodel.Method{Name: "Upload", Multipart: true, Form: fields}
+	}
+	name := &sdkmodel.Field{Name: "name", Type: str, Required: true}
+	kind := &sdkmodel.Field{Name: "kind", Type: str, Default: "raw"}
+	force := &sdkmodel.Field{
+		Name: "force",
+		Type: &sdkmodel.TypeRef{Kind: sdkmodel.Scalar, Name: "bool"},
+	}
+	file := &sdkmodel.Field{Name: "file", Type: str, File: true}
+	read := "content, err := os.ReadFile(\"/tmp/a\")\n" +
+		"if err != nil {\n\treturn err\n}\n\n"
 
 	tests := []struct {
 		name    string
@@ -217,11 +247,42 @@ func (s *ExamplesTestSuite) TestCallCode() {
 			input:   map[string]any{"tags": "web"},
 			wantErr: "tags: web is not a list",
 		},
+		{
+			name:   "when a form method has a file, the call reads it first",
+			method: form(force, kind, name, file),
+			input:  map[string]any{"name": "a", "file": "/tmp/a"},
+			want: read +
+				`c.Agent.Upload(ctx, "a", false, "raw", bytes.NewReader(content))`,
+		},
+		{
+			name:    "when the form has no file",
+			method:  form(name),
+			input:   map[string]any{"name": "a"},
+			wantErr: "the form has 0 files, not one",
+		},
+		{
+			name:    "when the example has no path of the file",
+			method:  form(file),
+			input:   map[string]any{},
+			wantErr: "it has no path of file",
+		},
+		{
+			name:    "when the example has no required field of the form",
+			method:  form(name, file),
+			input:   map[string]any{"file": "/tmp/a"},
+			wantErr: "it has no name",
+		},
+		{
+			name:    "when a field of the form is not its type",
+			method:  form(force, file),
+			input:   map[string]any{"force": "yes", "file": "/tmp/a"},
+			wantErr: "force: yes is not a bool",
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			code, err := callCode(agent, tc.method, &sdkmodel.Example{Input: tc.input})
+			code, pre, err := callCode(agent, tc.method, &sdkmodel.Example{Input: tc.input})
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -229,7 +290,33 @@ func (s *ExamplesTestSuite) TestCallCode() {
 				return
 			}
 			s.Require().NoError(err)
-			s.Equal(tc.want, fmt.Sprintf("%#v", code))
+			text := ""
+			for _, p := range pre {
+				text += strings.TrimSpace(fmt.Sprintf("%#v", p)) + "\n"
+			}
+			s.Equal(tc.want, text+fmt.Sprintf("%#v", code))
+		})
+	}
+}
+
+func (s *ExamplesTestSuite) TestZeroJSON() {
+	scalar := func(name string) *sdkmodel.TypeRef {
+		return &sdkmodel.TypeRef{Kind: sdkmodel.Scalar, Name: name}
+	}
+	tests := []struct {
+		name string
+		typ  *sdkmodel.TypeRef
+		want any
+	}{
+		{name: "when it is a string", typ: scalar("string"), want: ""},
+		{name: "when it is a bool", typ: scalar("bool"), want: false},
+		{name: "when it is a number", typ: scalar("int"), want: float64(0)},
+		{name: "when it is not a scalar", typ: &sdkmodel.TypeRef{Kind: sdkmodel.Slice}, want: nil},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, zeroJSON(tc.typ))
 		})
 	}
 }
