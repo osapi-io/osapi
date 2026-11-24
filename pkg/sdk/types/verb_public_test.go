@@ -31,6 +31,42 @@ type VerbPublicTestSuite struct {
 	suite.Suite
 }
 
+func (s *VerbPublicTestSuite) TestAdminOnly() {
+	tests := []struct {
+		name string
+		verb types.Verb
+		want bool
+	}{
+		{
+			name: "when the verb is shell, only the admin role gets it",
+			verb: types.VerbShell,
+			want: true,
+		},
+		{
+			name: "when the verb is exec, only the admin role gets it",
+			verb: types.VerbExec,
+			want: true,
+		},
+		{
+			name: "when the verb is execute, other roles can get it",
+			verb: types.VerbExecute,
+			want: false,
+		},
+		{name: "when the verb is read, other roles can get it", verb: types.VerbRead, want: false},
+		{
+			name: "when the verb is write, other roles can get it",
+			verb: types.VerbWrite,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.want, tt.verb.AdminOnly())
+		})
+	}
+}
+
 func (s *VerbPublicTestSuite) TestNewPermission() {
 	tests := []struct {
 		name     string

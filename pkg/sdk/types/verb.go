@@ -49,6 +49,12 @@ const (
 	VerbExec Verb = "exec"
 )
 
+// AdminOnly reports whether only the admin role gets a permission of verb
+// v: shell and exec reach anything that the host can do.
+func (v Verb) AdminOnly() bool {
+	return v == VerbShell || v == VerbExec
+}
+
 // NewPermission is the permission of verb v on resource, as resource:verb,
 // such as sysctl:read.
 func NewPermission(

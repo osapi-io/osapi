@@ -67,12 +67,6 @@ var builtinPermissions = []Permission{
 	"secret:reveal",
 }
 
-// adminVerbs are the verbs of a permission that only the admin role gets:
-// to open a shell, and to run a command that the caller gives inside
-// something on the host, such as docker:exec. They are the verbs that
-// behavior.PermitAs takes.
-var adminVerbs = []string{"shell", "exec"}
-
 // declared is a permission that something needs: a built-in permission, a
 // method of an endpoint group, or a method of a behavior.
 type declared struct {
@@ -182,7 +176,7 @@ func AdminOnly(
 	p Permission,
 ) bool {
 	_, verb, _ := strings.Cut(string(p), ":")
-	if slices.Contains(adminVerbs, verb) {
+	if types.Verb(verb).AdminOnly() {
 		return true
 	}
 	for _, d := range declarations() {

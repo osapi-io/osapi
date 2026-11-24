@@ -497,7 +497,7 @@ func ValidateBehavior(
 					"a read or a write keeps the permission of its verb",
 			)
 		}
-		if m.PermitVerb != "" && !slices.Contains(adminVerbs, m.PermitVerb) {
+		if m.PermitVerb != "" && !m.PermitVerb.AdminOnly() {
 			add(m.Name, RuleVerb, ".PermitAs takes a verb that only the admin role gets, "+
 				"types.VerbShell or types.VerbExec, not %q", m.PermitVerb)
 		}
