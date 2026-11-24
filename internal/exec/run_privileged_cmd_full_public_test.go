@@ -40,7 +40,7 @@ func (s *RunPrivilegedCmdFullPublicTestSuite) TestRunPrivilegedCmdFull() {
 	s.Run("without sudo, the output, the errors and a code other than 0 are apart", func() {
 		e := exec.New(slog.Default(), false)
 		out, errOut, code, err := e.RunPrivilegedCmdFull(ctx, "/bin/sh",
-			[]string{"-c", "echo out; echo err >&2; exit 3"})
+			[]string{"-c", "echo out; echo err >&2; exit 3"}, "")
 		s.Require().NoError(err)
 		s.Equal("out\n", out)
 		s.Equal("err\n", errOut)
@@ -49,14 +49,21 @@ func (s *RunPrivilegedCmdFullPublicTestSuite) TestRunPrivilegedCmdFull() {
 	s.Run("with sudo, the command runs through it", func() {
 		defer exec.SetSudoProgram("env")()
 		e := exec.New(slog.Default(), true)
-		out, _, code, err := e.RunPrivilegedCmdFull(ctx, "echo", []string{"hi"})
+		out, _, code, err := e.RunPrivilegedCmdFull(ctx, "echo", []string{"hi"}, "")
 		s.Require().NoError(err)
 		s.Equal("hi\n", out)
 		s.Equal(0, code)
 	})
+	s.Run("stdin goes to the command's standard input", func() {
+		e := exec.New(slog.Default(), false)
+		out, _, code, err := e.RunPrivilegedCmdFull(ctx, "cat", nil, "A=1\n")
+		s.Require().NoError(err)
+		s.Equal("A=1\n", out)
+		s.Equal(0, code)
+	})
 	s.Run("a program that does not start is the error", func() {
 		e := exec.New(slog.Default(), false)
-		_, _, _, err := e.RunPrivilegedCmdFull(ctx, "/nonexistent/osapi-probe", nil)
+		_, _, _, err := e.RunPrivilegedCmdFull(ctx, "/nonexistent/osapi-probe", nil, "")
 		s.ErrorContains(err, "failed to execute command")
 	})
 }

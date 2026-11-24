@@ -248,14 +248,19 @@ func (c *cli) Exec(
 		return ExecResult{}, host.ErrCommandDisabled
 	}
 	args := []string{"exec"}
-	for _, k := range slices.Sorted(maps.Keys(in.Env)) {
-		args = append(args, "-e", k+"="+in.Env[k].Reveal())
+	stdin := ""
+	if len(in.Env) > 0 {
+		// The values go on standard input, not in the arguments, which each
+		// user of the host can read. Without -i, docker exec gives the
+		// container no standard input, so docker reads all of it.
+		args = append(args, "--env-file", "/dev/stdin")
+		stdin = envFile(in.Env)
 	}
 	if in.WorkingDir != "" {
 		args = append(args, "-w", in.WorkingDir)
 	}
 	args = append(append(args, in.Name), in.Command...)
-	stdout, stderr, code, err := c.exec.RunPrivilegedCmdFull(ctx, "docker", args)
+	stdout, stderr, code, err := c.exec.RunPrivilegedCmdFull(ctx, "docker", args, stdin)
 	if err != nil {
 		return ExecResult{}, fmt.Errorf("docker exec %s: %w", in.Name, err)
 	}

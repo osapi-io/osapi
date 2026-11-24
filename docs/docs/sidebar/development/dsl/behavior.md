@@ -480,10 +480,11 @@ writes one in place.
 Runs a program: RunCmd as the agent's user, RunPrivilegedCmd with sudo,
 RunPrivilegedCmdWithStdin for a secret, RunPrivilegedCmdFull for a command whose
 standard output, standard error and exit code the caller gets, such as docker
-exec, RunCmdFull for the same as the agent's user, in a directory and with a
-timeout, such as command exec. The tests give a generated mock that records each
-command line and prints what the example says with Prints and PrintsAfter; Ran
-checks a command after. Each program is declared with Runs or Sudo.
+exec, with a secret on standard input when it has one, RunCmdFull for the same
+as the agent's user, in a directory and with a timeout, such as command exec.
+The tests give a generated mock that records each command line and prints what
+the example says with Prints and PrintsAfter; Ran checks a command after. Each
+program is declared with Runs or Sudo.
 
 Use: For a write, such as systemctl start or apt-get install, and for a read of
 what is not a fact of the host, with .NotAFact. A read of a fact goes through

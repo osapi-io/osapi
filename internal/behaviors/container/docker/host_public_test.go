@@ -222,12 +222,12 @@ func (s *HostPublicTestSuite) TestExec() {
 		s.ErrorContains(err, "agent.command.enabled")
 	})
 	s.Run(
-		"the environment and the directory go to docker exec, and a code other than 0 is an answer",
+		"the environment goes on standard input, never in the arguments, and a code other than 0 is an answer",
 		func() {
 			p := s.provider("running", true, func(m *hostmocks.MockExec) {
 				m.EXPECT().RunPrivilegedCmdFull(gomock.Any(), "docker", []string{
-					"exec", "-e", "A=1", "-e", "B=2", "-w", "/tmp", "web", "false",
-				}).Return("out", "err", 1, nil)
+					"exec", "--env-file", "/dev/stdin", "-w", "/tmp", "web", "false",
+				}, "A=1\nB=2\n").Return("out", "err", 1, nil)
 			})
 			got, err := p.Exec(ctx, docker.ExecInput{
 				Name: "web", Command: []string{"false"}, WorkingDir: "/tmp",
@@ -244,7 +244,7 @@ func (s *HostPublicTestSuite) TestExec() {
 		boom := errors.New("boom")
 		p := s.provider("running", true, func(m *hostmocks.MockExec) {
 			m.EXPECT().
-				RunPrivilegedCmdFull(gomock.Any(), "docker", gomock.Any()).
+				RunPrivilegedCmdFull(gomock.Any(), "docker", []string{"exec", "web", "x"}, "").
 				Return("", "", -1, boom)
 		})
 		_, err := p.Exec(ctx, docker.ExecInput{Name: "web", Command: []string{"x"}})
