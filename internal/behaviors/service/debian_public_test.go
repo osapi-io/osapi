@@ -176,6 +176,10 @@ func (s *DebianPublicTestSuite) TestRetryAfterAFailedRemove() {
 		s.Run(tc.name, func() {
 			if tc.onDisk {
 				s.Require().NoError(s.fs.WriteFile(unitPath, []byte(unitText), 0o644))
+			} else {
+				// A directory at the path is there, and cannot be read as
+				// a file.
+				s.Require().NoError(s.fs.Mkdir(unitPath, 0o755))
 			}
 			s.files.EXPECT().Read(gomock.Any(), unitPath).Return(managedfile.Record{
 				Path: unitPath, Metadata: map[string]string{"object": "app.service"},
@@ -195,6 +199,45 @@ func (s *DebianPublicTestSuite) TestRetryAfterAFailedRemove() {
 
 			s.False(changed)
 			s.EqualError(err, tc.wantError)
+		})
+	}
+}
+
+// TestRemoveWithoutTheUnitFile: a record of a unit whose file is not on the
+// host, such as the record that a VM built again with the same name keeps,
+// is dropped, and the remove changes nothing. systemctl is not run, because
+// it fails on a unit file that is not there.
+func (s *DebianPublicTestSuite) TestRemoveWithoutTheUnitFile() {
+	tests := []struct {
+		name      string
+		remove    error
+		wantError string
+	}{
+		{
+			name: "when the unit file is not there, the record is dropped",
+		},
+		{
+			name:      "when the record cannot be dropped, it fails",
+			remove:    errors.New("update state: kv is down"),
+			wantError: "update state: kv is down",
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.files.EXPECT().Read(gomock.Any(), unitPath).Return(managedfile.Record{
+				Path: unitPath, Metadata: map[string]string{"object": "app.service"},
+			}, nil)
+			s.files.EXPECT().Remove(gomock.Any(), unitPath).Return(false, tc.remove)
+
+			changed, err := s.provider().Remove(context.Background(), "app")
+
+			s.False(changed)
+			if tc.wantError != "" {
+				s.EqualError(err, tc.wantError)
+
+				return
+			}
+			s.NoError(err)
 		})
 	}
 }
