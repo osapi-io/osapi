@@ -111,6 +111,10 @@ type services struct {
 	// deploys.
 	Schedule *ScheduleService
 
+	// Secret calls the API's Secret group: the vaults of the controller and the
+	// metadata of their keys. No operation gives a value.
+	Secret *SecretService
+
 	// Service calls the API's Service group: the systemd services of the host.
 	Service *ServiceService
 
@@ -173,6 +177,7 @@ func (s *services) wire(c *Client) {
 	s.Power = &PowerService{client: c}
 	s.Process = &ProcessService{client: c}
 	s.Schedule = &ScheduleService{client: c}
+	s.Secret = &SecretService{client: c}
 	s.Service = &ServiceService{client: c}
 	s.Status = &StatusService{client: c}
 	s.Sysctl = &SysctlService{client: c}

@@ -82,3 +82,25 @@ func Sees(
 
 	return target != "" && InScope(ctx, target)
 }
+
+// subjectKey is the context key of the subject of a token.
+type subjectKey struct{}
+
+// WithSubject is ctx with the subject of the token of the request, such as
+// ops@example.com.
+func WithSubject(
+	ctx context.Context,
+	subject string,
+) context.Context {
+	return context.WithValue(ctx, subjectKey{}, subject)
+}
+
+// SubjectFrom is the subject that WithSubject put in ctx, or "" when the
+// request has no token.
+func SubjectFrom(
+	ctx context.Context,
+) string {
+	subject, _ := ctx.Value(subjectKey{}).(string)
+
+	return subject
+}

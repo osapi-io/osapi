@@ -43,6 +43,7 @@ const (
 	Security    Name = "security"
 	Containers  Name = "containers"
 	ObjectStore Name = "objectstore"
+	Secrets     Name = "secrets"
 	Command     Name = "command"
 	Hardware    Name = "hardware"
 	Audit       Name = "audit"
@@ -67,6 +68,7 @@ var All = []Area{
 	{Security, "Security"},
 	{Containers, "Containers"},
 	{ObjectStore, "Object Store"},
+	{Secrets, "Secrets"},
 	{Command, "Command"},
 	{Hardware, "Hardware"},
 	{Audit, "Audit"},

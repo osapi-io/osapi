@@ -461,6 +461,8 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareTargetScope() {
 					scope = authtoken.TargetsFrom(ctx.Request().Context())
 					s.True(authtoken.Granted(ctx.Request().Context(), "trace:read"),
 						"the handler has the permissions of the token")
+					s.Equal("test-subject", authtoken.SubjectFrom(ctx.Request().Context()),
+						"the request's context has the token's subject")
 					return "ok", nil
 				},
 			)

@@ -407,6 +407,7 @@ components:
         - DeleteNodeSysctl
         - DeleteNodeUser
         - DeleteNodeUserSshkey
+        - DeleteSecret
         - DrainAgent
         - GetAdmission
         - GetAdmissions
@@ -460,6 +461,9 @@ components:
         - GetNodeUser
         - GetNodeUserByKey
         - GetNodeUserSshkey
+        - GetSecret
+        - GetSecretVaults
+        - GetSecrets
         - GetTrace
         - PostFile
         - PostNodeCertificate
@@ -505,6 +509,7 @@ components:
         - PutNodeTimezone
         - PutNodeUser
         - PutNodeUserPassword
+        - PutSecret
         - RejectMachine
         - RetryJobByID
         - RevokeMachine
@@ -515,6 +520,7 @@ components:
       enum:
         - health:read
         - trace:read
+        - secret:use
         - certificate:read
         - certificate:write
         - command:execute
@@ -570,6 +576,8 @@ components:
         - catalog:read
         - job:read
         - job:write
+        - secret:read
+        - secret:write
       type: string
   securitySchemes:
     BearerAuth:

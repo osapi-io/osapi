@@ -60,6 +60,12 @@ func (s *ScopePublicTestSuite) TestInScope() {
 	}
 }
 
+func (s *ScopePublicTestSuite) TestSubject() {
+	s.Empty(authtoken.SubjectFrom(context.Background()), "a request with no token")
+	s.Equal("ops@example.com",
+		authtoken.SubjectFrom(authtoken.WithSubject(context.Background(), "ops@example.com")))
+}
+
 func (s *ScopePublicTestSuite) TestSees() {
 	tests := []struct {
 		name   string

@@ -40,6 +40,7 @@ import (
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
+	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
@@ -105,6 +106,7 @@ func handlers(
 			healthEndpoint.Deps{Health: reporter},
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			secretsDeps(d),
+			secretDeps(d),
 			// Each behavior's endpoint group, which the gen packages that
 			// internal/behaviors/all/gen imports register.
 			dispatch.Deps{JobClient: d.jobs},
@@ -156,6 +158,20 @@ func secretsDeps(
 	d handlerDeps,
 ) endpointserver.Secrets {
 	var deps endpointserver.Secrets
+	if d.vaults != nil {
+		deps.Vaults = d.vaults
+	}
+
+	return deps
+}
+
+// secretDeps is what the secret group's handlers use. A controller with no
+// vault set gives a nil interface, not an interface that holds a nil
+// pointer, so the group answers that the vault is not there.
+func secretDeps(
+	d handlerDeps,
+) secretEndpoint.Deps {
+	var deps secretEndpoint.Deps
 	if d.vaults != nil {
 		deps.Vaults = d.vaults
 	}

@@ -7,6 +7,7 @@ package client
 const (
 	PermHealthRead          Permission = "health:read"
 	PermTraceRead           Permission = "trace:read"
+	PermSecretUse           Permission = "secret:use"
 	PermCertificateRead     Permission = "certificate:read"
 	PermCertificateWrite    Permission = "certificate:write"
 	PermCommandExecute      Permission = "command:execute"
@@ -62,6 +63,8 @@ const (
 	PermCatalogRead         Permission = "catalog:read"
 	PermJobRead             Permission = "job:read"
 	PermJobWrite            Permission = "job:write"
+	PermSecretRead          Permission = "secret:read"
+	PermSecretWrite         Permission = "secret:write"
 )
 
 // Built-in role constants, one for each built-in role.

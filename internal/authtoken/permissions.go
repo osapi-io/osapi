@@ -66,13 +66,15 @@ func PermissionsOf(
 	return out
 }
 
-// builtinPermissions are the permissions that endpoint groups name with
-// Permission, and that no method declares: health:read and trace:read. An
-// endpoint group's own permissions and a behavior's come from their
-// definitions.
+// builtinPermissions are the permissions that no method declares:
+// health:read and trace:read, which endpoint groups name with Permission,
+// and secret:use, which a request needs for each secret://<vault>/<key>
+// reference that it gives. An endpoint group's own permissions and a
+// behavior's come from their definitions.
 var builtinPermissions = []Permission{
 	"health:read",
 	"trace:read",
+	"secret:use",
 }
 
 // adminVerbs are the verbs of a permission that only the admin role gets:
@@ -156,7 +158,8 @@ const (
 	// reboot, but no change to the configuration.
 	RoleOperator Role = "operator"
 	// RoleAutomation is CI or a workflow that changes the configuration:
-	// each read and each write, but no action.
+	// each read and each write, and the use of a secret in a write, but no
+	// action.
 	RoleAutomation Role = "automation"
 	// RoleAuditor reads the audit log, the traces and the jobs, and the
 	// health. It changes and runs nothing.
@@ -238,8 +241,9 @@ func RolePermissions(
 			return (verb == "read" || verb == "execute") && !AdminOnly(p)
 		}
 	case RoleAutomation:
+		// A secret goes into a write, so the role that writes uses one.
 		grants = func(p Permission, verb string) bool {
-			return (verb == "read" || verb == "write") && !AdminOnly(p)
+			return (verb == "read" || verb == "write" || verb == "use") && !AdminOnly(p)
 		}
 	case RoleRead:
 		grants = func(p Permission, verb string) bool { return verb == "read" && !AdminOnly(p) }

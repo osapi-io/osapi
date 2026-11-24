@@ -133,6 +133,12 @@ the spec.
 | ------------------------------ | ---------------------------------------- |
 | [File](../objectstore/file.md) | Object Store file management operations. |
 
+### Secrets
+
+| Service                        | Description                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| [Secret](../secrets/secret.md) | The vaults of the controller and the metadata of their keys. No operation gives a value. |
+
 ### Command
 
 | Service                          | Description                    |
