@@ -182,6 +182,7 @@ func buildAgentInfo(
 		info.OSInfo = &OSInfoResponse{
 			Distribution: a.OSInfo.Distribution,
 			Version:      a.OSInfo.Version,
+			Family:       a.OSInfo.Family,
 		}
 	}
 	if a.LoadAverages != nil {

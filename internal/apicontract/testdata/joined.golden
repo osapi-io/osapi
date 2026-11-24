@@ -650,6 +650,7 @@ schema NtpUpdateRequest.servers! = [string]
 schema NtpUpdateResponse.job_id = string/uuid
 schema NtpUpdateResponse.results! = [NtpResult]
 schema OSInfoResponse.distribution! = string
+schema OSInfoResponse.family = string
 schema OSInfoResponse.version! = string
 schema ObjectStoreInfo.name! = string
 schema ObjectStoreInfo.size! = integer

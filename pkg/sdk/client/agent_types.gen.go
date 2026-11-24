@@ -167,6 +167,11 @@ type OSInfoResponse struct {
 	// The name of the Linux distribution.
 	Distribution string `json:"distribution"`
 
+	// The platform family that the agent picks providers by, as gohai names it:
+	// debian, suse, darwin and so on. A method runs on a host whose family is one
+	// of its platforms.
+	Family string `json:"family,omitempty"`
+
 	// The version of the Linux distribution.
 	Version string `json:"version"`
 }

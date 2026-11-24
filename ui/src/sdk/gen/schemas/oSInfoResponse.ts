@@ -11,6 +11,8 @@
 export interface OSInfoResponse {
   /** The name of the Linux distribution. */
   distribution: string;
+  /** The platform family that the agent picks providers by, as gohai names it: debian, suse, darwin and so on. A method runs on a host whose family is one of its platforms. */
+  family?: string;
   /** The version of the Linux distribution. */
   version: string;
 }

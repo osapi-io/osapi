@@ -8932,6 +8932,10 @@ components:
           description: The name of the Linux distribution.
           example: Ubuntu
           type: string
+        family:
+          description: 'The platform family that the agent picks providers by, as gohai names it: debian, suse, darwin and so on. A method runs on a host whose family is one of its platforms.'
+          example: debian
+          type: string
         version:
           description: The version of the Linux distribution.
           example: "20.04"

@@ -147,19 +147,11 @@ export function planReducer(steps: PlanStep[], action: PlanAction): PlanStep[] {
 // ---------------------------------------------------------------------------
 
 /**
- * The platform of a host, as the behaviors name platforms, from the name of
- * its distribution: macOS is darwin, Ubuntu and Debian are debian, and
- * openSUSE and SLES are suse. Another Linux is its own name, which a method
- * that runs on linux serves. The agent does not report the family that
- * gohai detects, so the name is the closest that the UI has (#1224).
+ * The platform of a host, as the behaviors name platforms: the family that
+ * the agent picks providers by, which gohai detects on the host.
  */
 export function hostPlatform(agent: AgentInfo): string | undefined {
-  const d = agent.os_info?.distribution?.toLowerCase();
-  if (!d) return undefined;
-  if (d.includes("mac") || d === "darwin") return "darwin";
-  if (/ubuntu|debian|raspbian|mint|pop/.test(d)) return "debian";
-  if (/suse|sles/.test(d)) return "suse";
-  return d;
+  return agent.os_info?.family || undefined;
 }
 
 /**

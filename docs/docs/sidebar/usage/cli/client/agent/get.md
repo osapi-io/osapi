@@ -47,6 +47,7 @@ $ osapi client agent get --hostname web-01
 [1;38;2;255;209;0mOS:[0m
   [38;2;58;143;20mDistribution:[0m  Ubuntu
   [38;2;58;143;20mVersion:[0m       24.04
+  [38;2;58;143;20mFamily:[0m        debian
 
 [1;38;2;69;174;23mMemory:[0m
 
@@ -74,7 +75,8 @@ With `--json`, the API's response:
   },
   "os_info": {
     "distribution": "Ubuntu",
-    "version": "24.04"
+    "version": "24.04",
+    "family": "debian"
   },
   "version": "v1.4.0",
   "registered_at": "2026-01-15T09:59:52Z",

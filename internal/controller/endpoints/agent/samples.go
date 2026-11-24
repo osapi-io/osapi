@@ -34,14 +34,18 @@ var (
 	sampleSeen    = time.Date(2026, time.January, 15, 9, 59, 52, 0, time.UTC)
 
 	sampleWeb01 = AgentInfo{
-		Hostname:         "web-01",
-		MachineID:        "4c4c4544-0035-4b10-8031-b4c04f4d3332",
-		State:            "Ready",
-		Labels:           map[string]string{"group": "web"},
-		StartedAt:        sampleStarted,
-		RegisteredAt:     sampleSeen,
-		LoadAverage:      &LoadAverageResponse{OneMin: 0.32, FiveMin: 0.28, FifteenMin: 0.25},
-		OSInfo:           &OSInfoResponse{Distribution: "Ubuntu", Version: "24.04"},
+		Hostname:     "web-01",
+		MachineID:    "4c4c4544-0035-4b10-8031-b4c04f4d3332",
+		State:        "Ready",
+		Labels:       map[string]string{"group": "web"},
+		StartedAt:    sampleStarted,
+		RegisteredAt: sampleSeen,
+		LoadAverage:  &LoadAverageResponse{OneMin: 0.32, FiveMin: 0.28, FifteenMin: 0.25},
+		OSInfo: &OSInfoResponse{
+			Distribution: "Ubuntu",
+			Version:      "24.04",
+			Family:       "debian",
+		},
 		Version:          "v1.4.0",
 		Uptime:           "2 days, 3 hours",
 		Memory:           &MemoryResponse{Total: 8589934592, Used: 3221225472, Free: 5368709120},
@@ -59,7 +63,7 @@ var (
 		StartedAt:    time.Date(2026, time.January, 15, 8, 30, 0, 0, time.UTC),
 		RegisteredAt: sampleSeen,
 		LoadAverage:  &LoadAverageResponse{OneMin: 1.12, FiveMin: 0.94, FifteenMin: 0.88},
-		OSInfo:       &OSInfoResponse{Distribution: "macOS", Version: "15.5"},
+		OSInfo:       &OSInfoResponse{Distribution: "macOS", Version: "15.5", Family: "darwin"},
 		Version:      "v1.4.0",
 	}
 

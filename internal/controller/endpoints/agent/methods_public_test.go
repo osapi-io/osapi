@@ -158,7 +158,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				AgentVersion: "v1.4.0", Labels: map[string]string{"role": "web"},
 				RegisteredAt: at, StartedAt: at.Add(-time.Hour),
 				Uptime:       26*time.Hour + 1*time.Minute,
-				OSInfo:       &host.Result{Distribution: "debian", Version: "13"},
+				OSInfo:       &host.Result{Distribution: "debian", Version: "13", Family: "debian"},
 				LoadAverages: &load.Result{Load1: 0.5, Load5: 0.25, Load15: 0.125},
 				MemoryStats:  &memory.Result{Total: 8, Available: 5, Free: 2, Cached: 1},
 				Architecture: "arm64", KernelVersion: "6.12", CPUCount: 4,
@@ -191,7 +191,10 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				s.Equal(map[string]string{"role": "web"}, got.Labels)
 				s.Equal(at, got.RegisteredAt)
 				s.Equal("1 day, 2 hours, 1 minute", got.Uptime)
-				s.Equal(&agent.OSInfoResponse{Distribution: "debian", Version: "13"}, got.OSInfo)
+				s.Equal(
+					&agent.OSInfoResponse{Distribution: "debian", Version: "13", Family: "debian"},
+					got.OSInfo,
+				)
 				s.Equal(&agent.LoadAverageResponse{OneMin: 0.5, FiveMin: 0.25, FifteenMin: 0.125},
 					got.LoadAverage)
 				s.Equal(&agent.MemoryResponse{Total: 8, Free: 2, Used: 3}, got.Memory,

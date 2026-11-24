@@ -39,6 +39,9 @@ type Result struct {
 	Distribution string
 	// The version of the Linux distribution (e.g., 20.04, 8.3).
 	Version string
+	// Family is the platform family that the agent resolves providers by, as
+	// gohai's family.Detect names it (e.g., debian, suse, darwin).
+	Family string
 	// Changed indicates whether system state was modified.
 	Changed bool `json:"changed"`
 }
