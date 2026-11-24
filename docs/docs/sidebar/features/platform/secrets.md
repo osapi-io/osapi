@@ -100,8 +100,12 @@ The permissions:
 A reference as the value of `osapi client secret update` resolves too, so it
 copies the value of that key. It needs `secret:use`, as each reference does.
 
+On the Plans page of the UI, a secret field of a step has a key button that
+lists the reference of each key. A plan holds only references: Export YAML
+writes `<secret>` for a value that you typed.
+
 ## What comes next
 
-The `secret` commands and values sealed to the agent that uses them are in
-progress, in [osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This
-page tells how to use each part when it is built.
+Values sealed to the agent that uses them are in progress, in
+[osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This page tells
+how to use each part when it is built.

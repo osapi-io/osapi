@@ -1,3 +1,4 @@
+import { secretScheme } from "@/lib/secret-ref";
 // ---------------------------------------------------------------------------
 // A plan: steps that run in order, each a method of a behavior with its
 // target and its input. Its shape is the step of a workflow file,
@@ -278,10 +279,27 @@ function yamlValue(v: unknown, indent: string): string {
 }
 
 /**
+ * A secret as a plan holds it: a reference as it is, and <secret> for a
+ * value, also in each value of a map of secrets, such as docker env.
+ */
+export function planSecret(v: unknown): unknown {
+  if (typeof v === "string") {
+    return v.startsWith(secretScheme) ? v : "<secret>";
+  }
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    return Object.fromEntries(
+      Object.entries(v).map(([k, x]) => [k, planSecret(x)]),
+    );
+  }
+  return "<secret>";
+}
+
+/**
  * The plan as a workflow file: each step's run, its target and its input,
  * as the API takes the input. A step with no target says so, and a call of
- * the controller, which a workflow cannot run yet, is a comment. A secret is
- * left out.
+ * the controller, which a workflow cannot run yet, is a comment. A plan
+ * holds only references: a secret keeps its secret:// reference, and a
+ * value is <secret>.
  */
 export function planYAML(
   steps: PlanStep[],
@@ -308,7 +326,7 @@ export function planYAML(
     const raw = def.method ? safeInput(def, step) : {};
     for (const f of def.method?.fields ?? []) {
       if (!(f.name in raw)) continue;
-      input[f.name] = f.secret ? "<secret>" : raw[f.name];
+      input[f.name] = f.secret ? planSecret(raw[f.name]) : raw[f.name];
     }
     if (Object.keys(input).length > 0) {
       lines.push(`    with:${yamlValue(input, "    ")}`);

@@ -129,7 +129,9 @@ workflow file: `run`, `target` and `with`.
 - A read starts with the target `_all`. A write or an action starts with no
   target. It is pending, and Run does not run it, until you pick its hosts.
 - The form shows the doc of each field. A field with fixed values is a select,
-  and a list is a field of tags.
+  and a list is a field of tags. A secret field takes a reference,
+  `secret://<vault>/<key>`, from the key button beside it, which lists the keys
+  of each vault. A value that you type there is a password field.
 - Above the steps, a preflight shows each permission that the plan needs and
   whether your role has it. It also shows each host where a method does not run,
   such as a Debian-only write on a macOS host, and the steps that wait for input
@@ -137,8 +139,9 @@ workflow file: `run`, `target` and `with`.
 - **Run** runs each step that can run, in order, and continues after a step
   fails. Each result shows its job and its trace, the rows that the method
   returned, and the chain of calls on each host.
-- **Export YAML** shows the plan as a workflow file. The UI does not save a
-  plan. Copy the YAML to keep it.
+- **Export YAML** shows the plan as a workflow file. It keeps the reference of a
+  secret, and writes `<secret>` for a value. The UI does not save a plan. Copy
+  the YAML to keep it.
 - The steps of the Object Store area, such as an upload, run on the controller
   and take no target.
 

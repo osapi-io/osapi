@@ -8,6 +8,7 @@ import {
   inputReady,
   newStep,
   planReducer,
+  planSecret,
   planYAML,
   preflight,
   runsOnHost,
@@ -240,6 +241,32 @@ describe("planYAML", () => {
     const yaml = planYAML(steps, catalogIndex.step);
     expect(yaml).toContain('      value: "1"');
     expect(yaml).not.toContain("hunter2");
+  });
+
+  test("a plan keeps a secret's reference, and hides its value", () => {
+    const d = def("user.update");
+    const secret = d.method?.fields.find((f) => f.secret);
+    expect(secret).toBeTruthy();
+    const yaml = planYAML(
+      [
+        {
+          ...newStep(d, "b"),
+          target: "_all",
+          with: { name: "joe", [secret!.name]: "secret://default/joe" },
+        },
+      ],
+      catalogIndex.step,
+    );
+    expect(yaml).toContain("secret://default/joe");
+    expect(yaml).not.toContain("<secret>");
+  });
+
+  test("planSecret hides each value of a map of secrets, and keeps a reference", () => {
+    expect(
+      planSecret({ TOKEN: "secret://default/api-token", PASS: "hunter2" }),
+    ).toEqual({ TOKEN: "secret://default/api-token", PASS: "<secret>" });
+    expect(planSecret("hunter2")).toBe("<secret>");
+    expect(planSecret(42)).toBe("<secret>");
   });
 
   test("an empty plan has no steps", () => {
