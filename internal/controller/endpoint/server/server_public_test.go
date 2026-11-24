@@ -37,7 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
-const signingKey = "test-signing-key-for-the-endpoint-server"
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-endpoint-server"}
 
 var (
 	errMissing = errors.New("no such thing")
@@ -122,7 +122,7 @@ func (s *ServerPublicTestSuite) serve(
 	path string,
 	tok string,
 ) *httptest.ResponseRecorder {
-	srv := server.New(slog.Default(), signingKey, nil, d)
+	srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, d)
 	e := echo.New()
 	routes := make([]server.Route, 0, len(group.Methods))
 	for _, m := range group.Methods {
@@ -286,14 +286,14 @@ func (s *ServerPublicTestSuite) TestServe() {
 }
 
 func (s *ServerPublicTestSuite) TestDeps() {
-	srv := server.New(slog.Default(), signingKey, nil, deps{result: "x"})
+	srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, deps{result: "x"})
 
 	s.Equal("x", server.Deps[deps](srv).result)
 	s.PanicsWithValue("endpoint: no string given to the server", func() {
 		server.Deps[string](srv)
 	})
 	s.PanicsWithValue("endpoint: no server_test.deps given to the server", func() {
-		server.Deps[deps](server.New(slog.Default(), signingKey, nil))
+		server.Deps[deps](server.New(slog.Default(), authtoken.Keys{signingKey}, nil))
 	})
 	s.Equal(struct{}{}, server.Deps[struct{}](srv), "an empty struct needs no wiring")
 }
@@ -311,7 +311,7 @@ func (s *ServerPublicTestSuite) TestHandler() {
 	})
 
 	e := echo.New()
-	for _, register := range server.Handler(slog.Default(), signingKey, nil) {
+	for _, register := range server.Handler(slog.Default(), authtoken.Keys{signingKey}, nil) {
 		register(e)
 	}
 	rec := httptest.NewRecorder()

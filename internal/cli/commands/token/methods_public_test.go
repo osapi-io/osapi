@@ -39,7 +39,10 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
-const key = "0123456789abcdef0123456789abcdef"
+var (
+	key  = authtoken.Key{ID: "2026-11", Secret: "0123456789abcdef0123456789abcdef"}
+	keys = authtoken.Keys{key}
+)
 
 type MethodsPublicTestSuite struct {
 	suite.Suite
@@ -72,7 +75,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
-				s.config.EXPECT().SigningKey().Return(key)
+				s.config.EXPECT().SigningKeys().Return(keys)
 				s.tokens.EXPECT().
 					Generate(key, []string{"read"}, "ops", []string{"trace:read"}, []string{"group:web"}).
 					Return("signed", nil)
@@ -80,7 +83,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			validateFunc: func(got token.GenerateOutput, err error) {
 				s.Require().NoError(err)
 				s.Equal(token.GenerateOutput{
-					Token: "signed", Subject: "ops",
+					Token: "signed", KeyID: "2026-11", Subject: "ops",
 					Roles: []string{"read"}, Permissions: []string{"trace:read"},
 					Targets: []string{"group:web"},
 				}, got)
@@ -91,12 +94,23 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
-				s.config.EXPECT().SigningKey().Return("")
-				s.tokens.EXPECT().Generate("", []string{"read"}, "ops", nil, nil).
+				s.config.EXPECT().SigningKeys().Return(keys)
+				s.tokens.EXPECT().Generate(key, []string{"read"}, "ops", nil, nil).
 					Return("", errors.New("no key"))
 			},
 			validateFunc: func(_ token.GenerateOutput, err error) {
 				s.EqualError(err, "failed to generate token: no key")
+			},
+		},
+		{
+			name: "when the config has no signing key, it is refused",
+			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			setup: func() {
+				s.config.EXPECT().CustomRoles().Return(nil, nil)
+				s.config.EXPECT().SigningKeys().Return(nil)
+			},
+			validateFunc: func(_ token.GenerateOutput, err error) {
+				s.ErrorIs(err, token.ErrNoSigningKey)
 			},
 		},
 		{
@@ -105,7 +119,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			setup: func() {
 				s.config.EXPECT().CustomRoles().
 					Return(authtoken.CustomRoles{"security": {"audit:read"}}, nil)
-				s.config.EXPECT().SigningKey().Return(key)
+				s.config.EXPECT().SigningKeys().Return(keys)
 				s.tokens.EXPECT().Generate(key, []string{"security"}, "ops", nil, nil).
 					Return("signed", nil)
 			},
@@ -160,11 +174,12 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 		{
 			name: "when the token is valid, it is its claims with what they grant",
 			setup: func() {
-				s.config.EXPECT().SigningKey().Return(key)
-				s.tokens.EXPECT().Validate("jwt", key).Return(&authtoken.CustomClaims{
+				s.config.EXPECT().SigningKeys().Return(keys)
+				s.tokens.EXPECT().Validate("jwt", keys).Return(&authtoken.CustomClaims{
 					Roles:       []string{"read"},
 					Permissions: []string{"trace:read", "audit:read"},
 					Targets:     []string{"group:web"},
+					KeyID:       "2026-11",
 					RegisteredClaims: jwt.RegisteredClaims{
 						Subject:   "ops",
 						Audience:  jwt.ClaimStrings{"osapi"},
@@ -176,6 +191,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 			validateFunc: func(got token.Claims, err error) {
 				s.Require().NoError(err)
 				s.Equal(token.Claims{
+					KeyID:                "2026-11",
 					Subject:              "ops",
 					Roles:                []string{"read"},
 					Permissions:          []string{"trace:read", "audit:read"},
@@ -190,8 +206,8 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 		{
 			name: "when the token has no times, they are zero",
 			setup: func() {
-				s.config.EXPECT().SigningKey().Return(key)
-				s.tokens.EXPECT().Validate("jwt", key).Return(&authtoken.CustomClaims{
+				s.config.EXPECT().SigningKeys().Return(keys)
+				s.tokens.EXPECT().Validate("jwt", keys).Return(&authtoken.CustomClaims{
 					Roles: []string{"read"},
 				}, nil)
 			},
@@ -205,8 +221,8 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 		{
 			name: "when the token is not valid, it is the error",
 			setup: func() {
-				s.config.EXPECT().SigningKey().Return(key)
-				s.tokens.EXPECT().Validate("jwt", key).Return(nil, errors.New("expired"))
+				s.config.EXPECT().SigningKeys().Return(keys)
+				s.tokens.EXPECT().Validate("jwt", keys).Return(nil, errors.New("expired"))
 			},
 			validateFunc: func(_ token.Claims, err error) {
 				s.EqualError(err, "failed to validate token: expired")

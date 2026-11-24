@@ -41,9 +41,11 @@ import (
 )
 
 const (
-	signingKey = "test-signing-key-for-the-telemetry-group"
-	traceID    = "26e448c9dbe1c4a8d216a98c675079c9"
+	traceID = "26e448c9dbe1c4a8d216a98c675079c9"
 )
+
+// signingKey signs every token a case sends.
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-telemetry-group"}
 
 type MethodsPublicTestSuite struct {
 	suite.Suite
@@ -300,7 +302,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			if tc.noBackend {
 				d.Traces = nil
 			}
-			srv := server.New(slog.Default(), signingKey, nil, d)
+			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, d)
 			e := echo.New()
 			srv.Mount(e, gen.Routes(srv))
 

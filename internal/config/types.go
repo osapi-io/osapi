@@ -20,7 +20,10 @@
 
 package config
 
-import "github.com/osapi-io/osapi/pkg/sdk/client"
+import (
+	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
 
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
@@ -357,11 +360,31 @@ type CustomRole struct {
 type ServerSecurity struct {
 	// CORS Cross-Origin Resource Sharing (CORS) settings for the server.
 	CORS CORS `mapstructure:"cors"`
-	// SigningKey is the key used for signing or validating tokens. Must be at
-	// least validation.MinSigningKeyLen characters (see openssl rand -hex 32).
-	SigningKey string `mapstructure:"signing_key" validate:"required,signing_key" mask:"password" doc:"HS256 signing key for JWT validation (required). Generate with openssl rand -hex 32."`
+	// SigningKeys are the keys that sign and verify tokens. The first key
+	// signs a new token. Each key verifies a token whose kid is its ID.
+	SigningKeys []SigningKey `mapstructure:"signing_keys" validate:"required,min=1,unique=ID,dive" mask:"password" doc:"HS256 keys for JWTs, each an id and a key (required). The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32."`
 	// Roles defines custom roles with fine-grained permissions.
 	Roles map[client.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
+}
+
+// SigningKey is one key of controller.api.security.signing_keys.
+type SigningKey struct {
+	// ID names the key in the kid header of each token that it signs.
+	ID string `mapstructure:"id" validate:"required"`
+	// Key is the HS256 key. Must be at least validation.MinSigningKeyLen
+	// characters (see openssl rand -hex 32).
+	Key string `mapstructure:"key" validate:"required,signing_key" mask:"password"`
+}
+
+// Keys are the signing keys as authtoken uses them, in the order of the
+// config: the first signs.
+func (s ServerSecurity) Keys() authtoken.Keys {
+	keys := make(authtoken.Keys, 0, len(s.SigningKeys))
+	for _, k := range s.SigningKeys {
+		keys = append(keys, authtoken.Key{ID: k.ID, Secret: k.Key})
+	}
+
+	return keys
 }
 
 // ClientSecurity represents security-related settings for the client.

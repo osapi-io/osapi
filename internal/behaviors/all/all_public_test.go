@@ -119,7 +119,7 @@ func (s *AllPublicTestSuite) TestUIStatusesAreCurrent() {
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 	e := echo.New()
-	for _, register := range server.Handler(slog.Default(), "", nil, dispatch.Deps{}) {
+	for _, register := range server.Handler(slog.Default(), nil, nil, dispatch.Deps{}) {
 		register(e)
 	}
 	mounted := map[string]bool{}

@@ -41,11 +41,11 @@ var (
 		Items: []Setting{
 			samplePort,
 			{
-				Name:   "controller.api.security.signing_key",
+				Name:   "controller.api.security.signing_keys",
 				Value:  "********",
 				Source: "env",
-				Env:    "OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY",
-				Type:   "string",
+				Env:    "OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS",
+				Type:   "list",
 				Secret: true,
 			},
 			{

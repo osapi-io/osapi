@@ -38,7 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-const signingKey = "test-signing-key-for-the-agent-group"
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-agent-group"}
 
 // HTTPPublicTestSuite runs requests through the agent group's generated
 // routes, with the auth, the decoding and the status mapping of the
@@ -74,7 +74,7 @@ func (s *HTTPPublicTestSuite) serve(
 ) *httptest.ResponseRecorder {
 	srv := server.New(
 		slog.Default(),
-		signingKey,
+		authtoken.Keys{signingKey},
 		nil,
 		agent.Deps{Jobs: s.jobs},
 	)

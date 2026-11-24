@@ -30,7 +30,8 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
-// Generate signs a new token with the config's signing key.
+// Generate signs a new token with the first signing key of the config, and
+// sets its kid.
 func Generate(
 	_ context.Context,
 	d Deps,
@@ -48,8 +49,13 @@ func Generate(
 		}
 	}
 
+	key, ok := d.Config.SigningKeys().Signer()
+	if !ok {
+		return GenerateOutput{}, ErrNoSigningKey
+	}
+
 	token, err := d.Tokens.Generate(
-		d.Config.SigningKey(),
+		key,
 		in.Roles,
 		in.Subject,
 		in.Permissions,
@@ -61,6 +67,7 @@ func Generate(
 
 	return GenerateOutput{
 		Token:       token,
+		KeyID:       key.ID,
 		Subject:     in.Subject,
 		Roles:       in.Roles,
 		Permissions: in.Permissions,
@@ -71,14 +78,17 @@ func Generate(
 // ErrNoRole is a role that neither the built-in roles nor the config have.
 var ErrNoRole = errors.New("no such role")
 
-// Validate checks a token against the config's signing key, and is its
-// claims.
+// ErrNoSigningKey is a config without a signing key.
+var ErrNoSigningKey = errors.New("no signing key in controller.api.security.signing_keys")
+
+// Validate checks a token against the key of the config that its kid
+// names, and is its claims and its kid.
 func Validate(
 	_ context.Context,
 	d Deps,
 	in ValidateInput,
 ) (Claims, error) {
-	claims, err := d.Tokens.Validate(in.Token, d.Config.SigningKey())
+	claims, err := d.Tokens.Validate(in.Token, d.Config.SigningKeys())
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to validate token: %w", err)
 	}
@@ -95,6 +105,7 @@ func Validate(
 	sort.Strings(effective)
 
 	out := Claims{
+		KeyID:                claims.KeyID,
 		Subject:              claims.Subject,
 		Roles:                claims.Roles,
 		Permissions:          claims.Permissions,

@@ -62,7 +62,7 @@ import (
 )
 
 // signingKey signs every token a case sends.
-const signingKey = "behavior-api-test-signing-key"
+var signingKey = authtoken.Key{ID: "test", Secret: "behavior-api-test-signing-key"}
 
 // jobID is the job every mocked job client answers with.
 const jobID = "job-1"
@@ -332,7 +332,7 @@ func (h *Harness) serve(
 	req *http.Request,
 ) *httptest.ResponseRecorder {
 	a := api.New(config.Config{}, slog.Default())
-	s := server.New(slog.Default(), signingKey, nil, dispatch.Deps{JobClient: jobs})
+	s := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, dispatch.Deps{JobClient: jobs})
 	s.Mount(a.Echo, h.routes(s))
 
 	rec := httptest.NewRecorder()

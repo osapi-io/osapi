@@ -8,20 +8,38 @@ requires a valid token.
 
 ### JWT signing
 
-osapi uses **HMAC-SHA256 (HS256)** symmetric signatures. The same `signing_key`
-makes and verifies tokens:
+osapi uses **HMAC-SHA256 (HS256)** symmetric signatures.
+`controller.api.security.signing_keys` is a list of keys. Each key has an `id`
+and a `key`:
 
 ```
-osapi controller token generate ──[signs with signing_key]──> JWT
-Client ──[sends JWT]──> API Server ──[verifies with signing_key]──> Allow/Deny
+osapi controller token generate ──[signs with the first key, kid = its id]──> JWT
+Client ──[sends JWT]──> API Server ──[verifies with the key that kid names]──> Allow/Deny
 ```
 
-Only a person who knows the signing key can make valid tokens. If somebody else
-gets the signing key, change it immediately. Then all tokens made before become
-invalid.
+- The first key of the list signs each new token, and puts its `id` in the `kid`
+  header of the token. Put the newest key first.
+- Each key of the list verifies the tokens that have its `id` as `kid`.
+- The API refuses a token with no `kid`, or with a `kid` that the list does not
+  have, with 401.
 
-The key must have 32 characters or more. A shorter value fails the config
-validation when osapi starts. Make one with `openssl rand -hex 32`.
+`osapi controller token validate` shows the `kid` of a token.
+
+Only a person who knows a signing key can make valid tokens. If somebody else
+gets a signing key, remove it from the list immediately. Then all tokens that it
+signed become invalid.
+
+Each key must have 32 characters or more. A shorter value fails the config
+validation when osapi starts. Make one with `openssl rand -hex 32`. Two keys
+cannot have the same `id`.
+
+### Change the signing key
+
+1. Add a new key at the start of the list, and restart the controller. New
+   tokens get the new key. The tokens of the old key still work.
+2. Make a new token for each client with `osapi controller token generate`.
+3. Remove the old key when no client sends a token that it signed. A token
+   expires after three months.
 
 ### Token structure
 
@@ -197,9 +215,12 @@ controller:
 controller:
   api:
     security:
-      # HS256 signing key (REQUIRED, minimum 32 characters)
-      # Generate with: openssl rand -hex 32
-      signing_key: '<64-char hex string>'
+      # HS256 signing keys (REQUIRED, minimum 32 characters each).
+      # The first key signs; each key verifies the tokens with its id as kid.
+      # Generate a key with: openssl rand -hex 32
+      signing_keys:
+        - id: '2026-11'
+          key: '<64-char hex string>'
 
   client:
     security:

@@ -49,7 +49,7 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		Controller: config.Controller{
 			API: config.APIServer{
 				Security: config.ServerSecurity{
-					SigningKey: "test-signing-key",
+					SigningKeys: []config.SigningKey{{ID: "test", Key: "test-signing-key"}},
 				},
 			},
 		},

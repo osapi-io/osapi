@@ -35,7 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
-const testSigningKey = "test-signing-key-for-middleware"
+var testSigningKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-middleware"}
 
 type MiddlewarePublicTestSuite struct {
 	suite.Suite
@@ -109,6 +109,24 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddleware() {
 			validateFunc: func(called bool, rec *httptest.ResponseRecorder) {
 				s.False(called)
 				s.Equal(http.StatusUnauthorized, rec.Code)
+			},
+			setupContextKey: true,
+		},
+		{
+			name: "token from a key that is not in the list returns 401",
+			authHeader: func() string {
+				t, _ := s.tokenManager.Generate(
+					authtoken.Key{ID: "removed", Secret: "a-key-that-the-controller-dropped"},
+					[]string{"admin"}, "test-subject", nil, nil,
+				)
+				return "Bearer " + t
+			}(),
+			requiredScopes: []string{"trace:read"},
+			expectedStatus: http.StatusUnauthorized,
+			validateFunc: func(called bool, rec *httptest.ResponseRecorder) {
+				s.False(called)
+				s.Equal(http.StatusUnauthorized, rec.Code)
+				s.Contains(rec.Body.String(), `unknown kid \"removed\"`)
 			},
 			setupContextKey: true,
 		},
@@ -190,7 +208,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddleware() {
 			wrapped := api.ExportScopeMiddleware(
 				testHandler,
 				s.tokenManager,
-				testSigningKey,
+				authtoken.Keys{testSigningKey},
 				contextKey,
 				customOf(tt.customRoles),
 			)
@@ -274,7 +292,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 			wrapped := api.ExportScopeMiddleware(
 				testHandler,
 				s.tokenManager,
-				testSigningKey,
+				authtoken.Keys{testSigningKey},
 				contextKey,
 				customRoles,
 			)
@@ -339,7 +357,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareDirectPermissions() {
 			wrapped := api.ExportScopeMiddleware(
 				testHandler,
 				s.tokenManager,
-				testSigningKey,
+				authtoken.Keys{testSigningKey},
 				contextKey,
 				nil,
 			)
@@ -464,7 +482,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareTargetScope() {
 			wrapped := api.ExportScopeMiddleware(
 				testHandler,
 				s.tokenManager,
-				testSigningKey,
+				authtoken.Keys{testSigningKey},
 				contextKey,
 				nil,
 			)
@@ -550,7 +568,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareInjectsIdentity() {
 			wrapped := api.ExportScopeMiddleware(
 				testHandler,
 				s.tokenManager,
-				testSigningKey,
+				authtoken.Keys{testSigningKey},
 				contextKey,
 				nil,
 			)

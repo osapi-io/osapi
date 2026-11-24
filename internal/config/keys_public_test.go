@@ -123,7 +123,7 @@ func (s *KeysPublicTestSuite) TestKeys() {
 		{
 			name: "when passwords, keys and tokens are secret",
 			validateFunc: func() {
-				s.True(byName["controller.api.security.signing_key"].Secret)
+				s.True(byName["controller.api.security.signing_keys"].Secret)
 				s.True(byName["controller.client.security.bearer_token"].Secret)
 				s.True(byName["agent.nats.auth.password"].Secret)
 				s.False(byName["controller.api.port"].Secret)

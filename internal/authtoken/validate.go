@@ -21,6 +21,7 @@
 package authtoken
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -28,10 +29,19 @@ import (
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
-// Validate parses and validates the JWT.
+// ErrNoKeyID is a token without a kid header.
+var ErrNoKeyID = errors.New("token has no kid")
+
+// ErrUnknownKeyID is a token whose kid names no key of the config.
+var ErrUnknownKeyID = errors.New("unknown kid")
+
+// Validate parses and validates the JWT with the key that its kid header
+// names. A token without a kid, or with a kid that keys does not have, is
+// refused: Validate does not try each key. The claims carry the kid as
+// KeyID.
 func (t *Token) Validate(
 	tokenString string,
-	signingKey string,
+	keys Keys,
 ) (*CustomClaims, error) {
 	claims := &CustomClaims{}
 
@@ -42,7 +52,17 @@ func (t *Token) Validate(
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
-			return []byte(signingKey), nil
+			kid, _ := token.Header["kid"].(string)
+			if kid == "" {
+				return nil, ErrNoKeyID
+			}
+			key, ok := keys.Lookup(kid)
+			if !ok {
+				return nil, fmt.Errorf("%w %q", ErrUnknownKeyID, kid)
+			}
+			claims.KeyID = kid
+
+			return []byte(key.Secret), nil
 		},
 	)
 	if err != nil {

@@ -46,7 +46,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file/mocks"
 )
 
-const signingKey = "test-signing-key-for-the-file-group"
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-file-group"}
 
 var (
 	content = []byte("server { listen 80; }")
@@ -763,7 +763,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			if tc.noStore {
 				d = file.Deps{}
 			}
-			srv := server.New(slog.Default(), signingKey, nil, d)
+			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, d)
 			e := echo.New()
 			srv.Mount(e, gen.Routes(srv))
 

@@ -41,33 +41,33 @@ func (m *MockTokens) EXPECT() *MockTokensMockRecorder {
 }
 
 // Generate mocks base method.
-func (m *MockTokens) Generate(signingKey string, roles []string, subject string, permissions, targets []string) (string, error) {
+func (m *MockTokens) Generate(key authtoken.Key, roles []string, subject string, permissions, targets []string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Generate", signingKey, roles, subject, permissions, targets)
+	ret := m.ctrl.Call(m, "Generate", key, roles, subject, permissions, targets)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Generate indicates an expected call of Generate.
-func (mr *MockTokensMockRecorder) Generate(signingKey, roles, subject, permissions, targets any) *gomock.Call {
+func (mr *MockTokensMockRecorder) Generate(key, roles, subject, permissions, targets any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTokens)(nil).Generate), signingKey, roles, subject, permissions, targets)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTokens)(nil).Generate), key, roles, subject, permissions, targets)
 }
 
 // Validate mocks base method.
-func (m *MockTokens) Validate(tokenString, signingKey string) (*authtoken.CustomClaims, error) {
+func (m *MockTokens) Validate(tokenString string, keys authtoken.Keys) (*authtoken.CustomClaims, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Validate", tokenString, signingKey)
+	ret := m.ctrl.Call(m, "Validate", tokenString, keys)
 	ret0, _ := ret[0].(*authtoken.CustomClaims)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Validate indicates an expected call of Validate.
-func (mr *MockTokensMockRecorder) Validate(tokenString, signingKey any) *gomock.Call {
+func (mr *MockTokensMockRecorder) Validate(tokenString, keys any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockTokens)(nil).Validate), tokenString, signingKey)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockTokens)(nil).Validate), tokenString, keys)
 }
 
 // MockConfig is a mock of Config interface.
@@ -109,16 +109,16 @@ func (mr *MockConfigMockRecorder) CustomRoles() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CustomRoles", reflect.TypeOf((*MockConfig)(nil).CustomRoles))
 }
 
-// SigningKey mocks base method.
-func (m *MockConfig) SigningKey() string {
+// SigningKeys mocks base method.
+func (m *MockConfig) SigningKeys() authtoken.Keys {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SigningKey")
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "SigningKeys")
+	ret0, _ := ret[0].(authtoken.Keys)
 	return ret0
 }
 
-// SigningKey indicates an expected call of SigningKey.
-func (mr *MockConfigMockRecorder) SigningKey() *gomock.Call {
+// SigningKeys indicates an expected call of SigningKeys.
+func (mr *MockConfigMockRecorder) SigningKeys() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SigningKey", reflect.TypeOf((*MockConfig)(nil).SigningKey))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SigningKeys", reflect.TypeOf((*MockConfig)(nil).SigningKeys))
 }

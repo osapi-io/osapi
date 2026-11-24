@@ -31,6 +31,41 @@ type Token struct {
 	logger *slog.Logger
 }
 
+// Key is one key that signs and verifies tokens. A token carries the ID of
+// its key in its kid header.
+type Key struct {
+	// ID names the key in the kid header.
+	ID string
+	// Secret is the HS256 key.
+	Secret string
+}
+
+// Keys are the keys that the controller accepts. The first key signs, and
+// each key verifies the tokens that carry its ID.
+type Keys []Key
+
+// Signer is the key that signs a new token: the first.
+func (k Keys) Signer() (Key, bool) {
+	if len(k) == 0 {
+		return Key{}, false
+	}
+
+	return k[0], true
+}
+
+// Lookup is the key with id.
+func (k Keys) Lookup(
+	id string,
+) (Key, bool) {
+	for _, key := range k {
+		if key.ID == id {
+			return key, true
+		}
+	}
+
+	return Key{}, false
+}
+
 // CustomClaims defines the structure of your token claims
 type CustomClaims struct {
 	Roles       []string `json:"roles"                 validate:"required,dive,required"`
@@ -39,5 +74,8 @@ type CustomClaims struct {
 	// labels, such as web-01 or group:web. A token without targets acts on
 	// each host.
 	Targets []string `json:"targets,omitempty" validate:"omitempty,dive,target_scope"`
+	// KeyID is the kid header of the token: the ID of the key that signed
+	// it. Validate sets it. It is not a claim.
+	KeyID string `json:"-"`
 	jwt.RegisteredClaims
 }

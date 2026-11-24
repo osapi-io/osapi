@@ -32,10 +32,16 @@ controller:
     # results. Go duration format (default: 30s).
     job_timeout: 30s
     security:
-      # Placeholder — this value is intentionally too short to pass startup
+      # Placeholder: this key is intentionally too short to pass startup
       # validation. Generate a real key with: openssl rand -hex 32
-      # or set it via the OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY env var.
-      signing_key: CHANGE_ME_BEFORE_DEPLOYING
+      # or set the list via the OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS env
+      # var, as id=key pairs with commas between them. The first key signs new
+      # tokens, with its id as their kid; each key verifies the tokens with its
+      # id. To change the key, add the new one first, and remove the old one
+      # when its tokens expire.
+      signing_keys:
+        - id: main
+          key: CHANGE_ME_BEFORE_DEPLOYING
       cors:
         allow_origins: []
       # Custom roles with fine-grained permissions.

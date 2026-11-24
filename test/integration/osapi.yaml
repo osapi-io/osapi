@@ -21,7 +21,9 @@ controller:
     # runner can take more, and the next write then waits behind it (#1271).
     job_timeout: 2m
     security:
-      signing_key: 1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3
+      signing_keys:
+        - id: integration
+          key: 1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3
       cors:
         allow_origins: []
   nats:

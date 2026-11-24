@@ -58,7 +58,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					API: config.APIServer{
 						Port: 8080,
 						Security: config.ServerSecurity{
-							SigningKey: testSigningKey,
+							SigningKeys: []config.SigningKey{{ID: "test", Key: testSigningKey}},
 						},
 					},
 					NATS: config.NATSConnection{Port: 4222},
@@ -93,14 +93,17 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: ""}},
 						},
 					},
 				},
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "controller.api.security.signing_key breaks its rule")
+				s.Contains(
+					err.Error(),
+					"controller.api.security.signing_keys[0].key breaks its rule",
+				)
 			},
 		},
 		{
@@ -114,14 +117,19 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 31 characters
+							SigningKeys: []config.SigningKey{
+								{ID: "test", Key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+							}, // 31 characters
 						},
 					},
 				},
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "controller.api.security.signing_key breaks its rule")
+				s.Contains(
+					err.Error(),
+					"controller.api.security.signing_keys[0].key breaks its rule",
+				)
 			},
 		},
 		{
@@ -136,7 +144,9 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					API: config.APIServer{
 						Port: 8080,
 						Security: config.ServerSecurity{
-							SigningKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 32 characters
+							SigningKeys: []config.SigningKey{
+								{ID: "test", Key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+							}, // 32 characters
 						},
 					},
 					NATS: config.NATSConnection{Port: 4222},
@@ -171,14 +181,19 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "CHANGE_ME_BEFORE_DEPLOYING",
+							SigningKeys: []config.SigningKey{
+								{ID: "test", Key: "CHANGE_ME_BEFORE_DEPLOYING"},
+							},
 						},
 					},
 				},
 			},
 			validateFunc: func(err error) {
 				s.Error(err)
-				s.Contains(err.Error(), "controller.api.security.signing_key breaks its rule")
+				s.Contains(
+					err.Error(),
+					"controller.api.security.signing_keys[0].key breaks its rule",
+				)
 			},
 		},
 		{
@@ -192,7 +207,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: testSigningKey,
+							SigningKeys: []config.SigningKey{{ID: "test", Key: testSigningKey}},
 						},
 					},
 				},
@@ -228,8 +243,10 @@ func (s *ConfigPublicTestSuite) validConfig(
 				Security: config.ClientSecurity{BearerToken: "test-bearer-token"},
 			},
 			API: config.APIServer{
-				Port:     8080,
-				Security: config.ServerSecurity{SigningKey: testSigningKey},
+				Port: 8080,
+				Security: config.ServerSecurity{
+					SigningKeys: []config.SigningKey{{ID: "test", Key: testSigningKey}},
+				},
 			},
 			NATS: config.NATSConnection{Port: 4222},
 		},
@@ -344,8 +361,10 @@ func (s *ConfigPublicTestSuite) TestValidateURL() {
 					Security: config.ClientSecurity{BearerToken: "test-bearer-token"},
 				},
 				API: config.APIServer{
-					Port:     8080,
-					Security: config.ServerSecurity{SigningKey: testSigningKey},
+					Port: 8080,
+					Security: config.ServerSecurity{
+						SigningKeys: []config.SigningKey{{ID: "test", Key: testSigningKey}},
+					},
 				},
 				NATS: config.NATSConnection{Port: 4222},
 			},
@@ -492,7 +511,7 @@ func (s *ConfigPublicTestSuite) TestValidateRegisterValidatorsError() {
 					},
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: testSigningKey,
+							SigningKeys: []config.SigningKey{{ID: "test", Key: testSigningKey}},
 						},
 					},
 				},

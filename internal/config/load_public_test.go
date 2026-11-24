@@ -31,6 +31,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
 )
@@ -43,7 +44,9 @@ func validConfig(
 		"controller:",
 		"  api:",
 		"    security:",
-		"      signing_key: " + testSigningKey,
+		"      signing_keys:",
+		"        - id: test",
+		"          key: " + testSigningKey,
 		"  client:",
 		"    security:",
 		"      bearer_token: token",
@@ -115,6 +118,78 @@ func (s *LoadPublicTestSuite) TestLoad() {
 			},
 		},
 		{
+			name: "when the file has signing keys, the first is the signer",
+			body: strings.Replace(validConfig(), "        - id: test",
+				"        - id: new\n          key: "+testSigningKey+"-new\n        - id: test", 1),
+			validateFunc: func(_ *viper.Viper, c config.Config) {
+				keys := c.Controller.API.Security.Keys()
+				s.Equal(authtoken.Keys{
+					{ID: "new", Secret: testSigningKey + "-new"},
+					{ID: "test", Secret: testSigningKey},
+				}, keys)
+			},
+		},
+		{
+			name: "when the environment sets the signing keys, each id=key pair is a key",
+			body: validConfig(),
+			env: map[string]string{
+				"OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS": "new=" + testSigningKey +
+					"-new,old=" + testSigningKey,
+			},
+			validateFunc: func(v *viper.Viper, c config.Config) {
+				s.Equal([]config.SigningKey{
+					{ID: "new", Key: testSigningKey + "-new"},
+					{ID: "old", Key: testSigningKey},
+				}, c.Controller.API.Security.SigningKeys)
+				s.Equal(config.SourceEnv, config.Source(v, "controller.api.security.signing_keys"))
+			},
+		},
+		{
+			name: "when an environment pair has no id, the key has none",
+			body: validConfig(),
+			env: map[string]string{
+				"OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS": testSigningKey,
+			},
+			wantErr:  `controller.api.security.signing_keys[0].id breaks its rule "required"`,
+			wantRule: config.RuleValue,
+		},
+		{
+			name: "when the list of signing keys is empty, the config does not load",
+			body: strings.Replace(validConfig(),
+				"      signing_keys:\n        - id: test\n          key: "+testSigningKey,
+				`      signing_keys: ""`, 1),
+			wantErr:  `controller.api.security.signing_keys breaks its rule "min=1"`,
+			wantRule: config.RuleValue,
+		},
+		{
+			name: "when two signing keys have one id, the config does not load",
+			body: validConfig(),
+			env: map[string]string{
+				"OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS": "a=" + testSigningKey +
+					",a=" + testSigningKey,
+			},
+			wantErr:  `controller.api.security.signing_keys breaks its rule "unique=ID"`,
+			wantRule: config.RuleValue,
+		},
+		{
+			name: "when the environment sets a list, each comma starts an item",
+			body: validConfig(),
+			env: map[string]string{
+				"OSAPI_CONTROLLER_API_SECURITY_CORS_ALLOW_ORIGINS": "https://a,https://b",
+			},
+			validateFunc: func(_ *viper.Viper, c config.Config) {
+				s.Equal([]string{"https://a", "https://b"},
+					c.Controller.API.Security.CORS.AllowOrigins)
+			},
+		},
+		{
+			name: "when a list is an empty string, it is empty",
+			body: validConfig("agent:", "  consumer:", `    back_off: ""`),
+			validateFunc: func(_ *viper.Viper, c config.Config) {
+				s.Empty(c.Agent.Consumer.BackOff)
+			},
+		},
+		{
 			name:     "when the file is missing",
 			missing:  true,
 			wantErr:  "read ",
@@ -141,7 +216,7 @@ func (s *LoadPublicTestSuite) TestLoad() {
 		{
 			name:     "when a value breaks a constraint",
 			body:     strings.Replace(validConfig(), testSigningKey, "short", 1),
-			wantErr:  `controller.api.security.signing_key breaks its rule "signing_key": signing key`,
+			wantErr:  `controller.api.security.signing_keys[0].key breaks its rule "signing_key": signing key`,
 			wantRule: config.RuleValue,
 		},
 		{
@@ -237,7 +312,7 @@ func (s *LoadPublicTestSuite) TestCheck() {
 			want: []config.Problem{
 				{
 					Rule: config.RuleValue,
-					Key:  "controller.api.security.signing_key",
+					Key:  "controller.api.security.signing_keys[0].key",
 					Fix:  config.Checks.Fix(config.RuleValue),
 				},
 				{

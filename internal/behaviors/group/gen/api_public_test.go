@@ -19,7 +19,7 @@ type APIPublicTestSuite struct {
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
-	routes := gen.Routes(server.New(slog.Default(), "", nil, dispatch.Deps{}))
+	routes := gen.Routes(server.New(slog.Default(), nil, nil, dispatch.Deps{}))
 	want := []struct {
 		method     string
 		path       string

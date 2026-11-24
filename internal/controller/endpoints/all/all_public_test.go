@@ -70,7 +70,7 @@ func (s *AllPublicTestSuite) TestValidate() {
 // body. Validate makes each rule of an input have one, so this covers each
 // rule of each endpoint.
 func (s *AllPublicTestSuite) TestRefusals() {
-	const key = "test-signing-key-for-the-refusals"
+	key := authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-refusals"}
 	// The token has each method's permission, so a new group's, which no
 	// role has yet, does not answer 403 before the input is checked.
 	var perms []string
@@ -93,7 +93,7 @@ func (s *AllPublicTestSuite) TestRefusals() {
 		}
 	}
 	e := echo.New()
-	for _, mount := range server.Handler(slog.Default(), key, nil, deps...) {
+	for _, mount := range server.Handler(slog.Default(), authtoken.Keys{key}, nil, deps...) {
 		mount(e)
 	}
 

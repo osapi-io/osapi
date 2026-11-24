@@ -68,7 +68,7 @@ func apiTestFile(
 	f.Func().Params(jen.Id("s").Op("*").Id("APIPublicTestSuite")).Id("TestRoutes").Params().Block(
 		jen.Id("routes").Op(":=").Qual(pkgPath(b)+"/gen", "Routes").Call(
 			jen.Qual(serverPath, "New").Call(
-				jen.Qual("log/slog", "Default").Call(), jen.Lit(""), jen.Nil(),
+				jen.Qual("log/slog", "Default").Call(), jen.Nil(), jen.Nil(),
 				jen.Qual(dispatchPath, "Deps").Values(),
 			),
 		),

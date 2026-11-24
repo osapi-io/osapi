@@ -52,7 +52,9 @@ func (s *MethodsPublicTestSuite) file(
 const valid = `controller:
   api:
     security:
-      signing_key: 0123456789abcdef0123456789abcdef
+      signing_keys:
+        - id: test
+          key: 0123456789abcdef0123456789abcdef
   client:
     security:
       bearer_token: token
@@ -114,10 +116,10 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		{
 			name: "when the key is a setting, it is the setting",
 			deps: s.file(valid),
-			key:  "controller.api.security.signing_key",
+			key:  "controller.api.security.signing_keys",
 			validateFunc: func(got config.GetOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal("controller.api.security.signing_key", got.Setting.Name)
+				s.Equal("controller.api.security.signing_keys", got.Setting.Name)
 				s.Equal("********", got.Setting.Value, "a secret's value is hidden")
 			},
 		},

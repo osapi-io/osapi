@@ -161,7 +161,7 @@ func Read(
 		}
 		found = false
 	}
-	if err := v.Unmarshal(c); err != nil {
+	if err := v.Unmarshal(c, decodeHook()); err != nil {
 		return found, broke(RuleParse, fmt.Errorf("parse %s: %w", path, err))
 	}
 

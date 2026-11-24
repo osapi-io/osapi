@@ -43,7 +43,7 @@ const (
 type TokenValidator interface {
 	Validate(
 		tokenString string,
-		signingKey string,
+		keys authtoken.Keys,
 	) (*authtoken.CustomClaims, error)
 }
 
@@ -51,7 +51,7 @@ type TokenValidator interface {
 func ScopeMiddleware(
 	handler StrictHandlerFunc,
 	tokenManager TokenValidator,
-	signingKey string,
+	signingKeys authtoken.Keys,
 	contextKey string,
 	customRoles authtoken.CustomRoles,
 ) StrictHandlerFunc {
@@ -90,7 +90,7 @@ func ScopeMiddleware(
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-			claims, err := tokenManager.Validate(tokenString, signingKey)
+			claims, err := tokenManager.Validate(tokenString, signingKeys)
 			if err != nil {
 				return nil, ctx.JSON(http.StatusUnauthorized, endpoint.ErrorResponse{
 					Error:  "Invalid token: " + err.Error(),

@@ -57,7 +57,7 @@ func (s *HandlersPublicTestSuite) TestTraceReader() {
 func (s *HandlersPublicTestSuite) TestHandlers() {
 	ctrl := gomock.NewController(s.T())
 	var cfg config.Config
-	cfg.Controller.API.Security.SigningKey = "test-key"
+	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "test", Key: "test-key"}}
 	cfg.Controller.API.Security.Roles = map[client.Role]config.CustomRole{
 		"reader": {Permissions: []client.Permission{"status:read"}},
 	}

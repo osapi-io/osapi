@@ -624,15 +624,15 @@ agent has `agent.command.enabled` off, as the lab's agents do.
 
 ```bash
 just build     # Builds the React UI, then the Go binary
-export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
+export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS=dev=$(openssl rand -hex 32)
 ./osapi controller start -f configs/osapi.yaml
 ```
 
-`configs/osapi.yaml` has a placeholder `signing_key`. The placeholder fails the
-startup validation on purpose. Thus you must set the environment variable above
-to run the controller on your machine. The file also has a placeholder
-`bearer_token`, so a client request fails authentication until you set a token
-that the key signs:
+`configs/osapi.yaml` has a placeholder in `signing_keys`. The placeholder fails
+the startup validation on purpose. The variable takes `id=key` pairs, with a
+comma between them. Thus you must set the environment variable above to run the
+controller on your machine. The file also has a placeholder `bearer_token`, so a
+client request fails authentication until you set a token that the key signs:
 
 ```bash
 export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=$(./osapi controller token generate \

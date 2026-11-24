@@ -15,8 +15,9 @@ Each request makes a record.
 
 ## Who sends the request
 
-Each API request has a JWT. The key of the controller signs it
-(`controller.api.security.signing_key`, HS256).
+Each API request has a JWT. The first key of
+`controller.api.security.signing_keys` signs it (HS256), and puts its `id` in
+the `kid` header. Each key of the list verifies the tokens with its `id`.
 `osapi controller token generate` makes a token with roles, a subject and, if
 you want, a fixed list of permissions. `osapi controller token validate` shows
 what a token gives. The CLI sends the token in
