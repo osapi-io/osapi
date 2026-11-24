@@ -1001,7 +1001,7 @@ type Error struct {
 	Err error
 	// Code is the status code.
 	Code int
-	// types.Reason is the word of the answer's reason field, one of Reasons.
+	// Reason is the word of the answer's reason field, one of types.Reasons.
 	Reason types.Reason
 	// Doc says when it occurs, for the spec.
 	Doc string
@@ -1025,7 +1025,7 @@ var ReasonDocs = map[types.Reason]string{
 // ErrorResponse schema of the spec.
 type ErrorResponse struct {
 	Error string `json:"error"`
-	// types.Reason is why, as one of Reasons.
+	// Reason is why, as one of types.Reasons.
 	Reason types.Reason `json:"reason"`
 }
 

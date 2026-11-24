@@ -48,7 +48,7 @@ const CategoryBehavior = "behavior"
 
 // Status represents the current status of a job.
 // Status is a type alias for types.JobStatus so internal code and the SDK
-// share the same type. All status constants are defined in pkg/sdk/client/.
+// share the same type. All status constants are defined in pkg/sdk/types.
 type Status = types.JobStatus
 
 // Job status constants re-exported from the SDK.
@@ -149,35 +149,9 @@ type Response struct {
 // Operation type definitions for hierarchical job routing
 // These support the new dot-notation format used by the jobs CLI
 
-// OperationType is a type alias for types.JobOperation.
-type OperationType = types.JobOperation
-
-// Node operations — read-only operations that query node state.
-const ()
-
-// User operations.
-const ()
-
-// SSH Key operations.
-const ()
-
-// Network interface operations.
-const (
-	OperationNetworkInterfaceList   = types.OpNetworkInterfaceList
-	OperationNetworkInterfaceGet    = types.OpNetworkInterfaceGet
-	OperationNetworkInterfaceCreate = types.OpNetworkInterfaceCreate
-	OperationNetworkInterfaceUpdate = types.OpNetworkInterfaceUpdate
-	OperationNetworkInterfaceDelete = types.OpNetworkInterfaceDelete
-)
-
-// Network route operations.
-const (
-	OperationNetworkRouteList   = types.OpNetworkRouteList
-	OperationNetworkRouteGet    = types.OpNetworkRouteGet
-	OperationNetworkRouteCreate = types.OpNetworkRouteCreate
-	OperationNetworkRouteUpdate = types.OpNetworkRouteUpdate
-	OperationNetworkRouteDelete = types.OpNetworkRouteDelete
-)
+// OperationType is the operation of a job, in dot notation, such as
+// behavior.dns.update.
+type OperationType = string
 
 // Operation represents an operation in the new hierarchical format
 type Operation struct {

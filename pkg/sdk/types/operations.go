@@ -31,35 +31,6 @@ const (
 	JobTypeModify JobType = "modify"
 )
 
-// JobOperation represents a specific operation using hierarchical dot notation.
-// SDK consumers use these to avoid string typos when building orchestrator tasks.
-// Defined as a type alias so it's interchangeable with string in assignments.
-type JobOperation = string
-
-// Command operations — execute arbitrary commands on agents.
-const (
-	OpCommandExec  JobOperation = "command.exec.execute"
-	OpCommandShell JobOperation = "command.shell.execute"
-)
-
-// Network interface operations.
-const (
-	OpNetworkInterfaceList   JobOperation = "network.interface.list"
-	OpNetworkInterfaceGet    JobOperation = "network.interface.get"
-	OpNetworkInterfaceCreate JobOperation = "network.interface.create"
-	OpNetworkInterfaceUpdate JobOperation = "network.interface.update"
-	OpNetworkInterfaceDelete JobOperation = "network.interface.delete"
-)
-
-// Network route operations.
-const (
-	OpNetworkRouteList   JobOperation = "network.route.list"
-	OpNetworkRouteGet    JobOperation = "network.route.get"
-	OpNetworkRouteCreate JobOperation = "network.route.create"
-	OpNetworkRouteUpdate JobOperation = "network.route.update"
-	OpNetworkRouteDelete JobOperation = "network.route.delete"
-)
-
 // Target constants for job routing.
 const (
 	// TargetAny routes to any available agent (load-balanced).
