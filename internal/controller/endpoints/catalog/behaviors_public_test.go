@@ -29,8 +29,8 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/catalog"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type provider struct{}
