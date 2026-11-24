@@ -35,7 +35,7 @@ missing. This shows that the "Not yet" list of the skill works.
 | `restart`   | restarting a service                      | stopping at the "Not yet" list                      |
 | `swap`      | "manage swap", and nothing more           | asking what it should do instead of guessing        |
 | `apptoken`  | a token written to a file, never shown    | a secret input                                      |
-| `neighbors` | `ip neigh`, under the network group       | a grouped behavior, in its group's directory        |
+| `neighbors` | `ip neigh` of an interface, under it      | a child behavior, declared with `Of`                |
 
 ```sh
 internal/skills/resources/dev-skills/build-a-behavior/evals/run.sh          # every eval in evals.json

@@ -8,11 +8,11 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
-// decodeStatus reads the status method's input from the request.
-func decodeStatus(
+// decodeGet reads the get method's input from the request.
+func decodeGet(
 	c *echo.Context,
-) (StatusRequest, string, bool) {
-	var in StatusRequest
+) (GetRequest, string, bool) {
+	var in GetRequest
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}

@@ -202,18 +202,22 @@ default route, goes in a unit test of the provider, not in an example.
 
 1. Write it:
    `go run . dsl behavior create --name <name> --description "<one line>"`, with
-   `--group <group>` for a behavior nested under one, such as `network`, and
    `--package <go-package>` when the name is a Go keyword, such as
    `--name package --package packages` (the directory is then that package), and
    `--requires <behavior>[,<behavior>...]` for each behavior that it is built
    on, such as `--requires managedfile`, then
-   `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all`
-   (`<group>/<name>` for a grouped one). The result builds, validates and passes
-   every test before you change it. With `--requires`, one test fails: the
-   examples fail the rule `used` until a provider calls each required behavior
-   with `behavior.Call`. The comment on the provider field in `<platform>.go`
-   has the call to write. Then give the mock of each required provider its
-   expectations in `<platform>_public_test.go`.
+   `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all`. The
+   behavior is directly under node, by its own name. To nest it under a parent
+   behavior, add `behavior.Of(parent.Behavior)` to put it under an item of the
+   parent, as the SSH keys are under a user, or
+   `behavior.Under(parent.Behavior)` to put it under the collection, as the
+   sources are under the log. Never nest a behavior only to sort it: its area
+   sorts it. The result builds, validates and passes every test before you
+   change it. With `--requires`, one test fails: the examples fail the rule
+   `used` until a provider calls each required behavior with `behavior.Call`.
+   The comment on the provider field in `<platform>.go` has the call to write.
+   Then give the mock of each required provider its expectations in
+   `<platform>_public_test.go`.
 2. Change it in this order, because each depends on the one before:
    `settings.go`, `types.go`, `provider.go` and `<platform>.go`, `methods.go`,
    then `behavior.go`. Use the host only through `host.Host`. Then the fake host

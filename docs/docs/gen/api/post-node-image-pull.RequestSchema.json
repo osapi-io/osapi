@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"image":{"description":"The image, such as alpine:3.20","pattern":"^[a-zA-Z0-9][a-zA-Z0-9._/:@-]*$","type":"string","x-oapi-codegen-extra-tags":{"validate":"required,image_ref"}}},"required":["image"],"type":"object","title":"ImagePullRequest"}}},"required":true}}

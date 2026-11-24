@@ -25,19 +25,19 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"The newest entries\" is run",
-			args: []string{"node", "log", "entry", "list", "--target", "server1"},
+			args: []string{"node", "log", "list", "--target", "server1"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"The last entry of one unit at info or above\" is run",
-			args: []string{"node", "log", "entry", "list", "--target", "server1", "--unit", "nginx.service", "--lines", "1", "--since", "1 hour ago", "--priority", "info"},
+			args: []string{"node", "log", "list", "--target", "server1", "--unit", "nginx.service", "--lines", "1", "--since", "1 hour ago", "--priority", "info"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/log/entry?lines=1&priority=info&since=1+hour+ago&unit=nginx.service",
+				Path:   "/api/node/server1/log?lines=1&priority=info&since=1+hour+ago&unit=nginx.service",
 				Body:   "",
 			},
 		},

@@ -15,19 +15,19 @@ func Routes(
 	return []server.Route{
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/node/:hostname/container/image",
+			Path:       "/api/node/:hostname/image",
 			Permission: "image:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 		{
 			Method:     http.MethodPost,
-			Path:       "/api/node/:hostname/container/image/pull",
+			Path:       "/api/node/:hostname/image/pull",
 			Permission: "image:execute",
 			Handler:    server.Serve(s, Group, "pull", HandlePull, decodePull),
 		},
 		{
 			Method:     http.MethodDelete,
-			Path:       "/api/node/:hostname/container/image/:image",
+			Path:       "/api/node/:hostname/image/:image",
 			Permission: "image:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},

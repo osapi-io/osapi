@@ -1,7 +1,17 @@
 # Log
 
-Log commands.
+The entries of the systemd journal.
 
 import DocCardList from '@theme/DocCardList';
 
 <DocCardList />
+
+## Permission
+
+Each command needs the `log:read` permission.
+`osapi controller role get --name <role>` shows what a role grants.
+
+## Notes
+
+The \[log behavior](../../../../../reference/behaviors/logs/log/log.md) page
+tells where the behavior runs, what it is built on and its settings.

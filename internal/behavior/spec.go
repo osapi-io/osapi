@@ -97,13 +97,13 @@ var Spec = guide.Spec{
 			Kind: KindOption,
 			Name: `Title("Package updates")`,
 			Does: "Gives the behavior the title that a person reads: the title of its reference and chain pages, the name of its API tag, and its name on the UI's Behaviors page and on its steps of a plan. Without it, the title is the name with a capital letter, such as Sysctl.",
-			When: "When the name does not read well with a capital letter: an initialism such as DNS, two words such as Package updates, a group such as Container image, or a behavior that Of nests, which names its parent, such as User SSH key.",
+			When: "When the name does not read well with a capital letter: an initialism such as DNS, two words such as Package updates or Container image, or a child, which names its parent, such as User SSH key.",
 		},
 		{
 			Kind: KindOption,
 			Name: "Of(parent.Behavior)",
 			Does: "Puts the behavior's items under an item of another behavior: Of(user.Behavior) puts sshkey at /api/node/{hostname}/user/{name}/sshkey and osapi client node user sshkey. Each input has the parent's key, such as name, which goes in the path before the method's own key. The permissions are the parent's: the keys of a user need user:read and user:write. The parent's provider is not required: a child that needs it declares Requires too.",
-			When: "For a resource that exists only inside another, such as the SSH keys of a user. Not with Under: the parent's path is the group.",
+			When: "For a resource that exists only inside an item of another, such as the SSH keys of a user. For a child of the whole collection, use Under.",
 		},
 		{
 			Kind: KindOption,
@@ -113,9 +113,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Under(GroupName)`,
-			Does: "Nests the behavior in a group: its routes, commands and directory. The permissions keep the behavior's name: dns under network needs dns:read. Use a constant, such as GroupNetwork; dsl behavior validate refuses a group outside KnownGroups, because a misspelled group makes a new route and command.",
-			When: "When the behavior belongs to a group, such as network. Add the group's constant to KnownGroups first.",
+			Name: "Under(parent.Behavior)",
+			Does: "Puts the behavior under the collection of another behavior, with no key of the parent: Under(log.Behavior) puts source at /api/node/{hostname}/log/source and osapi client node log source. The permissions are the parent's: the sources of the log need log:read. A behavior with neither Of nor Under is directly under node, by its own name.",
+			When: "For a resource of a parent whose items have no key, such as the sources of the log, or that is about the whole collection, such as the updates of the packages. Not for a category: a behavior is never nested only to sort it, because the area sorts it.",
 		},
 		{
 			Kind: KindOption,
@@ -193,19 +193,19 @@ var Spec = guide.Spec{
 		{
 			Kind: KindMethod,
 			Name: `Read("name", fn)`,
-			Does: "A method that reads the host: GET and <group>:read. Named list, get or status.",
+			Does: "A method that reads the host: GET and <name>:read. Named list, get or status.",
 			When: "For each read. fn is func(ctx, p Provider, in In) (Out, error).",
 		},
 		{
 			Kind: KindMethod,
 			Name: `Write("name", fn)`,
-			Does: "A method that changes the host: POST, PUT or DELETE, and <group>:write. Named create, update or delete. Out has Changed bool.",
+			Does: "A method that changes the host: POST, PUT or DELETE, and <name>:write. Named create, update or delete. Out has Changed bool.",
 			When: "For each change. fn is func(ctx, p Provider, in In) (Out, error).",
 		},
 		{
 			Kind: KindMethod,
 			Name: `Action("name", fn)`,
-			Does: "A write named for what it does, such as restart: POST on the method's path with the name after it, /service/{name}/restart, and <group>:execute, which the operator role gets and automation does not. Named with one of the CLI's actions. Out has Changed bool.",
+			Does: "A write named for what it does, such as restart: POST on the method's path with the name after it, /service/{name}/restart, and <name>:execute, which the operator role gets and automation does not. Named with one of the CLI's actions. Out has Changed bool.",
 			When: "For a change that create, update and delete do not say, such as start, stop, restart, enable, signal or reboot.",
 		},
 
@@ -313,8 +313,8 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Always()`,
-			Does: "Marks an action that changes the host each time it runs, such as restart. Its output reports changed: true on each run, and the generated test does not run it again to see changed: false. dsl behavior validate refuses it on a method that is not an action.",
-			When: "On an action that has no state to compare, so a second run is not unchanged.",
+			Does: "Marks a method that changes the host each time it runs: an action such as restart, or an update whose input the host cannot compare with what it has, such as a password that the controller hashes with a new salt. Its output reports changed: true on each run, and the generated test does not run it again to see changed: false. dsl behavior validate refuses it on a create, a delete and a read.",
+			When: "On an action that has no state to compare, or an update of a secret that the host keeps only as a hash, so a second run is not unchanged.",
 		},
 		{
 			Kind: KindRefine,
@@ -523,7 +523,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindExample,
 			Name: "A write example on a live host",
-			Does: "CI runs each write example as root on a throwaway Linux runner, with OSAPI_INTEGRATION_WRITE_BEHAVIORS=1, and the lab can run it too. Each example starts with its item deleted, runs the calls of After, then must report its changed, and changed: false when it runs again. The test uploads each object of Stored first, and runs an .Always() action once. Prints, PrintsAfter and Exists only answer the fake host.",
+			Does: "CI runs each write example as root on a throwaway Linux runner, with OSAPI_INTEGRATION_WRITE_BEHAVIORS=1, and the lab can run it too. Each example starts with its item deleted, runs the calls of After, then must report its changed, and changed: false when it runs again. The test uploads each object of Stored first, and runs an .Always() method once. Prints, PrintsAfter and Exists only answer the fake host.",
 			When: "For each write example: give the state that it starts from with After, which a real host can run, such as After(StartInput{...}) before a stop, and make the content real, such as a unit file whose ExecStart exists. Run it against the lab with go test -tags integration before you push.",
 		},
 		{

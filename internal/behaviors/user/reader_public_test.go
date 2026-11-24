@@ -51,7 +51,6 @@ func (s *ReaderPublicTestSuite) TestWrites() {
 	s.ErrorIs(err, behavior.ErrUnsupported)
 	_, err = p.Delete(ctx, "alice")
 	s.ErrorIs(err, behavior.ErrUnsupported)
-	s.ErrorIs(p.SetPassword(ctx, "alice", "$6$x$y"), behavior.ErrUnsupported)
 }
 
 func (s *ReaderPublicTestSuite) TestIgnoreNotFound() {
@@ -95,7 +94,7 @@ func (s *ReaderPublicTestSuite) TestSameGroups() {
 	}
 }
 
-// TestSteps: each controller step leaves the job only the hash of the
+// TestSteps: the controller step leaves the job only the hash of the
 // password, and a call with no password stays as it is.
 func (s *ReaderPublicTestSuite) TestSteps() {
 	ctx := context.Background()
@@ -108,18 +107,8 @@ func (s *ReaderPublicTestSuite) TestSteps() {
 	s.Require().NoError(err)
 	s.Empty(in.PasswordHash, "no password, no hash")
 
-	pw, err := user.HashPassword(ctx, user.PasswordInput{Name: "alice", Password: "pw"})
-	s.Require().NoError(err)
-	s.Empty(pw.Password)
-	s.True(strings.HasPrefix(pw.PasswordHash, "$6$"))
-	pw, err = user.HashPassword(ctx, user.PasswordInput{Name: "alice"})
-	s.Require().NoError(err)
-	s.Empty(pw.PasswordHash)
-
 	defer user.SetHashFn(func(string) (string, error) { return "", errors.New("no salt") })()
 	_, err = user.HashCreate(ctx, user.CreateInput{Name: "alice", Password: "pw"})
-	s.ErrorContains(err, "no salt")
-	_, err = user.HashPassword(ctx, user.PasswordInput{Name: "alice", Password: "pw"})
 	s.ErrorContains(err, "no salt")
 }
 

@@ -11,7 +11,7 @@ components:
         type: string
       x-oapi-codegen-extra-tags:
         validate: required,min=1,valid_target
-    NetworkInterfaceRouteName:
+    InterfaceRouteName:
       description: The interface, such as eth0, or a fact such as @fact.interface.primary
       in: path
       name: name
@@ -47,7 +47,7 @@ components:
           example: not_found
           type: string
       type: object
-    NetworkInterfaceRouteCollectionResponse:
+    InterfaceRouteCollectionResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -58,12 +58,12 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkInterfaceRouteEntry'
+            $ref: '#/components/schemas/InterfaceRouteEntry'
           type: array
       required:
         - results
       type: object
-    NetworkInterfaceRouteCreateRequest:
+    InterfaceRouteCreateRequest:
       properties:
         destination:
           description: Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route
@@ -88,7 +88,7 @@ components:
         - destination
         - via
       type: object
-    NetworkInterfaceRouteCreateResponse:
+    InterfaceRouteCreateResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -99,12 +99,12 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkInterfaceRouteResult'
+            $ref: '#/components/schemas/InterfaceRouteResult'
           type: array
       required:
         - results
       type: object
-    NetworkInterfaceRouteDeleteRequest:
+    InterfaceRouteDeleteRequest:
       properties:
         destination:
           description: The destination of the route, in CIDR notation, such as 10.0.0.0/8
@@ -115,7 +115,7 @@ components:
       required:
         - destination
       type: object
-    NetworkInterfaceRouteDeleteResponse:
+    InterfaceRouteDeleteResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -126,12 +126,12 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkInterfaceRouteResult'
+            $ref: '#/components/schemas/InterfaceRouteResult'
           type: array
       required:
         - results
       type: object
-    NetworkInterfaceRouteEntry:
+    InterfaceRouteEntry:
       properties:
         destination:
           description: The destination in CIDR notation, or default
@@ -174,7 +174,7 @@ components:
         - hostname
         - status
       type: object
-    NetworkInterfaceRouteResult:
+    InterfaceRouteResult:
       properties:
         changed:
           description: Whether the host changed
@@ -202,7 +202,7 @@ components:
         - hostname
         - status
       type: object
-    NetworkInterfaceRouteUpdateRequest:
+    InterfaceRouteUpdateRequest:
       properties:
         destination:
           description: Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route
@@ -227,7 +227,7 @@ components:
         - destination
         - via
       type: object
-    NetworkInterfaceRouteUpdateResponse:
+    InterfaceRouteUpdateResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -238,7 +238,7 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkInterfaceRouteResult'
+            $ref: '#/components/schemas/InterfaceRouteResult'
           type: array
       required:
         - results
@@ -254,25 +254,25 @@ info:
   version: 1.0.0
 openapi: 3.0.0
 paths:
-  /api/node/{hostname}/network/interface/{name}/route:
+  /api/node/{hostname}/interface/{name}/route:
     delete:
       description: Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.
-      operationId: DeleteNodeNetworkInterfaceRoute
+      operationId: DeleteNodeInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
+        - $ref: '#/components/parameters/InterfaceRouteName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NetworkInterfaceRouteDeleteRequest'
+              $ref: '#/components/schemas/InterfaceRouteDeleteRequest'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkInterfaceRouteDeleteResponse'
+                $ref: '#/components/schemas/InterfaceRouteDeleteResponse'
           description: Each target host's result, with whether it changed.
         "400":
           content:
@@ -326,16 +326,16 @@ paths:
       x-osapi-method: delete
     get:
       description: 'Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.'
-      operationId: GetNodeNetworkInterfaceRoute
+      operationId: GetNodeInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
+        - $ref: '#/components/parameters/InterfaceRouteName'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkInterfaceRouteCollectionResponse'
+                $ref: '#/components/schemas/InterfaceRouteCollectionResponse'
           description: Each target host's result.
         "400":
           content:
@@ -396,22 +396,22 @@ paths:
       x-osapi-method: list
     post:
       description: 'Adds the route to the interface''s netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
-      operationId: PostNodeNetworkInterfaceRoute
+      operationId: PostNodeInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
+        - $ref: '#/components/parameters/InterfaceRouteName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NetworkInterfaceRouteCreateRequest'
+              $ref: '#/components/schemas/InterfaceRouteCreateRequest'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkInterfaceRouteCreateResponse'
+                $ref: '#/components/schemas/InterfaceRouteCreateResponse'
           description: Each target host's result, with whether it changed.
         "400":
           content:
@@ -473,22 +473,22 @@ paths:
       x-osapi-method: create
     put:
       description: 'Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.'
-      operationId: PutNodeNetworkInterfaceRoute
+      operationId: PutNodeInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
+        - $ref: '#/components/parameters/InterfaceRouteName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NetworkInterfaceRouteUpdateRequest'
+              $ref: '#/components/schemas/InterfaceRouteUpdateRequest'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkInterfaceRouteUpdateResponse'
+                $ref: '#/components/schemas/InterfaceRouteUpdateResponse'
           description: Each target host's result, with whether it changed.
         "400":
           content:

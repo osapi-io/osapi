@@ -128,12 +128,3 @@ func (r *reader) Delete(
 ) (bool, error) {
 	return false, behavior.ErrUnsupported
 }
-
-// SetPassword is not supported off the Debian family.
-func (r *reader) SetPassword(
-	context.Context,
-	string,
-	string,
-) error {
-	return behavior.ErrUnsupported
-}

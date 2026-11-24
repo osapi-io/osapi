@@ -25,91 +25,91 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"An interface with routes\" is run",
-			args: []string{"node", "network", "interface", "route", "list", "--target", "server1", "--name", "eth0"},
+			args: []string{"node", "interface", "route", "list", "--target", "server1", "--name", "eth0"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/network/interface/eth0/route",
+				Path:   "/api/node/server1/interface/eth0/route",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"An interface with no routes\" is run",
-			args: []string{"node", "network", "interface", "route", "list", "--target", "server1", "--name", "eth1"},
+			args: []string{"node", "interface", "route", "list", "--target", "server1", "--name", "eth1"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/network/interface/eth1/route",
+				Path:   "/api/node/server1/interface/eth1/route",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A Mac\" is run",
-			args: []string{"node", "network", "interface", "route", "list", "--target", "server1", "--name", "en0"},
+			args: []string{"node", "interface", "route", "list", "--target", "server1", "--name", "en0"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/network/interface/en0/route",
+				Path:   "/api/node/server1/interface/en0/route",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A route\" is run",
-			args: []string{"node", "network", "interface", "route", "create", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24", "--via", "192.0.2.1"},
+			args: []string{"node", "interface", "route", "create", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24", "--via", "192.0.2.1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"198.51.100.0/24\",\"via\":\"192.0.2.1\"}",
 			},
 		},
 		{
 			name: "when the example \"A second route, with a metric\" is run",
-			args: []string{"node", "network", "interface", "route", "create", "--target", "server1", "--name", "osapi0", "--destination", "2001:db8:1::/48", "--via", "2001:db8::1", "--metric", "200"},
+			args: []string{"node", "interface", "route", "create", "--target", "server1", "--name", "osapi0", "--destination", "2001:db8:1::/48", "--via", "2001:db8::1", "--metric", "200"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"2001:db8:1::/48\",\"via\":\"2001:db8::1\",\"metric\":200}",
 			},
 		},
 		{
 			name: "when the example \"A route osapi already has\" is run",
-			args: []string{"node", "network", "interface", "route", "create", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24", "--via", "192.0.2.1"},
+			args: []string{"node", "interface", "route", "create", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24", "--via", "192.0.2.1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"198.51.100.0/24\",\"via\":\"192.0.2.1\"}",
 			},
 		},
 		{
 			name: "when the example \"A new gateway and metric\" is run",
-			args: []string{"node", "network", "interface", "route", "update", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24", "--via", "192.0.2.2", "--metric", "10"},
+			args: []string{"node", "interface", "route", "update", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24", "--via", "192.0.2.2", "--metric", "10"},
 			want: commandtest.Request{
 				Method: "PUT",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"198.51.100.0/24\",\"via\":\"192.0.2.2\",\"metric\":10}",
 			},
 		},
 		{
 			name: "when the example \"One of two routes\" is run",
-			args: []string{"node", "network", "interface", "route", "delete", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24"},
+			args: []string{"node", "interface", "route", "delete", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"198.51.100.0/24\"}",
 			},
 		},
 		{
 			name: "when the example \"The last route\" is run",
-			args: []string{"node", "network", "interface", "route", "delete", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24"},
+			args: []string{"node", "interface", "route", "delete", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"198.51.100.0/24\"}",
 			},
 		},
 		{
 			name: "when the example \"A route osapi does not have\" is run",
-			args: []string{"node", "network", "interface", "route", "delete", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24"},
+			args: []string{"node", "interface", "route", "delete", "--target", "server1", "--name", "osapi0", "--destination", "198.51.100.0/24"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   "{\"destination\":\"198.51.100.0/24\"}",
 			},
 		},

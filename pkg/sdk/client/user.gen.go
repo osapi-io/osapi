@@ -92,7 +92,8 @@ func (s *UserService) Get(
 // UserUpdateInput is the input of UserService.Update. A field of the path goes
 // in the path, and each other field in the body.
 type UserUpdateInput struct {
-	// The name of the path: the user, such as alice.
+	// The name of the path: the user to remove, with its home directory, such as
+	// alice.
 	Name string `json:"-"`
 
 	// The groups it is a member of, which replace the groups it has.
@@ -141,32 +142,4 @@ func (s *UserService) Delete(
 	name string,
 ) (*Response[Collection[UserResult]], error) {
 	return send[Collection[UserResult]](ctx, s.client, http.MethodDelete, "/api/node/"+url.PathEscape(hostname)+"/user/"+url.PathEscape(name), nil, nil)
-}
-
-// UserPasswdInput is the input of UserService.Passwd. A field of the path goes
-// in the path, and each other field in the body.
-type UserPasswdInput struct {
-	// The name of the path: the user, such as alice.
-	Name string `json:"-"`
-
-	// The new password, which osapi hashes on the controller.
-	Password string `json:"password,omitempty"`
-}
-
-// Passwd is the operation PostNodeUserPasswd: set the password of a user.
-//
-// Sets the password with chpasswd -e, from its hash on standard input. The
-// controller hashes the password, so the job and NATS have only the hash. Each
-// run makes a new hash, so it always reports changed: true. A user that the
-// host does not have is not found. It runs on the Debian family only, and
-// elsewhere reports skipped.
-//
-// It sends POST /api/node/{hostname}/user/{name}/passwd, and needs the
-// permission user:execute.
-func (s *UserService) Passwd(
-	ctx context.Context,
-	hostname string,
-	input UserPasswdInput,
-) (*Response[Collection[UserResult]], error) {
-	return send[Collection[UserResult]](ctx, s.client, http.MethodPost, "/api/node/"+url.PathEscape(hostname)+"/user/"+url.PathEscape(input.Name)+"/passwd", nil, input)
 }

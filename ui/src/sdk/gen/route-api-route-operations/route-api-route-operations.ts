@@ -6,13 +6,13 @@
  */
 import type {
   ErrorResponse,
-  NetworkInterfaceRouteCollectionResponse,
-  NetworkInterfaceRouteCreateRequest,
-  NetworkInterfaceRouteCreateResponse,
-  NetworkInterfaceRouteDeleteRequest,
-  NetworkInterfaceRouteDeleteResponse,
-  NetworkInterfaceRouteUpdateRequest,
-  NetworkInterfaceRouteUpdateResponse
+  InterfaceRouteCollectionResponse,
+  InterfaceRouteCreateRequest,
+  InterfaceRouteCreateResponse,
+  InterfaceRouteDeleteRequest,
+  InterfaceRouteDeleteResponse,
+  InterfaceRouteUpdateRequest,
+  InterfaceRouteUpdateResponse
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
@@ -37,138 +37,138 @@ const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string 
   return Object.fromEntries(layers.reverse().flat()) as Extract<RequestInit['headers'], Record<string, unknown>>;
 };
 
-export type deleteNodeNetworkInterfaceRouteResponse200 = {
-  data: NetworkInterfaceRouteDeleteResponse
+export type deleteNodeInterfaceRouteResponse200 = {
+  data: InterfaceRouteDeleteResponse
   status: 200
 }
 
-export type deleteNodeNetworkInterfaceRouteResponse400 = {
+export type deleteNodeInterfaceRouteResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type deleteNodeNetworkInterfaceRouteResponse401 = {
+export type deleteNodeInterfaceRouteResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type deleteNodeNetworkInterfaceRouteResponse403 = {
+export type deleteNodeInterfaceRouteResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type deleteNodeNetworkInterfaceRouteResponse404 = {
+export type deleteNodeInterfaceRouteResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type deleteNodeNetworkInterfaceRouteResponse409 = {
+export type deleteNodeInterfaceRouteResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type deleteNodeNetworkInterfaceRouteResponse500 = {
+export type deleteNodeInterfaceRouteResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type deleteNodeNetworkInterfaceRouteResponseSuccess = (deleteNodeNetworkInterfaceRouteResponse200) & {
+export type deleteNodeInterfaceRouteResponseSuccess = (deleteNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type deleteNodeNetworkInterfaceRouteResponseError = (deleteNodeNetworkInterfaceRouteResponse400 | deleteNodeNetworkInterfaceRouteResponse401 | deleteNodeNetworkInterfaceRouteResponse403 | deleteNodeNetworkInterfaceRouteResponse404 | deleteNodeNetworkInterfaceRouteResponse409 | deleteNodeNetworkInterfaceRouteResponse500) & {
+export type deleteNodeInterfaceRouteResponseError = (deleteNodeInterfaceRouteResponse400 | deleteNodeInterfaceRouteResponse401 | deleteNodeInterfaceRouteResponse403 | deleteNodeInterfaceRouteResponse404 | deleteNodeInterfaceRouteResponse409 | deleteNodeInterfaceRouteResponse500) & {
   headers: Headers;
 };
 
-export type deleteNodeNetworkInterfaceRouteResponse = (deleteNodeNetworkInterfaceRouteResponseSuccess | deleteNodeNetworkInterfaceRouteResponseError)
+export type deleteNodeInterfaceRouteResponse = (deleteNodeInterfaceRouteResponseSuccess | deleteNodeInterfaceRouteResponseError)
 
-export const getDeleteNodeNetworkInterfaceRouteUrl = (hostname: string,
+export const getDeleteNodeInterfaceRouteUrl = (hostname: string,
     name: string,) => {
 
 
 
 
-  return `/api/node/${hostname}/network/interface/${name}/route`
+  return `/api/node/${hostname}/interface/${name}/route`
 }
 
 /**
  * Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.
  * @summary Drop a route that osapi wrote
  */
-export const deleteNodeNetworkInterfaceRoute = async (hostname: string,
+export const deleteNodeInterfaceRoute = async (hostname: string,
     name: string,
-    networkInterfaceRouteDeleteRequest: NetworkInterfaceRouteDeleteRequest, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNetworkInterfaceRouteResponse> => {
+    interfaceRouteDeleteRequest: InterfaceRouteDeleteRequest, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeInterfaceRouteResponse> => {
 
-  return apiFetch<deleteNodeNetworkInterfaceRouteResponse>(getDeleteNodeNetworkInterfaceRouteUrl(hostname,name),
+  return apiFetch<deleteNodeInterfaceRouteResponse>(getDeleteNodeInterfaceRouteUrl(hostname,name),
   {
     ...options,
     method: 'DELETE',
     headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
-    body: JSON.stringify(networkInterfaceRouteDeleteRequest)
+    body: JSON.stringify(interfaceRouteDeleteRequest)
   }
 );}
 
 
-export type getNodeNetworkInterfaceRouteResponse200 = {
-  data: NetworkInterfaceRouteCollectionResponse
+export type getNodeInterfaceRouteResponse200 = {
+  data: InterfaceRouteCollectionResponse
   status: 200
 }
 
-export type getNodeNetworkInterfaceRouteResponse400 = {
+export type getNodeInterfaceRouteResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type getNodeNetworkInterfaceRouteResponse401 = {
+export type getNodeInterfaceRouteResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getNodeNetworkInterfaceRouteResponse403 = {
+export type getNodeInterfaceRouteResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type getNodeNetworkInterfaceRouteResponse404 = {
+export type getNodeInterfaceRouteResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type getNodeNetworkInterfaceRouteResponse409 = {
+export type getNodeInterfaceRouteResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type getNodeNetworkInterfaceRouteResponse500 = {
+export type getNodeInterfaceRouteResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type getNodeNetworkInterfaceRouteResponseSuccess = (getNodeNetworkInterfaceRouteResponse200) & {
+export type getNodeInterfaceRouteResponseSuccess = (getNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type getNodeNetworkInterfaceRouteResponseError = (getNodeNetworkInterfaceRouteResponse400 | getNodeNetworkInterfaceRouteResponse401 | getNodeNetworkInterfaceRouteResponse403 | getNodeNetworkInterfaceRouteResponse404 | getNodeNetworkInterfaceRouteResponse409 | getNodeNetworkInterfaceRouteResponse500) & {
+export type getNodeInterfaceRouteResponseError = (getNodeInterfaceRouteResponse400 | getNodeInterfaceRouteResponse401 | getNodeInterfaceRouteResponse403 | getNodeInterfaceRouteResponse404 | getNodeInterfaceRouteResponse409 | getNodeInterfaceRouteResponse500) & {
   headers: Headers;
 };
 
-export type getNodeNetworkInterfaceRouteResponse = (getNodeNetworkInterfaceRouteResponseSuccess | getNodeNetworkInterfaceRouteResponseError)
+export type getNodeInterfaceRouteResponse = (getNodeInterfaceRouteResponseSuccess | getNodeInterfaceRouteResponseError)
 
-export const getGetNodeNetworkInterfaceRouteUrl = (hostname: string,
+export const getGetNodeInterfaceRouteUrl = (hostname: string,
     name: string,) => {
 
 
 
 
-  return `/api/node/${hostname}/network/interface/${name}/route`
+  return `/api/node/${hostname}/interface/${name}/route`
 }
 
 /**
  * Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.
  * @summary List the routes of an interface
  */
-export const getNodeNetworkInterfaceRoute = async (hostname: string,
-    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNetworkInterfaceRouteResponse> => {
+export const getNodeInterfaceRoute = async (hostname: string,
+    name: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeInterfaceRouteResponse> => {
 
-  return apiFetch<getNodeNetworkInterfaceRouteResponse>(getGetNodeNetworkInterfaceRouteUrl(hostname,name),
+  return apiFetch<getNodeInterfaceRouteResponse>(getGetNodeInterfaceRouteUrl(hostname,name),
   {
     ...options,
     method: 'GET'
@@ -178,144 +178,144 @@ export const getNodeNetworkInterfaceRoute = async (hostname: string,
 );}
 
 
-export type postNodeNetworkInterfaceRouteResponse200 = {
-  data: NetworkInterfaceRouteCreateResponse
+export type postNodeInterfaceRouteResponse200 = {
+  data: InterfaceRouteCreateResponse
   status: 200
 }
 
-export type postNodeNetworkInterfaceRouteResponse400 = {
+export type postNodeInterfaceRouteResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type postNodeNetworkInterfaceRouteResponse401 = {
+export type postNodeInterfaceRouteResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type postNodeNetworkInterfaceRouteResponse403 = {
+export type postNodeInterfaceRouteResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type postNodeNetworkInterfaceRouteResponse404 = {
+export type postNodeInterfaceRouteResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type postNodeNetworkInterfaceRouteResponse409 = {
+export type postNodeInterfaceRouteResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type postNodeNetworkInterfaceRouteResponse500 = {
+export type postNodeInterfaceRouteResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type postNodeNetworkInterfaceRouteResponseSuccess = (postNodeNetworkInterfaceRouteResponse200) & {
+export type postNodeInterfaceRouteResponseSuccess = (postNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type postNodeNetworkInterfaceRouteResponseError = (postNodeNetworkInterfaceRouteResponse400 | postNodeNetworkInterfaceRouteResponse401 | postNodeNetworkInterfaceRouteResponse403 | postNodeNetworkInterfaceRouteResponse404 | postNodeNetworkInterfaceRouteResponse409 | postNodeNetworkInterfaceRouteResponse500) & {
+export type postNodeInterfaceRouteResponseError = (postNodeInterfaceRouteResponse400 | postNodeInterfaceRouteResponse401 | postNodeInterfaceRouteResponse403 | postNodeInterfaceRouteResponse404 | postNodeInterfaceRouteResponse409 | postNodeInterfaceRouteResponse500) & {
   headers: Headers;
 };
 
-export type postNodeNetworkInterfaceRouteResponse = (postNodeNetworkInterfaceRouteResponseSuccess | postNodeNetworkInterfaceRouteResponseError)
+export type postNodeInterfaceRouteResponse = (postNodeInterfaceRouteResponseSuccess | postNodeInterfaceRouteResponseError)
 
-export const getPostNodeNetworkInterfaceRouteUrl = (hostname: string,
+export const getPostNodeInterfaceRouteUrl = (hostname: string,
     name: string,) => {
 
 
 
 
-  return `/api/node/${hostname}/network/interface/${name}/route`
+  return `/api/node/${hostname}/interface/${name}/route`
 }
 
 /**
  * Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
  * @summary Add a static route to an interface
  */
-export const postNodeNetworkInterfaceRoute = async (hostname: string,
+export const postNodeInterfaceRoute = async (hostname: string,
     name: string,
-    networkInterfaceRouteCreateRequest: NetworkInterfaceRouteCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeNetworkInterfaceRouteResponse> => {
+    interfaceRouteCreateRequest: InterfaceRouteCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeInterfaceRouteResponse> => {
 
-  return apiFetch<postNodeNetworkInterfaceRouteResponse>(getPostNodeNetworkInterfaceRouteUrl(hostname,name),
+  return apiFetch<postNodeInterfaceRouteResponse>(getPostNodeInterfaceRouteUrl(hostname,name),
   {
     ...options,
     method: 'POST',
     headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
-    body: JSON.stringify(networkInterfaceRouteCreateRequest)
+    body: JSON.stringify(interfaceRouteCreateRequest)
   }
 );}
 
 
-export type putNodeNetworkInterfaceRouteResponse200 = {
-  data: NetworkInterfaceRouteUpdateResponse
+export type putNodeInterfaceRouteResponse200 = {
+  data: InterfaceRouteUpdateResponse
   status: 200
 }
 
-export type putNodeNetworkInterfaceRouteResponse400 = {
+export type putNodeInterfaceRouteResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type putNodeNetworkInterfaceRouteResponse401 = {
+export type putNodeInterfaceRouteResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type putNodeNetworkInterfaceRouteResponse403 = {
+export type putNodeInterfaceRouteResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type putNodeNetworkInterfaceRouteResponse404 = {
+export type putNodeInterfaceRouteResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type putNodeNetworkInterfaceRouteResponse409 = {
+export type putNodeInterfaceRouteResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type putNodeNetworkInterfaceRouteResponse500 = {
+export type putNodeInterfaceRouteResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type putNodeNetworkInterfaceRouteResponseSuccess = (putNodeNetworkInterfaceRouteResponse200) & {
+export type putNodeInterfaceRouteResponseSuccess = (putNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type putNodeNetworkInterfaceRouteResponseError = (putNodeNetworkInterfaceRouteResponse400 | putNodeNetworkInterfaceRouteResponse401 | putNodeNetworkInterfaceRouteResponse403 | putNodeNetworkInterfaceRouteResponse404 | putNodeNetworkInterfaceRouteResponse409 | putNodeNetworkInterfaceRouteResponse500) & {
+export type putNodeInterfaceRouteResponseError = (putNodeInterfaceRouteResponse400 | putNodeInterfaceRouteResponse401 | putNodeInterfaceRouteResponse403 | putNodeInterfaceRouteResponse404 | putNodeInterfaceRouteResponse409 | putNodeInterfaceRouteResponse500) & {
   headers: Headers;
 };
 
-export type putNodeNetworkInterfaceRouteResponse = (putNodeNetworkInterfaceRouteResponseSuccess | putNodeNetworkInterfaceRouteResponseError)
+export type putNodeInterfaceRouteResponse = (putNodeInterfaceRouteResponseSuccess | putNodeInterfaceRouteResponseError)
 
-export const getPutNodeNetworkInterfaceRouteUrl = (hostname: string,
+export const getPutNodeInterfaceRouteUrl = (hostname: string,
     name: string,) => {
 
 
 
 
-  return `/api/node/${hostname}/network/interface/${name}/route`
+  return `/api/node/${hostname}/interface/${name}/route`
 }
 
 /**
  * Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.
  * @summary Change the gateway or the metric of a route
  */
-export const putNodeNetworkInterfaceRoute = async (hostname: string,
+export const putNodeInterfaceRoute = async (hostname: string,
     name: string,
-    networkInterfaceRouteUpdateRequest: NetworkInterfaceRouteUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeNetworkInterfaceRouteResponse> => {
+    interfaceRouteUpdateRequest: InterfaceRouteUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeInterfaceRouteResponse> => {
 
-  return apiFetch<putNodeNetworkInterfaceRouteResponse>(getPutNodeNetworkInterfaceRouteUrl(hostname,name),
+  return apiFetch<putNodeInterfaceRouteResponse>(getPutNodeInterfaceRouteUrl(hostname,name),
   {
     ...options,
     method: 'PUT',
     headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
-    body: JSON.stringify(networkInterfaceRouteUpdateRequest)
+    body: JSON.stringify(interfaceRouteUpdateRequest)
   }
 );}
 

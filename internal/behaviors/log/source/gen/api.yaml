@@ -91,7 +91,7 @@ openapi: 3.0.0
 paths:
   /api/node/{hostname}/log/source:
     get:
-      description: 'Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an entry, once, sorted. A name here is what log entry list takes as unit when the source is a systemd unit.'
+      description: 'Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an entry, once, sorted. A name here is what log list takes as unit when the source is a systemd unit.'
       operationId: GetNodeLogSource
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -140,10 +140,10 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - source:read
+            - log:read
       summary: List the sources of the journal
       tags:
-        - log_source_operations
+        - source_operations
       x-osapi-area: logs
       x-osapi-examples:
         - doc: The sources
@@ -152,7 +152,7 @@ paths:
       x-osapi-method: list
 tags:
   - description: The sources that write to the systemd journal
-    name: log_source_operations
+    name: source_operations
     x-displayName: Log source
     x-osapi-area: logs
     x-osapi-group: source

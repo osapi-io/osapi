@@ -34,9 +34,6 @@ var SameGroups = sameGroups
 // HashCreate is create's controller step, for its test.
 var HashCreate = hashCreate
 
-// HashPassword is the password action's controller step, for its test.
-var HashPassword = hashPassword
-
 // SetHashFn swaps the hash of the steps, and returns how to put it back.
 func SetHashFn(fn func(string) (string, error)) func() {
 	old := hashFn

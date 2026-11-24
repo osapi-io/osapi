@@ -88,9 +88,9 @@ for id in "${ids[@]}"; do
 			"go run . dsl behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if \"$requires\" in json.load(sys.stdin)[\"uses\"] else 1)'"
 		[ "$(field "$id" secret)" = "True" ] && check "$id" "the token input is tagged secret" \
 			"grep -rq 'secret:\"true\"' internal/behaviors/$dir/types.go"
-		group=$(field "$id" group)
-		[ -n "$group" ] && check "$id" "it is under the $group group" \
-			"grep -rqE 'behavior.Under\(behavior.Group[A-Z]' internal/behaviors/$dir/behavior.go && [ -d internal/behaviors/$dir ]"
+		parent=$(field "$id" parent)
+		[ -n "$parent" ] && check "$id" "it is under $parent" \
+			"go run . dsl behavior get --name $b --json | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if \"$parent\" in (d.get(\"of\"), d.get(\"under\")) else 1)'"
 		platforms=$(field "$id" platforms)
 		[ -n "$platforms" ] && check "$id" "its only platform is $platforms" \
 			"go run . dsl behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)[\"platforms\"] == [\"$platforms\"] else 1)'"

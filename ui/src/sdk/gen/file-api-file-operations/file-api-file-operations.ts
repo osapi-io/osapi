@@ -8,7 +8,7 @@ import type {
   ErrorResponse,
   FileDeleteRequest,
   FileDeleteResponse,
-  FileStatusResponse,
+  FileGetResponse,
   FileUpdateRequest,
   FileUpdateResponse,
   GetNodeFileParams
@@ -106,7 +106,7 @@ export const deleteNodeFile = async (hostname: string,
 
 
 export type getNodeFileResponse200 = {
-  data: FileStatusResponse
+  data: FileGetResponse
   status: 200
 }
 

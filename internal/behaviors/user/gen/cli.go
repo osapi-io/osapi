@@ -110,25 +110,6 @@ var userDeleteCmd = &cobra.Command{
 	Use:   "delete",
 }
 
-var userPasswdCmd = &cobra.Command{
-	Annotations: map[string]string{
-		reference.Permission: "user:execute",
-		reference.Result:     "Set a password, on one host:\n\n```ansi\n$ osapi client node user passwd --target web-01 --name osapitest --password osapi-test-password\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node user passwd --target _all --name osapitest --password osapi-test-password\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"name\": \"osapitest\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Set a password | runs `chpasswd -e` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No password | `--name alice` | give the password |\n| A user that the host does not have | `--name nobody` | not found |\n| A hash that is not a crypt hash | `--name alice` | crypt hash |\n| A name that is an option | `--name -r` | account_name |\n| A name longer than 32 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max |\n| A password with a line break | `--name alice --password \"a\\nb\"` | no_linebreak |",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  # Set a password\n  osapi client node user passwd --target web-01 --name osapitest --password osapi-test-password",
-	Long:    "Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.",
-	Run: func(cmd *cobra.Command, _ []string) {
-		hostname, _ := cmd.Flags().GetString("target")
-		name, _ := cmd.Flags().GetString("name")
-		password, _ := cmd.Flags().GetString("password")
-
-		endpointcommand.Run(cmd, Group, "passwd", PasswdRequest{Hostname: hostname, Name: name, Body: UserPasswdRequest{Password: password}})
-	},
-	Short: "Set the password of a user",
-	Use:   "passwd",
-}
-
 func init() {
 	userListCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	userGetCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
@@ -154,9 +135,5 @@ func init() {
 	userDeleteCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
 	userDeleteCmd.Flags().String("name", "", "The user to remove, with its home directory, such as alice")
 	_ = userDeleteCmd.MarkFlagRequired("name")
-	userPasswdCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	userPasswdCmd.Flags().String("name", "", "The user, such as alice")
-	_ = userPasswdCmd.MarkFlagRequired("name")
-	userPasswdCmd.Flags().String("password", "", "The new password, which osapi hashes on the controller (secret: kept out of the audit log and traces)")
-	clicommand.AddCommands(Group, userListCmd, userGetCmd, userCreateCmd, userUpdateCmd, userDeleteCmd, userPasswdCmd)
+	clicommand.AddCommands(Group, userListCmd, userGetCmd, userCreateCmd, userUpdateCmd, userDeleteCmd)
 }

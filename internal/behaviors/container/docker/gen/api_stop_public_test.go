@@ -23,15 +23,15 @@ func (s *APIStopPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
-// TestStop sends POST /api/node/{hostname}/container/docker/{name}/stop and
-// checks each answer's response.
+// TestStop sends POST /api/node/{hostname}/docker/{name}/stop and checks each
+// answer's response.
 func (s *APIStopPublicTestSuite) TestStop() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Stop a container\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -51,7 +51,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the example \"Stop a container\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/stop",
+				Path:   "/api/node/_all/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -73,7 +73,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the example \"A container that does not run\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -93,7 +93,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the example \"A container that does not run\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/stop",
+				Path:   "/api/node/_all/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -115,7 +115,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -135,7 +135,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -155,7 +155,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -175,7 +175,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -193,7 +193,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/stop",
+				Path:   "/api/node/_all/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -211,7 +211,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Write,
@@ -236,7 +236,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/container/docker/osapitest/stop",
+				Path:   "/api/node/nowhere/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token:    servertest.Write,
@@ -246,7 +246,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//container/docker/osapitest/stop",
+				Path:   "/api/node//docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token:    servertest.Write,
@@ -256,7 +256,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -266,7 +266,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when timeout has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"timeout":[]}`,
 			},
 			Token:    servertest.Write,
@@ -276,7 +276,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when sent a name that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/-f/stop",
+				Path:   "/api/node/server1/docker/-f/stop",
 				Body:   `{"name":"-f"}`,
 			},
 			Token:    servertest.Write,
@@ -286,7 +286,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when sent a timeout longer than 300 seconds, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":301}`,
 			},
 			Token:    servertest.Write,
@@ -296,7 +296,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 			Name: "when sent a negative timeout, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":-1}`,
 			},
 			Token:    servertest.Write,
@@ -312,7 +312,7 @@ func (s *APIStopPublicTestSuite) TestStopRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token:    servertest.NoToken,
@@ -322,7 +322,7 @@ func (s *APIStopPublicTestSuite) TestStopRBACHTTP() {
 			Name: "when the token lacks docker:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token:    servertest.Lacking,
@@ -332,7 +332,7 @@ func (s *APIStopPublicTestSuite) TestStopRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token:    servertest.Read,
@@ -342,7 +342,7 @@ func (s *APIStopPublicTestSuite) TestStopRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token: servertest.Admin,

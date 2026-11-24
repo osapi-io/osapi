@@ -25,73 +25,73 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"An interface with servers and a domain\" is run",
-			args: []string{"node", "network", "dns", "get", "--target", "server1", "--interface-name", "osapi0"},
+			args: []string{"node", "dns", "get", "--target", "server1", "--interface-name", "osapi0"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A container with no resolvers per interface\" is run",
-			args: []string{"node", "network", "dns", "get", "--target", "server1", "--interface-name", "osapi0"},
+			args: []string{"node", "dns", "get", "--target", "server1", "--interface-name", "osapi0"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A Mac\" is run",
-			args: []string{"node", "network", "dns", "get", "--target", "server1", "--interface-name", "en0"},
+			args: []string{"node", "dns", "get", "--target", "server1", "--interface-name", "en0"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/network/dns/en0",
+				Path:   "/api/node/server1/dns/en0",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"Set the servers of an interface\" is run",
-			args: []string{"node", "network", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--servers", "9.9.9.9"},
+			args: []string{"node", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--servers", "9.9.9.9"},
 			want: commandtest.Request{
 				Method: "PUT",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "{\"servers\":[\"9.9.9.9\"]}",
 			},
 		},
 		{
 			name: "when the example \"Set the search domains, and keep the servers\" is run",
-			args: []string{"node", "network", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--search-domains", "corp.example", "--override-dhcp"},
+			args: []string{"node", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--search-domains", "corp.example", "--override-dhcp"},
 			want: commandtest.Request{
 				Method: "PUT",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "{\"search_domains\":[\"corp.example\"],\"override_dhcp\":true}",
 			},
 		},
 		{
 			name: "when the example \"An interface with no resolvers yet\" is run",
-			args: []string{"node", "network", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--servers", "9.9.9.9"},
+			args: []string{"node", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--servers", "9.9.9.9"},
 			want: commandtest.Request{
 				Method: "PUT",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "{\"servers\":[\"9.9.9.9\"]}",
 			},
 		},
 		{
 			name: "when the example \"An interface osapi set\" is run",
-			args: []string{"node", "network", "dns", "delete", "--target", "server1", "--interface-name", "osapi0"},
+			args: []string{"node", "dns", "delete", "--target", "server1", "--interface-name", "osapi0"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"An interface osapi set nothing on\" is run",
-			args: []string{"node", "network", "dns", "delete", "--target", "server1", "--interface-name", "osapi0"},
+			args: []string{"node", "dns", "delete", "--target", "server1", "--interface-name", "osapi0"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   "",
 			},
 		},

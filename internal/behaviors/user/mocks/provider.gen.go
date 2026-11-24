@@ -101,20 +101,6 @@ func (mr *MockProviderMockRecorder) List(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockProvider)(nil).List), ctx)
 }
 
-// SetPassword mocks base method.
-func (m *MockProvider) SetPassword(ctx context.Context, name, hash string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPassword", ctx, name, hash)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetPassword indicates an expected call of SetPassword.
-func (mr *MockProviderMockRecorder) SetPassword(ctx, name, hash any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPassword", reflect.TypeOf((*MockProvider)(nil).SetPassword), ctx, name, hash)
-}
-
 // Update mocks base method.
 func (m *MockProvider) Update(ctx context.Context, in user.UpdateInput) (bool, error) {
 	m.ctrl.T.Helper()

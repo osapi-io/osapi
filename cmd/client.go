@@ -130,12 +130,12 @@ func init() {
 		Error:     func(err error) { cli.HandleError(err, logger) },
 		PrintJSON: cli.PrintJSON,
 		Print:     cli.Printer{},
-		// These are written by hand, and their inits run after this one: a
-		// behavior goes Under them, as network dns does.
-	}, clientNodeNetworkCmd); err != nil {
+	}); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	// The help of node lists each behavior under the label of its area.
+	clicommand.GroupByArea(clientNodeCmd)
 }
 
 // exports reports whether the tracing settings send spans to an exporter.

@@ -11,8 +11,6 @@ import type {
   UserCreateResponse,
   UserDeleteResponse,
   UserGetResponse,
-  UserPasswdRequest,
-  UserPasswdResponse,
   UserUpdateRequest,
   UserUpdateResponse
 } from '../schemas';
@@ -383,77 +381,6 @@ export const putNodeUser = async (hostname: string,
     method: 'PUT',
     headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(userUpdateRequest)
-  }
-);}
-
-
-export type postNodeUserPasswdResponse200 = {
-  data: UserPasswdResponse
-  status: 200
-}
-
-export type postNodeUserPasswdResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type postNodeUserPasswdResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type postNodeUserPasswdResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type postNodeUserPasswdResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type postNodeUserPasswdResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type postNodeUserPasswdResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type postNodeUserPasswdResponseSuccess = (postNodeUserPasswdResponse200) & {
-  headers: Headers;
-};
-export type postNodeUserPasswdResponseError = (postNodeUserPasswdResponse400 | postNodeUserPasswdResponse401 | postNodeUserPasswdResponse403 | postNodeUserPasswdResponse404 | postNodeUserPasswdResponse409 | postNodeUserPasswdResponse500) & {
-  headers: Headers;
-};
-
-export type postNodeUserPasswdResponse = (postNodeUserPasswdResponseSuccess | postNodeUserPasswdResponseError)
-
-export const getPostNodeUserPasswdUrl = (hostname: string,
-    name: string,) => {
-
-
-
-
-  return `/api/node/${hostname}/user/${name}/passwd`
-}
-
-/**
- * Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
- * @summary Set the password of a user
- */
-export const postNodeUserPasswd = async (hostname: string,
-    name: string,
-    userPasswdRequest: UserPasswdRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeUserPasswdResponse> => {
-
-  return apiFetch<postNodeUserPasswdResponse>(getPostNodeUserPasswdUrl(hostname,name),
-  {
-    ...options,
-    method: 'POST',
-    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
-    body: JSON.stringify(userPasswdRequest)
   }
 );}
 

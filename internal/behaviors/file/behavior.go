@@ -67,7 +67,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform(behavior.PlatformDarwin, newLinux),
 	// It writes the path its caller names.
 	behavior.Writes("*"),
-	behavior.Read("status", GetStatus).
+	behavior.Read("get", GetStatus).
 		Describe("Show whether a deployed file holds what osapi wrote").
 		Explain("Compares the file on the host with the record that osapi keeps of what it "+
 			"deployed: in-sync when they agree, drifted when something changed the file, "+

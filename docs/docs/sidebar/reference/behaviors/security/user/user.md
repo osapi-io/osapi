@@ -11,36 +11,35 @@ The users of the host. `osapi dsl behavior get --name user` and
 
 ## Behavior
 
-|             |                                                |
-| ----------- | ---------------------------------------------- |
-| Name        | user                                           |
-| Description | The users of the host                          |
-| Placement   | node                                           |
-| Area        | security                                       |
-| Internal    | no                                             |
-| API         | yes                                            |
-| CLI         | yes                                            |
-| Next        | no                                             |
-| Platforms   | debian, linux, darwin                          |
-| Sudo        | none                                           |
-| Runs        | none                                           |
-| Writes      | none                                           |
-| Keeps state | no                                             |
-| Uses        | none                                           |
-| Used by     | [sshkey](../../security/user/sshkey/sshkey.md) |
+|             |                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| Name        | user                                                                                                 |
+| Description | The users of the host                                                                                |
+| Placement   | node                                                                                                 |
+| Area        | security                                                                                             |
+| Internal    | no                                                                                                   |
+| API         | yes                                                                                                  |
+| CLI         | yes                                                                                                  |
+| Next        | no                                                                                                   |
+| Platforms   | debian, linux, darwin                                                                                |
+| Sudo        | none                                                                                                 |
+| Runs        | none                                                                                                 |
+| Writes      | none                                                                                                 |
+| Keeps state | no                                                                                                   |
+| Uses        | none                                                                                                 |
+| Used by     | [password](../../security/user/password/password.md), [sshkey](../../security/user/sshkey/sshkey.md) |
 
-### Methods (6)
+### Methods (5)
 
-| NAME                     | VERB  | HTTP   | ROUTE                                                       | PERMISSION | DESCRIPTION                |
-| ------------------------ | ----- | ------ | ----------------------------------------------------------- | ---------- | -------------------------- |
-| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/user                         | user:read  | List the users of the host |
-| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/user/&#123;name&#125;        | user:read  | Get one user               |
-| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/user                         | user:write | Add a user                 |
-| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/user/&#123;name&#125;        | user:write | Change a user              |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/user/&#123;name&#125;        | user:write | Remove a user              |
-| [passwd](#method-passwd) | write | POST   | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/passwd | user:write | Set the password of a user |
+| NAME                     | VERB  | HTTP   | ROUTE                                                | PERMISSION | DESCRIPTION                |
+| ------------------------ | ----- | ------ | ---------------------------------------------------- | ---------- | -------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/user                  | user:read  | List the users of the host |
+| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/user/&#123;name&#125; | user:read  | Get one user               |
+| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/user                  | user:write | Add a user                 |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/user/&#123;name&#125; | user:write | Change a user              |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/user/&#123;name&#125; | user:write | Remove a user              |
 
-### Types (6)
+### Types (5)
 
 | NAME                     | INPUT                                                                                            | OUTPUT                                                               |
 | ------------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
@@ -49,7 +48,6 @@ The users of the host. `osapi dsl behavior get --name user` and
 | [create](#method-create) | CreateInput &#123; name\*, uid, gid, home, shell, groups, system, password, password_hash &#125; | Result &#123; name, changed &#125;                                   |
 | [update](#method-update) | UpdateInput &#123; name\*, shell, home, groups, lock &#125;                                      | Result &#123; name, changed &#125;                                   |
 | [delete](#method-delete) | DeleteInput &#123; name\* &#125;                                                                 | Result &#123; name, changed &#125;                                   |
-| [passwd](#method-passwd) | PasswordInput &#123; name\*, password, password_hash &#125;                                      | Result &#123; name, changed &#125;                                   |
 
 ### Settings (0)
 
@@ -63,7 +61,7 @@ None. Declare them with behavior.Config.
 | Child spans     | exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, exec dscl                                     |
 | Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                       |
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
-| Recorded inputs | name (get, create, update, delete, passwd)                                                                      |
+| Recorded inputs | name (get, create, update, delete)                                                                              |
 
 ## Method list
 
@@ -261,39 +259,3 @@ None. The method takes no input; its command needs only --target.
 | ---------------------------------- | -------------- | ----------------------------- |
 | Remove a user                      | name=osapitest | name=osapitest, changed=true  |
 | A user that the host does not have | name=osapitest | name=osapitest, changed=false |
-
-## Method passwd
-
-|             |                                                                                                                                                                                                                                                                                                                                    |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | passwd                                                                                                                                                                                                                                                                                                                             |
-| Verb        | write                                                                                                                                                                                                                                                                                                                              |
-| Description | Set the password of a user                                                                                                                                                                                                                                                                                                         |
-| Detail      | Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP        | POST                                                                                                                                                                                                                                                                                                                               |
-| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/passwd                                                                                                                                                                                                                                                                        |
-| Permission  | user:execute                                                                                                                                                                                                                                                                                                                       |
-| Command     | [osapi client node user passwd](../../../../usage/cli/client/node/user/passwd.md)                                                                                                                                                                                                                                                  |
-| Input type  | PasswordInput                                                                                                                                                                                                                                                                                                                      |
-| Output type | Result                                                                                                                                                                                                                                                                                                                             |
-
-### Input (3)
-
-| FIELD         | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                      |
-| ------------- | ------ | -------- | ------------------------------------------------ | ---------------------------------------------------------------- |
-| name          | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                          |
-| password      | string | no       | pattern ^\[^\r\n]\*$, format password            | The new password, which osapi hashes on the controller           |
-| password_hash | string | no       |                                                  | The sha512-crypt hash of the password, which the controller sets |
-
-### Output (2)
-
-| FIELD   | TYPE    | DESCRIPTION              |
-| ------- | ------- | ------------------------ |
-| name    | string  | The user                 |
-| changed | boolean | Whether the host changed |
-
-### Examples (1)
-
-| EXAMPLE        | INPUT                                                                                                                                                           | OUTPUT                       |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Set a password | name=osapitest, password=osapi-test-password, password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true |

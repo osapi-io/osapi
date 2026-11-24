@@ -100,7 +100,6 @@ var Behavior = behavior.Register(behavior.Define(
 	"docker", "The Docker containers of the host",
 	behavior.Title("Container"),
 	behavior.Node,
-	behavior.Under(behavior.GroupContainer),
 	behavior.API,
 	behavior.Area(area.Containers),
 	behavior.CLI,

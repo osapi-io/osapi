@@ -25,7 +25,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"A deployed file\" is run",
-			args: []string{"node", "file", "status", "--target", "server1", "--path", "/etc/osapi/file-example.conf"},
+			args: []string{"node", "file", "get", "--target", "server1", "--path", "/etc/osapi/file-example.conf"},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
@@ -34,7 +34,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A path that osapi did not deploy\" is run",
-			args: []string{"node", "file", "status", "--target", "server1", "--path", "/etc/osapi/file-example.conf"},
+			args: []string{"node", "file", "get", "--target", "server1", "--path", "/etc/osapi/file-example.conf"},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
@@ -43,7 +43,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A file that osapi undeployed\" is run",
-			args: []string{"node", "file", "status", "--target", "server1", "--path", "/etc/osapi/file-example.conf"},
+			args: []string{"node", "file", "get", "--target", "server1", "--path", "/etc/osapi/file-example.conf"},
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",

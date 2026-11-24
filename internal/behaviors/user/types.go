@@ -57,14 +57,6 @@ type DeleteInput struct {
 	Name string `json:"name" validate:"required,max=32,account_name" doc:"The user to remove, with its home directory, such as alice"`
 }
 
-// PasswordInput sets the password of a user. The caller sends password;
-// the controller's step hashes it into password_hash.
-type PasswordInput struct {
-	Name         string `json:"name"                    validate:"required,max=32,account_name" doc:"The user, such as alice"`
-	Password     string `json:"password,omitempty"      validate:"omitempty,no_linebreak"       doc:"The new password, which osapi hashes on the controller"           secret:"true"`
-	PasswordHash string `json:"password_hash,omitempty" validate:"omitempty"                    doc:"The sha512-crypt hash of the password, which the controller sets"               before:"set"`
-}
-
 // Account is a user of the host.
 type Account struct {
 	Name   string   `json:"name"             doc:"The user"`

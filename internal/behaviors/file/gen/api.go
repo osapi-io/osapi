@@ -17,7 +17,7 @@ func Routes(
 			Method:     http.MethodGet,
 			Path:       "/api/node/:hostname/file",
 			Permission: "file:read",
-			Handler:    server.Serve(s, Group, "status", HandleStatus, decodeStatus),
+			Handler:    server.Serve(s, Group, "get", HandleGet, decodeGet),
 		},
 		{
 			Method:     http.MethodPut,

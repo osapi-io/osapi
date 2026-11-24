@@ -17,11 +17,11 @@ type LogSourceService struct {
 // List is the operation GetNodeLogSource: list the sources of the journal.
 //
 // Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has
-// an entry, once, sorted. A name here is what log entry list takes as unit
-// when the source is a systemd unit.
+// an entry, once, sorted. A name here is what log list takes as unit when the
+// source is a systemd unit.
 //
 // It sends GET /api/node/{hostname}/log/source, and needs the permission
-// source:read.
+// log:read.
 func (s *LogSourceService) List(
 	ctx context.Context,
 	hostname string,

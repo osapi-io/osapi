@@ -70,7 +70,7 @@ the spec.
 | Service                                          | Description                                     |
 | ------------------------------------------------ | ----------------------------------------------- |
 | [Package](../software/package.md)                | The packages installed on the host.             |
-| [UpdatePackages](../software/update_packages.md) | The updates the package index has for the host. |
+| [PackageUpdates](../software/package_updates.md) | The updates the package index has for the host. |
 
 ### Config
 
@@ -98,33 +98,34 @@ the spec.
 
 | Service                            | Description                                    |
 | ---------------------------------- | ---------------------------------------------- |
-| [LogEntry](../logs/log_entry.md)   | The entries of the systemd journal.            |
+| [Log](../logs/log.md)              | The entries of the systemd journal.            |
 | [LogSource](../logs/log_source.md) | The sources that write to the systemd journal. |
 
 ### Networking
 
-| Service                                                           | Description                                        |
-| ----------------------------------------------------------------- | -------------------------------------------------- |
-| [NetworkConnectivity](../networking/network_connectivity.md)      | Whether the host reaches an address, by ICMP ping. |
-| [NetworkDNS](../networking/network_dns.md)                        | The DNS resolvers of each interface of the host.   |
-| [NetworkInterface](../networking/network_interface.md)            | The network interfaces of the host.                |
-| [NetworkInterfaceRoute](../networking/network_interface_route.md) | The routes of an interface.                        |
+| Service                                            | Description                                        |
+| -------------------------------------------------- | -------------------------------------------------- |
+| [Connectivity](../networking/connectivity.md)      | Whether the host reaches an address, by ICMP ping. |
+| [DNS](../networking/dns.md)                        | The DNS resolvers of each interface of the host.   |
+| [Interface](../networking/interface.md)            | The network interfaces of the host.                |
+| [InterfaceRoute](../networking/interface_route.md) | The routes of an interface.                        |
 
 ### Security
 
-| Service                                   | Description                                       |
-| ----------------------------------------- | ------------------------------------------------- |
-| [Certificate](../security/certificate.md) | The certificate authorities that the host trusts. |
-| [Group](../security/group.md)             | The groups of the host.                           |
-| [User](../security/user.md)               | The users of the host.                            |
-| [UserSSHKey](../security/user_ssh_key.md) | The authorized SSH keys of a user.                |
+| Service                                      | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
+| [Certificate](../security/certificate.md)    | The certificate authorities that the host trusts. |
+| [Group](../security/group.md)                | The groups of the host.                           |
+| [User](../security/user.md)                  | The users of the host.                            |
+| [UserPassword](../security/user_password.md) | The password of a user.                           |
+| [UserSSHKey](../security/user_ssh_key.md)    | The authorized SSH keys of a user.                |
 
 ### Containers
 
-| Service                                              | Description                        |
-| ---------------------------------------------------- | ---------------------------------- |
-| [ContainerDocker](../containers/container_docker.md) | The Docker containers of the host. |
-| [ContainerImage](../containers/container_image.md)   | The Docker images of the host.     |
+| Service                           | Description                        |
+| --------------------------------- | ---------------------------------- |
+| [Docker](../containers/docker.md) | The Docker containers of the host. |
+| [Image](../containers/image.md)   | The Docker images of the host.     |
 
 ### Object Store
 

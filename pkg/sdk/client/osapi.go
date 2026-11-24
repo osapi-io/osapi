@@ -41,7 +41,7 @@ import (
 )
 
 // Client is the top-level OSAPI SDK client. Use New() to create one. Each
-// typed service is a field of the embedded services, such as c.NetworkDNS.
+// typed service is a field of the embedded services, such as c.DNS.
 type Client struct {
 	services
 

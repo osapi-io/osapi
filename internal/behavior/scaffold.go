@@ -44,8 +44,7 @@ const allFile = "internal/behaviors/all/all.go"
 var scaffoldName = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 
 // Scaffold writes a new behavior's standard layout under
-// internal/behaviors/<name>/, or internal/behaviors/<group>/<name>/ for a
-// behavior nested under a group, in the osapi checkout at root, and registers it in
+// internal/behaviors/<package>/, in the osapi checkout at root, and registers it in
 // internal/behaviors/all. It returns the files written, relative to root, the
 // registration last. Everything is rendered and checked before anything is
 // written, so a taken name or a root that is not a checkout writes nothing.
@@ -56,7 +55,6 @@ var scaffoldName = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 // author then writes the behavior.Call of each, which the tests ask for.
 func Scaffold(
 	root string,
-	group string,
 	name string,
 	goPackage string,
 	doc string,
@@ -80,14 +78,6 @@ func Scaffold(
 			"%q is a Go keyword, so it cannot be the Go package: pass --package with another name",
 			goPackage)
 	}
-	if group != "" && !scaffoldName.MatchString(group) {
-		return nil, fmt.Errorf(
-			"group %q must be lowercase letters and digits, starting with a letter", group)
-	}
-	if group != "" && !slices.Contains(KnownGroups(), GroupName(group)) {
-		return nil, fmt.Errorf(
-			"group %q is not one of KnownGroups; add its constant to KnownGroups first", group)
-	}
 	if doc == "" || strings.ContainsAny(doc, "\r\n") {
 		return nil, errors.New("description must be one line")
 	}
@@ -101,12 +91,7 @@ func Scaffold(
 		return nil, fmt.Errorf("%s is not an osapi checkout", root)
 	}
 
-	// A grouped behavior lives under its group, as its routes and commands
-	// do: internal/behaviors/network/dns.
 	path := goPackage
-	if group != "" {
-		path = group + "/" + goPackage
-	}
 	dir := filepath.Join("internal", "behaviors", filepath.FromSlash(path))
 	if _, err := os.Stat(filepath.Join(root, dir)); err == nil {
 		return nil, fmt.Errorf("%s already exists", dir)
@@ -127,7 +112,7 @@ func Scaffold(
 	}
 	sources := scaffoldSources(
 		scaffold{
-			group: group, name: name, goPackage: goPackage, path: path, doc: doc,
+			name: name, goPackage: goPackage, path: path, doc: doc,
 			requires: reqs,
 		},
 	)

@@ -18,7 +18,6 @@ examples make.
 | Name        | interface                                    |
 | Description | The network interfaces of the host           |
 | Placement   | node                                         |
-| Group       | network                                      |
 | Area        | networking                                   |
 | Internal    | no                                           |
 | API         | yes                                          |
@@ -34,13 +33,13 @@ examples make.
 
 ### Methods (5)
 
-| NAME                     | VERB  | HTTP   | ROUTE                                                             | PERMISSION      | DESCRIPTION                                        |
-| ------------------------ | ----- | ------ | ----------------------------------------------------------------- | --------------- | -------------------------------------------------- |
-| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/network/interface                  | interface:read  | List the network interfaces of the host            |
-| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125; | interface:read  | Get a network interface of the host                |
-| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125; | interface:write | Configure a network interface                      |
-| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125; | interface:write | Change the config osapi has of a network interface |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125; | interface:write | Drop the config osapi has of a network interface   |
+| NAME                     | VERB  | HTTP   | ROUTE                                                     | PERMISSION      | DESCRIPTION                                        |
+| ------------------------ | ----- | ------ | --------------------------------------------------------- | --------------- | -------------------------------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/interface                  | interface:read  | List the network interfaces of the host            |
+| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/interface/&#123;name&#125; | interface:read  | Get a network interface of the host                |
+| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/interface/&#123;name&#125; | interface:write | Configure a network interface                      |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/interface/&#123;name&#125; | interface:write | Change the config osapi has of a network interface |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/interface/&#123;name&#125; | interface:write | Drop the config osapi has of a network interface   |
 
 ### Types (5)
 
@@ -75,9 +74,9 @@ None. Declare them with behavior.Config.
 | Description | List the network interfaces of the host                                                                                                                                                                                                 |
 | Detail      | Reads each interface but the loopback, in the order of its index: /sys/class/net and ip on Linux, ifconfig and netstat on macOS. dhcp4 is true when a route of the interface has proto dhcp, and primary when it has the default route. |
 | HTTP        | GET                                                                                                                                                                                                                                     |
-| Route       | /api/node/&#123;hostname&#125;/network/interface                                                                                                                                                                                        |
+| Route       | /api/node/&#123;hostname&#125;/interface                                                                                                                                                                                                |
 | Permission  | interface:read                                                                                                                                                                                                                          |
-| Command     | [osapi client node network interface list](../../../../usage/cli/client/node/network/interface/list.md)                                                                                                                                 |
+| Command     | [osapi client node interface list](../../../../usage/cli/client/node/interface/list.md)                                                                                                                                                 |
 | Input type  | ListInput                                                                                                                                                                                                                               |
 | Output type | \[]Entry                                                                                                                                                                                                                                |
 
@@ -108,18 +107,18 @@ None. The method takes no input; its command needs only --target.
 
 ## Method get
 
-|             |                                                                                                       |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| Name        | get                                                                                                   |
-| Verb        | read                                                                                                  |
-| Description | Get a network interface of the host                                                                   |
-| Detail      | Reads the interface as list does.                                                                     |
-| HTTP        | GET                                                                                                   |
-| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;                                     |
-| Permission  | interface:read                                                                                        |
-| Command     | [osapi client node network interface get](../../../../usage/cli/client/node/network/interface/get.md) |
-| Input type  | GetInput                                                                                              |
-| Output type | Entry                                                                                                 |
+|             |                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------- |
+| Name        | get                                                                                   |
+| Verb        | read                                                                                  |
+| Description | Get a network interface of the host                                                   |
+| Detail      | Reads the interface as list does.                                                     |
+| HTTP        | GET                                                                                   |
+| Route       | /api/node/&#123;hostname&#125;/interface/&#123;name&#125;                             |
+| Permission  | interface:read                                                                        |
+| Command     | [osapi client node interface get](../../../../usage/cli/client/node/interface/get.md) |
+| Input type  | GetInput                                                                              |
+| Output type | Entry                                                                                 |
 
 ### Input (1)
 
@@ -157,9 +156,9 @@ None. The method takes no input; its command needs only --target.
 | Description | Configure a network interface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Detail      | Writes a netplan file of the interface's own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init's all for en\*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped. |
 | HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/interface/&#123;name&#125;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Permission  | interface:write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Command     | [osapi client node network interface create](../../../../usage/cli/client/node/network/interface/create.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Command     | [osapi client node interface create](../../../../usage/cli/client/node/interface/create.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Input type  | CreateInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
@@ -201,9 +200,9 @@ None. The method takes no input; its command needs only --target.
 | Description | Change the config osapi has of a network interface                                                                                                                         |
 | Detail      | Writes the interface's netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it. |
 | HTTP        | PUT                                                                                                                                                                        |
-| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;                                                                                                          |
+| Route       | /api/node/&#123;hostname&#125;/interface/&#123;name&#125;                                                                                                                  |
 | Permission  | interface:write                                                                                                                                                            |
-| Command     | [osapi client node network interface update](../../../../usage/cli/client/node/network/interface/update.md)                                                                |
+| Command     | [osapi client node interface update](../../../../usage/cli/client/node/interface/update.md)                                                                                |
 | Input type  | UpdateInput                                                                                                                                                                |
 | Output type | Result                                                                                                                                                                     |
 
@@ -243,9 +242,9 @@ None. The method takes no input; its command needs only --target.
 | Description | Drop the config osapi has of a network interface                                                                      |
 | Detail      | Removes the interface's netplan file and applies what is left. An interface osapi does not configure does not change. |
 | HTTP        | DELETE                                                                                                                |
-| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;                                                     |
+| Route       | /api/node/&#123;hostname&#125;/interface/&#123;name&#125;                                                             |
 | Permission  | interface:write                                                                                                       |
-| Command     | [osapi client node network interface delete](../../../../usage/cli/client/node/network/interface/delete.md)           |
+| Command     | [osapi client node interface delete](../../../../usage/cli/client/node/interface/delete.md)                           |
 | Input type  | DeleteInput                                                                                                           |
 | Output type | Result                                                                                                                |
 

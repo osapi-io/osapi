@@ -97,24 +97,3 @@ func decodeDelete(
 
 	return in, "", true
 }
-
-// decodePasswd reads the passwd method's input from the request.
-func decodePasswd(
-	c *echo.Context,
-) (PasswdRequest, string, bool) {
-	var in PasswdRequest
-	if msg, ok := server.Body(c, &in.Body); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Param(c, "name", &in.Name); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Valid(c, in); !ok {
-		return in, msg, false
-	}
-
-	return in, "", true
-}

@@ -15,25 +15,25 @@ func Routes(
 	return []server.Route{
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/node/:hostname/network/interface/:name/route",
+			Path:       "/api/node/:hostname/interface/:name/route",
 			Permission: "interface:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 		{
 			Method:     http.MethodPost,
-			Path:       "/api/node/:hostname/network/interface/:name/route",
+			Path:       "/api/node/:hostname/interface/:name/route",
 			Permission: "interface:write",
 			Handler:    server.Serve(s, Group, "create", HandleCreate, decodeCreate),
 		},
 		{
 			Method:     http.MethodPut,
-			Path:       "/api/node/:hostname/network/interface/:name/route",
+			Path:       "/api/node/:hostname/interface/:name/route",
 			Permission: "interface:write",
 			Handler:    server.Serve(s, Group, "update", HandleUpdate, decodeUpdate),
 		},
 		{
 			Method:     http.MethodDelete,
-			Path:       "/api/node/:hostname/network/interface/:name/route",
+			Path:       "/api/node/:hostname/interface/:name/route",
 			Permission: "interface:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},

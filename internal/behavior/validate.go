@@ -308,7 +308,7 @@ func ValidateBehavior(
 			b.Name,
 		)
 	}
-	if b.Name == "all" || b.Group == "all" {
+	if b.Name == "all" {
 		add(
 			"",
 			RuleName,
@@ -318,41 +318,28 @@ func ValidateBehavior(
 	problems = append(problems, keyNameProblems(b)...)
 	if b.Parent != nil {
 		switch {
-		case b.Group != "":
+		case !b.UnderCollection && b.ParentKey() == "":
 			add(
 				"",
 				RuleParent,
-				"it declares Of(%s) and Under(%q); a child is under its parent only",
+				"its parent %s has no keyed method, so its items have no key to be under; "+
+					"use Under(%s) to put it under the collection",
 				b.Parent.Name,
-				b.Group,
+				b.Parent.Name,
 			)
-		case b.ParentKey() == "":
+		case b.UnderCollection && b.Parent.Method(b.Name) != nil &&
+			b.Parent.Method(b.Name).Action:
 			add(
 				"",
 				RuleParent,
-				"its parent %s has no keyed method, so its items have no key to be under",
+				"its parent %s has the action %s, whose route is the route of this behavior; "+
+					"choose another name",
 				b.Parent.Name,
+				b.Name,
 			)
 		case Lookup(b.Parent.Name) != b.Parent:
 			add("", RuleParent, "its parent %s is not registered", b.Parent.Name)
 		}
-	}
-	if b.Group != "" && !namePattern.MatchString(b.Group) {
-		add(
-			"",
-			RuleName,
-			"group %q must be lowercase letters and digits, starting with a letter",
-			b.Group,
-		)
-	}
-	if b.Group != "" && b.Group != "all" && namePattern.MatchString(b.Group) &&
-		!slices.Contains(KnownGroups(), GroupName(b.Group)) {
-		add(
-			"",
-			RuleName,
-			"group %q is not one of KnownGroups; use a behavior.Group constant, such as GroupNetwork",
-			b.Group,
-		)
 	}
 	if b.Placement == "" {
 		add("", RulePlacement, "no placement; add behavior.Node")
@@ -500,9 +487,10 @@ func ValidateBehavior(
 		if m.Disruptive && strings.TrimSpace(m.Disruption) == "" {
 			add(m.Name, RuleVerb, ".Disrupts has no reason; say why a run takes the host down")
 		}
-		if m.AlwaysChanges && !m.Action {
-			add(m.Name, RuleVerb, ".Always is for an action, such as restart; a create, update or "+
-				"delete compares the host with its input and changes nothing when they agree")
+		if m.AlwaysChanges && !m.Action && m.Name != "update" {
+			add(m.Name, RuleVerb, ".Always is for an action, such as restart, or an update whose "+
+				"input the host cannot compare with what it has, such as a password hash; a create "+
+				"or delete compares the host with its input and changes nothing when they agree")
 		}
 		if m.PermitVerb != "" && !m.Action {
 			add(

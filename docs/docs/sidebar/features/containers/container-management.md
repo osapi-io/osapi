@@ -51,9 +51,9 @@ Each method runs on the agent. Reads go through gohai, which runs
 with sudo. A host where `docker version` does not answer reports `skipped`.
 
 You can target one host, broadcast to all hosts with `_all`, or target a label.
-Refer to the
-[CLI reference](../../usage/cli/client/node/container/container.mdx) for usage
-and examples.
+Refer to the CLI reference of
+[docker](../../usage/cli/client/node/docker/docker.mdx) and
+[image](../../usage/cli/client/node/image/image.mdx) for usage and examples.
 
 ## Configuration
 
@@ -75,7 +75,7 @@ give the permission of each method.
 - [docker behavior](../../reference/behaviors/containers/docker/docker.md) and
   [image behavior](../../reference/behaviors/containers/image/image.md): each
   method, its input, its output and its examples
-- [CLI reference](../../usage/cli/client/node/container/container.mdx): the
-  container commands
+- CLI reference: the [docker](../../usage/cli/client/node/docker/docker.mdx) and
+  [image](../../usage/cli/client/node/image/image.mdx) commands
 - [Job System](../platform/job-system.md): how asynchronous jobs work
 - [Authentication & RBAC](../platform/authentication.md): permissions and roles

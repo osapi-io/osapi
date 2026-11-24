@@ -251,7 +251,6 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		behavior.Node,
 		behavior.API,
 		behavior.CLI,
-		behavior.Under("store"),
 		behavior.Read("list", read).Describe("List <them>").Explain("All of {them}.").
 			Example("Every key", input{Key: "k", Force: true, Count: 2}, []entry{{Key: "k"}}).
 			Example("No keys", input{Key: "none"}, []entry{}),
@@ -277,8 +276,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	)
 
 	s.Equal(
-		"  # Every key\n  osapi client node store kv list --target web-01 --key k --force --count 2\n\n"+
-			"  # No keys\n  osapi client node store kv list --target web-01 --key none",
+		"  # Every key\n  osapi client node kv list --target web-01 --key k --force --count 2\n\n"+
+			"  # No keys\n  osapi client node kv list --target web-01 --key none",
 		command.Example(b, b.Method("list")),
 	)
 	list := command.Annotations(b, b.Method("list"))
@@ -286,11 +285,11 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	out := list[reference.Result]
 	s.True(strings.HasPrefix(
 		out,
-		"Every key, on one host:\n\n```ansi\n$ osapi client node store kv list --target web-01 --key k --force --count 2\n",
+		"Every key, on one host:\n\n```ansi\n$ osapi client node kv list --target web-01 --key k --force --count 2\n",
 	),
 		"each example's command and output, in a block that the site shows in color")
 	s.Contains(out, "On each host, where one cannot run it:\n\n```ansi\n"+
-		"$ osapi client node store kv list --target _all --key k --force --count 2\n",
+		"$ osapi client node kv list --target _all --key k --force --count 2\n",
 		"the fleet's output")
 	s.Contains(out, "web-02", "the fleet's second host answers")
 	s.Contains(out, "mac-01", "the fleet's Mac")
@@ -333,14 +332,14 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	s.Empty(command.Output(b, text))
 	b.API = true
 	s.Equal(
-		"  # Apply all\n  osapi client node store kv apply --target web-01",
+		"  # Apply all\n  osapi client node kv apply --target web-01",
 		command.Example(b, bare),
 	)
 	s.Empty(command.Example(b, behavior.Read("get", readOne)), "no examples")
 
 	s.Equal(
 		map[string]string{
-			reference.Notes: "The [kv behavior](../../../../../../reference/behaviors/internal/kv/kv.md) page tells " +
+			reference.Notes: "The [kv behavior](../../../../../reference/behaviors/internal/kv/kv.md) page tells " +
 				"where the behavior runs, what it is built on and its settings.",
 		},
 		command.GroupAnnotations(b),

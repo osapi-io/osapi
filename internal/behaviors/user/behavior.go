@@ -19,9 +19,10 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package user is the user behavior: the accounts of the host. It reads them
-// through gohai on every platform, and adds, changes and removes them, and
-// sets their passwords, on the Debian family. A password is hashed on the
-// controller, so the job data and NATS have only its hash.
+// through gohai on every platform, and adds, changes and removes them on the
+// Debian family. A password is hashed on the controller, so the job data and
+// NATS have only its hash. The password behavior, under the user, sets the
+// password of a user that exists.
 package user
 
 import (
@@ -291,38 +292,4 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name that is an option", DeleteInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",
 			DeleteInput{Name: strings.Repeat("a", 33)}, "max"),
-	behavior.Action("passwd", SetPassword).Key("name").
-		AdminOnly().
-		On(behavior.PlatformDebian).
-		Sudo("chpasswd").
-		Always().
-		Before(hashPassword).
-		Describe("Set the password of a user").
-		Explain("Sets the password with chpasswd -e, from its hash on standard input. "+
-			"The controller hashes the password, so the job and NATS have only the "+
-			"hash. Each run makes a new hash, so it always reports changed: true. A "+
-			"user that the host does not have is not found. It runs on the Debian "+
-			"family only, and elsewhere reports skipped.").
-		Example("Set a password",
-			PasswordInput{
-				Name:         "osapitest",
-				Password:     "osapi-test-password",
-				PasswordHash: testHash,
-			},
-			Result{Name: "osapitest", Changed: true},
-			withHost(newUser,
-				behavior.After(CreateInput{Name: "osapitest"}),
-				behavior.Ran("chpasswd", "-e"),
-			)...,
-		).
-		Fails("No password", PasswordInput{Name: "alice"}, "give the password", withHost()...).
-		Fails("A user that the host does not have",
-			PasswordInput{Name: "nobody", PasswordHash: testHash}, "not found", withHost()...).
-		Fails("A hash that is not a crypt hash",
-			PasswordInput{Name: "alice", PasswordHash: "plain"}, "crypt hash", withHost()...).
-		Fails("A name that is an option", PasswordInput{Name: "-r"}, "account_name").
-		Fails("A name longer than 32 characters",
-			PasswordInput{Name: strings.Repeat("a", 33)}, "max").
-		Fails("A password with a line break",
-			PasswordInput{Name: "alice", Password: "a\nb"}, "no_linebreak"),
 ))

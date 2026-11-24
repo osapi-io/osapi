@@ -160,33 +160,6 @@ func HandleDelete(
 	return dispatch.Run[UserDeleteResponse](ctx, d, user.Behavior, "delete", in.Hostname, user.DeleteInput{Name: in.Name})
 }
 
-// PasswdRequest is the request of user passwd: its target and its input.
-type PasswdRequest struct {
-	Hostname string            `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Name     string            `doc:"The user, such as alice" in:"path" json:"name" param:"UserName" validate:"required,max=32,account_name"`
-	Body     UserPasswdRequest `in:"body" validate:"required"`
-}
-
-// UserPasswdRequest is the body of user passwd.
-type UserPasswdRequest struct {
-	Password string `doc:"The new password, which osapi hashes on the controller" json:"password,omitempty" secret:"true" validate:"omitempty,no_linebreak"`
-}
-
-// UserPasswdResponse is each target host's result.
-type UserPasswdResponse struct {
-	JobID   string       `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []UserResult `json:"results"`
-}
-
-// HandlePasswd runs user passwd on the target, for the endpoint server.
-func HandlePasswd(
-	ctx context.Context,
-	d dispatch.Deps,
-	in PasswdRequest,
-) (UserPasswdResponse, error) {
-	return dispatch.Run[UserPasswdResponse](ctx, d, user.Behavior, "passwd", in.Hostname, user.PasswordInput{Name: in.Name, Password: in.Body.Password})
-}
-
 // Group is user as an endpoint group, which its spec comes from.
 var Group = endpoint.Define(
 	"user",
@@ -252,17 +225,6 @@ var Group = endpoint.Define(
 		Example("--target web-01 --name osapitest", "Remove a user").
 		Example("--target web-01 --name osapitest", "A user that the host does not have").
 		Result("Remove a user, on one host:\n\n```ansi\n$ osapi client node user delete --target web-01 --name osapitest\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node user delete --target _all --name osapitest\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"name\": \"osapitest\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nA user that the host does not have, on one host:\n\n```ansi\n$ osapi client node user delete --target web-01 --name osapitest\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mosapitest\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node user delete --target _all --name osapitest\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mosapitest\x1b[0m\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mosapitest\x1b[0m\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": false,\n      \"hostname\": \"web-01\",\n      \"name\": \"osapitest\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove a user | runs `userdel -r -- osapitest` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is an option | `--name -r` | account_name |\n| A name longer than 32 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no user with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
-	endpoint.Post[PasswdRequest, UserPasswdResponse]("passwd").
-		Handle(HandlePasswd).
-		ID("PostNodeUserPasswd").
-		Describe("Set the password of a user").
-		Permission("user:execute").
-		Returns("Each target host's result, with whether it changed.").
-		Action("passwd").
-		Explain("Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.").
-		Example("--target web-01 --name osapitest --password osapi-test-password", "Set a password").
-		Result("Set a password, on one host:\n\n```ansi\n$ osapi client node user passwd --target web-01 --name osapitest --password osapi-test-password\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node user passwd --target _all --name osapitest --password osapi-test-password\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mosapitest\x1b[0m\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"name\": \"osapitest\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Set a password | runs `chpasswd -e` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No password | `--name alice` | give the password |\n| A user that the host does not have | `--name nobody` | not found |\n| A hash that is not a crypt hash | `--name alice` | crypt hash |\n| A name that is an option | `--name -r` | account_name |\n| A name longer than 32 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max |\n| A password with a line break | `--name alice --password \"a\\nb\"` | no_linebreak |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no user with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
 )
 

@@ -46,7 +46,7 @@ func List(
 			names = append(names, m.Name)
 		}
 		out.Items = append(out.Items, Summary{
-			Name: b.Name, Group: b.Group, Of: parentName(b), Area: b.Area, Methods: names,
+			Name: b.Name, Under: underName(b), Of: parentName(b), Area: b.Area, Methods: names,
 			Doc: b.Doc, Internal: b.Internal,
 		})
 	}
@@ -59,7 +59,19 @@ func List(
 func parentName(
 	b *behavior.Behavior,
 ) string {
-	if b.Parent == nil {
+	if b.Parent == nil || b.UnderCollection {
+		return ""
+	}
+
+	return b.Parent.Name
+}
+
+// underName is the name of the parent whose collection b is under, set
+// with Under, or "".
+func underName(
+	b *behavior.Behavior,
+) string {
+	if b.Parent == nil || !b.UnderCollection {
 		return ""
 	}
 
@@ -91,7 +103,7 @@ func Get(
 		return GetOutput{}, err
 	}
 	out := GetOutput{
-		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group, Of: parentName(b),
+		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Under: underName(b), Of: parentName(b),
 		Area:     b.Area,
 		Internal: b.Internal, API: b.API, CLI: b.CLI,
 		Platforms:  platformNames(b),
@@ -236,7 +248,7 @@ func Create(
 		root = "."
 	}
 	files, err := behavior.Scaffold(
-		root, in.Group, in.Name, in.Package, in.Description, in.Requires)
+		root, in.Name, in.Package, in.Description, in.Requires)
 	if err != nil {
 		return CreateOutput{}, err
 	}
@@ -245,9 +257,6 @@ func Create(
 		dir = in.Name
 	}
 	path := dir
-	if in.Group != "" {
-		path = in.Group + "/" + dir
-	}
 	out := CreateOutput{Name: in.Name}
 	for _, f := range files {
 		out.Files = append(out.Files, File{Path: f})

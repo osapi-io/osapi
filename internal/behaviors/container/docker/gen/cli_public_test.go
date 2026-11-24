@@ -25,109 +25,109 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"A host with a container\" is run",
-			args: []string{"node", "container", "docker", "list", "--target", "server1"},
+			args: []string{"node", "docker", "list", "--target", "server1"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"Only the stopped ones\" is run",
-			args: []string{"node", "container", "docker", "list", "--target", "server1", "--state", "stopped"},
+			args: []string{"node", "docker", "list", "--target", "server1", "--state", "stopped"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/container/docker?state=stopped",
+				Path:   "/api/node/server1/docker?state=stopped",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A container\" is run",
-			args: []string{"node", "container", "docker", "get", "--target", "server1", "--name", "osapitest"},
+			args: []string{"node", "docker", "get", "--target", "server1", "--name", "osapitest"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"Create a container\" is run",
-			args: []string{"node", "container", "docker", "create", "--target", "server1", "--name", "osapitest", "--image", "alpine:3.20", "--command", "sleep", "--command", "300"},
+			args: []string{"node", "docker", "create", "--target", "server1", "--name", "osapitest", "--image", "alpine:3.20", "--command", "sleep", "--command", "300"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   "{\"name\":\"osapitest\",\"image\":\"alpine:3.20\",\"command\":[\"sleep\",\"300\"]}",
 			},
 		},
 		{
 			name: "when the example \"A container that the host has\" is run",
-			args: []string{"node", "container", "docker", "create", "--target", "server1", "--name", "osapitest", "--image", "alpine:3.20", "--command", "sleep", "--command", "300"},
+			args: []string{"node", "docker", "create", "--target", "server1", "--name", "osapitest", "--image", "alpine:3.20", "--command", "sleep", "--command", "300"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   "{\"name\":\"osapitest\",\"image\":\"alpine:3.20\",\"command\":[\"sleep\",\"300\"]}",
 			},
 		},
 		{
 			name: "when the example \"Remove a container\" is run",
-			args: []string{"node", "container", "docker", "delete", "--target", "server1", "--name", "osapitest"},
+			args: []string{"node", "docker", "delete", "--target", "server1", "--name", "osapitest"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A container that the host does not have\" is run",
-			args: []string{"node", "container", "docker", "delete", "--target", "server1", "--name", "osapitest"},
+			args: []string{"node", "docker", "delete", "--target", "server1", "--name", "osapitest"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"Start a container\" is run",
-			args: []string{"node", "container", "docker", "start", "--target", "server1", "--name", "osapitest"},
+			args: []string{"node", "docker", "start", "--target", "server1", "--name", "osapitest"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"A container that runs already\" is run",
-			args: []string{"node", "container", "docker", "start", "--target", "server1", "--name", "osapitest"},
+			args: []string{"node", "docker", "start", "--target", "server1", "--name", "osapitest"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"Stop a container\" is run",
-			args: []string{"node", "container", "docker", "stop", "--target", "server1", "--name", "osapitest", "--timeout", "1"},
+			args: []string{"node", "docker", "stop", "--target", "server1", "--name", "osapitest", "--timeout", "1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   "{\"timeout\":1}",
 			},
 		},
 		{
 			name: "when the example \"A container that does not run\" is run",
-			args: []string{"node", "container", "docker", "stop", "--target", "server1", "--name", "osapitest", "--timeout", "1"},
+			args: []string{"node", "docker", "stop", "--target", "server1", "--name", "osapitest", "--timeout", "1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
+				Path:   "/api/node/server1/docker/osapitest/stop",
 				Body:   "{\"timeout\":1}",
 			},
 		},
 		{
 			name: "when the example \"Run a command\" is run",
-			args: []string{"node", "container", "docker", "exec", "--target", "server1", "--name", "osapitest", "--command", "echo", "--command", "hello"},
+			args: []string{"node", "docker", "exec", "--target", "server1", "--name", "osapitest", "--command", "echo", "--command", "hello"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   "{\"command\":[\"echo\",\"hello\"]}",
 			},
 		},

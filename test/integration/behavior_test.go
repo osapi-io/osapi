@@ -212,7 +212,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 // fails with exit status 100. The refresh's own example can run after the
 // package examples, so the suite runs it first.
 func (s *BehaviorSmokeSuite) refreshIndex() {
-	b := behavior.Lookup("updatepackages")
+	b := behavior.Lookup("updates")
 	if b == nil || b.Method("update") == nil {
 		return
 	}

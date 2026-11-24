@@ -23,15 +23,15 @@ func (s *APIDeletePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/network/dns/gen/api.yaml", gen.Routes)
 }
 
-// TestDelete sends DELETE /api/node/{hostname}/network/dns/{interface_name}
-// and checks each answer's response.
+// TestDelete sends DELETE /api/node/{hostname}/dns/{interface_name} and checks
+// each answer's response.
 func (s *APIDeletePublicTestSuite) TestDelete() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"An interface osapi set\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -48,7 +48,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the example \"An interface osapi set\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/_all/network/dns/osapi0",
+				Path:   "/api/node/_all/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -67,7 +67,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the example \"An interface osapi set nothing on\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -84,7 +84,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the example \"An interface osapi set nothing on\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/_all/network/dns/osapi0",
+				Path:   "/api/node/_all/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -103,7 +103,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -120,7 +120,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -137,7 +137,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -154,7 +154,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -169,7 +169,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/_all/network/dns/osapi0",
+				Path:   "/api/node/_all/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -184,7 +184,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Write,
@@ -206,7 +206,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/nowhere/network/dns/osapi0",
+				Path:   "/api/node/nowhere/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token:    servertest.Write,
@@ -216,7 +216,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node//network/dns/osapi0",
+				Path:   "/api/node//dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token:    servertest.Write,
@@ -226,7 +226,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 			Name: "when sent an interface name that is not alphanumeric, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0%3Breboot",
+				Path:   "/api/node/server1/dns/osapi0%3Breboot",
 				Body:   `{"interface_name":"osapi0;reboot"}`,
 			},
 			Token:    servertest.Write,
@@ -242,7 +242,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token:    servertest.NoToken,
@@ -252,7 +252,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when the token lacks dns:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token:    servertest.Lacking,
@@ -262,7 +262,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token:    servertest.Read,
@@ -272,7 +272,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 				Body:   `{"interface_name":"osapi0"}`,
 			},
 			Token: servertest.Admin,

@@ -408,7 +408,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				s.NotContains(perms, authtoken.Permission("motdperm:write"))
 				s.NotContains(perms, client.PermAuditRead)
 				s.Contains(perms, client.PermAdmissionRead)
-				s.Contains(perms, client.PermEntryRead, "read keeps logs, files and processes")
+				s.Contains(perms, client.PermLogRead, "read keeps logs, files and processes")
 			},
 		},
 		{

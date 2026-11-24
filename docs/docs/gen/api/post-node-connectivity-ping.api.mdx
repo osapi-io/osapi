@@ -1,0 +1,69 @@
+---
+id: post-node-connectivity-ping
+title: "Ping an address from the host"
+description: "Sends three ICMP echo requests from the host and reports how many came back, and their round-trip times. A host that does not answer is 100% loss, not an error. It changes nothing, so it reports changed: false. On Linux the agent pings without root when net.ipv4.ping_group_range admits its group."
+sidebar_label: "Ping an address from the host"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Ping an address from the host"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/connectivity/ping"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Sends three ICMP echo requests from the host and reports how many came back, and their round-trip times. A host that does not answer is 100% loss, not an error. It changes nothing, so it reports changed: false. On Linux the agent pings without root when net.ipv4.ping_group_range admits its group.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-connectivity-ping.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-connectivity-ping.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-connectivity-ping.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

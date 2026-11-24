@@ -23,15 +23,14 @@ package behavior
 import "strings"
 
 // TypeName is the prefix of every schema, parameter and operation name the
-// spec gives this behavior: sysctl is Sysctl, dns under network is
-// NetworkDns, and a route under the interface under network is
-// NetworkInterfaceRoute.
+// spec gives this behavior: sysctl is Sysctl, and a route under the
+// interface is InterfaceRoute.
 func (b *Behavior) TypeName() string {
 	if b.Parent != nil {
 		return b.Parent.TypeName() + title(b.Name)
 	}
 
-	return title(b.Group) + title(b.Name)
+	return title(b.Name)
 }
 
 // OperationID is the method's operationId, by the rule the hand-written
@@ -51,13 +50,9 @@ func (b *Behavior) OperationID(
 	return id
 }
 
-// Tag is the spec tag the docs site groups the behavior's operations under:
-// sysctl_operations, or network_dns_operations for a grouped one.
+// Tag is the spec tag the docs site groups the behavior's operations under,
+// such as sysctl_operations.
 func (b *Behavior) Tag() string {
-	if b.Group != "" {
-		return b.Group + "_" + b.Name + "_operations"
-	}
-
 	return b.Name + "_operations"
 }
 

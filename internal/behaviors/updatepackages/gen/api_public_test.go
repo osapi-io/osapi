@@ -27,13 +27,13 @@ func (s *APIPublicTestSuite) TestRoutes() {
 	}{
 		{
 			method:     http.MethodGet,
-			path:       "/api/node/:hostname/updatepackages",
-			permission: "updatepackages:read",
+			path:       "/api/node/:hostname/package/updates",
+			permission: "package:read",
 		},
 		{
 			method:     http.MethodPut,
-			path:       "/api/node/:hostname/updatepackages",
-			permission: "updatepackages:write",
+			path:       "/api/node/:hostname/package/updates",
+			permission: "package:write",
 		},
 	}
 

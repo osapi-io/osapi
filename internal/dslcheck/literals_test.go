@@ -45,7 +45,6 @@ var definitions = []string{
 // compiles; this test is the guard.
 var typed = map[string]bool{
 	"github.com/osapi-io/osapi/internal/behavior.PlatformName":      true,
-	"github.com/osapi-io/osapi/internal/behavior.GroupName":         true,
 	"github.com/osapi-io/osapi/internal/area.Name":                  true,
 	"github.com/osapi-io/osapi/internal/behavior.Verb":              true,
 	"github.com/osapi-io/osapi/internal/behavior.Placement":         true,
@@ -95,10 +94,10 @@ func (s *LiteralsPublicTestSuite) TestFindsALiteral() {
 		found = append(found, literals(pkgs[0].Fset, pkgs[0].Info, f)...)
 	}
 	s.Equal([]string{
-		"literals.go:31: \"debain\" as behavior.PlatformName",
-		"literals.go:32: \"netwrok\" as behavior.GroupName",
-		"literals.go:33: \"helth:read\" as client.Permission",
-		"literals.go:36: \"raw\" as client.ContentType",
+		"literals.go:32: \"debain\" as behavior.PlatformName",
+		"literals.go:33: \"hardwar\" as area.Name",
+		"literals.go:34: \"helth:read\" as client.Permission",
+		"literals.go:37: \"raw\" as client.ContentType",
 	}, found)
 }
 

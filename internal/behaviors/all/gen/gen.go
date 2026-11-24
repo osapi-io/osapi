@@ -24,6 +24,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/ntp/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/os/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/packages/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/password/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/power/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/process/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/schedule/gen"

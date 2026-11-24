@@ -23,15 +23,15 @@ func (s *APIListPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
-// TestList sends GET /api/node/{hostname}/container/docker and checks each
-// answer's response.
+// TestList sends GET /api/node/{hostname}/docker and checks each answer's
+// response.
 func (s *APIListPublicTestSuite) TestList() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"A host with a container\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -47,7 +47,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"A host with a container\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/container/docker",
+				Path:   "/api/node/_all/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -65,7 +65,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"Only the stopped ones\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker?state=stopped",
+				Path:   "/api/node/server1/docker?state=stopped",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -81,7 +81,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"Only the stopped ones\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/container/docker?state=stopped",
+				Path:   "/api/node/_all/docker?state=stopped",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -99,7 +99,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -115,7 +115,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -131,7 +131,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -147,7 +147,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -161,7 +161,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/container/docker",
+				Path:   "/api/node/_all/docker",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -182,7 +182,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/nowhere/container/docker",
+				Path:   "/api/node/nowhere/docker",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -191,7 +191,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node//container/docker",
+				Path:   "/api/node//docker",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -200,7 +200,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when sent a state that is not one, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker?state=paused",
+				Path:   "/api/node/server1/docker?state=paused",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -215,7 +215,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -224,7 +224,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token lacks docker:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -233,7 +233,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 			},
 			Token: servertest.Admin,
 			Job: servertest.Query(

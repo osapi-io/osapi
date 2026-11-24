@@ -1,0 +1,69 @@
+---
+id: post-node-interface
+title: "Configure a network interface"
+description: "Writes a netplan file of the interface's own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init's all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped."
+sidebar_label: "Configure a network interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Configure a network interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/interface/{name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Writes a netplan file of the interface's own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init's all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-interface.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-interface.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-interface.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

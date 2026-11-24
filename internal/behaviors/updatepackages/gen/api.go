@@ -8,21 +8,21 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
-// Routes are the updatepackages group's endpoints, as its definition declares them.
+// Routes are the updates group's endpoints, as its definition declares them.
 func Routes(
 	s *server.Server,
 ) []server.Route {
 	return []server.Route{
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/node/:hostname/updatepackages",
-			Permission: "updatepackages:read",
+			Path:       "/api/node/:hostname/package/updates",
+			Permission: "package:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 		{
 			Method:     http.MethodPut,
-			Path:       "/api/node/:hostname/updatepackages",
-			Permission: "updatepackages:write",
+			Path:       "/api/node/:hostname/package/updates",
+			Permission: "package:write",
 			Handler:    server.Serve(s, Group, "update", HandleUpdate, decodeUpdate),
 		},
 	}

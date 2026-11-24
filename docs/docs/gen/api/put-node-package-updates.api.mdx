@@ -1,0 +1,69 @@
+---
+id: put-node-package-updates
+title: "Refresh the package index"
+description: "Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged."
+sidebar_label: "Refresh the package index"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "put api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Refresh the package index"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/api/node/{hostname}/package/updates"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./put-node-package-updates.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-node-package-updates.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-node-package-updates.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

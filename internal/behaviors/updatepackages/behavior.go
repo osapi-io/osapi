@@ -23,15 +23,18 @@ package updatepackages
 import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behaviors/packages"
 )
 
-// Behavior is the updates the package index has for the host. They are not
-// facts about the host but what its repositories have, so apt reads them,
-// not gohai. It runs on the Debian family.
+// Behavior is the updates the package index has for the host, under the
+// packages: package updates. They are not facts about the host but what its
+// repositories have, so apt reads them, not gohai. It runs on the Debian
+// family. Its permissions are the packages': package:read and package:write.
 var Behavior = behavior.Register(behavior.Define(
-	"updatepackages", "The updates the package index has for the host",
+	"updates", "The updates the package index has for the host",
 	behavior.Title("Package updates"),
 	behavior.Node,
+	behavior.Under(packages.Behavior),
 	behavior.API,
 	behavior.Area(area.Software),
 	behavior.CLI,

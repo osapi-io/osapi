@@ -1,0 +1,69 @@
+---
+id: post-node-docker
+title: "Create a container"
+description: "Runs docker create, which pulls the image when the host does not have it. The environment goes on docker's standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false."
+sidebar_label: "Create a container"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Create a container"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/docker"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs docker create, which pulls the image when the host does not have it. The environment goes on docker's standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-docker.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-docker.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-docker.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

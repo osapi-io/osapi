@@ -48,11 +48,11 @@ the configured servers.
 
 **Ping.** Ping is the `ping` action of the
 [connectivity behavior](../../reference/behaviors/networking/connectivity/connectivity.md),
-`osapi client node network connectivity ping --address <ip>`. It runs the host's
-`ping`, three echo requests, and reports what came back: the packets sent and
-received, the loss, and the round-trip times. A host that does not answer is
-100% loss, not an error. Ping changes nothing on the host, so it reports
-`changed: false`. On macOS it runs `ping6` for an IPv6 address.
+`osapi client node connectivity ping --address <ip>`. It runs the host's `ping`,
+three echo requests, and reports what came back: the packets sent and received,
+the loss, and the round-trip times. A host that does not answer is 100% loss,
+not an error. Ping changes nothing on the host, so it reports `changed: false`.
+On macOS it runs `ping6` for an IPv6 address.
 
 On Linux, the `ping` of iputils sends on an ICMP datagram socket, also when the
 agent runs as root. The kernel permits this only for the groups in
@@ -76,10 +76,11 @@ something between the host and the target drops ICMP. An example is a VM behind
 the NAT of a Mac with the stealth mode of the macOS firewall on: the Mac drops
 the replies to the pings of the VM.
 
-Refer to [CLI Reference](../../usage/cli/client/node/network/network.mdx) for
+Refer to the CLI reference of
+[connectivity](../../usage/cli/client/node/connectivity/connectivity.mdx) for
 usage and examples, or the
-[API Reference](/gen/api/connectivity-api-network-connectivity-operations) for
-the REST endpoints.
+[API Reference](/gen/api/connectivity-api-connectivity-operations) for the REST
+endpoints.
 
 ## Configuration
 
@@ -101,12 +102,13 @@ role has.
 
 ## Related
 
-- [CLI Reference](../../usage/cli/client/node/network/network.mdx): network
+- CLI reference: [dns](../../usage/cli/client/node/dns/dns.mdx) and
+  [connectivity](../../usage/cli/client/node/connectivity/connectivity.mdx)
   commands
 - [System Facts](../node/system-facts.md): available `@fact.*` references
-- API Reference: [DNS](/gen/api/dns-api-network-dns-operations),
-  [interfaces](/gen/api/interface-api-network-interface-operations),
+- API Reference: [DNS](/gen/api/dns-api-dns-operations),
+  [interfaces](/gen/api/interface-api-interface-operations),
   [routes](/gen/api/route-api-route-operations) and
-  [connectivity](/gen/api/connectivity-api-network-connectivity-operations)
+  [connectivity](/gen/api/connectivity-api-connectivity-operations)
 - [Job System](../platform/job-system.md): how async job processing works
 - [Architecture](../../architecture/architecture.md): system design overview

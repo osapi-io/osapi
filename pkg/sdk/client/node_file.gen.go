@@ -14,7 +14,7 @@ type NodeFileService struct {
 	client *Client
 }
 
-// Status is the operation GetNodeFile: show whether a deployed file holds what
+// Get is the operation GetNodeFile: show whether a deployed file holds what
 // osapi wrote.
 //
 // Compares the file on the host with the record that osapi keeps of what it
@@ -24,7 +24,7 @@ type NodeFileService struct {
 // is refused.
 //
 // It sends GET /api/node/{hostname}/file, and needs the permission file:read.
-func (s *NodeFileService) Status(
+func (s *NodeFileService) Get(
 	ctx context.Context,
 	hostname string,
 	path string,

@@ -1,0 +1,69 @@
+---
+id: delete-node-dns
+title: "Drop the DNS resolvers osapi set on an interface"
+description: "Removes the interface's netplan file and applies what is left. An interface osapi set nothing on does not change."
+sidebar_label: "Drop the DNS resolvers osapi set on an interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Drop the DNS resolvers osapi set on an interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/node/{hostname}/dns/{interface_name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes the interface's netplan file and applies what is left. An interface osapi set nothing on does not change.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-dns.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-dns.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-dns.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

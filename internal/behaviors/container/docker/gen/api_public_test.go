@@ -27,37 +27,37 @@ func (s *APIPublicTestSuite) TestRoutes() {
 	}{
 		{
 			method:     http.MethodGet,
-			path:       "/api/node/:hostname/container/docker",
+			path:       "/api/node/:hostname/docker",
 			permission: "docker:read",
 		},
 		{
 			method:     http.MethodGet,
-			path:       "/api/node/:hostname/container/docker/:name",
+			path:       "/api/node/:hostname/docker/:name",
 			permission: "docker:read",
 		},
 		{
 			method:     http.MethodPost,
-			path:       "/api/node/:hostname/container/docker",
+			path:       "/api/node/:hostname/docker",
 			permission: "docker:write",
 		},
 		{
 			method:     http.MethodDelete,
-			path:       "/api/node/:hostname/container/docker/:name",
+			path:       "/api/node/:hostname/docker/:name",
 			permission: "docker:write",
 		},
 		{
 			method:     http.MethodPost,
-			path:       "/api/node/:hostname/container/docker/:name/start",
+			path:       "/api/node/:hostname/docker/:name/start",
 			permission: "docker:execute",
 		},
 		{
 			method:     http.MethodPost,
-			path:       "/api/node/:hostname/container/docker/:name/stop",
+			path:       "/api/node/:hostname/docker/:name/stop",
 			permission: "docker:execute",
 		},
 		{
 			method:     http.MethodPost,
-			path:       "/api/node/:hostname/container/docker/:name/exec",
+			path:       "/api/node/:hostname/docker/:name/exec",
 			permission: "docker:exec",
 		},
 	}

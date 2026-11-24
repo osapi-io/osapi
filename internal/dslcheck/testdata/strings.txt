@@ -4,7 +4,6 @@
 # Categories: identity, free text, program, path pattern, fixture, boundary, checked.
 behavior.Action(name string)	identity	a name that the registry, the route or the command path holds
 behavior.Behavior.Doc string	free text	prose for a page or a message
-behavior.Behavior.Group string	checked	set only by Under, which takes a GroupName; validate checks KnownGroups
 behavior.Behavior.Method(name string)	identity	a name that the registry, the route or the command path holds
 behavior.Behavior.Name string	identity	a name that the registry, the route or the command path holds
 behavior.Behavior.Runs []string	program	a program name, which preflight and the fake host check
@@ -79,7 +78,6 @@ behavior.RunsOnPlatform(programs []string)	program	a program name, which preflig
 behavior.SudoOnPlatform(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Scaffold(doc string)	free text	prose for a page or a message
 behavior.Scaffold(goPackage string)	identity	a Go package name, which Scaffold checks
-behavior.Scaffold(group string)	checked	a group; Scaffold refuses one outside KnownGroups
 behavior.Scaffold(name string)	identity	a name that the registry, the route or the command path holds
 behavior.Scaffold(requires []string)	checked	behavior names; Scaffold refuses one that the registry does not have
 behavior.Scaffold(root string)	path pattern	a path or a path.Match pattern

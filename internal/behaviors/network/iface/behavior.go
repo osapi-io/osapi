@@ -161,7 +161,6 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.API,
 	behavior.Area(area.Networking),
 	behavior.CLI,
-	behavior.Under(behavior.GroupNetwork),
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

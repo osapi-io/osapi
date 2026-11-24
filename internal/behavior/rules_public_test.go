@@ -117,11 +117,9 @@ func (s *RulesPublicTestSuite) TestOutput() {
 
 func (s *RulesPublicTestSuite) TestNames() {
 	got := s.problems(behavior.Define("ip-forward", "x", behavior.Node, onDebian,
-		behavior.Under("net-work"),
 		behavior.Read("list", readList).Describe("List")))
 	s.Equal([]string{
 		`name "ip-forward" must be lowercase letters and digits, starting with a letter`,
-		`group "net-work" must be lowercase letters and digits, starting with a letter`,
 	}, got[behavior.RuleName])
 }
 

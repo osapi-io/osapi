@@ -17,8 +17,8 @@ type ListRequest struct {
 	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 }
 
-// ContainerImageEntry is the result of image on one host.
-type ContainerImageEntry struct {
+// ImageEntry is the result of image on one host.
+type ImageEntry struct {
 	Hostname   string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
 	Status     string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
 	ID         *string `doc:"The image's ID" json:"id,omitempty"`
@@ -28,10 +28,10 @@ type ContainerImageEntry struct {
 	Error      *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// ContainerImageCollectionResponse is each target host's result.
-type ContainerImageCollectionResponse struct {
-	JobID   string                `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []ContainerImageEntry `json:"results"`
+// ImageCollectionResponse is each target host's result.
+type ImageCollectionResponse struct {
+	JobID   string       `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []ImageEntry `json:"results"`
 }
 
 // HandleList runs image list on the target, for the endpoint server.
@@ -39,23 +39,23 @@ func HandleList(
 	ctx context.Context,
 	d dispatch.Deps,
 	in ListRequest,
-) (ContainerImageCollectionResponse, error) {
-	return dispatch.Run[ContainerImageCollectionResponse](ctx, d, image.Behavior, "list", in.Hostname, image.ListInput{})
+) (ImageCollectionResponse, error) {
+	return dispatch.Run[ImageCollectionResponse](ctx, d, image.Behavior, "list", in.Hostname, image.ListInput{})
 }
 
 // PullRequest is the request of image pull: its target and its input.
 type PullRequest struct {
-	Hostname string                    `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Body     ContainerImagePullRequest `in:"body" validate:"required"`
+	Hostname string           `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Body     ImagePullRequest `in:"body" validate:"required"`
 }
 
-// ContainerImagePullRequest is the body of image pull.
-type ContainerImagePullRequest struct {
+// ImagePullRequest is the body of image pull.
+type ImagePullRequest struct {
 	Image string `doc:"The image, such as alpine:3.20" json:"image" validate:"required,image_ref"`
 }
 
-// ContainerImagePullResult is the result of image on one host.
-type ContainerImagePullResult struct {
+// ImagePullResult is the result of image on one host.
+type ImagePullResult struct {
 	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
 	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
 	Image    *string `doc:"The image" json:"image,omitempty"`
@@ -65,10 +65,10 @@ type ContainerImagePullResult struct {
 	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// ContainerImagePullResponse is each target host's result.
-type ContainerImagePullResponse struct {
-	JobID   string                     `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []ContainerImagePullResult `json:"results"`
+// ImagePullResponse is each target host's result.
+type ImagePullResponse struct {
+	JobID   string            `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []ImagePullResult `json:"results"`
 }
 
 // HandlePull runs image pull on the target, for the endpoint server.
@@ -76,24 +76,24 @@ func HandlePull(
 	ctx context.Context,
 	d dispatch.Deps,
 	in PullRequest,
-) (ContainerImagePullResponse, error) {
-	return dispatch.Run[ContainerImagePullResponse](ctx, d, image.Behavior, "pull", in.Hostname, image.PullInput{Image: in.Body.Image})
+) (ImagePullResponse, error) {
+	return dispatch.Run[ImagePullResponse](ctx, d, image.Behavior, "pull", in.Hostname, image.PullInput{Image: in.Body.Image})
 }
 
 // DeleteRequest is the request of image delete: its target and its input.
 type DeleteRequest struct {
-	Hostname string                      `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Image    string                      `doc:"The image, by its reference or its ID" in:"path" json:"image" param:"ContainerImageImage" validate:"required,image_ref"`
-	Body     ContainerImageDeleteRequest `in:"body" validate:"required"`
+	Hostname string             `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Image    string             `doc:"The image, by its reference or its ID" in:"path" json:"image" param:"ImageImage" validate:"required,image_ref"`
+	Body     ImageDeleteRequest `in:"body" validate:"required"`
 }
 
-// ContainerImageDeleteRequest is the body of image delete.
-type ContainerImageDeleteRequest struct {
+// ImageDeleteRequest is the body of image delete.
+type ImageDeleteRequest struct {
 	Force bool `doc:"Remove it also when a container uses it" json:"force,omitempty" validate:"omitempty"`
 }
 
-// ContainerImageResult is the result of image on one host.
-type ContainerImageResult struct {
+// ImageResult is the result of image on one host.
+type ImageResult struct {
 	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
 	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
 	Image    *string `doc:"The image" json:"image,omitempty"`
@@ -101,10 +101,10 @@ type ContainerImageResult struct {
 	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// ContainerImageDeleteResponse is each target host's result.
-type ContainerImageDeleteResponse struct {
-	JobID   string                 `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []ContainerImageResult `json:"results"`
+// ImageDeleteResponse is each target host's result.
+type ImageDeleteResponse struct {
+	JobID   string        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []ImageResult `json:"results"`
 }
 
 // HandleDelete runs image delete on the target, for the endpoint server.
@@ -112,8 +112,8 @@ func HandleDelete(
 	ctx context.Context,
 	d dispatch.Deps,
 	in DeleteRequest,
-) (ContainerImageDeleteResponse, error) {
-	return dispatch.Run[ContainerImageDeleteResponse](ctx, d, image.Behavior, "delete", in.Hostname, image.DeleteInput{Image: in.Image, Force: in.Body.Force})
+) (ImageDeleteResponse, error) {
+	return dispatch.Run[ImageDeleteResponse](ctx, d, image.Behavior, "delete", in.Hostname, image.DeleteInput{Image: in.Image, Force: in.Body.Force})
 }
 
 // Group is image as an endpoint group, which its spec comes from.
@@ -121,41 +121,41 @@ var Group = endpoint.Define(
 	"image",
 	"The Docker images of the host",
 	endpoint.Area(area.Containers),
-	endpoint.Prefix("node/{hostname}/container"),
+	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("container_image_operations", "Container image", "The Docker images of the host"),
-	endpoint.CommandNotes("The [image behavior](../../../../../../reference/behaviors/containers/image/image.md) page tells where the behavior runs, what it is built on and its settings."),
-	endpoint.Get[ListRequest, ContainerImageCollectionResponse]("list").
+	endpoint.Tag("image_operations", "Container image", "The Docker images of the host"),
+	endpoint.CommandNotes("The [image behavior](../../../../../reference/behaviors/containers/image/image.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Get[ListRequest, ImageCollectionResponse]("list").
 		Handle(HandleList).
-		ID("GetNodeContainerImage").
+		ID("GetNodeImage").
 		Describe("List the images of the host").
 		Permission("image:read").
 		Returns("Each target host's result.").
 		Explain("Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped.").
 		Example("--target web-01", "A host with an image").
-		Result("A host with an image, on one host:\n\n```ansi\n$ osapi client node container image list --target web-01\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mID            \x1b[0m\x1b[38;2;10;143;176mREPOSITORY  \x1b[0m\x1b[38;2;10;143;176mTAG   \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m91ef0af61f39\x1b[0m  alpine      3.20  7.8MB\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node container image list --target _all\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mID            \x1b[0m\x1b[38;2;10;143;176mREPOSITORY  \x1b[0m\x1b[38;2;10;143;176mTAG   \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m91ef0af61f39\x1b[0m  alpine      3.20  7.8MB\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m91ef0af61f39\x1b[0m  alpine      3.20  7.8MB\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"web-01\",\n      \"id\": \"91ef0af61f39\",\n      \"repository\": \"alpine\",\n      \"size\": \"7.8MB\",\n      \"status\": \"ok\",\n      \"tag\": \"3.20\"\n    }\n  ]\n}\n```").
+		Result("A host with an image, on one host:\n\n```ansi\n$ osapi client node image list --target web-01\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mID            \x1b[0m\x1b[38;2;10;143;176mREPOSITORY  \x1b[0m\x1b[38;2;10;143;176mTAG   \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m91ef0af61f39\x1b[0m  alpine      3.20  7.8MB\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node image list --target _all\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mID            \x1b[0m\x1b[38;2;10;143;176mREPOSITORY  \x1b[0m\x1b[38;2;10;143;176mTAG   \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m91ef0af61f39\x1b[0m  alpine      3.20  7.8MB\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m91ef0af61f39\x1b[0m  alpine      3.20  7.8MB\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"hostname\": \"web-01\",\n      \"id\": \"91ef0af61f39\",\n      \"repository\": \"alpine\",\n      \"size\": \"7.8MB\",\n      \"status\": \"ok\",\n      \"tag\": \"3.20\"\n    }\n  ]\n}\n```").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
-	endpoint.Post[PullRequest, ContainerImagePullResponse]("pull").
+	endpoint.Post[PullRequest, ImagePullResponse]("pull").
 		Handle(HandlePull).
-		ID("PostNodeContainerImagePull").
+		ID("PostNodeImagePull").
 		Describe("Pull an image").
 		Permission("image:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("pull").
 		Explain("Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false.").
 		Example("--target web-01 --image alpine:3.20", "Pull an image").
-		Result("Pull an image, on one host:\n\n```ansi\n$ osapi client node container image pull --target web-01 --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE        \x1b[0m\x1b[38;2;10;143;176mIMAGE ID                                                                 \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20  \x1b[38;2;138;138;138msha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\x1b[0m  3634816\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node container image pull --target _all --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE        \x1b[0m\x1b[38;2;10;143;176mIMAGE ID                                                                 \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20  \x1b[38;2;138;138;138msha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\x1b[0m  3634816\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20  \x1b[38;2;138;138;138msha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\x1b[0m  3634816\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"image\": \"alpine:3.20\",\n      \"image_id\": \"sha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\",\n      \"size\": 3634816,\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Pull an image | runs `docker pull alpine:3.20` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An image that is an option | `--image --all-tags` | image_ref |\n| No image |  | required |").
+		Result("Pull an image, on one host:\n\n```ansi\n$ osapi client node image pull --target web-01 --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE        \x1b[0m\x1b[38;2;10;143;176mIMAGE ID                                                                 \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20  \x1b[38;2;138;138;138msha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\x1b[0m  3634816\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node image pull --target _all --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE        \x1b[0m\x1b[38;2;10;143;176mIMAGE ID                                                                 \x1b[0m\x1b[38;2;10;143;176mSIZE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20  \x1b[38;2;138;138;138msha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\x1b[0m  3634816\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20  \x1b[38;2;138;138;138msha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\x1b[0m  3634816\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"image\": \"alpine:3.20\",\n      \"image_id\": \"sha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b\",\n      \"size\": 3634816,\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Pull an image | runs `docker pull alpine:3.20` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An image that is an option | `--image --all-tags` | image_ref |\n| No image |  | required |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
-	endpoint.Delete[DeleteRequest, ContainerImageDeleteResponse]("delete").
+	endpoint.Delete[DeleteRequest, ImageDeleteResponse]("delete").
 		Handle(HandleDelete).
-		ID("DeleteNodeContainerImage").
+		ID("DeleteNodeImage").
 		Describe("Remove an image").
 		Permission("image:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Runs docker rmi, with -f when force is set, which removes an image that a container uses. An image that the host does not have reports changed: false.").
 		Example("--target web-01 --image alpine:3.20", "Remove an image").
 		Example("--target web-01 --image alpine:3.20", "An image that the host does not have").
-		Result("Remove an image, on one host:\n\n```ansi\n$ osapi client node container image delete --target web-01 --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node container image delete --target _all --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"image\": \"alpine:3.20\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nAn image that the host does not have, on one host:\n\n```ansi\n$ osapi client node container image delete --target web-01 --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      alpine:3.20\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node container image delete --target _all --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      alpine:3.20\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      alpine:3.20\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": false,\n      \"hostname\": \"web-01\",\n      \"image\": \"alpine:3.20\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove an image | runs `docker rmi alpine:3.20` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An image that is an option | `--image -f` | image_ref |").
+		Result("Remove an image, on one host:\n\n```ansi\n$ osapi client node image delete --target web-01 --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node image delete --target _all --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  alpine:3.20\n\n  3 hosts: \x1b[38;2;103;234;147m2 changed\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": true,\n      \"hostname\": \"web-01\",\n      \"image\": \"alpine:3.20\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nAn image that the host does not have, on one host:\n\n```ansi\n$ osapi client node image delete --target web-01 --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      alpine:3.20\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node image delete --target _all --image alpine:3.20\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mIMAGE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      alpine:3.20\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      alpine:3.20\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": false,\n      \"hostname\": \"web-01\",\n      \"image\": \"alpine:3.20\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove an image | runs `docker rmi alpine:3.20` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An image that is an option | `--image -f` | image_ref |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no image with that image."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
 )
 

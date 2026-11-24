@@ -1,0 +1,69 @@
+---
+id: get-node-image
+title: "List the images of the host"
+description: "Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped."
+sidebar_label: "List the images of the host"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the images of the host"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/image"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-image.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-image.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-image.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

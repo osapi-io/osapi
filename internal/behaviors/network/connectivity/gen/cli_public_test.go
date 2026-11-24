@@ -25,28 +25,28 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"A host that answers\" is run",
-			args: []string{"node", "network", "connectivity", "ping", "--target", "server1", "--address", "127.0.0.1"},
+			args: []string{"node", "connectivity", "ping", "--target", "server1", "--address", "127.0.0.1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   "{\"address\":\"127.0.0.1\"}",
 			},
 		},
 		{
 			name: "when the example \"A host that answers, on macOS\" is run",
-			args: []string{"node", "network", "connectivity", "ping", "--target", "server1", "--address", "127.0.0.1"},
+			args: []string{"node", "connectivity", "ping", "--target", "server1", "--address", "127.0.0.1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   "{\"address\":\"127.0.0.1\"}",
 			},
 		},
 		{
 			name: "when the example \"A host that does not answer\" is run",
-			args: []string{"node", "network", "connectivity", "ping", "--target", "server1", "--address", "192.0.2.1"},
+			args: []string{"node", "connectivity", "ping", "--target", "server1", "--address", "192.0.2.1"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   "{\"address\":\"192.0.2.1\"}",
 			},
 		},

@@ -23,15 +23,15 @@ func (s *APIStartPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
-// TestStart sends POST /api/node/{hostname}/container/docker/{name}/start and
-// checks each answer's response.
+// TestStart sends POST /api/node/{hostname}/docker/{name}/start and checks
+// each answer's response.
 func (s *APIStartPublicTestSuite) TestStart() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Start a container\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -48,7 +48,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the example \"Start a container\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/start",
+				Path:   "/api/node/_all/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -67,7 +67,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the example \"A container that runs already\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -84,7 +84,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the example \"A container that runs already\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/start",
+				Path:   "/api/node/_all/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -103,7 +103,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -120,7 +120,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -137,7 +137,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -154,7 +154,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -169,7 +169,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/start",
+				Path:   "/api/node/_all/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -184,7 +184,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -206,7 +206,7 @@ func (s *APIStartPublicTestSuite) TestStartValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/container/docker/osapitest/start",
+				Path:   "/api/node/nowhere/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Write,
@@ -216,7 +216,7 @@ func (s *APIStartPublicTestSuite) TestStartValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//container/docker/osapitest/start",
+				Path:   "/api/node//docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Write,
@@ -226,7 +226,7 @@ func (s *APIStartPublicTestSuite) TestStartValidationHTTP() {
 			Name: "when sent a name that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/-f/start",
+				Path:   "/api/node/server1/docker/-f/start",
 				Body:   `{"name":"-f"}`,
 			},
 			Token:    servertest.Write,
@@ -242,7 +242,7 @@ func (s *APIStartPublicTestSuite) TestStartRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.NoToken,
@@ -252,7 +252,7 @@ func (s *APIStartPublicTestSuite) TestStartRBACHTTP() {
 			Name: "when the token lacks docker:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Lacking,
@@ -262,7 +262,7 @@ func (s *APIStartPublicTestSuite) TestStartRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Read,
@@ -272,7 +272,7 @@ func (s *APIStartPublicTestSuite) TestStartRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
+				Path:   "/api/node/server1/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Admin,

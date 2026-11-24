@@ -59,14 +59,15 @@ func (s *OpenAPIPublicTestSuite) TestTag() {
 		want string
 	}{
 		{
-			name: "when the behavior has no group",
+			name: "when the behavior has no parent",
 			b:    behavior.Define("sysctl", "Kernel", behavior.Node),
 			want: "sysctl_operations",
 		},
 		{
-			name: "when the behavior is grouped",
-			b:    behavior.Define("dns", "Resolvers", behavior.Node, behavior.Under("network")),
-			want: "network_dns_operations",
+			name: "when the behavior is under a parent, it has its own name",
+			b: behavior.Define("source", "Sources", behavior.Node,
+				behavior.Under(behavior.Define("log", "Log", behavior.Node))),
+			want: "source_operations",
 		},
 	}
 

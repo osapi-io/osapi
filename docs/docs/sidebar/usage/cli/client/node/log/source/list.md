@@ -3,8 +3,8 @@
 List the sources of the journal.
 
 Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an
-entry, once, sorted. A name here is what log entry list takes as unit when the
-source is a systemd unit.
+entry, once, sorted. A name here is what log list takes as unit when the source
+is a systemd unit.
 
 ```bash
 osapi client node log source list [flags]
@@ -78,7 +78,7 @@ With `--json`, the API's response:
 
 ## Permission
 
-It needs the `source:read` permission. `osapi controller role get --name <role>`
+It needs the `log:read` permission. `osapi controller role get --name <role>`
 shows what a role grants.
 
 ## Flags

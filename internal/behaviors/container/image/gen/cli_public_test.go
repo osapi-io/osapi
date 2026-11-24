@@ -25,37 +25,37 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"A host with an image\" is run",
-			args: []string{"node", "container", "image", "list", "--target", "server1"},
+			args: []string{"node", "image", "list", "--target", "server1"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/container/image",
+				Path:   "/api/node/server1/image",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"Pull an image\" is run",
-			args: []string{"node", "container", "image", "pull", "--target", "server1", "--image", "alpine:3.20"},
+			args: []string{"node", "image", "pull", "--target", "server1", "--image", "alpine:3.20"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   "{\"image\":\"alpine:3.20\"}",
 			},
 		},
 		{
 			name: "when the example \"Remove an image\" is run",
-			args: []string{"node", "container", "image", "delete", "--target", "server1", "--image", "alpine:3.20"},
+			args: []string{"node", "image", "delete", "--target", "server1", "--image", "alpine:3.20"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/container/image/alpine:3.20",
+				Path:   "/api/node/server1/image/alpine:3.20",
 				Body:   "{}",
 			},
 		},
 		{
 			name: "when the example \"An image that the host does not have\" is run",
-			args: []string{"node", "container", "image", "delete", "--target", "server1", "--image", "alpine:3.20"},
+			args: []string{"node", "image", "delete", "--target", "server1", "--image", "alpine:3.20"},
 			want: commandtest.Request{
 				Method: "DELETE",
-				Path:   "/api/node/server1/container/image/alpine:3.20",
+				Path:   "/api/node/server1/image/alpine:3.20",
 				Body:   "{}",
 			},
 		},

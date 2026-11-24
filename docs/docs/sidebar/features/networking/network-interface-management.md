@@ -17,11 +17,11 @@ has the default route. `list` leaves out the loopback.
 
 Routes are the
 [route behavior](../../reference/behaviors/networking/interface/route/route.md),
-under an interface: `osapi client node network interface route`. `list` reads
-the routes of the main table that go out of the interface, through gohai on
-every platform: `ip route` on Linux, and `netstat` on macOS. A route has its
-destination, gateway, interface, family, metric, `proto` (where it came from,
-such as `dhcp`, `kernel` or `static`) and scope.
+under an interface: `osapi client node interface route`. `list` reads the routes
+of the main table that go out of the interface, through gohai on every platform:
+`ip route` on Linux, and `netstat` on macOS. A route has its destination,
+gateway, interface, family, metric, `proto` (where it came from, such as `dhcp`,
+`kernel` or `static`) and scope.
 
 `create`, `update` and `delete` write a Netplan file of the interface's own on
 the Debian family, through the internal
@@ -99,56 +99,56 @@ tells which permissions each role has.
 
 ```bash
 # List all interfaces
-osapi client node network interface list --target web-01
+osapi client node interface list --target web-01
 
 # Get a specific interface
-osapi client node network interface get \
+osapi client node interface get \
   --target web-01 --name eth0
 
 # Create a static interface config
-osapi client node network interface create \
+osapi client node interface create \
   --target web-01 --name eth1 \
   --addresses 192.168.1.100/24 \
   --gateway4 192.168.1.1
 
 # Create an interface with DHCP
-osapi client node network interface create \
+osapi client node interface create \
   --target web-01 --name eth1 --dhcp4
 
 # Update an interface (replace config)
-osapi client node network interface update \
+osapi client node interface update \
   --target web-01 --name eth1 \
   --addresses 192.168.1.200/24 \
   --gateway4 192.168.1.1 \
   --mtu 9000
 
 # Delete an interface config
-osapi client node network interface delete \
+osapi client node interface delete \
   --target web-01 --name eth1
 
 # List the routes of an interface
-osapi client node network interface route list --target web-01 --name eth0
+osapi client node interface route list --target web-01 --name eth0
 
 # Add static routes, one a call
-osapi client node network interface route create --target web-01 --name eth1 \
+osapi client node interface route create --target web-01 --name eth1 \
   --destination 10.0.0.0/8 --via 192.168.1.1
-osapi client node network interface route create --target web-01 --name eth1 \
+osapi client node interface route create --target web-01 --name eth1 \
   --destination 172.16.0.0/12 --via 192.168.1.1 --metric 100
 
 # Change the metric of a route
-osapi client node network interface route update --target web-01 --name eth1 \
+osapi client node interface route update --target web-01 --name eth1 \
   --destination 10.0.0.0/8 --via 192.168.1.1 --metric 50
 
 # Drop a route
-osapi client node network interface route delete --target web-01 --name eth1 \
+osapi client node interface route delete --target web-01 --name eth1 \
   --destination 10.0.0.0/8
 
 # Delete DNS config for an interface
-osapi client node network dns delete \
+osapi client node dns delete \
   --target web-01 --interface-name eth0
 
 # Broadcast interface create to all hosts
-osapi client node network interface create \
+osapi client node interface create \
   --target _all --name eth1 --dhcp4
 ```
 
@@ -180,14 +180,13 @@ access and is not available in standard container environments.
 
 ## Related
 
-- [CLI Reference](../../usage/cli/client/node/network/interface/interface.mdx):
+- [CLI Reference](../../usage/cli/client/node/interface/interface.mdx):
   interface commands
-- [CLI Reference](../../usage/cli/client/node/network/interface/route/route.mdx):
-  route commands
-- [SDK Reference](../../sdk/networking/network_interface.md): NetworkInterface
+- [CLI Reference](../../usage/cli/client/node/interface/route/route.mdx): route
+  commands
+- [SDK Reference](../../sdk/networking/interface.md): Interface service
+- [SDK Reference](../../sdk/networking/interface_route.md): InterfaceRoute
   service
-- [SDK Reference](../../sdk/networking/network_interface_route.md):
-  NetworkInterfaceRoute service
 - [Network Management](network-management.md): DNS and ping
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection

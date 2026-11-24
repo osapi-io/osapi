@@ -7,7 +7,7 @@
 //
 // Give the name of an example to run it. With no name, the program lists them:
 //
-//	OSAPI_TOKEN="<jwt>" go run node_file.go status
+//	OSAPI_TOKEN="<jwt>" go run node_file.go get
 //
 // OSAPI_URL is the controller, http://localhost:8080 when it is not set.
 // OSAPI_TARGET is the hosts each call goes to, _any when it is not set.
@@ -29,19 +29,19 @@ var examples = []struct {
 	doc  string
 	run  func(ctx context.Context, c *client.Client, target string) error
 }{
-	{"status", "A deployed file", runStatus},
+	{"get", "A deployed file", runGet},
 	{"update", "Deploy a file", runUpdate},
 	{"update-2", "Render a template", runUpdate2},
 	{"delete", "Remove a deployed file", runDelete},
 }
 
-// runStatus runs the example status: a deployed file.
-func runStatus(
+// runGet runs the example get: a deployed file.
+func runGet(
 	ctx context.Context,
 	c *client.Client,
 	target string,
 ) error {
-	resp, err := c.NodeFile.Status(ctx, target, "/etc/osapi/file-example.conf")
+	resp, err := c.NodeFile.Get(ctx, target, "/etc/osapi/file-example.conf")
 	if err != nil {
 		return err
 	}

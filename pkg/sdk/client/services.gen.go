@@ -24,16 +24,19 @@ type services struct {
 	// Command calls the API's Command group: run a command on target hosts.
 	Command *CommandService
 
-	// ContainerDocker calls the API's ContainerDocker group: the Docker containers
-	// of the host.
-	ContainerDocker *ContainerDockerService
+	// Connectivity calls the API's Connectivity group: whether the host reaches an
+	// address, by ICMP ping.
+	Connectivity *ConnectivityService
 
-	// ContainerImage calls the API's ContainerImage group: the Docker images of
-	// the host.
-	ContainerImage *ContainerImageService
+	// DNS calls the API's DNS group: the DNS resolvers of each interface of the
+	// host.
+	DNS *DNSService
 
 	// Disk calls the API's Disk group: get the disk usage of target hosts.
 	Disk *DiskService
+
+	// Docker calls the API's Docker group: the Docker containers of the host.
+	Docker *DockerService
 
 	// File calls the API's File group: object Store file management operations.
 	File *FileService
@@ -49,14 +52,25 @@ type services struct {
 	// hosts.
 	Hostname *HostnameService
 
+	// Image calls the API's Image group: the Docker images of the host.
+	Image *ImageService
+
+	// Interface calls the API's Interface group: the network interfaces of the
+	// host.
+	Interface *InterfaceService
+
+	// InterfaceRoute calls the API's InterfaceRoute group: the routes of an
+	// interface.
+	InterfaceRoute *InterfaceRouteService
+
 	// Job calls the API's Job group: operations related to the job queue.
 	Job *JobService
 
 	// Load calls the API's Load group: get the load averages of target hosts.
 	Load *LoadService
 
-	// LogEntry calls the API's LogEntry group: the entries of the systemd journal.
-	LogEntry *LogEntryService
+	// Log calls the API's Log group: the entries of the systemd journal.
+	Log *LogService
 
 	// LogSource calls the API's LogSource group: the sources that write to the
 	// systemd journal.
@@ -69,22 +83,6 @@ type services struct {
 	// status.
 	NTP *NTPService
 
-	// NetworkConnectivity calls the API's NetworkConnectivity group: whether the
-	// host reaches an address, by ICMP ping.
-	NetworkConnectivity *NetworkConnectivityService
-
-	// NetworkDNS calls the API's NetworkDNS group: the DNS resolvers of each
-	// interface of the host.
-	NetworkDNS *NetworkDNSService
-
-	// NetworkInterface calls the API's NetworkInterface group: the network
-	// interfaces of the host.
-	NetworkInterface *NetworkInterfaceService
-
-	// NetworkInterfaceRoute calls the API's NetworkInterfaceRoute group: the
-	// routes of an interface.
-	NetworkInterfaceRoute *NetworkInterfaceRouteService
-
 	// NodeFile calls the API's NodeFile group: files of the object store, deployed
 	// to the host.
 	NodeFile *NodeFileService
@@ -94,6 +92,10 @@ type services struct {
 
 	// Package calls the API's Package group: the packages installed on the host.
 	Package *PackageService
+
+	// PackageUpdates calls the API's PackageUpdates group: the updates the package
+	// index has for the host.
+	PackageUpdates *PackageUpdatesService
 
 	// Power calls the API's Power group: reboot or shut down the host.
 	Power *PowerService
@@ -121,15 +123,14 @@ type services struct {
 	// Trace calls the API's Trace group: the spans of a trace.
 	Trace *TraceService
 
-	// UpdatePackages calls the API's UpdatePackages group: the updates the package
-	// index has for the host.
-	UpdatePackages *UpdatePackagesService
-
 	// Uptime calls the API's Uptime group: get the uptime of target hosts.
 	Uptime *UptimeService
 
 	// User calls the API's User group: the users of the host.
 	User *UserService
+
+	// UserPassword calls the API's UserPassword group: the password of a user.
+	UserPassword *UserPasswordService
 
 	// UserSSHKey calls the API's UserSSHKey group: the authorized SSH keys of a
 	// user.
@@ -143,26 +144,27 @@ func (s *services) wire(c *Client) {
 	s.Audit = &AuditService{client: c}
 	s.Certificate = &CertificateService{client: c}
 	s.Command = &CommandService{client: c}
-	s.ContainerDocker = &ContainerDockerService{client: c}
-	s.ContainerImage = &ContainerImageService{client: c}
+	s.Connectivity = &ConnectivityService{client: c}
+	s.DNS = &DNSService{client: c}
 	s.Disk = &DiskService{client: c}
+	s.Docker = &DockerService{client: c}
 	s.File = &FileService{client: c}
 	s.Group = &GroupService{client: c}
 	s.Health = &HealthService{client: c}
 	s.Hostname = &HostnameService{client: c}
+	s.Image = &ImageService{client: c}
+	s.Interface = &InterfaceService{client: c}
+	s.InterfaceRoute = &InterfaceRouteService{client: c}
 	s.Job = &JobService{client: c}
 	s.Load = &LoadService{client: c}
-	s.LogEntry = &LogEntryService{client: c}
+	s.Log = &LogService{client: c}
 	s.LogSource = &LogSourceService{client: c}
 	s.Memory = &MemoryService{client: c}
 	s.NTP = &NTPService{client: c}
-	s.NetworkConnectivity = &NetworkConnectivityService{client: c}
-	s.NetworkDNS = &NetworkDNSService{client: c}
-	s.NetworkInterface = &NetworkInterfaceService{client: c}
-	s.NetworkInterfaceRoute = &NetworkInterfaceRouteService{client: c}
 	s.NodeFile = &NodeFileService{client: c}
 	s.OS = &OSService{client: c}
 	s.Package = &PackageService{client: c}
+	s.PackageUpdates = &PackageUpdatesService{client: c}
 	s.Power = &PowerService{client: c}
 	s.Process = &ProcessService{client: c}
 	s.Schedule = &ScheduleService{client: c}
@@ -171,8 +173,8 @@ func (s *services) wire(c *Client) {
 	s.Sysctl = &SysctlService{client: c}
 	s.Timezone = &TimezoneService{client: c}
 	s.Trace = &TraceService{client: c}
-	s.UpdatePackages = &UpdatePackagesService{client: c}
 	s.Uptime = &UptimeService{client: c}
 	s.User = &UserService{client: c}
+	s.UserPassword = &UserPasswordService{client: c}
 	s.UserSSHKey = &UserSSHKeyService{client: c}
 }

@@ -43,12 +43,6 @@ func Routes(
 			Permission: "user:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},
-		{
-			Method:     http.MethodPost,
-			Path:       "/api/node/:hostname/user/:name/passwd",
-			Permission: "user:execute",
-			Handler:    server.Serve(s, Group, "passwd", HandlePasswd, decodePasswd),
-		},
 	}
 }
 

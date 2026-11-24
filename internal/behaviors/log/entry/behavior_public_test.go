@@ -35,7 +35,7 @@ type BehaviorPublicTestSuite struct {
 }
 
 func (s *BehaviorPublicTestSuite) TestBehavior() {
-	s.Same(entry.Behavior, behavior.Lookup("entry"))
+	s.Same(entry.Behavior, behavior.Lookup("log"))
 	s.Empty(behavior.ValidateBehavior(entry.Behavior))
 }
 

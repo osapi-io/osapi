@@ -38,7 +38,7 @@ type ListOutput struct {
 // Summary is one behavior and the names of its methods.
 type Summary struct {
 	Name     string    `json:"name"`
-	Group    string    `json:"group,omitempty"`
+	Under    string    `json:"under,omitempty"`
 	Of       string    `json:"of,omitempty"`
 	Area     area.Name `json:"area,omitempty"`
 	Methods  []string  `json:"methods"`
@@ -58,7 +58,7 @@ type GetOutput struct {
 	Name       string             `                 json:"name"`
 	Doc        string             `                 json:"doc"             label:"Description"`
 	Placement  behavior.Placement `                 json:"placement"`
-	Group      string             `                 json:"group,omitempty"`
+	Under      string             `                 json:"under,omitempty"`
 	Of         string             `                 json:"of,omitempty"`
 	Area       area.Name          `                 json:"area,omitempty"`
 	Internal   bool               `                 json:"internal"`
@@ -182,7 +182,6 @@ type ExampleRow struct {
 type CreateInput struct {
 	Name        string   `json:"name"        validate:"required"  doc:"The behavior's name: lowercase letters and digits"`
 	Description string   `json:"description" validate:"required"  doc:"What it manages, in one line"`
-	Group       string   `json:"group"       validate:"omitempty" doc:"Nest it under a group, such as network: its routes, commands and directory"`
 	Package     string   `json:"package"     validate:"omitempty" doc:"The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages"`
 	Requires    []string `json:"requires"    validate:"omitempty" doc:"Behaviors it is built on, such as managedfile: it writes the Requires, the host.Require and a provider field of each"`
 	Root        string   `json:"root"        validate:"omitempty" doc:"The osapi checkout to write into"                                                                                     default:"."`
