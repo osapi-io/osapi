@@ -109,6 +109,14 @@ components:
           type: integer
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=68,max=9000
+        type:
+          description: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes
+          enum:
+            - ethernet
+            - dummy
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=ethernet dummy
         wakeonlan:
           description: Turn on wake-on-LAN
           type: boolean
@@ -288,6 +296,14 @@ components:
           type: integer
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=68,max=9000
+        type:
+          description: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes
+          enum:
+            - ethernet
+            - dummy
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=ethernet dummy
         wakeonlan:
           description: Turn on wake-on-LAN
           type: boolean
@@ -384,7 +400,7 @@ paths:
       x-osapi-method: list
   /api/node/{hostname}/interface/{name}:
     delete:
-      description: Removes the interface's netplan file and applies what is left. An interface osapi does not configure does not change.
+      description: Removes the interface's netplan file and applies what is left. netplan apply leaves the link of a dummy, so delete then deletes the link with ip link delete. An interface osapi does not configure does not change.
       operationId: DeleteNodeInterface
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -440,7 +456,7 @@ paths:
         - interface_operations
       x-osapi-area: networking
       x-osapi-examples:
-        - doc: An interface osapi configures
+        - doc: A dummy interface osapi configures
           input:
             hostname: web-01
             name: osapi0
@@ -512,7 +528,7 @@ paths:
             name: en0
       x-osapi-method: get
     post:
-      description: 'Writes a netplan file of the interface''s own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
+      description: 'Writes a netplan file of the interface''s own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. type is ethernet, the default, or dummy. An ethernet is an interface the host has, in the netplan section that netplan status gives for it: one the host does not have is not found. A dummy goes under dummy-devices, and netplan apply makes it, so the host need not have it. dummy-devices needs netplan 0.107 or later. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
       operationId: PostNodeInterface
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -574,12 +590,13 @@ paths:
         - interface_operations
       x-osapi-area: networking
       x-osapi-examples:
-        - doc: A static address
+        - doc: A dummy interface with a static address
           input:
             addresses:
               - 10.0.1.5/24
             hostname: web-01
             name: osapi0
+            type: dummy
         - doc: Each setting
           input:
             addresses:
@@ -589,10 +606,16 @@ paths:
             mac_address: 52:54:00:aa:bb:cc
             mtu: 9000
             name: osapi0
+            type: dummy
+        - doc: An interface the host has
+          input:
+            dhcp4: true
+            hostname: web-01
+            name: eth1
             wakeonlan: true
       x-osapi-method: create
     put:
-      description: 'Writes the interface''s netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.'
+      description: 'Writes the interface''s netplan file over the one osapi has, as create writes it, and applies it. Without type dummy, the config goes in the section that netplan status gives, which is dummy-devices for a dummy, so a dummy stays a dummy. An interface osapi does not configure is not found: create configures it.'
       operationId: PutNodeInterface
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -659,6 +682,7 @@ paths:
             dhcp4: true
             hostname: web-01
             name: osapi0
+            type: dummy
       x-osapi-method: update
 tags:
   - description: The network interfaces of the host

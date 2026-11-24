@@ -60,43 +60,52 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
-			name: "when the example \"A static address\" is run",
-			args: []string{"node", "interface", "create", "--target", "server1", "--name", "osapi0", "--addresses", "10.0.1.5/24"},
+			name: "when the example \"A dummy interface with a static address\" is run",
+			args: []string{"node", "interface", "create", "--target", "server1", "--name", "osapi0", "--type", "dummy", "--addresses", "10.0.1.5/24"},
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   "{\"addresses\":[\"10.0.1.5/24\"]}",
+				Body:   "{\"type\":\"dummy\",\"addresses\":[\"10.0.1.5/24\"]}",
 			},
 		},
 		{
 			name: "when the example \"Each setting\" is run",
-			args: []string{"node", "interface", "create", "--target", "server1", "--name", "osapi0", "--dhcp6", "--addresses", "2001:db8::5/64", "--mtu", "9000", "--mac-address", "52:54:00:aa:bb:cc", "--wakeonlan"},
+			args: []string{"node", "interface", "create", "--target", "server1", "--name", "osapi0", "--type", "dummy", "--dhcp6", "--addresses", "2001:db8::5/64", "--mtu", "9000", "--mac-address", "52:54:00:aa:bb:cc"},
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   "{\"dhcp6\":true,\"addresses\":[\"2001:db8::5/64\"],\"mtu\":9000,\"mac_address\":\"52:54:00:aa:bb:cc\",\"wakeonlan\":true}",
+				Body:   "{\"type\":\"dummy\",\"dhcp6\":true,\"addresses\":[\"2001:db8::5/64\"],\"mtu\":9000,\"mac_address\":\"52:54:00:aa:bb:cc\"}",
+			},
+		},
+		{
+			name: "when the example \"An interface the host has\" is run",
+			args: []string{"node", "interface", "create", "--target", "server1", "--name", "eth1", "--dhcp4", "--wakeonlan"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/interface/eth1",
+				Body:   "{\"dhcp4\":true,\"wakeonlan\":true}",
 			},
 		},
 		{
 			name: "when the example \"An interface osapi already configures\" is run",
-			args: []string{"node", "interface", "create", "--target", "server1", "--name", "osapi0", "--addresses", "10.0.1.5/24"},
+			args: []string{"node", "interface", "create", "--target", "server1", "--name", "osapi0", "--type", "dummy", "--addresses", "10.0.1.5/24"},
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   "{\"addresses\":[\"10.0.1.5/24\"]}",
+				Body:   "{\"type\":\"dummy\",\"addresses\":[\"10.0.1.5/24\"]}",
 			},
 		},
 		{
 			name: "when the example \"Move an interface to DHCP\" is run",
-			args: []string{"node", "interface", "update", "--target", "server1", "--name", "osapi0", "--dhcp4"},
+			args: []string{"node", "interface", "update", "--target", "server1", "--name", "osapi0", "--type", "dummy", "--dhcp4"},
 			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   "{\"dhcp4\":true}",
+				Body:   "{\"type\":\"dummy\",\"dhcp4\":true}",
 			},
 		},
 		{
-			name: "when the example \"An interface osapi configures\" is run",
+			name: "when the example \"A dummy interface osapi configures\" is run",
 			args: []string{"node", "interface", "delete", "--target", "server1", "--name", "osapi0"},
 			want: commandtest.Request{
 				Method: "DELETE",

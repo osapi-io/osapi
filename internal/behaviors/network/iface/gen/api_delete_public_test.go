@@ -28,7 +28,7 @@ func (s *APIDeletePublicTestSuite) SetupSuite() {
 func (s *APIDeletePublicTestSuite) TestDelete() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
-			Name: "when the example \"An interface osapi configures\" is sent, the host's result is returned",
+			Name: "when the example \"A dummy interface osapi configures\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/node/server1/interface/osapi0",
@@ -45,7 +45,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapi0","status":"ok"}]}`,
 		},
 		{
-			Name: "when the example \"An interface osapi configures\" is broadcast, every host's result is returned",
+			Name: "when the example \"A dummy interface osapi configures\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/node/_all/interface/osapi0",

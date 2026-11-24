@@ -31,6 +31,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
 	netplanmocks "github.com/osapi-io/osapi/internal/behaviors/netplan/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/network/iface"
@@ -83,6 +84,73 @@ func (s *DebianPublicTestSuite) TestNetplanReadFails() {
 	s.Require().NoError(err)
 	_, err = p.Create(context.Background(), iface.Config{Name: "osapi0", DHCP4: true})
 	s.ErrorContains(err, "boom")
+}
+
+// TestOldNetplan: a netplan older than 0.107 refuses dummy-devices, and the
+// error says so. The fake host's netplan generate does not fail, so no
+// example can show it.
+func (s *DebianPublicTestSuite) TestOldNetplan() {
+	np := netplanmocks.NewMockProvider(gomock.NewController(s.T()))
+	np.EXPECT().Interface(gomock.Any(), "osapi0").
+		Return(netplan.Interface{Name: "osapi0", Section: "ethernets", ID: "osapi0"}, nil)
+	np.EXPECT().Apply(gomock.Any(), gomock.Any()).Return(false, errors.New(
+		"netplan generate refused /etc/netplan/osapi-osapi0.yaml, so it was removed: "+
+			"exit status 1: Error in network definition: unknown key 'dummy-devices'"))
+	p, err := iface.ExportNewDebian(host.Host{
+		Platform: behavior.PlatformDebian,
+		FS:       memfs.New(),
+		Required: map[string]any{netplan.Behavior.Name: np},
+	})
+	s.Require().NoError(err)
+	_, err = p.Create(context.Background(), iface.Config{Name: "osapi0", Type: "dummy"})
+	s.ErrorContains(err, "does not have dummy-devices, which netplan 0.107 added")
+	s.ErrorContains(err, "unknown key 'dummy-devices'")
+}
+
+// TestDummyLinkDeleteFails: an ip link delete that fails after the file went
+// reports changed and the error.
+func (s *DebianPublicTestSuite) TestDummyLinkDeleteFails() {
+	ctrl := gomock.NewController(s.T())
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+	s.Require().NoError(fs.MkdirAll("/sys/class/net/osapi0", 0o755))
+	s.Require().NoError(fs.WriteFile(netplan.Dir+"/osapi-osapi0.yaml",
+		[]byte("network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"), 0o600))
+	np := netplanmocks.NewMockProvider(ctrl)
+	np.EXPECT().Remove(gomock.Any(), netplan.Dir+"/osapi-osapi0.yaml").Return(true, nil)
+	ex := hostmocks.NewMockExec(ctrl)
+	ex.EXPECT().RunPrivilegedCmd(gomock.Any(), "ip", []string{"link", "delete", "osapi0"}).
+		Return("", errors.New("exit status 1"))
+	p, err := iface.ExportNewDebian(host.Host{
+		Platform: behavior.PlatformDebian,
+		FS:       fs,
+		Exec:     ex,
+		Required: map[string]any{netplan.Behavior.Name: np},
+	})
+	s.Require().NoError(err)
+	changed, err := p.Remove(context.Background(), "osapi0")
+	s.True(changed)
+	s.ErrorContains(err, `delete the link of dummy interface "osapi0"`)
+}
+
+// TestDummyWithoutLink: a dummy whose link is gone already has nothing more
+// to delete.
+func (s *DebianPublicTestSuite) TestDummyWithoutLink() {
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+	s.Require().NoError(fs.WriteFile(netplan.Dir+"/osapi-osapi0.yaml",
+		[]byte("network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"), 0o600))
+	np := netplanmocks.NewMockProvider(gomock.NewController(s.T()))
+	np.EXPECT().Remove(gomock.Any(), netplan.Dir+"/osapi-osapi0.yaml").Return(true, nil)
+	p, err := iface.ExportNewDebian(host.Host{
+		Platform: behavior.PlatformDebian,
+		FS:       fs,
+		Required: map[string]any{netplan.Behavior.Name: np},
+	})
+	s.Require().NoError(err)
+	changed, err := p.Remove(context.Background(), "osapi0")
+	s.True(changed)
+	s.NoError(err)
 }
 
 // TestGateways checks the default routes that the gateways make, which no

@@ -152,12 +152,13 @@ None. Declare them with behavior.Config.
 | id      | string | The netplan ID of the definition that matches it, such as all for a match on en\*; the interface's name when netplan does not define it |
 | matches | array  | Each interface that the definition matches, this one too, in name order                                                                 |
 
-### Examples (5)
+### Examples (6)
 
-| EXAMPLE                                                    | INPUT       | OUTPUT                                                                          |
-| ---------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
-| A bond                                                     | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                |
-| An interface a match defines, as cloud-init's all for en\* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2] |
-| An interface netplan does not define                       | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                 |
-| A netplan without status                                   | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                   |
-| An interface netplan does not manage                       | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                   |
+| EXAMPLE                                                    | INPUT       | OUTPUT                                                                              |
+| ---------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------- |
+| A bond                                                     | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                    |
+| A dummy                                                    | name=osapi0 | name=osapi0, type=dummy-device, section=dummy-devices, id=osapi0, matches=\[osapi0] |
+| An interface a match defines, as cloud-init's all for en\* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2]     |
+| An interface netplan does not define                       | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                     |
+| A netplan without status                                   | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                       |
+| An interface netplan does not manage                       | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                       |

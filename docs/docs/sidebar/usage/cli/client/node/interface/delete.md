@@ -2,8 +2,9 @@
 
 Drop the config osapi has of a network interface.
 
-Removes the interface's netplan file and applies what is left. An interface
-osapi does not configure does not change.
+Removes the interface's netplan file and applies what is left. netplan apply
+leaves the link of a dummy, so delete then deletes the link with ip link delete.
+An interface osapi does not configure does not change.
 
 ```bash
 osapi client node interface delete [flags]
@@ -12,7 +13,7 @@ osapi client node interface delete [flags]
 ## Examples
 
 ```bash
-# An interface osapi configures
+# A dummy interface osapi configures
 osapi client node interface delete --target web-01 --name osapi0
 
 # An interface osapi does not configure
@@ -21,7 +22,7 @@ osapi client node interface delete --target web-01 --name osapi0
 
 ## Result
 
-An interface osapi configures, on one host:
+A dummy interface osapi configures, on one host:
 
 ```ansi
 $ osapi client node interface delete --target web-01 --name osapi0
@@ -107,9 +108,9 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example                       | On the host                                                    |
-| ----------------------------- | -------------------------------------------------------------- |
-| An interface osapi configures | removes `/etc/netplan/osapi-osapi0.yaml`; runs `netplan apply` |
+| Example                            | On the host                                                                                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| A dummy interface osapi configures | removes `/etc/netplan/osapi-osapi0.yaml`; runs `netplan apply`; runs `ip link delete osapi0` |
 
 The command fails in these cases:
 

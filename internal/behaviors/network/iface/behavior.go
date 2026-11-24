@@ -88,36 +88,45 @@ var en0Entry = Entry{
 	IPv4: "192.168.0.40", Addresses: []string{"192.168.0.40/24"}, Primary: true,
 }
 
-// osapi0 is the interface of the write examples, and the config osapi
-// writes for it. The integration tests run the examples on a live host, with
-// osapi0 a dummy interface, so no example sets a gateway: a default route
-// through osapi0 would take the host's traffic.
+// osapi0 is the dummy interface of the write examples, and the config osapi
+// writes for it. The integration tests run the examples on a live host, so
+// no example sets a gateway: a default route through osapi0 would take the
+// host's traffic.
 const (
 	osapi0Status = `{"lo":{"type":"ethernet"}}`
 	osapi0File   = netplan.Dir + "/osapi-osapi0.yaml"
-	osapi0YAML   = "network:\n  version: 2\n  ethernets:\n    osapi0:\n" +
+	osapi0YAML   = "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n" +
 		"      dhcp4: false\n      dhcp6: false\n" +
 		"      addresses:\n        - 10.0.1.5/24\n"
 )
 
-// osapi0Static is a static address for osapi0.
-var osapi0Static = CreateInput{Name: "osapi0", Addresses: []string{"10.0.1.5/24"}}
+// osapi0Static is a dummy interface with a static address.
+var osapi0Static = CreateInput{Name: "osapi0", Type: "dummy", Addresses: []string{"10.0.1.5/24"}}
 
-// osapi0Host is a host with osapi0, which netplan does not manage, so
-// netplan status does not list it.
+// osapi0Host is a host with the link of osapi0, which netplan status does
+// not list until netplan manages it.
 var osapi0Host = []behavior.HostOption{
 	behavior.Exists("/sys/class/net/osapi0/ifindex", "3"),
 	behavior.Exists("/sys/class/net/osapi0/flags", "0x82"),
 	behavior.Prints("netplan status --format json", osapi0Status),
 }
 
-// writes is osapi0Host, and what a write of osapi0's config runs.
+// writes is what a write of osapi0's config runs, on a host that does not
+// have osapi0 yet: netplan makes it.
 var writes = []behavior.HostOption{
-	behavior.Exists("/sys/class/net/osapi0/ifindex", "3"),
-	behavior.Exists("/sys/class/net/osapi0/flags", "0x82"),
 	behavior.Prints("netplan status --format json", osapi0Status),
 	behavior.Ran("netplan", "generate"),
 	behavior.Ran("netplan", "apply"),
+}
+
+// eth1Host is a host with eth1, an interface that netplan does not manage.
+var eth1Host = []behavior.HostOption{
+	behavior.Exists("/sys/class/net/eth1/ifindex", "3"),
+	behavior.Exists("/sys/class/net/eth1/flags", "0x1003"),
+	behavior.Prints("netplan status --format json", osapi0Status),
+	behavior.Ran("netplan", "generate"),
+	behavior.Ran("netplan", "apply"),
+	behavior.NotLive("it configures an interface that the host has"),
 }
 
 // refuse adds to a write the refusals of each rule of Config, with as
@@ -139,6 +148,7 @@ func refuse(
 		{"An MTU above 9000", Config{MTU: 9001}, "MTU"},
 		{"A MAC address netplan does not take", Config{MACAddress: "0000.5e00.5301"}, "MACAddress"},
 		{"A name that is not an interface name", Config{Name: "eth0;reboot"}, "Name"},
+		{"A type osapi does not know", Config{Type: "vlan"}, "Type"},
 	} {
 		if r.in.Name == "" {
 			r.in.Name = "osapi0"
@@ -168,6 +178,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.RunsOnPlatform(behavior.PlatformLinux, "ip"),
 	behavior.RunsOnPlatform(behavior.PlatformDarwin, "ifconfig", "netstat"),
 	behavior.RunsIfPresent("ethtool"),
+	behavior.SudoOnPlatform(behavior.PlatformDebian, "ip"),
 	behavior.Writes(netplan.Dir+"/osapi-*.yaml"),
 	behavior.Validator("mac_address", macRE.MatchString,
 		func(t rule.Target) { t.Pattern(macPattern) },
@@ -194,27 +205,40 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Configure a network interface").
 		Explain("Writes a netplan file of the interface's own, such as "+
 			"/etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that "+
-			"is the interface's own, and applies it. An interface the host does not have is "+
-			"not found. dhcp4 and dhcp6 are false unless given, "+
-			"so the interface has only the addresses given. An interface that a match "+
-			"defines, such as cloud-init's all for en*, is refused, because the config "+
-			"would change each interface the match takes, now and later. An interface osapi already configures does "+
-			"not change: update replaces its config. It runs on the Debian family, and "+
-			"elsewhere, and in a container, reports skipped.").
-		Example("A static address", osapi0Static, Result{Name: "osapi0", Changed: true},
+			"is the interface's own, and applies it. type is ethernet, the default, or "+
+			"dummy. An ethernet is an interface the host has, in the netplan section that "+
+			"netplan status gives for it: one the host does not have is not found. A dummy "+
+			"goes under dummy-devices, and netplan apply makes it, so the host need not "+
+			"have it. dummy-devices needs netplan 0.107 or later. dhcp4 and dhcp6 are "+
+			"false unless given, so the interface has only the addresses given. An "+
+			"interface that a match defines, such as cloud-init's all for en*, is refused, "+
+			"because the config would change each interface the match takes, now and later. "+
+			"An interface osapi already configures does not change: update replaces its "+
+			"config. It runs on the Debian family, and elsewhere, and in a container, "+
+			"reports skipped.").
+		Example("A dummy interface with a static address", osapi0Static,
+			Result{Name: "osapi0", Changed: true},
 			append([]behavior.HostOption{behavior.Wrote(osapi0File, osapi0YAML)}, writes...)...).
 		Example("Each setting",
 			CreateInput{
-				Name: "osapi0", DHCP6: true, Addresses: []string{"2001:db8::5/64"},
-				MTU: 9000, MACAddress: "52:54:00:aa:bb:cc", WakeOnLAN: true,
+				Name: "osapi0", Type: "dummy", DHCP6: true, Addresses: []string{"2001:db8::5/64"},
+				MTU: 9000, MACAddress: "52:54:00:aa:bb:cc",
 			},
 			Result{Name: "osapi0", Changed: true},
 			append([]behavior.HostOption{
-				behavior.Wrote(osapi0File, "network:\n  version: 2\n  ethernets:\n    osapi0:\n"+
+				behavior.Wrote(osapi0File, "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"+
 					"      dhcp4: false\n      dhcp6: true\n"+
 					"      addresses:\n        - 2001:db8::5/64\n"+
-					"      mtu: 9000\n      macaddress: 52:54:00:aa:bb:cc\n      wakeonlan: true\n"),
+					"      mtu: 9000\n      macaddress: 52:54:00:aa:bb:cc\n"),
 			}, writes...)...).
+		Example("An interface the host has",
+			CreateInput{Name: "eth1", DHCP4: true, WakeOnLAN: true},
+			Result{Name: "eth1", Changed: true},
+			append([]behavior.HostOption{
+				behavior.Wrote(netplan.Dir+"/osapi-eth1.yaml",
+					"network:\n  version: 2\n  ethernets:\n    eth1:\n"+
+						"      dhcp4: true\n      dhcp6: false\n      wakeonlan: true\n"),
+			}, eth1Host...)...).
 		Example("An interface osapi already configures", osapi0Static, Result{Name: "osapi0"},
 			append(slices.Clone(osapi0Host), behavior.After(osapi0Static))...).
 		Fails("An interface in a match that takes other interfaces",
@@ -235,13 +259,16 @@ var Behavior = behavior.Register(behavior.Define(
 		On(behavior.PlatformDebian).
 		Describe("Change the config osapi has of a network interface").
 		Explain("Writes the interface's netplan file over the one osapi has, as create "+
-			"writes it, and applies it. An interface osapi does not configure is not "+
-			"found: create configures it.").
-		Example("Move an interface to DHCP", UpdateInput{Name: "osapi0", DHCP4: true},
+			"writes it, and applies it. Without type dummy, the config goes in the section "+
+			"that netplan status gives, which is dummy-devices for a dummy, so a dummy "+
+			"stays a dummy. An interface osapi does not configure is not found: create "+
+			"configures it.").
+		Example("Move an interface to DHCP", UpdateInput{Name: "osapi0", Type: "dummy", DHCP4: true},
 			Result{Name: "osapi0", Changed: true},
-			append(slices.Clone(writes),
+			append(
+				slices.Clone(writes),
 				behavior.After(osapi0Static),
-				behavior.Wrote(osapi0File, "network:\n  version: 2\n  ethernets:\n    osapi0:\n"+
+				behavior.Wrote(osapi0File, "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"+
 					"      dhcp4: true\n      dhcp6: false\n"),
 			)...).
 		Fails("An interface osapi does not configure", UpdateInput{Name: "osapi0", DHCP4: true},
@@ -250,14 +277,16 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Write("delete", Delete).Key("name").
 		On(behavior.PlatformDebian).
 		Describe("Drop the config osapi has of a network interface").
-		Explain("Removes the interface's netplan file and applies what is left. An "+
-			"interface osapi does not configure does not change.").
-		Example("An interface osapi configures", DeleteInput{Name: "osapi0"},
+		Explain("Removes the interface's netplan file and applies what is left. netplan "+
+			"apply leaves the link of a dummy, so delete then deletes the link with ip "+
+			"link delete. An interface osapi does not configure does not change.").
+		Example("A dummy interface osapi configures", DeleteInput{Name: "osapi0"},
 			Result{Name: "osapi0", Changed: true},
 			append(slices.Clone(osapi0Host),
 				behavior.After(osapi0Static),
 				behavior.Removed(osapi0File),
 				behavior.Ran("netplan", "apply"),
+				behavior.Ran("ip", "link", "delete", "osapi0"),
 			)...,
 		).
 		Example("An interface osapi does not configure", DeleteInput{Name: "osapi0"},

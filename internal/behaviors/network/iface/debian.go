@@ -38,6 +38,7 @@ type debian struct {
 	*reader
 	netplan   netplan.Provider
 	fs        avfs.VFS
+	exec      host.Exec
 	container bool
 }
 
@@ -48,9 +49,17 @@ func newDebian(
 		reader:    &reader{src: h.Sources()},
 		netplan:   host.Require[netplan.Provider](h, netplan.Behavior),
 		fs:        h.FS,
+		exec:      h.Exec,
 		container: h.Container,
 	}, nil
 }
+
+// typeDummy is the type of a dummy interface, which netplan makes from the
+// interface's config under dummySection.
+const (
+	typeDummy    = "dummy"
+	dummySection = "dummy-devices"
+)
 
 // file is the netplan file of an interface's config.
 func file(
@@ -94,7 +103,8 @@ func (d *debian) Update(
 	return d.write(ctx, in)
 }
 
-// Remove drops osapi's config of the interface.
+// Remove drops osapi's config of the interface. netplan apply leaves the
+// link of a dummy after its config goes, so Remove deletes it.
 func (d *debian) Remove(
 	ctx context.Context,
 	name string,
@@ -102,11 +112,25 @@ func (d *debian) Remove(
 	if d.container {
 		return false, behavior.ErrUnsupported
 	}
+	data, _ := d.fs.ReadFile(file(name))
+	dummy := strings.Contains(string(data), "\n  "+dummySection+":\n")
 	result, err := behavior.Call(ctx, netplan.Behavior, netplan.Delete, d.netplan,
 		netplan.DeleteInput{Path: file(name)})
+	if err != nil || !result.Changed || !dummy {
+		return result.Changed, err
+	}
+	if _, err := d.fs.Stat(sysClassNet + "/" + name); err != nil {
+		return true, nil
+	}
+	if _, err := d.exec.RunPrivilegedCmd(ctx, "ip", []string{"link", "delete", name}); err != nil {
+		return true, fmt.Errorf("delete the link of dummy interface %q: %w", name, err)
+	}
 
-	return result.Changed, err
+	return true, nil
 }
+
+// sysClassNet has a directory for each link of the host.
+const sysClassNet = "/sys/class/net"
 
 // exists reports whether osapi has a config of the interface.
 func (d *debian) exists(
@@ -117,9 +141,11 @@ func (d *debian) exists(
 	return err == nil
 }
 
-// write writes the interface's config under its own netplan definition. An
-// interface the host does not have is not found: netplan lists only the
-// interfaces it manages, so gohai answers that. An interface that a match
+// write writes the interface's config under its own netplan definition, in
+// the section that netplan has it in, or under dummy-devices for a dummy. An
+// interface the host does not have is not found, but for a dummy, which
+// netplan makes: netplan lists only the interfaces it manages, so gohai
+// answers that. An interface that a match
 // defines, such as cloud-init's all for en*, is refused: netplan applies that
 // definition, so the config would change each interface it matches, now and
 // later.
@@ -127,8 +153,10 @@ func (d *debian) write(
 	ctx context.Context,
 	in Config,
 ) (bool, error) {
-	if _, err := d.Interface(ctx, in.Name); err != nil {
-		return false, err
+	if in.Type != typeDummy {
+		if _, err := d.Interface(ctx, in.Name); err != nil {
+			return false, err
+		}
 	}
 	iface, err := behavior.Call(ctx, netplan.Behavior, netplan.Get, d.netplan,
 		netplan.GetInput{Name: in.Name})
@@ -142,6 +170,10 @@ func (d *debian) write(
 			in.Name, iface.ID, others(iface.Matches, in.Name),
 		)
 	}
+	section := iface.Section
+	if in.Type == typeDummy {
+		section = dummySection
+	}
 	result, err := behavior.Call(
 		ctx,
 		netplan.Behavior,
@@ -149,10 +181,15 @@ func (d *debian) write(
 		d.netplan,
 		netplan.UpdateInput{
 			Path:     file(in.Name),
-			Content:  yaml(iface.ID, iface.Section, in),
+			Content:  yaml(iface.ID, section, in),
 			Metadata: map[string]string{"domain": "interface", "interface": in.Name},
 		},
 	)
+	if err != nil && strings.Contains(err.Error(), "unknown key '"+dummySection+"'") {
+		return false, fmt.Errorf(
+			"the netplan of this host does not have %s, which netplan 0.107 added: %w",
+			dummySection, err)
+	}
 
 	return result.Changed, err
 }

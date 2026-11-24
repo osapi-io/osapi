@@ -4,6 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { InterfaceUpdateRequestType } from './interfaceUpdateRequestType';
 
 export interface InterfaceUpdateRequest {
   /**
@@ -30,6 +31,8 @@ export interface InterfaceUpdateRequest {
      * @maximum 9000
      */
   mtu?: number;
+  /** ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes */
+  type?: InterfaceUpdateRequestType;
   /** Turn on wake-on-LAN */
   wakeonlan?: boolean;
 }
