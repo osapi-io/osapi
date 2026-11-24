@@ -15,6 +15,7 @@ export const Permission = {
   'health:read': 'health:read',
   'trace:read': 'trace:read',
   'secret:use': 'secret:use',
+  'secret:reveal': 'secret:reveal',
   'certificate:read': 'certificate:read',
   'certificate:write': 'certificate:write',
   'command:execute': 'command:execute',

@@ -109,6 +109,15 @@ func (s *PrinterPublicTestSuite) TestPrinter() {
 		})
 	}
 
+	s.Run("when text prints, no trace line follows it, so a pipe gets only the text", func() {
+		cli.PrintTraceID("26e448c9dbe1c4a8d216a98c675079c9")
+		got := cli.Capture(func() {
+			p.Text("s3cret")
+			cli.FlushTraceID()
+		})
+		s.Equal("s3cret\n", got)
+	})
+
 	s.Contains(p.Status("ok"), "ok")
 	s.Equal(cli.FormatBytes(3480), p.Bytes(3480))
 	s.Equal(cli.FormatAge(3*time.Second), p.Age(3*time.Second))

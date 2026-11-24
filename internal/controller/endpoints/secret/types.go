@@ -40,6 +40,18 @@ type GetInput struct {
 	Key   string `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
 }
 
+// RevealInput names the key whose value to reveal.
+type RevealInput struct {
+	Vault string `json:"vault" in:"path" validate:"required,resource_name,max=64"  doc:"The name of the vault, such as default."      example:"default"`
+	Key   string `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
+}
+
+// SecretValue is the value of a key: the answer of reveal only. The CLI
+// prints it as it is, for a pipe.
+type SecretValue struct { //nolint:revive // the schema name is part of the API
+	Value string `json:"value" doc:"The value of the key." example:"glpat-xxxxxxxxxxxxxxxxxxxx" render:"body"`
+}
+
 // DeleteInput names the key to delete.
 type DeleteInput struct {
 	Vault string `json:"vault" in:"path" validate:"required,resource_name,max=64"  doc:"The name of the vault, such as default."      example:"default"`

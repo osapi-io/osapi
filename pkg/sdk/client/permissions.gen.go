@@ -8,6 +8,7 @@ const (
 	PermHealthRead          Permission = "health:read"
 	PermTraceRead           Permission = "trace:read"
 	PermSecretUse           Permission = "secret:use"
+	PermSecretReveal        Permission = "secret:reveal"
 	PermCertificateRead     Permission = "certificate:read"
 	PermCertificateWrite    Permission = "certificate:write"
 	PermCommandExecute      Permission = "command:execute"

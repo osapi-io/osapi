@@ -30,6 +30,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 var (
@@ -51,7 +52,8 @@ var Group = endpoint.Register(endpoint.Define(
 		"The vaults of the controller and the metadata of their keys. No operation gives a value."),
 	endpoint.CommandLong("A secret is a key in a vault of the controller. A request uses it as a\n"+
 		"reference, secret://<vault>/<key>. These commands write a value and read the\n"+
-		"metadata of each key. No command shows a value."),
+		"metadata of each key. Only reveal shows a value, with secret:reveal, which\n"+
+		"only the admin role has."),
 	endpoint.SubDoc("vault", "Read the vaults of the controller"),
 	endpoint.Uses[Deps](),
 	endpoint.Get[VaultListInput, VaultListResponse]("vaults").
@@ -102,6 +104,32 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a vault name over 64 characters", GetInput{Vault: long(65), Key: "k"}).
 		Fails("a key that is not letters, digits, - or _", GetInput{Vault: "default", Key: "a.b"}).
 		Fails("a key over 128 characters", GetInput{Vault: "default", Key: long(129)}).
+		Errors(noVault404, endpoint.NotFound(ErrNoKey, "The vault has no key with that name.")),
+	endpoint.Get[RevealInput, SecretValue]("reveal").
+		Handle(Reveal).
+		Key("vault", "key").
+		Action("value").
+		Permission(client.PermSecretReveal).
+		AdminOnly().
+		ID("GetSecretValue").
+		Describe("Reveal the value of a key").
+		Explain("Get the value of a key, for a tool that needs the value itself. It is the "+
+			"one method that gives a value, and it needs secret:reveal, which only the "+
+			"admin role has. The audit log records each call, with the vault, the key "+
+			"and the caller, and never the value.").
+		Returns("The value of the key.").
+		Command("Print the value of a key",
+			"The command prints only the value, with no heading and no trace line, so a\n"+
+				"pipe gets the value. --json prints {\"value\": \"...\"}. The audit log\n"+
+				"records each call. A request that uses the secret gives its reference,\n"+
+				"secret://<vault>/<key>, not the value.").
+		Example("--vault default --key registry-token").
+		Prints(sampleValue).
+		Example("--vault default --key registry-token --json").
+		Fails("a vault name that is not letters, digits, - or _", RevealInput{Vault: "a.b", Key: "k"}).
+		Fails("a vault name over 64 characters", RevealInput{Vault: long(65), Key: "k"}).
+		Fails("a key that is not letters, digits, - or _", RevealInput{Vault: "default", Key: "a.b"}).
+		Fails("a key over 128 characters", RevealInput{Vault: "default", Key: long(129)}).
 		Errors(noVault404, endpoint.NotFound(ErrNoKey, "The vault has no key with that name.")),
 	endpoint.Put[UpdateInput, SecretInfo]("update").
 		Handle(Update).

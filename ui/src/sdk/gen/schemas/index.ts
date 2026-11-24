@@ -284,6 +284,7 @@ export * from './scheduleUpdateResponse';
 export * from './secretInfo';
 export * from './secretListResponse';
 export * from './secretUpdateRequest';
+export * from './secretValue';
 export * from './serviceCollectionResponse';
 export * from './serviceCreateRequest';
 export * from './serviceCreateResponse';

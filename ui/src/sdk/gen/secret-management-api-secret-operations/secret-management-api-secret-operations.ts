@@ -9,6 +9,7 @@ import type {
   SecretInfo,
   SecretListResponse,
   SecretUpdateRequest,
+  SecretValue,
   VaultListResponse
 } from '../schemas';
 
@@ -342,6 +343,71 @@ export const putSecret = async (vault: string,
     method: 'PUT',
     headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(secretUpdateRequest)
+  }
+);}
+
+
+export type getSecretValueResponse200 = {
+  data: SecretValue
+  status: 200
+}
+
+export type getSecretValueResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getSecretValueResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getSecretValueResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getSecretValueResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getSecretValueResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getSecretValueResponseSuccess = (getSecretValueResponse200) & {
+  headers: Headers;
+};
+export type getSecretValueResponseError = (getSecretValueResponse400 | getSecretValueResponse401 | getSecretValueResponse403 | getSecretValueResponse404 | getSecretValueResponse500) & {
+  headers: Headers;
+};
+
+export type getSecretValueResponse = (getSecretValueResponseSuccess | getSecretValueResponseError)
+
+export const getGetSecretValueUrl = (vault: string,
+    key: string,) => {
+
+
+
+
+  return `/api/secret/${vault}/${key}/value`
+}
+
+/**
+ * Get the value of a key, for a tool that needs the value itself. It is the one method that gives a value, and it needs secret:reveal, which only the admin role has. The audit log records each call, with the vault, the key and the caller, and never the value.
+ * @summary Reveal the value of a key
+ */
+export const getSecretValue = async (vault: string,
+    key: string, options?: Parameters<typeof apiFetch>[1]): Promise<getSecretValueResponse> => {
+
+  return apiFetch<getSecretValueResponse>(getGetSecretValueUrl(vault,key),
+  {
+    ...options,
+    method: 'GET'
+
+
   }
 );}
 

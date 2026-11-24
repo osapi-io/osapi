@@ -85,10 +85,13 @@ func (Printer) Block(
 	PrintBlock(title, pairs...)
 }
 
-// Text prints text as it is, with one newline at its end.
+// Text prints text as it is, with one newline at its end. The text is the
+// whole output, such as a document or a value for a pipe, so no trace line
+// follows it.
 func (Printer) Text(
 	text string,
 ) {
+	pendingTraceID = ""
 	FlushKV()
 	fmt.Println(strings.TrimRight(text, "\n"))
 }

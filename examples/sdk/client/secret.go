@@ -33,6 +33,7 @@ var examples = []struct {
 	{"get", "Get the metadata of a key", runGet},
 	{"update", "Read the value from standard input", runUpdate},
 	{"delete", "Delete a key", runDelete},
+	{"reveal", "Reveal the value of a key", runReveal},
 }
 
 // runVaults runs the example vaults: list the vaults.
@@ -102,6 +103,19 @@ func runDelete(
 	fmt.Println("done")
 
 	return nil
+}
+
+// runReveal runs the example reveal: reveal the value of a key.
+func runReveal(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Secret.Reveal(ctx, "default", "registry-token")
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
 }
 
 func main() {

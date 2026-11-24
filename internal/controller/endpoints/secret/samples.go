@@ -63,6 +63,8 @@ var (
 		},
 	}
 
+	sampleValue = SecretValue{Value: "glpat-xxxxxxxxxxxxxxxxxxxx"}
+
 	sampleUpdate = SecretInfo{
 		Vault:   "default",
 		Key:     "registry-token",

@@ -2320,6 +2320,83 @@ paths:
             value: '-'
             vault: default
       x-osapi-method: update
+  /api/secret/{vault}/{key}/value:
+    get:
+      description: Get the value of a key, for a tool that needs the value itself. It is the one method that gives a value, and it needs secret:reveal, which only the admin role has. The audit log records each call, with the vault, the key and the caller, and never the value.
+      operationId: GetSecretValue
+      parameters:
+        - description: The name of the vault, such as default.
+          in: path
+          name: vault
+          required: true
+          schema:
+            example: default
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_-]+$
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,resource_name,max=64
+        - description: The name of the key, such as registry-token.
+          in: path
+          name: key
+          required: true
+          schema:
+            example: registry-token
+            maxLength: 128
+            pattern: ^[a-zA-Z0-9_-]+$
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,resource_name,max=128
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecretValue'
+          description: The value of the key.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The vault has no key with that name.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - secret:reveal
+      summary: Reveal the value of a key
+      tags:
+        - Secret_Management_API_secret_operations
+      x-osapi-area: secrets
+      x-osapi-examples:
+        - doc: Reveal the value of a key
+          input:
+            key: registry-token
+            vault: default
+      x-osapi-method: reveal
   /api/trace/{id}:
     get:
       description: Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet. A token with a target scope gets a trace only when each target that the trace records is in its scope.
@@ -9802,6 +9879,7 @@ components:
         - GetNodeUserByKey
         - GetNodeUserSshkey
         - GetSecret
+        - GetSecretValue
         - GetSecretVaults
         - GetSecrets
         - GetTrace
@@ -9861,6 +9939,7 @@ components:
         - health:read
         - trace:read
         - secret:use
+        - secret:reveal
         - certificate:read
         - certificate:write
         - command:execute
@@ -10585,6 +10664,15 @@ components:
           x-oapi-codegen-extra-tags:
             validate: required,max=65536
           x-osapi-secret: true
+      required:
+        - value
+      type: object
+    SecretValue:
+      properties:
+        value:
+          description: The value of the key.
+          example: glpat-xxxxxxxxxxxxxxxxxxxx
+          type: string
       required:
         - value
       type: object

@@ -344,6 +344,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				s.True(ok)
 				s.Equal(authtoken.AllPermissions(), perms)
 				s.Contains(perms, client.PermCommandShell)
+				s.Contains(perms, client.PermSecretReveal, "the value of a secret")
 			},
 		},
 		{
@@ -403,6 +404,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				s.Contains(perms, client.PermSecretRead)
 				s.Contains(perms, client.PermSecretWrite)
 				s.Contains(perms, client.PermSecretUse, "a secret goes into a write")
+				s.NotContains(perms, client.PermSecretReveal, "a value is admin only")
 			},
 		},
 		{

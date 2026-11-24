@@ -96,3 +96,20 @@ func (s *SecretService) Delete(
 ) error {
 	return sendEmpty(ctx, s.client, http.MethodDelete, "/api/secret/"+url.PathEscape(vault)+"/"+url.PathEscape(key), nil, nil)
 }
+
+// Reveal is the operation GetSecretValue: reveal the value of a key.
+//
+// Get the value of a key, for a tool that needs the value itself. It is the
+// one method that gives a value, and it needs secret:reveal, which only the
+// admin role has. The audit log records each call, with the vault, the key and
+// the caller, and never the value.
+//
+// It sends GET /api/secret/{vault}/{key}/value, and needs the permission
+// secret:reveal.
+func (s *SecretService) Reveal(
+	ctx context.Context,
+	vault string,
+	key string,
+) (*Response[SecretValue], error) {
+	return send[SecretValue](ctx, s.client, http.MethodGet, "/api/secret/"+url.PathEscape(vault)+"/"+url.PathEscape(key)+"/value", nil, nil)
+}

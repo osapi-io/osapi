@@ -337,6 +337,52 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 	}
 }
 
+func (s *MethodsPublicTestSuite) TestReveal() {
+	tests := []struct {
+		name    string
+		value   []byte
+		err     error
+		wantErr error
+		wantMsg string
+	}{
+		{name: "when the key is there, the answer is its value", value: []byte("s3cret")},
+		{
+			name:    "when the key is not there, it is ErrNoKey",
+			err:     vault.ErrNotFound,
+			wantErr: secret.ErrNoKey,
+			wantMsg: "vault default has no key registry-token",
+		},
+		{
+			name:    "when the vault fails, it is a failure of the controller",
+			err:     errBoom,
+			wantMsg: "failed to read the key",
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.hasDefault()
+			s.vault.EXPECT().Get(gomock.Any(), "registry-token").Return(tc.value, meta, tc.err)
+			got, err := secret.Reveal(context.Background(), s.deps(),
+				secret.RevealInput{Vault: "default", Key: "registry-token"})
+			if tc.wantMsg != "" {
+				s.ErrorContains(err, tc.wantMsg)
+				if tc.wantErr != nil {
+					s.ErrorIs(err, tc.wantErr)
+				}
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal("s3cret", got.Value)
+		})
+	}
+	s.Run("when the controller has no vault, it is ErrNoVault", func() {
+		_, err := secret.Reveal(context.Background(), secret.Deps{},
+			secret.RevealInput{Vault: "default", Key: "k"})
+		s.ErrorIs(err, secret.ErrNoVault)
+	})
+}
+
 func (s *MethodsPublicTestSuite) TestDelete() {
 	tests := []struct {
 		name    string
@@ -475,6 +521,27 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 				s.vault.EXPECT().Delete(gomock.Any(), "registry-token").Return(nil)
 			},
 			wantCode: http.StatusNoContent,
+		},
+		{
+			name:   "when a caller with secret:reveal reveals a key, the answer is its value",
+			method: http.MethodGet,
+			path:   "/api/secret/default/registry-token/value",
+			token:  token("secret:reveal"),
+			setup: func() {
+				s.hasDefault()
+				s.vault.EXPECT().Get(gomock.Any(), "registry-token").
+					Return([]byte("s3cret"), meta, nil)
+			},
+			wantCode: http.StatusOK,
+			wantBody: `{"value":"s3cret"}`,
+		},
+		{
+			name:     "when a caller with secret:read and secret:write reveals a key, it is a 403",
+			method:   http.MethodGet,
+			path:     "/api/secret/default/registry-token/value",
+			token:    token("secret:read", "secret:write", "secret:use"),
+			setup:    func() {},
+			wantCode: http.StatusForbidden,
 		},
 		{
 			name:     "when there is no token, it is a 401",

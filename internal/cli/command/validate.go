@@ -62,6 +62,7 @@ var Actions = map[string]bool{
 	"pull": true, "signal": true, "reboot": true, "shutdown": true, "ping": true,
 	"status": true, "fingerprint": true, "liveness": true, "ready": true,
 	"generate": true, "validate": true, "setup": true, "rotate": true,
+	"reveal": true,
 }
 
 // RootGroup is a word directly under osapi, and what goes under it.

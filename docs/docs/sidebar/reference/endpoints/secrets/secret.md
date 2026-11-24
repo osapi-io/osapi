@@ -17,22 +17,24 @@ Manage the secrets in the vaults of the controller.
 | Description | Manage the secrets in the vaults of the controller |
 | Area        | secrets                                            |
 
-### Methods (5)
+### Methods (6)
 
-| NAME   | VERB   | PATH                                          | PERMISSION   | OPERATION ID    |
-| ------ | ------ | --------------------------------------------- | ------------ | --------------- |
-| vaults | GET    | /api/secret                                   | secret:read  | GetSecretVaults |
-| list   | GET    | /api/secret/&#123;vault&#125;                 | secret:read  | GetSecrets      |
-| get    | GET    | /api/secret/&#123;vault&#125;/&#123;key&#125; | secret:read  | GetSecret       |
-| update | PUT    | /api/secret/&#123;vault&#125;/&#123;key&#125; | secret:write | PutSecret       |
-| delete | DELETE | /api/secret/&#123;vault&#125;/&#123;key&#125; | secret:write | DeleteSecret    |
+| NAME   | VERB   | PATH                                                | PERMISSION    | OPERATION ID    |
+| ------ | ------ | --------------------------------------------------- | ------------- | --------------- |
+| vaults | GET    | /api/secret                                         | secret:read   | GetSecretVaults |
+| list   | GET    | /api/secret/&#123;vault&#125;                       | secret:read   | GetSecrets      |
+| get    | GET    | /api/secret/&#123;vault&#125;/&#123;key&#125;       | secret:read   | GetSecret       |
+| reveal | GET    | /api/secret/&#123;vault&#125;/&#123;key&#125;/value | secret:reveal | GetSecretValue  |
+| update | PUT    | /api/secret/&#123;vault&#125;/&#123;key&#125;       | secret:write  | PutSecret       |
+| delete | DELETE | /api/secret/&#123;vault&#125;/&#123;key&#125;       | secret:write  | DeleteSecret    |
 
-### Types (5)
+### Types (6)
 
 | NAME   | INPUT                                            | OUTPUT                                                    |
 | ------ | ------------------------------------------------ | --------------------------------------------------------- |
 | vaults | VaultListInput                                   | VaultListResponse &#123; items, total_items &#125;        |
 | list   | ListInput &#123; vault\* &#125;                  | SecretListResponse &#123; items, total_items &#125;       |
 | get    | GetInput &#123; vault\*, key\* &#125;            | SecretInfo &#123; vault, key, version, changed, by &#125; |
+| reveal | RevealInput &#123; vault\*, key\* &#125;         | SecretValue &#123; value &#125;                           |
 | update | UpdateInput &#123; vault\*, key\*, body\* &#125; | SecretInfo &#123; vault, key, version, changed, by &#125; |
 | delete | DeleteInput &#123; vault\*, key\* &#125;         |                                                           |

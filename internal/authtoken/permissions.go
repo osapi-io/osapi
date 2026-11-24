@@ -68,13 +68,15 @@ func PermissionsOf(
 
 // builtinPermissions are the permissions that no method declares:
 // health:read and trace:read, which endpoint groups name with Permission,
-// and secret:use, which a request needs for each secret://<vault>/<key>
-// reference that it gives. An endpoint group's own permissions and a
+// secret:use, which a request needs for each secret://<vault>/<key>
+// reference that it gives, and secret:reveal, which secret reveal names
+// and marks AdminOnly: the one method that gives the value of a secret. An endpoint group's own permissions and a
 // behavior's come from their definitions.
 var builtinPermissions = []Permission{
 	"health:read",
 	"trace:read",
 	"secret:use",
+	"secret:reveal",
 }
 
 // adminVerbs are the verbs of a permission that only the admin role gets:
