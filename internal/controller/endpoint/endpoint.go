@@ -274,7 +274,7 @@ func (g *Group) Path(
 	if m.sub != "" {
 		p += "/" + m.sub
 	}
-	if key := m.Key(); key != "" {
+	for _, key := range m.Keys() {
 		p += "/{" + key + "}"
 	}
 	if m.action != "" {
@@ -465,6 +465,8 @@ type Method struct {
 	Out reflect.Type
 
 	sub, action, id  string
+	keys             []string
+	cmdSub           string
 	summary, explain string
 	returns          string
 	permission       client.Permission
@@ -539,6 +541,18 @@ func (m *Method) Sub(
 	segment string,
 ) *Method {
 	m.sub = segment
+
+	return m
+}
+
+// Key names the path fields of the key, in the order of the path, such as
+// Key("vault", "key") for /api/secret/{vault}/{key}: a key that is unique
+// only in the thing that holds it. Without it, the key is the one input
+// field tagged in:"path" that the prefix does not name.
+func (m *Method) Key(
+	fields ...string,
+) *Method {
+	m.keys = fields
 
 	return m
 }
@@ -814,9 +828,24 @@ func (m *Method) LocationField() string {
 	return m.location
 }
 
-// SubPath is the fixed segment Sub set, or "".
+// SubPath is the word that the CLI command is under: the one CommandSub
+// set, or the fixed segment Sub set, or "".
 func (m *Method) SubPath() string {
+	if m.cmdSub != "" {
+		return m.cmdSub
+	}
+
 	return m.sub
+}
+
+// CommandSub puts the CLI command under a word that is not in the path,
+// such as vault in osapi client secret vault list for GET /api/secret.
+func (m *Method) CommandSub(
+	word string,
+) *Method {
+	m.cmdSub = word
+
+	return m
 }
 
 // PageNotes is the Notes section Notes set, or "".
@@ -927,15 +956,31 @@ func (m *Method) Handler() any {
 	return m.handler
 }
 
-// Key is the name of the input's path parameter, or "" when it has none.
-func (m *Method) Key() string {
+// Keys are the json names of the path fields of the key, in the order of
+// the path: the ones Key named, or the one input field tagged in:"path"
+// that the prefix does not name. It is empty when the method has no key.
+func (m *Method) Keys() []string {
+	if len(m.keys) > 0 {
+		return m.keys
+	}
 	for _, f := range fields(m.In) {
 		if f.Tag.Get("in") == "path" && !slices.Contains(m.prefix, jsonName(f)) {
-			return jsonName(f)
+			return []string{jsonName(f)}
 		}
 	}
 
-	return ""
+	return nil
+}
+
+// KeyField is the json name of the last field of the key, which names what
+// the method acts on, such as key in /api/secret/{vault}/{key}, or "".
+func (m *Method) KeyField() string {
+	keys := m.Keys()
+	if len(keys) == 0 {
+		return ""
+	}
+
+	return keys[len(keys)-1]
 }
 
 // OperationID is the operationId: the one ID sets, or the verb and the

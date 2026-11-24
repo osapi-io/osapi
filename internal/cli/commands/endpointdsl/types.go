@@ -95,15 +95,16 @@ type MethodOutput struct {
 	Long        string           `               json:"long,omitempty"       label:"Detail"`
 	HTTPMethod  string           `               json:"http_method"          label:"HTTP"`
 	Route       string           `               json:"route"`
-	Permission  string           `               json:"permission,omitempty"                      none:"none (public)"`
+	Keys        []string         `               json:"keys"                                      empty:"The method has no key."`
+	Permission  string           `               json:"permission,omitempty"                                                         none:"none (public)"`
 	AdminOnly   bool             `               json:"admin_only"           label:"Admin only"`
 	OperationID string           `               json:"operation_id"         label:"Operation ID"`
 	Command     string           `               json:"command"`
 	InputType   string           `               json:"input_type"           label:"Input type"`
-	OutputType  string           `               json:"output_type"          label:"Output type"  none:"none: it answers with no body"`
-	Fields      []Field          `               json:"fields"               label:"Input"                                             empty:"The method takes no input."`
+	OutputType  string           `               json:"output_type"          label:"Output type"                                     none:"none: it answers with no body"`
+	Fields      []Field          `               json:"fields"               label:"Input"        empty:"The method takes no input."`
 	Results     []Result         `               json:"results"              label:"Output"`
-	Examples    []Example        `               json:"examples"                                                                       empty:"The method has no example."`
+	Examples    []Example        `               json:"examples"                                  empty:"The method has no example."`
 	Refuses     []string         `               json:"refuses,omitempty"`
 	Errors      []Error          `               json:"errors,omitempty"`
 	Input       *behavior.Schema `               json:"input"                                                                                                             render:"-"`

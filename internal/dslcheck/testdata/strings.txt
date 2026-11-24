@@ -211,12 +211,14 @@ endpoint.Method.Action(segment string)	identity	a name that the registry, the ro
 endpoint.Method.Answers(doc string)	free text	prose for a page or a message
 endpoint.Method.Command(long string)	free text	prose for a page or a message
 endpoint.Method.Command(short string)	free text	prose for a page or a message
+endpoint.Method.CommandSub(word string)	identity	a name that the registry, the route or the command path holds
 endpoint.Method.Describe(summary string)	free text	prose for a page or a message
 endpoint.Method.Example(doc []string)	free text	prose for a page or a message
 endpoint.Method.Example(flags string)	checked	the flags of an example; validate checks each against the command
 endpoint.Method.Explain(text string)	free text	prose for a page or a message
 endpoint.Method.Fails(doc string)	free text	prose for a page or a message
 endpoint.Method.ID(id string)	identity	a name that the registry, the route or the command path holds
+endpoint.Method.Key(fields []string)	checked	the path fields of the input; the key rule checks each
 endpoint.Method.Location(field string)	checked	a json field of the output; the field rule checks it
 endpoint.Method.Name string	identity	a name that the registry, the route or the command path holds
 endpoint.Method.Notes(text string)	free text	prose for a page or a message

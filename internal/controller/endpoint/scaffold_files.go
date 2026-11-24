@@ -187,6 +187,7 @@ func (sc groupScaffold) groupFile() *jen.File {
 		e("Get").Index(jen.List(jen.Id("GetInput"), jen.Id(sc.typeName("Item")))).
 			Call(jen.Lit("get")).
 			Add(next("Handle", jen.Id("Get"))).
+			Add(next("Key", jen.Lit("name"))).
 			Add(next("Describe", jen.Lit("Get one "+sc.name+" item"))).
 			Add(next("Errors", e("NotFound").Call(jen.Id("ErrNotFound"),
 				jen.Lit("No item with that name.")))).
@@ -222,7 +223,9 @@ func (sc groupScaffold) typesFile() *jen.File {
 	f.Line()
 	comments(f,
 		"GetInput names the item to read. The field tagged in:\"path\" is the key",
-		"of the path, and each field becomes a flag of the CLI command.",
+		"of the path, which Key names, and each field becomes a flag of the CLI",
+		"command. A key of more than one field, such as a key in a vault, names",
+		"each in the order of the path: Key(\"vault\", \"key\").",
 	)
 	f.Type().Id("GetInput").Struct(
 		jen.Id("Name").String().Add(tagged("json", "name", "in", "path",

@@ -29,6 +29,7 @@ $ osapi dsl endpoint method get --name agent --method drain
   [38;2;10;143;176mDescription:[0m   Drain an agent
   [38;2;10;143;176mHTTP:[0m          POST
   [38;2;10;143;176mRoute:[0m         /api/agent/{hostname}/drain
+  [38;2;10;143;176mKeys:[0m
   [38;2;10;143;176mPermission:[0m    agent:write
   [38;2;10;143;176mAdmin only:[0m    yes
   [38;2;10;143;176mOperation ID:[0m  DrainAgent
@@ -62,6 +63,7 @@ With `--json`, the command prints:
   "doc": "Drain an agent",
   "http_method": "POST",
   "route": "/api/agent/{hostname}/drain",
+  "keys": null,
   "permission": "agent:write",
   "admin_only": true,
   "operation_id": "DrainAgent",

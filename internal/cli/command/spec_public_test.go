@@ -106,7 +106,7 @@ var notDSL = map[string]bool{
 	"Format:Column":                true,
 	"FormatKV:Column":              true,
 	"PrintsGroups":                 true,
-	"Key":                          true,
+	"KeyField":                     true,
 	"Saying":                       true,
 }
 

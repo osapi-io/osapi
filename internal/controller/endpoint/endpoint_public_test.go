@@ -147,6 +147,20 @@ func handleNode(
 	return Node{}, nil
 }
 
+type underIn struct {
+	Vault string `json:"vault" in:"path" validate:"required"`
+	Key   string `json:"key"   in:"path" validate:"required"`
+}
+
+type vaultIn struct {
+	Vault string `json:"vault" in:"path" validate:"required"`
+}
+
+type secretKeyIn struct {
+	Vault string       `json:"vault" in:"path" validate:"required"`
+	Token secret.Value `json:"token" in:"path" validate:"required"`
+}
+
 type twoKeys struct {
 	A string `json:"a" in:"path"`
 	B string `json:"b" in:"path"`
@@ -246,6 +260,9 @@ func (s *EndpointPublicTestSuite) TestInternal() {
 	s.Equal("draining", endpoint.Post[noInput, struct{}]("drain").Says("draining").Saying())
 	s.Equal(reflect.TypeFor[Node](), m.Output())
 	s.Equal("trace", m.SubPath())
+	s.Equal("vault",
+		endpoint.Get[noInput, Node]("vaults").CommandSub("vault").Use("list").SubPath(),
+		"the command's word, which the path does not have")
 	s.Equal("get", m.CommandName())
 	s.Equal("list", endpoint.Get[noInput, Node]("pending").Use("list").CommandName())
 
@@ -317,6 +334,20 @@ func (s *EndpointPublicTestSuite) TestPathPermissionAndID() {
 			path: "/api/node/{hostname}/drain",
 			perm: "agent:write",
 			id:   "drainNode",
+		},
+		{
+			name:   "when a GET has a key of two fields, in the order Key names",
+			method: endpoint.Get[twoKeys, Node]("get").Key("b", "a"),
+			path:   "/api/node/{b}/{a}",
+			perm:   "node:read",
+			id:     "GetNodeGet",
+		},
+		{
+			name:   "when a list names only the field that holds the keys",
+			method: endpoint.Get[keyInput, Node]("list").Key("hostname"),
+			path:   "/api/node/{hostname}",
+			perm:   "node:read",
+			id:     "GetNodeList",
 		},
 		{
 			name:   "when a PUT has the default permission",
@@ -614,8 +645,13 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 	s.Equal(area.Config, g.Area)
 	s.Equal("/api/fleet/node/{hostname}/sysctl", g.Path(g.Method("list")))
 	s.Equal("/api/fleet/node/{hostname}/sysctl/{key}", g.Path(g.Method("get")))
-	s.Empty(g.Method("list").Key(), "the prefix's field is not the key")
-	s.Equal("key", g.Method("get").Key())
+	s.Empty(g.Method("list").KeyField(), "the prefix's field is not the key")
+	s.Empty(g.Method("list").Keys())
+	s.Equal("key", g.Method("get").KeyField())
+	s.Equal([]string{"key"}, g.Method("get").Keys())
+	two := endpoint.Get[underIn, Node]("get").Key("vault", "key")
+	s.Equal([]string{"vault", "key"}, two.Keys())
+	s.Equal("key", two.KeyField(), "the last field names what the method acts on")
 	s.Empty(endpoint.Validate(g))
 
 	doc, err := endpoint.OpenAPI(g)
@@ -874,6 +910,33 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when Key names each path field once and in order, it passes",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[underIn, Node]("get").Key("vault", "key"),
+				endpoint.Get[vaultIn, Node]("list").Key("vault"),
+			),
+		},
+		{
+			name: "when Key breaks the key rule, it says how",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[underIn, Node]("get"),
+				endpoint.Delete[underIn, Node]("delete").Key("vault", "nope"),
+				endpoint.Put[underIn, Node]("update").Key("vault", "vault"),
+				endpoint.Post[underIn, Node]("create").Key("key"),
+				endpoint.Post[secretKeyIn, Node]("seal").Sub("seal").Key("vault", "token"),
+			),
+			want: []string{
+				"the input has more than one path field besides the prefix; name each in order with .Key.",
+				"Key names {nope}, and the input has no path field nope.",
+				"path field key is not in Key or the prefix.",
+				"Key names {vault} twice.",
+				"path field key is not in Key or the prefix.",
+				"path field vault is not in Key or the prefix.",
+				"input field token is a secret in the path; a URL goes in logs.",
+				"Key names {token}, which is a secret; a URL goes in logs.",
+			},
+		},
+		{
 			name: "when a secret is in the URL or on a span",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[secretInURLIn, Node]("get"),
@@ -978,7 +1041,7 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				endpoint.Get[noInput, Node]("list")),
 			want: []string{
 				`area "kitchen" is not one of services, software, config, node, logs, ` +
-					`networking, security, containers, objectstore, command, hardware, audit, fleet.`,
+					`networking, security, containers, objectstore, secrets, command, hardware, audit, fleet.`,
 			},
 		},
 		{
@@ -990,6 +1053,18 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				endpoint.Get[noInput, Node]("status").Sub("status"),
 			),
 			want: []string{`the Sub segment "trace" has no SubDoc.`},
+		},
+		{
+			name: "when a CommandSub word has no SubDoc, or is not lowercase, it says so",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[noInput, Node]("vaults").CommandSub("vault").Use("list"),
+				endpoint.Get[noInput, Node]("disks").Sub("disks").CommandSub("Disk").Use("list"),
+			),
+			want: []string{
+				`the Sub segment "vault" has no SubDoc.`,
+				`path segment "Disk" is not lowercase letters and digits.`,
+				`the Sub segment "Disk" has no SubDoc.`,
+			},
 		},
 		{
 			name: "when methods break the rules",
@@ -1013,7 +1088,7 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				`path segment "Bad" is not lowercase letters and digits.`,
 				`the Sub segment "Bad" has no SubDoc.`,
 				"the method has an action but no key.",
-				"the input has more than one path field besides the prefix.",
+				"the input has more than one path field besides the prefix; name each in order with .Key.",
 				"input field a has no validate tag.",
 				"input field b has no validate tag.",
 				"operationId getLower starts with a small letter.",

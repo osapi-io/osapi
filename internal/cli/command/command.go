@@ -94,9 +94,9 @@ type Command interface {
 	// Output is the type of the method's output, which the output prints
 	// from.
 	Output() reflect.Type
-	// Key is the json name of the input field that names what the command
-	// acts on, such as machine_id, or "".
-	Key() string
+	// KeyField is the json name of the input field that names what the
+	// command acts on, such as machine_id, or "".
+	KeyField() string
 	// Saying is what the one line of a method with no body says, which Says
 	// set, or "" for the past tense of the method.
 	Saying() string

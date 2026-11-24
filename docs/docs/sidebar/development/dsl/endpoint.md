@@ -168,6 +168,29 @@ the method's name, the CLI command is under it too: osapi client &lt;group&gt;
 Use: For a path beside the key, such as /api/agent/pending, or with no key, such
 as /api/file/stale.
 
+### `.CommandSub("word")`
+
+Puts the CLI command under a word that is not a segment of the path: osapi
+client &lt;group&gt; &lt;word&gt; &lt;method&gt;. The word needs a SubDoc, as a
+Sub does.
+
+Use: When the command names a resource that the path does not, such as vault in
+osapi client secret vault list for GET /api/secret.
+
+### `.Key("field", ...)`
+
+Names the in:"path" fields of the key, in the order of the path:
+/api/&lt;group&gt;\[/&lt;segment&gt;]/&#123;field&#125;/.../&#123;key&#125;. The
+last field names what the method acts on, as the CLI line of a method with no
+body says. Without it, the key is the one in:"path" field that the Prefix does
+not name. endpoint validate checks that each named field is a path field of the
+input, is not a secret, and is named once, and that no other path field is left
+out.
+
+Use: For a key that is unique only in the thing that holds it, such as a key in
+a vault: .Key("vault", "key") for /api/secret/&#123;vault&#125;/&#123;key&#125;.
+A list of the keys of one vault names only the holder: .Key("vault").
+
 ### `.Action("segment")`
 
 Puts a segment after the key:
@@ -477,6 +500,15 @@ The TraceReader: it reads one trace from the tracing backend that the config
 names, for osapi client file stale list.
 
 Use: For the telemetry group.
+
+### `Vaults`
+
+The vaults of controller.secrets.vaults, by name: each vault's spec, and the
+vault.Vault that gets, puts, deletes and lists its keys. handlers.go gives the
+vault.Set that the controller opens at startup.
+
+Use: For the secret group. A handler reads the metadata of a key from List, so
+that no method reads a value that it does not give.
 
 ## Tags on input and output fields
 
