@@ -27,6 +27,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 
@@ -49,7 +51,7 @@ func (s *MiddlewarePublicTestSuite) SetupSuite() {
 }
 
 func (s *MiddlewarePublicTestSuite) generateToken(
-	roles []string,
+	roles []types.Role,
 ) string {
 	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", nil, nil)
 	s.Require().NoError(err)
@@ -58,7 +60,7 @@ func (s *MiddlewarePublicTestSuite) generateToken(
 }
 
 func (s *MiddlewarePublicTestSuite) generateTokenWithPerms(
-	roles []string,
+	roles []types.Role,
 	permissions []string,
 ) string {
 	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", permissions, nil)
@@ -117,7 +119,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddleware() {
 			authHeader: func() string {
 				t, _ := s.tokenManager.Generate(
 					authtoken.Key{ID: "removed", Secret: "a-key-that-the-controller-dropped"},
-					[]string{"admin"}, "test-subject", nil, nil,
+					[]types.Role{types.RoleAdmin}, "test-subject", nil, nil,
 				)
 				return "Bearer " + t
 			}(),
@@ -190,9 +192,9 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddleware() {
 			authHeader := tt.authHeader
 			if authHeader == "" && tt.expectedStatus != http.StatusUnauthorized {
 				if tt.expectedStatus == http.StatusForbidden {
-					authHeader = "Bearer " + s.generateToken([]string{"read"})
+					authHeader = "Bearer " + s.generateToken([]types.Role{types.RoleRead})
 				} else {
-					authHeader = "Bearer " + s.generateToken([]string{"admin"})
+					authHeader = "Bearer " + s.generateToken([]types.Role{types.RoleAdmin})
 				}
 			}
 			if authHeader != "" {
@@ -224,7 +226,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 
 	tests := []struct {
 		name           string
-		tokenRoles     []string
+		tokenRoles     []types.Role
 		customRoles    map[string][]string
 		requiredScope  string
 		expectedStatus int
@@ -232,7 +234,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 	}{
 		{
 			name:       "custom role grants access",
-			tokenRoles: []string{"ops"},
+			tokenRoles: []types.Role{"ops"},
 			customRoles: map[string][]string{
 				"ops": {"trace:read", "health:read"},
 			},
@@ -244,7 +246,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 		},
 		{
 			name:       "custom role lacks permission",
-			tokenRoles: []string{"ops"},
+			tokenRoles: []types.Role{"ops"},
 			customRoles: map[string][]string{
 				"ops": {"health:read"},
 			},
@@ -269,7 +271,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 
 			token, err := s.tokenManager.Generate(
 				testSigningKey,
-				[]string{"admin"},
+				[]types.Role{types.RoleAdmin},
 				"test-subject",
 				nil,
 				nil,
@@ -278,7 +280,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 
 			// Override custom roles to shadow "admin".
 			customRoles := authtoken.CustomRoles{
-				"admin": authtoken.PermissionsOf(tt.customRoles[tt.tokenRoles[0]]),
+				types.RoleAdmin: authtoken.PermissionsOf(tt.customRoles[string(tt.tokenRoles[0])]),
 			}
 
 			e := echo.New()
@@ -344,7 +346,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareDirectPermissions() {
 				},
 			)
 
-			token := s.generateTokenWithPerms([]string{"admin"}, tt.permissions)
+			token := s.generateTokenWithPerms([]types.Role{types.RoleAdmin}, tt.permissions)
 
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -468,7 +470,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareTargetScope() {
 			)
 
 			token, err := s.tokenManager.Generate(
-				testSigningKey, []string{"admin"}, "test-subject", nil, tt.targets,
+				testSigningKey, []types.Role{types.RoleAdmin}, "test-subject", nil, tt.targets,
 			)
 			s.Require().NoError(err)
 
@@ -502,36 +504,36 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareInjectsIdentity() {
 
 	tests := []struct {
 		name           string
-		tokenRoles     []string
+		tokenRoles     []types.Role
 		authHeader     string
 		requiredScopes []string
-		validateFunc   func(bool, string, []string)
+		validateFunc   func(bool, string, []types.Role)
 	}{
 		{
 			name:           "admin token injects subject and roles",
-			tokenRoles:     []string{"admin"},
+			tokenRoles:     []types.Role{types.RoleAdmin},
 			requiredScopes: []string{"trace:read"},
-			validateFunc: func(called bool, subject string, roles []string) {
+			validateFunc: func(called bool, subject string, roles []types.Role) {
 				s.True(called)
 				s.Equal("test-subject", subject)
-				s.Equal([]string{"admin"}, roles)
+				s.Equal([]types.Role{types.RoleAdmin}, roles)
 			},
 		},
 		{
 			name:           "read token injects subject and read role",
-			tokenRoles:     []string{"read"},
+			tokenRoles:     []types.Role{types.RoleRead},
 			requiredScopes: []string{"trace:read"},
-			validateFunc: func(called bool, subject string, roles []string) {
+			validateFunc: func(called bool, subject string, roles []types.Role) {
 				s.True(called)
 				s.Equal("test-subject", subject)
-				s.Equal([]string{"read"}, roles)
+				s.Equal([]types.Role{types.RoleRead}, roles)
 			},
 		},
 		{
 			name:           "invalid token does not inject identity",
 			authHeader:     "Bearer invalid-token-string",
 			requiredScopes: []string{"trace:read"},
-			validateFunc: func(called bool, _ string, _ []string) {
+			validateFunc: func(called bool, _ string, _ []types.Role) {
 				s.False(called)
 			},
 		},
@@ -541,13 +543,13 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareInjectsIdentity() {
 		s.Run(tt.name, func() {
 			handlerCalled := false
 			var capturedSubject string
-			var capturedRoles []string
+			var capturedRoles []types.Role
 
 			testHandler := api.StrictHandlerFunc(
 				func(ctx *echo.Context, _ interface{}) (interface{}, error) {
 					handlerCalled = true
 					capturedSubject, _ = ctx.Get(api.ContextKeySubject).(string)
-					capturedRoles, _ = ctx.Get(api.ContextKeyRoles).([]string)
+					capturedRoles, _ = ctx.Get(api.ContextKeyRoles).([]types.Role)
 					return "ok", nil
 				},
 			)

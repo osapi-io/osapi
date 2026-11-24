@@ -23,6 +23,8 @@ package token
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
@@ -39,7 +41,7 @@ type Deps struct {
 type Tokens interface {
 	Generate(
 		key authtoken.Key,
-		roles []string,
+		roles []types.Role,
 		subject string,
 		permissions []string,
 		targets []string,

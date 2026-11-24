@@ -235,7 +235,7 @@ func requestFields(
 		jen.Id("Hostname").String().Tag(map[string]string{
 			"json": "hostname", "in": "path", "param": "Hostname",
 			"validate": "required,min=1,valid_target", "doc": hostnameDoc,
-			"flag": "target", "short": "T", "default": "_all",
+			"flag": "target", "short": "T", "default": string(types.TargetAll),
 		}),
 	}
 

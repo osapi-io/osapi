@@ -102,7 +102,7 @@ func Validate(
 	}
 
 	resolved := authtoken.ResolvePermissions(
-		authtoken.RolesOf(claims.Roles),
+		claims.Roles,
 		authtoken.PermissionsOf(claims.Permissions),
 		nil,
 	)

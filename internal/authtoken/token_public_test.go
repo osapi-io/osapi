@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/suite"
 
@@ -54,7 +56,13 @@ func (s *AuthTokenPublicTestSuite) TestNew() {
 }
 
 func (s *AuthTokenPublicTestSuite) TestGenerate() {
-	tokenString, err := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil, nil)
+	tokenString, err := s.token.Generate(
+		s.signingKey,
+		[]types.Role{types.RoleAdmin},
+		"test-subject",
+		nil,
+		nil,
+	)
 
 	s.NoError(err)
 	s.NotEmpty(tokenString)
@@ -72,13 +80,19 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		{
 			name: "valid token",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil, nil)
+				t, _ := s.token.Generate(
+					s.signingKey,
+					[]types.Role{types.RoleAdmin},
+					"test-subject",
+					nil,
+					nil,
+				)
 				return t
 			},
 			signingKeys: s.keys,
 			expectError: false,
 			validateFunc: func(claims *authtoken.CustomClaims) {
-				s.Equal([]string{"admin"}, claims.Roles)
+				s.Equal([]types.Role{types.RoleAdmin}, claims.Roles)
 				s.Equal("test-subject", claims.Subject)
 				s.Equal("osapi", claims.Issuer)
 				s.Equal("2026-11", claims.KeyID)
@@ -87,19 +101,31 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		{
 			name: "when an older key of the list signed the token, its key verifies it",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.oldKey, []string{"read"}, "test-subject", nil, nil)
+				t, _ := s.token.Generate(
+					s.oldKey,
+					[]types.Role{types.RoleRead},
+					"test-subject",
+					nil,
+					nil,
+				)
 				return t
 			},
 			signingKeys: s.keys,
 			validateFunc: func(claims *authtoken.CustomClaims) {
 				s.Equal("2026-08", claims.KeyID)
-				s.Equal([]string{"read"}, claims.Roles)
+				s.Equal([]types.Role{types.RoleRead}, claims.Roles)
 			},
 		},
 		{
 			name: "when the key of the token is no longer in the list, the token is refused",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.oldKey, []string{"read"}, "test-subject", nil, nil)
+				t, _ := s.token.Generate(
+					s.oldKey,
+					[]types.Role{types.RoleRead},
+					"test-subject",
+					nil,
+					nil,
+				)
 				return t
 			},
 			signingKeys: authtoken.Keys{s.signingKey},
@@ -110,7 +136,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			name: "when the token has no kid, it is refused",
 			tokenFunc: func() string {
 				claims := authtoken.CustomClaims{
-					Roles: []string{"admin"},
+					Roles: []types.Role{types.RoleAdmin},
 					RegisteredClaims: jwt.RegisteredClaims{
 						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 					},
@@ -127,7 +153,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			name: "when the token has a target scope, it is in the claims",
 			tokenFunc: func() string {
 				t, _ := s.token.Generate(
-					s.signingKey, []string{"operator"}, "team-web", nil,
+					s.signingKey, []types.Role{types.RoleOperator}, "team-web", nil,
 					[]string{"group:web", "web-01"},
 				)
 				return t
@@ -141,7 +167,11 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			name: "when a target of the scope is _all, the token is refused",
 			tokenFunc: func() string {
 				t, _ := s.token.Generate(
-					s.signingKey, []string{"operator"}, "team-web", nil, []string{"_all"},
+					s.signingKey,
+					[]types.Role{types.RoleOperator},
+					"team-web",
+					nil,
+					[]string{"_all"},
 				)
 				return t
 			},
@@ -152,7 +182,13 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		{
 			name: "wrong signing key",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.signingKey, []string{"read"}, "test-subject", nil, nil)
+				t, _ := s.token.Generate(
+					s.signingKey,
+					[]types.Role{types.RoleRead},
+					"test-subject",
+					nil,
+					nil,
+				)
 				return t
 			},
 			signingKeys: authtoken.Keys{{ID: "2026-11", Secret: "wrong-key"}},
@@ -196,7 +232,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			name: "claims fail struct validation",
 			tokenFunc: func() string {
 				claims := authtoken.CustomClaims{
-					Roles: []string{""},
+					Roles: []types.Role{""},
 					RegisteredClaims: jwt.RegisteredClaims{
 						Issuer:    "osapi",
 						IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -239,40 +275,40 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 func (s *AuthTokenPublicTestSuite) TestGenerateAndValidateRoundTrip() {
 	tests := []struct {
 		name         string
-		roles        []string
+		roles        []types.Role
 		subject      string
 		validateFunc func(*authtoken.CustomClaims, error)
 	}{
 		{
 			name:    "admin role round trip",
-			roles:   []string{"admin"},
+			roles:   []types.Role{types.RoleAdmin},
 			subject: "admin-user",
 			validateFunc: func(claims *authtoken.CustomClaims, err error) {
 				s.NoError(err)
 				s.NotNil(claims)
-				s.Equal([]string{"admin"}, claims.Roles)
+				s.Equal([]types.Role{types.RoleAdmin}, claims.Roles)
 				s.Equal("admin-user", claims.Subject)
 			},
 		},
 		{
 			name:    "multiple roles round trip",
-			roles:   []string{"read", "automation"},
+			roles:   []types.Role{types.RoleRead, types.RoleAutomation},
 			subject: "rw-user",
 			validateFunc: func(claims *authtoken.CustomClaims, err error) {
 				s.NoError(err)
 				s.NotNil(claims)
-				s.Equal([]string{"read", "automation"}, claims.Roles)
+				s.Equal([]types.Role{types.RoleRead, types.RoleAutomation}, claims.Roles)
 				s.Equal("rw-user", claims.Subject)
 			},
 		},
 		{
 			name:    "read only round trip",
-			roles:   []string{"read"},
+			roles:   []types.Role{types.RoleRead},
 			subject: "reader",
 			validateFunc: func(claims *authtoken.CustomClaims, err error) {
 				s.NoError(err)
 				s.NotNil(claims)
-				s.Equal([]string{"read"}, claims.Roles)
+				s.Equal([]types.Role{types.RoleRead}, claims.Roles)
 				s.Equal("reader", claims.Subject)
 			},
 		},

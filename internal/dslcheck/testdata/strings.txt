@@ -168,6 +168,7 @@ command.Secrets(flags map[string]string)	boundary	the values of a flag of a map 
 command.Secrets(name string)	identity	the name of the flag, for its error
 command.Serve(method string)	identity	a name that the registry, the route or the command path holds
 command.SetTraceID(id string)	identity	a name that the registry, the route or the command path holds
+command.Strings(values []string)	boundary	the strings of a list flag, which it converts to a named type
 command.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds
 command.SubDoc(short string)	free text	prose for a page or a message
 command.Table.Empty string	boundary	what the output prints, derived from the struct tags

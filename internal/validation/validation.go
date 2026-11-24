@@ -31,6 +31,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
 	"github.com/go-playground/validator/v10"
@@ -352,7 +354,7 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 	"valid_target": func(ctx context.Context, fe validator.FieldError) string {
 		target, _ := fe.Value().(string)
 		if t, ok := PendingTarget(ctx, target); ok {
-			if t == "_all" || t == "_any" {
+			if t == types.TargetAll || t == types.TargetAny {
 				return "all agents are pending PKI enrollment; list them with: osapi client admission list --state pending"
 			}
 

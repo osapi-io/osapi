@@ -210,13 +210,13 @@ func responseCases(
 		one.wantBody = body(rows(m, "server1", out))
 		cases = append(cases, one)
 
-		all, err := request(b, m, "_all", ex.Input)
+		all, err := request(b, m, string(types.TargetAll), ex.Input)
 		if err != nil {
 			return nil, err
 		}
 		all.name = "when the example " + strconv.Quote(ex.Doc) +
 			" is broadcast, every host's result is returned"
-		all.job = jobCall(b, m, "_all", ex.Input,
+		all.job = jobCall(b, m, string(types.TargetAll), ex.Input,
 			completed("server1", string(out)),
 			jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server2")),
 			jen.Qual(servertestPath, "Failed").Call(jen.Lit("server3"), jen.Lit("boom")),
@@ -233,7 +233,7 @@ func responseCases(
 	if err != nil {
 		return nil, err
 	}
-	all, err := request(b, m, "_all", input)
+	all, err := request(b, m, string(types.TargetAll), input)
 	if err != nil {
 		return nil, err
 	}
@@ -275,9 +275,16 @@ func responseCases(
 	add(base, "when the job client fails, it is a 500",
 		failing(jobCall(b, m, "server1", input), jen.Qual(servertestPath, "ErrUnreachable")),
 		http.StatusInternalServerError, "")
-	add(all, "when broadcast and the job client fails, it is a 500",
-		failing(jobCall(b, m, "_all", input), jen.Qual(servertestPath, "ErrUnreachable")),
-		http.StatusInternalServerError, "")
+	add(
+		all,
+		"when broadcast and the job client fails, it is a 500",
+		failing(
+			jobCall(b, m, string(types.TargetAll), input),
+			jen.Qual(servertestPath, "ErrUnreachable"),
+		),
+		http.StatusInternalServerError,
+		"",
+	)
 	if m.KeyField != "" {
 		add(base, "when the host does not have it, it is a 404",
 			failing(jobCall(b, m, "server1", input),

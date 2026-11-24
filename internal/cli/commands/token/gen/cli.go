@@ -8,6 +8,7 @@ import (
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
 	"github.com/osapi-io/osapi/internal/cli/reference"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var tokenGenerateCmd = &cobra.Command{
@@ -20,7 +21,7 @@ var tokenGenerateCmd = &cobra.Command{
 		permissions, _ := cmd.Flags().GetStringSlice("permissions")
 		targets, _ := cmd.Flags().GetStringSlice("targets")
 
-		return clicommand.Run(cmd, token.Group, "generate", token.GenerateInput{Roles: roles, Subject: subject, Permissions: permissions, Targets: targets})
+		return clicommand.Run(cmd, token.Group, "generate", token.GenerateInput{Roles: clicommand.Strings[types.Role](roles), Subject: subject, Permissions: permissions, Targets: targets})
 	},
 	Short: "Generate a new token",
 	Use:   "generate",

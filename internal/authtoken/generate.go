@@ -24,6 +24,8 @@ package authtoken
 import (
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -31,7 +33,7 @@ import (
 // permissions and optional target scope. The kid header is the ID of key.
 func (t *Token) Generate(
 	key Key,
-	roles []string,
+	roles []types.Role,
 	subject string,
 	permissions []string,
 	targets []string,

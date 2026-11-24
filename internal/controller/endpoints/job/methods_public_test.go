@@ -570,7 +570,8 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms, nil)
+	t, _ := authtoken.New(slog.Default()).
+		Generate(signingKey, []types.Role{types.RoleRead}, "test", perms, nil)
 
 	return t
 }
@@ -581,7 +582,7 @@ func scopedToken(
 	perms ...string,
 ) string {
 	t, _ := authtoken.New(slog.Default()).
-		Generate(signingKey, []string{"read"}, "test", perms, targets)
+		Generate(signingKey, []types.Role{types.RoleRead}, "test", perms, targets)
 
 	return t
 }

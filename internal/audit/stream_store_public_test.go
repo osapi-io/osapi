@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -70,7 +72,7 @@ func (s *StreamStorePublicTestSuite) newEntry(
 		ID:           id,
 		Timestamp:    time.Now(),
 		User:         "user@example.com",
-		Roles:        []string{"admin"},
+		Roles:        []types.Role{types.RoleAdmin},
 		Method:       "GET",
 		Path:         "/node/hostname",
 		SourceIP:     "127.0.0.1",

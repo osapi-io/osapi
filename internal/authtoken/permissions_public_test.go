@@ -100,14 +100,14 @@ type PermissionsPublicTestSuite struct {
 func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 	tests := []struct {
 		name              string
-		roles             []string
+		roles             []types.Role
 		directPermissions []string
 		customRoles       map[string][]string
 		validateFunc      func(map[string]bool)
 	}{
 		{
 			name:  "admin role gets all permissions",
-			roles: []string{"admin"},
+			roles: []types.Role{types.RoleAdmin},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range authtoken.AllPermissions() {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
@@ -116,7 +116,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "admin role gets command:execute and command:shell",
-			roles: []string{"admin"},
+			roles: []types.Role{types.RoleAdmin},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(types.PermCommandExecute),
@@ -128,7 +128,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "automation role gets write permissions but not audit or command",
-			roles: []string{"automation"},
+			roles: []types.Role{types.RoleAutomation},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(types.PermHostnameRead),
@@ -153,7 +153,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "read role gets read-only permissions",
-			roles: []string{"read"},
+			roles: []types.Role{types.RoleRead},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(types.PermHostnameRead),
@@ -178,7 +178,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "unknown role gets no permissions",
-			roles: []string{"unknown"},
+			roles: []types.Role{types.Role("unknown")},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range authtoken.AllPermissions() {
 					s.False(resolved[string(p)], "expected permission %s to be absent", p)
@@ -187,7 +187,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "empty roles gets no permissions",
-			roles: []string{},
+			roles: []types.Role{},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range authtoken.AllPermissions() {
 					s.False(resolved[string(p)], "expected permission %s to be absent", p)
@@ -205,7 +205,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:              "direct permissions override roles",
-			roles:             []string{"admin"},
+			roles:             []types.Role{types.RoleAdmin},
 			directPermissions: []string{string(types.PermHostnameRead)},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{string(types.PermHostnameRead)} {
@@ -225,7 +225,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "custom role overrides default",
-			roles: []string{"ops"},
+			roles: []types.Role{types.Role("ops")},
 			customRoles: map[string][]string{
 				"ops": {string(types.PermHostnameRead), string(types.PermHealthRead)},
 			},
@@ -248,7 +248,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "custom role shadows built-in role",
-			roles: []string{"read"},
+			roles: []types.Role{types.RoleRead},
 			customRoles: map[string][]string{
 				"read": {string(types.PermHealthRead)},
 			},
@@ -266,7 +266,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "a built-in role grants a behavior's permissions by verb",
-			roles: []string{"read"},
+			roles: []types.Role{types.RoleRead},
 			validateFunc: func(resolved map[string]bool) {
 				s.True(resolved["motdperm:read"])
 				s.False(resolved["motdperm:write"])
@@ -274,7 +274,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "multiple roles merge permissions",
-			roles: []string{"read", "automation"},
+			roles: []types.Role{types.RoleRead, types.RoleAutomation},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(types.PermHostnameRead),
@@ -293,7 +293,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			resolved := authtoken.ResolvePermissions(
-				authtoken.RolesOf(tt.roles),
+				tt.roles,
 				authtoken.PermissionsOf(tt.directPermissions),
 				customOf(tt.customRoles),
 			)
@@ -339,7 +339,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 	}{
 		{
 			name: "when admin, it gets each permission",
-			role: authtoken.RoleAdmin,
+			role: types.RoleAdmin,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.Equal(authtoken.AllPermissions(), perms)
@@ -349,7 +349,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when operator, it gets each read and each execute that is not admin only",
-			role: authtoken.RoleOperator,
+			role: types.RoleOperator,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.Contains(perms, authtoken.Permission("motdperm:read"))
@@ -383,7 +383,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when automation, it gets each read and each write that is not admin only",
-			role: authtoken.RoleAutomation,
+			role: types.RoleAutomation,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.Contains(perms, authtoken.Permission("motdperm:read"))
@@ -409,7 +409,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when read, it gets each read that is not admin only",
-			role: authtoken.RoleRead,
+			role: types.RoleRead,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.Contains(perms, authtoken.Permission("motdperm:read"))
@@ -424,7 +424,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when auditor, it gets the audit log, the traces, the jobs, the health and the catalog",
-			role: authtoken.RoleAuditor,
+			role: types.RoleAuditor,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.ElementsMatch([]authtoken.Permission{
@@ -438,7 +438,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when observer, it gets the health, the status, the agents and the catalog only",
-			role: authtoken.RoleObserver,
+			role: types.RoleObserver,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.ElementsMatch([]authtoken.Permission{

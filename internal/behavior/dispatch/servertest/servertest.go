@@ -42,6 +42,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
@@ -59,7 +61,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/validation"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // signingKey signs every token a case sends.
@@ -400,20 +401,21 @@ func request(
 func token(
 	tok Token,
 ) string {
-	var roles, perms []string
+	var roles []types.Role
+	var perms []string
 	switch tok {
 	case NoToken:
 		return ""
 	case Read:
-		roles = []string{"read"}
+		roles = []types.Role{types.RoleRead}
 	case Write:
 		// The two roles that change a host without admin: automation for a
 		// write, operator for an action (its execute permission).
-		roles = []string{"automation", "operator"}
+		roles = []types.Role{types.RoleAutomation, types.RoleOperator}
 	case Lacking:
-		roles, perms = []string{"admin"}, []string{"health:read"}
+		roles, perms = []types.Role{types.RoleAdmin}, []string{"health:read"}
 	case Admin:
-		roles = []string{"admin"}
+		roles = []types.Role{types.RoleAdmin}
 	}
 	t, _ := authtoken.New(slog.Default()).Generate(signingKey, roles, "servertest", perms, nil)
 

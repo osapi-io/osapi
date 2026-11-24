@@ -39,6 +39,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 
 	"github.com/stretchr/testify/suite"
@@ -81,7 +83,8 @@ func (s *AllPublicTestSuite) TestRefusals() {
 			}
 		}
 	}
-	token, err := authtoken.New(slog.Default()).Generate(key, []string{"admin"}, "test", perms, nil)
+	token, err := authtoken.New(slog.Default()).
+		Generate(key, []types.Role{types.RoleAdmin}, "test", perms, nil)
 	s.Require().NoError(err)
 
 	// Each group gets an empty Deps: the API refuses each input before a

@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -70,32 +72,36 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		{
 			name: "when the token is signed, it is the answer with what it carries",
 			in: token.GenerateInput{
-				Roles: []string{"read"}, Subject: "ops", Permissions: []string{"trace:read"},
-				Targets: []string{"group:web"},
+				Roles: []types.Role{
+					types.RoleRead,
+				},
+				Subject:     "ops",
+				Permissions: []string{"trace:read"},
+				Targets:     []string{"group:web"},
 			},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().
-					Generate(key, []string{"read"}, "ops", []string{"trace:read"}, []string{"group:web"}).
+					Generate(key, []types.Role{types.RoleRead}, "ops", []string{"trace:read"}, []string{"group:web"}).
 					Return("signed", nil)
 			},
 			validateFunc: func(got token.GenerateOutput, err error) {
 				s.Require().NoError(err)
 				s.Equal(token.GenerateOutput{
 					Token: "signed", KeyID: "2026-11", Subject: "ops",
-					Roles: []string{"read"}, Permissions: []string{"trace:read"},
+					Roles: []types.Role{types.RoleRead}, Permissions: []string{"trace:read"},
 					Targets: []string{"group:web"},
 				}, got)
 			},
 		},
 		{
 			name: "when the token cannot be signed, it is the error",
-			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []types.Role{types.RoleRead}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
-				s.tokens.EXPECT().Generate(key, []string{"read"}, "ops", nil, nil).
+				s.tokens.EXPECT().Generate(key, []types.Role{types.RoleRead}, "ops", nil, nil).
 					Return("", errors.New("no key"))
 			},
 			validateFunc: func(_ token.GenerateOutput, err error) {
@@ -104,7 +110,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		},
 		{
 			name: "when the config has no signing key, it is refused",
-			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []types.Role{types.RoleRead}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKeys(gomock.Any()).Return(nil, nil)
@@ -115,7 +121,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		},
 		{
 			name: "when a signing key does not resolve, it is the error",
-			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []types.Role{types.RoleRead}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKeys(gomock.Any()).
@@ -127,12 +133,12 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		},
 		{
 			name: "when the role is a custom role of the config, it is signed",
-			in:   token.GenerateInput{Roles: []string{"security"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []types.Role{"security"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().
 					Return(authtoken.CustomRoles{"security": {"audit:read"}}, nil)
 				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
-				s.tokens.EXPECT().Generate(key, []string{"security"}, "ops", nil, nil).
+				s.tokens.EXPECT().Generate(key, []types.Role{"security"}, "ops", nil, nil).
 					Return("signed", nil)
 			},
 			validateFunc: func(got token.GenerateOutput, err error) {
@@ -142,7 +148,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		},
 		{
 			name: "when the role is neither built in nor of the config, it is refused",
-			in:   token.GenerateInput{Roles: []string{"root"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []types.Role{"root"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 			},
@@ -153,7 +159,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		},
 		{
 			name: "when the config cannot be read, it is the error",
-			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []types.Role{types.RoleRead}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, errors.New("no file"))
 			},
@@ -188,7 +194,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 			setup: func() {
 				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Validate("jwt", keys).Return(&authtoken.CustomClaims{
-					Roles:       []string{"read"},
+					Roles:       []types.Role{types.RoleRead},
 					Permissions: []string{"trace:read", "audit:read"},
 					Targets:     []string{"group:web"},
 					KeyID:       "2026-11",
@@ -205,7 +211,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 				s.Equal(token.Claims{
 					KeyID:                "2026-11",
 					Subject:              "ops",
-					Roles:                []string{"read"},
+					Roles:                []types.Role{types.RoleRead},
 					Permissions:          []string{"trace:read", "audit:read"},
 					Targets:              []string{"group:web"},
 					EffectivePermissions: []string{"audit:read", "trace:read"},
@@ -220,7 +226,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 			setup: func() {
 				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Validate("jwt", keys).Return(&authtoken.CustomClaims{
-					Roles: []string{"read"},
+					Roles: []types.Role{types.RoleRead},
 				}, nil)
 			},
 			validateFunc: func(got token.Claims, err error) {
@@ -288,7 +294,7 @@ func (s *MethodsPublicTestSuite) TestPermissionRule() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			err := command.Check(context.Background(), token.GenerateInput{
-				Roles: []string{"read"}, Subject: "ops", Permissions: tc.perms,
+				Roles: []types.Role{types.RoleRead}, Subject: "ops", Permissions: tc.perms,
 			})
 
 			if tc.wantErr == "" {

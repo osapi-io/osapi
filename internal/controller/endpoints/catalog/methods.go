@@ -55,7 +55,7 @@ func Get(
 	for _, r := range authtoken.Roles() {
 		perms, _ := authtoken.RolePermissions(r)
 		out.Roles = append(out.Roles, CatalogRole{
-			Name:        string(r),
+			Name:        r,
 			Description: authtoken.RoleDescription(r),
 			Permissions: perms,
 		})

@@ -56,7 +56,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		jobID        string
 		steps        map[string][]types.Step
 		subject      string
-		roles        []string
+		roles        []types.Role
 		targets      []string
 		storeErr     error
 		wantWrite    bool
@@ -68,14 +68,14 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			name:      "authenticated request is logged",
 			path:      "/api/node/hostname",
 			subject:   "user@example.com",
-			roles:     []string{"admin"},
+			roles:     []types.Role{types.RoleAdmin},
 			wantWrite: true,
 			validateFunc: func(entry audit.Entry) {
 				s.Equal("user@example.com", entry.User)
 				s.Equal("GET", entry.Method)
 				s.Equal("/api/node/hostname", entry.Path)
 				s.Equal(http.StatusOK, entry.ResponseCode)
-				s.Equal([]string{"admin"}, entry.Roles)
+				s.Equal([]types.Role{types.RoleAdmin}, entry.Roles)
 				s.Empty(entry.Targets)
 			},
 		},
@@ -83,7 +83,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			name:      "the target scope of the token is recorded",
 			path:      "/api/node/web-01/hostname",
 			subject:   "team-web",
-			roles:     []string{"operator"},
+			roles:     []types.Role{types.RoleOperator},
 			targets:   []string{"group:web"},
 			wantWrite: true,
 			validateFunc: func(entry audit.Entry) {
@@ -114,7 +114,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			name:      "authenticated request with trace context captures trace ID",
 			path:      "/api/node/hostname",
 			subject:   "user@example.com",
-			roles:     []string{"admin"},
+			roles:     []types.Role{types.RoleAdmin},
 			wantWrite: true,
 			setupReq: func(req *http.Request) *http.Request {
 				traceID, _ := trace.TraceIDFromHex(
@@ -141,7 +141,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			name:      "store error is handled gracefully",
 			path:      "/api/node/hostname",
 			subject:   "user@example.com",
-			roles:     []string{"admin"},
+			roles:     []types.Role{types.RoleAdmin},
 			storeErr:  fmt.Errorf("write failed"),
 			wantWrite: true,
 		},
@@ -153,7 +153,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			contentType: "application/json",
 			jobID:       "7c9e6679-7425-40de-944b-e07fc1f90ae7",
 			subject:     "user@example.com",
-			roles:       []string{"admin"},
+			roles:       []types.Role{types.RoleAdmin},
 			wantWrite:   true,
 			validateFunc: func(entry audit.Entry) {
 				s.Contains(entry.RequestSummary, "systemctl restart nginx")

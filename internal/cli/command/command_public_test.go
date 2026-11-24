@@ -95,6 +95,26 @@ func (s *CommandPublicTestSuite) TestReadFile() {
 	s.ErrorContains(reported, "missing")
 }
 
+func (s *CommandPublicTestSuite) TestStrings() {
+	tests := []struct {
+		name   string
+		values []string
+		want   []types.Role
+	}{
+		{
+			name: "when there are values, each is one of T", values: []string{"admin", "read"},
+			want: []types.Role{types.RoleAdmin, types.RoleRead},
+		},
+		{name: "when there are none, the list is empty", values: nil, want: []types.Role{}},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.want, command.Strings[types.Role](tt.values))
+		})
+	}
+}
+
 func (s *CommandPublicTestSuite) TestReport() {
 	var reported error
 	s.Require().NoError(command.Attach(&cobra.Command{Use: "client"}, command.Deps{

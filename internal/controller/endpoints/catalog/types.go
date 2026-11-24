@@ -78,7 +78,7 @@ type CatalogArea struct { //nolint:revive // the schema name is part of the API
 
 // CatalogRole is one built-in role.
 type CatalogRole struct { //nolint:revive // the schema name is part of the API
-	Name        string             `json:"name"        doc:"The name of the role, as a token names it." example:"operator"`
+	Name        types.Role         `json:"name"        doc:"The name of the role, as a token names it." example:"operator"`
 	Description string             `json:"description" doc:"Who the role is for."`
 	Permissions []types.Permission `json:"permissions" doc:"The permissions of the role."                                  table:"-"`
 }

@@ -55,7 +55,7 @@ var when = time.Date(2026, 11, 17, 8, 0, 0, 0, time.UTC)
 var (
 	full = auditstore.Entry{
 		ID: entryID, Timestamp: when, User: "ops@example.com",
-		Roles: []string{"admin"}, Method: "POST", Path: "/api/node/web-01/command/exec",
+		Roles: []types.Role{types.RoleAdmin}, Method: "POST", Path: "/api/node/web-01/command/exec",
 		OperationID: "PostNodeCommandExec", SourceIP: "192.168.1.100",
 		ResponseCode: 202, DurationMs: 42, TraceID: "4bf92f3577b34da6a3ce929d0e0e4736",
 		JobID: "7c9e6679-7425-40de-944b-e07fc1f90ae7", RequestSummary: `{"command":"uptime"}`,
@@ -65,7 +65,7 @@ var (
 		}},
 	}
 	bare = auditstore.Entry{
-		ID: entryID, Timestamp: when, User: "ops@example.com", Roles: []string{"read"},
+		ID: entryID, Timestamp: when, User: "ops@example.com", Roles: []types.Role{types.RoleRead},
 		Method: "GET", Path: "/api/agent", SourceIP: "10.0.0.1", ResponseCode: 200,
 	}
 )
@@ -132,7 +132,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 					ID:             entryID,
 					Timestamp:      when,
 					User:           "ops@example.com",
-					Roles:          []string{"admin"},
+					Roles:          []types.Role{types.RoleAdmin},
 					Method:         "POST",
 					Path:           "/api/node/web-01/command/exec",
 					OperationID:    "PostNodeCommandExec",
@@ -453,7 +453,8 @@ func (s *MethodsPublicTestSuite) TestGet() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms, nil)
+	t, _ := authtoken.New(slog.Default()).
+		Generate(signingKey, []types.Role{types.RoleRead}, "test", perms, nil)
 
 	return t
 }

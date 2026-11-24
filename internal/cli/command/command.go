@@ -534,6 +534,19 @@ func Report(
 	deps.Error(err)
 }
 
+// Strings is values as a list of T, for a flag of a []T field whose T is a
+// named string type, such as []types.Role.
+func Strings[T ~string](
+	values []string,
+) []T {
+	out := make([]T, 0, len(values))
+	for _, v := range values {
+		out = append(out, T(v))
+	}
+
+	return out
+}
+
 // ReadFile is the content of the local file at path, for a flag of a []byte
 // field. A file that it cannot read is reported, and ok is false.
 func ReadFile(
