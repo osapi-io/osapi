@@ -28,7 +28,7 @@ import (
 
 // ListInput filters the records by state.
 type ListInput struct {
-	State types.AdmissionState `json:"state" in:"query" validate:"omitempty,oneof=pending admitted rejected revoked" doc:"Only the records in this state: pending, admitted, rejected or revoked."`
+	State types.AdmissionState `json:"state" in:"query" validate:"omitempty,enum" doc:"Only the records in this state: pending, admitted, rejected or revoked."`
 }
 
 // MachineInput names a machine.

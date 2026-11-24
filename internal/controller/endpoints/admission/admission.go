@@ -44,14 +44,6 @@ var (
 	ErrMismatch = errors.New("fingerprint does not match the request")
 )
 
-// admissionStates are the values of types.AdmissionState.
-func admissionStates() []string {
-	return []string{
-		string(types.AdmissionPending), string(types.AdmissionAdmitted),
-		string(types.AdmissionRejected), string(types.AdmissionRevoked),
-	}
-}
-
 // Group is the admission group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"admission", "The admission of nodes",
@@ -63,7 +55,6 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[types.AdmissionState](
 		"The state of a node's admission record: pending, admitted, rejected or revoked.",
 	),
-	endpoint.Enum[types.AdmissionState](admissionStates),
 	endpoint.Get[ListInput, ListAdmissionResponse]("list").
 		Fails("a state that is not one of the four", ListInput{State: "accepted"}).
 		Handle(List).

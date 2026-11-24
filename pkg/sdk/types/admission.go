@@ -20,6 +20,8 @@
 
 package types
 
+import "slices"
+
 // AdmissionState is the state of a machine's admission record. A machine
 // has one at a time: the state of its latest record.
 type AdmissionState string
@@ -36,3 +38,18 @@ const (
 	// AdmissionRevoked is a machine whose admission the controller revoked.
 	AdmissionRevoked AdmissionState = "revoked"
 )
+
+// Values are the states of an admission record, in their order.
+func (AdmissionState) Values() []AdmissionState {
+	return []AdmissionState{
+		AdmissionPending,
+		AdmissionAdmitted,
+		AdmissionRejected,
+		AdmissionRevoked,
+	}
+}
+
+// Valid reports whether s is one of the states.
+func (s AdmissionState) Valid() bool {
+	return slices.Contains(s.Values(), s)
+}
