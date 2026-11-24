@@ -137,18 +137,12 @@ func traceReader(
 	return traces.NewJaeger(cfg.URL, nil)
 }
 
-// admissionDeps is what the admission group's handlers use. A controller
-// with PKI off has no watcher, and the group must see a nil interface, not
-// an interface that holds a nil pointer, to answer that admission is off.
+// admissionDeps is what the admission group's handlers use: the watcher of
+// the enrollment, which keeps the records, and the job client.
 func admissionDeps(
 	d handlerDeps,
 ) admissionEndpoint.Deps {
-	deps := admissionEndpoint.Deps{Jobs: d.jobs}
-	if d.admission != nil {
-		deps.Store = d.admission
-	}
-
-	return deps
+	return admissionEndpoint.Deps{Store: d.admission, Jobs: d.jobs}
 }
 
 // secretsDeps is what each route resolves a reference with. A controller

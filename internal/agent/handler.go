@@ -46,10 +46,10 @@ import (
 // reason so an operator reading agent logs or job termination reasons can
 // tell an unenrolled agent apart from a forged or malformed job.
 var (
-	// ErrJobEnvelopeMissing means PKI is enabled but the job data is not a
+	// ErrJobEnvelopeMissing means the job data is not a
 	// signed envelope at all, or is missing a required envelope field.
 	ErrJobEnvelopeMissing = errors.New("job data is not a signed envelope")
-	// ErrControllerKeyUnknown means PKI is enabled but this agent has not
+	// ErrControllerKeyUnknown means this agent has not
 	// completed enrollment, so it holds no controller public key to verify
 	// against.
 	ErrControllerKeyUnknown = errors.New("no cached controller public key: agent not enrolled")
@@ -83,9 +83,9 @@ func extractChanged(
 }
 
 // unwrapJobEnvelope unwraps a SignedEnvelope from job data and verifies its
-// signature. When PKI is disabled (pkiManager is nil), the raw data passes
-// through unchanged — job payloads are never wrapped in an envelope in that
-// case. When PKI is enabled, verification is fail-closed: a missing or
+// signature. Before Start loads the keys (pkiManager is nil), the raw data
+// passes through unchanged; the agent consumes no job until then, and only
+// tests call it so. Verification is fail-closed: a missing or
 // malformed envelope, an agent with no cached controller key, and a bad
 // signature are each rejected with a distinct error rather than executed.
 // Returns the inner payload or one of the Err* sentinels above.
@@ -284,7 +284,7 @@ func (a *Agent) handleJobMessage(
 		return fmt.Errorf("job not found: %s", jobKey)
 	}
 
-	// Unwrap and verify the signed envelope when PKI is enabled. Each
+	// Unwrap and verify the signed envelope. Each
 	// rejection reason is distinct so an operator can tell an unenrolled
 	// agent apart from a forged or malformed job in logs and in the
 	// terminated message's reason.

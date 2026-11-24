@@ -32,7 +32,7 @@ var Group = command.Register(command.Define(
 	command.Method[FingerprintInput, FingerprintOutput]("fingerprint").
 		Short("Show the fingerprint of the agent's keys, and what admits this machine").
 		Long("Run this on the machine. It reads the two agent keys in `agent.pki.key_dir`\n"+
-			"(`/etc/osapi/pki` by default): the Ed25519 signing key and the X25519\n"+
+			"(`/etc/osapi/pki/agent` by default): the Ed25519 signing key and the X25519\n"+
 			"encryption key. It prints the machine ID, the hostname, the public\n"+
 			"encryption key, the fingerprint that covers the two keys, and the command\n"+
 			"that admits the machine. The controller admits the machine only when the\n"+

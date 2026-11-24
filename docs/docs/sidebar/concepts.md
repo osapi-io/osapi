@@ -78,9 +78,8 @@ The controller serves the API and puts jobs on the queue. An agent runs on each
 host and does the work. `osapi start` runs the queue, the controller and an
 agent in one process, for a test.
 
-Each agent has an identity. With PKI on, the controller signs each job, and an
-agent signs each answer. Refer to
-[Agent identity](features/platform/agent-identity.md).
+Each agent has an identity. The controller signs each job, and an agent signs
+each answer. Refer to [Agent identity](features/platform/agent-identity.md).
 
 ## Skill
 

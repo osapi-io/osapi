@@ -123,7 +123,8 @@ type Agent struct {
 	// Guarded by lifecycleMu.
 	state string
 
-	// pkiManager handles keypair and enrollment lifecycle (nil when PKI disabled).
+	// pkiManager handles keypair and enrollment lifecycle. Nil before Start
+	// loads the keys; the agent takes no job until then.
 	pkiManager *pki.Manager
 
 	// natsClient is used for publishing enrollment requests via NATS.

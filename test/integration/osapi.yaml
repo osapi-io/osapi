@@ -8,13 +8,11 @@ controller:
       bearer_token: placeholder
   ui:
     enabled: true
-  # PKI enrollment and job signing (default: disabled).
-  # pki:
-  #   enabled: false
-  #   key_dir: /etc/osapi/pki
-  #   auto_admit: false
-  #   rotation_grace_period: 24h
-  #   delete_after: ""
+  # PKI enrollment and job signing. Always on. The suite admits its own
+  # agent: integration_test.go sets the key directories in the
+  # environment.
+  pki:
+    auto_admit: true
   api:
     port: 8080
     # Longer than the default 30s: a refresh of the package index on a CI
@@ -137,8 +135,10 @@ agent:
   # Command exec, command shell and docker exec. On here, for development and tests. The default is off.
   command:
     enabled: true
-  # PKI enrollment and job signing (default: disabled).
+  # PKI enrollment and job verification. Always on: the agent asks to join
+  # at its first start, and takes jobs once the controller admits it. The
+  # key directory is not the controller's, because the agent keeps the
+  # controller's public key as controller.pub in it.
   # pki:
-  #   enabled: false
-  #   key_dir: /etc/osapi/pki
+  #   key_dir: /etc/osapi/pki/agent
 

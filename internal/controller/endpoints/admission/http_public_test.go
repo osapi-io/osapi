@@ -103,7 +103,6 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 		path   string
 		body   string
 		tok    string
-		off    bool
 		setup  func()
 		code   int
 		want   string
@@ -199,11 +198,6 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			name: "when delete has only admission:read, it is a 403", method: http.MethodDelete,
 			path: "/api/admission/m-1", tok: read, code: http.StatusForbidden,
 		},
-		{
-			name: "when PKI is off, it is a 503", method: http.MethodGet,
-			path: "/api/admission", tok: read, off: true, code: http.StatusServiceUnavailable,
-			want: "controller.pki.enabled",
-		},
 	}
 
 	for _, tc := range tests {
@@ -212,9 +206,6 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 				tc.setup()
 			}
 			deps := admission.Deps{Store: s.store, Jobs: s.jobs}
-			if tc.off {
-				deps = admission.Deps{Jobs: s.jobs}
-			}
 
 			rec := s.serve(deps, tc.method, tc.path, tc.body, tc.tok)
 

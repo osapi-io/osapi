@@ -34,7 +34,8 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// PKISigner signs and verifies payloads. Nil when PKI is disabled.
+// PKISigner signs and verifies payloads. Nil until the controller, or the
+// agent at enrollment, sets it.
 type PKISigner interface {
 	// Sign signs the given data with the signer's private key.
 	Sign(data []byte) []byte
@@ -112,6 +113,13 @@ type AgentKeyStore interface {
 // forged, and both from a store that cannot be read. None of them ever means
 // "treat as verified".
 var (
+	// ErrNoAgentKeys means a job with a secret, on a job client with no
+	// agent keys to seal it to. The controller always has them; a secret
+	// never goes in a job in plain text.
+	ErrNoAgentKeys = errors.New(
+		"the job has a secret, and the job client has no agent keys to seal it to",
+	)
+
 	// ErrResponseNotSigned means the response carried no signed envelope.
 	// Expected from an agent that has not been upgraded; never accepted
 	// while enforcing.

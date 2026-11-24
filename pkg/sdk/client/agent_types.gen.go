@@ -19,8 +19,8 @@ type AgentInfo struct {
 	// Extended facts from additional providers.
 	Facts map[string]any `json:"facts,omitempty"`
 
-	// The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is
-	// disabled.
+	// The SHA256 fingerprint of the agent's PKI public key. Empty until the agent
+	// loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
 
 	// Fully qualified domain name.

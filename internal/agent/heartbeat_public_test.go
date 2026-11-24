@@ -95,6 +95,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 			QueueGroup: "test-queue",
 			MaxJobs:    5,
 			Labels:     map[string]string{"group": "web"},
+			PKI:        config.AgentPKI{KeyDir: keyDir},
 			Consumer: config.AgentConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s", "2s", "5s"},
@@ -104,6 +105,7 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 			},
 		},
 	}
+	enroll(s.appFs, s.mockJobClient)
 }
 
 func (s *HeartbeatPublicTestSuite) TearDownTest() {

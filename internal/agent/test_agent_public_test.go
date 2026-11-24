@@ -22,16 +22,21 @@ package agent_test
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/json"
+	"encoding/pem"
 	"log/slog"
 
 	"github.com/avfs/avfs"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -104,4 +109,24 @@ func newTestAgent(
 		p.execManager,
 		p.natsClient,
 	)
+}
+
+// keyDir is the PKI key directory of the test agents.
+const keyDir = "/keys"
+
+// enroll makes the agent of fs enrolled: keyDir has the controller's public
+// key, so Start takes jobs at once and does not wait for admission. The
+// enrollment gives the job client the agent's signer and machine ID.
+func enroll(
+	fs avfs.VFS,
+	jobClient *mocks.MockJobClient,
+) {
+	ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
+	_ = fs.MkdirAll(keyDir, 0o700)
+	_ = fs.WriteFile(keyDir+"/controller.pub", pem.EncodeToMemory(&pem.Block{
+		Type:  "ED25519 PUBLIC KEY",
+		Bytes: ctrlPub,
+	}), 0o644)
+	jobClient.EXPECT().SetPKISigner(gomock.Any()).AnyTimes()
+	jobClient.EXPECT().SetMachineID(gomock.Any()).AnyTimes()
 }

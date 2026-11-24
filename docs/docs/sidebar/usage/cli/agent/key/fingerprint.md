@@ -3,11 +3,11 @@
 Show the fingerprint of the agent's keys, and what admits this machine.
 
 Run this on the machine. It reads the two agent keys in `agent.pki.key_dir`
-(`/etc/osapi/pki` by default): the Ed25519 signing key and the X25519 encryption
-key. It prints the machine ID, the hostname, the public encryption key, the
-fingerprint that covers the two keys, and the command that admits the machine.
-The controller admits the machine only when the fingerprint is the one of the
-keys in its request. The command makes each key that does not exist.
+(`/etc/osapi/pki/agent` by default): the Ed25519 signing key and the X25519
+encryption key. It prints the machine ID, the hostname, the public encryption
+key, the fingerprint that covers the two keys, and the command that admits the
+machine. The controller admits the machine only when the fingerprint is the one
+of the keys in its request. The command makes each key that does not exist.
 
 ```bash
 osapi agent key fingerprint

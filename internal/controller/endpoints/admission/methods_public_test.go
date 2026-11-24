@@ -170,12 +170,6 @@ func (s *MethodsPublicTestSuite) TestList() {
 
 		s.True(internal(err))
 	})
-
-	s.Run("when PKI is off is not configured", func() {
-		_, err := admission.List(context.Background(), admission.Deps{}, admission.ListInput{})
-
-		s.True(is(err, admission.ErrNotConfigured))
-	})
 }
 
 func (s *MethodsPublicTestSuite) TestGet() {
@@ -217,16 +211,6 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		)
 
 		s.True(internal(err))
-	})
-
-	s.Run("when PKI is off is not configured", func() {
-		_, err := admission.Get(
-			context.Background(),
-			admission.Deps{},
-			admission.MachineInput{MachineID: "m-x"},
-		)
-
-		s.True(is(err, admission.ErrNotConfigured))
 	})
 }
 
@@ -369,10 +353,4 @@ func (s *MethodsPublicTestSuite) TestDecisions() {
 			}
 		})
 	}
-
-	s.Run("when PKI is off each decision is not configured", func() {
-		for _, call := range []func(admission.Deps) error{admit, reject, revoke, del} {
-			s.True(is(call(admission.Deps{}), admission.ErrNotConfigured))
-		}
-	})
 }

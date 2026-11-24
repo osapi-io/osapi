@@ -64,17 +64,15 @@ func (a *Agent) Start() {
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
 
-	// PKI enrollment (when enabled).
-	if a.appConfig.Agent.PKI.Enabled {
-		if err := a.handlePKIEnrollment(a.ctx); err != nil {
-			a.logger.Error(
-				"PKI enrollment failed",
-				slog.String("error", err.Error()),
-			)
-			a.cancel()
+	// PKI enrollment: the agent is always admitted before it takes a job.
+	if err := a.handlePKIEnrollment(a.ctx); err != nil {
+		a.logger.Error(
+			"PKI enrollment failed",
+			slog.String("error", err.Error()),
+		)
+		a.cancel()
 
-			return
-		}
+		return
 	}
 
 	a.refreshPrograms()

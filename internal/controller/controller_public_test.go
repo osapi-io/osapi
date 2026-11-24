@@ -191,7 +191,6 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			name: "when PKI, stale cleanup, notifications and metrics are on starts each of them",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())
-				cfg.Controller.PKI.Enabled = true
 				cfg.Controller.PKI.RotationGracePeriod = "1h"
 				cfg.Controller.PKI.DeleteAfter = "720h"
 				cfg.Controller.Notifications.Enabled = true
@@ -202,13 +201,13 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			},
 		},
 		{
-			name: "when the enrollment bucket fails runs without enrollment",
+			name: "when the enrollment bucket fails does not start",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())
-				cfg.Controller.PKI.Enabled = true
 				cfg.NATS.Enrollment.Bucket = "bad name"
 				return cfg
 			},
+			wantErr: "create the enrollment KV bucket",
 		},
 		{
 			name:       "when a vault is configured opens it",
@@ -287,7 +286,6 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			name: "when the keypair does not load returns the error",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())
-				cfg.Controller.PKI.Enabled = true
 				blocked := filepath.Join(s.T().TempDir(), "file")
 				s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
 				cfg.Controller.PKI.KeyDir = filepath.Join(blocked, "keys")

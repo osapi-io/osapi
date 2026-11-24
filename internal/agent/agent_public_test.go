@@ -95,6 +95,7 @@ func (s *AgentPublicTestSuite) SetupTest() {
 			Hostname:   "test-agent",
 			QueueGroup: "test-queue",
 			MaxJobs:    5,
+			PKI:        config.AgentPKI{KeyDir: keyDir},
 			Consumer: config.AgentConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s", "2s", "5s"},
@@ -104,6 +105,7 @@ func (s *AgentPublicTestSuite) SetupTest() {
 			},
 		},
 	}
+	enroll(s.appFs, s.mockJobClient)
 }
 
 func (s *AgentPublicTestSuite) TearDownTest() {
@@ -239,8 +241,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 			setupFunc: func() *agent.Agent {
 				cfg := s.appConfig
 				cfg.Agent.PKI = config.AgentPKI{
-					Enabled: true,
-					KeyDir:  "/nonexistent/keys",
+					KeyDir: "/nonexistent/keys",
 				}
 
 				// Use failfs to make the key directory creation fail.
@@ -276,27 +277,21 @@ func (s *AgentPublicTestSuite) TestStart() {
 			},
 		},
 		{
-			name: "enters pending state when PKI enabled and not enrolled skips consumers",
+			name: "enters pending state when not enrolled skips consumers",
 			setupFunc: func() *agent.Agent {
 				fs := memfs.New()
 
 				cfg := s.appConfig
 				cfg.Agent.PKI = config.AgentPKI{
-					Enabled: true,
-					KeyDir:  "/keys",
+					KeyDir: "/keys",
 				}
 
 				// No CreateOrUpdateConsumer/ConsumeJobs expectations:
 				// consumers must NOT be started in pending state.
 
 				// PKI enrollment loads a keypair even while pending, and
-				// wires it into the job client so responses are signed
-				// once the agent is accepted.
-				s.mockJobClient.EXPECT().SetPKISigner(gomock.Any())
-				// Enrollment also stamps the agent's identity on what it
-				// signs, so the controller knows which stored key verifies
-				// its responses.
-				s.mockJobClient.EXPECT().SetMachineID(gomock.Any())
+				// wires it and the machine ID into the job client, as
+				// enroll in SetupTest expects.
 
 				return newTestAgent(newTestAgentParams{
 					appFs:           fs,

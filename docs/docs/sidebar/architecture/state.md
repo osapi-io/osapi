@@ -30,8 +30,7 @@ retention of each store, and its storage, memory or file.
 If the configuration does not name a store that an operation needs, osapi does
 not make the store. It also disables the operations that use the store. For
 example, without `file-state`, the agent disables its file operations, and the
-sysctl behavior reports `skipped`. The controller makes `agent-enrollment`, and
-only when PKI is on.
+sysctl behavior reports `skipped`. The controller makes `agent-enrollment`.
 
 ## What is on the hosts
 

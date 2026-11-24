@@ -55,7 +55,7 @@ type Client struct {
 	// Exported for testing.
 	JSONMarshalFn func(v any) ([]byte, error)
 	jobsCreated   metric.Int64Counter
-	// pkiSigner signs job payloads when PKI is enabled. Nil when disabled.
+	// pkiSigner signs job payloads. Nil until SetPKISigner.
 	pkiSigner PKISigner
 	// targetResolver resolves a target (hostname or machine ID) to the
 	// value used for NATS subject routing. When nil, the target is used as-is.
@@ -88,7 +88,7 @@ type Options struct {
 	StateBucket string
 	// StreamName is the JetStream stream name (used to derive DLQ name).
 	StreamName string
-	// PKISigner signs job payloads when PKI is enabled. Nil when disabled.
+	// PKISigner signs job payloads. Nil until SetPKISigner.
 	PKISigner PKISigner
 	// TargetResolver resolves hostname targets to machine IDs for NATS
 	// subject routing. When nil, targets are used as-is.
@@ -302,7 +302,7 @@ func (c *Client) publishAndWait(
 
 	jobJSON, _ := json.Marshal(jobData)
 
-	// Sign the job data when PKI is enabled.
+	// Sign the job data with the key of the controller.
 	kvPayload := jobJSON
 	if c.pkiSigner != nil {
 		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
@@ -470,7 +470,7 @@ func (c *Client) publishAndCollect(
 
 	jobJSON, _ := json.Marshal(jobData)
 
-	// Sign the job data when PKI is enabled.
+	// Sign the job data with the key of the controller.
 	kvPayload := jobJSON
 	if c.pkiSigner != nil {
 		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
@@ -689,12 +689,11 @@ func operation(
 var newSealer = seal.New
 
 // request is the job of data for target, which resolves to resolved, with
-// a new job ID. When the controller verifies its agents (PKI) and data
-// holds a secret, each secret of the data is sealed with a new job key,
-// and the job key is sealed to each agent that the target can reach and
-// that has an encryption key: JetStream and the job KV never see the
-// value. Without PKI, no agent has an encryption key, so the data keeps
-// each value as the caller sent it.
+// a new job ID. When data holds a secret, each secret is sealed with a new
+// job key, and the job key is sealed to each agent that the target can
+// reach and that has an encryption key: JetStream and the job KV never see
+// the value. A job client with no agent keys, which only the controller
+// has, refuses a job with a secret, so no secret goes in plain text.
 func (c *Client) request(
 	ctx context.Context,
 	typ job.Type,
@@ -710,7 +709,7 @@ func (c *Client) request(
 		Category:  category,
 		Operation: operation,
 	}
-	if c.agentKeyStore == nil || !secret.Has(data) {
+	if !secret.Has(data) {
 		dataBytes, err := json.Marshal(secret.Plain(data))
 		if err != nil {
 			return nil, fmt.Errorf("marshal data: %w", err)
@@ -718,6 +717,10 @@ func (c *Client) request(
 		req.Data = dataBytes
 
 		return req, nil
+	}
+
+	if c.agentKeyStore == nil {
+		return nil, ErrNoAgentKeys
 	}
 
 	sealer, err := newSealer(req.JobID)

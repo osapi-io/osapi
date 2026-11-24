@@ -30,8 +30,7 @@ import (
 
 // Deps is what the admission group's handlers use.
 type Deps struct {
-	// Store keeps the admission records. Nil when PKI is off; each method
-	// then answers 503.
+	// Store keeps the admission records.
 	Store Store
 	// Jobs reads the registry, for which nodes are online, and the last
 	// time each node reported.

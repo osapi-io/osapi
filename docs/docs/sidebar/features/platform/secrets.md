@@ -6,12 +6,10 @@ tells what osapi does with a secret now.
 ## What osapi does now
 
 A behavior input that holds a secret, such as the `--env` of
-`osapi client node docker create`, stays out of the audit log and the traces.
-When `controller.pki.enabled` is true, it also stays out of NATS: the controller
-seals the value to each agent that the target names, and only those agents can
-open it. [Sealed values](#sealed-values) has how. When PKI is off, no agent has
-an encryption key. Then the job data in NATS has the value as plain text, so do
-not give a long-lived token to a behavior input.
+`osapi client node docker create`, stays out of the audit log and the traces. It
+also stays out of NATS: the controller seals the value to each agent that the
+target names, and only those agents can open it. [Sealed values](#sealed-values)
+has how. No setting sends a secret in plain text.
 
 A password is the exception. `osapi client node user create` and
 `osapi client node user password update` send the password to the controller,
@@ -109,11 +107,10 @@ writes `<secret>` for a value that you typed.
 
 ## Sealed values
 
-When `controller.pki.enabled` is true, the controller seals each secret of a job
-before it stores the job. `osapi client job get` then shows each secret as
-`sealed:` and ciphertext, and the job has a `sealed_keys` map with one entry for
-each agent that can open it. The job data in JetStream and in the job KV never
-has the value.
+The controller seals each secret of a job before it stores the job.
+`osapi client job get` then shows each secret as `sealed:` and ciphertext, and
+the job has a `sealed_keys` map with one entry for each agent that can open it.
+The job data in JetStream and in the job KV never has the value.
 
 The controller seals the job to each agent that the target names when it queues
 the job, and that has an encryption key:

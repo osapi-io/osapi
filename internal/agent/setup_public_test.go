@@ -276,7 +276,6 @@ func (s *SetupPublicTestSuite) TestGohaiFacts() {
 func (s *SetupPublicTestSuite) TestSubComponents() {
 	s.Run("when PKI and metrics are on reports them as ok", func() {
 		cfg := agentConfig(s.T())
-		cfg.Agent.PKI.Enabled = true
 		cfg.Agent.Metrics = config.MetricsServer{
 			Enabled: true,
 			Host:    "127.0.0.1",

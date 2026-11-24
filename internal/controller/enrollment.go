@@ -38,9 +38,9 @@ import (
 
 // startEnrollment loads or makes the controller keypair, and starts the
 // enrollment watcher. It returns the watcher, so that the agent handler can
-// list, accept and reject agents. If the enrollment bucket does not open, it
-// logs a warning and returns nil, because the controller runs without
-// enrollment then.
+// list, accept and reject agents. If the enrollment bucket does not open,
+// the controller does not start: PKI is always on, and an agent that is not
+// admitted takes no job.
 func startEnrollment(
 	ctx context.Context,
 	log *slog.Logger,
@@ -50,11 +50,7 @@ func startEnrollment(
 ) (*admission.Watcher, error) {
 	enrollmentCfg := bus.EnrollmentKV(namespace, cfg.NATS.Enrollment)
 	if err := conn.NATS.KVCreateOrUpdate(ctx, enrollmentCfg); err != nil {
-		log.Warn(
-			"failed to create enrollment KV bucket, enrollment disabled",
-			slog.String("error", err.Error()),
-		)
-		return nil, nil
+		return nil, fmt.Errorf("create the enrollment KV bucket: %w", err)
 	}
 
 	keys := pki.New(osfs.New(), cfg.Controller.PKI.KeyDir, "controller")
