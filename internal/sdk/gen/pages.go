@@ -39,12 +39,22 @@ import (
 	"github.com/osapi-io/osapi/internal/sdk/gen/sdkmodel"
 )
 
-// pageDir is the SDK's reference pages, from the root of the repository.
-// The page of each service is in the folder of its area, such as
-// fleet/agent.md, and the _category_.json of the folder gives the area's
-// label and order, from the spec's x-osapi-areas. The generator owns each
-// folder of pageDir, and fills the table of services of client.md.
-const pageDir = "docs/docs/sidebar/sdk/client"
+// pageDir is the SDK's section of the docs site, from the root of the
+// repository. The page of each service is in the folder of its area, such
+// as fleet/agent.md, and the _category_.json of the folder gives the area's
+// label and order, from the spec's x-osapi-areas, as the folders of the
+// feature pages are. The generator owns the folder of each area, and fills
+// the table of services of indexPage. The folder libraryDir, with the
+// client's overview and the guidelines, is written by hand and comes last.
+const pageDir = "docs/docs/sidebar/sdk"
+
+// libraryDir is the folder of pageDir that people write: the client's
+// overview, the guidelines and platform detection.
+const libraryDir = "library"
+
+// indexPage is the client's overview, whose table of services the
+// generator fills.
+const indexPage = libraryDir + "/client.md"
 
 // categoryFile is the file of a folder of the docs site that gives its
 // label and its place in the sidebar.
@@ -94,9 +104,9 @@ func runPages(
 		) {
 			continue
 		}
-		// An area's folder follows client.md, the first page of pageDir.
+		// The areas come first, in their order, as on the feature pages.
 		_ = w.Write(filepath.Join(pageDir, a.Name, categoryFile),
-			fmt.Appendf(nil, "{\n  \"label\": %q,\n  \"position\": %d\n}\n", a.Label, i+2))
+			fmt.Appendf(nil, "{\n  \"label\": %q,\n  \"position\": %d\n}\n", a.Label, i+1))
 	}
 	for _, s := range m.Services {
 		cs, err := calls(s)
@@ -108,7 +118,7 @@ func runPages(
 		_ = w.Write(pagePath(s), []byte(page))
 	}
 
-	index := filepath.Join(pageDir, "client.md")
+	index := filepath.Join(pageDir, indexPage)
 	data, err := os.ReadFile(filepath.Join(root, index))
 	if err != nil {
 		return err
@@ -140,8 +150,10 @@ func removeEmpty(
 }
 
 // removeOld records the removal of each page that a run wrote before, in
-// pageDir and in the folder of each area, and of each folder's
+// pageDir and in the folder of each area, and of each area folder's
 // categoryFile, so an area or a service that is gone leaves nothing behind.
+// Each folder but libraryDir is an area's, so the folder of an area that
+// is gone goes too.
 func removeOld(
 	w *genfile.Writer,
 	root string,
@@ -155,6 +167,9 @@ func removeOld(
 				_ = w.Remove(name)
 			}
 
+			continue
+		}
+		if e.Name() == libraryDir {
 			continue
 		}
 		_ = w.Remove(filepath.Join(name, categoryFile))
@@ -188,7 +203,7 @@ func serviceTables(
 		rows := []string{"### " + a.Label, "", "| Service | Description |", "| --- | --- |"}
 		for _, s := range m.Services {
 			if s.Area == a.Name {
-				rows = append(rows, fmt.Sprintf("| [%s](%s/%s.md) | %s |",
+				rows = append(rows, fmt.Sprintf("| [%s](../%s/%s.md) | %s |",
 					s.Name, a.Name, snake(s.Name), cell(sentence(s.Doc))))
 			}
 		}

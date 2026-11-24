@@ -355,7 +355,7 @@ behavior-gen-check:
 sdk-docs-generate:
     just _docs-bun-install
     go run ./internal/sdk/gen --docs
-    cd docs && bun run prettier docs/sidebar/sdk/client --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
+    cd docs && bun run prettier docs/sidebar/sdk --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
 
 # The SDK's examples and its reference pages are generated from the full spec,
 # from the examples of each method's definition, and from the SDK's source. A
@@ -366,7 +366,7 @@ sdk-gen-check:
     #!/usr/bin/env bash
     set -euo pipefail
     generated() {
-        find examples/sdk/client docs/docs/sidebar/sdk/client -type f -print | sort | xargs shasum
+        find examples/sdk/client docs/docs/sidebar/sdk -type f -print | sort | xargs shasum
     }
     before=$(generated)
     go generate ./pkg/sdk/client

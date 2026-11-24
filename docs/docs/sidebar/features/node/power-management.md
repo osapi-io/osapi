@@ -84,8 +84,9 @@ Skipped and failed hosts appear with their error in the output.
 | Linux     | Skipped |
 
 On a platform that is not supported, power operations return `status: skipped`.
-They do not fail. Refer to [Platform Detection](../../sdk/platform/detection.md)
-for how osapi finds the OS family.
+They do not fail. Refer to
+[Platform Detection](../../sdk/library/platform-detection.md) for how osapi
+finds the OS family.
 
 ## Permissions
 
@@ -95,5 +96,6 @@ the permission of each method.
 ## Related
 
 - [CLI Reference](../../usage/cli/client/node/power/power.mdx): power commands
-- [Platform Detection](../../sdk/platform/detection.md): OS family detection
+- [Platform Detection](../../sdk/library/platform-detection.md): OS family
+  detection
 - [Configuration](../../usage/configuration.md): full configuration reference

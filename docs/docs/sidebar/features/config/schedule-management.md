@@ -187,8 +187,8 @@ management API after you remove the scheduled entry.
 
 On a platform that is not supported, schedule operations return
 `status: skipped`. They do not fail. Refer to
-[Platform Detection](../../sdk/platform/detection.md) for how osapi finds the OS
-family.
+[Platform Detection](../../sdk/library/platform-detection.md) for how osapi
+finds the OS family.
 
 ## Permissions
 
@@ -226,6 +226,6 @@ Each will have its own routes.
 - [File Management](file-management.md): upload scripts and render templates
 - [CLI Reference](../../usage/cli/client/node/schedule/schedule.mdx): the
   schedule commands
-- [Platform Detection](../../sdk/platform/detection.md): how osapi finds the OS
-  family
+- [Platform Detection](../../sdk/library/platform-detection.md): how osapi finds
+  the OS family
 - [Configuration](../../usage/configuration.md): all configuration settings

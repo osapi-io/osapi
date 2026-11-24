@@ -67,6 +67,7 @@ gives the permission of each method.
   method, its examples and what it refuses
 - [CLI Reference](../../usage/cli/client/node/process/process.mdx): process
   commands
-- [SDK Reference](../../sdk/client/node/process.md): Process service
-- [Platform Detection](../../sdk/platform/detection.md): OS family detection
+- [SDK Reference](../../sdk/node/process.md): Process service
+- [Platform Detection](../../sdk/library/platform-detection.md): OS family
+  detection
 - [Configuration](../../usage/configuration.md): full configuration reference

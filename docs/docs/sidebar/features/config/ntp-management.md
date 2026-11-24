@@ -111,8 +111,8 @@ times safely.
 
 On a platform that is not supported, and in a container, whose clock is its
 host's, NTP operations return `status: skipped`. They do not fail. Refer to
-[Platform Detection](../../sdk/platform/detection.md) for how osapi finds the OS
-family.
+[Platform Detection](../../sdk/library/platform-detection.md) for how osapi
+finds the OS family.
 
 ## Permissions
 
@@ -123,5 +123,6 @@ permission of each method.
 
 - [CLI Reference](../../usage/cli/client/node/ntp/ntp.mdx): NTP commands
 - [File Management](file-management.md): file-state KV tracking
-- [Platform Detection](../../sdk/platform/detection.md): OS family detection
+- [Platform Detection](../../sdk/library/platform-detection.md): OS family
+  detection
 - [Configuration](../../usage/configuration.md): full configuration reference
