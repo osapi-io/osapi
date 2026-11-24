@@ -462,6 +462,7 @@ components:
         - GetNodeUserByKey
         - GetNodeUserSshkey
         - GetSecret
+        - GetSecretValue
         - GetSecretVaults
         - GetSecrets
         - GetTrace
@@ -521,6 +522,7 @@ components:
         - health:read
         - trace:read
         - secret:use
+        - secret:reveal
         - certificate:read
         - certificate:write
         - command:execute

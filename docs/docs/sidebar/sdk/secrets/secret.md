@@ -11,13 +11,14 @@ metadata of their keys. No operation gives a value.
 
 ## Methods
 
-| Method                               | Returns                         | Permission     | Description                |
-| ------------------------------------ | ------------------------------- | -------------- | -------------------------- |
-| [`Vaults(ctx)`](#vaults)             | `*Response[VaultListResponse]`  | `secret:read`  | List the vaults.           |
-| [`List(ctx, vault)`](#list)          | `*Response[SecretListResponse]` | `secret:read`  | List the keys of a vault.  |
-| [`Get(ctx, vault, key)`](#get)       | `*Response[SecretInfo]`         | `secret:read`  | Get the metadata of a key. |
-| [`Update(ctx, input)`](#update)      | `*Response[SecretInfo]`         | `secret:write` | Write the value of a key.  |
-| [`Delete(ctx, vault, key)`](#delete) | `error`                         | `secret:write` | Delete a key.              |
+| Method                               | Returns                         | Permission      | Description                |
+| ------------------------------------ | ------------------------------- | --------------- | -------------------------- |
+| [`Vaults(ctx)`](#vaults)             | `*Response[VaultListResponse]`  | `secret:read`   | List the vaults.           |
+| [`List(ctx, vault)`](#list)          | `*Response[SecretListResponse]` | `secret:read`   | List the keys of a vault.  |
+| [`Get(ctx, vault, key)`](#get)       | `*Response[SecretInfo]`         | `secret:read`   | Get the metadata of a key. |
+| [`Update(ctx, input)`](#update)      | `*Response[SecretInfo]`         | `secret:write`  | Write the value of a key.  |
+| [`Delete(ctx, vault, key)`](#delete) | `error`                         | `secret:write`  | Delete a key.              |
+| [`Reveal(ctx, vault, key)`](#reveal) | `*Response[SecretValue]`        | `secret:reveal` | Reveal the value of a key. |
 
 ### Vaults
 
@@ -146,6 +147,34 @@ Delete a key, `go run secret.go delete`:
 err := c.Secret.Delete(ctx, "default", "registry-token")
 ```
 
+### Reveal
+
+```go
+func (s *SecretService) Reveal(
+	ctx context.Context,
+	vault string,
+	key string,
+) (*Response[SecretValue], error)
+```
+
+Reveal the value of a key.
+
+Get the value of a key, for a tool that needs the value itself. It is the one
+method that gives a value, and it needs secret:reveal, which only the admin role
+has. The audit log records each call, with the vault, the key and the caller,
+and never the value.
+
+It sends `GET /api/secret/{vault}/{key}/value`, and needs the permission
+`secret:reveal`.
+
+The examples of the method's definition:
+
+Reveal the value of a key, `go run secret.go reveal`:
+
+```go
+resp, err := c.Secret.Reveal(ctx, "default", "registry-token")
+```
+
 ## Types
 
 The fields of each type are the properties of its schema in the API's spec.
@@ -174,6 +203,12 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Vault` | `string` | The vault of the path. The name of the vault, such as default.                                                 |
 | `Key`   | `string` | The key of the path. The name of the key, such as registry-token.                                              |
 | `Value` | `string` | The value of the key, which no method gives back. A secret: a reference, secret://<vault>/<key>, or the value. |
+
+### SecretValue
+
+| Field   | Type     | Description           |
+| ------- | -------- | --------------------- |
+| `Value` | `string` | The value of the key. |
 
 ### VaultInfo
 

@@ -86,6 +86,7 @@ export const OperationID = {
   GetNodeUserByKey: 'GetNodeUserByKey',
   GetNodeUserSshkey: 'GetNodeUserSshkey',
   GetSecret: 'GetSecret',
+  GetSecretValue: 'GetSecretValue',
   GetSecretVaults: 'GetSecretVaults',
   GetSecrets: 'GetSecrets',
   GetTrace: 'GetTrace',

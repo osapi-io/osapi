@@ -62,6 +62,24 @@ var secretGetCmd = &cobra.Command{
 	Use:   "get",
 }
 
+var secretRevealCmd = &cobra.Command{
+	Annotations: map[string]string{
+		reference.Permission: "secret:reveal",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client secret reveal --vault default --key registry-token\nglpat-xxxxxxxxxxxxxxxxxxxx\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"value\": \"glpat-xxxxxxxxxxxxxxxxxxxx\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client secret reveal --vault default --key registry-token\n  osapi client secret reveal --vault default --key registry-token --json",
+	Long:    "The command prints only the value, with no heading and no trace line, so a\npipe gets the value. --json prints {\"value\": \"...\"}. The audit log\nrecords each call. A request that uses the secret gives its reference,\nsecret://<vault>/<key>, not the value.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		vault, _ := cmd.Flags().GetString("vault")
+		key, _ := cmd.Flags().GetString("key")
+
+		endpointcommand.Run(cmd, secret.Group, "reveal", secret.RevealInput{Vault: vault, Key: key})
+	},
+	Short: "Print the value of a key",
+	Use:   "reveal",
+}
+
 var secretUpdateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "secret:write",
@@ -110,6 +128,10 @@ func init() {
 	_ = secretGetCmd.MarkFlagRequired("vault")
 	secretGetCmd.Flags().String("key", "", "The name of the key, such as registry-token")
 	_ = secretGetCmd.MarkFlagRequired("key")
+	secretRevealCmd.Flags().String("vault", "", "The name of the vault, such as default")
+	_ = secretRevealCmd.MarkFlagRequired("vault")
+	secretRevealCmd.Flags().String("key", "", "The name of the key, such as registry-token")
+	_ = secretRevealCmd.MarkFlagRequired("key")
 	secretUpdateCmd.Flags().String("vault", "", "The name of the vault, such as default")
 	_ = secretUpdateCmd.MarkFlagRequired("vault")
 	secretUpdateCmd.Flags().String("key", "", "The name of the key, such as registry-token")
@@ -120,5 +142,5 @@ func init() {
 	_ = secretDeleteCmd.MarkFlagRequired("vault")
 	secretDeleteCmd.Flags().String("key", "", "The name of the key, such as registry-token")
 	_ = secretDeleteCmd.MarkFlagRequired("key")
-	clicommand.AddCommands(secret.Group, secretVaultsCmd, secretListCmd, secretGetCmd, secretUpdateCmd, secretDeleteCmd)
+	clicommand.AddCommands(secret.Group, secretVaultsCmd, secretListCmd, secretGetCmd, secretRevealCmd, secretUpdateCmd, secretDeleteCmd)
 }

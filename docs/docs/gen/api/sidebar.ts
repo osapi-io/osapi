@@ -1165,6 +1165,13 @@ const sidebar: SidebarsConfig = {
               className: "api-method put",
               key: "secrets-secret-management-api-secret-operations-gen-api-put-secret",
             },
+            {
+              type: "doc",
+              id: "gen/api/get-secret-value",
+              label: "Reveal the value of a key",
+              className: "api-method get",
+              key: "secrets-secret-management-api-secret-operations-gen-api-get-secret-value",
+            },
           ],
         },
       ],

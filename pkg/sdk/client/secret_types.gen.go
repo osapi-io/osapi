@@ -31,6 +31,12 @@ type SecretListResponse struct {
 	TotalItems int `json:"total_items"`
 }
 
+// SecretValue is the SecretValue of the spec.
+type SecretValue struct {
+	// The value of the key.
+	Value string `json:"value"`
+}
+
 // VaultInfo is the VaultInfo of the spec.
 type VaultInfo struct {
 	// Whether the vault answered a list of its keys.

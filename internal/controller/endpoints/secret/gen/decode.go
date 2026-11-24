@@ -51,6 +51,24 @@ func decodeGet(
 	return in, "", true
 }
 
+// decodeReveal reads the reveal method's input from the request.
+func decodeReveal(
+	c *echo.Context,
+) (secret.RevealInput, string, bool) {
+	var in secret.RevealInput
+	if msg, ok := server.Param(c, "vault", &in.Vault); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Param(c, "key", &in.Key); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
 // decodeUpdate reads the update method's input from the request.
 func decodeUpdate(
 	c *echo.Context,

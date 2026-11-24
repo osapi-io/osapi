@@ -98,6 +98,29 @@ func Get(
 	return info(in.Vault, m), nil
 }
 
+// Reveal is the value of one key: the one method that gives a value. The
+// route checks secret:reveal; the audit log records the call by its path,
+// and the value goes only into the answer.
+func Reveal(
+	ctx context.Context,
+	d Deps,
+	in RevealInput,
+) (SecretValue, error) {
+	v, err := open(d, in.Vault)
+	if err != nil {
+		return SecretValue{}, err
+	}
+	value, _, err := v.Get(ctx, in.Key)
+	if errors.Is(err, vault.ErrNotFound) {
+		return SecretValue{}, endpoint.Errorf(ErrNoKey, "vault %s has no key %s", in.Vault, in.Key)
+	}
+	if err != nil {
+		return SecretValue{}, endpoint.Internal("failed to read the key", err)
+	}
+
+	return SecretValue{Value: string(value)}, nil
+}
+
 // Update writes the value as the next version of the key, and records the
 // subject of the token as who changed it. The answer is the metadata.
 func Update(

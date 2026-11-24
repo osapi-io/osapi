@@ -77,8 +77,8 @@ tells which settings take one.
 ## Write and read a secret
 
 `osapi client secret` writes the value of a key, and reads the metadata of each
-key: its version, when it changed and who changed it. No command and no API
-answer gives a value. Give the value on standard input:
+key: its version, when it changed and who changed it. Only
+`osapi client secret reveal` gives a value. Give the value on standard input:
 
 ```bash
 osapi client secret update --vault default --key registry-token --value - < token.txt
@@ -92,14 +92,25 @@ writes a value with a password field and deletes a key.
 
 The permissions:
 
-| Permission     | Built-in roles                            | Lets a token                           |
-| -------------- | ----------------------------------------- | -------------------------------------- |
-| `secret:read`  | `admin`, `operator`, `automation`, `read` | list the vaults and the keys of each   |
-| `secret:write` | `admin`, `automation`                     | write and delete a key                 |
-| `secret:use`   | `admin`, `automation`                     | give a reference to a secret in a call |
+| Permission      | Built-in roles                            | Lets a token                           |
+| --------------- | ----------------------------------------- | -------------------------------------- |
+| `secret:read`   | `admin`, `operator`, `automation`, `read` | list the vaults and the keys of each   |
+| `secret:write`  | `admin`, `automation`                     | write and delete a key                 |
+| `secret:use`    | `admin`, `automation`                     | give a reference to a secret in a call |
+| `secret:reveal` | `admin`                                   | print the value of a key               |
 
 A reference as the value of `osapi client secret update` resolves too, so it
 copies the value of that key. It needs `secret:use`, as each reference does.
+
+A tool that needs the value itself, such as ansible, reads it with `reveal`. It
+needs `secret:reveal`, which only `admin` has. It prints only the value, for a
+pipe, and `--json` prints `{"value": "..."}`. The audit log records each call,
+with the caller, the vault and the key, and never the value. The UI has no
+button for it:
+
+```bash
+osapi client secret reveal --vault default --key registry-token
+```
 
 On the Plans page of the UI, a secret field of a step has a key button that
 lists the reference of each key. A plan holds only references: Export YAML
