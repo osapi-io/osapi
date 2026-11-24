@@ -40,7 +40,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // RowStatusDoc is the description of types.RowStatus in the spec.
