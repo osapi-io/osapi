@@ -20,8 +20,8 @@ resp, err := c.Hostname.Get(ctx, "_any")
 ## How the services are made
 
 `internal/sdk/gen` writes the services and their types from the spec of the API,
-in `go generate`. Each group of the API is a service, and each operation is a
-method:
+in `just sdk-generate`. Each group of the API is a service, and each operation
+is a method:
 
 - The service has the words of the group's path, such as `NetworkDNS` for
   `/api/node/{hostname}/network/dns`.

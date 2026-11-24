@@ -25,8 +25,10 @@
 // than one service has, and services.gen.go puts each service on the
 // Client. A method sends its request through the SDK's Send, and decodes
 // the answer into the SDK's types: the SDK uses nothing that oapi-codegen
-// writes. It runs from the go:generate directive in pkg/sdk/client, after
-// internal/behaviors/all writes the spec.
+// writes. just sdk-generate runs it, after go generate writes the spec. It
+// is not a go:generate directive: go generate lists the files of each
+// package before it runs, so a run that removed the file of a group that is
+// gone made go generate fail on that file (osapi-io/osapi#1261).
 //
 // The same run writes a program for each service whose methods have
 // examples, examples/sdk/client/<service>.go: it calls each method with the
