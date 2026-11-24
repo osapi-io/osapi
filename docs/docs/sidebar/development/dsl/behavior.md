@@ -526,12 +526,12 @@ Use: Only through the object building block, which the behavior requires.
 
 ### `h.Settings, h.Required`
 
-The decoded settings of the behavior, which Settings\[T](h) reads, and the
+The decoded settings of the behavior, which Settings[T](h) reads, and the
 providers of the behaviors that it requires, which Require reads. The tests give
 the defaults of Config and the real providers of the required behaviors, on the
 same fake host.
 
-Use: Through Settings\[T](h) and Require\[P](h, b), not the fields.
+Use: Through Settings[T](h) and Require\[P](h, b), not the fields.
 
 ### `h.Now, h.Time()`
 
