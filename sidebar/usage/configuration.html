@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Configuration | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/configuration"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Configuration | OSAPI"><meta data-rh="true" name="description" content="A YAML file configures osapi. As an option, environment variables can replace"><meta data-rh="true" property="og:description" content="A YAML file configures osapi. As an option, environment variables can replace"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/configuration"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/configuration" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/configuration" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"Configuration","item":"https://osapi-io.github.io/osapi/sidebar/usage/configuration"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.52b0a313.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.aba4235e.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.13c5b7d6.js" defer="defer"></script>
 </head>
 <body>
@@ -53,11 +53,15 @@ key and the fix. <code>osapi config validate --help</code> lists each rule with 
 
 
 
-<table><thead><tr><th>Key</th><th>Purpose</th></tr></thead><tbody><tr><td><code>controller.api.security.signing_key</code></td><td>HS256 key for signing JWTs</td></tr><tr><td><code>controller.client.security.bearer_token</code></td><td>JWT sent with client requests</td></tr></tbody></table>
+<table><thead><tr><th>Key</th><th>Purpose</th></tr></thead><tbody><tr><td><code>controller.api.security.signing_keys</code></td><td>HS256 keys for JWTs, each an id and key</td></tr><tr><td><code>controller.client.security.bearer_token</code></td><td>JWT sent with client requests</td></tr></tbody></table>
 <p>Make a signing key with <code>openssl rand -hex 32</code>. It must have 32 characters or
-more. Make a bearer token with <code>osapi controller token generate</code>. Durations are
-Go durations, for example <code>30s</code>, <code>5m</code> or <code>168h</code>. osapi does not accept a <code>d</code>
-suffix.</p>
+more. The first key of the list signs. Each key verifies the tokens with its
+<code>id</code> as <code>kid</code>.
+<a class="" href="/osapi/sidebar/features/platform/authentication#jwt-signing">Authentication</a> has the
+list. In the environment, <code>OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS</code> takes
+<code>id=key</code> pairs with a comma between them. Make a bearer token with
+<code>osapi controller token generate</code>. Durations are Go durations, for example
+<code>30s</code>, <code>5m</code> or <code>168h</code>. osapi does not accept a <code>d</code> suffix.</p>
 <p>Each bucket name and each namespace must be a name that NATS accepts for a
 bucket: letters, digits, <code>-</code> and <code>_</code> only. Two settings must not name the same
 bucket, because each role keeps its own keys in it. For example, when
