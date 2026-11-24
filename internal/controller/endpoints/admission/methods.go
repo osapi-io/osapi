@@ -37,9 +37,6 @@ func List(
 	d Deps,
 	in ListInput,
 ) (ListAdmissionResponse, error) {
-	if d.Store == nil {
-		return ListAdmissionResponse{}, notConfigured()
-	}
 	records, err := d.Store.List(ctx)
 	if err != nil {
 		return ListAdmissionResponse{}, endpoint.Internal("failed to list admission records", err)
@@ -63,9 +60,6 @@ func Get(
 	d Deps,
 	in MachineInput,
 ) (Admission, error) {
-	if d.Store == nil {
-		return Admission{}, notConfigured()
-	}
 	r, err := d.Store.Get(ctx, in.MachineID)
 	if err != nil {
 		if errors.Is(err, admission.ErrNotFound) {
@@ -89,9 +83,6 @@ func Admit(
 	d Deps,
 	in AdmitInput,
 ) (struct{}, error) {
-	if d.Store == nil {
-		return struct{}{}, notConfigured()
-	}
 	err := d.Store.Admit(ctx, in.MachineID, in.Body.Fingerprint)
 	switch {
 	case err == nil:
@@ -120,9 +111,6 @@ func Reject(
 	d Deps,
 	in RejectInput,
 ) (struct{}, error) {
-	if d.Store == nil {
-		return struct{}{}, notConfigured()
-	}
 	err := d.Store.Reject(ctx, in.MachineID, in.Body.Reason)
 	switch {
 	case err == nil:
@@ -144,9 +132,6 @@ func Revoke(
 	d Deps,
 	in MachineInput,
 ) (struct{}, error) {
-	if d.Store == nil {
-		return struct{}{}, notConfigured()
-	}
 	err := d.Store.Revoke(ctx, in.MachineID)
 	switch {
 	case err == nil:
@@ -227,21 +212,12 @@ func timeOf(
 	return &t
 }
 
-// notConfigured is the 503 of each method when PKI is off.
-func notConfigured() error {
-	return endpoint.Errorf(ErrNotConfigured,
-		"admission is not configured: set controller.pki.enabled on the controller")
-}
-
 // Delete removes a machine's key and each record of it.
 func Delete(
 	ctx context.Context,
 	d Deps,
 	in MachineInput,
 ) (struct{}, error) {
-	if d.Store == nil {
-		return struct{}{}, notConfigured()
-	}
 	err := d.Store.Delete(ctx, in.MachineID)
 	switch {
 	case err == nil:

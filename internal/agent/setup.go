@@ -280,7 +280,7 @@ func subComponents(
 	return map[string]job.SubComponentInfo{
 		"agent.facts":     {Status: "ok"},
 		"agent.heartbeat": {Status: "ok"},
-		"agent.pki":       {Status: enabledOrDisabled(cfg.Agent.PKI.Enabled)},
+		"agent.pki":       {Status: "ok"},
 		"agent.metrics": {
 			Status: enabledOrDisabled(cfg.Agent.Metrics.Enabled),
 			Address: fmt.Sprintf(

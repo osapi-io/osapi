@@ -24,7 +24,7 @@ export interface AgentInfo {
   cpu_count?: number;
   /** Extended facts from additional providers. */
   facts?: AgentInfoFacts;
-  /** The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled. */
+  /** The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys. */
   fingerprint?: string;
   /** Fully qualified domain name. */
   fqdn?: string;

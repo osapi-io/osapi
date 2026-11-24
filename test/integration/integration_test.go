@@ -212,6 +212,10 @@ func serverEnv() []string {
 		fmt.Sprintf("OSAPI_CONTROLLER_NATS_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_AGENT_NATS_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
+		// PKI is always on: the controller and the agent keep their keys in
+		// the suite's directory, not in /etc/osapi/pki.
+		fmt.Sprintf("OSAPI_CONTROLLER_PKI_KEY_DIR=%s", filepath.Join(tempDir, "pki", "controller")),
+		fmt.Sprintf("OSAPI_AGENT_PKI_KEY_DIR=%s", filepath.Join(tempDir, "pki", "agent")),
 	)
 }
 
@@ -243,7 +247,8 @@ func waitForReady(
 	return fmt.Errorf("server not ready after %s", timeout)
 }
 
-// waitForAgent waits until agent list has at least one agent.
+// waitForAgent waits until agent list has at least one agent that the
+// controller admitted: an agent takes no job while it is Pending.
 func waitForAgent(
 	timeout time.Duration,
 ) error {
@@ -253,16 +258,22 @@ func waitForAgent(
 		stdout, _, exitCode := runCLI("client", "agent", "list", "--json")
 		if exitCode == 0 {
 			var resp struct {
-				Items []json.RawMessage `json:"items"`
+				Items []struct {
+					State string `json:"state"`
+				} `json:"items"`
 			}
-			if parseJSON(stdout, &resp) == nil && len(resp.Items) > 0 {
-				return nil
+			if parseJSON(stdout, &resp) == nil {
+				for _, a := range resp.Items {
+					if a.State != "Pending" {
+						return nil
+					}
+				}
 			}
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	return fmt.Errorf("no agent registered after %s", timeout)
+	return fmt.Errorf("no admitted agent after %s", timeout)
 }
 
 func stopServer() {

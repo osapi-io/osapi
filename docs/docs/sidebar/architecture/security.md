@@ -50,8 +50,7 @@ The **machine ID** of an agent identifies it. The hostname does not. osapi sends
 jobs to the machine ID. Thus, when a host gets a new name, its work does not go
 to a different host.
 
-With PKI on (`controller.pki.enabled` and `agent.pki.enabled`), an agent gets no
-work until an administrator accepts it:
+PKI is always on. An agent gets no work until an administrator accepts it:
 
 1. When the agent starts for the first time, it makes an Ed25519 signing key
    pair and an X25519 encryption key in `agent.pki.key_dir`.

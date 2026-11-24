@@ -51,8 +51,8 @@ needs no privileges on a host. It runs these parts:
   when `controller.ui.enabled` is set. Refer to [UI](ui.md).
 - **The audit log.** The controller records each authenticated request in its
   own stream. Refer to [Security](security.md#audit).
-- **Enrollment**, when PKI is on. The controller keeps the agents that wait for
-  acceptance, and it signs each job that it puts on the queue. Refer to
+- **Enrollment.** The controller keeps the agents that wait for acceptance, and
+  it signs each job that it puts on the queue. Refer to
   [Security](security.md#which-agent-can-answer).
 - **A heartbeat** in the registry. With it, `osapi client health status` shows
   the controller and each of its parts.
@@ -70,8 +70,8 @@ these steps:
    macOS. If it has no machine ID, it does not start. The machine ID is the
    identity of the agent. The hostname is only a display name, and it can
    change.
-1. If PKI is on, it makes or loads its key pair and **enrolls** with the
-   controller. It waits until an administrator accepts it.
+1. It makes or loads its key pair and **enrolls** with the controller. It waits
+   until an administrator accepts it.
 1. If privilege escalation is on, it runs a **preflight**. If sudo needs a
    password, the agent stops. The agent shows a warning for each installed
    program that has no sudo rule, and for each missing capability.

@@ -84,7 +84,6 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 		var cfg config.Config
 		cfg.Controller.API.Port = 8080
 		cfg.Controller.Metrics = config.MetricsServer{Enabled: true, Host: "127.0.0.1", Port: 9090}
-		cfg.Controller.PKI.Enabled = true
 		cfg.Controller.Notifications.Enabled = true
 		cfg.Telemetry.Tracing.Enabled = true
 
@@ -185,8 +184,9 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 
 		got := controller.ExportSubComponents(cfg)
 
-		for _, name := range []string{"controller.metrics", "controller.pki", "controller.notifier", "controller.tracing", "controller.ui"} {
+		for _, name := range []string{"controller.metrics", "controller.notifier", "controller.tracing", "controller.ui"} {
 			s.Equal("disabled", got[name].Status, name)
 		}
+		s.Equal("ok", got["controller.pki"].Status, "PKI is always on")
 	})
 }

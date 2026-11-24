@@ -94,7 +94,7 @@ func (c *Client) CreateJob(
 		return nil, fmt.Errorf("failed to marshal job with status: %w", err)
 	}
 
-	// Sign the job data when PKI is enabled.
+	// Sign the job data with the key of the controller.
 	kvPayload := jobWithStatusJSON
 	if c.pkiSigner != nil {
 		signed, signErr := wrapInSignedEnvelope(
@@ -968,10 +968,10 @@ func (c *Client) getJobResponses(
 	return responses
 }
 
-// jobRecord is the stored record of a job. With PKI on, the controller
-// writes the record inside a signed envelope, so the record is the
-// envelope's payload, its signature checked with the controller's key.
-// Without PKI, the value is the record itself.
+// jobRecord is the stored record of a job. The controller writes the
+// record inside a signed envelope, so the record is the envelope's
+// payload, its signature checked with the controller's key. A job client
+// with no signer, as in a test, reads the value as the record itself.
 func (c *Client) jobRecord(
 	value []byte,
 ) (map[string]interface{}, error) {

@@ -49,16 +49,16 @@ Enrollment page to manage pending agents.
 
 ## PKI enrollment
 
-When `pki.enabled` is true on the controller and on the agent, osapi uses
-Ed25519 key pairs. They give each agent a cryptographic identity, and they sign
-the jobs.
+PKI is always on. osapi uses Ed25519 key pairs. They give each agent a
+cryptographic identity, and they sign the jobs. An agent takes no job until the
+controller admits it.
 
 ### Enrollment flow
 
 Enrollment uses an accept and reject model, like Salt:
 
 1. **The agent makes its keys.** When the agent starts for the first time, it
-   makes two keys in `agent.pki.key_dir` (`/etc/osapi/pki` by default):
+   makes two keys in `agent.pki.key_dir` (`/etc/osapi/pki/agent` by default):
 
    | File         | Mode | Key                                            |
    | ------------ | ---- | ---------------------------------------------- |
@@ -154,9 +154,8 @@ osapi controller key fingerprint
 
 ## Job signing
 
-When `controller.pki.enabled` is true, the controller signs each job payload
-with its Ed25519 private key before it stores the job in the KV bucket. The
-payload is in a `SignedEnvelope`:
+The controller signs each job payload with its Ed25519 private key before it
+stores the job in the KV bucket. The payload is in a `SignedEnvelope`:
 
 ```json
 {
@@ -169,17 +168,13 @@ payload is in a `SignedEnvelope`:
 Agents also sign their job responses with their own key pair before they write
 them to the KV bucket. They use the same envelope.
 
-When PKI is disabled on one side, that side does not sign and does not verify.
-osapi stores and processes the jobs and the responses as plain JSON, without an
-envelope.
-
 ### Verification and failures
 
-When `agent.pki.enabled` is true, the agent verifies the envelope of each job
-before it runs the operation. Verification fails closed: the agent rejects the
-job and does not run it unless the job passes all checks. The agent writes one
-of three reasons to the log and records it as the termination reason of the job.
-Thus an operator can tell them apart:
+The agent verifies the envelope of each job before it runs the operation.
+Verification fails closed: the agent rejects the job and does not run it unless
+the job passes all checks. The agent writes one of three reasons to the log and
+records it as the termination reason of the job. Thus an operator can tell them
+apart:
 
 - **Not enrolled.** The agent has no controller public key yet, because
   enrollment is pending or did not complete. osapi reports this separately from
@@ -195,9 +190,6 @@ The controller also verifies the signature on the job response of an agent
 before it uses it as a result. A response that fails verification is a failed or
 missing result, never a successful result.
 
-When PKI is disabled, none of this applies. There is no envelope to verify, so
-osapi rejects nothing because of a signature.
-
 ## Registration signing
 
 An agent sends more than job responses. At each heartbeat, it writes its own
@@ -205,8 +197,8 @@ entry in the agent registry again. Targeting reads that entry. It reads the
 hostname that a job names and the labels that a label target selects. It also
 reads the scheduling state, which decides if the agent can get work.
 
-When `agent.pki.enabled` is true, the agent signs the routing fields of its
-registration with its own key pair. The signature includes:
+The agent signs the routing fields of its registration with its own key pair.
+The signature includes:
 
 | Field         | Why the agent signs it                                              |
 | ------------- | ------------------------------------------------------------------- |
@@ -277,35 +269,25 @@ To rotate the key:
    Then they change to the new key.
 1. After the grace period, osapi accepts only the new key.
 
-## Rollout
+## Upgrade a fleet
 
-Verification on the agent fails closed. Thus the order is important when you
-enable `agent.pki.enabled` on a fleet:
+PKI is always on, and the settings `controller.pki.enabled` and
+`agent.pki.enabled` do not exist. Remove them from `osapi.yaml`: the config
+check refuses a key that it does not know. Do these steps in this order:
 
-1. Enable `controller.pki.enabled` first. Make sure that the agents complete
-   enrollment and show as accepted (`osapi client agent list`).
-1. Then enable `agent.pki.enabled`. An agent that did not complete enrollment
-   has no public key of the controller. If you enable PKI on it before
-   enrollment completes, it rejects each job as "not enrolled" until enrollment
-   completes.
+1. Upgrade the controller. It makes its key pair in `controller.pki.key_dir` at
+   its first start, and signs each job from then on.
+1. Upgrade each agent. At its first start, the agent makes its keys in
+   `agent.pki.key_dir` (`/etc/osapi/pki/agent` by default), and asks to join. It
+   takes no job until the controller admits it.
+1. Admit each agent: read `osapi client admission list --state pending`, and
+   admit each machine with the fingerprint that `osapi agent key fingerprint`
+   prints on it. Set `controller.pki.auto_admit` only on a test fleet.
 
-An upgrade does not change these settings. An agent that the controller accepted
-before the key store started has no stored key. Thus it reports
-`key_stored: false`, and its registration does not decide anything when the
-controller verifies. Nothing starts to refuse work at a time that nobody
-selected. Do these steps in this order:
-
-1. Enable `controller.pki.enabled`. The controller starts to record the key of
-   each agent when it accepts the enrollment.
-1. Read `osapi client agent list`. Each agent that still shows
-   `key_stored: false` did not enroll after the store started.
-1. Enroll those agents again. Watch the field change as the controller accepts
-   each one.
-1. When all of the fleet reports `key_stored: true` and `verified: true`, enable
-   `agent.pki.enabled`.
-
-If you do step 4 first, the fleet refuses work: the agents verify the jobs
-before the controller can verify the agents.
+The agent and the controller have different key directories. The agent keeps the
+public key of the controller as `controller.pub` in its directory, and the
+controller keeps its own key with the same name in its directory. An agent and a
+controller on one host thus do not read the key of the other.
 
 ## Configuration
 
@@ -313,10 +295,9 @@ before the controller can verify the agents.
 
 <!-- osapi:config agent.pki -->
 
-| Key                 | Type   | Default          | Environment               | Description                                           |
-| ------------------- | ------ | ---------------- | ------------------------- | ----------------------------------------------------- |
-| `agent.pki.enabled` | bool   | `false`          | `OSAPI_AGENT_PKI_ENABLED` | Enable PKI enrollment and job signature verification. |
-| `agent.pki.key_dir` | string | `/etc/osapi/pki` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory for agent keypair storage.                  |
+| Key                 | Type   | Default                | Environment               | Description                          |
+| ------------------- | ------ | ---------------------- | ------------------------- | ------------------------------------ |
+| `agent.pki.key_dir` | string | `/etc/osapi/pki/agent` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory for agent keypair storage. |
 
 <!-- /osapi:config -->
 
@@ -326,7 +307,6 @@ before the controller can verify the agents.
 
 | Key                                    | Type   | Default          | Environment                                  | Description                                                                                                       |
 | -------------------------------------- | ------ | ---------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `controller.pki.enabled`               | bool   | `false`          | `OSAPI_CONTROLLER_PKI_ENABLED`               | Enable PKI enrollment and job signing.                                                                            |
 | `controller.pki.key_dir`               | string | `/etc/osapi/pki` | `OSAPI_CONTROLLER_PKI_KEY_DIR`               | Directory for controller keypair storage.                                                                         |
 | `controller.pki.auto_admit`            | bool   | `false`          | `OSAPI_CONTROLLER_PKI_AUTO_ADMIT`            | Admit each machine that asks to join, with no operator (dev/test only).                                           |
 | `controller.pki.rotation_grace_period` | string | `24h`            | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD` | Grace period during key rotation where both old and new keys are accepted. Go duration format.                    |

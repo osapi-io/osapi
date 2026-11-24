@@ -17,9 +17,10 @@ controller:
       signing_keys:
         - id: dev
           key: dev-not-used-do-not-deploy-this-value
-  # PKI enrollment and job signing (default: disabled).
+  # PKI enrollment and job signing. Always on: the controller admits each
+  # agent before it takes a job, signs each job, and seals each secret of a
+  # job to its agents.
   # pki:
-  #   enabled: false
   #   key_dir: /etc/osapi/pki
   #   auto_admit: false
   #   rotation_grace_period: 24h
@@ -67,10 +68,12 @@ agent:
   # Command exec, command shell and docker exec. On here, for development and tests. The default is off.
   command:
     enabled: true
-  # PKI enrollment and job signing (default: disabled).
+  # PKI enrollment and job verification. Always on: the agent asks to join
+  # at its first start, and takes jobs once the controller admits it. The
+  # key directory is not the controller's, because the agent keeps the
+  # controller's public key as controller.pub in it.
   # pki:
-  #   enabled: false
-  #   key_dir: /etc/osapi/pki
+  #   key_dir: /etc/osapi/pki/agent
 
 nats:
   stream:

@@ -139,7 +139,7 @@ func (c *Client) WriteJobResponse(
 	// Marshal response (Response fields are always marshalable)
 	responseJSON, _ := json.Marshal(response)
 
-	// Sign the response when PKI is enabled.
+	// Sign the response with the key of the agent.
 	kvPayload := responseJSON
 	if c.pkiSigner != nil {
 		signed, signErr := wrapInSignedEnvelope(

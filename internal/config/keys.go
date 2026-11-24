@@ -45,7 +45,6 @@ var Defaults = map[string]any{
 	"controller.nats.host":       "localhost",
 	"controller.nats.port":       4222,
 
-	"controller.pki.enabled":               false,
 	"controller.pki.key_dir":               "/etc/osapi/pki",
 	"controller.pki.auto_admit":            false,
 	"controller.pki.rotation_grace_period": "24h",
@@ -90,8 +89,7 @@ var Defaults = map[string]any{
 	"agent.consumer.inactive_threshold":          "24h",
 	"agent.nats.client_name":                     "osapi-agent",
 	"agent.command.enabled":                      false,
-	"agent.pki.enabled":                          false,
-	"agent.pki.key_dir":                          "/etc/osapi/pki",
+	"agent.pki.key_dir":                          "/etc/osapi/pki/agent",
 }
 
 // Key is one setting osapi reads: its dotted name, the environment variable

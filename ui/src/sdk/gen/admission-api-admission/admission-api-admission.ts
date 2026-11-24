@@ -60,15 +60,10 @@ export type getAdmissionsResponse500 = {
   status: 500
 }
 
-export type getAdmissionsResponse503 = {
-  data: ErrorResponse
-  status: 503
-}
-
 export type getAdmissionsResponseSuccess = (getAdmissionsResponse200) & {
   headers: Headers;
 };
-export type getAdmissionsResponseError = (getAdmissionsResponse400 | getAdmissionsResponse401 | getAdmissionsResponse403 | getAdmissionsResponse500 | getAdmissionsResponse503) & {
+export type getAdmissionsResponseError = (getAdmissionsResponse400 | getAdmissionsResponse401 | getAdmissionsResponse403 | getAdmissionsResponse500) & {
   headers: Headers;
 };
 
@@ -135,15 +130,10 @@ export type deleteMachineResponse500 = {
   status: 500
 }
 
-export type deleteMachineResponse503 = {
-  data: ErrorResponse
-  status: 503
-}
-
 export type deleteMachineResponseSuccess = (deleteMachineResponse204) & {
   headers: Headers;
 };
-export type deleteMachineResponseError = (deleteMachineResponse400 | deleteMachineResponse401 | deleteMachineResponse403 | deleteMachineResponse404 | deleteMachineResponse500 | deleteMachineResponse503) & {
+export type deleteMachineResponseError = (deleteMachineResponse400 | deleteMachineResponse401 | deleteMachineResponse403 | deleteMachineResponse404 | deleteMachineResponse500) & {
   headers: Headers;
 };
 
@@ -203,15 +193,10 @@ export type getAdmissionResponse500 = {
   status: 500
 }
 
-export type getAdmissionResponse503 = {
-  data: ErrorResponse
-  status: 503
-}
-
 export type getAdmissionResponseSuccess = (getAdmissionResponse200) & {
   headers: Headers;
 };
-export type getAdmissionResponseError = (getAdmissionResponse400 | getAdmissionResponse401 | getAdmissionResponse403 | getAdmissionResponse404 | getAdmissionResponse500 | getAdmissionResponse503) & {
+export type getAdmissionResponseError = (getAdmissionResponse400 | getAdmissionResponse401 | getAdmissionResponse403 | getAdmissionResponse404 | getAdmissionResponse500) & {
   headers: Headers;
 };
 
@@ -276,15 +261,10 @@ export type admitMachineResponse500 = {
   status: 500
 }
 
-export type admitMachineResponse503 = {
-  data: ErrorResponse
-  status: 503
-}
-
 export type admitMachineResponseSuccess = (admitMachineResponse204) & {
   headers: Headers;
 };
-export type admitMachineResponseError = (admitMachineResponse400 | admitMachineResponse401 | admitMachineResponse403 | admitMachineResponse404 | admitMachineResponse409 | admitMachineResponse500 | admitMachineResponse503) & {
+export type admitMachineResponseError = (admitMachineResponse400 | admitMachineResponse401 | admitMachineResponse403 | admitMachineResponse404 | admitMachineResponse409 | admitMachineResponse500) & {
   headers: Headers;
 };
 
@@ -345,15 +325,10 @@ export type rejectMachineResponse500 = {
   status: 500
 }
 
-export type rejectMachineResponse503 = {
-  data: ErrorResponse
-  status: 503
-}
-
 export type rejectMachineResponseSuccess = (rejectMachineResponse204) & {
   headers: Headers;
 };
-export type rejectMachineResponseError = (rejectMachineResponse400 | rejectMachineResponse401 | rejectMachineResponse403 | rejectMachineResponse404 | rejectMachineResponse500 | rejectMachineResponse503) & {
+export type rejectMachineResponseError = (rejectMachineResponse400 | rejectMachineResponse401 | rejectMachineResponse403 | rejectMachineResponse404 | rejectMachineResponse500) & {
   headers: Headers;
 };
 
@@ -414,15 +389,10 @@ export type revokeMachineResponse500 = {
   status: 500
 }
 
-export type revokeMachineResponse503 = {
-  data: ErrorResponse
-  status: 503
-}
-
 export type revokeMachineResponseSuccess = (revokeMachineResponse204) & {
   headers: Headers;
 };
-export type revokeMachineResponseError = (revokeMachineResponse400 | revokeMachineResponse401 | revokeMachineResponse403 | revokeMachineResponse404 | revokeMachineResponse500 | revokeMachineResponse503) & {
+export type revokeMachineResponseError = (revokeMachineResponse400 | revokeMachineResponse401 | revokeMachineResponse403 | revokeMachineResponse404 | revokeMachineResponse500) & {
   headers: Headers;
 };
 

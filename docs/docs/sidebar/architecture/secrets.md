@@ -107,10 +107,10 @@ An agent with no key in `sealed_keys` fails the job with
 run it. Such an agent joined after the controller queued the job, or has no
 X25519 key.
 
-The job client seals only when the controller verifies its agents
-(`controller.pki.enabled`), because only then has the admission store an X25519
-key for each agent. Without PKI, the job keeps each value as plain text, as the
-caller sent it.
+The controller always has the X25519 key of each admitted agent, because PKI is
+always on. A job client with no agent keys, such as the one of an agent, refuses
+a job with a secret with `client.ErrNoAgentKeys`. Thus no secret goes in a job
+as plain text.
 
 A `.Before` step can still change a secret to a value made from it, such as a
 password to its hash. A secret that the step leaves set is sealed, not refused.

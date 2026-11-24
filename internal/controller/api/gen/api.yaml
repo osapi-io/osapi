@@ -267,12 +267,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: 'Admission is not configured: set controller.pki.enabled.'
       security:
         - BearerAuth:
             - admission:read
@@ -335,12 +329,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: 'Admission is not configured: set controller.pki.enabled.'
       security:
         - BearerAuth:
             - admission:write
@@ -404,12 +392,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: 'Admission is not configured: set controller.pki.enabled.'
       security:
         - BearerAuth:
             - admission:read
@@ -482,12 +464,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: 'Admission is not configured: set controller.pki.enabled.'
       security:
         - BearerAuth:
             - admission:write
@@ -555,12 +531,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: 'Admission is not configured: set controller.pki.enabled.'
       security:
         - BearerAuth:
             - admission:write
@@ -622,12 +592,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
-        "503":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: 'Admission is not configured: set controller.pki.enabled.'
       security:
         - BearerAuth:
             - admission:write
@@ -8973,7 +8937,7 @@ components:
           description: Extended facts from additional providers.
           type: object
         fingerprint:
-          description: The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled.
+          description: The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys.
           type: string
         fqdn:
           description: Fully qualified domain name.

@@ -303,7 +303,7 @@ Runs fn, func(ctx context.Context, in In) (In, error), on the controller in the
 method's route, in a span of its own, before osapi queues the job. It changes
 what the caller sent into what the agent gets, such as a password into its hash
 with password.Hash. A secret.Value field that it leaves set goes to the job
-sealed for the target agents, when the controller has PKI.
+sealed for the target agents.
 
 Use: When the agent must not see a secret in plain text. Tag the field that the
 step fills before:"set", and clear the secret in the step.
@@ -730,10 +730,10 @@ flag takes a reference, or - to read the value from standard input, and refuses
 a value; an example with a value shows -. The provider reads it with Reveal. The
 route resolves a reference from its vault, after the limits of use: secret:use,
 and the targets of the vault. The job client seals the value for the target
-agents when the controller has PKI, and the dispatch of the agent opens it. The
-secret rule refuses one with telemetry:"attr", one that is the key, and one in a
-read, which goes in the query. A chain gives a secret only to a secret.Value of
-the behavior it calls: the tests of the examples check it.
+agents, and the dispatch of the agent opens it. The secret rule refuses one with
+telemetry:"attr", one that is the key, and one in a read, which goes in the
+query. A chain gives a secret only to a secret.Value of the behavior it calls:
+the tests of the examples check it.
 
 Use: On each input that holds a password, a key or a token. Not a string: a
 string whose name is on the audit denylist fails TestSecretsAreTyped.

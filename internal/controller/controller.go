@@ -33,7 +33,6 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
@@ -151,12 +150,10 @@ func newController(
 		apiOpts = append(apiOpts, api.WithAuditStore(auditStore))
 	}
 
-	var watcher *admission.Watcher
-	if cfg.Controller.PKI.Enabled {
-		watcher, err = startEnrollment(ctx, log, conn, namespace, cfg)
-		if err != nil {
-			return nil, err
-		}
+	// Each agent is admitted, and each job is signed: PKI is always on.
+	watcher, err := startEnrollment(ctx, log, conn, namespace, cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	vaults, err := openVaults(ctx, log, conn, cfg)

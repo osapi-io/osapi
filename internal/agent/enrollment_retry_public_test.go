@@ -50,7 +50,7 @@ func (s *EnrollmentRetryPublicTestSuite) pendingAgent(
 	fs := memfs.New()
 	cfg := config.Config{
 		Agent: config.AgentConfig{
-			PKI: config.AgentPKI{Enabled: true, KeyDir: "/keys"},
+			PKI: config.AgentPKI{KeyDir: "/keys"},
 		},
 	}
 

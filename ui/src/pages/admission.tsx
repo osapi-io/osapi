@@ -56,7 +56,7 @@ export function Admission() {
       {!loading && !error && records.length === 0 && (
         <EmptyState
           icon={<ShieldAlert className="h-8 w-8 text-text-muted" />}
-          message="No machine has asked to join. Start an agent with PKI on, and it shows here."
+          message="No machine has asked to join. Start an agent, and it shows here."
         />
       )}
 

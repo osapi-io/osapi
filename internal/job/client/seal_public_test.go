@@ -168,16 +168,12 @@ func (s *SealPublicTestSuite) TestRequest() {
 		validateFunc func(req *job.Request)
 	}{
 		{
-			name:     "when the controller has no PKI, the job keeps each value",
+			name:     "when the job client has no agent keys, a job with a secret is refused",
 			store:    func() client.AgentKeyStore { return nil },
 			target:   "web-01",
 			resolved: "m-web",
 			data:     input,
-			validateFunc: func(req *job.Request) {
-				s.JSONEq(`{"name":"app","env":{"TOKEN":"hunter2"}}`, string(req.Data))
-				s.Empty(req.SealedKeys)
-				s.NotEmpty(req.JobID)
-			},
+			wantErr:  client.ErrNoAgentKeys.Error(),
 		},
 		{
 			name: "when the data has no secret value, nothing is sealed",

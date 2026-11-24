@@ -93,8 +93,8 @@ tries again each 10 seconds. Refer to
 The controller writes the job to a KV bucket, and the job stays there. The
 stream carries only a notification that points to the job. Reads and changes go
 on different subjects, `jobs.query.*` and `jobs.modify.*`. Thus an agent can
-process them differently. When PKI is on, the controller signs the job. The
-agent checks the signature before it runs the job.
+process them differently. The controller signs the job. The agent checks the
+signature before it runs the job.
 
 The agent records each step as a status event on the job. Then it runs the
 operation and writes its result to the response bucket. osapi does not store the

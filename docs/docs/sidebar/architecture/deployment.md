@@ -41,8 +41,8 @@ graph TD
 1. Run `osapi agent start` on each managed host, with `agent.nats` set to the
    address of NATS. Give each agent labels, for example `group: web.prod`, so
    that you can target groups.
-1. Enable PKI (`controller.pki.enabled`, `agent.pki.enabled`). Then only agents
-   that an administrator accepted get work.
+1. Admit each agent: `osapi client admission admit`. An agent gets no work until
+   an administrator admits it.
 1. Set NATS authentication. Then only the osapi processes can connect.
 1. Give the agent `agent.privilege_escalation` and the sudoers drop-in. Do not
    run it as root.

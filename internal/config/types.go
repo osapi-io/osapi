@@ -480,16 +480,12 @@ type AgentCommand struct {
 
 // AgentPKI holds PKI configuration for the agent.
 type AgentPKI struct {
-	// Enabled activates PKI enrollment and job signature verification.
-	Enabled bool `mapstructure:"enabled" doc:"Enable PKI enrollment and job signature verification."`
 	// KeyDir is the directory for agent keypair storage.
 	KeyDir string `mapstructure:"key_dir" doc:"Directory for agent keypair storage."`
 }
 
 // ControllerPKI holds PKI configuration for the controller.
 type ControllerPKI struct {
-	// Enabled activates PKI enrollment and job signing.
-	Enabled bool `mapstructure:"enabled" doc:"Enable PKI enrollment and job signing."`
 	// KeyDir is the directory for controller keypair storage.
 	KeyDir string `mapstructure:"key_dir" doc:"Directory for controller keypair storage."`
 	// AutoAdmit admits each machine that asks to join, with no operator.

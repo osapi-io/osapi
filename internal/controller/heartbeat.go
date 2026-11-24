@@ -98,7 +98,7 @@ func subComponents(
 			Address: httpAddr(cfg.Controller.Metrics.Host, cfg.Controller.Metrics.Port),
 			URL:     cfg.Controller.Metrics.URL,
 		},
-		"controller.pki":      {Status: enabledOrDisabled(cfg.Controller.PKI.Enabled)},
+		"controller.pki":      {Status: "ok"},
 		"controller.notifier": {Status: enabledOrDisabled(cfg.Controller.Notifications.Enabled)},
 		"controller.tracing": {
 			Status:  enabledOrDisabled(cfg.Telemetry.Tracing.Enabled),

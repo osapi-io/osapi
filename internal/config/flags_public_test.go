@@ -71,7 +71,7 @@ func (s *FlagsPublicTestSuite) TestBindFlags() {
 		},
 		{
 			name: "when the key is a bool, the flag is one",
-			key:  "agent.pki.enabled",
+			key:  "agent.command.enabled",
 			validateFunc: func(f *pflag.Flag) {
 				s.Equal("bool", f.Value.Type())
 			},

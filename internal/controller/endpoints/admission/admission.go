@@ -41,13 +41,7 @@ var (
 	// ErrMismatch is an admit whose fingerprint is not the one of the key
 	// the machine requested with.
 	ErrMismatch = errors.New("fingerprint does not match the request")
-	// ErrNotConfigured is a controller with PKI off, which admits no one.
-	ErrNotConfigured = errors.New("admission is not configured")
 )
-
-// notConfigured503 is the 503 of each method when PKI is off.
-var notConfigured503 = endpoint.Unavailable(ErrNotConfigured,
-	"Admission is not configured: set controller.pki.enabled.")
 
 // Group is the admission group's definition.
 var Group = endpoint.Register(endpoint.Define(
@@ -71,8 +65,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"it was last seen.").
 		Example("").
 		Prints(sampleList).
-		Example("--state pending").
-		Errors(notConfigured503),
+		Example("--state pending"),
 	endpoint.Get[MachineInput, Admission]("get").
 		Fails("a machine ID over 255 characters", MachineInput{MachineID: long}).
 		Handle(Get).
@@ -83,7 +76,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Get a machine's admission record", "").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
 		Prints(samplePending).
-		Errors(endpoint.NotFound(ErrNotFound, "No admission record for the machine."), notConfigured503),
+		Errors(endpoint.NotFound(ErrNotFound, "No admission record for the machine.")),
 	endpoint.Post[AdmitInput, struct{}]("admit").
 		AdminOnly().
 		Fails("a machine ID over 255 characters", AdmitInput{MachineID: long, Body: AdmitRequest{Fingerprint: "SHA256:x"}}).
@@ -106,7 +99,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Errors(
 			endpoint.NotFound(ErrNotFound, "No pending request from the machine."),
 			endpoint.Conflict(ErrMismatch, "The fingerprint does not match the request."),
-			notConfigured503,
 		),
 	endpoint.Post[RejectInput, struct{}]("reject").
 		AdminOnly().
@@ -122,7 +114,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("The machine is rejected.").
 		Command("Reject a pending machine", "").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"").
-		Errors(endpoint.NotFound(ErrNotFound, "No pending request from the machine."), notConfigured503),
+		Errors(endpoint.NotFound(ErrNotFound, "No pending request from the machine.")),
 	endpoint.Post[MachineInput, struct{}]("revoke").
 		AdminOnly().
 		Fails("a machine ID over 255 characters", MachineInput{MachineID: long}).
@@ -138,7 +130,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"The controller removes the key of the machine. Its responses and its\n"+
 				"registration stop verifying at once, so a target does not find it.").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
-		Errors(endpoint.NotFound(ErrNotFound, "No admitted machine with the ID."), notConfigured503),
+		Errors(endpoint.NotFound(ErrNotFound, "No admitted machine with the ID.")),
 	endpoint.Delete[MachineInput, struct{}]("delete").
 		AdminOnly().
 		Fails("a machine ID over 255 characters", MachineInput{MachineID: long}).
@@ -155,7 +147,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"revoke, it keeps no record, so a machine that asks again is new. Use it\n"+
 				"before a machine is rebuilt or removed.").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
-		Errors(endpoint.NotFound(ErrNotFound, "No record of the machine."), notConfigured503),
+		Errors(endpoint.NotFound(ErrNotFound, "No record of the machine.")),
 ))
 
 // long is a name over the 255 characters a name may have, for the inputs

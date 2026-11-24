@@ -208,8 +208,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 			cfg := config.Config{
 				Agent: config.AgentConfig{
 					PKI: config.AgentPKI{
-						Enabled: true,
-						KeyDir:  "/keys",
+						KeyDir: "/keys",
 					},
 				},
 			}
@@ -261,8 +260,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -313,8 +311,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -351,8 +348,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 							Namespace: "osapi",
 						},
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -386,8 +382,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -426,8 +421,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -473,8 +467,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -530,8 +523,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -576,8 +568,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 							Namespace: "osapi",
 						},
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -611,8 +602,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -657,8 +647,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -708,8 +697,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -739,8 +727,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -783,8 +770,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}
@@ -854,8 +840,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				cfg := config.Config{
 					Agent: config.AgentConfig{
 						PKI: config.AgentPKI{
-							Enabled: true,
-							KeyDir:  "/keys",
+							KeyDir: "/keys",
 						},
 					},
 				}

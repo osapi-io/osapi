@@ -429,14 +429,13 @@ type AgentRegistration struct {
 	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
 	State string `json:"state,omitempty"`
 	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
-	// Empty when PKI is disabled.
+	// Empty until the agent loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 	// Signature is the agent's Ed25519 signature over the routing fields of
-	// this registration, as RegistrationSigningBytes encodes them. Empty when
-	// agent PKI is disabled, and unverifiable rather than trusted when the
-	// controller is enforcing.
+	// this registration, as RegistrationSigningBytes encodes them. Empty before
+	// the agent loads its keys, and then unverifiable rather than trusted.
 	Signature []byte `json:"signature,omitempty"`
 }
 
@@ -490,7 +489,7 @@ type AgentInfo struct {
 	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
 	State string `json:"state,omitempty"`
 	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
-	// Empty when PKI is disabled.
+	// Empty until the agent loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
 	// Timeline contains the chronological sequence of state transition events.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
