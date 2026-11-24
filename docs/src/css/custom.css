@@ -116,6 +116,16 @@
   font-size: 0.875rem;
 }
 
+/* A section heading of a dropdown: larger than a link, in the color of the
+   page headings that navbar.ts gives it, and on the left edge of the links
+   under it. */
+.navbar .dropdown-header > span {
+  display: block;
+  padding: 0.25rem 0.5rem 0.125rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .navbar .dropdown__link:hover,
 .navbar .dropdown__link--active {
   color: var(--osapi-text);
@@ -336,6 +346,31 @@ button[class*='copyButton'] {
   text-decoration: none !important;
 }
 
+/* Each card of a list has a thin strip on its top in a heading color,
+   cycled by its place, and the border takes that color under the pointer.
+   The title stays the title color, so a page of cards stays calm. */
+.row > .col {
+  --card-accent: var(--osapi-heading-1);
+}
+.row > .col:nth-child(5n + 2) {
+  --card-accent: var(--osapi-heading-2);
+}
+.row > .col:nth-child(5n + 3) {
+  --card-accent: var(--osapi-heading-3);
+}
+.row > .col:nth-child(5n + 4) {
+  --card-accent: var(--osapi-heading-4);
+}
+.row > .col:nth-child(5n + 5) {
+  --card-accent: var(--osapi-heading-5);
+}
+.row > .col .card {
+  border-top: 2px solid var(--card-accent) !important;
+}
+.row > .col .card:hover {
+  border-color: var(--card-accent) !important;
+}
+
 /* The title, as a UI card's: no emoji icon before it. */
 .markdown .card h2 {
   display: block;
@@ -437,9 +472,8 @@ button[class*='copyButton'] {
 
 /* ---------- Sidebar, table of contents, breadcrumbs ---------- */
 
-/* A page is gray. The open one is the text color on the raised background,
-   as a page under the pointer is: no colored bar, as the UI's cards have
-   none. */
+/* A section is bold and a page is gray. A faint line beside each nested
+   list shows the tree. */
 .menu {
   font-size: 0.875rem;
 }
@@ -457,14 +491,68 @@ button[class*='copyButton'] {
 .menu__link--sublist,
 .menu__list-item-collapsible--active .menu__link {
   color: var(--osapi-text);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+/* Each section of the sidebar, such as Usage or Features, has a heading
+   color by its place among the sections, as the cards of a list have. The color is only on its
+   faint guide line and on its open page, as a bar and a light tint. The
+   labels stay the text color. */
+.menu__list-item {
+  --section-accent: var(--osapi-heading-1);
+}
+.theme-doc-sidebar-menu
+  > .menu__list-item
+  > .menu__list
+  > .menu__list-item:nth-child(5n + 2 of .theme-doc-sidebar-item-category) {
+  --section-accent: var(--osapi-heading-2);
+}
+.theme-doc-sidebar-menu
+  > .menu__list-item
+  > .menu__list
+  > .menu__list-item:nth-child(5n + 3 of .theme-doc-sidebar-item-category) {
+  --section-accent: var(--osapi-heading-3);
+}
+.theme-doc-sidebar-menu
+  > .menu__list-item
+  > .menu__list
+  > .menu__list-item:nth-child(5n + 4 of .theme-doc-sidebar-item-category) {
+  --section-accent: var(--osapi-heading-4);
+}
+.theme-doc-sidebar-menu
+  > .menu__list-item
+  > .menu__list
+  > .menu__list-item:nth-child(5n + 5 of .theme-doc-sidebar-item-category) {
+  --section-accent: var(--osapi-heading-5);
+}
+.theme-doc-sidebar-menu .menu__list-item .menu__list-item {
+  --section-accent: inherit;
+}
+
+/* A section shows its color when it is closed too: a short mark at the
+   left of its label. */
+.theme-doc-sidebar-menu
+  > .menu__list-item
+  > .menu__list
+  > .theme-doc-sidebar-item-category
+  > .menu__list-item-collapsible
+  > .menu__link {
+  box-shadow: inset 2px 0 0
+    color-mix(in srgb, var(--section-accent) 70%, transparent);
+}
+
+.menu__list .menu__list {
+  border-left: 1px solid
+    color-mix(in srgb, var(--section-accent) 30%, transparent);
+  margin-left: 0.75rem;
+  padding-left: 0.25rem;
 }
 
 .menu__link--active:not(.menu__link--sublist) {
   color: var(--osapi-title);
   font-weight: 500;
-  background: var(--osapi-raise);
-  box-shadow: none;
+  background: color-mix(in srgb, var(--section-accent) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--section-accent);
 }
 
 .table-of-contents {
@@ -687,7 +775,7 @@ div[class^='announcementBar_'] {
 [data-theme='dark'] .docusaurus-mermaid-container .actor,
 [data-theme='dark'] .docusaurus-mermaid-container rect.actor {
   fill: var(--osapi-card) !important;
-  stroke: var(--osapi-border-hover) !important;
+  stroke: var(--node-accent, var(--osapi-border-hover)) !important;
 }
 
 [data-theme='dark'] .docusaurus-mermaid-container .edgeLabel p,
@@ -737,4 +825,75 @@ div[class^='announcementBar_'] {
   color: var(--osapi-title) !important;
   background: var(--osapi-raise);
   border-bottom-color: transparent !important;
+}
+
+/* ---------- Mermaid: the diagrams in the palette ---------- */
+/* A node's border is a heading color, cycled by its place, as the cards of
+   a list are. The rules above and below keep the fill, the lines and the
+   labels in the page's colors. */
+.docusaurus-mermaid-container .node:nth-of-type(5n + 1) {
+  --node-accent: var(--osapi-heading-1);
+}
+.docusaurus-mermaid-container .node:nth-of-type(5n + 2) {
+  --node-accent: var(--osapi-heading-2);
+}
+.docusaurus-mermaid-container .node:nth-of-type(5n + 3) {
+  --node-accent: var(--osapi-heading-3);
+}
+.docusaurus-mermaid-container .node:nth-of-type(5n + 4) {
+  --node-accent: var(--osapi-heading-4);
+}
+.docusaurus-mermaid-container .node:nth-of-type(5n + 5) {
+  --node-accent: var(--osapi-heading-5);
+}
+.docusaurus-mermaid-container
+  .node
+  :is(rect.label-container, polygon, circle, ellipse) {
+  stroke: var(--node-accent) !important;
+  stroke-width: 1.5px !important;
+}
+
+/* A sequence diagram: the participants in the first heading color, at the
+   top and the bottom alike, faint lifelines, gray messages, a note in the
+   third color and a loop or alt frame in the second. */
+.docusaurus-mermaid-container rect.actor {
+  --node-accent: var(--osapi-heading-1);
+  fill: var(--osapi-card) !important;
+  stroke: var(--osapi-heading-1) !important;
+  stroke-width: 1.5px !important;
+  filter: none !important;
+}
+.docusaurus-mermaid-container :is(text.actor, text.actor > tspan) {
+  fill: var(--osapi-text) !important;
+}
+.docusaurus-mermaid-container line.actor-line {
+  stroke: var(--osapi-border) !important;
+}
+.docusaurus-mermaid-container
+  :is(
+    .messageText,
+    .loopText,
+    .loopText > tspan,
+    .noteText,
+    .noteText > tspan,
+    .labelText,
+    .labelText > tspan
+  ) {
+  fill: var(--osapi-text) !important;
+}
+.docusaurus-mermaid-container :is(.messageLine0, .messageLine1) {
+  stroke: var(--osapi-muted) !important;
+}
+.docusaurus-mermaid-container
+  :is(#arrowhead path, #crosshead path, #filled-head path, marker path) {
+  fill: var(--osapi-muted) !important;
+  stroke: var(--osapi-muted) !important;
+}
+.docusaurus-mermaid-container rect.note {
+  fill: var(--osapi-raise) !important;
+  stroke: var(--osapi-heading-3) !important;
+}
+.docusaurus-mermaid-container :is(.loopLine, .labelBox) {
+  stroke: var(--osapi-heading-2) !important;
+  fill: var(--osapi-card) !important;
 }

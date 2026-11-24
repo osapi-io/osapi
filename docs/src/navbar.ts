@@ -74,15 +74,19 @@ function folders(dir: string): { name: string; label: string }[] {
     .sort((a, b) => a.position - b.position || a.label.localeCompare(b.label));
 }
 
-const header = (text: string): Item => ({
+// header heads a section of a dropdown in a color of the page headings,
+// cycled by its place, as the h2 headings of a page are.
+const header = (text: string, i: number): Item => ({
   type: 'html',
-  value: `<small style="padding: 4px 12px; color: var(--ifm-color-emphasis-600);">${text}</small>`,
+  value: `<span style="color: var(--osapi-heading-${(i % 5) + 1});">${text}</span>`,
   className: 'dropdown-header'
 });
 
+// separator is space between two sections of a dropdown: the colored
+// headings mark the sections, so it draws no line.
 const separator: Item = {
   type: 'html',
-  value: '<hr style="margin: 0.3rem 0;">',
+  value: '<div style="height: 0.5rem;"></div>',
   className: 'dropdown-separator'
 };
 
@@ -98,7 +102,7 @@ const doc = (p: Page): Item => ({
 export function featureItems(): Item[] {
   return folders('sidebar/features').flatMap((f, i) => [
     ...(i > 0 ? [separator] : []),
-    header(f.label),
+    header(f.label, i),
     ...pages(`sidebar/features/${f.name}`).map(doc)
   ]);
 }
@@ -110,12 +114,13 @@ export function featureItems(): Item[] {
 // so the sections have the labels and the order of area.All in Go. The
 // library folder is written by hand and has the last position.
 export function sdkItems(): Item[] {
-  const items: Item[] = folders('sidebar/sdk').flatMap((f, i) => [
+  const sections = folders('sidebar/sdk');
+  const items: Item[] = sections.flatMap((f, i) => [
     ...(i > 0 ? [separator] : []),
-    header(f.label),
+    header(f.label, i),
     ...pages(`sidebar/sdk/${f.name}`).map(doc)
   ]);
-  items.push(separator, header('Orchestrator'), {
+  items.push(separator, header('Orchestrator', sections.length), {
     href: 'https://github.com/osapi-io/osapi-orchestrator',
     label: 'osapi-orchestrator'
   });
@@ -144,7 +149,7 @@ function behaviorPages(dir: string): Page[] {
 export function behaviorItems(): Item[] {
   return folders('sidebar/reference/behaviors').flatMap((area, i) => [
     ...(i > 0 ? [separator] : []),
-    header(area.label),
+    header(area.label, i),
     ...behaviorPages(`sidebar/reference/behaviors/${area.name}`)
       .sort((a, b) => a.title.localeCompare(b.title))
       .map(doc)
