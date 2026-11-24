@@ -20,9 +20,20 @@ Each kind of secret has its own solution:
 
 A behavior input that is a secret is not kept out of NATS. The input of a
 behavior is the data of its job, and JetStream keeps that data. Thus a token in
-the environment of a container is plain text in JetStream. A password is the
-exception: the controller hashes it before it queues the job, so the job has
-only the hash.
+the environment of a container is plain text to each NATS user that can read the
+stream. A password is the exception: the controller hashes it before it queues
+the job, so the job has only the hash.
+
+## The store on the disk
+
+The embedded NATS server encrypts each stream and bucket in its `store_dir` when
+`nats.server.jetstream.key_file` names a key. `osapi nats key create` makes the
+key on the NATS host. Thus a person who reads the disk or a backup of the store
+does not read the jobs, the audit log or the agent registry. The key does not
+protect a value from a NATS user, because the server decrypts each message for a
+user that can read the stream.
+[Encryption at rest](../usage/configuration.md#encryption-at-rest) has the
+setting, and what happens when the key is lost.
 
 ## The JWT signing keys
 
