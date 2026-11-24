@@ -254,7 +254,7 @@ paths:
           schema:
             $ref: '#/components/schemas/JobStatus'
           x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=submitted processing completed failed partial_failure skipped
+            validate: omitempty,enum
         - description: Maximum number of jobs per page (1-100).
           in: query
           name: limit

@@ -47,7 +47,7 @@ List jobs, with --status completed --limit 3, `go run job.go list-2`:
 ```go
 resp, err := c.Job.List(ctx, client.JobListParams{
 	Limit:  3,
-	Status: client.JobStatus("completed"),
+	Status: types.JobStatus("completed"),
 })
 ```
 

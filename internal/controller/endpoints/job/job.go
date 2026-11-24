@@ -39,29 +39,6 @@ var (
 	ErrOutOfScope = errors.New("target is outside the token's target scope")
 )
 
-// jobStatuses are the values of types.JobStatus, for the enum of the spec.
-func jobStatuses() []string {
-	return names(types.JobStatus("").Values())
-}
-
-// agentJobStatuses are the values of types.AgentJobStatus, for the enum of
-// the spec.
-func agentJobStatuses() []string {
-	return names(types.AgentJobStatus("").Values())
-}
-
-// names are the strings of values.
-func names[T ~string](
-	values []T,
-) []string {
-	out := make([]string, 0, len(values))
-	for _, v := range values {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
 // Group is the job group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"job", "Manage the jobs in the queue",
@@ -74,13 +51,11 @@ var Group = endpoint.Register(endpoint.Define(
 			"submitted, processing, completed, failed, partial_failure (completed on some "+
 			"agents and failed on others) or skipped (each agent skipped it).",
 	),
-	endpoint.Enum[types.JobStatus](jobStatuses),
 	endpoint.Doc[types.AgentJobStatus](
 		"The status of a job on one host. The controller records submitted and retried; "+
 			"an agent records acknowledged, started, completed, failed or skipped; and timeout "+
 			"is a host whose agent did not answer in time.",
 	),
-	endpoint.Enum[types.AgentJobStatus](agentJobStatuses),
 	endpoint.Example[ListJobsResponse]("status_counts",
 		`{"submitted":5,"processing":2,"completed":30,"failed":3,"partial_failure":2}`),
 	endpoint.Get[ListInput, ListJobsResponse]("list").

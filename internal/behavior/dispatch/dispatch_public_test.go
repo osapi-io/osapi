@@ -36,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type provider struct{}

@@ -25,9 +25,9 @@ import (
 
 // ListInput is a page of the job queue, and the status to filter by.
 type ListInput struct {
-	Status types.JobStatus `json:"status" in:"query" validate:"omitempty,oneof=submitted processing completed failed partial_failure skipped" doc:"Filter jobs by status."`
-	Limit  int             `json:"limit"  in:"query" validate:"omitempty,min=1,max=100"                                                       doc:"Maximum number of jobs per page (1-100)." default:"10"`
-	Offset int             `json:"offset" in:"query" validate:"omitempty,min=0"                                                               doc:"Number of jobs to skip for pagination."   default:"0"`
+	Status types.JobStatus `json:"status" in:"query" validate:"omitempty,enum"          doc:"Filter jobs by status."`
+	Limit  int             `json:"limit"  in:"query" validate:"omitempty,min=1,max=100" doc:"Maximum number of jobs per page (1-100)." default:"10"`
+	Offset int             `json:"offset" in:"query" validate:"omitempty,min=0"         doc:"Number of jobs to skip for pagination."   default:"0"`
 }
 
 // GetInput names the job to read.
