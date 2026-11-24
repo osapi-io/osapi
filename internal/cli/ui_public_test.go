@@ -1621,8 +1621,15 @@ func (suite *UIPublicTestSuite) TestStatusWeight() {
 			},
 		},
 		{
-			name:   "when err returns 3",
+			name:   "when err returns 4",
 			status: "err",
+			validateFunc: func(got int) {
+				assert.Equal(suite.T(), 4, got)
+			},
+		},
+		{
+			name:   "when timeout returns 3, below err",
+			status: "timeout",
 			validateFunc: func(got int) {
 				assert.Equal(suite.T(), 3, got)
 			},
@@ -1694,6 +1701,13 @@ func (suite *UIPublicTestSuite) TestResolveStatus() {
 				assert.Equal(suite.T(), "skipped", got)
 			},
 		},
+		{
+			name: "when status timeout returns timeout, not err",
+			row:  cli.ResultRow{Hostname: "h1", Status: "timeout", Error: &errMsg},
+			validateFunc: func(got string) {
+				assert.Equal(suite.T(), "timeout", got)
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1723,6 +1737,25 @@ func (suite *UIPublicTestSuite) TestPrintSummary() {
 				assert.Contains(suite.T(), output, "3 hosts:")
 				assert.Contains(suite.T(), output, "1 ok")
 				assert.Contains(suite.T(), output, "1 skipped")
+				assert.Contains(suite.T(), output, "1 failed")
+			},
+		},
+		{
+			name: "when a host timed out it is counted as timeout, not failed",
+			section: cli.Section{
+				Rows: [][]string{{"web-01", "ok", "val"}},
+				Errors: []cli.ErrorEntry{
+					{
+						Hostname: "web-02",
+						Message:  "timeout: agent did not respond",
+						Status:   "timeout",
+					},
+					{Hostname: "web-03", Message: "boom", Status: "err"},
+				},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "3 hosts:")
+				assert.Contains(suite.T(), output, "1 timeout")
 				assert.Contains(suite.T(), output, "1 failed")
 			},
 		},
@@ -1860,6 +1893,16 @@ func (suite *UIPublicTestSuite) TestPrintErrors() {
 				assert.Contains(suite.T(), output, "Details:")
 				assert.Contains(suite.T(), output, "mac-01")
 				assert.Contains(suite.T(), output, "unsupported OS")
+			},
+		},
+		{
+			name: "when a host timed out it is listed as timeout, not failed",
+			errors: []cli.ErrorEntry{
+				{Hostname: "web-02", Message: "agent did not respond", Status: "timeout"},
+			},
+			validateFunc: func(output string) {
+				assert.Contains(suite.T(), output, "timeout")
+				assert.NotContains(suite.T(), output, "failed")
 			},
 		},
 		{

@@ -88,6 +88,12 @@ func resolveStatus(
 		return string(types.RowStatusSkipped)
 	}
 
+	// A host that did not answer is not failed: nobody knows whether the
+	// operation ran.
+	if r.Status == types.RowStatusTimeout {
+		return string(types.RowStatusTimeout)
+	}
+
 	if r.Error != nil {
 		return "err"
 	}
@@ -365,7 +371,8 @@ func printSummary(
 	for _, e := range section.Errors {
 		if _, ok := hostStatuses[e.Hostname]; !ok {
 			status := e.Status
-			if status != string(types.RowStatusSkipped) {
+			if status != string(types.RowStatusSkipped) &&
+				status != string(types.RowStatusTimeout) {
 				status = "err"
 			}
 			hostStatuses[e.Hostname] = status
@@ -391,6 +398,9 @@ func printSummary(
 	}
 	if n := counts[string(types.RowStatusSkipped)]; n > 0 {
 		parts = append(parts, WarnStyle.Render(fmt.Sprintf("%d skipped", n)))
+	}
+	if n := counts[string(types.RowStatusTimeout)]; n > 0 {
+		parts = append(parts, ErrStyle.Render(fmt.Sprintf("%d timeout", n)))
 	}
 	if n := counts["err"]; n > 0 {
 		parts = append(parts, ErrStyle.Render(fmt.Sprintf("%d failed", n)))
@@ -499,8 +509,10 @@ func statusWeight(
 		return 1
 	case string(types.RowStatusSkipped):
 		return 2
-	case "err":
+	case string(types.RowStatusTimeout):
 		return 3
+	case "err":
+		return 4
 	default:
 		return 0
 	}
@@ -530,8 +542,11 @@ func PrintErrors(
 	printHeading(titleStyleAbove("warn", "ok"), "Details")
 	for _, e := range errors {
 		outcome, style := "failed", ErrStyle
-		if e.Status == string(types.RowStatusSkipped) {
+		switch e.Status {
+		case string(types.RowStatusSkipped):
 			outcome, style = "skipped", WarnStyle
+		case string(types.RowStatusTimeout):
+			outcome = string(types.RowStatusTimeout)
 		}
 		fmt.Printf(
 			"  %s  %s  %s\n",
