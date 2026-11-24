@@ -35,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // natsStatus is the part of a NATS client that the health metrics read.
@@ -189,12 +190,12 @@ func newMetricsProvider(
 			}
 
 			return &health.JobMetrics{
-				Total:       stats.TotalJobs,
-				Unprocessed: stats.StatusCounts["submitted"],
-				Processing:  stats.StatusCounts["processing"],
-				Completed:   stats.StatusCounts["completed"],
-				Failed:      stats.StatusCounts["failed"],
-				DLQ:         stats.DLQCount,
+				Total:      stats.TotalJobs,
+				Submitted:  stats.StatusCounts[types.JobStatusSubmitted],
+				Processing: stats.StatusCounts[types.JobStatusProcessing],
+				Completed:  stats.StatusCounts[types.JobStatusCompleted],
+				Failed:     stats.StatusCounts[types.JobStatusFailed],
+				DLQ:        stats.DLQCount,
 			}, nil
 		},
 		AgentStatsFn: func(fnCtx context.Context) (*health.AgentMetrics, error) {

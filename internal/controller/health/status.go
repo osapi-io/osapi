@@ -300,12 +300,12 @@ func (h *Health) populateMetrics(
 
 	if jobStats != nil {
 		resp.Jobs = &api.JobStats{
-			Total:       jobStats.Total,
-			Unprocessed: jobStats.Unprocessed,
-			Processing:  jobStats.Processing,
-			Completed:   jobStats.Completed,
-			Failed:      jobStats.Failed,
-			DLQ:         jobStats.DLQ,
+			Total:      jobStats.Total,
+			Submitted:  jobStats.Submitted,
+			Processing: jobStats.Processing,
+			Completed:  jobStats.Completed,
+			Failed:     jobStats.Failed,
+			DLQ:        jobStats.DLQ,
 		}
 	}
 

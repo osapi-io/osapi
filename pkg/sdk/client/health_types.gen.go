@@ -107,11 +107,11 @@ type JobStats struct {
 	// Number of jobs currently processing.
 	Processing int `json:"processing"`
 
+	// Number of jobs that no agent has taken.
+	Submitted int `json:"submitted"`
+
 	// Total number of jobs.
 	Total int `json:"total"`
-
-	// Number of unprocessed jobs.
-	Unprocessed int `json:"unprocessed"`
 }
 
 // KVBucketInfo is the KVBucketInfo of the spec.

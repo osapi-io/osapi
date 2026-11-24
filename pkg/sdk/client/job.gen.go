@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // JobService calls the API's Job group: operations related to the job queue.
@@ -19,7 +21,7 @@ type JobService struct {
 type JobListParams struct {
 	// Status is the status of the query: filter jobs by status. The zero value
 	// leaves it out.
-	Status GetJobsStatus
+	Status types.JobStatus
 
 	// Limit is the limit of the query: maximum number of jobs per page (1-100).
 	// The zero value leaves it out.

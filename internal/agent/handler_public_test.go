@@ -53,6 +53,7 @@ import (
 	"github.com/osapi-io/osapi/internal/secret/seal"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // newTestMsg creates a jetstream.Msg mock that returns the given subject,
@@ -126,7 +127,7 @@ func (s *HandlerPublicTestSuite) TestWriteStatusEvent() {
 	tests := []struct {
 		name         string
 		jobID        string
-		event        string
+		event        types.AgentJobStatus
 		data         map[string]interface{}
 		setupMocks   func()
 		validateFunc func(error)
@@ -138,7 +139,7 @@ func (s *HandlerPublicTestSuite) TestWriteStatusEvent() {
 			data:  map[string]interface{}{"agent_version": "1.0.0", "pid": 12345},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-123", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-123", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -152,7 +153,7 @@ func (s *HandlerPublicTestSuite) TestWriteStatusEvent() {
 			data:  nil,
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-456", "completed", gomock.Any(), nil).
+					WriteStatusEvent(gomock.Any(), "test-job-456", types.AgentJobStatusCompleted, gomock.Any(), nil).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -166,7 +167,7 @@ func (s *HandlerPublicTestSuite) TestWriteStatusEvent() {
 			data:  map[string]interface{}{"error": "processing failed"},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-789", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-789", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(errors.New("KV storage failed"))
 			},
 			validateFunc: func(err error) {
@@ -183,7 +184,7 @@ func (s *HandlerPublicTestSuite) TestWriteStatusEvent() {
 			data:  map[string]interface{}{},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -235,14 +236,14 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 				// Mock status event writes
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-123", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-123", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// The version of the agent is in its registration, not in each
 				// started event.
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-123", "started", gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ context.Context, _, _, _ string, data map[string]interface{}) error {
+					WriteStatusEvent(gomock.Any(), "test-job-123", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, _ string, _ types.AgentJobStatus, _ string, data map[string]interface{}) error {
 						s.NotContains(data, "agent_version")
 						s.Contains(data, "pid")
 
@@ -250,12 +251,12 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					})
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-123", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-123", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Mock response write
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-123", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-123", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -283,20 +284,20 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 				// Mock status event writes
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-456", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-456", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-456", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-456", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "test-job-456", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "test-job-456", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Mock response write for failed job
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-456", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-456", gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -468,19 +469,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "ack-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "ack-err-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(errors.New("ack write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "ack-err-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "ack-err-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "ack-err-job", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "ack-err-job", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -505,19 +506,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "start-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "start-err-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "start-err-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "start-err-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(errors.New("started write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "start-err-job", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "start-err-job", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -542,19 +543,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "comp-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "comp-err-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "comp-err-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "comp-err-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "comp-err-job", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "comp-err-job", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(errors.New("completed write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -579,19 +580,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fail-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fail-err-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fail-err-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fail-err-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fail-err-job", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fail-err-job", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(errors.New("failed write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -622,19 +623,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "skip-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "skip-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "skip-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "skip-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "skip-job", "skipped", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "skip-job", types.AgentJobStatusSkipped, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "skip-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "skip-job", gomock.Any(), gomock.Any(), types.AgentJobStatusSkipped, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -662,19 +663,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "skip-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "skip-err-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "skip-err-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "skip-err-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "skip-err-job", "skipped", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "skip-err-job", types.AgentJobStatusSkipped, gomock.Any(), gomock.Any()).
 					Return(errors.New("skipped write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "skip-err-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "skip-err-job", gomock.Any(), gomock.Any(), types.AgentJobStatusSkipped, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -703,19 +704,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-resolve-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-resolve-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-resolve-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-resolve-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-resolve-job", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-resolve-job", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fact-resolve-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fact-resolve-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -742,19 +743,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-nil-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-nil-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-nil-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-nil-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-nil-job", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-nil-job", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fact-nil-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fact-nil-job", gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -784,19 +785,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-fail-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-fail-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-fail-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-fail-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "fact-fail-job", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "fact-fail-job", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fact-fail-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fact-fail-job", gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -824,17 +825,17 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "storage-fail-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "storage-fail-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				// Response is written before the status event; failure
 				// here prevents the completed event from being written.
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("storage failure"))
 
 				// The handler falls back to recording the storage failure
@@ -842,7 +843,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				// message unacked (which would redeliver and re-execute
 				// the already-completed operation).
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-job", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "storage-fail-job", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -872,22 +873,22 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "storage-fail-double-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "storage-fail-double-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("storage failure"))
 
 				// Even the fallback failed-event write fails; this is only
 				// logged, and the message is still acked rather than
 				// redelivered for a second execution.
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", "failed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "storage-fail-double-job", types.AgentJobStatusFailed, gomock.Any(), gomock.Any()).
 					Return(errors.New("status write also failed"))
 			},
 			validateFunc: func(err error) {
@@ -952,19 +953,19 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					}`), nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "check-err-job", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "check-err-job", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "check-err-job", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "check-err-job", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "check-err-job", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "check-err-job", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "check-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "check-err-job", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -1027,7 +1028,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 						"modify-job-123",
 						gomock.Any(),
 						gomock.Any(),
-						"completed",
+						types.AgentJobStatusCompleted,
 						gomock.Any(),
 						gomock.Any(),
 						gomock.Any(),
@@ -1340,7 +1341,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 		name       string
 		jobID      string
 		pki        *pki.Manager
-		wantStatus string
+		wantStatus types.AgentJobStatus
 	}{
 		{
 			name:       "when the job key is sealed to this agent, the job runs",
@@ -1366,7 +1367,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 			s.mockJobClient.EXPECT().
 				GetJobData(gomock.Any(), "jobs."+tt.jobID).
 				Return(jobData(tt.jobID), nil)
-			for _, event := range []string{"acknowledged", "started", tt.wantStatus} {
+			for _, event := range []types.AgentJobStatus{types.AgentJobStatusAcknowledged, types.AgentJobStatusStarted, tt.wantStatus} {
 				s.mockJobClient.EXPECT().
 					WriteStatusEvent(gomock.Any(), tt.jobID, event, gomock.Any(), gomock.Any()).
 					Return(nil)
@@ -1427,16 +1428,16 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 					Return(envelopeJSON, nil)
 
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "signed-job-ok", "acknowledged", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "signed-job-ok", types.AgentJobStatusAcknowledged, gomock.Any(), gomock.Any()).
 					Return(nil)
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "signed-job-ok", "started", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "signed-job-ok", types.AgentJobStatusStarted, gomock.Any(), gomock.Any()).
 					Return(nil)
 				s.mockJobClient.EXPECT().
-					WriteStatusEvent(gomock.Any(), "signed-job-ok", "completed", gomock.Any(), gomock.Any()).
+					WriteStatusEvent(gomock.Any(), "signed-job-ok", types.AgentJobStatusCompleted, gomock.Any(), gomock.Any()).
 					Return(nil)
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "signed-job-ok", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "signed-job-ok", gomock.Any(), gomock.Any(), types.AgentJobStatusCompleted, "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {

@@ -27,6 +27,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var (
@@ -45,6 +46,18 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("Job Management API"),
 	endpoint.Tag("job_operations", "Job", "Operations related to the job queue."),
 	endpoint.Uses[Deps](),
+	endpoint.Doc[types.JobStatus](
+		"The status of a job, which the controller computes from what each agent did: "+
+			"submitted, processing, completed, failed, partial_failure (completed on some "+
+			"agents and failed on others) or skipped (each agent skipped it).",
+	),
+	endpoint.Enum[types.JobStatus](types.JobStatus("").Values),
+	endpoint.Doc[types.AgentJobStatus](
+		"The status of a job on one host. The controller records submitted and retried; "+
+			"an agent records acknowledged, started, completed, failed or skipped; and timeout "+
+			"is a host whose agent did not answer in time.",
+	),
+	endpoint.Enum[types.AgentJobStatus](types.AgentJobStatus("").Values),
 	endpoint.Example[ListJobsResponse]("status_counts",
 		`{"submitted":5,"processing":2,"completed":30,"failed":3,"partial_failure":2}`),
 	endpoint.Get[ListInput, ListJobsResponse]("list").

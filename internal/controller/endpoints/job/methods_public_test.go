@@ -112,14 +112,15 @@ func (s *MethodsPublicTestSuite) TestList() {
 		{
 			name: "when the caller gives no limit, it reads the default page and masks secrets",
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0, gomock.Nil()).
+				s.jobs.EXPECT().
+					ListJobs(gomock.Any(), types.JobStatus(""), client.DefaultPageSize, 0, gomock.Nil()).
 					Return(&client.ListJobsResult{
 						Jobs: []*job.QueuedJob{
 							queued(),
 							{ID: newJobID, Status: "submitted"},
 						},
 						TotalCount:   42,
-						StatusCounts: map[string]int{"completed": 41, "submitted": 1},
+						StatusCounts: map[types.JobStatus]int{"completed": 41, "submitted": 1},
 					}, nil)
 			},
 			validateFunc: func(got jobgroup.ListJobsResponse, err error) {
@@ -147,7 +148,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			name: "when the caller gives a status, a limit and an offset, it reads that page",
 			in:   jobgroup.ListInput{Status: "failed", Limit: 3, Offset: 6},
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "failed", 3, 6, gomock.Nil()).
+				s.jobs.EXPECT().ListJobs(gomock.Any(), types.JobStatusFailed, 3, 6, gomock.Nil()).
 					Return(&client.ListJobsResult{}, nil)
 			},
 			validateFunc: func(got jobgroup.ListJobsResponse, err error) {
@@ -158,7 +159,8 @@ func (s *MethodsPublicTestSuite) TestList() {
 		{
 			name: "when the job client fails, the caller gets a message without its error",
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0, gomock.Nil()).
+				s.jobs.EXPECT().
+					ListJobs(gomock.Any(), types.JobStatus(""), client.DefaultPageSize, 0, gomock.Nil()).
 					Return(nil, errors.New("nats: timeout"))
 			},
 			validateFunc: func(_ jobgroup.ListJobsResponse, err error) {
@@ -170,9 +172,9 @@ func (s *MethodsPublicTestSuite) TestList() {
 			scope: []string{"group:web"},
 			setup: func() {
 				s.jobs.EXPECT().
-					ListJobs(gomock.Any(), "", client.DefaultPageSize, 0, gomock.Not(gomock.Nil())).
+					ListJobs(gomock.Any(), types.JobStatus(""), client.DefaultPageSize, 0, gomock.Not(gomock.Nil())).
 					DoAndReturn(func(
-						_ context.Context, _ string, _ int, _ int, keep func(string) bool,
+						_ context.Context, _ types.JobStatus, _ int, _ int, keep func(string) bool,
 					) (*client.ListJobsResult, error) {
 						s.True(keep("group:web.dev"))
 						s.True(keep("web-01"), "a host whose agent has a label in the scope")
@@ -212,11 +214,11 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				qj := queued()
 				qj.Responses = map[string]job.Response{
 					"web-01": {
-						Status: job.StatusCompleted, Hostname: "web-01",
+						Status: types.AgentJobStatusCompleted, Hostname: "web-01",
 						Data: json.RawMessage(`{"uptime":5}`), Changed: ptr(false),
 					},
 					"web-02": {
-						Status: job.StatusFailed, Hostname: "web-02", Error: "boom",
+						Status: types.AgentJobStatusFailed, Hostname: "web-02", Error: "boom",
 						Steps: []types.Step{
 							{
 								Behavior: "netplan",
@@ -589,7 +591,8 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			path:   "/api/job?status=completed&limit=5&offset=10",
 			token:  token("job:read"),
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "completed", 5, 10, gomock.Nil()).
+				s.jobs.EXPECT().
+					ListJobs(gomock.Any(), types.JobStatusCompleted, 5, 10, gomock.Nil()).
 					Return(&client.ListJobsResult{TotalCount: 0}, nil)
 			},
 			wantCode: http.StatusOK,

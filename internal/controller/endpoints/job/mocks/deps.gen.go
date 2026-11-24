@@ -15,6 +15,7 @@ import (
 
 	job "github.com/osapi-io/osapi/internal/job"
 	client "github.com/osapi-io/osapi/internal/job/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -72,7 +73,7 @@ func (mr *MockJobsMockRecorder) GetJobStatus(ctx, jobID any) *gomock.Call {
 }
 
 // ListJobs mocks base method.
-func (m *MockJobs) ListJobs(ctx context.Context, statusFilter string, limit, offset int, keep func(string) bool) (*client.ListJobsResult, error) {
+func (m *MockJobs) ListJobs(ctx context.Context, statusFilter types.JobStatus, limit, offset int, keep func(string) bool) (*client.ListJobsResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListJobs", ctx, statusFilter, limit, offset, keep)
 	ret0, _ := ret[0].(*client.ListJobsResult)

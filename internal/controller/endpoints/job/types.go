@@ -25,9 +25,9 @@ import (
 
 // ListInput is a page of the job queue, and the status to filter by.
 type ListInput struct {
-	Status string `json:"status" in:"query" validate:"omitempty,oneof=submitted processing completed failed partial_failure" doc:"Filter jobs by status."`
-	Limit  int    `json:"limit"  in:"query" validate:"omitempty,min=1,max=100"                                               doc:"Maximum number of jobs per page (1-100)." default:"10"`
-	Offset int    `json:"offset" in:"query" validate:"omitempty,min=0"                                                       doc:"Number of jobs to skip for pagination."   default:"0"`
+	Status types.JobStatus `json:"status" in:"query" validate:"omitempty,oneof=submitted processing completed failed partial_failure skipped" doc:"Filter jobs by status."`
+	Limit  int             `json:"limit"  in:"query" validate:"omitempty,min=1,max=100"                                                       doc:"Maximum number of jobs per page (1-100)." default:"10"`
+	Offset int             `json:"offset" in:"query" validate:"omitempty,min=0"                                                               doc:"Number of jobs to skip for pagination."   default:"0"`
 }
 
 // GetInput names the job to read.
@@ -53,25 +53,25 @@ type RetryJobRequest struct {
 
 // CreateJobResponse is the job that a request created.
 type CreateJobResponse struct {
-	JobID     string `json:"job_id"              validate:"uuid" doc:"Unique identifier for the created job." example:"550e8400-e29b-41d4-a716-446655440000"`
-	Status    string `json:"status"                              doc:"Initial status of the job."             example:"unprocessed"`
-	Revision  int64  `json:"revision,omitempty"                  doc:"The KV revision number."                example:"1"`
-	Timestamp string `json:"timestamp,omitempty"                 doc:"Creation timestamp."                    example:"2025-06-14T10:00:00Z"                 render:"-"`
+	JobID     string          `json:"job_id"              validate:"uuid" doc:"Unique identifier for the created job." example:"550e8400-e29b-41d4-a716-446655440000"`
+	Status    types.JobStatus `json:"status"                              doc:"Initial status of the job."             example:"submitted"`
+	Revision  int64           `json:"revision,omitempty"                  doc:"The KV revision number."                example:"1"`
+	Timestamp string          `json:"timestamp,omitempty"                 doc:"Creation timestamp."                    example:"2025-06-14T10:00:00Z"                 render:"-"`
 }
 
 // ListJobsResponse is a page of the job queue.
 type ListJobsResponse struct {
-	_            struct{}            `title:"Jobs"`
-	TotalItems   int                 `             json:"total_items,omitempty"   doc:"Total number of jobs matching the filter."                                                                                                                     example:"42"`
-	StatusCounts map[string]int      `             json:"status_counts,omitempty" doc:"Count of all jobs by status (submitted, processing, completed, failed, partial_failure). Derived from key names during the listing pass, with no extra reads."`
-	Items        []JobDetailResponse `             json:"items,omitempty"`
+	_            struct{}                `title:"Jobs"`
+	TotalItems   int                     `             json:"total_items,omitempty"   doc:"Total number of jobs matching the filter."                                                         example:"42"`
+	StatusCounts map[types.JobStatus]int `             json:"status_counts,omitempty" doc:"Count of all jobs by status. Derived from key names during the listing pass, with no extra reads."`
+	Items        []JobDetailResponse     `             json:"items,omitempty"`
 }
 
 // JobDetailResponse is one job, with what each agent did with it. The
 // fields of a list come first, in the order of its columns.
 type JobDetailResponse struct { //nolint:revive // the schema name is part of the API
 	ID          string          `json:"id,omitempty"           validate:"uuid" doc:"Unique identifier of the job."                                                                                                                                    label:"Job ID"`
-	Status      string          `json:"status,omitempty"                       doc:"Current status of the job."                                                                                                                                                       render:"status"`
+	Status      types.JobStatus `json:"status,omitempty"                       doc:"Current status of the job."                                                                                                                                                       render:"status"`
 	Created     string          `json:"created,omitempty"                      doc:"Creation timestamp."                                                                                                                                                              render:"time"`
 	Target      string          `json:"target,omitempty"                       doc:"The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered."`
 	Operation   *Operation      `json:"operation,omitempty"                    doc:"What the job asked for, with each secret masked."`
@@ -95,27 +95,27 @@ type Operation = struct {
 
 // Response is what one agent answered, in place in the spec.
 type Response = struct {
-	Hostname string       `json:"hostname"`
-	Status   string       `json:"status,omitempty"  render:"status"`
-	Changed  *bool        `json:"changed,omitempty"`
-	Error    string       `json:"error,omitempty"`
-	Data     any          `json:"data,omitempty"                    doc:"Agent result data."`
-	Steps    []types.Step `json:"steps,omitempty"                   doc:"The calls of other behaviors that the method made on the host, also when one failed."`
+	Hostname string               `json:"hostname"`
+	Status   types.AgentJobStatus `json:"status,omitempty"  render:"status"`
+	Changed  *bool                `json:"changed,omitempty"`
+	Error    string               `json:"error,omitempty"`
+	Data     any                  `json:"data,omitempty"                    doc:"Agent result data."`
+	Steps    []types.Step         `json:"steps,omitempty"                   doc:"The calls of other behaviors that the method made on the host, also when one failed."`
 }
 
 // AgentState is how far one agent got, in place in the spec.
 type AgentState = struct {
-	Hostname string `json:"hostname"`
-	Status   string `json:"status,omitempty"   render:"status"   validate:"omitempty,oneof=acknowledged started completed failed skipped" doc:"How far the agent got: acknowledged, started, completed, failed or skipped."`
-	Duration string `json:"duration,omitempty" render:"duration"`
-	Error    string `json:"error,omitempty"`
+	Hostname string               `json:"hostname"`
+	Status   types.AgentJobStatus `json:"status,omitempty"   render:"status"   doc:"How far the agent got."`
+	Duration string               `json:"duration,omitempty" render:"duration"`
+	Error    string               `json:"error,omitempty"`
 }
 
 // TimelineEvent is one event of a job's life, in place in the spec.
 type TimelineEvent = struct {
-	Timestamp string `json:"timestamp,omitempty" doc:"ISO 8601 timestamp of the event."                                           render:"time"`
-	Event     string `json:"event,omitempty"     doc:"Event type (submitted, acknowledged, started, completed, failed, retried)."`
-	Hostname  string `json:"hostname,omitempty"  doc:"Agent or source that generated the event."`
-	Message   string `json:"message,omitempty"   doc:"Human-readable description of the event."`
-	Error     string `json:"error,omitempty"     doc:"Error details if applicable."`
+	Timestamp string               `json:"timestamp,omitempty" doc:"ISO 8601 timestamp of the event."          render:"time"`
+	Event     types.AgentJobStatus `json:"event,omitempty"     doc:"The status event."`
+	Hostname  string               `json:"hostname,omitempty"  doc:"Agent or source that generated the event."`
+	Message   string               `json:"message,omitempty"   doc:"Human-readable description of the event."`
+	Error     string               `json:"error,omitempty"     doc:"Error details if applicable."`
 }

@@ -4,12 +4,12 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { AgentJobStatus } from './agentJobStatus';
 
 export type JobDetailResponseTimelineItem = {
   /** Error details if applicable. */
   error?: string;
-  /** Event type (submitted, acknowledged, started, completed, failed, retried). */
-  event?: string;
+  event?: AgentJobStatus;
   /** Agent or source that generated the event. */
   hostname?: string;
   /** Human-readable description of the event. */

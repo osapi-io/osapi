@@ -84,7 +84,7 @@ func ExportComputeStatusFromKeyNames(
 	orderedIDs, jobStatuses := computeStatusFromKeyNames(keys)
 	statuses := make(map[string]string, len(jobStatuses))
 	for id, info := range jobStatuses {
-		statuses[id] = info.Status
+		statuses[id] = string(info.Status)
 	}
 	return orderedIDs, statuses
 }

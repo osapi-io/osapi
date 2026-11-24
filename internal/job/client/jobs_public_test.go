@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type JobsPublicTestSuite struct {
@@ -122,7 +123,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 		name           string
 		jobID          string
 		expectedErr    string
-		expectedStatus string
+		expectedStatus types.JobStatus
 		expectedError  string
 		agentCount     int
 		responseCount  int
@@ -836,7 +837,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			agentCount:     1,
 			validateFunc: func(qj *job.QueuedJob) {
 				ws := qj.AgentStates["agent1"]
-				s.Equal("skipped", ws.Status)
+				s.Equal(types.AgentJobStatusSkipped, ws.Status)
 
 				// Verify timeline includes skipped event with message
 				found := false
@@ -997,7 +998,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 func (s *JobsPublicTestSuite) TestListJobs() {
 	tests := []struct {
 		name         string
-		statusFilter string
+		statusFilter types.JobStatus
 		limit        int
 		offset       int
 		keep         func(string) bool
@@ -1589,7 +1590,7 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 					Return(retriedEntry, nil)
 			},
 			validateFunc: func(qj *job.QueuedJob) {
-				s.Equal("failed", qj.Status)
+				s.Equal(types.JobStatusFailed, qj.Status)
 				s.Len(qj.Timeline, 3)
 
 				// Find retried event in timeline
@@ -1706,7 +1707,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			validateFunc: func(result *client.CreateJobResult, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
+				s.Equal(types.JobStatusSubmitted, result.Status)
 			},
 		},
 		{
@@ -1732,7 +1733,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			validateFunc: func(result *client.CreateJobResult, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
+				s.Equal(types.JobStatusSubmitted, result.Status)
 			},
 		},
 		{
@@ -1806,7 +1807,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			validateFunc: func(result *client.CreateJobResult, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
+				s.Equal(types.JobStatusSubmitted, result.Status)
 			},
 		},
 		{
@@ -1910,7 +1911,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			validateFunc: func(result *client.CreateJobResult, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
+				s.Equal(types.JobStatusSubmitted, result.Status)
 			},
 		},
 		{
@@ -1942,7 +1943,7 @@ func (s *JobsPublicTestSuite) TestRetryJob() {
 			validateFunc: func(result *client.CreateJobResult, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
+				s.Equal(types.JobStatusSubmitted, result.Status)
 			},
 		},
 	}
@@ -2422,7 +2423,7 @@ func (s *JobsPublicTestSuite) TestCreateJobWithPKISigner() {
 			validateFunc: func(result *client.CreateJobResult, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
-				s.Equal("created", result.Status)
+				s.Equal(types.JobStatusSubmitted, result.Status)
 			},
 		},
 		{
@@ -2545,7 +2546,7 @@ func (s *JobsPublicTestSuite) TestSignedJobRecord() {
 	signer, _ := newSignerWithControllerKey(gomock.NewController(s.T()))
 	jobID := "signed-job-1"
 	record := []byte(fmt.Sprintf(
-		`{"id":"%s","status":"unprocessed","created":"2026-11-18T20:57:13Z","subject":"jobs.query._all","target":"_all","operation":{"type":"node.hostname.get"}}`,
+		`{"id":"%s","status":"submitted","created":"2026-11-18T20:57:13Z","subject":"jobs.query._all","target":"_all","operation":{"type":"node.hostname.get"}}`,
 		jobID,
 	))
 	signed, err := client.ExportWrapInSignedEnvelope(signer, "", record)
@@ -2787,7 +2788,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatusWithAgentKeyStoreEnforcing() {
 	setupJobAndKeys := func(responseKey string) {
 		jobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 		jobEntry.EXPECT().Value().Return([]byte(fmt.Sprintf(
-			`{"id":"%s","status":"unprocessed","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
+			`{"id":"%s","status":"submitted","created":"2026-01-01T00:00:00Z","subject":"jobs.query.host.server1","operation":{"type":"node.hostname.get"}}`,
 			jobID,
 		)))
 		s.mockNATSClient.EXPECT().

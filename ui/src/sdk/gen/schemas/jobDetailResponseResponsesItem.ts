@@ -4,6 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { AgentJobStatus } from './agentJobStatus';
 import type { Step } from './step';
 
 export type JobDetailResponseResponsesItem = {
@@ -12,7 +13,7 @@ export type JobDetailResponseResponsesItem = {
   data?: unknown;
   error?: string;
   hostname: string;
-  status?: string;
+  status?: AgentJobStatus;
   /** The calls of other behaviors that the method made on the host, also when one failed. */
   steps?: Step[];
 };

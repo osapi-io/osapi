@@ -36,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/seal"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Client provides methods for publishing job requests and retrieving responses.
@@ -189,7 +190,7 @@ func (c *Client) Query(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed {
+	if resp.Status == types.AgentJobStatusFailed {
 		return jobID, nil, job.NewResponseError(resp)
 	}
 
@@ -240,7 +241,7 @@ func (c *Client) Modify(
 		return "", nil, fmt.Errorf("failed to publish and wait: %w", err)
 	}
 
-	if resp.Status == job.StatusFailed {
+	if resp.Status == types.AgentJobStatusFailed {
 		return jobID, nil, job.NewResponseError(resp)
 	}
 
@@ -294,7 +295,7 @@ func (c *Client) publishAndWait(
 	// Store immutable job data in KV (same structure as CreateJob)
 	jobData := map[string]interface{}{
 		"id":        jobID,
-		"status":    "unprocessed",
+		"status":    types.JobStatusSubmitted,
 		"created":   createdTime,
 		"subject":   subject,
 		"target":    target,
@@ -423,7 +424,7 @@ func (c *Client) publishAndCollect(
 	// Store immutable job data in KV
 	jobData := map[string]interface{}{
 		"id":        jobID,
-		"status":    "unprocessed",
+		"status":    types.JobStatusSubmitted,
 		"created":   createdTime,
 		"subject":   subject,
 		"target":    target,
@@ -527,7 +528,7 @@ func (c *Client) publishAndCollect(
 					responses[hostname] = &job.Response{
 						JobID:     jobID,
 						Hostname:  hostname,
-						Status:    job.StatusTimeout,
+						Status:    types.AgentJobStatusTimeout,
 						ErrorCode: job.ErrorCodeTimeout,
 						Error:     "timeout: agent did not respond",
 					}

@@ -202,7 +202,7 @@ type JobClient interface {
 	) (*job.QueuedJob, error)
 	ListJobs(
 		ctx context.Context,
-		statusFilter string,
+		statusFilter types.JobStatus,
 		limit int,
 		offset int,
 		keep func(target string) bool,
@@ -277,7 +277,7 @@ type JobClient interface {
 	WriteStatusEvent(
 		ctx context.Context,
 		jobID string,
-		event string,
+		event types.AgentJobStatus,
 		hostname string,
 		data map[string]interface{},
 	) error
@@ -286,7 +286,7 @@ type JobClient interface {
 		jobID string,
 		hostname string,
 		responseData []byte,
-		status string,
+		status types.AgentJobStatus,
 		errorMsg string,
 		errorCode job.ErrorCode,
 		changed *bool,
@@ -339,22 +339,22 @@ type JobClient interface {
 
 // CreateJobResult represents the result of creating a job.
 type CreateJobResult struct {
-	JobID     string `json:"job_id"`
-	Status    string `json:"status"`
-	Revision  uint64 `json:"revision"`
-	Timestamp string `json:"timestamp"`
+	JobID     string          `json:"job_id"`
+	Status    types.JobStatus `json:"status"`
+	Revision  uint64          `json:"revision"`
+	Timestamp string          `json:"timestamp"`
 }
 
 // ListJobsResult represents the result of listing jobs with pagination.
 type ListJobsResult struct {
 	Jobs         []*job.QueuedJob
 	TotalCount   int
-	StatusCounts map[string]int
+	StatusCounts map[types.JobStatus]int
 }
 
 // computedJobStatus represents the computed status from events
 type computedJobStatus struct {
-	Status      string
+	Status      types.JobStatus
 	Error       string
 	Hostname    string
 	UpdatedAt   string
@@ -364,7 +364,7 @@ type computedJobStatus struct {
 
 // lightJobInfo holds status derived from KV key names only (no reads).
 type lightJobInfo struct {
-	Status string
+	Status types.JobStatus
 }
 
 // Ensure Client implements JobClient interface

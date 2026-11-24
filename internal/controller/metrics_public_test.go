@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type MetricsPublicTestSuite struct {
@@ -198,7 +199,7 @@ func (s *MetricsPublicTestSuite) TestJobStats() {
 			name: "when the queue answers returns the counts",
 			stats: &job.QueueStats{
 				TotalJobs: 10,
-				StatusCounts: map[string]int{
+				StatusCounts: map[types.JobStatus]int{
 					"submitted":  1,
 					"processing": 2,
 					"completed":  5,
@@ -207,12 +208,12 @@ func (s *MetricsPublicTestSuite) TestJobStats() {
 				DLQCount: 1,
 			},
 			want: &health.JobMetrics{
-				Total:       10,
-				Unprocessed: 1,
-				Processing:  2,
-				Completed:   5,
-				Failed:      2,
-				DLQ:         1,
+				Total:      10,
+				Submitted:  1,
+				Processing: 2,
+				Completed:  5,
+				Failed:     2,
+				DLQ:        1,
 			},
 		},
 		{

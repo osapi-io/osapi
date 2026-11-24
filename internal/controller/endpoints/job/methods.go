@@ -91,7 +91,7 @@ func Get(
 		r := qj.Responses[hostname]
 		out.Responses = append(out.Responses, Response{
 			Hostname: hostname,
-			Status:   string(r.Status),
+			Status:   r.Status,
 			Changed:  r.Changed,
 			Error:    r.Error,
 			Data:     decode(r.Data),
@@ -104,7 +104,7 @@ func Get(
 	for _, te := range qj.Timeline {
 		out.Timeline = append(out.Timeline, TimelineEvent{
 			Timestamp: te.Timestamp.Format(time.RFC3339),
-			Event:     te.Event,
+			Event:     types.AgentJobStatus(te.Event),
 			Hostname:  te.Hostname,
 			Message:   te.Message,
 			Error:     te.Error,

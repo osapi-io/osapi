@@ -205,7 +205,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				},
 				JobStatsFn: func(_ context.Context) (*health.JobMetrics, error) {
 					return &health.JobMetrics{
-						Total: 100, Unprocessed: 5, Processing: 2,
+						Total: 100, Submitted: 5, Processing: 2,
 						Completed: 90, Failed: 3, DLQ: 0,
 					}, nil
 				},
@@ -250,7 +250,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 
 				s.Require().NotNil(r.Jobs)
 				s.Equal(100, r.Jobs.Total)
-				s.Equal(5, r.Jobs.Unprocessed)
+				s.Equal(5, r.Jobs.Submitted)
 				s.Equal(90, r.Jobs.Completed)
 
 				s.Require().NotNil(r.Agents)

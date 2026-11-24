@@ -34,6 +34,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // CreateJob creates a new job from operation data and stores it in the KV bucket.
@@ -76,14 +77,14 @@ func (c *Client) CreateJob(
 	createdTime := time.Now().Format(time.RFC3339)
 	jobWithStatus := map[string]interface{}{
 		"id":        jobID,
-		"status":    "unprocessed",
+		"status":    types.JobStatusSubmitted,
 		"created":   createdTime,
 		"subject":   notificationSubject,
 		"target":    targetHostname,
 		"operation": operationData,
 		"status_history": []interface{}{
 			map[string]interface{}{
-				"status":    "unprocessed",
+				"status":    types.JobStatusSubmitted,
 				"timestamp": createdTime,
 			},
 		},
@@ -119,7 +120,7 @@ func (c *Client) CreateJob(
 	statusKey := fmt.Sprintf("status.%s.submitted._api.%d", jobID, time.Now().UnixNano())
 	statusEvent := map[string]interface{}{
 		"job_id":    jobID,
-		"event":     string(job.StatusSubmitted),
+		"event":     types.AgentJobStatusSubmitted,
 		"hostname":  "_api", // API server hostname could be added here
 		"timestamp": createdTime,
 		"unix_nano": time.Now().UnixNano(),
@@ -154,7 +155,7 @@ func (c *Client) CreateJob(
 
 	return &CreateJobResult{
 		JobID:     jobID,
-		Status:    "created",
+		Status:    types.JobStatusSubmitted,
 		Revision:  revision,
 		Timestamp: createdTime,
 	}, nil
@@ -172,12 +173,12 @@ func (c *Client) queueSummary(
 
 	_, jobStatuses := computeStatusFromKeyNames(keys)
 
-	statusCounts := map[string]int{
-		string(job.StatusSubmitted):      0,
-		string(job.StatusProcessing):     0,
-		string(job.StatusCompleted):      0,
-		string(job.StatusFailed):         0,
-		string(job.StatusPartialFailure): 0,
+	statusCounts := map[types.JobStatus]int{
+		types.JobStatusSubmitted:      0,
+		types.JobStatusProcessing:     0,
+		types.JobStatusCompleted:      0,
+		types.JobStatusFailed:         0,
+		types.JobStatusPartialFailure: 0,
 	}
 
 	for _, info := range jobStatuses {
@@ -294,7 +295,7 @@ func (c *Client) jobStatus(
 // costs a read of each job, which a nil keep does not.
 func (c *Client) listJobs(
 	ctx context.Context,
-	statusFilter string,
+	statusFilter types.JobStatus,
 	limit int,
 	offset int,
 	keep func(target string) bool,
@@ -307,7 +308,7 @@ func (c *Client) listJobs(
 	c.logger.Debug(
 		"kv.keys",
 		slog.String("operation", "list_jobs"),
-		slog.String("status_filter", statusFilter),
+		slog.String("status_filter", string(statusFilter)),
 		slog.Int("limit", limit),
 		slog.Int("offset", offset),
 	)
@@ -324,18 +325,18 @@ func (c *Client) listJobs(
 	}
 
 	// Compute status counts from key-name-derived statuses (free — no extra reads)
-	statusCounts := map[string]int{
-		string(job.StatusSubmitted):      0,
-		string(job.StatusProcessing):     0,
-		string(job.StatusCompleted):      0,
-		string(job.StatusFailed):         0,
-		string(job.StatusPartialFailure): 0,
+	statusCounts := map[types.JobStatus]int{
+		types.JobStatusSubmitted:      0,
+		types.JobStatusProcessing:     0,
+		types.JobStatusCompleted:      0,
+		types.JobStatusFailed:         0,
+		types.JobStatusPartialFailure: 0,
 	}
 	for _, id := range orderedJobIDs {
 		// Jobs with no status events are "submitted" but not in jobStatuses
 		info, exists := jobStatuses[id]
 		if !exists {
-			info = lightJobInfo{Status: string(job.StatusSubmitted)}
+			info = lightJobInfo{Status: types.JobStatusSubmitted}
 		}
 		statusCounts[info.Status]++
 	}
@@ -346,7 +347,7 @@ func (c *Client) listJobs(
 		if statusFilter != "" {
 			info, exists := jobStatuses[id]
 			if !exists {
-				info = lightJobInfo{Status: string(job.StatusSubmitted)}
+				info = lightJobInfo{Status: types.JobStatusSubmitted}
 			}
 			if info.Status != statusFilter {
 				continue
@@ -496,7 +497,7 @@ func (c *Client) computeStatusFromEvents(
 	jobID string,
 ) computedJobStatus {
 	result := computedJobStatus{
-		Status:      string(job.StatusSubmitted), // Default if no events
+		Status:      types.JobStatusSubmitted, // Default if no events
 		AgentStates: make(map[string]job.AgentState),
 		Timeline:    []job.TimelineEvent{},
 	}
@@ -518,7 +519,7 @@ func (c *Client) computeStatusFromEvents(
 	// Track status by agent. Events are processed in alphabetical key
 	// order (e.g., "completed" before "started") so we use priority to
 	// ensure only higher-priority events overwrite lower ones.
-	agentStates := make(map[string]string)
+	agentStates := make(map[string]types.AgentJobStatus)
 	agentStartTimes := make(map[string]time.Time)
 	agentEndTimes := make(map[string]time.Time)
 	agentErrors := make(map[string]string)
@@ -539,7 +540,7 @@ func (c *Client) computeStatusFromEvents(
 		}
 
 		hostname := getStringField(event, "hostname")
-		eventType := getStringField(event, "event")
+		eventType := types.AgentJobStatus(getStringField(event, "event"))
 		timestamp := getStringField(event, "timestamp")
 
 		// Parse timestamp (supports both RFC3339 and RFC3339Nano)
@@ -551,21 +552,21 @@ func (c *Client) computeStatusFromEvents(
 		// Add to timeline
 		timelineEvent := job.TimelineEvent{
 			Timestamp: t,
-			Event:     eventType,
+			Event:     string(eventType),
 			Hostname:  hostname,
 		}
 
 		// Set message based on event type
 		switch eventType {
-		case string(job.StatusSubmitted):
+		case types.AgentJobStatusSubmitted:
 			timelineEvent.Message = "Job submitted to queue"
-		case string(job.StatusAcknowledged):
+		case types.AgentJobStatusAcknowledged:
 			timelineEvent.Message = fmt.Sprintf("Job acknowledged by agent %s", hostname)
-		case string(job.StatusStarted):
+		case types.AgentJobStatusStarted:
 			timelineEvent.Message = fmt.Sprintf("Job processing started on %s", hostname)
-		case string(job.StatusCompleted):
+		case types.AgentJobStatusCompleted:
 			timelineEvent.Message = fmt.Sprintf("Job completed successfully on %s", hostname)
-		case string(job.StatusSkipped):
+		case types.AgentJobStatusSkipped:
 			timelineEvent.Message = fmt.Sprintf(
 				"Job skipped on %s (unsupported OS family)",
 				hostname,
@@ -577,7 +578,7 @@ func (c *Client) computeStatusFromEvents(
 					latestError = errMsg
 				}
 			}
-		case string(job.StatusFailed):
+		case types.AgentJobStatusFailed:
 			timelineEvent.Message = fmt.Sprintf("Job failed on %s", hostname)
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if errMsg, ok := data["error"].(string); ok {
@@ -586,7 +587,7 @@ func (c *Client) computeStatusFromEvents(
 					latestError = errMsg
 				}
 			}
-		case string(job.StatusRetried):
+		case types.AgentJobStatusRetried:
 			if data, ok := event["data"].(map[string]interface{}); ok {
 				if newJobID, ok := data["new_job_id"].(string); ok {
 					timelineEvent.Message = fmt.Sprintf("Job retried as %s", newJobID)
@@ -607,14 +608,15 @@ func (c *Client) computeStatusFromEvents(
 			}
 
 			// Track first start time for duration calculation
-			if eventType == string(job.StatusStarted) {
+			if eventType == types.AgentJobStatusStarted {
 				if _, exists := agentStartTimes[hostname]; !exists {
 					agentStartTimes[hostname] = t
 				}
 			}
 
 			// Track last end time for duration calculation
-			if eventType == string(job.StatusCompleted) || eventType == string(job.StatusFailed) {
+			if eventType == types.AgentJobStatusCompleted ||
+				eventType == types.AgentJobStatusFailed {
 				agentEndTimes[hostname] = t
 				result.Hostname = hostname
 			}
@@ -667,15 +669,15 @@ func (c *Client) computeStatusFromEvents(
 
 	for _, state := range agentStates {
 		switch state {
-		case string(job.StatusCompleted):
+		case types.AgentJobStatusCompleted:
 			completed++
-		case string(job.StatusFailed):
+		case types.AgentJobStatusFailed:
 			failed++
-		case string(job.StatusSkipped):
+		case types.AgentJobStatusSkipped:
 			skippedCount++
-		case string(job.StatusStarted):
+		case types.AgentJobStatusStarted:
 			processing++
-		case string(job.StatusAcknowledged):
+		case types.AgentJobStatusAcknowledged:
 			acknowledged++
 		}
 	}
@@ -684,20 +686,20 @@ func (c *Client) computeStatusFromEvents(
 
 	// Determine overall status
 	if totalAgents == 0 {
-		result.Status = string(job.StatusSubmitted)
+		result.Status = types.JobStatusSubmitted
 	} else if processing > 0 || acknowledged > 0 {
-		result.Status = string(job.StatusProcessing)
+		result.Status = types.JobStatusProcessing
 	} else if completed+failed+skippedCount == totalAgents {
 		if failed > 0 && completed > 0 {
-			result.Status = string(job.StatusPartialFailure)
+			result.Status = types.JobStatusPartialFailure
 		} else if failed > 0 {
-			result.Status = string(job.StatusFailed)
+			result.Status = types.JobStatusFailed
 			result.Error = latestError
 		} else if skippedCount > 0 && completed == 0 {
-			result.Status = string(job.StatusSkipped)
+			result.Status = types.JobStatusSkipped
 			result.Error = latestError
 		} else {
-			result.Status = string(job.StatusCompleted)
+			result.Status = types.JobStatusCompleted
 		}
 	}
 
@@ -746,7 +748,7 @@ func (c *Client) retryJob(
 	retriedKey := fmt.Sprintf("status.%s.retried._api.%d", jobID, time.Now().UnixNano())
 	retriedEvent := map[string]interface{}{
 		"job_id":    jobID,
-		"event":     string(job.StatusRetried),
+		"event":     types.AgentJobStatusRetried,
 		"hostname":  "_api",
 		"timestamp": time.Now().Format(time.RFC3339Nano),
 		"unix_nano": time.Now().UnixNano(),
@@ -822,7 +824,7 @@ func computeStatusFromKeyNames(
 
 	// Parse status keys and track highest-priority event per (jobID, hostname)
 	// agentStates[jobID][hostname] = highest-priority event
-	agentStates := make(map[string]map[string]string)
+	agentStates := make(map[string]map[string]types.AgentJobStatus)
 
 	for _, key := range keys {
 		if !strings.HasPrefix(key, "status.") {
@@ -833,11 +835,11 @@ func computeStatusFromKeyNames(
 			continue
 		}
 		jobID := parts[1]
-		event := parts[2]
+		event := types.AgentJobStatus(parts[2])
 		hostname := parts[3]
 
 		if _, exists := agentStates[jobID]; !exists {
-			agentStates[jobID] = make(map[string]string)
+			agentStates[jobID] = make(map[string]types.AgentJobStatus)
 		}
 
 		cur, exists := agentStates[jobID][hostname]
@@ -861,35 +863,35 @@ func computeStatusFromKeyNames(
 				continue
 			}
 			switch state {
-			case string(job.StatusCompleted), string(job.StatusRetried):
+			case types.AgentJobStatusCompleted, types.AgentJobStatusRetried:
 				completed++
-			case string(job.StatusFailed):
+			case types.AgentJobStatusFailed:
 				failed++
-			case string(job.StatusSkipped):
+			case types.AgentJobStatusSkipped:
 				skipped++
-			case string(job.StatusStarted):
+			case types.AgentJobStatusStarted:
 				processing++
-			case string(job.StatusAcknowledged):
+			case types.AgentJobStatusAcknowledged:
 				acknowledged++
 			}
 		}
 
 		totalAgents := completed + failed + skipped + processing + acknowledged
 
-		var status string
+		var status types.JobStatus
 		switch {
 		case totalAgents == 0:
-			status = string(job.StatusSubmitted)
+			status = types.JobStatusSubmitted
 		case processing > 0 || acknowledged > 0:
-			status = string(job.StatusProcessing)
+			status = types.JobStatusProcessing
 		case failed > 0 && completed > 0:
-			status = string(job.StatusPartialFailure)
+			status = types.JobStatusPartialFailure
 		case failed > 0:
-			status = string(job.StatusFailed)
+			status = types.JobStatusFailed
 		case skipped > 0 && completed == 0:
-			status = string(job.StatusSkipped)
+			status = types.JobStatusSkipped
 		default:
-			status = string(job.StatusCompleted)
+			status = types.JobStatusCompleted
 		}
 
 		jobStatuses[jobID] = lightJobInfo{Status: status}
@@ -986,13 +988,13 @@ func (c *Client) GetJobStatus(
 // before the jobs are counted and paged.
 func (c *Client) ListJobs(
 	ctx context.Context,
-	statusFilter string,
+	statusFilter types.JobStatus,
 	limit int,
 	offset int,
 	keep func(target string) bool,
 ) (*ListJobsResult, error) {
 	ctx, span := opspan.Start(ctx, tracerName, "job.list",
-		attribute.String("job.status_filter", statusFilter),
+		attribute.String("job.status_filter", string(statusFilter)),
 	)
 	result, err := c.listJobs(ctx, statusFilter, limit, offset, keep)
 	if err == nil {

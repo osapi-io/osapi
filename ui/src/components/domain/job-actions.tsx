@@ -1,6 +1,6 @@
 import { RefreshCw, Trash2 } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
-import { GetJobsStatus, type ListJobsResponse } from "@/sdk/gen/schemas";
+import { JobStatus, type ListJobsResponse } from "@/sdk/gen/schemas";
 
 type Job = NonNullable<ListJobsResponse["items"]>[number];
 
@@ -14,8 +14,7 @@ interface JobActionsProps {
 /** Retry and delete on the row of a job that failed. */
 export function JobActions({ job, busy, onRetry, onDelete }: JobActionsProps) {
   const failed =
-    job.status === GetJobsStatus.failed ||
-    job.status === GetJobsStatus.partial_failure;
+    job.status === JobStatus.failed || job.status === JobStatus.partial_failure;
   if (!failed || !job.id) return null;
   const id = job.id;
   return (

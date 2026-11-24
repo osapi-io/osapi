@@ -33,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type VerifyAgentResponsePublicTestSuite struct {
@@ -96,7 +97,7 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 			validateFunc: func(response *job.Response, err error) {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
-				s.Equal(job.StatusCompleted, response.Status)
+				s.Equal(types.AgentJobStatusCompleted, response.Status)
 				s.Equal("web-01", response.Hostname)
 			},
 		},

@@ -59,6 +59,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // signingKey signs every token a case sends.
@@ -163,7 +164,11 @@ func Completed(
 	host string,
 	data string,
 ) *job.Response {
-	r := &job.Response{Hostname: host, Status: job.StatusCompleted, Data: json.RawMessage(data)}
+	r := &job.Response{
+		Hostname: host,
+		Status:   types.AgentJobStatusCompleted,
+		Data:     json.RawMessage(data),
+	}
 	var out struct {
 		Changed *bool `json:"changed"`
 	}
@@ -178,7 +183,7 @@ func Completed(
 func Skipped(
 	host string,
 ) *job.Response {
-	return &job.Response{Hostname: host, Status: job.StatusSkipped, Error: "unsupported"}
+	return &job.Response{Hostname: host, Status: types.AgentJobStatusSkipped, Error: "unsupported"}
 }
 
 // Failed is host's answer when the method fails there with msg.
@@ -186,14 +191,14 @@ func Failed(
 	host string,
 	msg string,
 ) *job.Response {
-	return &job.Response{Hostname: host, Status: job.StatusFailed, Error: msg}
+	return &job.Response{Hostname: host, Status: types.AgentJobStatusFailed, Error: msg}
 }
 
 // TimedOut is host's answer when it never replied.
 func TimedOut(
 	host string,
 ) *job.Response {
-	return &job.Response{Hostname: host, Status: job.StatusTimeout}
+	return &job.Response{Hostname: host, Status: types.AgentJobStatusTimeout}
 }
 
 // Harness serves one behavior's generated routes.

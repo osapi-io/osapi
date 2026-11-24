@@ -46,39 +46,18 @@ const (
 // Its operation is "<behavior>.<method>", such as "sysctl.get".
 const CategoryBehavior = "behavior"
 
-// Status represents the current status of a job.
-// Status is a type alias for types.JobStatus so internal code and the SDK
-// share the same type. All status constants are defined in pkg/sdk/types.
-type Status = types.JobStatus
-
-// Job status constants re-exported from the SDK.
-const (
-	StatusSubmitted      = types.JobStatusSubmitted
-	StatusAcknowledged   = types.JobStatusAcknowledged
-	StatusStarted        = types.JobStatusStarted
-	StatusPending        = types.JobStatusPending
-	StatusProcessing     = types.JobStatusProcessing
-	StatusCompleted      = types.JobStatusCompleted
-	StatusFailed         = types.JobStatusFailed
-	StatusSkipped        = types.JobStatusSkipped
-	StatusTimeout        = types.JobStatusTimeout
-	StatusPartialFailure = types.JobStatusPartialFailure
-	StatusRetried        = types.JobStatusRetried
-)
-
-// StatusPriority maps each job status to a numeric priority used when
-// computing the overall status from append-only events. Higher values
-// take precedence — a "completed" event (4) is never overwritten by a
-// "started" event (2) that happens to sort later alphabetically in KV.
-var StatusPriority = map[string]int{
-	string(StatusSubmitted):    0,
-	string(StatusAcknowledged): 1,
-	string(StatusStarted):      2,
-	string(StatusFailed):       3,
-	string(StatusSkipped):      3,
-	string(StatusTimeout):      3,
-	string(StatusCompleted):    4,
-	string(StatusRetried):      4,
+// StatusPriority is the rank of each status event of a host, which the
+// controller uses to compute the state of the host from append-only events.
+// A higher rank takes precedence: a completed event (4) is never
+// overwritten by a started event (2) that sorts later in KV.
+var StatusPriority = map[types.AgentJobStatus]int{
+	types.AgentJobStatusSubmitted:    0,
+	types.AgentJobStatusAcknowledged: 1,
+	types.AgentJobStatusStarted:      2,
+	types.AgentJobStatusFailed:       3,
+	types.AgentJobStatusSkipped:      3,
+	types.AgentJobStatusCompleted:    4,
+	types.AgentJobStatusRetried:      4,
 }
 
 // SignedEnvelope wraps a job or response payload with an Ed25519 signature.
@@ -124,8 +103,8 @@ type Request struct {
 type Response struct {
 	// JobID matches the original job ID.
 	JobID string `json:"job_id"`
-	// Status indicates the job completion status.
-	Status Status `json:"status"`
+	// Status is how the job ended on the host.
+	Status types.AgentJobStatus `json:"status"`
 	// Data contains the operation results as raw JSON.
 	Data json.RawMessage `json:"data,omitempty"`
 	// Error contains error information if the job failed.
@@ -166,8 +145,8 @@ type Operation struct {
 type QueuedJob struct {
 	// ID is the unique identifier for this job
 	ID string `json:"id"`
-	// Status tracks the current state of the job
-	Status string `json:"status"` // "unprocessed", "processing", "completed", "failed"
+	// Status is the status of the job, computed from its status events.
+	Status types.JobStatus `json:"status"`
 	// Created is the timestamp when the job was created
 	Created string `json:"created"`
 	// Subject is the NATS subject for this job (optional)
@@ -200,11 +179,11 @@ type QueuedJob struct {
 
 // AgentState represents the state of a specific agent processing a job
 type AgentState struct {
-	Status    string    `json:"status"`
-	Error     string    `json:"error,omitempty"`
-	Duration  string    `json:"duration,omitempty"`
-	StartTime time.Time `json:"start_time,omitempty"`
-	EndTime   time.Time `json:"end_time,omitempty"`
+	Status    types.AgentJobStatus `json:"status"`
+	Error     string               `json:"error,omitempty"`
+	Duration  string               `json:"duration,omitempty"`
+	StartTime time.Time            `json:"start_time,omitempty"`
+	EndTime   time.Time            `json:"end_time,omitempty"`
 }
 
 // TimelineEvent represents a single event in the job timeline
@@ -218,9 +197,9 @@ type TimelineEvent struct {
 
 // QueueStats represents statistics about the job queue.
 type QueueStats struct {
-	TotalJobs    int            `json:"total_jobs"`
-	StatusCounts map[string]int `json:"status_counts"`
-	DLQCount     int            `json:"dlq_count"`
+	TotalJobs    int                     `json:"total_jobs"`
+	StatusCounts map[types.JobStatus]int `json:"status_counts"`
+	DLQCount     int                     `json:"dlq_count"`
 }
 
 // Operation data structures for specific operations

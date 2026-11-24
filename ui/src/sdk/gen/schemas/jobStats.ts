@@ -14,8 +14,8 @@ export interface JobStats {
   failed: number;
   /** Number of jobs currently processing. */
   processing: number;
+  /** Number of jobs that no agent has taken. */
+  submitted: number;
   /** Total number of jobs. */
   total: number;
-  /** Number of unprocessed jobs. */
-  unprocessed: number;
 }

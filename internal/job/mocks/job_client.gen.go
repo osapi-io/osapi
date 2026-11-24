@@ -237,7 +237,7 @@ func (mr *MockJobClientMockRecorder) ListAgents(ctx any) *gomock.Call {
 }
 
 // ListJobs mocks base method.
-func (m *MockJobClient) ListJobs(ctx context.Context, statusFilter string, limit, offset int, keep func(string) bool) (*client0.ListJobsResult, error) {
+func (m *MockJobClient) ListJobs(ctx context.Context, statusFilter types.JobStatus, limit, offset int, keep func(string) bool) (*client0.ListJobsResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListJobs", ctx, statusFilter, limit, offset, keep)
 	ret0, _ := ret[0].(*client0.ListJobsResult)
@@ -409,7 +409,7 @@ func (mr *MockJobClientMockRecorder) WriteAgentTimelineEvent(ctx, hostname, even
 }
 
 // WriteJobResponse mocks base method.
-func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, errorCode job.ErrorCode, changed *bool, steps []types.Step) error {
+func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status types.AgentJobStatus, errorMsg string, errorCode job.ErrorCode, changed *bool, steps []types.Step) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteJobResponse", ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed, steps)
 	ret0, _ := ret[0].(error)
@@ -423,7 +423,7 @@ func (mr *MockJobClientMockRecorder) WriteJobResponse(ctx, jobID, hostname, resp
 }
 
 // WriteStatusEvent mocks base method.
-func (m *MockJobClient) WriteStatusEvent(ctx context.Context, jobID, event, hostname string, data map[string]any) error {
+func (m *MockJobClient) WriteStatusEvent(ctx context.Context, jobID string, event types.AgentJobStatus, hostname string, data map[string]any) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteStatusEvent", ctx, jobID, event, hostname, data)
 	ret0, _ := ret[0].(error)

@@ -32,7 +32,7 @@ op GET /api/file/{name} id=GetFileByName tags=[File_Management_API_file_operatio
 op GET /api/health id=GetHealth tags=[Health_Check_API_health] auth=public params=[] body= responses=[200=application/json:HealthResponse 500=application/json:ErrorResponse]
 op GET /api/health/ready id=GetHealthReady tags=[Health_Check_API_health] auth=public params=[] body= responses=[200=application/json:ReadyResponse 500=application/json:ErrorResponse 503=application/json:ReadyResponse]
 op GET /api/health/status id=GetHealthStatus tags=[Health_Check_API_health] auth=BearerAuth:health:read params=[query:component:string(controller|nats|agent)] body= responses=[200=application/json:StatusResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/job id=GetJobs tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[query:limit:integer query:offset:integer query:status:string(submitted|processing|completed|failed|partial_failure)] body= responses=[200=application/json:ListJobsResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/job id=GetJobs tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[query:limit:integer query:offset:integer query:status:JobStatus] body= responses=[200=application/json:ListJobsResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job/{id} id=GetJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[path:id!:string/uuid] body= responses=[200=application/json:JobDetailResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/certificate id=GetNodeCertificate tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string] body= responses=[200=application/json:CertificateCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/certificate/{name} id=GetNodeCertificateByKey tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:CertificateGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -171,6 +171,7 @@ schema AgentInfo.timeline = [TimelineEvent]
 schema AgentInfo.uptime = string
 schema AgentInfo.verified = boolean
 schema AgentInfo.version = string
+schema AgentJobStatus = string(submitted|acknowledged|started|completed|failed|skipped|retried|timeout)
 schema AgentStats.agents = [AgentDetail]
 schema AgentStats.ready! = integer
 schema AgentStats.total! = integer
@@ -335,7 +336,7 @@ schema ConnectivityPingResult.status! = RowStatus
 schema ContentType = string(raw|template)
 schema CreateJobResponse.job_id! = string/uuid
 schema CreateJobResponse.revision = integer/int64
-schema CreateJobResponse.status! = string
+schema CreateJobResponse.status! = JobStatus
 schema CreateJobResponse.timestamp = string
 schema Disk.free! = integer
 schema Disk.name! = string
@@ -619,7 +620,7 @@ schema InterfaceUpdateRequest.type = string(ethernet|dummy)
 schema InterfaceUpdateRequest.wakeonlan = boolean
 schema InterfaceUpdateResponse.job_id = string/uuid
 schema InterfaceUpdateResponse.results! = [InterfaceResult]
-schema JobDetailResponse.agent_states = [{duration:string,error:string,hostname!:string,status:string(acknowledged|started|completed|failed|skipped)}]
+schema JobDetailResponse.agent_states = [{duration:string,error:string,hostname!:string,status:AgentJobStatus}]
 schema JobDetailResponse.chain = [string]
 schema JobDetailResponse.changed = boolean
 schema JobDetailResponse.created = string
@@ -627,18 +628,19 @@ schema JobDetailResponse.error = string
 schema JobDetailResponse.hostname = string
 schema JobDetailResponse.id = string/uuid
 schema JobDetailResponse.operation = {data:,type!:string}
-schema JobDetailResponse.responses = [{changed:boolean,data:,error:string,hostname!:string,status:string,steps:[Step]}]
+schema JobDetailResponse.responses = [{changed:boolean,data:,error:string,hostname!:string,status:AgentJobStatus,steps:[Step]}]
 schema JobDetailResponse.result = 
-schema JobDetailResponse.status = string
+schema JobDetailResponse.status = JobStatus
 schema JobDetailResponse.target = string
-schema JobDetailResponse.timeline = [{error:string,event:string,hostname:string,message:string,timestamp:string}]
+schema JobDetailResponse.timeline = [{error:string,event:AgentJobStatus,hostname:string,message:string,timestamp:string}]
 schema JobDetailResponse.updated_at = string
 schema JobStats.completed! = integer
 schema JobStats.dlq! = integer
 schema JobStats.failed! = integer
 schema JobStats.processing! = integer
+schema JobStats.submitted! = integer
 schema JobStats.total! = integer
-schema JobStats.unprocessed! = integer
+schema JobStatus = string(submitted|processing|completed|failed|partial_failure|skipped)
 schema KVBucketInfo.bytes! = integer
 schema KVBucketInfo.keys! = integer
 schema KVBucketInfo.name! = string

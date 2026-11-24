@@ -172,7 +172,9 @@ func Run[Out any](
 			// The job ran and the provider refused it: the host's row
 			// says why, as a broadcast's does.
 			resp = &job.Response{
-				Hostname: failed.Hostname, Status: job.StatusFailed, Error: failed.Message,
+				Hostname: failed.Hostname,
+				Status:   types.AgentJobStatusFailed,
+				Error:    failed.Message,
 			}
 		case err != nil:
 			return out, endpoint.Internal("the job could not be sent", err)
@@ -237,14 +239,14 @@ func rows(
 // failureStatus is the row status of a host whose job did not succeed, or
 // empty for a host whose job did.
 func failureStatus(
-	s job.Status,
+	s types.AgentJobStatus,
 ) types.RowStatus {
 	switch s {
-	case job.StatusFailed:
+	case types.AgentJobStatusFailed:
 		return types.RowStatusFailed
-	case job.StatusSkipped:
+	case types.AgentJobStatusSkipped:
 		return types.RowStatusSkipped
-	case job.StatusTimeout:
+	case types.AgentJobStatusTimeout:
 		return types.RowStatusTimeout
 	default:
 		return ""

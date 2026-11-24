@@ -151,14 +151,14 @@ A `string`, one of `controller`, `nats`, `agent`.
 
 ### JobStats
 
-| Field         | Type  | Description                              |
-| ------------- | ----- | ---------------------------------------- |
-| `Completed`   | `int` | Number of completed jobs.                |
-| `DLQ`         | `int` | Number of jobs in the dead letter queue. |
-| `Failed`      | `int` | Number of failed jobs.                   |
-| `Processing`  | `int` | Number of jobs currently processing.     |
-| `Total`       | `int` | Total number of jobs.                    |
-| `Unprocessed` | `int` | Number of unprocessed jobs.              |
+| Field        | Type  | Description                              |
+| ------------ | ----- | ---------------------------------------- |
+| `Completed`  | `int` | Number of completed jobs.                |
+| `DLQ`        | `int` | Number of jobs in the dead letter queue. |
+| `Failed`     | `int` | Number of failed jobs.                   |
+| `Processing` | `int` | Number of jobs currently processing.     |
+| `Submitted`  | `int` | Number of jobs that no agent has taken.  |
+| `Total`      | `int` | Total number of jobs.                    |
 
 ### KVBucketInfo
 

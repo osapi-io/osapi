@@ -90,7 +90,7 @@ func completed(
 ) *job.Response {
 	return &job.Response{
 		Hostname: host,
-		Status:   job.StatusCompleted,
+		Status:   types.AgentJobStatusCompleted,
 		Data:     json.RawMessage(data),
 		Changed:  changed,
 	}
@@ -133,7 +133,7 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			setup: func() {
 				s.jobs.EXPECT().
 					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"get", kvIn{}).
-					Return("job-1", &job.Response{Hostname: "server1", Status: job.StatusCompleted}, nil)
+					Return("job-1", &job.Response{Hostname: "server1", Status: types.AgentJobStatusCompleted}, nil)
 			},
 			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
 		},
@@ -202,13 +202,17 @@ func (s *DispatchPublicTestSuite) TestRun() {
 				s.jobs.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+"set", kvIn{}).
 					Return("job-1", map[string]*job.Response{
-						"server1": {Hostname: "server1", Status: job.StatusFailed, Error: "boom"},
+						"server1": {
+							Hostname: "server1",
+							Status:   types.AgentJobStatusFailed,
+							Error:    "boom",
+						},
 						"server2": {
 							Hostname: "server2",
-							Status:   job.StatusSkipped,
+							Status:   types.AgentJobStatusSkipped,
 							Error:    "unsupported",
 						},
-						"server3": {Hostname: "server3", Status: job.StatusTimeout},
+						"server3": {Hostname: "server3", Status: types.AgentJobStatusTimeout},
 					}, nil)
 			},
 			wantBody: `{"job_id":"job-1","results":[` +
@@ -281,7 +285,7 @@ func (s *DispatchPublicTestSuite) TestRun() {
 				s.jobs.EXPECT().
 					Modify(gomock.Any(), "server1", job.CategoryBehavior, op+"set", kvIn{}).
 					Return("job-1", nil, job.NewResponseError(&job.Response{
-						Hostname: "server1", Status: job.StatusFailed, Error: "refused",
+						Hostname: "server1", Status: types.AgentJobStatusFailed, Error: "refused",
 					}))
 			},
 			wantBody: `{"job_id":"job-1","results":[{"error":"refused","hostname":"server1","status":"failed"}]}`,
