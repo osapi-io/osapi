@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Audit logging | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Audit logging | OSAPI"><meta data-rh="true" name="description" content="OSAPI records a structured audit trail of every API request. Audit entries"><meta data-rh="true" property="og:description" content="OSAPI records a structured audit trail of every API request. Audit entries"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Audit logging","item":"https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.cd783e1b.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.5573b0ce.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.42e91377.js" defer="defer"></script>
 </head>
 <body>
@@ -101,11 +101,14 @@ as JSON. osapi replaces the values of sensitive fields with <code>[redacted]</co
 <li class=""><strong>Redacted fields.</strong> osapi finds them by name, at all levels, and upper case
 or lower case does not matter. Thus it also redacts a password in a list of
 users: <code>password</code>, <code>password_hash</code>, <code>secret</code>, <code>token</code>, <code>private_key</code>,
-<code>key_data</code>, <code>stdin</code>, <code>content</code>, <code>authorization</code>.</li>
+<code>key_data</code>, <code>stdin</code>, <code>content</code>, <code>authorization</code>. It also redacts each input
+field of type <code>secret.Value</code>, by its name. A reference,
+<code>secret://&lt;vault&gt;/&lt;key&gt;</code>, stays, so the entry shows which secret a request
+used.</li>
 <li class=""><strong>The list is a deny list, not an allow list.</strong> osapi records new fields by
 default. A summary with only the fields that somebody remembered does not help
-after an incident. When a change adds a field with a secret, the same change
-adds the field to the list.</li>
+after an incident. A field with a secret has the type <code>secret.Value</code>, and a
+test fails a <code>string</code> input field with a name on the list.</li>
 <li class=""><strong>A summary has a limit</strong> of 2 KB. When osapi cuts it, it adds <code>…[truncated]</code>.
 osapi does not read a body of more than 64 KB. The entry says so. It does not
 keep the upload.</li>
