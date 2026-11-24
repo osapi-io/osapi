@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
         with:
-          # Only the job of the UI checks builds the UI.
+          # Only the job of the UI checks installs the UI packages.
           ui: ${{ contains(matrix.check, 'react') && 'true' || 'false' }}
       # golangci-lint keeps the result of each package in a cache. Without it
       # each run lints and formats every package again.

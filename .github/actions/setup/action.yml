@@ -13,10 +13,10 @@ inputs:
     default: "true"
   ui:
     description: >-
-      Install and build the UI. Only the job of the UI checks sets it to true.
-      Each other job compiles and tests Go: the embed needs a file in ui/dist,
-      not the built UI, and no Go test reads it. A release builds the UI in
-      goreleaser's before hook.
+      Install the packages of the UI, for the job of the UI checks, which lints,
+      type-checks and tests it. No job builds the UI: the embed needs a file in
+      ui/dist, not the built UI, and no Go test reads it. A release builds the
+      UI in goreleaser's before hook.
     default: "false"
 
 runs:
@@ -45,8 +45,6 @@ runs:
         just go-deps
         if [ "${{ inputs.ui }}" = "true" ]; then
           just react-deps
-          just react-build
-        else
-          mkdir -p ui/dist && touch ui/dist/.keep
         fi
+        mkdir -p ui/dist && touch ui/dist/.keep
         just linux-tune
