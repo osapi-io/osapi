@@ -26,7 +26,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // jobIDSinkKey is the context key the sink is carried under.
@@ -45,7 +45,7 @@ type jobIDSinkKey struct{}
 type jobIDSink struct {
 	mu    sync.Mutex
 	id    string
-	steps map[string][]client.Step
+	steps map[string][]types.Step
 }
 
 // WithJobIDSink returns a context that collects the job ID a request creates.
@@ -103,7 +103,7 @@ func RecordSteps(
 	ctx context.Context,
 	jobID string,
 	hostname string,
-	steps []client.Step,
+	steps []types.Step,
 ) {
 	sink, ok := ctx.Value(jobIDSinkKey{}).(*jobIDSink)
 	if !ok || len(steps) == 0 {
@@ -118,7 +118,7 @@ func RecordSteps(
 	}
 
 	if sink.steps == nil {
-		sink.steps = make(map[string][]client.Step)
+		sink.steps = make(map[string][]types.Step)
 	}
 	sink.steps[hostname] = steps
 }

@@ -44,15 +44,15 @@ var definitions = []string{
 // each value. Go converts an untyped string literal to each, so a typo
 // compiles; this test is the guard.
 var typed = map[string]bool{
-	"github.com/osapi-io/osapi/internal/behavior.PlatformName":      true,
-	"github.com/osapi-io/osapi/internal/area.Name":                  true,
-	"github.com/osapi-io/osapi/internal/behavior.Verb":              true,
-	"github.com/osapi-io/osapi/internal/behavior.Placement":         true,
-	"github.com/osapi-io/osapi/internal/cli/command.Parent":         true,
-	"github.com/osapi-io/osapi/internal/controller/endpoint.Reason": true,
-	"github.com/osapi-io/osapi/pkg/sdk/client.Permission":           true,
-	"github.com/osapi-io/osapi/pkg/sdk/client.Role":                 true,
-	"github.com/osapi-io/osapi/pkg/sdk/client.ContentType":          true,
+	"github.com/osapi-io/osapi/internal/behavior.PlatformName": true,
+	"github.com/osapi-io/osapi/internal/area.Name":             true,
+	"github.com/osapi-io/osapi/internal/behavior.Verb":         true,
+	"github.com/osapi-io/osapi/internal/behavior.Placement":    true,
+	"github.com/osapi-io/osapi/internal/cli/command.Parent":    true,
+	"github.com/osapi-io/osapi/pkg/sdk/types.Reason":           true,
+	"github.com/osapi-io/osapi/pkg/sdk/types.Permission":       true,
+	"github.com/osapi-io/osapi/pkg/sdk/types.Role":             true,
+	"github.com/osapi-io/osapi/pkg/sdk/types.ContentType":      true,
 }
 
 type LiteralsPublicTestSuite struct {
@@ -96,8 +96,8 @@ func (s *LiteralsPublicTestSuite) TestFindsALiteral() {
 	s.Equal([]string{
 		"literals.go:32: \"debain\" as behavior.PlatformName",
 		"literals.go:33: \"hardwar\" as area.Name",
-		"literals.go:34: \"helth:read\" as client.Permission",
-		"literals.go:37: \"raw\" as client.ContentType",
+		"literals.go:34: \"helth:read\" as types.Permission",
+		"literals.go:37: \"raw\" as types.ContentType",
 	}, found)
 }
 

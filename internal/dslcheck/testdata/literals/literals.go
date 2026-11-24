@@ -25,13 +25,13 @@ package literals
 import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var (
 	_ = behavior.Platform[struct{}, struct{}]("debain", nil)
 	_ = behavior.Area(area.Name("hardwar"))
-	_ = []client.Permission{"helth:read"}
+	_ = []types.Permission{"helth:read"}
 	_ = behavior.Platform[struct{}, struct{}](behavior.PlatformDebian, nil)
 	_ = "plain"
 	_ = behavior.Given{ContentType: "raw"}

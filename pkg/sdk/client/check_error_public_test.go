@@ -24,6 +24,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -165,7 +167,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckErrorMessages() {
 				suite.Contains(err.Error(), "field 'name' is required")
 				var apiErr *client.ValidationError
 				suite.Require().ErrorAs(err, &apiErr)
-				suite.Equal("invalid_request", apiErr.Reason)
+				suite.Equal(types.ReasonInvalidRequest, apiErr.Reason)
 			},
 		},
 		{

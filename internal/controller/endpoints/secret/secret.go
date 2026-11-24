@@ -28,9 +28,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 var (
@@ -109,7 +110,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(Reveal).
 		Key("vault", "key").
 		Action("value").
-		Permission(client.PermSecretReveal).
+		Permission(types.PermSecretReveal).
 		AdminOnly().
 		ID("GetSecretValue").
 		Describe("Reveal the value of a key").

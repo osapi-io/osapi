@@ -23,7 +23,7 @@ package config
 import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/secret/vault"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Config represents the root structure of the YAML configuration file.
@@ -374,7 +374,7 @@ type Client struct {
 // CustomRole defines a named set of permissions that can be assigned to tokens.
 type CustomRole struct {
 	// Permissions granted to this role.
-	Permissions []client.Permission `mapstructure:"permissions" validate:"dive,permission"`
+	Permissions []types.Permission `mapstructure:"permissions" validate:"dive,permission"`
 }
 
 // ServerSecurity represents security-related settings for the server.
@@ -385,7 +385,7 @@ type ServerSecurity struct {
 	// signs a new token. Each key verifies a token whose kid is its ID.
 	SigningKeys []SigningKey `mapstructure:"signing_keys" validate:"required,min=1,unique=ID,dive" mask:"password" doc:"HS256 keys for JWTs, each an id and a key (required). The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32. A key can be a reference, secret://<vault>/<key>, which the controller resolves at startup."`
 	// Roles defines custom roles with fine-grained permissions.
-	Roles map[client.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
+	Roles map[types.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
 }
 
 // SigningKey is one key of controller.api.security.signing_keys.

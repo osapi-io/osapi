@@ -29,7 +29,7 @@ package catalog
 import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Group is the catalog group's definition. The routes, the spec, the CLI
@@ -42,8 +42,8 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Tag("catalog", "Catalog",
 		"The behaviors, the permissions and the roles that the controller serves, for the UI."),
 	endpoint.Uses[Deps](),
-	endpoint.Doc[client.Permission]("A permission that osapi knows, as resource:verb."),
-	endpoint.Enum[client.Permission](permissionNames),
+	endpoint.Doc[types.Permission]("A permission that osapi knows, as resource:verb."),
+	endpoint.Enum[types.Permission](permissionNames),
 	endpoint.Doc[OperationID]("An operationId of an operation that needs a permission."),
 	endpoint.Enum[OperationID](operationIDs),
 	endpoint.Get[GetInput, CatalogResponse]("get").

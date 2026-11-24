@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
@@ -217,12 +217,12 @@ func (s *MethodsPublicTestSuite) TestGet() {
 					},
 					"web-02": {
 						Status: job.StatusFailed, Hostname: "web-02", Error: "boom",
-						Steps: []sdkclient.Step{
+						Steps: []types.Step{
 							{
 								Behavior: "netplan",
 								Method:   "update",
 								Changed:  ptr(true),
-								Steps: []sdkclient.Step{
+								Steps: []types.Step{
 									{Behavior: "managedfile", Method: "update", Error: "boom"},
 								},
 							},

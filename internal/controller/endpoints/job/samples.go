@@ -20,7 +20,9 @@
 
 package job
 
-import "github.com/osapi-io/osapi/pkg/sdk/client"
+import (
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // The sample answers of the examples, which the docs page of each command
 // shows as the CLI prints them.
@@ -43,7 +45,7 @@ var (
 		Responses: []Response{{
 			Hostname: "web-01", Status: "completed", Changed: &sampleChanged,
 			Data: map[string]any{"key": "net.ipv4.ip_forward", "changed": true},
-			Steps: []client.Step{{
+			Steps: []types.Step{{
 				Behavior: "managedfile", Method: "update", Changed: &sampleChanged, DurationMS: 1,
 			}},
 		}},

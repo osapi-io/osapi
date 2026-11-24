@@ -30,7 +30,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -112,8 +112,8 @@ var (
 // stored is the PEM that a person uploads once with osapi client file
 // upload, and deployed the CA that create deployed from it.
 var (
-	stored   = behavior.Stored("internal-ca.pem", pem, client.ContentRaw)
-	stored2  = behavior.Stored("internal-ca-2.pem", pem2, client.ContentRaw)
+	stored   = behavior.Stored("internal-ca.pem", pem, types.ContentRaw)
+	stored2  = behavior.Stored("internal-ca-2.pem", pem2, types.ContentRaw)
 	deployed = behavior.After(CreateInput{Name: "internal-ca", Object: "internal-ca.pem"})
 )
 

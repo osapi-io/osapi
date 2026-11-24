@@ -18,16 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package client
+package types
 
-// ContentType is how a deploy treats a file: as bytes, or as a template.
-type ContentType string
+// Permission represents a fine-grained resource:verb permission.
+// Permissions use the format "resource:verb" (e.g., "status:read",
+// "command:execute").
+type Permission string
 
-// The content types of a file.
-const (
-	// ContentRaw writes the bytes as they are.
-	ContentRaw ContentType = "raw"
-	// ContentTemplate renders the file with Go text/template and the agent's
-	// facts before it writes it.
-	ContentTemplate ContentType = "template"
-)
+// Role represents a built-in RBAC role name.
+type Role string

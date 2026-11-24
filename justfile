@@ -184,6 +184,14 @@ go-pkg-check:
         echo "$leaks" >&2
         exit 1
     fi
+    # pkg/sdk/types is the shared vocabulary: each part of osapi and each
+    # extension imports it, so it imports nothing else of osapi.
+    deps=$(go list -deps ./pkg/sdk/types | grep '^github.com/osapi-io/osapi/' | grep -v '^github.com/osapi-io/osapi/pkg/sdk/types$' || true)
+    if [ -n "$deps" ]; then
+        echo "pkg/sdk/types imports more of osapi:" >&2
+        echo "$deps" >&2
+        exit 1
+    fi
 
 # Compile a client that oapi-codegen writes from the full spec with its
 # default options, as a person outside osapi would. The SDK does not use

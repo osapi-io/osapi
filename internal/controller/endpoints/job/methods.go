@@ -27,7 +27,7 @@ import (
 	"slices"
 	"time"
 
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
@@ -98,7 +98,7 @@ func Get(
 			Steps:    r.Steps,
 		})
 		if len(r.Steps) > 0 {
-			out.Chain = append(out.Chain, hostname+": "+sdkclient.FormatSteps(r.Steps))
+			out.Chain = append(out.Chain, hostname+": "+types.FormatSteps(r.Steps))
 		}
 	}
 	for _, te := range qj.Timeline {

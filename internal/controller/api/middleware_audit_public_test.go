@@ -38,7 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 	"go.uber.org/mock/gomock"
 )
 
@@ -54,7 +54,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		body         string
 		contentType  string
 		jobID        string
-		steps        map[string][]client.Step
+		steps        map[string][]types.Step
 		subject      string
 		roles        []string
 		targets      []string
@@ -173,7 +173,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			body:        `{"value":"1"}`,
 			contentType: "application/json",
 			jobID:       "7c9e6679-7425-40de-944b-e07fc1f90ae7",
-			steps: map[string][]client.Step{
+			steps: map[string][]types.Step{
 				"web-01": {{Behavior: "managedfile", Method: "update"}},
 				"web-02": {{Behavior: "managedfile", Method: "update", Error: "denied"}},
 			},
@@ -183,11 +183,11 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				s.Equal([]audit.HostSteps{
 					{
 						Hostname: "web-01",
-						Steps:    []client.Step{{Behavior: "managedfile", Method: "update"}},
+						Steps:    []types.Step{{Behavior: "managedfile", Method: "update"}},
 					},
 					{
 						Hostname: "web-02",
-						Steps: []client.Step{
+						Steps: []types.Step{
 							{Behavior: "managedfile", Method: "update", Error: "denied"},
 						},
 					},

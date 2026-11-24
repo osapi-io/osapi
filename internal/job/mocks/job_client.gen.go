@@ -18,7 +18,7 @@ import (
 	client "github.com/osapi-io/nats-client/pkg/client"
 	job "github.com/osapi-io/osapi/internal/job"
 	client0 "github.com/osapi-io/osapi/internal/job/client"
-	client1 "github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -409,7 +409,7 @@ func (mr *MockJobClientMockRecorder) WriteAgentTimelineEvent(ctx, hostname, even
 }
 
 // WriteJobResponse mocks base method.
-func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, errorCode job.ErrorCode, changed *bool, steps []client1.Step) error {
+func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, errorCode job.ErrorCode, changed *bool, steps []types.Step) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteJobResponse", ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed, steps)
 	ret0, _ := ret[0].(error)

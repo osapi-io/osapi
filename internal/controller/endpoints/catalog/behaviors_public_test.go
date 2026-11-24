@@ -30,7 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/catalog"
 	"github.com/osapi-io/osapi/internal/secret"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type provider struct{}
@@ -164,7 +164,7 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	s.Equal("read", list.Kind)
 	s.Equal("GET", list.HTTPMethod)
 	s.Equal("/api/node/{hostname}/item", list.Path)
-	s.Equal(client.Permission("item:read"), list.Permission)
+	s.Equal(types.Permission("item:read"), list.Permission)
 	s.Equal([]string{"debian", "darwin"}, list.Platforms)
 	s.Equal("itemIn { name*, mode, count, on, tags, labels, token }", list.Input)
 	s.Equal("[]row { name, changed, size, usage, disks, tags, ptr, hidden }", list.Output)
@@ -223,7 +223,7 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	s.Equal("action", restart.Kind)
 	s.True(restart.Disruptive)
 	s.Equal("It stops the item", restart.Disruption)
-	s.Equal(client.Permission("item:execute"), restart.Permission)
+	s.Equal(types.Permission("item:execute"), restart.Permission)
 
 	s.Equal("action", item.Methods[4].Kind, "the verb of the permission decides the kind")
 

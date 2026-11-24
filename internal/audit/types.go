@@ -24,7 +24,7 @@ package audit
 import (
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Entry represents a single audit log record.
@@ -73,5 +73,5 @@ type HostSteps struct {
 	// Hostname is the host that answered the job.
 	Hostname string `json:"hostname"`
 	// Steps are the calls, in the order that the method made them.
-	Steps []client.Step `json:"steps"`
+	Steps []types.Step `json:"steps"`
 }

@@ -33,7 +33,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // The commands that every DSL has, under the command of its group. A DSL
@@ -59,7 +59,7 @@ func Commands() []string {
 // Declared is a permission that a method of a definition needs.
 type Declared struct {
 	// Permission is the permission.
-	Permission client.Permission
+	Permission types.Permission
 	// AdminOnly is true when the method is marked AdminOnly.
 	AdminOnly bool
 	// Named is true when the method names a permission that something else
@@ -73,7 +73,7 @@ type Declared struct {
 // permission that it needs.
 type Operation struct {
 	ID         string
-	Permission client.Permission
+	Permission types.Permission
 }
 
 // DSL is one DSL and the parts that it shares with the others.

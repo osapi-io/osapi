@@ -19,7 +19,9 @@
 // DEALINGS IN THE SOFTWARE.
 package job
 
-import "github.com/osapi-io/osapi/pkg/sdk/client"
+import (
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // ListInput is a page of the job queue, and the status to filter by.
 type ListInput struct {
@@ -93,12 +95,12 @@ type Operation = struct {
 
 // Response is what one agent answered, in place in the spec.
 type Response = struct {
-	Hostname string        `json:"hostname"`
-	Status   string        `json:"status,omitempty"  render:"status"`
-	Changed  *bool         `json:"changed,omitempty"`
-	Error    string        `json:"error,omitempty"`
-	Data     any           `json:"data,omitempty"                    doc:"Agent result data."`
-	Steps    []client.Step `json:"steps,omitempty"                   doc:"The calls of other behaviors that the method made on the host, also when one failed."`
+	Hostname string       `json:"hostname"`
+	Status   string       `json:"status,omitempty"  render:"status"`
+	Changed  *bool        `json:"changed,omitempty"`
+	Error    string       `json:"error,omitempty"`
+	Data     any          `json:"data,omitempty"                    doc:"Agent result data."`
+	Steps    []types.Step `json:"steps,omitempty"                   doc:"The calls of other behaviors that the method made on the host, also when one failed."`
 }
 
 // AgentState is how far one agent got, in place in the spec.

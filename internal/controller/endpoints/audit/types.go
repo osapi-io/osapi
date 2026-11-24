@@ -22,7 +22,7 @@ package audit
 import (
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ListInput is a page of the audit log.
@@ -82,6 +82,6 @@ type AuditEntry struct { //nolint:revive // the schema name is part of the API
 // HostSteps are the calls of other behaviors that the method of the job made
 // on one host, in place in the spec.
 type HostSteps = struct {
-	Hostname string        `json:"hostname" doc:"The host that answered the job."`
-	Steps    []client.Step `json:"steps"    doc:"The calls, in the order that the method made them."`
+	Hostname string       `json:"hostname" doc:"The host that answered the job."`
+	Steps    []types.Step `json:"steps"    doc:"The calls, in the order that the method made them."`
 }

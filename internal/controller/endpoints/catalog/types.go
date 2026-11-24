@@ -20,7 +20,9 @@
 
 package catalog
 
-import "github.com/osapi-io/osapi/pkg/sdk/client"
+import (
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // GetInput is the input of get, which has none.
 type GetInput struct{}
@@ -35,15 +37,15 @@ type OperationID string
 // of each operation, the tones of the statuses and the counts, and the
 // host families.
 type CatalogResponse struct { //nolint:revive // the schema name is part of the API
-	_            struct{}            `title:"Catalog"`
-	Behaviors    []CatalogBehavior   `                json:"behaviors"     doc:"Each behavior that the API serves, and each internal behavior, in the order of the registry."`
-	Areas        []CatalogArea       `                json:"areas"         doc:"Each area, in order, with its label."`
-	Permissions  []client.Permission `                json:"permissions"   doc:"Each permission that osapi knows."                                                            render:"-"`
-	Roles        []CatalogRole       `                json:"roles"         doc:"The built-in roles, in order, with the permissions of each."`
-	Operations   []CatalogOperation  `                json:"operations"    doc:"The permission of each operation that needs one, in the order of the operationIds."`
-	StatusTones  map[string]string   `                json:"status_tones"  doc:"The tone of each status word, as the CLI colors it: ok, warn or err."                         render:"-"`
-	CountTones   map[string]string   `                json:"count_tones"   doc:"The tone of a count above zero, by what it counts: ok, warn or err."                          render:"-"`
-	HostFamilies []string            `                json:"host_families" doc:"The host platforms that gohai names. A method's runs_on has * for any other Linux."`
+	_            struct{}           `title:"Catalog"`
+	Behaviors    []CatalogBehavior  `                json:"behaviors"     doc:"Each behavior that the API serves, and each internal behavior, in the order of the registry."`
+	Areas        []CatalogArea      `                json:"areas"         doc:"Each area, in order, with its label."`
+	Permissions  []types.Permission `                json:"permissions"   doc:"Each permission that osapi knows."                                                            render:"-"`
+	Roles        []CatalogRole      `                json:"roles"         doc:"The built-in roles, in order, with the permissions of each."`
+	Operations   []CatalogOperation `                json:"operations"    doc:"The permission of each operation that needs one, in the order of the operationIds."`
+	StatusTones  map[string]string  `                json:"status_tones"  doc:"The tone of each status word, as the CLI colors it: ok, warn or err."                         render:"-"`
+	CountTones   map[string]string  `                json:"count_tones"   doc:"The tone of a count above zero, by what it counts: ok, warn or err."                          render:"-"`
+	HostFamilies []string           `                json:"host_families" doc:"The host platforms that gohai names. A method's runs_on has * for any other Linux."`
 }
 
 // CatalogArea is one area: a section of the Behaviors page.
@@ -54,15 +56,15 @@ type CatalogArea struct { //nolint:revive // the schema name is part of the API
 
 // CatalogRole is one built-in role.
 type CatalogRole struct { //nolint:revive // the schema name is part of the API
-	Name        string              `json:"name"        doc:"The name of the role, as a token names it." example:"operator"`
-	Description string              `json:"description" doc:"Who the role is for."`
-	Permissions []client.Permission `json:"permissions" doc:"The permissions of the role."                                  table:"-"`
+	Name        string             `json:"name"        doc:"The name of the role, as a token names it." example:"operator"`
+	Description string             `json:"description" doc:"Who the role is for."`
+	Permissions []types.Permission `json:"permissions" doc:"The permissions of the role."                                  table:"-"`
 }
 
 // CatalogOperation is the permission of one operation.
 type CatalogOperation struct { //nolint:revive // the schema name is part of the API
-	ID         OperationID       `json:"id"         doc:"The operationId."`
-	Permission client.Permission `json:"permission" doc:"The permission that the operation needs."`
+	ID         OperationID      `json:"id"         doc:"The operationId."`
+	Permission types.Permission `json:"permission" doc:"The permission that the operation needs."`
 }
 
 // CatalogBehavior is one behavior, as the UI shows it. An internal behavior
@@ -84,23 +86,23 @@ type CatalogBehavior struct { //nolint:revive // the schema name is part of the 
 
 // CatalogMethod is one method of a behavior, as the UI shows and runs it.
 type CatalogMethod struct { //nolint:revive // the schema name is part of the API
-	Name       string            `json:"name"                  doc:"The name of the method."                                                                                                          example:"update"`
-	Kind       string            `json:"kind"                  doc:"What the method does to a host, by the verb of its permission: read, write or action."                                            example:"write"  validate:"oneof=read write action"`
-	Doc        string            `json:"doc"                   doc:"What the method does."`
-	Long       string            `json:"long,omitempty"        doc:"The rest of what the method does."`
-	HTTPMethod string            `json:"http_method,omitempty" doc:"The HTTP method of the route. An internal behavior has no route."                                                                 example:"PUT"`
-	Path       string            `json:"path,omitempty"        doc:"The path of the route."`
-	Permission client.Permission `json:"permission,omitempty"  doc:"The permission of the method. An internal behavior has none."`
-	Platforms  []string          `json:"platforms"             doc:"The platforms that the method runs on: those that its On limits it to, else each platform of the behavior."`
-	RunsOn     []string          `json:"runs_on"               doc:"The host platforms that the method runs on, as the agent decides, and * for a Linux host whose platform gohai has no family for."`
-	Input      string            `json:"input"                 doc:"The input type and its fields, a required one marked *."`
-	Output     string            `json:"output"                doc:"The output type and its fields."`
-	Fields     []CatalogField    `json:"fields"                doc:"The fields of the input."`
-	Columns    []CatalogColumn   `json:"columns"               doc:"The fields of the rows that the method answers, as the CLI's output reads them."`
-	Calls      []CatalogCall     `json:"calls"                 doc:"The calls that the examples of the method make to other behaviors."`
-	Examples   []CatalogExample  `json:"examples"              doc:"The examples of the method."`
-	Disruptive bool              `json:"disruptive,omitempty"  doc:"The method can interrupt a host, such as a reboot."`
-	Disruption string            `json:"disruption,omitempty"  doc:"What the method interrupts."`
+	Name       string           `json:"name"                  doc:"The name of the method."                                                                                                          example:"update"`
+	Kind       string           `json:"kind"                  doc:"What the method does to a host, by the verb of its permission: read, write or action."                                            example:"write"  validate:"oneof=read write action"`
+	Doc        string           `json:"doc"                   doc:"What the method does."`
+	Long       string           `json:"long,omitempty"        doc:"The rest of what the method does."`
+	HTTPMethod string           `json:"http_method,omitempty" doc:"The HTTP method of the route. An internal behavior has no route."                                                                 example:"PUT"`
+	Path       string           `json:"path,omitempty"        doc:"The path of the route."`
+	Permission types.Permission `json:"permission,omitempty"  doc:"The permission of the method. An internal behavior has none."`
+	Platforms  []string         `json:"platforms"             doc:"The platforms that the method runs on: those that its On limits it to, else each platform of the behavior."`
+	RunsOn     []string         `json:"runs_on"               doc:"The host platforms that the method runs on, as the agent decides, and * for a Linux host whose platform gohai has no family for."`
+	Input      string           `json:"input"                 doc:"The input type and its fields, a required one marked *."`
+	Output     string           `json:"output"                doc:"The output type and its fields."`
+	Fields     []CatalogField   `json:"fields"                doc:"The fields of the input."`
+	Columns    []CatalogColumn  `json:"columns"               doc:"The fields of the rows that the method answers, as the CLI's output reads them."`
+	Calls      []CatalogCall    `json:"calls"                 doc:"The calls that the examples of the method make to other behaviors."`
+	Examples   []CatalogExample `json:"examples"              doc:"The examples of the method."`
+	Disruptive bool             `json:"disruptive,omitempty"  doc:"The method can interrupt a host, such as a reboot."`
+	Disruption string           `json:"disruption,omitempty"  doc:"What the method interrupts."`
 }
 
 // CatalogField is one input field of a method: a field of the form of a

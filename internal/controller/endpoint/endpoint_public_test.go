@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -725,8 +725,8 @@ func (s *EndpointPublicTestSuite) TestCommandLayer() {
 	s.Require().Len(methods, 2)
 	s.Equal("list", methods[0].MethodName())
 	s.Equal(reflect.TypeFor[noInput](), methods[0].Input())
-	s.Equal(client.Permission("sysctl:read"), g.CommandPermission(methods[0]))
-	s.Equal(client.Permission("sysctl:admin"), g.CommandPermission(methods[1]))
+	s.Equal(types.Permission("sysctl:read"), g.CommandPermission(methods[0]))
+	s.Equal(types.Permission("sysctl:admin"), g.CommandPermission(methods[1]))
 }
 
 func (s *EndpointPublicTestSuite) TestRefusals() {
@@ -971,7 +971,7 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				),
 			),
 			want: []string{
-				`an error of 409 has the reason "not_manged", which is not one of endpoint.Reasons.`,
+				`an error of 409 has the reason "not_manged", which is not one of types.Reasons.`,
 			},
 		},
 		{

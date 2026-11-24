@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package client
+package types
 
 // JobType represents the type of job operation.
 // Defined as a type alias so it's interchangeable with string in assignments.
@@ -36,23 +36,11 @@ const (
 // Defined as a type alias so it's interchangeable with string in assignments.
 type JobOperation = string
 
-// Node operations — read-only operations that query node state.
-const ()
-
-// Network operations.
-const ()
-
 // Command operations — execute arbitrary commands on agents.
 const (
 	OpCommandExec  JobOperation = "command.exec.execute"
 	OpCommandShell JobOperation = "command.shell.execute"
 )
-
-// User operations.
-const ()
-
-// SSH Key operations.
-const ()
 
 // Network interface operations.
 const (

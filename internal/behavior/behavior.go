@@ -31,7 +31,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/validation"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Placement says where a behavior's work happens.
@@ -285,12 +285,12 @@ func Define(
 // permission: the sources of the log need log:read.
 func (b *Behavior) Permission(
 	v Verb,
-) client.Permission {
+) types.Permission {
 	if b.Parent != nil {
 		return b.Parent.Permission(v)
 	}
 
-	return client.Permission(b.Name + ":" + string(v))
+	return types.Permission(b.Name + ":" + string(v))
 }
 
 // Method returns the method with the given name, or nil.

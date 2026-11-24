@@ -29,7 +29,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -255,8 +255,9 @@ func Stale(
 
 // write is a file that upload or update writes.
 type write struct {
-	name, contentType string
-	data              []byte
+	name        string
+	contentType types.ContentType
+	data        []byte
 }
 
 // digest is the Object Store digest of the file's content.
@@ -267,9 +268,9 @@ func (w write) digest() string {
 }
 
 // kind is how a deploy treats the file: raw unless the caller says.
-func (w write) kind() string {
+func (w write) kind() types.ContentType {
 	if w.contentType == "" {
-		return string(client.ContentRaw)
+		return types.ContentRaw
 	}
 
 	return w.contentType
@@ -295,7 +296,7 @@ func (w write) store(
 ) error {
 	meta := jetstream.ObjectMeta{
 		Name:    w.name,
-		Headers: nats.Header{contentTypeHeader: []string{w.kind()}},
+		Headers: nats.Header{contentTypeHeader: []string{string(w.kind())}},
 	}
 	if _, err := objects.Put(ctx, meta, bytes.NewReader(w.data)); err != nil {
 		return endpoint.Internal("failed to store file", err)
@@ -331,12 +332,12 @@ func hexDigest(
 
 func contentType(
 	info *jetstream.ObjectInfo,
-) string {
+) types.ContentType {
 	if info.Headers == nil {
 		return ""
 	}
 
-	return info.Headers.Get(contentTypeHeader)
+	return types.ContentType(info.Headers.Get(contentTypeHeader))
 }
 
 // hostnameOf is the hostname of a state key, <hostname>.<sha256 of path>:

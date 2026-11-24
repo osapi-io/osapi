@@ -20,7 +20,9 @@
 
 package catalog
 
-import "github.com/osapi-io/osapi/pkg/sdk/client"
+import (
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // sampleCatalog is the sample answer of the example, which the docs page of
 // the command shows as the CLI prints it: one behavior with one method, and
@@ -40,7 +42,7 @@ var sampleCatalog = CatalogResponse{
 			Doc:        "Get the hostname.",
 			HTTPMethod: "GET",
 			Path:       "/api/node/{hostname}/hostname",
-			Permission: client.PermHostnameRead,
+			Permission: types.PermHostnameRead,
 			Platforms:  []string{"debian", "darwin"},
 			RunsOn:     []string{"debian", "darwin"},
 			Input:      "GetInput {}",
@@ -54,14 +56,14 @@ var sampleCatalog = CatalogResponse{
 		}},
 	}},
 	Areas:       []CatalogArea{{Name: "node", Label: "Node"}},
-	Permissions: []client.Permission{client.PermHostnameRead, client.PermHostnameWrite},
+	Permissions: []types.Permission{types.PermHostnameRead, types.PermHostnameWrite},
 	Roles: []CatalogRole{{
 		Name:        "observer",
 		Description: "A dashboard or a monitor.",
-		Permissions: []client.Permission{client.PermHealthRead},
+		Permissions: []types.Permission{types.PermHealthRead},
 	}},
 	Operations: []CatalogOperation{
-		{ID: "GetNodeHostname", Permission: client.PermHostnameRead},
+		{ID: "GetNodeHostname", Permission: types.PermHostnameRead},
 	},
 	StatusTones:  map[string]string{"ok": "ok", "failed": "err"},
 	CountTones:   map[string]string{"failed": "err"},

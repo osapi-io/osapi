@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
@@ -48,7 +50,7 @@ const reasonDoc = "Why the request failed, as a word that a program can branch o
 	"and the error is the message for a person, which can change between releases."
 
 // ErrorSchema is the schema of ErrorResponse, the body of each error
-// answer: its message, and its reason, one of Reasons, with what each means.
+// answer: its message, and its reason, one of types.Reasons, with what each means.
 func ErrorSchema() *openapi3.Schema {
 	text := func(doc string, example string) *openapi3.SchemaRef {
 		s := openapi3.NewStringSchema()
@@ -59,12 +61,12 @@ func ErrorSchema() *openapi3.Schema {
 	}
 	doc := reasonDoc
 	reason := openapi3.NewStringSchema()
-	for _, r := range Reasons {
+	for _, r := range types.Reasons {
 		doc += " " + string(r) + ": " + ReasonDocs[r]
 		reason.Enum = append(reason.Enum, string(r))
 	}
 	reason.Description = doc
-	reason.Example = string(ReasonNotFound)
+	reason.Example = string(types.ReasonNotFound)
 
 	s := openapi3.NewObjectSchema()
 	s.Properties = openapi3.Schemas{

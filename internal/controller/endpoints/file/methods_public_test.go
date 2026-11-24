@@ -44,6 +44,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-file-group"}
@@ -110,6 +111,18 @@ func answered(
 	}
 
 	return 0
+}
+
+// TestSpecContentType: the spec's ContentType has each content type, so a
+// client checks a value when it compiles.
+func (s *MethodsPublicTestSuite) TestSpecContentType() {
+	doc, err := endpoint.OpenAPI(file.Group)
+	s.Require().NoError(err)
+
+	s.Equal(
+		[]any{string(types.ContentRaw), string(types.ContentTemplate)},
+		doc.Components.Schemas["ContentType"].Value.Enum,
+	)
 }
 
 func (s *MethodsPublicTestSuite) TestNoStore() {
@@ -366,7 +379,7 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 			}
 			s.Equal(tc.wantCode, answered(err))
 			s.Equal(tc.changed, got.Changed)
-			s.Equal("raw", got.ContentType)
+			s.Equal(types.ContentRaw, got.ContentType)
 			s.Equal(hexOf(content), got.Sha256)
 		})
 	}

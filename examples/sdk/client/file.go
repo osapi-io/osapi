@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -61,7 +62,7 @@ func runUpload(
 		return err
 	}
 
-	resp, err := c.File.Upload(ctx, "app.conf", "raw", bytes.NewReader(content))
+	resp, err := c.File.Upload(ctx, "app.conf", types.ContentType(""), bytes.NewReader(content))
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func runUpload2(
 		return err
 	}
 
-	resp, err := c.File.Upload(ctx, "app.conf.tmpl", "template", bytes.NewReader(content))
+	resp, err := c.File.Upload(ctx, "app.conf.tmpl", types.ContentType("template"), bytes.NewReader(content))
 	if err != nil {
 		return err
 	}
@@ -123,7 +124,7 @@ func runUpdate(
 		return err
 	}
 
-	resp, err := c.File.Update(ctx, "app.conf", "raw", bytes.NewReader(content))
+	resp, err := c.File.Update(ctx, "app.conf", types.ContentType(""), bytes.NewReader(content))
 	if err != nil {
 		return err
 	}

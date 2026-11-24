@@ -20,7 +20,11 @@
 
 package client
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // APIError is the base error type for OSAPI API errors.
 type APIError struct {
@@ -29,7 +33,7 @@ type APIError struct {
 	// Reason is why the request failed, as the API names it, such as
 	// not_found or not_managed. A program branches on it, not on Message.
 	// It is empty when the answer gives none.
-	Reason string
+	Reason types.Reason
 	// Body is the answer as it came, for a status whose body is not an
 	// error, such as a probe's 503. Request sets it.
 	Body []byte

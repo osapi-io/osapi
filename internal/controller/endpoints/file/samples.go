@@ -20,6 +20,8 @@
 
 package file
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // The sample answers of the examples, which the docs page of each command
 // shows as the CLI prints them.
 var (
@@ -28,12 +30,18 @@ var (
 	sampleList = FileListResponse{
 		TotalItems: 2,
 		Items: []FileInfo{
-			{Name: "app.conf", Sha256: sampleSum, Size: 1024, ContentType: "raw", Source: "user"},
+			{
+				Name:        "app.conf",
+				Sha256:      sampleSum,
+				Size:        1024,
+				ContentType: types.ContentRaw,
+				Source:      "user",
+			},
 			{
 				Name:        "app.conf.tmpl",
 				Sha256:      "7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8",
 				Size:        512,
-				ContentType: "template",
+				ContentType: types.ContentTemplate,
 				Source:      "user",
 			},
 		},
@@ -44,7 +52,7 @@ var (
 		Sha256:      sampleSum,
 		Size:        1024,
 		Changed:     true,
-		ContentType: "raw",
+		ContentType: types.ContentRaw,
 	}
 
 	sampleUploadTemplate = FileUploadResponse{
@@ -52,14 +60,14 @@ var (
 		Sha256:      "7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8",
 		Size:        512,
 		Changed:     true,
-		ContentType: "template",
+		ContentType: types.ContentTemplate,
 	}
 
 	sampleInfo = FileInfoResponse{
 		Name:        "app.conf",
 		Sha256:      sampleSum,
 		Size:        1024,
-		ContentType: "raw",
+		ContentType: types.ContentRaw,
 	}
 
 	sampleStale = StaleDeploymentsResponse{

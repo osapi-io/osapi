@@ -45,7 +45,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	"github.com/osapi-io/osapi/internal/validation"
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // detectFn and containerFn tell the platform of the host (injectable for
@@ -255,7 +255,7 @@ func (o storeObjects) Object(
 	if err != nil {
 		return nil, "", fmt.Errorf("object %q: %w", name, err)
 	}
-	contentType := string(sdkclient.ContentRaw)
+	contentType := string(types.ContentRaw)
 	if info, err := o.store.ObjectInfo(ctx, o.bucket, name); err == nil && info.Headers != nil {
 		if ct := info.Headers.Get("Osapi-Content-Type"); ct != "" {
 			contentType = ct

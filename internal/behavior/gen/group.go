@@ -165,10 +165,12 @@ func groupFile(
 				Call(jen.Qual(behaviorPkg, "ErrNotFound"), jen.Lit(missing)),
 			jen.Qual(endpointPath, "Conflict").
 				Call(jen.Qual(behaviorPkg, "ErrNotManaged"), jen.Lit(conflict)).
-				Dot("Because").Call(jen.Qual(endpointPath, "ReasonNotManaged")),
+				Dot("Because").
+				Call(jen.Qual("github.com/osapi-io/osapi/pkg/sdk/types", "ReasonNotManaged")),
 			jen.Qual(endpointPath, "Conflict").
 				Call(jen.Qual(behaviorPkg, "ErrNotInstalled"), jen.Lit(conflict)).
-				Dot("Because").Call(jen.Qual(endpointPath, "ReasonNotInstalled")),
+				Dot("Because").
+				Call(jen.Qual("github.com/osapi-io/osapi/pkg/sdk/types", "ReasonNotInstalled")),
 			jen.Qual(endpointPath, "Invalid").
 				Call(jen.Qual(dispatchPath, "ErrInvalid"), jen.Lit(invalid)),
 		)

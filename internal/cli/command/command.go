@@ -38,7 +38,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/spf13/cobra"
 
@@ -68,7 +68,7 @@ type Group interface {
 	Commands() []Command
 	// CommandPermission is the permission the command of method m needs, or
 	// "" for one that needs none.
-	CommandPermission(m Command) client.Permission
+	CommandPermission(m Command) types.Permission
 }
 
 // Command is one method of a group: one command.
@@ -187,8 +187,8 @@ func annotate(
 func permissionOf(
 	g Group,
 	sub string,
-) client.Permission {
-	var perm client.Permission
+) types.Permission {
+	var perm types.Permission
 	for _, c := range g.Commands() {
 		if sub != "" && c.SubPath() != sub {
 			continue

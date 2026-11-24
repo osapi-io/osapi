@@ -32,7 +32,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // cronDir holds the entries with a cron expression.
@@ -161,7 +161,7 @@ func (d *debian) Create(
 		path,
 		mode,
 		in.Object,
-		client.ContentType(in.ContentType),
+		types.ContentType(in.ContentType),
 		in.Vars,
 		map[string]string{
 			"schedule": in.Schedule, "interval": in.Interval, "user": in.User,
@@ -202,7 +202,7 @@ func (d *debian) Update(
 		mode = "0755"
 	}
 
-	return d.deploy(ctx, path, mode, obj, client.ContentType(in.ContentType), in.Vars, meta)
+	return d.deploy(ctx, path, mode, obj, types.ContentType(in.ContentType), in.Vars, meta)
 }
 
 // Delete removes an entry that osapi deployed. An entry with no file that
@@ -234,7 +234,7 @@ func (d *debian) deploy(
 	path string,
 	mode string,
 	objectName string,
-	contentType client.ContentType,
+	contentType types.ContentType,
 	vars map[string]string,
 	meta map[string]string,
 ) (bool, error) {
@@ -244,8 +244,8 @@ func (d *debian) deploy(
 		return false, err
 	}
 	content := obj.Content
-	kind := or(or(string(contentType), obj.ContentType), string(client.ContentRaw))
-	if kind == string(client.ContentTemplate) {
+	kind := or(or(string(contentType), obj.ContentType), string(types.ContentRaw))
+	if kind == string(types.ContentTemplate) {
 		data := behavior.TemplateData{Vars: vars, Hostname: d.hostname}
 		if d.facts != nil {
 			data.Facts = d.facts()

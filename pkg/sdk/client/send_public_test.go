@@ -28,6 +28,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -159,7 +161,7 @@ func (s *SendPublicTestSuite) TestSend() {
 				var notFound *client.NotFoundError
 				s.Require().ErrorAs(err, &notFound)
 				s.Equal("no interface eth9", notFound.Message)
-				s.Equal("not_found", notFound.Reason)
+				s.Equal(types.ReasonNotFound, notFound.Reason)
 			},
 		},
 		{

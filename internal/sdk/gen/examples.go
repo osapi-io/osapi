@@ -211,11 +211,14 @@ func required(
 }
 
 // zeroJSON is the value of JSON that a field of type t has when nothing sets
-// it: "", false or 0 for a scalar, and nil for any other type, which value
-// refuses.
+// it: "", false or 0 for a scalar, "" for a named type such as an enum, and
+// nil for any other type, which value refuses.
 func zeroJSON(
 	t *sdkmodel.TypeRef,
 ) any {
+	if t.Kind == sdkmodel.Named {
+		return ""
+	}
 	if t.Kind != sdkmodel.Scalar {
 		return nil
 	}
@@ -303,6 +306,17 @@ func value(
 		}
 
 		return jen.Map(jen.String()).Add(elem).Values(dict), nil
+	case sdkmodel.Named:
+		// A named string, such as the enum ContentType, is its value
+		// converted to the type.
+		if text, ok := v.(string); ok {
+			at := pkg
+			if shared[t.Name] {
+				at = typesPkg
+			}
+
+			return jen.Qual(at, t.Name).Call(jen.Lit(text)), nil
+		}
 	}
 
 	return nil, fmt.Errorf("a value of %s has no literal", t)

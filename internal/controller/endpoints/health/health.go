@@ -26,7 +26,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Group is the health group's definition.
@@ -66,7 +66,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(Status).
 		Sub("status").
 		ID("GetHealthStatus").
-		Permission(client.PermHealthRead).
+		Permission(types.PermHealthRead).
 		Describe("System status and component health").
 		Explain("Returns per-component health status with system metrics. "+
 			"Requires authentication.").

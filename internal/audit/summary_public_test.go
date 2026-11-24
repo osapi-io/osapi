@@ -33,7 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/secret"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // vaultIn is a behavior's input with a secret.Value field, under a name the
@@ -267,8 +267,8 @@ func (s *SummaryPublicTestSuite) TestJobIDSink() {
 // TestStepsSink covers the channel by which an entry learns the chain of the
 // job of its request.
 func (s *SummaryPublicTestSuite) TestStepsSink() {
-	update := []client.Step{{Behavior: "managedfile", Method: "update"}}
-	failed := []client.Step{{Behavior: "managedfile", Method: "update", Error: "denied"}}
+	update := []types.Step{{Behavior: "managedfile", Method: "update"}}
+	failed := []types.Step{{Behavior: "managedfile", Method: "update", Error: "denied"}}
 
 	tests := []struct {
 		name   string
