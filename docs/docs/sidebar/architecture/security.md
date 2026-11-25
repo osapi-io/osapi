@@ -65,7 +65,28 @@ PKI is always on. An agent gets no work until an administrator accepts it:
 
 osapi stops sending work to an agent in two cases. The first case is a heartbeat
 that the accepted key of the agent did not sign. The second case is a hostname
-that is not the hostname that the agent enrolled with.
+that a different admitted machine holds. A host that only changed its hostname
+keeps its work: the record of the machine takes the new hostname.
+
+```mermaid
+sequenceDiagram
+    participant U as Client
+    participant C as Controller
+    participant N as NATS
+    participant A as Agent
+
+    U->>C: request with a JWT
+    C->>C: verify the JWT, the permission and the target scope
+    C->>C: sign the job with the controller's key
+    C->>N: write the job
+    N->>A: deliver the job
+    A->>A: refuse a job that the controller did not sign
+    A->>A: run it, sign the answer with the agent's key
+    A->>N: write the signed answer
+    N->>C: the answer
+    C->>C: verify it with the key that admission recorded
+    C-->>U: the results, and an audit entry of the request
+```
 
 When a key changes, a grace period (`controller.pki.rotation_grace_period`)
 starts. During it, osapi accepts the old key and the new key.

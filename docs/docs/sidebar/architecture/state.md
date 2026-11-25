@@ -24,8 +24,25 @@ retention of each store, and its storage, memory or file.
 | `agent-state`      | KV           | Operator actions: drain flags and timeline events                | No expiry                | The drains stop, and the timeline is gone                  |
 | `file-objects`     | Object store | Files uploaded with `osapi client file upload`                   | Until deleted            | The uploaded files. A deploy of them fails                 |
 | `file-state`       | KV           | What osapi deployed to each host, with each file's checksum      | No expiry                | osapi does not know which files on a host it manages       |
-| `AUDIT`            | Stream       | One entry per authenticated API request                          | `nats.audit.max_age`     | The audit trail                                            |
+| `AUDIT`            | Stream       | One entry per authenticated API request, and per join over NATS  | `nats.audit.max_age`     | The audit trail                                            |
 | `agent-enrollment` | KV           | Agents waiting to be accepted, and accepted agents' keys         | No expiry                | Each agent must enroll again, and you must accept it again |
+
+```mermaid
+flowchart LR
+    C[Controller] -->|jobs| JOBS[(JOBS)]
+    C -->|definitions, status| JQ[(job-queue)]
+    C -->|entries| AUDIT[(AUDIT)]
+    C -->|admission records| EN[(agent-enrollment)]
+    C -->|drain flags| ST[(agent-state)]
+    C -->|uploads| FO[(file-objects)]
+    A[Agent] -->|takes| JOBS
+    A -->|results| JQ
+    A -->|heartbeats| REG[(agent-registry)]
+    A -->|facts| FA[(agent-facts)]
+    A -->|timeline| ST
+    A -->|deployed files| FS[(file-state)]
+    A -->|reads| FO
+```
 
 If the configuration does not name a store that an operation needs, osapi does
 not make the store. It also disables the operations that use the store. For
