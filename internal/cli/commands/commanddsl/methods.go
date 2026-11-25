@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/guide/sdktypes"
+
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -281,7 +283,7 @@ func Spec(
 	_ Deps,
 	_ SpecInput,
 ) (SpecOutput, error) {
-	return SpecOutput{Kinds: command.Spec.Sections()}, nil
+	return SpecOutput{Kinds: sdktypes.Append(command.Spec).Sections()}, nil
 }
 
 // Validate checks each local group, and the output of each group. When a

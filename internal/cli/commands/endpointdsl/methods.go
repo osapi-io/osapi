@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/guide/sdktypes"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 
 	"gopkg.in/yaml.v3"
@@ -288,7 +290,7 @@ func Spec(
 	_ Deps,
 	_ SpecInput,
 ) (SpecOutput, error) {
-	return SpecOutput{Kinds: endpoint.Spec.Sections()}, nil
+	return SpecOutput{Kinds: sdktypes.Append(endpoint.Spec).Sections()}, nil
 }
 
 // Validate checks each endpoint group. When a rule fails, it is the report

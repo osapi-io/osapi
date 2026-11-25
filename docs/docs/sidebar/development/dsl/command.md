@@ -617,3 +617,214 @@ The CLI pages, from just cli-docs-generate. The page of a local command comes
 from .Short, .Long, .Example, .Prints, .Logs and each input field's doc.
 
 Use: Change the definition, then generate. Do not write a CLI page by hand.
+
+## Types for values
+
+### `types.AddressFamily`
+
+AddressFamily is the IP address family of an interface. Values: inet, inet6,
+dual.
+
+Use: A field that takes one of these values: types.AddressFamily with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.AdmissionState`
+
+AdmissionState is the state of a machine's admission record. A machine has one
+at a time: the state of its latest record. Values: pending, admitted, rejected,
+revoked.
+
+Use: A field that takes one of these values: types.AdmissionState with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.AgentJobStatus`
+
+AgentJobStatus is the status of a job on one host: the event that a status key
+of the job records, the state of an agent, and the status of an agent's
+response. The controller records submitted and retried for the host _api, and an
+agent records the others. It is one of Values. Values: submitted, acknowledged,
+started, completed, failed, skipped, retried, timeout.
+
+Use: A field that takes one of these values: types.AgentJobStatus with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.AgentState`
+
+AgentState is the scheduling state of an agent, one of its Values. Values:
+Ready, Draining, Cordoned, Pending.
+
+Use: A field that takes one of these values: types.AgentState with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.ColumnKind`
+
+ColumnKind is what a field of an answer holds. Values: value, values, object,
+list.
+
+Use: A field that takes one of these values: types.ColumnKind with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.ComponentType`
+
+ComponentType is the type of a part of osapi that reports its health. Values:
+controller, nats, agent.
+
+Use: A field that takes one of these values: types.ComponentType with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.ConditionType`
+
+ConditionType is a node or process condition that the agent evaluates, one of
+its Values. Values: MemoryPressure, HighLoad, DiskPressure, DrainStuck,
+ConsumersUnavailable, ProcessMemoryPressure, ProcessHighCPU.
+
+Use: A field that takes one of these values: types.ConditionType with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.ContainerState`
+
+ContainerState is the containers that a list shows, by their state. Values:
+running, stopped, all.
+
+Use: A field that takes one of these values: types.ContainerState with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.ContentType`
+
+ContentType is how a deploy treats a file: raw writes its bytes as they are;
+template renders it with Go text/template and the agent's facts. Values: raw,
+template.
+
+Use: A field that takes one of these values: types.ContentType with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.FieldIn`
+
+FieldIn is where a field of a request goes. Values: path, query, body.
+
+Use: A field that takes one of these values: types.FieldIn with validate:"enum".
+A closed set that pkg/sdk/types does not have is a named type with Values and
+Valid in the package's types.go; validate refuses oneof.
+
+### `types.FieldKind`
+
+FieldKind is how a form takes the value of a field. Values: string, number,
+bool, list, object.
+
+Use: A field that takes one of these values: types.FieldKind with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.InterfaceType`
+
+InterfaceType is the type of a network interface that osapi manages. Values:
+ethernet, dummy.
+
+Use: A field that takes one of these values: types.InterfaceType with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.Interval`
+
+Interval is how often a scheduled job runs, in place of a cron schedule. Values:
+hourly, daily, weekly, monthly.
+
+Use: A field that takes one of these values: types.Interval with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.JobStatus`
+
+JobStatus is the status of a job: what the controller computes from the status
+events of each agent that the job went to. It is one of Values. Values:
+submitted, processing, completed, failed, partial_failure, skipped.
+
+Use: A field that takes one of these values: types.JobStatus with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.Lock`
+
+Lock is whether a user account refuses logins with its password. Values: locked,
+unlocked.
+
+Use: A field that takes one of these values: types.Lock with validate:"enum". A
+closed set that pkg/sdk/types does not have is a named type with Values and
+Valid in the package's types.go; validate refuses oneof.
+
+### `types.MethodKind`
+
+MethodKind is what a method of a behavior does to a host, by the verb of its
+permission. It is a separate set from Verb: execute, shell and exec are each an
+action. Values: read, write, action.
+
+Use: A field that takes one of these values: types.MethodKind with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.Permission`
+
+Permission represents a fine-grained resource:verb permission. Permissions use
+the format "resource:verb" (e.g., "status:read", "command:execute"). Values:
+health:read, trace:read, secret:use, secret:reveal, certificate:read,
+certificate:write, command:execute, command:shell, connectivity:execute,
+disk:read, dns:read, dns:write, docker:read, docker:write, docker:execute,
+docker:exec, file:read, file:write, group:read, group:write, hostname:read,
+hostname:write, image:read, image:execute, image:write, interface:read,
+interface:write, load:read, log:read, memory:read, ntp:read, ntp:write, os:read,
+package:read, package:write, power:execute, process:read, process:execute,
+schedule:read, schedule:write, service:read, service:write, service:execute,
+status:read, sysctl:read, sysctl:write, timezone:read, timezone:write,
+uptime:read, user:read, user:write, admission:read, admission:write, agent:read,
+agent:write, audit:read, catalog:read, job:read, job:write, secret:read,
+secret:write.
+
+Use: A field that takes one of these values: types.Permission with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.Reason`
+
+Reason is the reason of an error answer, one of its Values. A program branches
+on it, so a reason outside the list breaks the contract of the spec's
+ErrorResponse. Values: invalid_request, unauthorized, forbidden, not_found,
+not_managed, not_installed, conflict, unavailable, server_error.
+
+Use: A field that takes one of these values: types.Reason with validate:"enum".
+A closed set that pkg/sdk/types does not have is a named type with Values and
+Valid in the package's types.go; validate refuses oneof.
+
+### `types.RowStatus`
+
+RowStatus is the status of one host in the answer of a behavior method: what
+happened on that host. Values: ok, failed, skipped, timeout.
+
+Use: A field that takes one of these values: types.RowStatus with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
+### `types.Signal`
+
+Signal is a signal that osapi sends to a process, by its name without SIG.
+Values: TERM, KILL, HUP, INT, USR1, USR2.
+
+Use: A field that takes one of these values: types.Signal with validate:"enum".
+A closed set that pkg/sdk/types does not have is a named type with Values and
+Valid in the package's types.go; validate refuses oneof.
+
+### `types.SpanStatus`
+
+SpanStatus is whether the work of a span failed. Values: ok, error.
+
+Use: A field that takes one of these values: types.SpanStatus with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.

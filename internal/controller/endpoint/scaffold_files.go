@@ -226,6 +226,11 @@ func (sc groupScaffold) typesFile() *jen.File {
 		"of the path, which Key names, and each field becomes a flag of the CLI",
 		"command. A key of more than one field, such as a key in a vault, names",
 		"each in the order of the path: Key(\"vault\", \"key\").",
+		"",
+		"A field that takes one of a closed set of values, such as a state or a",
+		"mode, is a named type with Values and Valid, and validate:\"enum\": use the",
+		"type of pkg/sdk/types when it has one (osapi dsl endpoint spec get lists them), or",
+		"declare one here. validate refuses oneof.",
 	)
 	f.Type().Id("GetInput").Struct(
 		jen.Id("Name").String().Add(tagged("json", "name", "in", "path",

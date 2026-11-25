@@ -339,6 +339,11 @@ func (sc scaffold) typesFile() *jen.File {
 		"UpdateInput is update's input. update has no key, so the field that says",
 		`what it changes is tagged telemetry:"attr", and the trace shows it.`,
 		"osapi dsl behavior spec get lists each tag.",
+		"",
+		"A field that takes one of a closed set of values, such as a state or a",
+		"mode, is a named type with Values and Valid, and validate:\"enum\": use the",
+		"type of pkg/sdk/types when it has one (osapi dsl behavior spec get lists them), or",
+		"declare one here. validate refuses oneof.",
 	)
 	f.Type().Id("UpdateInput").Struct(
 		jen.Id("Value").String().Add(tag("json", "value", "validate", "required",
