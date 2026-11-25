@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	user "github.com/osapi-io/osapi/internal/behaviors/user"
 	"github.com/osapi-io/osapi/internal/behaviors/user/gen"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APIUpdatePublicTestSuite struct {
@@ -125,7 +126,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				user.UpdateInput{
 					Groups: []string{"root"},
 					Home:   "/home/osapitest2",
-					Lock:   "locked",
+					Lock:   types.Lock("locked"),
 					Name:   "osapitest",
 				},
 				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
@@ -147,7 +148,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				user.UpdateInput{
 					Groups: []string{"root"},
 					Home:   "/home/osapitest2",
-					Lock:   "locked",
+					Lock:   types.Lock("locked"),
 					Name:   "osapitest",
 				},
 				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
@@ -169,7 +170,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"server1",
 				"user.update",
 				user.UpdateInput{
-					Lock: "unlocked",
+					Lock: types.Lock("unlocked"),
 					Name: "osapitest",
 				},
 				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
@@ -189,7 +190,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				"_all",
 				"user.update",
 				user.UpdateInput{
-					Lock: "unlocked",
+					Lock: types.Lock("unlocked"),
 					Name: "osapitest",
 				},
 				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),

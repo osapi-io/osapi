@@ -24,6 +24,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
@@ -57,9 +59,9 @@ func Get(
 
 	spans := make([]TraceSpan, 0, len(trace.Spans))
 	for _, s := range trace.Spans {
-		status := "ok"
+		status := types.SpanOK
 		if s.Failed {
-			status = "error"
+			status = types.SpanError
 		}
 		spans = append(spans, TraceSpan{
 			SpanID:        s.ID,

@@ -4,11 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NetworkInterfaceResponseFamily } from './networkInterfaceResponseFamily';
+import type { AddressFamily } from './addressFamily';
 
 export interface NetworkInterfaceResponse {
-  /** IP address family. */
-  family?: NetworkInterfaceResponseFamily;
+  family?: AddressFamily;
   ipv4?: string;
   ipv6?: string;
   mac?: string;

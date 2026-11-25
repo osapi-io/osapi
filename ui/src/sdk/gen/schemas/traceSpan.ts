@@ -4,8 +4,8 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { SpanStatus } from './spanStatus';
 import type { TraceSpanAttributes } from './traceSpanAttributes';
-import type { TraceSpanStatus } from './traceSpanStatus';
 
 export interface TraceSpan {
   /** The attributes of the span, each as text. */
@@ -24,8 +24,7 @@ export interface TraceSpan {
   span_id: string;
   /** When the span started. */
   start_time: string;
-  /** Whether the work of the span failed. */
-  status: TraceSpanStatus;
+  status: SpanStatus;
   /** The error of a failed span. */
   status_message?: string;
 }

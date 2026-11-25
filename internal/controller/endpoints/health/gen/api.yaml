@@ -103,6 +103,12 @@ components:
           example: v0.2.1-0.20261119003517-f6bc5af55ceb
           type: string
       type: object
+    ComponentType:
+      enum:
+        - controller
+        - nats
+        - agent
+      type: string
     ConditionType:
       description: A condition that an agent or a component evaluates.
       enum:
@@ -397,13 +403,9 @@ paths:
           in: query
           name: component
           schema:
-            enum:
-              - controller
-              - nats
-              - agent
-            type: string
+            $ref: '#/components/schemas/ComponentType'
           x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=controller nats agent
+            validate: omitempty,enum
       responses:
         "200":
           content:

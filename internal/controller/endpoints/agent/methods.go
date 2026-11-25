@@ -201,7 +201,11 @@ func buildAgentInfo(
 	}
 	for _, ni := range a.Interfaces {
 		info.Interfaces = append(info.Interfaces, NetworkInterfaceResponse{
-			Name: ni.Name, IPv4: ni.IPv4, IPv6: ni.IPv6, MAC: ni.MAC, Family: ni.Family,
+			Name:   ni.Name,
+			IPv4:   ni.IPv4,
+			IPv6:   ni.IPv6,
+			MAC:    ni.MAC,
+			Family: types.AddressFamily(ni.Family),
 		})
 	}
 	for _, r := range a.Routes {

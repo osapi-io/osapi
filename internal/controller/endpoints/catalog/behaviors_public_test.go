@@ -33,16 +33,23 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
+// mode is a mode of a test, a closed set for the enum rule.
+type mode string
+
+func (mode) Values() []mode { return []mode{"a", "b"} }
+
+func (v mode) Valid() bool { return v == "a" || v == "b" }
+
 type provider struct{}
 
 type itemIn struct {
-	Name   string            `json:"name"   validate:"required"            doc:"The item"`
-	Mode   string            `json:"mode"   validate:"omitempty,oneof=a b" doc:"The mode"`
-	Count  int               `json:"count"  validate:"omitempty"           doc:"How many"`
-	On     bool              `json:"on"     validate:"omitempty"           doc:"Whether"`
-	Tags   []string          `json:"tags"   validate:"omitempty"           doc:"Tags"`
-	Labels map[string]string `json:"labels" validate:"omitempty"           doc:"Labels"`
-	Token  secret.Value      `json:"token"  validate:"omitempty"           doc:"A secret"`
+	Name   string            `json:"name"   validate:"required"       doc:"The item"`
+	Mode   mode              `json:"mode"   validate:"omitempty,enum" doc:"The mode"`
+	Count  int               `json:"count"  validate:"omitempty"      doc:"How many"`
+	On     bool              `json:"on"     validate:"omitempty"      doc:"Whether"`
+	Tags   []string          `json:"tags"   validate:"omitempty"      doc:"Tags"`
+	Labels map[string]string `json:"labels" validate:"omitempty"      doc:"Labels"`
+	Token  secret.Value      `json:"token"  validate:"omitempty"      doc:"A secret"`
 	Skip   string            `json:"-"`
 	_      string
 }
@@ -205,8 +212,8 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	s.Equal(types.KindWrite, update.Kind)
 	s.Equal("PUT", update.HTTPMethod)
 	s.Equal([]string{"debian"}, update.Platforms, "On limits the platforms")
-	s.Equal("path", update.Fields[0].In, "the key goes in the path")
-	s.Equal("body", update.Fields[1].In, "a write's other fields go in the body")
+	s.Equal(types.FieldInPath, update.Fields[0].In, "the key goes in the path")
+	s.Equal(types.FieldInBody, update.Fields[1].In, "a write's other fields go in the body")
 	s.Equal([]catalog.CatalogCall{
 		{Behavior: "inner", Method: "list", Calls: []catalog.CatalogCall{
 			{Behavior: "deep", Method: "get"},

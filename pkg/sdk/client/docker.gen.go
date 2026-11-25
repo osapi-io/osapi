@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // DockerService calls the API's Docker group: the Docker containers of the
@@ -19,7 +21,7 @@ type DockerService struct {
 type DockerListParams struct {
 	// State is the state of the query: only the containers in this state: running,
 	// stopped or all, the default. The zero value leaves it out.
-	State GetNodeDockerState
+	State types.ContainerState
 }
 
 // List is the operation GetNodeDocker: list the containers of the host.

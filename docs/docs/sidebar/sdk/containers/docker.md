@@ -51,7 +51,7 @@ resp, err := c.Docker.List(ctx, target, client.DockerListParams{})
 Only the stopped ones, `go run docker.go list-2`:
 
 ```go
-resp, err := c.Docker.List(ctx, target, client.DockerListParams{State: client.GetNodeDockerState("stopped")})
+resp, err := c.Docker.List(ctx, target, client.DockerListParams{State: types.ContainerState("stopped")})
 ```
 
 ### Create
@@ -233,6 +233,12 @@ resp, err := c.Docker.Stop(ctx, target, client.DockerStopInput{
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### ContainerState
+
+Only the containers in this state: running, stopped or all, the default.
+
+A `string`, one of `running`, `stopped`, `all`.
+
 ### DockerCreateInput
 
 | Field               | Type                | Description                                                                                              |
@@ -304,12 +310,6 @@ The fields of each type are the properties of its schema in the API's spec.
 | --------- | -------- | ---------------------------------------------------------------- |
 | `Name`    | `string` | The name of the path. The container's name or ID.                |
 | `Timeout` | `int`    | Seconds to wait before docker kills it; docker's default when 0. |
-
-### GetNodeDockerState
-
-Only the containers in this state: running, stopped or all, the default.
-
-A `string`, one of `running`, `stopped`, `all`.
 
 ### RowStatus
 

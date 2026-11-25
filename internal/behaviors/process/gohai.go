@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/process"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
@@ -77,7 +79,7 @@ func (g *gohai) Get(
 func (g *gohai) Signal(
 	ctx context.Context,
 	pid int,
-	signal string,
+	signal types.Signal,
 ) error {
 	if _, err := g.Get(ctx, pid); err != nil {
 		return err
@@ -85,7 +87,7 @@ func (g *gohai) Signal(
 	if _, err := g.exec.RunPrivilegedCmd(
 		ctx,
 		"kill",
-		[]string{"-" + signal, strconv.Itoa(pid)},
+		[]string{"-" + string(signal), strconv.Itoa(pid)},
 	); err != nil {
 		return fmt.Errorf("signal %s to process %d: %w", signal, pid, err)
 	}

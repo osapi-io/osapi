@@ -160,7 +160,7 @@ Move the home, set the groups and lock it, `go run user.go update-2`:
 resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
 	Groups: []string{"root"},
 	Home:   "/home/osapitest2",
-	Lock:   client.UserUpdateRequestLock("locked"),
+	Lock:   types.Lock("locked"),
 	Name:   "osapitest",
 })
 ```
@@ -169,7 +169,7 @@ Unlock it, `go run user.go update-3`:
 
 ```go
 resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
-	Lock: client.UserUpdateRequestLock("unlocked"),
+	Lock: types.Lock("unlocked"),
 	Name: "osapitest",
 })
 ```
@@ -204,6 +204,10 @@ resp, err := c.User.Delete(ctx, target, "osapitest")
 ## Types
 
 The fields of each type are the properties of its schema in the API's spec.
+
+### Lock
+
+A `string`, one of `locked`, `unlocked`.
 
 ### RowStatus
 
@@ -253,20 +257,13 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### UserUpdateInput
 
-| Field    | Type                    | Description                                                                                                            |
-| -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `Name`   | `string`                | The name of the path. The user to remove, with its home directory, such as alice.                                      |
-| `Groups` | `[]string`              | The groups it is a member of, which replace the groups it has.                                                         |
-| `Home`   | `string`                | Its home directory, which usermod moves the files to.                                                                  |
-| `Lock`   | `UserUpdateRequestLock` | Whether to refuse logins with its password: locked refuses them, unlocked allows them. It is one of: locked, unlocked. |
-| `Shell`  | `string`                | Its login shell, such as /bin/bash.                                                                                    |
-
-### UserUpdateRequestLock
-
-Whether to refuse logins with its password: locked refuses them, unlocked allows
-them.
-
-A `string`, one of `locked`, `unlocked`.
+| Field    | Type       | Description                                                                       |
+| -------- | ---------- | --------------------------------------------------------------------------------- |
+| `Name`   | `string`   | The name of the path. The user to remove, with its home directory, such as alice. |
+| `Groups` | `[]string` | The groups it is a member of, which replace the groups it has.                    |
+| `Home`   | `string`   | Its home directory, which usermod moves the files to.                             |
+| `Lock`   | `Lock`     |                                                                                   |
+| `Shell`  | `string`   | Its login shell, such as /bin/bash.                                               |
 
 ## Example
 

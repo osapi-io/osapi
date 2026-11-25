@@ -33,8 +33,16 @@ import (
 )
 
 // roleIn has a rule after dive, which breaks on an item.
+
+// letter is a role of a test, a closed set for the enum rule.
+type letter string
+
+func (letter) Values() []letter { return []letter{"a", "b"} }
+
+func (v letter) Valid() bool { return v == "a" || v == "b" }
+
 type roleIn struct {
-	Roles []string `json:"roles" validate:"required,dive,oneof=a b" doc:"The roles"`
+	Roles []letter `json:"roles" validate:"required,dive,enum" doc:"The roles"`
 }
 
 type roleOut struct{}
@@ -92,7 +100,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Short("List roles").
 					Example("--roles a").
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 		},
@@ -111,7 +119,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Short("List roles").
 					Example("--rols a --json -j=true \\\n    -d --roles=b").
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 			want: []string{
@@ -126,7 +134,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Short("List roles").
 					Example("--roles a").
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 			want: []string{
@@ -162,11 +170,11 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					}),
 				command.Method[roleIn, roleOut]("frob").
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 				command.Method[roleIn, roleOut]("frob").Short("X").Example("").
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 			want: []string{
@@ -218,7 +226,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Example("--roles a").
 					Prints(roleOut{}).
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 			want: []string{`"zzroot" is not a group of RootGroups.`},
@@ -232,7 +240,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Example("--roles a").
 					Prints(roleOut{}).
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 			want: []string{
@@ -249,7 +257,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Example("--roles a").
 					Prints(roleOut{}).
 					Fails("no roles", roleIn{}).
-					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Fails("an unknown role", roleIn{Roles: []letter{"c"}}).
 					Handle(handleRoles),
 			),
 			want: []string{
@@ -398,7 +406,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 				`the .Fails input "not the input" is string, not command_test.greetIn.`,
 				"no .Fails input breaks required on Name.",
 				"no .Fails input breaks max=5 on Name.",
-				"no .Fails input breaks oneof=dry warm on Tone.",
+				"no .Fails input breaks enum on Tone.",
 				"no .Fails input breaks zzlocal on Tags.",
 			},
 		},

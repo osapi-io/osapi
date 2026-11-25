@@ -19,7 +19,11 @@
 // DEALINGS IN THE SOFTWARE.
 package telemetry
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // TraceInput names the trace to read.
 type TraceInput struct {
@@ -62,7 +66,7 @@ type TraceSpan struct {
 	Kind          string            `json:"kind,omitempty"           doc:"The span kind, such as server, client, producer or consumer."`
 	StartTime     time.Time         `json:"start_time"               doc:"When the span started."`
 	DurationMs    float64           `json:"duration_ms"              doc:"How long the span took, in milliseconds."`
-	Status        string            `json:"status"                   doc:"Whether the work of the span failed."                         validate:"oneof=ok error"`
+	Status        types.SpanStatus  `json:"status"                   doc:"Whether the work of the span failed."                         validate:"enum"`
 	StatusMessage string            `json:"status_message,omitempty" doc:"The error of a failed span."`
 	Attributes    map[string]string `json:"attributes"               doc:"The attributes of the span, each as text."`
 }

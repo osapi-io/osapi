@@ -58,6 +58,6 @@ var Group = command.Register(command.Define(
 		Prints(sampleInstall).
 		Example("--tool claude --tool codex").
 		Example("--path ./ops-repo --json").
-		Fails("an unknown tool", InstallInput{Tools: []string{"vim"}}).
+		Fails("an unknown tool", InstallInput{Tools: []Tool{"vim"}}).
 		Handle(Install),
 ))

@@ -4,9 +4,9 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GetNodeDockerState } from './getNodeDockerState';
+import type { ContainerState } from './containerState';
 
 export type GetNodeDockerParams = {
   /** Only the containers in this state: running, stopped or all, the default */
-  state?: GetNodeDockerState;
+  state?: ContainerState;
 };

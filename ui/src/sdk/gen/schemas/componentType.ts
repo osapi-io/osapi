@@ -5,10 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetHealthStatusComponent = typeof GetHealthStatusComponent[keyof typeof GetHealthStatusComponent];
+export type ComponentType = typeof ComponentType[keyof typeof ComponentType];
 
 
-export const GetHealthStatusComponent = {
+export const ComponentType = {
   controller: 'controller',
   nats: 'nats',
   agent: 'agent',

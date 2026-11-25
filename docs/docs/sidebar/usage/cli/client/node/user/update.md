@@ -219,7 +219,7 @@ The command fails in these cases:
 | A home with a line break              | `--name alice --home "/home/a\nb"`                        | no_linebreak |
 | A group that is an option             | `--name alice --groups -r`                                | account_name |
 | A group longer than 32 characters     | `--name alice --groups aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max          |
-| A lock that is not locked or unlocked | `--name alice --lock maybe`                               | oneof        |
+| A lock that is not locked or unlocked | `--name alice --lock maybe`                               | enum         |
 
 ## Permission
 

@@ -99,18 +99,18 @@ func (s *RulePublicTestSuite) TestApply() {
 		},
 		{
 			name: "when the tag has the standard rules, each is set",
-			tag:  "required,min=1,max=255,len=3,oneof=a b,startswith=/etc,omitempty,dive",
+			tag:  "required,min=1,max=255,len=3,startswith=/etc,omitempty,dive",
 			validateFunc: func(g *got, required bool, err error) {
 				s.Require().NoError(err)
 				s.True(required)
 				s.Equal(map[string]float64{"min": 1, "max": 255, "len": 3}, g.bounds)
-				s.Equal([]string{"a", "b"}, g.enum)
 				s.Equal(`^/etc`, g.pattern)
 			},
 		},
 		{
 			name: "when the tag has dive, the rules after it are each item's",
-			tag:  "required,max=10,dive,max=255,oneof=a b",
+			tag:  "required,max=10,dive,max=255,enum",
+			typ:  reflect.TypeFor[[]shade](),
 			validateFunc: func(g *got, required bool, err error) {
 				s.Require().NoError(err)
 				s.True(required)
@@ -118,7 +118,7 @@ func (s *RulePublicTestSuite) TestApply() {
 				s.Empty(g.enum)
 				s.Require().NotNil(g.items)
 				s.Equal(map[string]float64{"max": 255}, g.items.bounds, "each item is at most 255")
-				s.Equal([]string{"a", "b"}, g.items.enum)
+				s.Equal([]string{"light", "dark"}, g.items.enum)
 			},
 		},
 		{
@@ -212,6 +212,15 @@ func (s *RulePublicTestSuite) TestApply() {
 			validateFunc: func(_ *got, _ bool, err error) {
 				s.EqualError(err,
 					"validate oneof on rule_test.shade: the type has Values; use validate enum")
+			},
+		},
+		{
+			name: "when a string has oneof, it is an error that names the fix",
+			tag:  "oneof=light dark",
+			typ:  reflect.TypeFor[string](),
+			validateFunc: func(_ *got, _ bool, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "declare a named type with Values and Valid")
 			},
 		},
 	}
@@ -371,10 +380,10 @@ func (s *RulePublicTestSuite) TestOptions() {
 			want: []string{"light", "dark"},
 		},
 		{
-			name: "when a list has oneof after dive, they are each item's values",
-			tag:  "omitempty,max=3,dive,oneof=a b",
-			typ:  reflect.TypeFor[[]string](),
-			want: []string{"a", "b"},
+			name: "when a list has enum after dive, they are each item's values",
+			tag:  "omitempty,max=3,dive,enum",
+			typ:  reflect.TypeFor[[]shade](),
+			want: []string{"light", "dark"},
 		},
 		{
 			name: "when the field has neither, there are none",

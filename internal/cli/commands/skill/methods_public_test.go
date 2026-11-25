@@ -112,6 +112,12 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	}
 }
 
+func (s *MethodsPublicTestSuite) TestToolValues() {
+	s.Equal([]skill.Tool{skill.ToolClaude, skill.ToolCodex}, skill.ToolClaude.Values())
+	s.True(skill.ToolCodex.Valid())
+	s.False(skill.Tool("vim").Valid())
+}
+
 func (s *MethodsPublicTestSuite) TestInstall() {
 	src := fstest.MapFS{
 		"osapi/SKILL.md": {
@@ -137,7 +143,7 @@ func (s *MethodsPublicTestSuite) TestInstall() {
 			},
 			validateFunc: func(got skill.InstallOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal([]string{"claude"}, got.Tools)
+				s.Equal([]skill.Tool{skill.ToolClaude}, got.Tools)
 				s.Equal("v1.2.3", got.Version)
 				s.Positive(got.Changed)
 				s.Equal(len(got.Files), got.Changed, "each file is new")
@@ -151,10 +157,13 @@ func (s *MethodsPublicTestSuite) TestInstall() {
 
 				return skill.Deps{FS: fs, Installed: src, Version: version}
 			},
-			in: skill.InstallInput{Path: "/ops", Tools: []string{"claude", "codex"}},
+			in: skill.InstallInput{
+				Path:  "/ops",
+				Tools: []skill.Tool{skill.ToolClaude, skill.ToolCodex},
+			},
 			validateFunc: func(got skill.InstallOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal([]string{"claude", "codex"}, got.Tools)
+				s.Equal([]skill.Tool{skill.ToolClaude, skill.ToolCodex}, got.Tools)
 			},
 		},
 		{

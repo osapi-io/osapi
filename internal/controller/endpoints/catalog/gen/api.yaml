@@ -103,16 +103,7 @@ components:
           description: What the field is.
           type: string
         kind:
-          description: 'What the field holds: value, values, object or list.'
-          enum:
-            - value
-            - values
-            - object
-            - list
-          example: value
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=value values object list
+          $ref: '#/components/schemas/ColumnKind'
         label:
           description: The label of the field.
           example: Total
@@ -150,27 +141,9 @@ components:
           description: What the field is.
           type: string
         in:
-          description: 'Where the field goes in the request: path, query or body.'
-          enum:
-            - path
-            - query
-            - body
-          example: body
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=path query body
+          $ref: '#/components/schemas/FieldIn'
         kind:
-          description: 'How a form takes the value: string, number, bool, list or object.'
-          enum:
-            - string
-            - number
-            - bool
-            - list
-            - object
-          example: list
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=string number bool list object
+          $ref: '#/components/schemas/FieldKind'
         name:
           description: The json name of the field.
           example: servers
@@ -352,6 +325,13 @@ components:
         - description
         - permissions
       type: object
+    ColumnKind:
+      enum:
+        - value
+        - values
+        - object
+        - list
+      type: string
     ErrorResponse:
       properties:
         details:
@@ -377,6 +357,20 @@ components:
           example: not_found
           type: string
       type: object
+    FieldIn:
+      enum:
+        - path
+        - query
+        - body
+      type: string
+    FieldKind:
+      enum:
+        - string
+        - number
+        - bool
+        - list
+        - object
+      type: string
     MethodKind:
       description: 'What a method does to a host, by the verb of its permission: read, write or action.'
       enum:

@@ -47,7 +47,7 @@ The last entry of one unit at info or above, `go run log.go list-2`:
 ```go
 resp, err := c.Log.List(ctx, target, client.LogListParams{
 	Lines:    1,
-	Priority: client.GetNodeLogPriority("info"),
+	Priority: client.Priority("info"),
 	Since:    "1 hour ago",
 	Unit:     "nginx.service",
 })
@@ -57,13 +57,6 @@ resp, err := c.Log.List(ctx, target, client.LogListParams{
 
 The fields of each type are the properties of its schema in the API's spec.
 
-### GetNodeLogPriority
-
-Only the entries at this priority or above.
-
-A `string`, one of `emerg`, `alert`, `crit`, `err`, `warning`, `notice`, `info`,
-`debug`.
-
 ### LogEntry
 
 | Field       | Type        | Description                                                                                                                                                                                                              |
@@ -72,10 +65,17 @@ A `string`, one of `emerg`, `alert`, `crit`, `err`, `warning`, `notice`, `info`,
 | `Hostname`  | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
 | `Message`   | `string`    | The message.                                                                                                                                                                                                             |
 | `PID`       | `int`       | The process that wrote it.                                                                                                                                                                                               |
-| `Priority`  | `string`    | Its priority, by name.                                                                                                                                                                                                   |
+| `Priority`  | `Priority`  |                                                                                                                                                                                                                          |
 | `Status`    | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 | `Timestamp` | `string`    | When journald recorded it, in RFC 3339.                                                                                                                                                                                  |
 | `Unit`      | `string`    | The syslog identifier that wrote it.                                                                                                                                                                                     |
+
+### Priority
+
+Only the entries at this priority or above.
+
+A `string`, one of `emerg`, `alert`, `crit`, `err`, `warning`, `notice`, `info`,
+`debug`.
 
 ### RowStatus
 

@@ -189,7 +189,13 @@ func Apply(
 			}
 			t.Bound(name, n)
 		case name == "oneof":
-			t.Enum(strings.Fields(param))
+			// A closed set is a named type with Values and Valid, so that
+			// each place that uses it has one list, and a caller has
+			// constants to use.
+			return false, fmt.Errorf(
+				"validate oneof=%s on %s: declare a named type with Values and Valid, "+
+					"in pkg/sdk/types when a caller of the API sees it, and use validate enum",
+				param, typ)
 		case name == "startswith":
 			t.Pattern("^" + regexp.QuoteMeta(param))
 		case name == "startsnotwith":

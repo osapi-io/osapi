@@ -121,7 +121,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("Only the stopped ones", ListInput{State: "stopped"}, []Entry{},
 			answers, running, details,
 		).
-		Fails("A state that is not one", ListInput{State: "paused"}, "oneof"),
+		Fails("A state that is not one", ListInput{State: "paused"}, "enum"),
 	behavior.Read("get", Get).Key("name").
 		Describe("Get one container").
 		Explain("Reads one container by its name, its ID or the start of its ID. A container "+

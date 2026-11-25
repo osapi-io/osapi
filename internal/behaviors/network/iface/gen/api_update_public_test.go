@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	iface "github.com/osapi-io/osapi/internal/behaviors/network/iface"
 	"github.com/osapi-io/osapi/internal/behaviors/network/iface/gen"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APIUpdatePublicTestSuite struct {
@@ -41,7 +42,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 			),
@@ -62,7 +63,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 				servertest.Skipped("server2"),
@@ -85,7 +86,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 				servertest.Skipped("server1"),
 			),
@@ -106,7 +107,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 				servertest.Failed("server1", "boom"),
 			),
@@ -127,7 +128,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 				servertest.TimedOut("server1"),
 			),
@@ -148,7 +149,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -167,7 +168,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -186,7 +187,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 			).Fails(servertest.NotFound("server1")),
 			WantCode: http.StatusNotFound,
@@ -378,7 +379,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
-					Type:  "dummy",
+					Type:  types.InterfaceType("dummy"),
 				},
 				servertest.Skipped("server1"),
 			),

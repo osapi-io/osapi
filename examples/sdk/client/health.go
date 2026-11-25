@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -78,7 +79,7 @@ func runStatus2(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: client.GetHealthStatusComponent("agent")})
+	resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: types.ComponentType("agent")})
 	if err != nil {
 		return err
 	}

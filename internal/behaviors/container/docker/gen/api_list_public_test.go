@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	docker "github.com/osapi-io/osapi/internal/behaviors/container/docker"
 	"github.com/osapi-io/osapi/internal/behaviors/container/docker/gen"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APIListPublicTestSuite struct {
@@ -71,7 +72,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Job: servertest.Query(
 				"server1",
 				"docker.list",
-				docker.ListInput{State: "stopped"},
+				docker.ListInput{State: types.ContainerState("stopped")},
 				servertest.Completed("server1", `[]`),
 			),
 			WantCode: http.StatusOK,
@@ -87,7 +88,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Job: servertest.Query(
 				"_all",
 				"docker.list",
-				docker.ListInput{State: "stopped"},
+				docker.ListInput{State: types.ContainerState("stopped")},
 				servertest.Completed("server1", `[]`),
 				servertest.Skipped("server2"),
 				servertest.Failed("server3", "boom"),

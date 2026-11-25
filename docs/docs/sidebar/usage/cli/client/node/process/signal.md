@@ -75,7 +75,7 @@ The command fails in these cases:
 | ------------------------------------- | --------------------------- | ---------- |
 | A process that the host does not have | `--pid 99999 --signal TERM` | not found  |
 | A process ID below 1                  | `--pid -1 --signal TERM`    | min        |
-| A signal that osapi does not send     | `--pid 1234 --signal STOP`  | oneof      |
+| A signal that osapi does not send     | `--pid 1234 --signal STOP`  | enum       |
 
 ## Permission
 

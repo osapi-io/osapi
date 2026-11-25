@@ -54,6 +54,13 @@ components:
           example: not_found
           type: string
       type: object
+    Interval:
+      enum:
+        - hourly
+        - daily
+        - weekly
+        - monthly
+      type: string
     RowStatus:
       description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
       enum:
@@ -83,15 +90,7 @@ components:
         content_type:
           $ref: '#/components/schemas/ContentType'
         interval:
-          description: The interval of a script in /etc/cron.daily and the like; give it or schedule
-          enum:
-            - hourly
-            - daily
-            - weekly
-            - monthly
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly
+          $ref: '#/components/schemas/Interval'
         name:
           description: The entry, and its file name, such as backup
           maxLength: 64

@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	process "github.com/osapi-io/osapi/internal/behaviors/process"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -72,7 +73,7 @@ func (mr *MockProviderMockRecorder) List(ctx any) *gomock.Call {
 }
 
 // Signal mocks base method.
-func (m *MockProvider) Signal(ctx context.Context, pid int, signal string) error {
+func (m *MockProvider) Signal(ctx context.Context, pid int, signal types.Signal) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Signal", ctx, pid, signal)
 	ret0, _ := ret[0].(error)

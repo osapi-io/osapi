@@ -106,7 +106,7 @@ The command fails in these cases:
 
 | Call                    | Flags            | Fails with |
 | ----------------------- | ---------------- | ---------- |
-| A state that is not one | `--state paused` | oneof      |
+| A state that is not one | `--state paused` | enum       |
 
 ## Permission
 

@@ -218,12 +218,12 @@ func fields(
 		if !f.IsExported() || name == "-" || behavior.SetByBefore(f) {
 			continue
 		}
-		in := "body"
+		in := types.FieldInBody
 		switch {
 		case m.InPath(name):
-			in = "path"
+			in = types.FieldInPath
 		case m.Verb == types.VerbRead:
-			in = "query"
+			in = types.FieldInQuery
 		}
 		rules := f.Tag.Get("validate")
 		field := CatalogField{
@@ -245,20 +245,20 @@ func fields(
 // a list of strings.
 func kind(
 	t reflect.Type,
-) string {
+) types.FieldKind {
 	switch t.Kind() {
 	case reflect.Bool:
-		return "bool"
+		return types.FieldBool
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32, reflect.Float64:
-		return "number"
+		return types.FieldNumber
 	case reflect.Slice:
-		return "list"
+		return types.FieldList
 	case reflect.Map, reflect.Struct:
-		return "object"
+		return types.FieldObject
 	default:
-		return "string"
+		return types.FieldString
 	}
 }
 

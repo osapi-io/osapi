@@ -20,7 +20,11 @@
 
 package skill
 
-import "github.com/osapi-io/osapi/internal/skills"
+import (
+	"slices"
+
+	"github.com/osapi-io/osapi/internal/skills"
+)
 
 // ListInput is the input of list, which has none.
 type ListInput struct{}
@@ -46,15 +50,36 @@ type GetOutput struct {
 
 // InstallInput is where to install the skills, and for which tools.
 type InstallInput struct {
-	Path  string   `json:"path" validate:"omitempty"                         doc:"The repository to install into; the current directory without it"         default:"."`
-	Tools []string `json:"tool" validate:"omitempty,dive,oneof=claude codex" doc:"Agent tool to install for: claude, codex (repeatable); claude without it"`
+	Path  string `json:"path" validate:"omitempty"           doc:"The repository to install into; the current directory without it"         default:"."`
+	Tools []Tool `json:"tool" validate:"omitempty,dive,enum" doc:"Agent tool to install for: claude, codex (repeatable); claude without it"`
 }
 
 // InstallOutput is each file install wrote, and how many changed.
 type InstallOutput struct {
 	_       struct{}        `title:"Skills"`
 	Version string          `               json:"version"`
-	Tools   []string        `               json:"tools"`
+	Tools   []Tool          `               json:"tools"`
 	Changed int             `               json:"changed"`
 	Files   []skills.Result `               json:"files"`
+}
+
+// Tool is an AI agent tool that osapi installs its skills for.
+type Tool string
+
+// The tools that osapi installs its skills for.
+const (
+	// ToolClaude is Claude Code.
+	ToolClaude Tool = "claude"
+	// ToolCodex is Codex.
+	ToolCodex Tool = "codex"
+)
+
+// Values are the tools that osapi installs its skills for.
+func (Tool) Values() []Tool {
+	return []Tool{ToolClaude, ToolCodex}
+}
+
+// Valid reports whether t is a tool that osapi installs its skills for.
+func (t Tool) Valid() bool {
+	return slices.Contains(t.Values(), t)
 }

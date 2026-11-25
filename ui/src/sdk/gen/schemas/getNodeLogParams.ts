@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GetNodeLogPriority } from './getNodeLogPriority';
+import type { Priority } from './priority';
 
 export type GetNodeLogParams = {
   /**
@@ -21,5 +21,5 @@ export type GetNodeLogParams = {
   /** Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago */
   since?: string;
   /** Only the entries at this priority or above */
-  priority?: GetNodeLogPriority;
+  priority?: Priority;
 };

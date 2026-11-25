@@ -20,6 +20,8 @@
 
 package process
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ListInput is list's input: it takes none.
 type ListInput struct{}
 
@@ -30,8 +32,8 @@ type GetInput struct {
 
 // SignalInput is the signal to send, and the process to send it to.
 type SignalInput struct {
-	PID    int    `json:"pid"    validate:"required,min=1"                             doc:"The process ID, such as 1234"                   telemetry:"attr"`
-	Signal string `json:"signal" validate:"required,oneof=TERM KILL HUP INT USR1 USR2" doc:"The signal: TERM, KILL, HUP, INT, USR1 or USR2" telemetry:"attr"`
+	PID    int          `json:"pid"    validate:"required,min=1" doc:"The process ID, such as 1234"                   telemetry:"attr"`
+	Signal types.Signal `json:"signal" validate:"required,enum"  doc:"The signal: TERM, KILL, HUP, INT, USR1 or USR2" telemetry:"attr"`
 }
 
 // Entry is one process of the host.
@@ -49,7 +51,7 @@ type Entry struct {
 
 // Result is what a signal did.
 type Result struct {
-	PID     int    `json:"pid"     doc:"The process ID"`
-	Signal  string `json:"signal"  doc:"The signal that was sent"`
-	Changed bool   `json:"changed" doc:"Whether the signal was sent"`
+	PID     int          `json:"pid"     doc:"The process ID"`
+	Signal  types.Signal `json:"signal"  doc:"The signal that was sent"`
+	Changed bool         `json:"changed" doc:"Whether the signal was sent"`
 }

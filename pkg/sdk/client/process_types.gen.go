@@ -59,24 +59,11 @@ type ProcessResult struct {
 	// The process ID.
 	PID int `json:"pid,omitempty"`
 
-	// The signal that was sent.
-	Signal string `json:"signal,omitempty"`
+	// Signal is the property signal.
+	Signal types.Signal `json:"signal,omitzero"`
 
 	// What happened on the host: ok, the operation ran and succeeded; failed, it
 	// ran and did not succeed; skipped, the host's OS family does not support it;
 	// timeout, the host did not answer, so nobody knows whether it ran.
 	Status types.RowStatus `json:"status"`
 }
-
-// ProcessSignalRequestSignal: The signal: TERM, KILL, HUP, INT, USR1 or USR2.
-type ProcessSignalRequestSignal string
-
-// The values of ProcessSignalRequestSignal.
-const (
-	ProcessSignalRequestSignalTERM ProcessSignalRequestSignal = "TERM"
-	ProcessSignalRequestSignalKILL ProcessSignalRequestSignal = "KILL"
-	ProcessSignalRequestSignalHUP  ProcessSignalRequestSignal = "HUP"
-	ProcessSignalRequestSignalINT  ProcessSignalRequestSignal = "INT"
-	ProcessSignalRequestSignalUSR1 ProcessSignalRequestSignal = "USR1"
-	ProcessSignalRequestSignalUSR2 ProcessSignalRequestSignal = "USR2"
-)

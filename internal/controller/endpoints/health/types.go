@@ -29,7 +29,7 @@ type ReadyInput struct{}
 
 // StatusInput is the input of status: the type of component to show.
 type StatusInput struct {
-	Component string `json:"component,omitempty" in:"query" validate:"omitempty,oneof=controller nats agent" doc:"Show only the components of this type: controller, nats or agent. The other parts of the status stay."`
+	Component types.ComponentType `json:"component,omitempty" in:"query" validate:"omitempty,enum" doc:"Show only the components of this type: controller, nats or agent. The other parts of the status stay."`
 }
 
 // HealthResponse is the liveness probe's answer.

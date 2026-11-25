@@ -139,6 +139,10 @@ err := c.Agent.Undrain(ctx, "web-01")
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### AddressFamily
+
+A `string`, one of `inet`, `inet6`, `dual`.
+
 ### AgentInfo
 
 | Field              | Type                         | Description                                                                                                                                                                                                                   |
@@ -229,19 +233,13 @@ Memory usage information.
 
 ### NetworkInterfaceResponse
 
-| Field    | Type                             | Description                                         |
-| -------- | -------------------------------- | --------------------------------------------------- |
-| `Family` | `NetworkInterfaceResponseFamily` | IP address family. It is one of: inet, inet6, dual. |
-| `IPv4`   | `string`                         |                                                     |
-| `IPv6`   | `string`                         |                                                     |
-| `MAC`    | `string`                         |                                                     |
-| `Name`   | `string`                         |                                                     |
-
-### NetworkInterfaceResponseFamily
-
-IP address family.
-
-A `string`, one of `inet`, `inet6`, `dual`.
+| Field    | Type            | Description |
+| -------- | --------------- | ----------- |
+| `Family` | `AddressFamily` |             |
+| `IPv4`   | `string`        |             |
+| `IPv6`   | `string`        |             |
+| `MAC`    | `string`        |             |
+| `Name`   | `string`        |             |
 
 ### NodeCondition
 

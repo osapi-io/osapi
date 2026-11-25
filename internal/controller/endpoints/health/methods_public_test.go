@@ -69,7 +69,7 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 func (s *MethodsPublicTestSuite) TestStatusComponent() {
 	tests := []struct {
 		name string
-		kind string
+		kind types.ComponentType
 		want []string
 	}{
 		{

@@ -36,15 +36,23 @@ import (
 )
 
 // localDeps is what the methods of a test group use.
+
+// tone is how to greet, a closed set for the enum rule.
+type tone string
+
+func (tone) Values() []tone { return []tone{"dry", "warm"} }
+
+func (v tone) Valid() bool { return v == "dry" || v == "warm" }
+
 type localDeps struct {
 	Prefix string
 }
 
 // greetIn is the input of greet: each field is a flag.
 type greetIn struct {
-	Name  string   `json:"name"  validate:"required,max=5"           doc:"Who to greet"`
-	Tone  string   `json:"tone"  validate:"omitempty,oneof=dry warm" doc:"How to greet"`
-	Tags  []string `json:"tags"  validate:"omitempty,dive,zzlocal"   doc:"Tags of the greeting"`
+	Name  string   `json:"name"  validate:"required,max=5"         doc:"Who to greet"`
+	Tone  tone     `json:"tone"  validate:"omitempty,enum"         doc:"How to greet"`
+	Tags  []string `json:"tags"  validate:"omitempty,dive,zzlocal" doc:"Tags of the greeting"`
 	Inner inner    `json:"inner"`
 }
 
@@ -111,6 +119,12 @@ func (s *LocalPublicTestSuite) SetupSuite() {
 		Schema:  rule.None,
 		Message: "is not a good tag",
 	})
+}
+
+func (s *LocalPublicTestSuite) TestParentValues() {
+	s.Equal(command.KnownParents(), command.ParentAgent.Values())
+	s.True(command.ParentNATS.Valid())
+	s.False(command.Parent("node").Valid())
 }
 
 func (s *LocalPublicTestSuite) TestDefine() {

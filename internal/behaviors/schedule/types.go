@@ -34,13 +34,13 @@ type GetInput struct {
 // written as /etc/cron.d/<name>, or as /etc/cron.<interval>/<name> for an
 // interval.
 type CreateInput struct {
-	Name        string            `json:"name"                   validate:"required,max=64,resource_name"                                                                doc:"The entry, and its file name, such as backup"                                                                         telemetry:"attr"`
-	Object      string            `json:"object"                 validate:"required,min=1,max=255"                                                                       doc:"The object that holds the entry, from osapi client file upload"`
-	Schedule    string            `json:"schedule,omitempty"     validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"                     doc:"A cron expression, such as */5 * * * *; give it or interval"`
-	Interval    string            `json:"interval,omitempty"     validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly" doc:"The interval of a script in /etc/cron.daily and the like; give it or schedule"`
-	User        string            `json:"user,omitempty"         validate:"omitempty,account_name"                                                                       doc:"The user the entry runs as"`
-	ContentType types.ContentType `json:"content_type,omitempty" validate:"omitempty,enum"                                                                               doc:"The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty"`
-	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                                                                                    doc:"The vars of a template, as key=value"`
+	Name        string            `json:"name"                   validate:"required,max=64,resource_name"                                            doc:"The entry, and its file name, such as backup"                                                                         telemetry:"attr"`
+	Object      string            `json:"object"                 validate:"required,min=1,max=255"                                                   doc:"The object that holds the entry, from osapi client file upload"`
+	Schedule    string            `json:"schedule,omitempty"     validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule" doc:"A cron expression, such as */5 * * * *; give it or interval"`
+	Interval    types.Interval    `json:"interval,omitempty"     validate:"required_without=Schedule,excluded_with=Schedule,omitempty,enum"          doc:"The interval of a script in /etc/cron.daily and the like; give it or schedule"`
+	User        string            `json:"user,omitempty"         validate:"omitempty,account_name"                                                   doc:"The user the entry runs as"`
+	ContentType types.ContentType `json:"content_type,omitempty" validate:"omitempty,enum"                                                           doc:"The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty"`
+	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                                                                doc:"The vars of a template, as key=value"`
 }
 
 // UpdateInput is a new object, or new settings, for an entry that osapi

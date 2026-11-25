@@ -5,10 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetNodeDockerState = typeof GetNodeDockerState[keyof typeof GetNodeDockerState];
+export type ContainerState = typeof ContainerState[keyof typeof ContainerState];
 
 
-export const GetNodeDockerState = {
+export const ContainerState = {
   running: 'running',
   stopped: 'stopped',
   all: 'all',

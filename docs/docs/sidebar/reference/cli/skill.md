@@ -48,7 +48,7 @@ Show and install the agent skills that this binary has.
 
 ### Flags (2)
 
-| FLAG   | TYPE      | VALIDATE                          | HELP                                                                     |
-| ------ | --------- | --------------------------------- | ------------------------------------------------------------------------ |
-| --path | string    | omitempty                         | The repository to install into; the current directory without it         |
-| --tool | \[]string | omitempty,dive,oneof=claude codex | Agent tool to install for: claude, codex (repeatable); claude without it |
+| FLAG   | TYPE          | VALIDATE            | HELP                                                                     |
+| ------ | ------------- | ------------------- | ------------------------------------------------------------------------ |
+| --path | string        | omitempty           | The repository to install into; the current directory without it         |
+| --tool | \[]skill.Tool | omitempty,dive,enum | Agent tool to install for: claude, codex (repeatable); claude without it |

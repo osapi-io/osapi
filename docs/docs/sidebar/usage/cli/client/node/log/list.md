@@ -132,7 +132,7 @@ The command fails in these cases:
 | -------------------------------------- | ------------------------ | ---------- |
 | Lines below one                        | `--lines -1`             | min        |
 | More than 10000 lines                  | `--lines 10001`          | max        |
-| A priority that journald does not have | `--priority loud`        | oneof      |
+| A priority that journald does not have | `--priority loud`        | enum       |
 | A unit with a space in it              | `--unit "nginx service"` | unit_name  |
 
 ## Permission

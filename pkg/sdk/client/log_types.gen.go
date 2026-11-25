@@ -4,21 +4,6 @@ package client
 
 import types "github.com/osapi-io/osapi/pkg/sdk/types"
 
-// GetNodeLogPriority: Only the entries at this priority or above.
-type GetNodeLogPriority string
-
-// The values of GetNodeLogPriority.
-const (
-	GetNodeLogPriorityEmerg   GetNodeLogPriority = "emerg"
-	GetNodeLogPriorityAlert   GetNodeLogPriority = "alert"
-	GetNodeLogPriorityCrit    GetNodeLogPriority = "crit"
-	GetNodeLogPriorityErr     GetNodeLogPriority = "err"
-	GetNodeLogPriorityWarning GetNodeLogPriority = "warning"
-	GetNodeLogPriorityNotice  GetNodeLogPriority = "notice"
-	GetNodeLogPriorityInfo    GetNodeLogPriority = "info"
-	GetNodeLogPriorityDebug   GetNodeLogPriority = "debug"
-)
-
 // LogEntry is the LogEntry of the spec.
 type LogEntry struct {
 	// Error message if the agent failed.
@@ -33,8 +18,8 @@ type LogEntry struct {
 	// The process that wrote it.
 	PID int `json:"pid,omitempty"`
 
-	// Its priority, by name.
-	Priority string `json:"priority,omitempty"`
+	// Priority is the property priority.
+	Priority Priority `json:"priority,omitzero"`
 
 	// What happened on the host: ok, the operation ran and succeeded; failed, it
 	// ran and did not succeed; skipped, the host's OS family does not support it;
@@ -47,3 +32,18 @@ type LogEntry struct {
 	// The syslog identifier that wrote it.
 	Unit string `json:"unit,omitempty"`
 }
+
+// Priority: Only the entries at this priority or above.
+type Priority string
+
+// The values of Priority.
+const (
+	PriorityEmerg   Priority = "emerg"
+	PriorityAlert   Priority = "alert"
+	PriorityCrit    Priority = "crit"
+	PriorityErr     Priority = "err"
+	PriorityWarning Priority = "warning"
+	PriorityNotice  Priority = "notice"
+	PriorityInfo    Priority = "info"
+	PriorityDebug   Priority = "debug"
+)

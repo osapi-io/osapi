@@ -4,6 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { Priority } from './priority';
 import type { RowStatus } from './rowStatus';
 
 export interface LogEntry {
@@ -15,8 +16,7 @@ export interface LogEntry {
   message?: string;
   /** The process that wrote it */
   pid?: number;
-  /** Its priority, by name */
-  priority?: string;
+  priority?: Priority;
   status: RowStatus;
   /** When journald recorded it, in RFC 3339 */
   timestamp?: string;

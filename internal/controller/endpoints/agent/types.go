@@ -112,11 +112,11 @@ type MemoryResponse struct {
 
 // NetworkInterfaceResponse is one network interface of the host.
 type NetworkInterfaceResponse struct {
-	Name   string `json:"name"             example:"eth0"`
-	IPv4   string `json:"ipv4,omitempty"   example:"192.168.1.10"`
-	IPv6   string `json:"ipv6,omitempty"   example:"fe80::1"`
-	MAC    string `json:"mac,omitempty"    example:"00:11:22:33:44:55"`
-	Family string `json:"family,omitempty" example:"dual"              doc:"IP address family." validate:"oneof=inet inet6 dual"`
+	Name   string              `json:"name"             example:"eth0"`
+	IPv4   string              `json:"ipv4,omitempty"   example:"192.168.1.10"`
+	IPv6   string              `json:"ipv6,omitempty"   example:"fe80::1"`
+	MAC    string              `json:"mac,omitempty"    example:"00:11:22:33:44:55"`
+	Family types.AddressFamily `json:"family,omitempty" example:"dual"              doc:"IP address family." validate:"enum"`
 }
 
 // NodeCondition is a condition the controller evaluated for the host.

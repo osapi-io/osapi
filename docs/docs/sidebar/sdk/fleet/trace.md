@@ -53,6 +53,10 @@ resp, err := c.Trace.Get(ctx, "26e448c9dbe1c4a8d216a98c675079c9", client.TraceGe
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### SpanStatus
+
+A `string`, one of `ok`, `error`.
+
 ### TraceNode
 
 | Field       | Type          | Description                                                                                                                                                                                   |
@@ -81,24 +85,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### TraceSpan
 
-| Field           | Type                | Description                                                   |
-| --------------- | ------------------- | ------------------------------------------------------------- |
-| `Attributes`    | `map[string]string` | The attributes of the span, each as text.                     |
-| `DurationMS`    | `float64`           | How long the span took, in milliseconds.                      |
-| `Kind`          | `string`            | The span kind, such as server, client, producer or consumer.  |
-| `Name`          | `string`            | The name of the span, such as job.process.                    |
-| `ParentSpanID`  | `string`            | The ID of the parent span. Empty for the root.                |
-| `Service`       | `string`            | The service that made the span, such as osapi-agent.          |
-| `SpanID`        | `string`            | The span ID.                                                  |
-| `StartTime`     | `time.Time`         | When the span started.                                        |
-| `Status`        | `TraceSpanStatus`   | Whether the work of the span failed. It is one of: ok, error. |
-| `StatusMessage` | `string`            | The error of a failed span.                                   |
-
-### TraceSpanStatus
-
-Whether the work of the span failed.
-
-A `string`, one of `ok`, `error`.
+| Field           | Type                | Description                                                  |
+| --------------- | ------------------- | ------------------------------------------------------------ |
+| `Attributes`    | `map[string]string` | The attributes of the span, each as text.                    |
+| `DurationMS`    | `float64`           | How long the span took, in milliseconds.                     |
+| `Kind`          | `string`            | The span kind, such as server, client, producer or consumer. |
+| `Name`          | `string`            | The name of the span, such as job.process.                   |
+| `ParentSpanID`  | `string`            | The ID of the parent span. Empty for the root.               |
+| `Service`       | `string`            | The service that made the span, such as osapi-agent.         |
+| `SpanID`        | `string`            | The span ID.                                                 |
+| `StartTime`     | `time.Time`         | When the span started.                                       |
+| `Status`        | `SpanStatus`        |                                                              |
+| `StatusMessage` | `string`            | The error of a failed span.                                  |
 
 ## Example
 

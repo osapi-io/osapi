@@ -39,9 +39,8 @@ type ScheduleCreateInput struct {
 	// renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type,omitzero"`
 
-	// The interval of a script in /etc/cron.daily and the like; give it or
-	// schedule. It is one of: hourly, daily, weekly, monthly.
-	Interval ScheduleCreateRequestInterval `json:"interval,omitzero"`
+	// Interval is the property interval.
+	Interval types.Interval `json:"interval,omitzero"`
 
 	// The entry, and its file name, such as backup.
 	Name string `json:"name"`

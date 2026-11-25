@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // InterfaceService calls the API's Interface group: the network interfaces of
@@ -74,9 +76,8 @@ type InterfaceCreateInput struct {
 	// The MTU, from 68 to 9000.
 	MTU int `json:"mtu,omitempty"`
 
-	// The type: ethernet, the default, for an interface the host has, or dummy for
-	// a dummy interface that netplan makes. It is one of: ethernet, dummy.
-	Type InterfaceCreateRequestType `json:"type,omitzero"`
+	// Type is the property type.
+	Type types.InterfaceType `json:"type,omitzero"`
 
 	// Turn on wake-on-LAN.
 	Wakeonlan bool `json:"wakeonlan,omitempty"`
@@ -136,9 +137,8 @@ type InterfaceUpdateInput struct {
 	// The MTU, from 68 to 9000.
 	MTU int `json:"mtu,omitempty"`
 
-	// The type: ethernet, the default, for an interface the host has, or dummy for
-	// a dummy interface that netplan makes. It is one of: ethernet, dummy.
-	Type InterfaceUpdateRequestType `json:"type,omitzero"`
+	// Type is the property type.
+	Type types.InterfaceType `json:"type,omitzero"`
 
 	// Turn on wake-on-LAN.
 	Wakeonlan bool `json:"wakeonlan,omitempty"`

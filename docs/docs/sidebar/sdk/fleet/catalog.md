@@ -77,20 +77,14 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CatalogColumn
 
-| Field     | Type                | Description                                                                                     |
-| --------- | ------------------- | ----------------------------------------------------------------------------------------------- |
-| `Columns` | `[]CatalogColumn`   | The columns of an object, or of a list of objects.                                              |
-| `Doc`     | `string`            | What the field is.                                                                              |
-| `Kind`    | `CatalogColumnKind` | What the field holds: value, values, object or list. It is one of: value, values, object, list. |
-| `Label`   | `string`            | The label of the field.                                                                         |
-| `Name`    | `string`            | The json name of the field.                                                                     |
-| `Render`  | `string`            | The render tag of the field, such as bytes.                                                     |
-
-### CatalogColumnKind
-
-What the field holds: value, values, object or list.
-
-A `string`, one of `value`, `values`, `object`, `list`.
+| Field     | Type              | Description                                        |
+| --------- | ----------------- | -------------------------------------------------- |
+| `Columns` | `[]CatalogColumn` | The columns of an object, or of a list of objects. |
+| `Doc`     | `string`          | What the field is.                                 |
+| `Kind`    | `ColumnKind`      |                                                    |
+| `Label`   | `string`          | The label of the field.                            |
+| `Name`    | `string`          | The json name of the field.                        |
+| `Render`  | `string`          | The render tag of the field, such as bytes.        |
 
 ### CatalogExample
 
@@ -102,27 +96,15 @@ A `string`, one of `value`, `values`, `object`, `list`.
 
 ### CatalogField
 
-| Field      | Type               | Description                                                                                                         |
-| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `Doc`      | `string`           | What the field is.                                                                                                  |
-| `In`       | `CatalogFieldIn`   | Where the field goes in the request: path, query or body. It is one of: path, query, body.                          |
-| `Kind`     | `CatalogFieldKind` | How a form takes the value: string, number, bool, list or object. It is one of: string, number, bool, list, object. |
-| `Name`     | `string`           | The json name of the field.                                                                                         |
-| `Options`  | `[]string`         | The values that the field takes: those of its type with enum, or of its oneof rule.                                 |
-| `Required` | `bool`             | The request needs the field.                                                                                        |
-| `Secret`   | `bool`             | The field is a secret.                                                                                              |
-
-### CatalogFieldIn
-
-Where the field goes in the request: path, query or body.
-
-A `string`, one of `path`, `query`, `body`.
-
-### CatalogFieldKind
-
-How a form takes the value: string, number, bool, list or object.
-
-A `string`, one of `string`, `number`, `bool`, `list`, `object`.
+| Field      | Type        | Description                                                                         |
+| ---------- | ----------- | ----------------------------------------------------------------------------------- |
+| `Doc`      | `string`    | What the field is.                                                                  |
+| `In`       | `FieldIn`   |                                                                                     |
+| `Kind`     | `FieldKind` |                                                                                     |
+| `Name`     | `string`    | The json name of the field.                                                         |
+| `Options`  | `[]string`  | The values that the field takes: those of its type with enum, or of its oneof rule. |
+| `Required` | `bool`      | The request needs the field.                                                        |
+| `Secret`   | `bool`      | The field is a secret.                                                              |
 
 ### CatalogMethod
 
@@ -173,6 +155,18 @@ A `string`, one of `string`, `number`, `bool`, `list`, `object`.
 | `Description` | `string`       | Who the role is for.                       |
 | `Name`        | `string`       | The name of the role, as a token names it. |
 | `Permissions` | `[]Permission` | The permissions of the role.               |
+
+### ColumnKind
+
+A `string`, one of `value`, `values`, `object`, `list`.
+
+### FieldIn
+
+A `string`, one of `path`, `query`, `body`.
+
+### FieldKind
+
+A `string`, one of `string`, `number`, `bool`, `list`, `object`.
 
 ### MethodKind
 

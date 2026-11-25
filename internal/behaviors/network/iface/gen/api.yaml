@@ -110,13 +110,7 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=68,max=9000
         type:
-          description: 'The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes'
-          enum:
-            - ethernet
-            - dummy
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=ethernet dummy
+          $ref: '#/components/schemas/InterfaceType'
         wakeonlan:
           description: Turn on wake-on-LAN
           type: boolean
@@ -234,6 +228,11 @@ components:
         - hostname
         - status
       type: object
+    InterfaceType:
+      enum:
+        - ethernet
+        - dummy
+      type: string
     InterfaceUpdateRequest:
       properties:
         addresses:
@@ -281,13 +280,7 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=68,max=9000
         type:
-          description: 'The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes'
-          enum:
-            - ethernet
-            - dummy
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=ethernet dummy
+          $ref: '#/components/schemas/InterfaceType'
         wakeonlan:
           description: Turn on wake-on-LAN
           type: boolean

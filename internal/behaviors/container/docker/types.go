@@ -20,11 +20,14 @@
 
 package docker
 
-import "github.com/osapi-io/osapi/internal/secret"
+import (
+	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // ListInput is list's input.
 type ListInput struct {
-	State string `json:"state,omitempty" validate:"omitempty,oneof=running stopped all" doc:"Only the containers in this state: running, stopped or all, the default"`
+	State types.ContainerState `json:"state,omitempty" validate:"omitempty,enum" doc:"Only the containers in this state: running, stopped or all, the default"`
 }
 
 // GetInput is get's input: the container, by its name or its ID.
