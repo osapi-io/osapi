@@ -30,7 +30,9 @@ controller:
     client_name: osapi-api-integration
     namespace: ""
     auth:
-      type: none
+      type: user_pass
+      username: controller
+      password: integration-controller
   metrics:
     enabled: false
   notifications:
@@ -42,8 +44,21 @@ nats:
     port: 4222
     store_dir: .nats/jetstream/
     namespace: ""
+    # Each osapi process connects as a user with its role, so the suite runs
+    # with the least permissions of each (#1415). The first user is the
+    # server's own setup and heartbeat.
     auth:
-      type: none
+      type: user_pass
+      users:
+        - username: setup
+          password: integration-setup
+          role: setup
+        - username: controller
+          password: integration-controller
+          role: controller
+        - username: agent
+          password: integration-agent
+          role: agent
 
   stream:
     name: JOBS
@@ -111,7 +126,9 @@ agent:
     client_name: osapi-agent-integration
     namespace: ""
     auth:
-      type: none
+      type: user_pass
+      username: agent
+      password: integration-agent
   consumer:
     name: jobs-agent
     max_deliver: 5

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package agent_test
+package templates_test
 
 import (
 	"context"
@@ -30,13 +30,13 @@ import (
 	"testing/fstest"
 	"time"
 
-	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
+	templateMocks "github.com/osapi-io/osapi/internal/templates/mocks"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/templates"
 )
 
 // SeedPublicTestSuite tests the exported SeedSystemTemplates function.
@@ -53,8 +53,8 @@ func (s *SeedPublicTestSuite) SetupTest() {
 }
 
 func (s *SeedPublicTestSuite) TearDownSubTest() {
-	agent.ResetEmbeddedFS()
-	agent.ResetReadEmbeddedFile()
+	templates.ResetEmbeddedFS()
+	templates.ResetReadEmbeddedFile()
 }
 
 var testTemplateData = []byte("#!/bin/sh\necho hello\n")
@@ -72,8 +72,8 @@ func testTemplateFS() fstest.MapFS {
 // to use the fake template FS.
 func setupTestTemplateFS() {
 	fakeFS := testTemplateFS()
-	agent.SetEmbeddedFS(fakeFS)
-	agent.SetReadEmbeddedFile(func(path string) ([]byte, error) {
+	templates.SetEmbeddedFS(fakeFS)
+	templates.SetReadEmbeddedFile(func(path string) ([]byte, error) {
 		return fs.ReadFile(fakeFS, path)
 	})
 }
@@ -84,17 +84,17 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 	tests := []struct {
 		name         string
 		setupFunc    func()
-		setupMock    func(ctrl *gomock.Controller, mockObj *agentMocks.MockTemplateStore, putNames *[]string)
+		setupMock    func(ctrl *gomock.Controller, mockObj *templateMocks.MockTemplateStore, putNames *[]string)
 		validateFunc func(error, *[]string)
 	}{
 		{
 			name: "when WalkDir callback receives error",
 			setupFunc: func() {
-				agent.SetEmbeddedFS(&errorWalkFS{})
+				templates.SetEmbeddedFS(&errorWalkFS{})
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *agentMocks.MockTemplateStore,
+				_ *templateMocks.MockTemplateStore,
 				_ *[]string,
 			) {
 			},
@@ -108,13 +108,13 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 		{
 			name: "when directory contains only .gitkeep skips it",
 			setupFunc: func() {
-				agent.SetEmbeddedFS(fstest.MapFS{
+				templates.SetEmbeddedFS(fstest.MapFS{
 					"resources/templates/.gitkeep": &fstest.MapFile{Data: []byte{}},
 				})
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *agentMocks.MockTemplateStore,
+				_ *templateMocks.MockTemplateStore,
 				_ *[]string,
 			) {
 				// No ObjectGetBytes or ObjectPutBytes calls expected — .gitkeep is skipped.
@@ -129,13 +129,13 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			name: "when ReadFile fails returns error",
 			setupFunc: func() {
 				setupTestTemplateFS()
-				agent.SetReadEmbeddedFile(func(_ string) ([]byte, error) {
+				templates.SetReadEmbeddedFile(func(_ string) ([]byte, error) {
 					return nil, fmt.Errorf("read failure")
 				})
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				_ *agentMocks.MockTemplateStore,
+				_ *templateMocks.MockTemplateStore,
 				_ *[]string,
 			) {
 			},
@@ -153,7 +153,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *agentMocks.MockTemplateStore,
+				mockObj *templateMocks.MockTemplateStore,
 				putNames *[]string,
 			) {
 				mockObj.EXPECT().
@@ -188,7 +188,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *agentMocks.MockTemplateStore,
+				mockObj *templateMocks.MockTemplateStore,
 				_ *[]string,
 			) {
 				// Return same content as embedded — SHA will match, no ObjectPutBytes call.
@@ -209,7 +209,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *agentMocks.MockTemplateStore,
+				mockObj *templateMocks.MockTemplateStore,
 				putNames *[]string,
 			) {
 				// Return different content — SHA will differ.
@@ -245,7 +245,7 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 			},
 			setupMock: func(
 				_ *gomock.Controller,
-				mockObj *agentMocks.MockTemplateStore,
+				mockObj *templateMocks.MockTemplateStore,
 				putNames *[]string,
 			) {
 				mockObj.EXPECT().
@@ -283,14 +283,14 @@ func (s *SeedPublicTestSuite) TestSeedSystemTemplates() {
 				tt.setupFunc()
 			}
 
-			mockObj := agentMocks.NewMockTemplateStore(ctrl)
+			mockObj := templateMocks.NewMockTemplateStore(ctrl)
 			putNames := &[]string{}
 
 			if tt.setupMock != nil {
 				tt.setupMock(ctrl, mockObj, putNames)
 			}
 
-			err := agent.SeedSystemTemplates(s.ctx, s.logger, mockObj, "templates")
+			err := templates.SeedSystemTemplates(s.ctx, s.logger, mockObj, "templates")
 			tt.validateFunc(err, putNames)
 		})
 	}
@@ -321,7 +321,7 @@ func (s *SeedPublicTestSuite) TestDefaultReadEmbeddedFile() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.validateFunc(agent.ExportDefaultReadEmbeddedFile(tc.path))
+			tc.validateFunc(templates.ExportDefaultReadEmbeddedFile(tc.path))
 		})
 	}
 }

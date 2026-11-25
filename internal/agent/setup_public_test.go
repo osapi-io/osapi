@@ -26,7 +26,6 @@ import (
 	"net"
 	"path/filepath"
 	"testing"
-	"testing/fstest"
 
 	"github.com/osapi-io/osapi/internal/provider/gohaitest"
 
@@ -58,7 +57,6 @@ func (s *SetupPublicTestSuite) SetupSubTest() {
 
 func (s *SetupPublicTestSuite) TearDownSubTest() {
 	agent.ResetPlatformFns()
-	agent.ResetEmbeddedFS()
 }
 
 // freePort returns a port that nothing listens on now.
@@ -136,13 +134,6 @@ func (s *SetupPublicTestSuite) TestSetup() {
 					func() string { return "darwin" },
 					func() bool { return false },
 				)
-			},
-		},
-		{
-			name: "when the templates do not seed makes the agent",
-			cfg:  func() config.Config { return agentConfig(s.T()) },
-			setup: func() {
-				agent.SetEmbeddedFS(fstest.MapFS{})
 			},
 		},
 		{

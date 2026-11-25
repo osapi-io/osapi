@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/templates"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/stretchr/testify/suite"
@@ -48,6 +50,7 @@ func (s *FilesPublicTestSuite) TestOpenFileBuckets() {
 	tests := []struct {
 		name       string
 		objErr     error
+		seedErr    error
 		kvErr      error
 		wantObject bool
 		wantState  bool
@@ -63,6 +66,12 @@ func (s *FilesPublicTestSuite) TestOpenFileBuckets() {
 			wantState: true,
 		},
 		{
+			name:       "when the templates do not seed runs with the Object Store",
+			seedErr:    errBoom,
+			wantObject: true,
+			wantState:  true,
+		},
+		{
 			name:       "when the file-state bucket fails runs without it",
 			kvErr:      errBoom,
 			wantObject: true,
@@ -73,6 +82,11 @@ func (s *FilesPublicTestSuite) TestOpenFileBuckets() {
 		s.Run(tc.name, func() {
 			ctrl := gomock.NewController(s.T())
 			nc := mocks.NewMockFileBuckets(ctrl)
+			defer controller.SetSeedTemplates(func(
+				context.Context, *slog.Logger, templates.TemplateStore, string,
+			) error {
+				return tc.seedErr
+			})()
 			nc.EXPECT().ObjectStoreCreateOrUpdate(gomock.Any(), gomock.Any()).Return(tc.objErr)
 			nc.EXPECT().KVStatus(gomock.Any(), "ns-file-state").Return(nil, tc.kvErr)
 

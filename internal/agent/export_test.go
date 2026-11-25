@@ -24,7 +24,6 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
-	"io/fs"
 	"log/slog"
 	"os"
 	osexec "os/exec"
@@ -63,37 +62,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	memProv "github.com/osapi-io/osapi/internal/provider/node/memory"
 )
-
-// SetEmbeddedFS overrides the embedded filesystem for testing.
-func SetEmbeddedFS(
-	f fs.FS,
-) {
-	embeddedFS = f
-}
-
-// ResetEmbeddedFS restores the default embedded filesystem.
-func ResetEmbeddedFS() {
-	embeddedFS = systemTemplates
-}
-
-// SetReadEmbeddedFile overrides the read function for testing.
-func SetReadEmbeddedFile(
-	fn func(string) ([]byte, error),
-) {
-	readEmbeddedFile = fn
-}
-
-// ResetReadEmbeddedFile restores the default read function.
-func ResetReadEmbeddedFile() {
-	readEmbeddedFile = defaultReadEmbeddedFile
-}
-
-// ExportDefaultReadEmbeddedFile exposes defaultReadEmbeddedFile for testing.
-func ExportDefaultReadEmbeddedFile(
-	path string,
-) ([]byte, error) {
-	return defaultReadEmbeddedFile(path)
-}
 
 // ExportProcessJobOperation exposes the private processJobOperation method for testing.
 func ExportProcessJobOperation(

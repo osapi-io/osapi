@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/templates"
+
 	"github.com/osapi-io/osapi/internal/controller/api"
 
 	"github.com/avfs/avfs"
@@ -222,4 +224,15 @@ func ExportTLSOptions(
 	cfg config.Config,
 ) ([]api.Option, error) {
 	return tlsOptions(cfg)
+}
+
+// SetSeedTemplates swaps the template seeder, and returns a func that puts it
+// back.
+func SetSeedTemplates(
+	fn func(context.Context, *slog.Logger, templates.TemplateStore, string) error,
+) func() {
+	old := seedTemplates
+	seedTemplates = fn
+
+	return func() { seedTemplates = old }
 }

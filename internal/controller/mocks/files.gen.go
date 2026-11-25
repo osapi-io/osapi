@@ -166,6 +166,21 @@ func (mr *MockFileBucketsMockRecorder) ObjectPut(ctx, bucket, meta, reader any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectPut", reflect.TypeOf((*MockFileBuckets)(nil).ObjectPut), ctx, bucket, meta, reader)
 }
 
+// ObjectPutBytes mocks base method.
+func (m *MockFileBuckets) ObjectPutBytes(ctx context.Context, bucket, name string, data []byte) (*jetstream.ObjectInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ObjectPutBytes", ctx, bucket, name, data)
+	ret0, _ := ret[0].(*jetstream.ObjectInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectPutBytes indicates an expected call of ObjectPutBytes.
+func (mr *MockFileBucketsMockRecorder) ObjectPutBytes(ctx, bucket, name, data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectPutBytes", reflect.TypeOf((*MockFileBuckets)(nil).ObjectPutBytes), ctx, bucket, name, data)
+}
+
 // ObjectStoreCreateOrUpdate mocks base method.
 func (m *MockFileBuckets) ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error {
 	m.ctrl.T.Helper()
