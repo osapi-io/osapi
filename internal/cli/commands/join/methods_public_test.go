@@ -22,17 +22,27 @@ package join_test
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
+	"math/big"
+	"net"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
+	natsserver "github.com/nats-io/nats-server/v2/server"
+	natstest "github.com/nats-io/nats-server/v2/test"
+	"github.com/osapi-io/osapi/internal/config"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/join"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 )
@@ -126,7 +136,12 @@ func (s *MethodsPublicTestSuite) deps() join.Deps {
 
 func (s *MethodsPublicTestSuite) TestCreate() {
 	ctx := context.Background()
-	in := join.CreateInput{Expires: "1h", Uses: 2, Labels: map[string]string{"group": "web"}}
+	in := join.CreateInput{
+		Expires:   "1h",
+		Uses:      2,
+		Labels:    map[string]string{"group": "web"},
+		Transport: "https",
+	}
 
 	d := s.deps()
 	got, err := join.Create(ctx, d, in)
@@ -167,6 +182,82 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	s.ErrorContains(err, "store the join token")
 }
 
+func (s *MethodsPublicTestSuite) TestCreateNATS() {
+	ctx := context.Background()
+	in := join.CreateInput{Expires: "1h", Uses: 1, Transport: "nats"}
+	natsDeps := func(url string) join.Deps {
+		d := s.deps()
+		d.Config.NATS.Server.URL = url
+		d.Config.Controller.NATS.Namespace = "osapi"
+		d.Config.NATS.Server.Auth.Users = []config.NATSServerUser{
+			{Username: "join", Password: "jp", Role: "join"},
+		}
+
+		return d
+	}
+
+	s.Run("a nats:// server: the join user and the namespace, no fingerprint", func() {
+		got, err := join.Create(ctx, natsDeps("nats://hub:4222"), in)
+		s.Require().NoError(err)
+		u, err := url.Parse(got.Join)
+		s.Require().NoError(err)
+		s.Equal("nats", u.Scheme)
+		s.Equal("hub:4222", u.Host)
+		s.Equal(got.Token, u.Query().Get("token"))
+		s.Equal("join", u.Query().Get("user"))
+		s.Equal("jp", u.Query().Get("pass"))
+		s.Equal("osapi", u.Query().Get("ns"))
+		s.Empty(u.Query().Get("fp"))
+	})
+
+	s.Run("a tls:// server: the fingerprint of its certificate", func() {
+		defer join.SetNATSFingerprint(func(url string, user config.NATSUser) (string, error) {
+			s.Equal("tls://hub:4222", url)
+			s.Equal("join", user.Username)
+
+			return "SHA256:ab", nil
+		})()
+		got, err := join.Create(ctx, natsDeps("tls://hub:4222"), in)
+		s.Require().NoError(err)
+		u, _ := url.Parse(got.Join)
+		s.Equal("SHA256:ab", u.Query().Get("fp"))
+	})
+
+	s.Run("a tls:// server that cannot be read makes no token", func() {
+		defer join.SetNATSFingerprint(func(string, config.NATSUser) (string, error) {
+			return "", errors.New("refused")
+		})()
+		before, err := join.List(ctx, s.deps(), join.ListInput{})
+		s.Require().NoError(err)
+		_, err = join.Create(ctx, natsDeps("tls://hub:4222"), in)
+		s.ErrorContains(err, "refused")
+		after, err := join.List(ctx, s.deps(), join.ListInput{})
+		s.Require().NoError(err)
+		s.Len(after.Items, len(before.Items))
+	})
+
+	s.Run("no address of NATS is the error", func() {
+		_, err := join.Create(ctx, natsDeps(""), in)
+		s.ErrorContains(err, "controller.join.url or nats.server.url")
+	})
+
+	s.Run("a real server that is not there is the error", func() {
+		_, err := join.Create(ctx, natsDeps("tls://127.0.0.1:1"), in)
+		s.ErrorContains(err, "read the certificate of the NATS server")
+	})
+
+	s.Run("a real server: its certificate", func() {
+		srv := tlsServer(s.T())
+		defer srv.Shutdown()
+		d := natsDeps(strings.Replace(srv.ClientURL(), "nats://", "tls://", 1))
+		d.Config.NATS.Server.Auth.Users = nil
+		got, err := join.Create(ctx, d, in)
+		s.Require().NoError(err)
+		u, _ := url.Parse(got.Join)
+		s.True(strings.HasPrefix(u.Query().Get("fp"), "SHA256:"))
+	})
+}
+
 func (s *MethodsPublicTestSuite) TestListAndRevoke() {
 	ctx := context.Background()
 	d := s.deps()
@@ -174,7 +265,7 @@ func (s *MethodsPublicTestSuite) TestListAndRevoke() {
 	s.Require().NoError(err)
 	s.Empty(got.Items)
 
-	made, err := join.Create(ctx, d, join.CreateInput{Expires: "1h", Uses: 1})
+	made, err := join.Create(ctx, d, join.CreateInput{Expires: "1h", Uses: 1, Transport: "https"})
 	s.Require().NoError(err)
 	got, err = join.List(ctx, d, join.ListInput{})
 	s.Require().NoError(err)
@@ -201,4 +292,34 @@ func (s *MethodsPublicTestSuite) TestListAndRevoke() {
 
 func TestMethodsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(MethodsPublicTestSuite))
+}
+
+// tlsServer is a NATS server with TLS, on a free port, with a self-signed
+// certificate.
+func tlsServer(
+	t *testing.T,
+) *natsserver.Server {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		NotAfter:     time.Now().Add(time.Hour),
+		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	opts := natstest.DefaultTestOptions
+	opts.Port = -1
+	opts.TLS = true
+	opts.TLSConfig = &tls.Config{
+		MinVersion:   tls.VersionTLS12,
+		Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: key}},
+	}
+
+	return natstest.RunServer(&opts)
 }

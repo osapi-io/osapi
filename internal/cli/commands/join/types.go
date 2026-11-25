@@ -27,6 +27,8 @@ type CreateInput struct {
 	Expires string            `json:"expires" validate:"required,go_duration" doc:"How long the token admits agents, as a Go duration such as 1h"       default:"1h"`
 	Uses    int               `json:"uses"    validate:"min=1"                doc:"How many agents the token admits"                                    default:"1"`
 	Labels  map[string]string `json:"labels"  validate:"omitempty"            doc:"Labels that each agent that joins with the token gets, as key=value"`
+	// Transport is how the agent joins: over NATS, or over HTTPS to the API.
+	Transport string `json:"transport" validate:"required,oneof=nats https" doc:"How the agent joins: nats, over the NATS server, or https, over the controller's API" default:"nats"`
 }
 
 // CreateOutput is a new token: printed one time, with its join string.

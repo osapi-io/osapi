@@ -121,3 +121,14 @@ func RejectedKVPrefix() string {
 func RevokedKVPrefix() string {
 	return revokedKVPrefix
 }
+
+// SetRespond swaps how a join is replied to, and returns a func that puts it
+// back.
+func SetRespond(
+	fn func(msg *nats.Msg, data []byte) error,
+) func() {
+	old := respond
+	respond = fn
+
+	return func() { respond = old }
+}

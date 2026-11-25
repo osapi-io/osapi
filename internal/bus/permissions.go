@@ -46,10 +46,14 @@ const (
 	// RoleSetup makes and updates each stream and bucket: osapi nats setup,
 	// and the embedded server, which also writes its own registration.
 	RoleSetup Role = "setup"
+	// RoleJoin is the bootstrap user of a join over NATS: it can send the
+	// join request and get its reply, and nothing else. The join string
+	// carries it.
+	RoleJoin Role = "join"
 )
 
 // Roles are each role, in order.
-var Roles = []Role{RoleController, RoleAgent, RoleSetup}
+var Roles = []Role{RoleController, RoleAgent, RoleSetup, RoleJoin}
 
 // Permissions are the subjects that a role may publish and subscribe to, as
 // NATS user permissions take them.
@@ -96,6 +100,12 @@ func RolePermissions(
 		p.pub[n.auditSubject+".>"] = true
 		p.pub[subject(namespace, pki.EnrollResponsePrefix)+".>"] = true
 		p.sub[subject(namespace, pki.EnrollRequestSuffix)] = true
+		p.sub[subject(namespace, pki.JoinRequestSuffix)] = true
+	case RoleJoin:
+		return Permissions{
+			Publish:   []string{subject(namespace, pki.JoinRequestSuffix)},
+			Subscribe: []string{"_INBOX.>"},
+		}, nil
 	case RoleSetup:
 		for _, s := range n.allStreams() {
 			p.admin(s)

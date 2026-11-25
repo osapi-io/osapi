@@ -75,3 +75,18 @@ func (r JoinRequest) Verify() bool {
 	return len(r.PublicKey) == ed25519.PublicKeySize &&
 		ed25519.Verify(r.PublicKey, r.signed(), r.Signature)
 }
+
+// JoinReply is the controller's reply to a join over NATS: its public key,
+// and the NATS user that the agent connects with after the join. Error is
+// why the join did not admit, and the other fields are empty then.
+type JoinReply struct {
+	ControllerPublicKey ed25519.PublicKey `json:"controller_public_key,omitempty"`
+	NATS                JoinNATS          `json:"nats"`
+	Error               string            `json:"error,omitempty"`
+}
+
+// JoinNATS is the NATS user of an agent, which the join gives it.
+type JoinNATS struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}

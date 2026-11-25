@@ -1025,4 +1025,29 @@ func NoteRename(
 	req job.Request,
 ) {
 	a.noteRename(req)
+// ExportJoinNATS calls joinNATS.
+func ExportJoinNATS(
+	ctx context.Context,
+	log *slog.Logger,
+	fs avfs.VFS,
+	cfg config.Config,
+) (config.Config, error) {
+	return joinNATS(ctx, log, fs, cfg)
+}
+
+// SetJoinNATSFns swaps how a join over NATS finds the host's identity and
+// sends its request, and returns a func that puts them back.
+func SetJoinNATSFns(
+	id func(avfs.VFS, string) (*identity.Identity, error),
+	req func(string, []nats.Option, string, []byte) ([]byte, error),
+) func() {
+	oldID, oldReq := getIdentity, natsRequest
+	if id != nil {
+		getIdentity = id
+	}
+	if req != nil {
+		natsRequest = req
+	}
+
+	return func() { getIdentity, natsRequest = oldID, oldReq }
 }

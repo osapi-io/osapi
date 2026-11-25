@@ -52,9 +52,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag     | Description                                              | Default |
-| -------- | -------------------------------------------------------- | ------- |
-| `--role` | The osapi process: controller, agent or setup (required) |         |
+| Flag     | Description                                                    | Default |
+| -------- | -------------------------------------------------------------- | ------- |
+| `--role` | The osapi process: controller, agent, setup or join (required) |         |
 
 ## Global flags
 

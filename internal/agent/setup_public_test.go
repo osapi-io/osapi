@@ -162,6 +162,15 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			},
 		},
 		{
+			name: "when the join over NATS fails returns the error",
+			cfg: func() config.Config {
+				cfg := agentConfig(s.T())
+				cfg.Agent.Join = "nats://hub?token=t"
+				return cfg
+			},
+			wantErr: "join over NATS: ",
+		},
+		{
 			name: "when nothing listens returns the error",
 			cfg: func() config.Config {
 				var cfg config.Config

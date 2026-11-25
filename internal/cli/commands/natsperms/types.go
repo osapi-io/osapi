@@ -22,7 +22,7 @@ package natsperms
 
 // GetInput is the input of get.
 type GetInput struct {
-	Role string `json:"role" validate:"required,oneof=controller agent setup" doc:"The osapi process: controller, agent or setup"`
+	Role string `json:"role" validate:"required,oneof=controller agent setup join" doc:"The osapi process: controller, agent, setup or join"`
 }
 
 // GetOutput is the subjects of a role.

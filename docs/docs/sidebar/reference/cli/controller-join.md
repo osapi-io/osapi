@@ -18,19 +18,20 @@ Make and remove the tokens that admit an agent at its join.
 
 ## [osapi controller join token create](../../usage/cli/controller/join/token/create.md)
 
-|             |                                                      |
-| ----------- | ---------------------------------------------------- |
-| Method      | token create                                         |
-| Description | Make a join token, and print it with the join string |
-| Refuses     | no expiry, a duration that is not one, no use        |
+|             |                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| Method      | token create                                                                                      |
+| Description | Make a join token, and print it with the join string                                              |
+| Refuses     | no expiry, a duration that is not one, no use, no transport, a transport that osapi does not have |
 
-### Flags (3)
+### Flags (4)
 
-| FLAG      | TYPE               | VALIDATE             | HELP                                                                |
-| --------- | ------------------ | -------------------- | ------------------------------------------------------------------- |
-| --expires | string             | required,go_duration | How long the token admits agents, as a Go duration such as 1h       |
-| --uses    | int                | min=1                | How many agents the token admits                                    |
-| --labels  | map\[string]string | omitempty            | Labels that each agent that joins with the token gets, as key=value |
+| FLAG        | TYPE               | VALIDATE                  | HELP                                                                                 |
+| ----------- | ------------------ | ------------------------- | ------------------------------------------------------------------------------------ |
+| --expires   | string             | required,go_duration      | How long the token admits agents, as a Go duration such as 1h                        |
+| --uses      | int                | min=1                     | How many agents the token admits                                                     |
+| --labels    | map\[string]string | omitempty                 | Labels that each agent that joins with the token gets, as key=value                  |
+| --transport | string             | required,oneof=nats https | How the agent joins: nats, over the NATS server, or https, over the controller's API |
 
 ## [osapi controller join token list](../../usage/cli/controller/join/token/list.md)
 

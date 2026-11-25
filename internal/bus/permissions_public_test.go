@@ -140,8 +140,20 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				"$JS.API.STREAM.UPDATE.osapi-JOBS",
 				"osapi.enroll.request",
 			},
-			sub:    []string{"_INBOX.abc", "osapi.enroll.request"},
+			sub:    []string{"_INBOX.abc", "osapi.enroll.request", "osapi.join.request"},
 			notSub: []string{"osapi.jobs.query._all"},
+		},
+		{
+			name: "the join user sends the join request, and nothing else",
+			role: bus.RoleJoin,
+			pub:  []string{"osapi.join.request"},
+			notPub: []string{
+				"osapi.enroll.request",
+				"$JS.API.INFO",
+				"$KV.osapi-agent-registry.x",
+			},
+			sub:    []string{"_INBOX.abc"},
+			notSub: []string{"osapi.join.request"},
 		},
 		{
 			name: "setup makes and updates each stream, and nothing else",

@@ -107,6 +107,16 @@ func startEnrollment(
 
 	background(ctx, log, "enrollment watcher", watcher.Start)
 
+	// A join over NATS: the agent sends the same signed request as over
+	// HTTPS, and gets the NATS user that it connects with after the join.
+	_, agentUser := cfg.JoinUsers()
+	background(ctx, log, "join over NATS", func(ctx context.Context) error {
+		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, pki.JoinNATS{
+			Username: agentUser.Username,
+			Password: agentUser.Password,
+		})
+	})
+
 	// A machine that went away without a delete keeps its key until an
 	// operator removes it, unless delete_after removes it.
 	if after, err := time.ParseDuration(cfg.Controller.PKI.DeleteAfter); err == nil && after > 0 {

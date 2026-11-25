@@ -25,7 +25,7 @@ var permissionsGetCmd = &cobra.Command{
 }
 
 func init() {
-	permissionsGetCmd.Flags().String("role", "", "The osapi process: controller, agent or setup")
+	permissionsGetCmd.Flags().String("role", "", "The osapi process: controller, agent, setup or join")
 	_ = permissionsGetCmd.MarkFlagRequired("role")
 	clicommand.AddCommands(natsperms.Group, permissionsGetCmd)
 }

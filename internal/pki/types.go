@@ -68,6 +68,10 @@ const (
 
 	// PKIRotateSuffix is the NATS subject suffix for key rotation notifications.
 	PKIRotateSuffix = "pki.rotate"
+
+	// JoinRequestSuffix is the NATS subject suffix of a join over NATS: a
+	// request that the controller replies to with a JoinReply.
+	JoinRequestSuffix = "join.request"
 )
 
 // EnrollmentRequest is sent by the agent to the controller. It carries both
