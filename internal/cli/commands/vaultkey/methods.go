@@ -30,13 +30,13 @@ import (
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 )
 
-// Create writes a new key to the key_file of the nats vault in.Name.
+// Create writes a new key to the key_file of the nats vault in.Vault.
 func Create(
 	ctx context.Context,
 	d Deps,
 	in Input,
 ) (CreateOutput, error) {
-	spec, err := natsSpec(d, in.Name)
+	spec, err := natsSpec(d, in.Vault)
 	if err != nil {
 		return CreateOutput{}, err
 	}
@@ -48,14 +48,14 @@ func Create(
 	return CreateOutput{Name: spec.Name, KeyFile: spec.KeyFile, KeyID: ring.ID()}, nil
 }
 
-// Rotate adds a new key to the key_file of the nats vault in.Name, encrypts
+// Rotate adds a new key to the key_file of the nats vault in.Vault, encrypts
 // each value of the vault again with it, and drops the old key.
 func Rotate(
 	ctx context.Context,
 	d Deps,
 	in Input,
 ) (RotateOutput, error) {
-	spec, err := natsSpec(d, in.Name)
+	spec, err := natsSpec(d, in.Vault)
 	if err != nil {
 		return RotateOutput{}, err
 	}

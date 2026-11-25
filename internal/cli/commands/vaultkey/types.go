@@ -22,7 +22,7 @@ package vaultkey
 
 // Input names the vault.
 type Input struct {
-	Name string `json:"name" validate:"required" doc:"The vault, as controller.secrets.vaults names it, such as default"`
+	Vault string `json:"vault" validate:"required" doc:"The vault, as controller.secrets.vaults names it, such as default"`
 }
 
 // CreateOutput is the key that create made.

@@ -10,44 +10,44 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
-var vaultKeyCreateCmd = &cobra.Command{
+var secretKeyCreateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey: "key",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi controller vault key create --name default\n\x1b[1;38;2;0;213;255mVault key:\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m      default\n  \x1b[38;2;10;143;176mKey file:\x1b[0m  /etc/osapi/secrets.key\n  \x1b[38;2;10;143;176mKey ID:\x1b[0m    3f9a1c0e7b2d4a58\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"default\",\n  \"key_file\": \"/etc/osapi/secrets.key\",\n  \"key_id\": \"3f9a1c0e7b2d4a58\"\n}\n```",
+		reference.Result:  "The command prints:\n\n```ansi\n$ osapi controller secret key create --vault default\n\x1b[1;38;2;0;213;255mVault key:\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m      default\n  \x1b[38;2;10;143;176mKey file:\x1b[0m  /etc/osapi/secrets.key\n  \x1b[38;2;10;143;176mKey ID:\x1b[0m    3f9a1c0e7b2d4a58\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"default\",\n  \"key_file\": \"/etc/osapi/secrets.key\",\n  \"key_id\": \"3f9a1c0e7b2d4a58\"\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi controller vault key create --name default",
+	Example: "  osapi controller secret key create --vault default",
 	Long:    "The command writes a new random AES-256 key to the `key_file` of the\nvault in `controller.secrets.vaults`, with the mode 0600. The vault\nencrypts each value with this key. The command does not replace a key that\nexists, because each value under it would then not decrypt. Use `rotate`\nfor that. It prints the ID of the key, not the key. The controller makes\nthe key at start when the file is not there, so run this only to make the\nkey before that.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		name, _ := cmd.Flags().GetString("name")
+		vault, _ := cmd.Flags().GetString("vault")
 
-		return clicommand.Run(cmd, vaultkey.Group, "key create", vaultkey.Input{Name: name})
+		return clicommand.Run(cmd, vaultkey.Group, "key create", vaultkey.Input{Vault: vault})
 	},
 	Short: "Make the key of a nats vault",
 	Use:   "create",
 }
 
-var vaultKeyRotateCmd = &cobra.Command{
+var secretKeyRotateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey: "key",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi controller vault key rotate --name default\n\x1b[1;38;2;0;213;255mVault key:\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m      default\n  \x1b[38;2;10;143;176mKey file:\x1b[0m  /etc/osapi/secrets.key\n  \x1b[38;2;10;143;176mKey ID:\x1b[0m    a07c5e91d3b8f246\n  \x1b[38;2;10;143;176mValues:\x1b[0m    12\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"default\",\n  \"key_file\": \"/etc/osapi/secrets.key\",\n  \"key_id\": \"a07c5e91d3b8f246\",\n  \"values\": 12\n}\n```",
+		reference.Result:  "The command prints:\n\n```ansi\n$ osapi controller secret key rotate --vault default\n\x1b[1;38;2;0;213;255mVault key:\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m      default\n  \x1b[38;2;10;143;176mKey file:\x1b[0m  /etc/osapi/secrets.key\n  \x1b[38;2;10;143;176mKey ID:\x1b[0m    a07c5e91d3b8f246\n  \x1b[38;2;10;143;176mValues:\x1b[0m    12\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"default\",\n  \"key_file\": \"/etc/osapi/secrets.key\",\n  \"key_id\": \"a07c5e91d3b8f246\",\n  \"values\": 12\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi controller vault key rotate --name default",
+	Example: "  osapi controller secret key rotate --vault default",
 	Long:    "The command adds a new key to the `key_file` of the vault, and keeps the\nold key for reads. Then it connects to NATS as the controller does,\nencrypts each value of the vault again with the new key, and removes the\nold key from the file. A controller that runs reads the file at each call,\nso it needs no restart. If the rotation stops, the file keeps the old key,\nand a second rotation completes it. The earlier versions of a value stay\nunder the old key, and do not decrypt after the rotation.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		name, _ := cmd.Flags().GetString("name")
+		vault, _ := cmd.Flags().GetString("vault")
 
-		return clicommand.Run(cmd, vaultkey.Group, "key rotate", vaultkey.Input{Name: name})
+		return clicommand.Run(cmd, vaultkey.Group, "key rotate", vaultkey.Input{Vault: vault})
 	},
 	Short: "Rotate the key of a nats vault",
 	Use:   "rotate",
 }
 
 func init() {
-	vaultKeyCreateCmd.Flags().String("name", "", "The vault, as controller.secrets.vaults names it, such as default")
-	_ = vaultKeyCreateCmd.MarkFlagRequired("name")
-	vaultKeyRotateCmd.Flags().String("name", "", "The vault, as controller.secrets.vaults names it, such as default")
-	_ = vaultKeyRotateCmd.MarkFlagRequired("name")
-	clicommand.AddCommands(vaultkey.Group, vaultKeyCreateCmd, vaultKeyRotateCmd)
+	secretKeyCreateCmd.Flags().String("vault", "", "The vault, as controller.secrets.vaults names it, such as default")
+	_ = secretKeyCreateCmd.MarkFlagRequired("vault")
+	secretKeyRotateCmd.Flags().String("vault", "", "The vault, as controller.secrets.vaults names it, such as default")
+	_ = secretKeyRotateCmd.MarkFlagRequired("vault")
+	clicommand.AddCommands(vaultkey.Group, secretKeyCreateCmd, secretKeyRotateCmd)
 }

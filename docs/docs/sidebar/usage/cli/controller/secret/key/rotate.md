@@ -11,13 +11,13 @@ The earlier versions of a value stay under the old key, and do not decrypt after
 the rotation.
 
 ```bash
-osapi controller vault key rotate [flags]
+osapi controller secret key rotate [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi controller vault key rotate --name default
+osapi controller secret key rotate --vault default
 ```
 
 ## Result
@@ -25,7 +25,7 @@ osapi controller vault key rotate --name default
 The command prints:
 
 ```ansi
-$ osapi controller vault key rotate --name default
+$ osapi controller secret key rotate --vault default
 [1;38;2;0;213;255mVault key:[0m
   [38;2;10;143;176mName:[0m      default
   [38;2;10;143;176mKey file:[0m  /etc/osapi/secrets.key
@@ -46,9 +46,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag     | Description                                                                  | Default |
-| -------- | ---------------------------------------------------------------------------- | ------- |
-| `--name` | The vault, as controller.secrets.vaults names it, such as default (required) |         |
+| Flag      | Description                                                                  | Default |
+| --------- | ---------------------------------------------------------------------------- | ------- |
+| `--vault` | The vault, as controller.secrets.vaults names it, such as default (required) |         |
 
 ## Global flags
 

@@ -91,7 +91,7 @@ func (s *KeyPublicTestSuite) TestCreateKey() {
 				return fs
 			},
 			file:    "/etc/osapi/secrets.key",
-			wantErr: "/etc/osapi/secrets.key exists: rotate the key with osapi controller vault key rotate",
+			wantErr: "/etc/osapi/secrets.key exists: rotate the key with osapi controller secret key rotate",
 		},
 		{
 			name:    "when the directory cannot be made returns the error",

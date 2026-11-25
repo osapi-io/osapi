@@ -225,8 +225,8 @@ it cannot make a key, or when a key that is there does not load.
 `create` makes the key before the first start, and `rotate` changes it:
 
 ```bash
-osapi controller vault key create --name default
-osapi controller vault key rotate --name default
+osapi controller secret key create --vault default
+osapi controller secret key rotate --vault default
 ```
 
 `key_env` names an environment variable that holds the key, in place of
@@ -244,7 +244,7 @@ osapi controller vault key rotate --name default
 | `controller.secrets.vaults[].name`     | string | none                                                                                                             | none                              | The name that a reference gives, such as default in secret://default/registry-token.                                                       |
 | `controller.secrets.vaults[].type`     | string | none                                                                                                             | none                              | The type of the vault, such as nats.                                                                                                       |
 | `controller.secrets.vaults[].targets`  | list   | none                                                                                                             | none                              | The targets that the secrets of the vault can go to, such as group:prod. Empty is each host.                                               |
-| `controller.secrets.vaults[].key_file` | string | none                                                                                                             | none                              | For a type that encrypts, such as nats: the file of the vault key. osapi controller vault key create writes it.                            |
+| `controller.secrets.vaults[].key_file` | string | none                                                                                                             | none                              | For a type that encrypts, such as nats: the file of the vault key. osapi controller secret key create writes it.                           |
 | `controller.secrets.vaults[].key_env`  | string | none                                                                                                             | none                              | For a type that encrypts, such as nats: the environment variable of the vault key, in place of key_file.                                   |
 | `controller.secrets.vaults[].config`   | map    | none                                                                                                             | none                              | The settings of the type. The struct of the type gives its keys.                                                                           |
 
