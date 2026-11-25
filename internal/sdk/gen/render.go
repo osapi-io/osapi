@@ -86,6 +86,10 @@ func files(
 	writeServices(wiring, m)
 	out["services.gen.go"] = wiring
 
+	spec := newFile()
+	writeSpec(spec, m)
+	out["spec.gen.go"] = spec
+
 	return out
 }
 
@@ -632,4 +636,43 @@ func snake(
 	}
 
 	return b.String()
+}
+
+// writeSpec writes Services: each service and method of the client, as
+// data, from the same model as the methods, so it cannot disagree with them.
+func writeSpec(
+	f *jen.File,
+	m *sdkmodel.Model,
+) {
+	services := make([]jen.Code, 0, len(m.Services))
+	for _, s := range m.Services {
+		methods := make([]jen.Code, 0, len(s.Methods))
+		for _, me := range s.Methods {
+			d := jen.Dict{
+				jen.Id("Name"):       jen.Lit(me.Name),
+				jen.Id("Doc"):        jen.Lit(me.Summary),
+				jen.Id("Permission"): jen.Lit(me.Permission),
+				jen.Id("HTTP"):       jen.Lit(me.HTTPMethod + " " + me.Path),
+				jen.Id("Examples"):   jen.Lit(len(me.Examples)),
+			}
+			if me.Input != nil {
+				d[jen.Id("Input")] = jen.Lit(me.Input.Name)
+			}
+			if me.Result != nil {
+				d[jen.Id("Result")] = jen.Lit(me.Result.String())
+			}
+			methods = append(methods, jen.Values(d))
+		}
+		services = append(services, jen.Values(jen.Dict{
+			jen.Id("Name"):    jen.Lit(s.Name),
+			jen.Id("Doc"):     jen.Lit(s.Doc),
+			jen.Id("Area"):    jen.Lit(s.Area),
+			jen.Id("Node"):    jen.Lit(s.Node),
+			jen.Id("Methods"): jen.Index().Id("MethodSpec").Values(methods...),
+		}))
+	}
+	f.Comment("Services is each service of the client and its methods, by the order of the spec.")
+	f.Func().Id("Services").Params().Index().Id("ServiceSpec").Block(
+		jen.Return(jen.Index().Id("ServiceSpec").Values(services...)),
+	)
 }
