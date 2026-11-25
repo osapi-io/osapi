@@ -27,6 +27,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/guide/sdktypes"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/spf13/cobra"
@@ -314,7 +316,11 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 func (s *MethodsPublicTestSuite) TestSpec() {
 	got, err := commanddsl.Spec(context.Background(), s.deps(), commanddsl.SpecInput{})
 	s.Require().NoError(err)
-	s.Equal(command.Spec.Sections(), got.Kinds)
+	s.Equal(
+		sdktypes.Append(command.Spec).Sections(),
+		got.Kinds,
+		"the DSL, then the types for values",
+	)
 }
 
 // TestValidate runs last: a broken group, once registered, stays.

@@ -27,6 +27,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/guide/sdktypes"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -279,7 +281,11 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 func (s *MethodsPublicTestSuite) TestSpec() {
 	got, err := endpointdsl.Spec(context.Background(), s.deps(), endpointdsl.SpecInput{})
 	s.Require().NoError(err)
-	s.Equal(endpoint.Spec.Sections(), got.Kinds)
+	s.Equal(
+		sdktypes.Append(endpoint.Spec).Sections(),
+		got.Kinds,
+		"the DSL, then the types for values",
+	)
 }
 
 func (s *MethodsPublicTestSuite) TestValidate() {

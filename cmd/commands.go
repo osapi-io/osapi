@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/guide/sdktypes"
+
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/cli/commands/chain"
 
@@ -189,7 +191,7 @@ func dslPages() []clidocs.DSL {
 			Intro: "Each part of a behavior definition: what it makes osapi do, and when to use it. " +
 				"`osapi dsl behavior spec get` prints the same list from this build. " +
 				"[Building a behavior](../behaviors.md) tells how to write one.",
-			Spec: collectors.Append(behavior.CurrentSpec(job.FactKeys()...)),
+			Spec: sdktypes.Append(collectors.Append(behavior.CurrentSpec(job.FactKeys()...))),
 		},
 		{
 			Slug: "chain", Title: "Chains", Position: 3,
@@ -203,14 +205,14 @@ func dslPages() []clidocs.DSL {
 			Intro: "Each part of an endpoint group: a route of the controller, its spec and its " +
 				"commands. `osapi dsl endpoint spec get` prints the same list from this build. " +
 				"[Building an endpoint](../endpoints.md) tells how to write one.",
-			Spec: endpoint.Spec,
+			Spec: sdktypes.Append(endpoint.Spec),
 		},
 		{
 			Slug: "command", Title: "Command DSL", Position: 5,
 			Intro: "Each part of a local group: a command that runs in the CLI and calls no API. " +
 				"`osapi dsl command spec get` prints the same list from this build. " +
 				"[Building a command](../commands.md) tells how to write one.",
-			Spec: command.Spec,
+			Spec: sdktypes.Append(command.Spec),
 		},
 	}
 }
@@ -241,7 +243,7 @@ func behaviorDSLDeps() behaviordsl.Deps {
 		Behaviors: behavior.All,
 		Validate:  behavior.Validate,
 		Keys:      config.Keys,
-		Spec:      func() guide.Spec { return collectors.Append(behavior.CurrentSpec(job.FactKeys()...)) },
+		Spec:      func() guide.Spec { return sdktypes.Append(collectors.Append(behavior.CurrentSpec(job.FactKeys()...))) },
 		OpenAPI: func(b *behavior.Behavior) (any, error) {
 			g := behavior.GroupOf(b)
 			if g == nil {
