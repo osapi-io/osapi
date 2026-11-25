@@ -1063,6 +1063,7 @@ func SetNewNATSUser(
 	newNATSUser = fn
 
 	return func() { newNATSUser = old }
+}
 
 // ExportLifecycle calls lifecycle, as the agent with machineID and hostname.
 func ExportLifecycle(
