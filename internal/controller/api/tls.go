@@ -24,9 +24,11 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"math/big"
@@ -142,4 +144,28 @@ func writeSelfSigned(
 	}
 
 	return nil
+}
+
+// CertFingerprint is the SHA-256 of the certificate that the API serves, as
+// SHA256:<hex>, which a join token pins: the certificate of c, or the
+// self-signed one in keyDir.
+func CertFingerprint(
+	c config.ServerTLS,
+	keyDir string,
+) (string, error) {
+	certFile := c.CertFile
+	if certFile == "" {
+		certFile = filepath.Join(keyDir, SelfSignedCert)
+	}
+	data, err := os.ReadFile(certFile)
+	if err != nil {
+		return "", fmt.Errorf("read the API's certificate: %w", err)
+	}
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return "", fmt.Errorf("%s: no PEM certificate", certFile)
+	}
+	sum := sha256.Sum256(block.Bytes)
+
+	return "SHA256:" + hex.EncodeToString(sum[:]), nil
 }

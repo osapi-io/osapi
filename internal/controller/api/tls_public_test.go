@@ -207,3 +207,30 @@ func (s *TLSPublicTestSuite) TestWithTLS() {
 	s.Require().NoError(err)
 	s.NotNil(api.New(config.Config{}, slog.Default(), api.WithTLS(c)))
 }
+
+// TestCertFingerprint is the SHA-256 of the served certificate, of a set
+// certificate or of the self-signed one.
+func (s *TLSPublicTestSuite) TestCertFingerprint() {
+	dir := s.T().TempDir()
+	_, err := api.TLSConfig(config.ServerTLS{}, dir)
+	s.Require().NoError(err)
+
+	self, err := api.CertFingerprint(config.ServerTLS{}, dir)
+	s.Require().NoError(err)
+	s.Regexp(`^SHA256:[0-9a-f]{64}$`, self)
+
+	set, err := api.CertFingerprint(
+		config.ServerTLS{CertFile: filepath.Join(dir, api.SelfSignedCert)},
+		"/elsewhere",
+	)
+	s.Require().NoError(err)
+	s.Equal(self, set, "the same certificate has the same fingerprint")
+
+	_, err = api.CertFingerprint(config.ServerTLS{}, s.T().TempDir())
+	s.ErrorContains(err, "read the API's certificate")
+
+	bad := filepath.Join(dir, "bad.crt")
+	s.Require().NoError(os.WriteFile(bad, []byte("not pem"), 0o600))
+	_, err = api.CertFingerprint(config.ServerTLS{CertFile: bad}, dir)
+	s.ErrorContains(err, "no PEM certificate")
+}

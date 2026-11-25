@@ -24,6 +24,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
 
 	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -55,6 +58,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
+	"github.com/osapi-io/osapi/internal/cli/commands/join"
 	"github.com/osapi-io/osapi/internal/cli/commands/natskey"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
@@ -86,6 +90,7 @@ func init() {
 	command.Provide(configcmd.Group, func() configcmd.Deps {
 		return configcmd.Deps{File: func() string { return viper.GetString("osapiFile") }}
 	})
+	command.Provide(join.Group, joinDeps)
 	command.Provide(sdk.Group, func() sdk.Deps {
 		return sdk.Deps{Types: types.All, Services: sdkclient.Services}
 	})
@@ -270,6 +275,29 @@ func chainDeps() chain.Deps {
 		Problems:    behavior.ChainProblems,
 		RunProblems: behaviortest.ChainProblems,
 		Spec:        behavior.CurrentChainSpec,
+	}
+}
+
+// joinDeps is what osapi controller join token uses: the config, a
+// connection to NATS as the controller makes it, and the time.
+func joinDeps() join.Deps {
+	return join.Deps{
+		Config: appConfig,
+		Now:    time.Now,
+		Dial: func(context.Context) (jointoken.KV, func(), error) {
+			n := appConfig.Controller.NATS
+			nc, err := bus.Dial(logger, &natsclient.Options{
+				Host: n.Host,
+				Port: n.Port,
+				Auth: bus.AuthOptions(n.Auth),
+				Name: "osapi-join-token",
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+
+			return nc, func() { bus.Close(nc) }, nil
+		},
 	}
 }
 

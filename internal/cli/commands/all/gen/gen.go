@@ -14,6 +14,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllerkey/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/endpointdsl/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/join/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natskey/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natssetup/gen"
