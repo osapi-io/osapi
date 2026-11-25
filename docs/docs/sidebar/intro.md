@@ -36,34 +36,6 @@ go install github.com/osapi-io/osapi@latest
 
 Or download a prebuilt binary from the [releases][] page.
 
-### Docker
-
-Each commit to main publishes a multi-arch distroless image to the [GitHub
-Container Registry][ghcr]. [cosign][] signs the images without a key, through
-GitHub OIDC. Each image has an [SBOM][] attestation.
-
-```bash
-docker pull ghcr.io/osapi-io/osapi:latest
-docker run ghcr.io/osapi-io/osapi:latest --help
-```
-
-Verify the image signature:
-
-```bash
-cosign verify ghcr.io/osapi-io/osapi:latest \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --certificate-identity-regexp github.com/osapi-io/osapi
-```
-
-Verify the build provenance and the SBOM attestations with the GitHub CLI:
-
-```bash
-gh attestation verify oci://ghcr.io/osapi-io/osapi:latest \
-  --owner osapi-io
-```
-
-Attestations are also visible on the [package page][ghcr].
-
 ## Get started
 
 ### 1. Start osapi
@@ -76,7 +48,7 @@ export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS=main=$(openssl rand -hex 32)
 osapi start &
 
 osapi controller token generate -r admin -u admin@example.com
-export OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN=<token from above>
+export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=<token from above>
 ```
 
 `osapi config list` shows every setting and where its value came from, and
@@ -167,6 +139,9 @@ what each behavior declares it runs with sudo.
 Every host answers for itself: `ok`, `failed`, or `skipped` where the behavior
 does not run on its platform.
 
+For more than one host, see [A fleet on osapi's NATS](fleet.md), and for a NATS
+server that you run already, [A fleet on your NATS](your-nats.md).
+
 ## Explore the Docs
 
 - [Core concepts](concepts.md): behaviors, building blocks, jobs, targets,
@@ -222,7 +197,4 @@ Cockpit or webmin when one person manages one server through a browser.
 [Cockpit]: https://cockpit-project.org/
 [webmin]: https://webmin.com/
 [releases]: https://github.com/osapi-io/osapi/releases
-[ghcr]: https://github.com/osapi-io/osapi/pkgs/container/osapi
-[cosign]: https://github.com/sigstore/cosign
-[SBOM]: https://en.wikipedia.org/wiki/Software_supply_chain
 <!-- prettier-ignore-end -->
