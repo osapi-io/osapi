@@ -86,9 +86,10 @@ func (a *Agent) startHeartbeat(
 			case <-ctx.Done():
 				a.deregister(machineID)
 				return
-			case <-a.renamed:
+			case done := <-a.renamed:
 				hostname = a.refreshHostname(hostname)
 				a.writeRegistration(ctx, machineID, hostname)
+				close(done)
 			case <-ticker.C:
 				hostname = a.refreshHostname(hostname)
 				a.writeRegistration(ctx, machineID, hostname)

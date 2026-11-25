@@ -67,7 +67,7 @@ type Agent struct {
 	// reads the new hostname and registers with it at once, not at its next
 	// tick: until then the controller, which took the new name from the
 	// update's answer, finds no verified registration of this agent.
-	renamed     chan struct{}
+	renamed     chan chan struct{}
 	logger      *slog.Logger
 	appConfig   config.Config
 	appFs       avfs.VFS

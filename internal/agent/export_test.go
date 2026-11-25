@@ -993,7 +993,18 @@ func ExportStoreObjects(
 func SignalRenamed(
 	a *Agent,
 ) {
-	a.renamed <- struct{}{}
+	a.renamed <- make(chan struct{})
+}
+
+// SetRenameWait sets how long a hostname update waits for the agent to
+// register, and returns a func that puts it back.
+func SetRenameWait(
+	d time.Duration,
+) func() {
+	old := renameWait
+	renameWait = d
+
+	return func() { renameWait = old }
 }
 
 // ExportNoteRename exposes the private noteRename for testing, and reports

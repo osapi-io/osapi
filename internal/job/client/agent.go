@@ -407,7 +407,12 @@ func agentInfoFromRegistration(
 // registration naming another agent is verified against that agent's key and
 // fails unless it was actually signed by it. The hostname must also match the
 // one recorded at acceptance: an accepted agent is not entitled to answer for
-// a host it did not enrol as, which is the claim GHSA-j73r describes.
+// a host it did not enrol as, which is the claim GHSA-j73r describes. A
+// hostname changes, though: a person renames a host, or cloud-init does.
+// Thus a signed registration with a new hostname renames the record, unless
+// another admitted machine that is online holds that name, which is the
+// claim that the pin refuses. The machine ID and the key are the identity;
+// the hostname follows them.
 //
 // The fingerprint needs no separate check. It is inside the signed bytes, so a
 // wrong one would have to be signed by the right key.
@@ -454,20 +459,85 @@ func (c *Client) applyRegistrationTrust(
 		return
 	}
 
-	if reg.Hostname != record.Hostname {
-		c.logger.WarnContext(
-			ctx, "registration claims a hostname the agent did not enrol as",
-			slog.String("machine_id", reg.MachineID),
-			slog.String("enrolled_as", record.Hostname),
-			slog.String("claimed", reg.Hostname),
-		)
-
+	if reg.Hostname != record.Hostname && !c.followHostname(ctx, reg, record.Hostname) {
 		info.Verified = false
 
 		return
 	}
 
 	info.Verified = true
+}
+
+// followHostname renames the record of reg's machine to reg's hostname,
+// which its key signed, and reports whether it did. It refuses a name that
+// another admitted machine that is online holds: an agent may not take
+// another host's target.
+func (c *Client) followHostname(
+	ctx context.Context,
+	reg *job.AgentRegistration,
+	was string,
+) bool {
+	if holder := c.hostnameHolder(ctx, reg.Hostname, reg.MachineID); holder != "" {
+		c.logger.WarnContext(
+			ctx, "registration claims the hostname of another admitted machine",
+			slog.String("machine_id", reg.MachineID),
+			slog.String("enrolled_as", was),
+			slog.String("claimed", reg.Hostname),
+			slog.String("held_by", holder),
+		)
+
+		return false
+	}
+	if err := c.agentKeyStore.RenameAgentKey(ctx, reg.MachineID, reg.Hostname); err != nil {
+		c.logger.WarnContext(ctx, "record the new hostname of an agent",
+			slog.String("machine_id", reg.MachineID),
+			slog.String("hostname", reg.Hostname),
+			slog.String("error", err.Error()),
+		)
+
+		return false
+	}
+	c.logger.InfoContext(ctx, "an agent's hostname changed",
+		slog.String("machine_id", reg.MachineID),
+		slog.String("old_hostname", was),
+		slog.String("new_hostname", reg.Hostname),
+	)
+	_ = c.WriteAgentTimelineEvent(ctx, reg.Hostname, "hostname_changed",
+		fmt.Sprintf("hostname changed from %s to %s", was, reg.Hostname))
+
+	return true
+}
+
+// hostnameHolder is the machine ID of another machine that is online, in the
+// registry, with hostname, and whose admitted record has it too; or "".
+func (c *Client) hostnameHolder(
+	ctx context.Context,
+	hostname string,
+	machineID string,
+) string {
+	keys, err := c.natsClient.KVKeys(ctx, c.registryBucket)
+	if err != nil {
+		// The registry cannot be read: assume the name is held, so that a
+		// claim is not taken on a guess.
+		return "unknown"
+	}
+	for _, key := range keys {
+		entry, err := c.natsClient.KVGet(ctx, c.registryBucket, key)
+		if err != nil {
+			continue
+		}
+		var other job.AgentRegistration
+		if json.Unmarshal(entry.Value(), &other) != nil ||
+			other.MachineID == machineID || other.Hostname != hostname {
+			continue
+		}
+		if rec, err := c.agentKeyStore.LookupAgentKey(ctx, other.MachineID); err == nil &&
+			rec.Hostname == hostname {
+			return other.MachineID
+		}
+	}
+
+	return ""
 }
 
 // sanitizeKeyForNATS sanitizes a string for use as a NATS key.

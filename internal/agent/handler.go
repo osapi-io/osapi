@@ -675,17 +675,29 @@ func (a *Agent) openJob(
 	return seal.Open(req.JobID, sealed, req.SealedFrom, a.pkiManager.EncryptionKey())
 }
 
-// noteRename tells the heartbeat that a hostname update completed, so the
-// agent registers with its new hostname at once. A rename that the heartbeat
-// has not read yet covers this one.
+// renameWait is how long a hostname update waits for the agent to register
+// with its new hostname, before it answers.
+var renameWait = 2 * time.Second
+
+// noteRename tells the heartbeat that a hostname update completed, and waits
+// until the agent registered with its new hostname, or renameWait. Thus the
+// answer of the update arrives after the registration, and a request to the
+// new name right after it finds the host. A rename that the heartbeat has not
+// read yet covers this one.
 func (a *Agent) noteRename(
 	req job.Request,
 ) {
 	if req.Category != job.CategoryBehavior || req.Operation != "hostname.update" {
 		return
 	}
+	done := make(chan struct{})
 	select {
-	case a.renamed <- struct{}{}:
+	case a.renamed <- done:
 	default:
+		return
+	}
+	select {
+	case <-done:
+	case <-time.After(renameWait):
 	}
 }

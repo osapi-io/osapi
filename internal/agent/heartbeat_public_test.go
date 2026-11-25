@@ -779,6 +779,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestNoteRename() {
 	get := job.Request{Category: job.CategoryBehavior, Operation: "hostname.get"}
 	update := job.Request{Category: job.CategoryBehavior, Operation: "hostname.update"}
 
+	defer agent.SetRenameWait(time.Millisecond)()
 	s.False(agent.ExportNoteRename(testAgent, get), "a read is not a rename")
 	s.True(agent.ExportNoteRename(testAgent, update))
 	s.True(agent.ExportNoteRename(testAgent, update), "a second rename waits with the first")
