@@ -35,9 +35,12 @@ import (
 
 // PendingAgent represents an agent awaiting enrollment acceptance.
 type PendingAgent struct {
-	MachineID string `json:"machine_id"`
-	Hostname  string `json:"hostname"`
-	PublicKey []byte `json:"public_key"`
+	// JoinLabels are, for a join, the labels of its token. They are not
+	// stored with a pending request.
+	JoinLabels map[string]string `json:"-"`
+	MachineID  string            `json:"machine_id"`
+	Hostname   string            `json:"hostname"`
+	PublicKey  []byte            `json:"public_key"`
 	// EncryptionKey is the agent's public X25519 key, in the nkeys form.
 	EncryptionKey string    `json:"encryption_key"`
 	Fingerprint   string    `json:"fingerprint"`
@@ -64,6 +67,8 @@ type AcceptedAgent struct {
 	// JoinToken is the ID of the join token that admitted the agent, or
 	// empty when an operator or auto_admit admitted it.
 	JoinToken string `json:"join_token,omitempty"`
+	// JoinLabels are the labels of that join token, which the agent took.
+	JoinLabels map[string]string `json:"join_labels,omitempty"`
 
 	// SupersededKey is the key replaced by the most recent rotation. It is
 	// absent unless a rotation is inside its grace period.

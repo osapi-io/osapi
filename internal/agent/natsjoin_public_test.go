@@ -97,6 +97,7 @@ func (s *NATSJoinPublicTestSuite) reply(
 var admitted = pki.JoinReply{
 	ControllerPublicKey: make([]byte, 32),
 	NATS:                pki.JoinNATS{Username: "agent", Password: "ap"},
+	Labels:              map[string]string{"group": "web", "dc": "east"},
 }
 
 func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
@@ -121,6 +122,11 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		)
 		s.False(got.Agent.NATS.TLS.Enabled)
 		s.Empty(got.Agent.Join, "the join is spent")
+		s.Equal(
+			map[string]string{"group": "web", "dc": "east"},
+			got.Agent.Labels,
+			"the token's labels",
+		)
 		info, err := s.fs.Stat(filepath.Join("/pki", agent.NATSJoinFile))
 		s.Require().NoError(err)
 		s.Equal("-rw-------", info.Mode().Perm().String())
@@ -344,6 +350,16 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
 
 		s.ErrorContains(err, "no entropy")
+	})
+
+	s.Run("the agent's own labels win over the token's", func() {
+		s.cfg.Agent.Labels = map[string]string{"group": "db"}
+		defer agent.SetJoinNATSFns(id, s.reply(admitted, "osapi.join.request"))()
+
+		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.Require().NoError(err)
+		s.Equal(map[string]string{"group": "db", "dc": "east"}, got.Agent.Labels)
 	})
 
 	s.Run("a saved join that is not JSON joins again", func() {

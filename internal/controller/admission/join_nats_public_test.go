@@ -110,6 +110,11 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		s.Empty(reply.Error)
 		s.Len(reply.ControllerPublicKey, 32)
 		s.Equal(pki.JoinNATS{Username: "agent", Password: "pw"}, reply.NATS)
+		s.Equal(
+			map[string]string{"group": "web"},
+			reply.Labels,
+			"the agent gets the token's labels",
+		)
 		s.Require().Len(log.entries, 1)
 		e := log.entries[0]
 		s.Equal("join-token:t1", e.User, "the token's ID, never the token")

@@ -91,7 +91,9 @@ func (r JoinRequest) Verify() bool {
 type JoinReply struct {
 	ControllerPublicKey ed25519.PublicKey `json:"controller_public_key,omitempty"`
 	NATS                JoinNATS          `json:"nats"`
-	Error               string            `json:"error,omitempty"`
+	// Labels are the labels of the join token, which the agent takes.
+	Labels map[string]string `json:"labels,omitempty"`
+	Error  string            `json:"error,omitempty"`
 }
 
 // JoinNATS is the NATS user of an agent, which the join gives it.

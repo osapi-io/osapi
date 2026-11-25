@@ -172,7 +172,7 @@ func (w *Watcher) joinReply(
 	if err := json.Unmarshal(data, &req); err != nil {
 		return req, pki.JoinReply{Error: "the join request is not JSON"}
 	}
-	key, err := w.Join(ctx, req)
+	key, labels, err := w.joinLabels(ctx, req)
 	if err != nil {
 		w.logger.Warn(
 			"refused a join over NATS",
@@ -197,5 +197,5 @@ func (w *Watcher) joinReply(
 		}
 	}
 
-	return req, pki.JoinReply{ControllerPublicKey: key, NATS: user}
+	return req, pki.JoinReply{ControllerPublicKey: key, NATS: user, Labels: labels}
 }

@@ -90,7 +90,9 @@ type savedJoin struct {
 	Username  string `json:"username,omitempty"`
 	Password  string `json:"password,omitempty"`
 	CredsFile string `json:"creds_file,omitempty"`
-	CA        string `json:"ca,omitempty"`
+	// Labels are the labels of the join token.
+	Labels map[string]string `json:"labels,omitempty"`
+	CA     string            `json:"ca,omitempty"`
 }
 
 // isNATSJoin reports whether s is a join string for NATS.
@@ -302,6 +304,7 @@ func joinNow(
 	s := savedJoin{
 		Scheme: j.scheme, Host: j.host, Port: j.port, Namespace: j.namespace,
 		Username: reply.NATS.Username, Password: reply.NATS.Password,
+		Labels: reply.Labels,
 	}
 	if reply.NATS.JWT != "" {
 		creds, err := natsjwt.Creds(reply.NATS.JWT, userSeed)
@@ -364,6 +367,17 @@ func applyJoin(
 			}
 			n.TLS.CAFile = ca
 		}
+	}
+	// The labels of the token are the agent's, except a label that the
+	// agent's own config sets.
+	for k, v := range s.Labels {
+		if _, ok := cfg.Agent.Labels[k]; ok {
+			continue
+		}
+		if cfg.Agent.Labels == nil {
+			cfg.Agent.Labels = map[string]string{}
+		}
+		cfg.Agent.Labels[k] = v
 	}
 	cfg.Agent.Join = ""
 
