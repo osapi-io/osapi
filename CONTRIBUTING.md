@@ -500,6 +500,26 @@ All logs use `log/slog`, the structured logger of Go.
   lifecycle events and state changes. Use `Warn` for a state that is degraded
   but works. Use `Error` for a failure that needs attention.
 
+### Audit and spans
+
+Decide a change's audit entry and spans when you design it, not after it merges.
+The [constitution] has the rule.
+
+- **Audit.** A request through the API is audited by the API's middleware. A
+  change of state that does not go through the API is not: a local command, such
+  as `controller join token create`, and the controller's own work, such as an
+  admission by `auto_admit`. Each of those writes its own entry
+  (osapi-io/osapi#1425).
+- **Spans.** Start a span with
+  `opspan.Start(ctx, tracerName, "<area>.<verb>", ...)` for each operation that
+  reads or writes NATS, a vault, or a file, or runs a command. End it with
+  `opspan.End(span, err)`, so an error marks it failed. Name attributes
+  `osapi.<thing>`, such as `osapi.agent.machine_id`.
+- **No secret.** A span or an audit entry never holds the value of a secret, a
+  token or a key: name it by its ID. `internal/audit/span_public_test.go` and
+  the redaction guard show how a test checks it.
+- **Test them.** A test of the change asserts its span, and its audit entry.
+
 ### Lifecycle
 
 A component has a lifecycle that does not block. `Start()` returns immediately.
@@ -927,6 +947,7 @@ Open a [Discussion] on GitHub.
 [building-a-behavior]: docs/docs/sidebar/development/behaviors.md
 [bun]: https://bun.sh
 [configuration]: docs/docs/sidebar/usage/configuration.md
+[constitution]: https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md#audit-and-telemetry-are-part-of-the-design
 [conventional commits]: https://www.conventionalcommits.org
 [developing-a-skill]: docs/docs/sidebar/development/skills.md
 [discussion]: https://github.com/osapi-io/osapi/discussions
