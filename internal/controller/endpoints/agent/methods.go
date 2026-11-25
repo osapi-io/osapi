@@ -91,7 +91,7 @@ func Drain(
 		return struct{}{}, fmt.Errorf("failed to set drain flag: %w", err)
 	}
 	if err := d.Jobs.WriteAgentTimelineEvent(
-		ctx, in.Hostname, "drain", "Drain initiated via API",
+		ctx, info.MachineID, in.Hostname, "drain", "Drain initiated via API",
 	); err != nil {
 		return struct{}{}, err
 	}
@@ -118,7 +118,7 @@ func Undrain(
 		return struct{}{}, fmt.Errorf("failed to delete drain flag: %w", err)
 	}
 	if err := d.Jobs.WriteAgentTimelineEvent(
-		ctx, in.Hostname, "undrain", "Undrain initiated via API",
+		ctx, info.MachineID, in.Hostname, "undrain", "Undrain initiated via API",
 	); err != nil {
 		return struct{}{}, err
 	}

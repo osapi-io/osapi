@@ -141,15 +141,15 @@ func (mr *MockJobsMockRecorder) SetDrainFlag(ctx, hostname any) *gomock.Call {
 }
 
 // WriteAgentTimelineEvent mocks base method.
-func (m *MockJobs) WriteAgentTimelineEvent(ctx context.Context, hostname, event, message string) error {
+func (m *MockJobs) WriteAgentTimelineEvent(ctx context.Context, machineID, hostname, event, message string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteAgentTimelineEvent", ctx, hostname, event, message)
+	ret := m.ctrl.Call(m, "WriteAgentTimelineEvent", ctx, machineID, hostname, event, message)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // WriteAgentTimelineEvent indicates an expected call of WriteAgentTimelineEvent.
-func (mr *MockJobsMockRecorder) WriteAgentTimelineEvent(ctx, hostname, event, message any) *gomock.Call {
+func (mr *MockJobsMockRecorder) WriteAgentTimelineEvent(ctx, machineID, hostname, event, message any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteAgentTimelineEvent", reflect.TypeOf((*MockJobs)(nil).WriteAgentTimelineEvent), ctx, hostname, event, message)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteAgentTimelineEvent", reflect.TypeOf((*MockJobs)(nil).WriteAgentTimelineEvent), ctx, machineID, hostname, event, message)
 }

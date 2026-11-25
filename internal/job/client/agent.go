@@ -300,7 +300,7 @@ func (c *Client) getAgent(
 		c.mergeFacts(ctx, &info)
 		c.overlayDrainState(ctx, &info)
 
-		timeline, _ := c.GetAgentTimeline(ctx, reg.Hostname)
+		timeline, _ := c.GetAgentTimeline(ctx, reg.MachineID, reg.Hostname)
 		if len(timeline) > 0 {
 			info.Timeline = timeline
 		}
@@ -316,7 +316,7 @@ func (c *Client) getAgent(
 
 	for i := range agents {
 		if agents[i].Hostname == target {
-			timeline, _ := c.GetAgentTimeline(ctx, target)
+			timeline, _ := c.GetAgentTimeline(ctx, agents[i].MachineID, target)
 			if len(timeline) > 0 {
 				agents[i].Timeline = timeline
 			}
@@ -502,7 +502,7 @@ func (c *Client) followHostname(
 		slog.String("old_hostname", was),
 		slog.String("new_hostname", reg.Hostname),
 	)
-	_ = c.WriteAgentTimelineEvent(ctx, reg.Hostname, "hostname_changed",
+	_ = c.WriteAgentTimelineEvent(ctx, reg.MachineID, reg.Hostname, "hostname_changed",
 		fmt.Sprintf("hostname changed from %s to %s", was, reg.Hostname))
 
 	return true

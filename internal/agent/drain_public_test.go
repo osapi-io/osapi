@@ -164,7 +164,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 		}).
 		AnyTimes()
 	s.mockJobClient.EXPECT().
-		WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -236,7 +236,7 @@ func (s *DrainPublicTestSuite) TestDrainWithAStuckConsumer() {
 		}).
 		AnyTimes()
 	s.mockJobClient.EXPECT().
-		WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -289,6 +289,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
+						gomock.Any(),
 						"test-agent",
 						"drain",
 						"Drain initiated",
@@ -297,11 +298,12 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
+						gomock.Any(),
 						"test-agent",
 						"cordoned",
 						"All jobs completed",
 					).
-					DoAndReturn(func(context.Context, string, string, string) error {
+					DoAndReturn(func(context.Context, string, string, string, string) error {
 						close(s.cordoned)
 						return nil
 					})
@@ -341,6 +343,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 					Return(false)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
+						gomock.Any(),
 						gomock.Any(),
 						"test-agent",
 						"undrain",

@@ -103,7 +103,7 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 						key string,
 						data []byte,
 					) (uint64, error) {
-						s.Contains(key, "timeline.server1.drain.")
+						s.Contains(key, "timeline.machine_001.drain.")
 
 						var te job.TimelineEvent
 						err := json.Unmarshal(data, &te)
@@ -184,6 +184,7 @@ func (s *AgentTimelinePublicTestSuite) TestWriteAgentTimelineEvent() {
 
 			tt.validateFunc(jobsClient.WriteAgentTimelineEvent(
 				s.ctx,
+				"machine-001",
 				tt.hostname,
 				tt.event,
 				tt.message,
@@ -395,7 +396,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				jobsClient = s.newClientWithoutState()
 			}
 
-			events, err := jobsClient.GetAgentTimeline(s.ctx, tt.hostname)
+			events, err := jobsClient.GetAgentTimeline(s.ctx, "machine-001", tt.hostname)
 
 			if tt.expectError {
 				s.Error(err)
