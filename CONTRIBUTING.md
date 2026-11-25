@@ -36,6 +36,15 @@ Thank you for your contribution to osapi.
   4. [How a request runs][job-architecture]. Targets, the KV-first job, the
      dispatch in the agent, the statuses and broadcast.
 
+- **Keep the descriptions in sync.** Each DSL, the Go SDK and gohai's collectors
+  describe themselves as data, and the binary prints it: `osapi dsl <dsl>`,
+  `osapi sdk` and `osapi agent collector`, each with `list`, `get --name`,
+  `spec get` and `validate`. Change the data (a spec term, a check, a doc
+  comment, an example), never a copy of it. A new part that describes itself
+  gets the four commands in the same change, and `cmd/describe_test.go` fails
+  without them. A change to a collector goes in gohai first. The rule is in
+  [Keep the descriptions in sync](https://github.com/osapi-io/specs/blob/main/CONTRIBUTING.md#keep-the-descriptions-in-sync).
+
 - **Examine the work that exists.** Look for a pull request or an issue about
   the change. If you find one, use what it says in your work.
 
