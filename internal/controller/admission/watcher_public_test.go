@@ -29,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/nats-io/nats.go"
@@ -268,7 +270,17 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setupMock()
+			log := &joinLog{}
+			autoWatcher.SetAudit(log)
 			admission.ExportHandleEnrollmentRequest(s.ctx, autoWatcher, tc.msg)
+			if tc.name == "auto-admits on successful store" {
+				s.Require().Len(log.entries, 1, "an admission by auto_admit is audited")
+				e := log.entries[0]
+				s.Equal(audit.ActorSystem, e.Actor)
+				s.Equal("auto_admit", e.User)
+				s.Equal("agent.admit", e.Action)
+				s.Equal("machine-001", e.Target)
+			}
 		})
 	}
 }

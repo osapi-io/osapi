@@ -7,6 +7,10 @@
 import type { AuditEntryStepsItem } from './auditEntryStepsItem';
 
 export interface AuditEntry {
+  /** What a change that did not go through the API did, such as agent.admit or jointoken.create. */
+  action?: string;
+  /** The kind of who made a change that did not go through the API: system, join-token or local. Absent for a request through the API. */
+  actor?: string;
   /** The steps on one line for each host, such as web-01: managedfile update (changed). */
   chain?: string[];
   /** Request duration in milliseconds. */
@@ -31,12 +35,14 @@ export interface AuditEntry {
   source_ip: string;
   /** The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call. */
   steps?: AuditEntryStepsItem[];
+  /** What the action was on, such as a machine ID or a join token's ID. */
+  target?: string;
   /** The target scope of the JWT token, absent when the token acts on each host. */
   targets?: string[];
   /** When the request was processed. */
   timestamp: string;
   /** OpenTelemetry trace ID for correlation. */
   trace_id?: string;
-  /** Authenticated user (JWT subject). */
+  /** Who did it: the authenticated user (JWT subject), or the name of another actor. */
   user: string;
 }

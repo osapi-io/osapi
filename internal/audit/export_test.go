@@ -20,7 +20,10 @@
 
 package audit
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"os/user"
+)
 
 // SetMarshalJSON overrides the marshalJSON variable for testing.
 func SetMarshalJSON(
@@ -32,4 +35,15 @@ func SetMarshalJSON(
 // ResetMarshalJSON restores the marshalJSON variable to its default.
 func ResetMarshalJSON() {
 	marshalJSON = json.Marshal
+}
+
+// SetCurrentUser swaps how the user of the operating system is read, and
+// returns a func that puts it back.
+func SetCurrentUser(
+	fn func() (*user.User, error),
+) func() {
+	old := currentUser
+	currentUser = fn
+
+	return func() { currentUser = old }
 }

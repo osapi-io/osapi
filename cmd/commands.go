@@ -26,6 +26,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 
 	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
@@ -307,7 +309,36 @@ func joinDeps() join.Deps {
 
 			return nc, func() { bus.Close(nc) }, nil
 		},
+		Audit: localAudit,
 	}
+}
+
+// localAudit writes e to the audit log of the controller, with a connection
+// to NATS as the controller makes it. The controller keeps no audit log when
+// nats.audit.stream is empty.
+func localAudit(
+	ctx context.Context,
+	e audit.Entry,
+) error {
+	a := appConfig.NATS.Audit
+	if a.Stream == "" {
+		return nil
+	}
+	n := appConfig.Controller.NATS
+	opts, err := bus.ConnectionOptions(n, "osapi-audit")
+	if err != nil {
+		return err
+	}
+	nc, err := bus.Dial(logger, opts)
+	if err != nil {
+		return err
+	}
+	defer bus.Close(nc)
+	store := audit.NewStreamStore(logger, nc,
+		job.ApplyNamespaceToInfraName(n.Namespace, a.Stream),
+		job.ApplyNamespaceToSubjects(n.Namespace, a.Subject))
+
+	return store.Write(ctx, e)
 }
 
 // vaultKeyDeps is what osapi controller secret key uses: the file system, the

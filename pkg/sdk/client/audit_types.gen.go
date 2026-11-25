@@ -10,6 +10,14 @@ import (
 
 // AuditEntry is the AuditEntry of the spec.
 type AuditEntry struct {
+	// What a change that did not go through the API did, such as agent.admit or
+	// jointoken.create.
+	Action string `json:"action,omitempty"`
+
+	// The kind of who made a change that did not go through the API: system,
+	// join-token or local. Absent for a request through the API.
+	Actor string `json:"actor,omitempty"`
+
 	// The steps on one line for each host, such as web-01: managedfile update
 	// (changed).
 	Chain []string `json:"chain,omitempty"`
@@ -51,6 +59,9 @@ type AuditEntry struct {
 	// no host made a call.
 	Steps []AuditEntryStepsItem `json:"steps,omitempty"`
 
+	// What the action was on, such as a machine ID or a join token's ID.
+	Target string `json:"target,omitempty"`
+
 	// The target scope of the JWT token, absent when the token acts on each host.
 	Targets []string `json:"targets,omitempty"`
 
@@ -60,7 +71,8 @@ type AuditEntry struct {
 	// OpenTelemetry trace ID for correlation.
 	TraceID string `json:"trace_id,omitempty"`
 
-	// Authenticated user (JWT subject).
+	// Who did it: the authenticated user (JWT subject), or the name of another
+	// actor.
 	User string `json:"user"`
 }
 

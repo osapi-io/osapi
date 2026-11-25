@@ -38,6 +38,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nkeys"
@@ -187,6 +189,32 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	s.kv.err = errors.New("kv down")
 	_, err = join.Create(ctx, s.deps(), in)
 	s.ErrorContains(err, "store the join token")
+}
+
+// TestAudit: a token that a local command makes or revokes is audited, by
+// its ID, with the user of the operating system as the actor.
+func (s *MethodsPublicTestSuite) TestAudit() {
+	ctx := context.Background()
+	var entries []audit.Entry
+	d := s.deps()
+	d.Audit = func(_ context.Context, e audit.Entry) error {
+		entries = append(entries, e)
+
+		return errors.New("the audit stream is down")
+	}
+
+	made, err := join.Create(ctx, d, join.CreateInput{Expires: "1h", Uses: 1, Transport: "https"})
+	s.Require().NoError(err, "a failed audit write does not fail the command")
+	_, err = join.Revoke(ctx, d, join.RevokeInput{ID: made.ID})
+	s.Require().NoError(err)
+
+	s.Require().Len(entries, 2)
+	s.Equal(audit.ActorLocal, entries[0].Actor)
+	s.Equal("jointoken.create", entries[0].Action)
+	s.Equal(made.ID, entries[0].Target)
+	s.NotContains(entries[0].RequestSummary, made.Token, "never the token")
+	s.Equal("jointoken.revoke", entries[1].Action)
+	s.Equal(made.ID, entries[1].Target)
 }
 
 func (s *MethodsPublicTestSuite) TestCreateNATS() {

@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -136,9 +138,17 @@ func (s *StorePublicTestSuite) TestDeleteStale() {
 			},
 		}
 
+		log := &joinLog{}
+		s.watcher.SetAudit(log)
 		deleted, err := s.watcher.DeleteStale(context.Background(), seen, after)
 
 		s.Require().NoError(err)
+		s.Len(log.entries, 2, "each deletion by delete_after is audited")
+		for _, e := range log.entries {
+			s.Equal(audit.ActorSystem, e.Actor)
+			s.Equal("delete_after", e.User)
+			s.Equal("agent.delete", e.Action)
+		}
 		s.ElementsMatch(
 			[]string{"gone", "old"},
 			deleted,

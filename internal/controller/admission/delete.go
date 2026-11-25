@@ -24,7 +24,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/audit"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
@@ -140,6 +143,9 @@ func (w *Watcher) DeleteStale(
 		)
 		w.event(ctx, r.MachineID, r.Hostname, "deleted",
 			"deleted by delete_after: not seen since "+at.UTC().Format(time.RFC3339))
+		w.record(ctx, audit.Change(ctx, audit.ActorSystem, "delete_after", "agent.delete",
+			r.MachineID, http.StatusOK,
+			"hostname="+r.Hostname+" last_seen="+at.UTC().Format(time.RFC3339)))
 		deleted = append(deleted, r.MachineID)
 	}
 

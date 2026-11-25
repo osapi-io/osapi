@@ -25,8 +25,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"sync"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/audit"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -81,8 +84,9 @@ type Watcher struct {
 	timeline Timeline
 	// joinTokens is the store of join tokens, which Join takes a use of.
 	joinTokens JoinTokens
-	// joinAudit is the audit log of the joins over NATS, or nil.
-	joinAudit JoinAudit
+	// audit is the audit log of the changes the watcher makes on its own,
+	// or nil.
+	audit audit.Writer
 }
 
 // SetRotationGracePeriod sets how long a replaced key keeps verifying after a
@@ -237,6 +241,15 @@ func (w *Watcher) handleEnrollmentRequest(
 			return
 		}
 		w.event(ctx, req.MachineID, req.Hostname, "admitted", "admitted by auto_admit")
+		w.record(ctx, audit.Change(
+			ctx,
+			audit.ActorSystem,
+			"auto_admit",
+			"agent.admit",
+			req.MachineID,
+			http.StatusOK,
+			"hostname="+req.Hostname+" fingerprint="+pending.Fingerprint,
+		))
 	}
 }
 

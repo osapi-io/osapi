@@ -126,6 +126,8 @@ The fields of each type are the properties of its schema in the API's spec.
 
 | Field            | Type                    | Description                                                                                                                                                                   |
 | ---------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Action`         | `string`                | What a change that did not go through the API did, such as agent.admit or jointoken.create.                                                                                   |
+| `Actor`          | `string`                | The kind of who made a change that did not go through the API: system, join-token or local. Absent for a request through the API.                                             |
 | `Chain`          | `[]string`              | The steps on one line for each host, such as web-01: managedfile update (changed).                                                                                            |
 | `DurationMS`     | `int64`                 | Request duration in milliseconds.                                                                                                                                             |
 | `ID`             | `string`                | Unique identifier for the audit entry.                                                                                                                                        |
@@ -138,10 +140,11 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Roles`          | `[]string`              | Roles from the JWT token.                                                                                                                                                     |
 | `SourceIP`       | `string`                | Client IP address.                                                                                                                                                            |
 | `Steps`          | `[]AuditEntryStepsItem` | The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call. |
+| `Target`         | `string`                | What the action was on, such as a machine ID or a join token's ID.                                                                                                            |
 | `Targets`        | `[]string`              | The target scope of the JWT token, absent when the token acts on each host.                                                                                                   |
 | `Timestamp`      | `time.Time`             | When the request was processed.                                                                                                                                               |
 | `TraceID`        | `string`                | OpenTelemetry trace ID for correlation.                                                                                                                                       |
-| `User`           | `string`                | Authenticated user (JWT subject).                                                                                                                                             |
+| `User`           | `string`                | Who did it: the authenticated user (JWT subject), or the name of another actor.                                                                                               |
 
 ### AuditEntryResponse
 
