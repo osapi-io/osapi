@@ -243,6 +243,6 @@ func SetSeedTemplates(
 func ExportJoinAgentUser(
 	cfg config.Config,
 	namespace string,
-) (admission.AgentUser, error) {
+) (admission.AgentUser, admission.Mint, error) {
 	return joinAgentUser(cfg, namespace)
 }

@@ -120,6 +120,9 @@ func (a *Agent) Start() {
 	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
 	a.lifecycle(a.ctx, "started", "started, version "+a.versionOrUnknown())
 
+	// In operator mode, renew the JWT of the agent's NATS user.
+	a.startRenewal(a.ctx)
+
 	// Collect and publish system facts.
 	a.startFacts(a.ctx, a.machineID, a.hostname)
 

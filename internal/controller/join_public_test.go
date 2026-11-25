@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
@@ -48,7 +49,7 @@ func (s *JoinUserPublicTestSuite) TestJoinAgentUser() {
 	s.Run("static users give each agent the agent user", func() {
 		var cfg config.Config
 		cfg.Controller.Join.Agent = config.NATSUser{Username: "agent", Password: "ap"}
-		user, err := controller.ExportJoinAgentUser(cfg, "osapi")
+		user, _, err := controller.ExportJoinAgentUser(cfg, "osapi")
 		s.Require().NoError(err)
 		got, err := user(pki.JoinRequest{})
 		s.Require().NoError(err)
@@ -65,7 +66,7 @@ func (s *JoinUserPublicTestSuite) TestJoinAgentUser() {
 		cfg.Controller.Join.SigningKeyFile = file
 		cfg.Controller.Join.Account = acctPub
 		cfg.NATS.Stream = config.NATSStream{Name: "JOBS", Subjects: "jobs.>"}
-		user, err := controller.ExportJoinAgentUser(cfg, "osapi")
+		user, _, err := controller.ExportJoinAgentUser(cfg, "osapi")
 		s.Require().NoError(err)
 
 		kp, _ := nkeys.CreateUser()
@@ -84,5 +85,15 @@ func (s *JoinUserPublicTestSuite) TestJoinAgentUser() {
 
 		_, err = user(pki.JoinRequest{MachineID: "m-1", NATSUserKey: "bad"})
 		s.ErrorContains(err, "is not a user public key")
+		s.Zero(uc.Expires, "with no agent_ttl the JWT never expires")
+
+		cfg.Controller.Join.AgentTTL = "1h"
+		_, mint, err := controller.ExportJoinAgentUser(cfg, "osapi")
+		s.Require().NoError(err)
+		token, err := mint(pub, "m-1")
+		s.Require().NoError(err)
+		uc, err = jwt.DecodeUserClaims(token)
+		s.Require().NoError(err)
+		s.InDelta(time.Now().Add(time.Hour).Unix(), uc.Expires, 5, "the JWT lasts agent_ttl")
 	})
 }

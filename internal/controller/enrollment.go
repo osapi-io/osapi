@@ -120,13 +120,20 @@ func startEnrollment(
 	if auditLog != nil {
 		watcher.SetAudit(auditLog)
 	}
-	agentUser, err := joinAgentUser(cfg, namespace)
+	agentUser, mint, err := joinAgentUser(cfg, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("join over NATS: %w", err)
 	}
 	background(ctx, log, "join over NATS", func(ctx context.Context) error {
 		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, agentUser)
 	})
+	// In operator mode an agent renews the JWT of its NATS user; only an
+	// admitted machine gets a new one.
+	if mint != nil {
+		background(ctx, log, "renewal over NATS", func(ctx context.Context) error {
+			return watcher.ServeRenew(ctx, conn.NATS.NC.QueueSubscribe, mint)
+		})
+	}
 
 	// A machine that went away without a delete keeps its key until an
 	// operator removes it, unless delete_after removes it.
@@ -149,30 +156,41 @@ var errNoUserKey = errors.New("the agent sent no NATS user key: upgrade it")
 func joinAgentUser(
 	cfg config.Config,
 	namespace string,
-) (admission.AgentUser, error) {
+) (admission.AgentUser, admission.Mint, error) {
 	j := cfg.Controller.Join
 	if j.SigningKeyFile == "" {
 		_, user := cfg.JoinUsers()
 
 		return admission.StaticUser(
 			pki.JoinNATS{Username: user.Username, Password: user.Password},
-		), nil
+		), nil, nil
 	}
 	signer, err := natsjwt.Load(j.SigningKeyFile, j.Account)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	perms, _ := bus.RolePermissions(bus.RoleAgent, namespace, cfg.NATS)
+	// The config's check refuses an agent_ttl that is not a duration; an
+	// empty one is no expiry.
+	ttl, _ := time.ParseDuration(j.AgentTTL)
+	mint := func(userKey string, machineID string) (string, error) {
+		var expires time.Time
+		if ttl > 0 {
+			expires = time.Now().Add(ttl)
+		}
+
+		return signer.Mint(userKey, machineID, perms, expires)
+	}
 
 	return func(req pki.JoinRequest) (pki.JoinNATS, error) {
 		if req.NATSUserKey == "" {
 			return pki.JoinNATS{}, errNoUserKey
 		}
-		token, err := signer.Mint(req.NATSUserKey, req.MachineID, perms, time.Time{})
+		token, err := mint(req.NATSUserKey, req.MachineID)
 		if err != nil {
 			return pki.JoinNATS{}, err
 		}
 
 		return pki.JoinNATS{JWT: token}, nil
-	}, nil
+	}, mint, nil
 }

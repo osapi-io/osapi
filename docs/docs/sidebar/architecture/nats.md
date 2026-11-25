@@ -130,6 +130,25 @@ controller admits each agent by its own key, and verifies each answer that it
 signs ([Agent identity](../features/platform/agent-identity.md)). Thus a shared
 user does not let one agent answer for another.
 
+## Revoking an agent in operator mode
+
+In operator mode, an agent's NATS user is a JWT that the controller minted. With
+`controller.join.agent_ttl`, such as `24h`, the JWT expires, and the agent
+renews it over NATS when a third of its life is left. The controller renews only
+a machine that is admitted, and only for a request that the machine's admitted
+key signed. Thus `osapi client admission revoke` cuts an agent from NATS when
+its JWT expires, also on a NATS server that osapi does not run.
+
+Pick the TTL by how fast a revocation must take effect, and how long a host can
+be off: an agent that is off for longer than the TTL cannot renew, and joins
+again with a new join string. An empty `agent_ttl` gives a JWT that never
+expires. Then osapi still refuses each answer and registration that a revoked
+agent signs, but the agent stays on the bus.
+
+The credentials that `osapi nats auth operator create` makes carry the subjects
+of the version that made them. After an upgrade that adds a subject, such as the
+renewal, make them again, or add the subject with `nsc edit user`.
+
 ## Hosts that come and go
 
 You do not make a NATS user for each host. The agents share their user, so a

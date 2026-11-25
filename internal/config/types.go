@@ -355,6 +355,9 @@ type ControllerJoin struct {
 	// SigningKeyFile is, in operator mode, an account signing key seed, which
 	// the controller mints the users of a join with.
 	SigningKeyFile string `mapstructure:"signing_key_file" doc:"For a NATS server in operator mode: a file with a signing key seed (SA...) of osapi's account. The controller mints the join's bootstrap user, and each agent's own user, with it. Empty gives the static users." choice:"set for operator mode"`
+	// AgentTTL is how long the JWT of an agent's NATS user lasts, in
+	// operator mode. The agent renews it before then.
+	AgentTTL string `mapstructure:"agent_ttl" doc:"For operator mode: how long the JWT of an agent's NATS user lasts, as a Go duration such as 24h. The agent renews it when a third is left, and the controller renews only an admitted machine: a revoked agent is cut from NATS when its JWT expires. Empty never expires." validate:"omitempty,go_duration" choice:"empty: the JWT never expires"`
 	// Account is the public key of the account of SigningKeyFile.
 	Account string `mapstructure:"account" doc:"For operator mode: the public key (A...) of osapi's account, which signing_key_file signs for." choice:"set for operator mode"`
 	// Agent is the NATS user that the join gives the agent.
