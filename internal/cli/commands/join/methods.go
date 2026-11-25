@@ -28,7 +28,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -210,9 +209,9 @@ func create(
 	if err != nil {
 		return CreateOutput{}, err
 	}
-	record(
+	audit.RecordLocal(
 		ctx,
-		d,
+		d.Audit,
 		"jointoken.create",
 		t.ID,
 		fmt.Sprintf("uses=%d expires=%s transport=%s labels=%v",
@@ -268,7 +267,7 @@ func Revoke(
 	if err := s.Revoke(ctx, in.ID); err != nil {
 		return RevokeOutput{}, err
 	}
-	record(ctx, d, "jointoken.revoke", in.ID, "")
+	audit.RecordLocal(ctx, d.Audit, "jointoken.revoke", in.ID, "")
 
 	return RevokeOutput{ID: in.ID}, nil
 }
@@ -288,22 +287,4 @@ func bootstrapCreds(
 	perms, _ := bus.RolePermissions(bus.RoleJoin, d.Config.Controller.NATS.Namespace, d.Config.NATS)
 
 	return signer.NewCreds("osapi-join", perms, expires)
-}
-
-// record writes the audit entry of a change that this local command made:
-// the user of the operating system is the actor. The token is never in it,
-// only its ID. A write that fails does not fail the command, which already
-// made the change: it says so on stderr through the log.
-func record(
-	ctx context.Context,
-	d Deps,
-	action string,
-	target string,
-	summary string,
-) {
-	if d.Audit == nil {
-		return
-	}
-	_ = d.Audit(ctx, audit.Change(ctx, audit.ActorLocal, audit.LocalUser(),
-		action, target, http.StatusOK, summary))
 }

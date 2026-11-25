@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
@@ -44,6 +46,8 @@ func Create(
 	if err != nil {
 		return CreateOutput{}, fmt.Errorf("vault %q: %w", spec.Name, err)
 	}
+
+	audit.RecordLocal(ctx, d.Audit, "vaultkey.create", spec.Name, "key_id="+ring.ID())
 
 	return CreateOutput{Name: spec.Name, KeyFile: spec.KeyFile, KeyID: ring.ID()}, nil
 }
@@ -84,6 +88,9 @@ func Rotate(
 	if err != nil {
 		return RotateOutput{}, fmt.Errorf("vault %q: %w", spec.Name, err)
 	}
+
+	audit.RecordLocal(ctx, d.Audit, "vaultkey.rotate", spec.Name,
+		fmt.Sprintf("key_id=%s values=%d", ring.ID(), n))
 
 	return RotateOutput{Name: spec.Name, KeyFile: spec.KeyFile, KeyID: ring.ID(), Values: n}, nil
 }

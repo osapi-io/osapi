@@ -101,16 +101,20 @@ Some changes do not go through the API, and the log has them too. Such an entry
 has an `actor`, the kind of who made the change, an `action` and a `target`. Its
 `user` is the name of the actor:
 
-| Actor        | User                                          | Action                                  | Target         |
-| ------------ | --------------------------------------------- | --------------------------------------- | -------------- |
-| `system`     | `auto_admit`                                  | `agent.admit`                           | the machine ID |
-| `system`     | `delete_after`                                | `agent.delete`                          | the machine ID |
-| `join-token` | the token's ID                                | `agent.join` (200, or 403 when refused) | the machine ID |
-| `local`      | the user of the operating system of a command | `jointoken.create`, `jointoken.revoke`  | the token's ID |
+| Actor        | User                                          | Action                                                                                         | Target                                            |
+| ------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `system`     | `auto_admit`                                  | `agent.admit`                                                                                  | the machine ID                                    |
+| `system`     | `delete_after`                                | `agent.delete`                                                                                 | the machine ID                                    |
+| `join-token` | the token's ID                                | `agent.join` (200, or 403 when refused)                                                        | the machine ID                                    |
+| `local`      | the user of the operating system of a command | `jointoken.create`, `jointoken.revoke`, `token.generate`, `vaultkey.create`, `vaultkey.rotate` | the token's ID, the token's subject, or the vault |
 
 A local command connects to NATS as the controller does, and writes its entry to
 the audit stream. An entry never has the token or a secret: only its ID. An
 entry of a request through the API has no `actor`.
+
+`osapi nats key create`, `nats auth ... create` and `nats setup` write no entry:
+they run before the NATS server or its audit stream exists, or as a user that
+cannot write to it.
 
 ## Viewing audit logs
 

@@ -85,7 +85,7 @@ import (
 // a command runs, after the config is read.
 func init() {
 	command.Provide(token.Group, func() token.Deps {
-		return token.Deps{Tokens: authtoken.New(logger), Config: tokenConfig{}}
+		return token.Deps{Tokens: authtoken.New(logger), Config: tokenConfig{}, Audit: localAudit}
 	})
 	command.Provide(role.Group, func() role.Deps {
 		return role.Deps{Config: tokenConfig{}}
@@ -345,6 +345,7 @@ func localAudit(
 // config, and a connection to NATS as the controller makes it.
 func vaultKeyDeps() vaultkey.Deps {
 	return vaultkey.Deps{
+		Audit:  localAudit,
 		FS:     osfs.NewWithNoIdm(),
 		Config: appConfig,
 		Dial: func(context.Context) (natsvault.KV, func(), error) {
