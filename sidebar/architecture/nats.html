@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Running osapi on your NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Running osapi on your NATS | OSAPI"><meta data-rh="true" name="description" content="This page is for the NATS administrator: the person who runs the NATS"><meta data-rh="true" property="og:description" content="This page is for the NATS administrator: the person who runs the NATS"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Running osapi on your NATS","item":"https://osapi-io.github.io/osapi/sidebar/architecture/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.978824e1.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.5f9ef984.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.5550ef37.js" defer="defer"></script>
 </head>
 <body>
@@ -47,6 +47,43 @@ server&#x27;s. For your server, set <code>controller.nats.tls</code> and <code>a
 output and the facts cross the network in plain text; the controller still
 signs each job and verifies each answer.</li>
 </ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-each-osapi-process-can-use">What each osapi process can use<a href="#what-each-osapi-process-can-use" class="hash-link" aria-label="Direct link to What each osapi process can use" title="Direct link to What each osapi process can use" translate="no">​</a></h2>
+<p>Each osapi process connects as a NATS user with the role of the process. The
+server lets the user use the subjects of its role, and nothing else. An agent
+has no JetStream admin, cannot read the secrets or the enrollment records, and
+cannot send a job. <code>osapi nats permissions get --role &lt;role&gt;</code> prints each set.</p>
+<!-- -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Role</th><th>Who connects as it</th><th>It cannot</th></tr></thead><tbody><tr><td><code>controller</code></td><td>the controller, and the local controller commands</td><td>make or delete the job stream</td></tr><tr><td><code>agent</code></td><td>each agent</td><td>make a stream or a bucket, send a job, read a secret</td></tr><tr><td><code>setup</code></td><td><code>osapi nats setup</code>, and the embedded server itself</td><td>write a job, a secret or a record</td></tr><tr><td><code>join</code></td><td>an agent with a join string, before its join</td><td>anything but the join request</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-each-kind-of-server-needs">What each kind of server needs<a href="#what-each-kind-of-server-needs" class="hash-link" aria-label="Direct link to What each kind of server needs" title="Direct link to What each kind of server needs" translate="no">​</a></h2>
 <p>Each osapi process authenticates with its own <code>nats.auth</code>: <code>none</code>, <code>user_pass</code>,
 <code>nkey</code> or <code>creds</code>.</p>
@@ -148,6 +185,6 @@ of the two users.</p>
 <p>With a scoped signing key, the operator&#x27;s key stays with you: the template sets
 the most that osapi can give an agent. The design is
 <a href="https://github.com/osapi-io/specs/blob/main/components/osapi/agent-join.md" target="_blank" rel="noopener noreferrer" class="">agent join</a>
-in the specs, and this page changes as each part is built.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/deployment"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Deployment</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">UI architecture</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-osapi-needs-from-a-nats-server" class="table-of-contents__link toc-highlight">What osapi needs from a NATS server</a></li><li><a href="#what-each-kind-of-server-needs" class="table-of-contents__link toc-highlight">What each kind of server needs</a></li><li><a href="#hosts-that-come-and-go" class="table-of-contents__link toc-highlight">Hosts that come and go</a></li><li><a href="#agents-that-join-over-nats" class="table-of-contents__link toc-highlight">Agents that join over NATS</a></li></ul></div></div></div></div></main></div></div></div></div>
+in the specs, and this page changes as each part is built.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/deployment"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Deployment</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">UI architecture</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-osapi-needs-from-a-nats-server" class="table-of-contents__link toc-highlight">What osapi needs from a NATS server</a></li><li><a href="#what-each-osapi-process-can-use" class="table-of-contents__link toc-highlight">What each osapi process can use</a></li><li><a href="#what-each-kind-of-server-needs" class="table-of-contents__link toc-highlight">What each kind of server needs</a></li><li><a href="#hosts-that-come-and-go" class="table-of-contents__link toc-highlight">Hosts that come and go</a></li><li><a href="#agents-that-join-over-nats" class="table-of-contents__link toc-highlight">Agents that join over NATS</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
