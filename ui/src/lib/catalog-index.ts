@@ -15,6 +15,7 @@ import { rolesOf, type RoleDefinition } from "@/lib/permissions";
 import type { Tones } from "@/lib/status";
 import type {
   CatalogArea,
+  CatalogTarget,
   CatalogResponse,
   OperationID,
   Permission,
@@ -50,37 +51,12 @@ export interface StepDef {
 }
 
 /**
- * The calls of the controller that a plan can run, under the Object Store
- * area. Each names the operation that it calls, which gives its permission,
- * so a step cannot check another permission than the API asks for, and an
- * operation that is renamed fails the type check here.
+ * The methods of the controller that a plan can run, under the Object Store
+ * area. The plan has the code that runs each; the catalog gives each its doc,
+ * its operation and its permission, so a step cannot check another
+ * permission than the API asks for.
  */
-const CONTROLLER_STEPS: {
-  method: string;
-  doc: string;
-  operation: OperationID;
-}[] = [
-  {
-    method: "list",
-    doc: "List the files in the object store",
-    operation: "GetFiles",
-  },
-  {
-    method: "upload",
-    doc: "Upload a file to the object store",
-    operation: "PostFile",
-  },
-  {
-    method: "delete",
-    doc: "Delete a file from the object store",
-    operation: "DeleteFileByName",
-  },
-  {
-    method: "stale",
-    doc: "List the deployments whose file changed after they were deployed",
-    operation: "GetFileStale",
-  },
-];
+const PLAN_CONTROLLER_METHODS = new Set(["list", "upload", "delete", "stale"]);
 
 /** The kind of a permission: its verb read, write, or a verb of an action. */
 export function permissionKind(permission: string): MethodKind {
@@ -132,6 +108,12 @@ export interface CatalogIndex {
   countTones: Tones;
   /** The host platforms that gohai names; runs_on has "*" for any other Linux. */
   hostFamilies: readonly string[];
+  /** The targets that name no host: each agent, or any one agent. */
+  targets: readonly CatalogTarget[];
+  /** The render tags of an output field, as the CLI reads them. */
+  renderTags: readonly string[];
+  /** The outcomes of a host, from the best to the worst. */
+  outcomes: readonly string[];
   /** The sections of the Behaviors page: each area with a behavior. */
   sections: CatalogSection[];
   /** The behaviors that only other behaviors call. */
@@ -171,9 +153,9 @@ export function buildIndex(catalog: CatalogResponse): CatalogIndex {
       }
     }
     if (a.name === "objectstore") {
-      for (const c of CONTROLLER_STEPS) {
-        const permission = operations.get(c.operation);
-        if (!permission) continue;
+      for (const c of catalog.controller) {
+        if (!PLAN_CONTROLLER_METHODS.has(c.method)) continue;
+        const permission = c.permission;
         steps.push({
           run: runName("objectstore", c.method),
           title: "Object store",
@@ -200,6 +182,9 @@ export function buildIndex(catalog: CatalogResponse): CatalogIndex {
     statusTones: catalog.status_tones as Tones,
     countTones: catalog.count_tones as Tones,
     hostFamilies: catalog.host_families,
+    targets: catalog.targets,
+    renderTags: catalog.render_tags,
+    outcomes: catalog.outcomes,
     sections,
     internal: behaviors.filter((b) => b.internal),
     behavior: (name) => byName.get(name),

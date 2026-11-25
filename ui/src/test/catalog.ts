@@ -189,6 +189,67 @@ export const testCatalog: CatalogResponse = {
   status_tones: { ok: "ok", ready: "ok", skipped: "warn", failed: "err" },
   count_tones: { completed: "ok", skipped: "warn", failed: "err" },
   host_families: ["debian", "darwin", "fedora", "suse"],
+  targets: [
+    {
+      value: "_all",
+      label: "All agents",
+      doc: "Each agent answers, one row for each host.",
+    },
+    {
+      value: "_any",
+      label: "Any agent",
+      doc: "One agent, any that is free, answers.",
+    },
+  ],
+  controller: [
+    {
+      group: "file",
+      method: "list",
+      doc: "List stored files",
+      operation: "GetFiles",
+      permission: "file:read",
+    },
+    {
+      group: "file",
+      method: "upload",
+      doc: "Upload a file",
+      operation: "PostFile",
+      permission: "file:write",
+    },
+    {
+      group: "file",
+      method: "get",
+      doc: "Get a file",
+      operation: "GetFileByName",
+      permission: "file:read",
+    },
+    {
+      group: "file",
+      method: "delete",
+      doc: "Delete a file",
+      operation: "DeleteFileByName",
+      permission: "file:write",
+    },
+    {
+      group: "file",
+      method: "stale",
+      doc: "List the stale deployments",
+      operation: "GetFileStale",
+      permission: "file:read",
+    },
+  ],
+  render_tags: [
+    "-",
+    "bytes",
+    "age",
+    "time",
+    "duration",
+    "duration=ms",
+    "status",
+    "body",
+    "short=",
+  ],
+  outcomes: ["ok", "changed", "skipped", "timeout", "failed"],
 };
 
 /** The test catalog, indexed as useCatalog gives it. */

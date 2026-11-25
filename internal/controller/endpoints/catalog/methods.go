@@ -25,6 +25,10 @@ import (
 	"maps"
 	"slices"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -70,6 +74,47 @@ func Get(
 	for _, f := range behavior.HostFamilies {
 		out.HostFamilies = append(out.HostFamilies, string(f))
 	}
+	out.Targets = []CatalogTarget{
+		{
+			Value: types.TargetAll,
+			Label: "All agents",
+			Doc:   "Each agent answers, one row for each host.",
+		},
+		{Value: types.TargetAny, Label: "Any agent", Doc: "One agent, any that is free, answers."},
+	}
+	out.Controller = controllerMethods(endpoint.All(), ops)
+	out.RenderTags = clicommand.RenderTags()
+	out.Outcomes = []string{
+		string(types.RowStatusOK), "changed", string(types.RowStatusSkipped),
+		string(types.RowStatusTimeout), string(types.RowStatusFailed),
+	}
 
 	return out, nil
+}
+
+// controllerMethods are the methods of the endpoint groups of the Object
+// Store area, in the order of the groups: the calls of the controller that
+// take no target.
+func controllerMethods(
+	groups []*endpoint.Group,
+	ops map[string]types.Permission,
+) []CatalogControllerMethod {
+	out := []CatalogControllerMethod{}
+	for _, g := range groups {
+		if g.Area != area.ObjectStore {
+			continue
+		}
+		for _, m := range g.Methods {
+			id := m.OperationID(g)
+			out = append(out, CatalogControllerMethod{
+				Group:      g.Name,
+				Method:     m.Name,
+				Doc:        m.CommandShort(),
+				Operation:  OperationID(id),
+				Permission: ops[id],
+			})
+		}
+	}
+
+	return out
 }

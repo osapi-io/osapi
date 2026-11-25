@@ -26,6 +26,8 @@ The command prints:
 $ osapi client catalog get
 [1;38;2;0;213;255mCatalog:[0m
   [38;2;10;143;176mHost families:[0m  debian, darwin
+  [38;2;10;143;176mRender tags:[0m
+  [38;2;10;143;176mOutcomes:[0m
 
 [1;38;2;255;0;255mBehaviors (1):[0m
   [38;2;176;48;176mNAME      [0m[38;2;176;48;176mTITLE     [0m[38;2;176;48;176mAREA  [0m[38;2;176;48;176mINTERNAL  [0m[38;2;176;48;176mPLATFORMS       [0m[38;2;176;48;176mMETHODS[0m
@@ -42,6 +44,12 @@ $ osapi client catalog get
 [1;38;2;107;92;255mOperations (1):[0m
   [38;2;89;76;216mID               [0m[38;2;89;76;216mPERMISSION[0m
   [38;2;138;138;138mGetNodeHostname[0m  [38;2;138;138;138mhostname:read[0m
+
+[1;38;2;0;213;255mTargets (0):[0m
+  [38;2;138;138;138mNone.[0m
+
+[1;38;2;255;0;255mController (0):[0m
+  [38;2;138;138;138mNone.[0m
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```
@@ -115,7 +123,11 @@ With `--json`, the API's response:
   "count_tones": {
     "failed": "err"
   },
-  "host_families": ["debian", "darwin"]
+  "host_families": ["debian", "darwin"],
+  "targets": null,
+  "controller": null,
+  "render_tags": null,
+  "outcomes": null
 }
 ```
 

@@ -120,9 +120,21 @@ describe("buildIndex", () => {
     expect(catalogIndex.permissions).toContain("catalog:read");
   });
 
-  test("leaves out a step of the controller whose operation it does not have", () => {
-    const index = buildIndex({ ...testCatalog, operations: [] });
+  test("takes each step of the controller from the catalog, with its permission", () => {
+    expect(catalogIndex.step("objectstore.list")?.permission).toBe("file:read");
+    expect(catalogIndex.step("objectstore.upload")?.kind).toBe("write");
+    const index = buildIndex({ ...testCatalog, controller: [] });
     expect(index.step("objectstore.list")).toBeUndefined();
+  });
+
+  test("offers only the methods of the controller that a plan can run", () => {
+    expect(catalogIndex.step("objectstore.get")).toBeUndefined();
+  });
+
+  test("has the targets, the render tags and the outcomes of the catalog", () => {
+    expect(catalogIndex.targets.map((t) => t.value)).toEqual(["_all", "_any"]);
+    expect(catalogIndex.renderTags).toContain("bytes");
+    expect(catalogIndex.outcomes[0]).toBe("ok");
   });
 });
 

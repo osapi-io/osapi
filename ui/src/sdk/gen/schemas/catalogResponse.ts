@@ -6,10 +6,12 @@
  */
 import type { CatalogArea } from './catalogArea';
 import type { CatalogBehavior } from './catalogBehavior';
+import type { CatalogControllerMethod } from './catalogControllerMethod';
 import type { CatalogOperation } from './catalogOperation';
 import type { CatalogResponseCountTones } from './catalogResponseCountTones';
 import type { CatalogResponseStatusTones } from './catalogResponseStatusTones';
 import type { CatalogRole } from './catalogRole';
+import type { CatalogTarget } from './catalogTarget';
 import type { Permission } from './permission';
 
 export interface CatalogResponse {
@@ -17,16 +19,24 @@ export interface CatalogResponse {
   areas: CatalogArea[];
   /** Each behavior that the API serves, and each internal behavior, in the order of the registry. */
   behaviors: CatalogBehavior[];
+  /** Each method of an endpoint group of the Object Store area: a call of the controller that takes no target. */
+  controller: CatalogControllerMethod[];
   /** The tone of a count above zero, by what it counts: ok, warn or err. */
   count_tones: CatalogResponseCountTones;
   /** The host platforms that gohai names. A method's runs_on has * for any other Linux. */
   host_families: string[];
   /** The permission of each operation that needs one, in the order of the operationIds. */
   operations: CatalogOperation[];
+  /** The outcomes of a host, from the best to the worst, as the CLI's summary orders them. */
+  outcomes: string[];
   /** Each permission that osapi knows. */
   permissions: Permission[];
+  /** The render tags of an output field, as the CLI reads them. short= takes a number, such as short=12. */
+  render_tags: string[];
   /** The built-in roles, in order, with the permissions of each. */
   roles: CatalogRole[];
   /** The tone of each status word, as the CLI colors it: ok, warn or err. */
   status_tones: CatalogResponseStatusTones;
+  /** The targets that name no host: each agent, or any one agent. */
+  targets: CatalogTarget[];
 }
