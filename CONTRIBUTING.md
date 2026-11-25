@@ -610,7 +610,7 @@ the tests that write, set `OSAPI_INTEGRATION_WRITES=1`.
 To test the lab from this checkout:
 
 ```bash
-OSAPI_INTEGRATION_OSAPIFILE=../osapi-lab/.lab/config/client.yaml \
+OSAPI_INTEGRATION_OSAPIFILE=../osapi-lab/.lab/config/cli.yaml \
 OSAPI_INTEGRATION_TARGET=ubuntu-1 \
 just go-unit-int
 ```
