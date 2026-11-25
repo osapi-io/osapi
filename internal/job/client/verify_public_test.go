@@ -130,7 +130,7 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 			},
 		},
 		{
-			name: "rejects an accepted agent answering for another host",
+			name: "an answer shows under the record's hostname, not the one it claims",
 			setupData: func() []byte {
 				signer, pub := newSigner(s.mockCtrl)
 
@@ -151,11 +151,9 @@ func (s *VerifyAgentResponsePublicTestSuite) TestVerifyAgentResponse() {
 				)
 			},
 			validateFunc: func(response *job.Response, err error) {
-				s.Require().Error(err)
-				s.Nil(response)
-				s.Require().ErrorIs(err, client.ErrResponseHostnameMismatch)
-				s.Contains(err.Error(), "evil-01")
-				s.Contains(err.Error(), "web-01")
+				s.Require().NoError(err, "the machine's key signed it: the answer is its own")
+				s.Equal("evil-01", response.Hostname, "it cannot put another host's name on it")
+				s.Equal("machine-evil", response.MachineID)
 			},
 		},
 		{

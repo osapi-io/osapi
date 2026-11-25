@@ -1820,7 +1820,7 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			},
 		},
 		{
-			name: "a response from an agent answering for another host is dropped",
+			name: "a response from an agent that claims another host's name is its own",
 			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
 				signer, pub := newSigner(s.mockCtrl)
 
@@ -1840,7 +1840,10 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 
 				return wrapped
 			},
-			expectedErr: "no agents responded",
+			validateFunc: func(responses map[string]*job.Response) {
+				s.NotContains(responses, "server1", "it cannot answer for server1")
+				s.Contains(responses, "evil-01", "its answer is under its own name")
+			},
 		},
 	}
 

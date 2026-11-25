@@ -124,11 +124,24 @@ func getAgents(
 	purpose string,
 	target string,
 ) ([]AgentTarget, error) {
+	agents, _, err := agentsFor(ctx, purpose, target, false)
+
+	return agents, err
+}
+
+// agentsFor is the agent list, and whether it came from the cache. fresh
+// reads the registry even when the cache has not expired.
+func agentsFor(
+	ctx context.Context,
+	purpose string,
+	target string,
+	fresh bool,
+) ([]AgentTarget, bool, error) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
-	if time.Now().Before(cacheExpiry) {
-		return cachedAgents, nil
+	if !fresh && time.Now().Before(cacheExpiry) {
+		return cachedAgents, true, nil
 	}
 
 	// A refresh reads the registry, so it has a span that says why: the
@@ -141,13 +154,33 @@ func getAgents(
 
 	agents, err := agentLister(ctx)
 	if err := opspan.End(span, err); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	cachedAgents = agents
 	cacheExpiry = time.Now().Add(cacheTTL)
 
-	return agents, nil
+	return agents, false, nil
+}
+
+// matchAgents reports whether match finds an agent for target. A miss in the
+// cached list reads the registry again before it refuses: an agent that
+// registered, or took a new hostname, after the cache was filled is found.
+func matchAgents(
+	ctx context.Context,
+	target string,
+	match func([]AgentTarget) bool,
+) bool {
+	agents, cached, err := agentsFor(ctx, spanValidate, target, false)
+	if err != nil {
+		return false
+	}
+	if match(agents) || !cached {
+		return match(agents)
+	}
+	agents, _, err = agentsFor(ctx, spanValidate, target, true)
+
+	return err == nil && match(agents)
 }
 
 // validTarget checks whether the target is a valid routing pattern
@@ -203,24 +236,21 @@ func matchesLabel(
 	ctx context.Context,
 	key, value string,
 ) bool {
-	agents, err := getAgents(ctx, spanValidate, key+":"+value)
-	if err != nil {
-		return false
-	}
+	return matchAgents(ctx, key+":"+value, func(agents []AgentTarget) bool {
+		for _, a := range agents {
+			if !resolvable(a) {
+				continue
+			}
 
-	for _, a := range agents {
-		if !resolvable(a) {
-			continue
-		}
-
-		if av, ok := a.Labels[key]; ok {
-			if av == value || strings.HasPrefix(av, value+".") {
-				return true
+			if av, ok := a.Labels[key]; ok {
+				if av == value || strings.HasPrefix(av, value+".") {
+					return true
+				}
 			}
 		}
-	}
 
-	return false
+		return false
+	})
 }
 
 // allAgentsPending returns true when every registered agent is in Pending
@@ -255,23 +285,20 @@ func matchesHostname(
 	ctx context.Context,
 	target string,
 ) bool {
-	agents, err := getAgents(ctx, spanValidate, target)
-	if err != nil {
+	return matchAgents(ctx, target, func(agents []AgentTarget) bool {
+		for _, a := range agents {
+			if !resolvable(a) {
+				continue
+			}
+
+			if a.Hostname == target || a.MachineID == target {
+				// A pending agent exists but cannot be dispatched to yet.
+				return a.State != types.AgentPending
+			}
+		}
+
 		return false
-	}
-
-	for _, a := range agents {
-		if !resolvable(a) {
-			continue
-		}
-
-		if a.Hostname == target || a.MachineID == target {
-			// A pending agent exists but cannot be dispatched to yet.
-			return a.State != types.AgentPending
-		}
-	}
-
-	return false
+	})
 }
 
 // PendingTarget reports whether target names an agent, or a whole fleet, that

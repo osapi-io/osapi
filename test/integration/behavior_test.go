@@ -215,6 +215,17 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 					if b.Name == "interface" {
 						defer func() { s.NoError(makeDummy()) }()
 					}
+					// A rename makes the host answer to its new name. The
+					// suite follows it there, so the restore reaches the host
+					// by the name that it has, then goes back to the target's
+					// own name. Registered first, so it runs last.
+					renames := b.Name == "hostname" && target != "_any"
+					var machineID string
+					if renames {
+						named := target
+						machineID = s.agentHostname("", named)
+						defer func() { target = named }()
+					}
 					defer s.restore(b)()
 					s.reset(b, ex.Input)
 					// The example's items go again after it, also when it
@@ -235,6 +246,9 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 					for _, r := range s.results(commandLine(b, m, ex.Input)) {
 						if r["status"] == "ok" {
 							s.Equal(want, r["changed"], "the example's changed")
+							if name, ok := r["name"].(string); renames && ok && name != "" {
+								target = s.follow(machineID, name)
+							}
 						}
 					}
 					if m.AlwaysChanges {
@@ -467,13 +481,67 @@ func (s *BehaviorSmokeSuite) restore(
 		return inputs
 	}
 	before := read()
+	// named is the target's name before the example: a rename moves the
+	// target to the new name, the update puts the old one back, and the
+	// read after it is by the old name.
+	named := target
 
 	return func() {
 		for _, in := range before {
 			s.results(commandLine(b, update, in))
 		}
+		target = named
 		s.Equal(before, read(), "%s is back as the example found it", b.Name)
 	}
+}
+
+// agentHostname is, with a machine ID, the hostname that the agent reports;
+// with "" and a hostname, the machine ID of that agent. Each is "" when no
+// agent matches.
+func (s *BehaviorSmokeSuite) agentHostname(
+	machineID string,
+	hostname string,
+) string {
+	out, stderr, code := runCLI("client", "agent", "list", "--json")
+	s.Require().Zero(code, stderr)
+	var resp struct {
+		Items []struct {
+			Hostname  string `json:"hostname"`
+			MachineID string `json:"machine_id"`
+		} `json:"items"`
+	}
+	s.Require().NoError(parseJSON(out, &resp), out)
+	for _, a := range resp.Items {
+		switch {
+		case machineID != "" && a.MachineID == machineID:
+			return a.Hostname
+		case machineID == "" && a.Hostname == hostname:
+			return a.MachineID
+		}
+	}
+
+	return ""
+}
+
+// follow is the name that the renamed agent answers to: name, once the agent
+// registers with it, or the name that the agent keeps, when its config pins
+// agent.hostname and the rename of the host does not change it.
+func (s *BehaviorSmokeSuite) follow(
+	machineID string,
+	name string,
+) string {
+	var got string
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); {
+		if got = s.agentHostname(machineID, ""); got == name {
+			return name
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	if got == "" {
+		return name
+	}
+
+	return got
 }
 
 func TestBehaviorSmokeSuite(

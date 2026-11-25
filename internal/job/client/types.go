@@ -150,13 +150,6 @@ var (
 	// ErrResponseSignatureInvalid means a key that is not the stored key
 	// for that agent signed the response.
 	ErrResponseSignatureInvalid = errors.New("invalid agent signature on response")
-
-	// ErrResponseHostnameMismatch means the signature verified, but the
-	// response claims a hostname the signing agent did not enroll under —
-	// an accepted agent answering for a host that is not its own.
-	ErrResponseHostnameMismatch = errors.New(
-		"response hostname does not match the enrolled hostname",
-	)
 )
 
 const (

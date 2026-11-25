@@ -146,15 +146,12 @@ func verifyAgentResponse(
 		)
 	}
 
-	if response.Hostname != record.Hostname {
-		return nil, fmt.Errorf(
-			"%w: machine %s enrolled as %q but answered as %q",
-			ErrResponseHostnameMismatch,
-			envelope.MachineID,
-			record.Hostname,
-			response.Hostname,
-		)
-	}
+	// The machine ID and its key are the agent's identity: the job went to
+	// that machine, and its key signed the answer. The hostname is a name
+	// for a person, which a rename changes before the record follows it.
+	// Thus the answer shows the name of the record, the controller's own,
+	// and an agent cannot put another host's name on its answer.
+	response.Hostname = record.Hostname
 
 	response.MachineID = envelope.MachineID
 
@@ -189,5 +186,9 @@ func (c *Client) followRename(
 			slog.String("hostname", out.Name),
 			slog.String("error", err.Error()),
 		)
+
+		return
 	}
+	_ = c.WriteAgentTimelineEvent(ctx, out.Name, "hostname_changed",
+		fmt.Sprintf("hostname changed from %s to %s", r.Hostname, out.Name))
 }

@@ -22,6 +22,7 @@ package validation_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -655,6 +656,45 @@ func (s *TargetPublicTestSuite) TestValidTargetMatchesMachineID() {
 	// Machine ID should pass validation
 	_, ok := validation.Struct(context.Background(), targetInput{Target: "abc123-def456"})
 	s.True(ok)
+}
+
+// TestValidTargetReadsAgainOnAMiss: a host that registered, or took a new
+// name, after the cache was filled is found, because a miss in the cache
+// reads the registry again. A registry that fails on that read refuses.
+func (s *TargetPublicTestSuite) TestValidTargetReadsAgainOnAMiss() {
+	tests := []struct {
+		name   string
+		second error
+		want   bool
+	}{
+		{name: "a renamed host is found", want: true},
+		{name: "a registry that fails refuses", second: errors.New("nats down"), want: false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			calls := 0
+			validation.RegisterTargetValidator(
+				func(_ context.Context) ([]validation.AgentTarget, error) {
+					calls++
+					if calls == 1 {
+						return []validation.AgentTarget{{MachineID: "m1", Hostname: "web-01"}}, nil
+					}
+					if tt.second != nil {
+						return nil, tt.second
+					}
+
+					return []validation.AgentTarget{{MachineID: "m1", Hostname: "web-02"}}, nil
+				},
+			)
+
+			_, ok := validation.Struct(context.Background(), targetInput{Target: "web-01"})
+			s.True(ok, "fills the cache")
+			_, ok = validation.Struct(context.Background(), targetInput{Target: "web-02"})
+			s.Equal(tt.want, ok)
+			s.Equal(2, calls)
+		})
+	}
 }
 
 func TestTargetPublicTestSuite(

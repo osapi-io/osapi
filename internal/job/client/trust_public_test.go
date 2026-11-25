@@ -25,6 +25,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"testing"
 	"time"
@@ -160,29 +161,6 @@ func (s *RegistrationTrustPublicTestSuite) TestListAgentsTrust() {
 			},
 		},
 		{
-			name: "an accepted agent may not answer for another host",
-			reg: func() job.AgentRegistration {
-				reg := s.base()
-				reg.Hostname = "web-01"
-
-				return s.signed(reg)
-			},
-			setupStore: func(st *jobmocks.MockAgentKeyStore) {
-				// Signature is valid, but this machine enrolled as evil-01.
-				st.EXPECT().
-					LookupAgentKey(gomock.Any(), "machine-001").
-					Return(&client.AgentKey{
-						MachineID: "machine-001",
-						Hostname:  "evil-01",
-						PublicKey: s.pub,
-					}, nil)
-			},
-			validateFunc: func(a job.AgentInfo) {
-				s.False(a.Verified)
-				s.True(a.KeyStored)
-			},
-		},
-		{
 			name: "an agent with no stored key is visible but not authoritative",
 			reg:  func() job.AgentRegistration { return s.signed(s.base()) },
 			setupStore: func(st *jobmocks.MockAgentKeyStore) {
@@ -245,6 +223,179 @@ func (s *RegistrationTrustPublicTestSuite) TestListAgentsTrust() {
 			tt.validateFunc(agents[0])
 		})
 	}
+}
+
+// newClient is a job client of the mocked NATS, with store.
+func (s *RegistrationTrustPublicTestSuite) newClient(
+	store client.AgentKeyStore,
+) *client.Client {
+	s.T().Helper()
+
+	c, err := client.New(slog.Default(), s.mockNC, &client.Options{
+		Timeout:        30 * time.Second,
+		JobsBucket:     "jobs",
+		RegistryBucket: "registry",
+		StreamName:     "JOBS",
+	})
+	s.Require().NoError(err)
+	c.SetAgentKeyStore(store)
+
+	return c
+}
+
+// registryOf makes the registry bucket hold regs, for each read.
+func (s *RegistrationTrustPublicTestSuite) registryOf(
+	regs ...job.AgentRegistration,
+) {
+	s.T().Helper()
+
+	keys := make([]string, 0, len(regs))
+	for _, reg := range regs {
+		keys = append(keys, "agents."+reg.MachineID)
+		data, err := json.Marshal(reg)
+		s.Require().NoError(err)
+		entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+		entry.EXPECT().Value().Return(data).AnyTimes()
+		s.mockNC.EXPECT().
+			KVGet(gomock.Any(), "registry", "agents."+reg.MachineID).
+			Return(entry, nil).AnyTimes()
+	}
+	s.mockNC.EXPECT().KVKeys(gomock.Any(), "registry").Return(keys, nil).AnyTimes()
+}
+
+// TestHostnameFollows is a host whose hostname changed: its record follows a
+// signed registration, unless another admitted machine that is online holds
+// the name (GHSA-j73r).
+func (s *RegistrationTrustPublicTestSuite) TestHostnameFollows() {
+	renamed := func() job.AgentRegistration {
+		reg := s.base()
+		reg.Hostname = "web-02"
+
+		return s.signed(reg)
+	}
+	record := func(machineID, hostname string) *client.AgentKey {
+		return &client.AgentKey{MachineID: machineID, Hostname: hostname, PublicKey: s.pub}
+	}
+	tests := []struct {
+		name         string
+		regs         func() []job.AgentRegistration
+		setupStore   func(*jobmocks.MockAgentKeyStore)
+		wantVerified bool
+	}{
+		{
+			name: "when no other machine holds the new name, the record follows it",
+			regs: func() []job.AgentRegistration { return []job.AgentRegistration{renamed()} },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+					Return(record("machine-001", "web-01"), nil).AnyTimes()
+				st.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").Return(nil)
+			},
+			wantVerified: true,
+		},
+		{
+			name: "when another admitted machine online holds the name, the claim is refused",
+			regs: func() []job.AgentRegistration {
+				holder := job.AgentRegistration{
+					MachineID: "machine-002",
+					Hostname:  "web-02",
+					State:     "Ready",
+				}
+
+				return []job.AgentRegistration{renamed(), holder}
+			},
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+					Return(record("machine-001", "web-01"), nil).AnyTimes()
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-002").
+					Return(record("machine-002", "web-02"), nil).AnyTimes()
+			},
+		},
+		{
+			name: "when the record cannot be renamed, the claim is refused",
+			regs: func() []job.AgentRegistration { return []job.AgentRegistration{renamed()} },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+					Return(record("machine-001", "web-01"), nil).AnyTimes()
+				st.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").
+					Return(errors.New("kv: down"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.mockCtrl = gomock.NewController(s.T())
+			s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
+			s.registryOf(tc.regs()...)
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			tc.setupStore(store)
+			c := s.newClient(store)
+
+			agents, err := c.ListAgents(s.ctx)
+
+			s.Require().NoError(err)
+			s.Equal(tc.wantVerified, agents[0].Verified)
+		})
+	}
+}
+
+// TestHostnameRegistryUnreadable is a rename while the registry cannot be
+// read for the check: the claim is refused, not taken on a guess.
+func (s *RegistrationTrustPublicTestSuite) TestHostnameRegistryUnreadable() {
+	reg := s.base()
+	reg.Hostname = "web-02"
+	data, err := json.Marshal(s.signed(reg))
+	s.Require().NoError(err)
+	entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+	entry.EXPECT().Value().Return(data).AnyTimes()
+	gomock.InOrder(
+		s.mockNC.EXPECT().
+			KVKeys(gomock.Any(), "registry").
+			Return([]string{"agents.machine-001"}, nil),
+		s.mockNC.EXPECT().KVKeys(gomock.Any(), "registry").Return(nil, errors.New("kv: down")),
+	)
+	s.mockNC.EXPECT().
+		KVGet(gomock.Any(), "registry", "agents.machine-001").
+		Return(entry, nil).
+		AnyTimes()
+	store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+	store.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+		Return(&client.AgentKey{MachineID: "machine-001", Hostname: "web-01", PublicKey: s.pub}, nil).
+		AnyTimes()
+
+	agents, err := s.newClient(store).ListAgents(s.ctx)
+
+	s.Require().NoError(err)
+	s.False(agents[0].Verified)
+}
+
+// TestHostnameEntryUnreadable is a registry entry that cannot be read
+// during the check: it is skipped, and the rename goes on.
+func (s *RegistrationTrustPublicTestSuite) TestHostnameEntryUnreadable() {
+	reg := s.base()
+	reg.Hostname = "web-02"
+	data, err := json.Marshal(s.signed(reg))
+	s.Require().NoError(err)
+	entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+	entry.EXPECT().Value().Return(data).AnyTimes()
+	s.mockNC.EXPECT().KVKeys(gomock.Any(), "registry").
+		Return([]string{"agents.machine-001", "agents.machine-002"}, nil).AnyTimes()
+	s.mockNC.EXPECT().
+		KVGet(gomock.Any(), "registry", "agents.machine-001").
+		Return(entry, nil).
+		AnyTimes()
+	s.mockNC.EXPECT().KVGet(gomock.Any(), "registry", "agents.machine-002").
+		Return(nil, errors.New("kv: gone")).AnyTimes()
+	store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+	store.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+		Return(&client.AgentKey{MachineID: "machine-001", Hostname: "web-01", PublicKey: s.pub}, nil).
+		AnyTimes()
+	store.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").Return(nil)
+
+	agents, err := s.newClient(store).ListAgents(s.ctx)
+
+	s.Require().NoError(err)
+	s.True(agents[0].Verified)
 }
 
 func TestRegistrationTrustPublicTestSuite(
