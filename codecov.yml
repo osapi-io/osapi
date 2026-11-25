@@ -1,0 +1,10 @@
+# Each of the ten unit shards of go.yml sends its own profile. Codecov
+# reports only when all ten are in, so its status is never green from the
+# shards that were fast. The gate is each shard's own check (go-unit-shard);
+# this keeps the report honest. Change the number with the shards.
+codecov:
+  notify:
+    after_n_builds: 10
+
+comment:
+  after_n_builds: 10
