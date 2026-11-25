@@ -27,6 +27,7 @@ import (
 	"log/slog"
 	"os"
 	osexec "os/exec"
+	"sync"
 	"time"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -1003,4 +1004,21 @@ func ExportNoteRename(
 	a.noteRename(req)
 
 	return len(a.renamed) == 1
+}
+
+// HoldConsumers gives a one running consumer, which a drain waits for
+// until release is called.
+func HoldConsumers(
+	a *Agent,
+) (release func()) {
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	a.lifecycleMu.Lock()
+	a.consumerCancel = func() {}
+	a.consumerSetWg = wg
+	a.lifecycleMu.Unlock()
+
+	var once sync.Once
+
+	return func() { once.Do(wg.Done) }
 }
