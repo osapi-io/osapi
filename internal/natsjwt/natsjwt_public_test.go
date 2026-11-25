@@ -126,6 +126,18 @@ func (s *NatsJWTPublicTestSuite) TestNewCreds() {
 	s.ErrorContains(err, "no entropy")
 }
 
+func (s *NatsJWTPublicTestSuite) TestNewSigner() {
+	kp, _ := nkeys.CreateAccount()
+	signer := natsjwt.NewSigner(kp, s.account)
+	_, pub, err := natsjwt.NewUser()
+	s.Require().NoError(err)
+	token, err := signer.Mint(pub, "m-1", bus.Permissions{}, time.Time{})
+	s.Require().NoError(err)
+	uc, err := jwt.DecodeUserClaims(token)
+	s.Require().NoError(err)
+	s.Equal(s.account, uc.IssuerAccount)
+}
+
 func (s *NatsJWTPublicTestSuite) TestNewUserFails() {
 	defer natsjwt.SetCreateUser(func() (nkeys.KeyPair, error) {
 		return nil, errors.New("no entropy")
