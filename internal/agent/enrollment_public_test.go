@@ -122,6 +122,52 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 			},
 		},
 		{
+			name: "when the agent saved the controller's key under its own name, it is enrolled",
+			setupFS: func() avfs.VFS {
+				fs := memfs.New()
+				_ = fs.MkdirAll("/keys", 0o700)
+				ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
+				_ = fs.WriteFile(
+					"/keys/"+agent.EnrolledControllerKey,
+					pem.EncodeToMemory(&pem.Block{
+						Type:  "ED25519 PUBLIC KEY",
+						Bytes: ctrlPub,
+					}),
+					0o644,
+				)
+
+				return fs
+			},
+			validateFunc: func(a *agent.Agent) {
+				m := agent.GetAgentPKIManager(a)
+				require.NotNil(suite.T(), m)
+				assert.Len(suite.T(), m.ControllerPublicKey(), ed25519.PublicKeySize)
+			},
+		},
+		{
+			name: "when the key_dir is the controller's own, its controller.pub is not an enrollment",
+			setupFS: func() avfs.VFS {
+				fs := memfs.New()
+				_ = fs.MkdirAll("/keys", 0o700)
+				ctrlPub, ctrlPriv, _ := ed25519.GenerateKey(rand.Reader)
+				_ = fs.WriteFile("/keys/controller.pub", pem.EncodeToMemory(&pem.Block{
+					Type:  "ED25519 PUBLIC KEY",
+					Bytes: ctrlPub,
+				}), 0o644)
+				_ = fs.WriteFile("/keys/controller.key", pem.EncodeToMemory(&pem.Block{
+					Type:  "ED25519 PRIVATE KEY",
+					Bytes: ctrlPriv.Seed(),
+				}), 0o600)
+
+				return fs
+			},
+			validateFunc: func(a *agent.Agent) {
+				m := agent.GetAgentPKIManager(a)
+				require.NotNil(suite.T(), m)
+				assert.Nil(suite.T(), m.ControllerPublicKey(), "it asks to be admitted")
+			},
+		},
+		{
 			name: "when controller public key PEM is corrupted returns error",
 			setupFS: func() avfs.VFS {
 				fs := memfs.New()

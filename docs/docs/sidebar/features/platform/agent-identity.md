@@ -103,8 +103,9 @@ Enrollment uses an accept and reject model, like Salt:
    an agent, it sends back its own public key.
 
 1. **The agent is ready.** The agent saves the public key of the controller as
-   `controller.pub`, and starts to verify job signatures. At the next restarts,
-   the agent loads the controller key from disk and does not enroll again.
+   `enrolled-controller.pub`, and starts to verify job signatures. At the next
+   restarts, the agent loads the controller key from disk and does not enroll
+   again.
 
 ### An agent admitted before the encryption key
 
@@ -112,8 +113,9 @@ An agent that was admitted before agents had an encryption key makes
 `agent.xkey` when you upgrade it. Its fingerprint changes, and its admitted
 record has no encryption key. Enroll it again:
 
-1. On the machine, delete `controller.pub` in `agent.pki.key_dir`, and restart
-   the agent. It sends a new request with the two keys.
+1. On the machine, delete `enrolled-controller.pub` in `agent.pki.key_dir`
+   (`controller.pub` on an agent admitted before osapi-io/osapi#1398), and
+   restart the agent. It sends a new request with the two keys.
 1. On the machine, run `osapi agent key fingerprint`.
 1. Admit the machine with that fingerprint. The pending record shows the old
    fingerprint as `previous_fingerprint`.
@@ -284,10 +286,14 @@ check refuses a key that it does not know. Do these steps in this order:
    admit each machine with the fingerprint that `osapi agent key fingerprint`
    prints on it. Set `controller.pki.auto_admit` only on a test fleet.
 
-The agent and the controller have different key directories. The agent keeps the
-public key of the controller as `controller.pub` in its directory, and the
-controller keeps its own key with the same name in its directory. An agent and a
-controller on one host thus do not read the key of the other.
+By default the agent and the controller use one key directory, `/etc/osapi/pki`.
+The controller keeps its own key pair there as `controller.key` and
+`controller.pub`. The agent keeps the key that the controller sent it as
+`enrolled-controller.pub`. Thus an agent on the controller's host does not take
+the controller's own `controller.pub` as proof that it was admitted. Before
+osapi-io/osapi#1398 the agent used `controller.pub`, so it skipped enrollment on
+that host and no job ran. An agent admitted before then still reads its
+`controller.pub`, but only when no `controller.key` is beside it.
 
 ## Configuration
 

@@ -39,6 +39,33 @@ import (
 	"github.com/osapi-io/osapi/internal/atomicfile"
 )
 
+// EnrolledControllerKey is the file in agent.pki.key_dir of the controller's
+// public key, which the agent saves when the controller admits it. It is not
+// controller.pub: that is the name of the controller's own key pair, and the
+// two share a directory when both run on one host with the default key_dir.
+const EnrolledControllerKey = "enrolled-controller.pub"
+
+// legacyControllerKey is the file an agent saved before EnrolledControllerKey.
+// It is read only when no controller.key is beside it, since with one it is
+// the controller's own key, not proof that the agent was admitted.
+const legacyControllerKey = "controller.pub"
+
+// enrolledKey is the controller's public key that the agent saved when it
+// was admitted, from keyDir, or an error when it saved none.
+func (a *Agent) enrolledKey(
+	keyDir string,
+) ([]byte, error) {
+	pubPEM, err := avfs.ReadFile(a.appFs, filepath.Join(keyDir, EnrolledControllerKey))
+	if err == nil {
+		return pubPEM, nil
+	}
+	if _, keyErr := a.appFs.Stat(filepath.Join(keyDir, "controller.key")); keyErr == nil {
+		return nil, err
+	}
+
+	return avfs.ReadFile(a.appFs, filepath.Join(keyDir, legacyControllerKey))
+}
+
 // marshalJSONEnrollment is a package-level variable for testing the marshal error path.
 var marshalJSONEnrollment = json.Marshal
 
@@ -76,10 +103,8 @@ func (a *Agent) handlePKIEnrollment(
 		slog.String("key_dir", keyDir),
 	)
 
-	// Check if controller public key already exists (previously enrolled).
-	controllerPubPath := filepath.Join(keyDir, "controller.pub")
-
-	pubPEM, err := avfs.ReadFile(a.appFs, controllerPubPath)
+	// Check if the agent saved the controller's key when it was admitted.
+	pubPEM, err := a.enrolledKey(keyDir)
 	if err == nil {
 		pubKey, parseErr := pki.ParsePublicKeyPEM(pubPEM)
 		if parseErr != nil {
@@ -261,7 +286,7 @@ func (a *Agent) handleEnrollmentResponse(
 	a.pkiManager.SetControllerPublicKey(controllerPubKey)
 
 	keyDir := a.appConfig.Agent.PKI.KeyDir
-	controllerPubPath := filepath.Join(keyDir, "controller.pub")
+	controllerPubPath := filepath.Join(keyDir, EnrolledControllerKey)
 
 	pubPEM := pem.EncodeToMemory(&pem.Block{
 		Type:  "ED25519 PUBLIC KEY",
