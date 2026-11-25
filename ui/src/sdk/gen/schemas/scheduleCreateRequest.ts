@@ -5,13 +5,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ContentType } from './contentType';
-import type { ScheduleCreateRequestInterval } from './scheduleCreateRequestInterval';
+import type { Interval } from './interval';
 import type { ScheduleCreateRequestVars } from './scheduleCreateRequestVars';
 
 export interface ScheduleCreateRequest {
   content_type?: ContentType;
-  /** The interval of a script in /etc/cron.daily and the like; give it or schedule */
-  interval?: ScheduleCreateRequestInterval;
+  interval?: Interval;
   /**
      * The entry, and its file name, such as backup
      * @maxLength 64

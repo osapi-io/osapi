@@ -58,13 +58,3 @@ type UserResult struct {
 	// timeout, the host did not answer, so nobody knows whether it ran.
 	Status types.RowStatus `json:"status"`
 }
-
-// UserUpdateRequestLock: Whether to refuse logins with its password: locked
-// refuses them, unlocked allows them.
-type UserUpdateRequestLock string
-
-// The values of UserUpdateRequestLock.
-const (
-	UserUpdateRequestLockLocked   UserUpdateRequestLock = "locked"
-	UserUpdateRequestLockUnlocked UserUpdateRequestLock = "unlocked"
-)

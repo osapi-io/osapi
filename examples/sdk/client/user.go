@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -147,7 +148,7 @@ func runUpdate2(
 	resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
 		Groups: []string{"root"},
 		Home:   "/home/osapitest2",
-		Lock:   client.UserUpdateRequestLock("locked"),
+		Lock:   types.Lock("locked"),
 		Name:   "osapitest",
 	})
 	if err != nil {
@@ -164,7 +165,7 @@ func runUpdate3(
 	target string,
 ) error {
 	resp, err := c.User.Update(ctx, target, client.UserUpdateInput{
-		Lock: client.UserUpdateRequestLock("unlocked"),
+		Lock: types.Lock("unlocked"),
 		Name: "osapitest",
 	})
 	if err != nil {

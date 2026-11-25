@@ -40,7 +40,7 @@ const cronDir = "/etc/cron.d"
 
 // intervals are the directories of the scripts that run hourly, daily,
 // weekly or monthly, in the order that a lookup tries them.
-var intervals = []string{"hourly", "daily", "weekly", "monthly"}
+var intervals = types.Interval("").Values()
 
 // check refuses a name that a program would read as an option, such as
 // --now: cron's own tools and a person's shell treat a file of that name as
@@ -57,9 +57,9 @@ func check(
 
 // intervalDir is the directory of an interval's scripts.
 func intervalDir(
-	interval string,
+	interval types.Interval,
 ) string {
-	return "/etc/cron." + interval
+	return "/etc/cron." + string(interval)
 }
 
 // debian deploys each entry as a file that managedfile keeps a record of:
@@ -164,7 +164,7 @@ func (d *debian) Create(
 		types.ContentType(in.ContentType),
 		in.Vars,
 		map[string]string{
-			"schedule": in.Schedule, "interval": in.Interval, "user": in.User,
+			"schedule": in.Schedule, "interval": string(in.Interval), "user": in.User,
 		},
 	)
 }

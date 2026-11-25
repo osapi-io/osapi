@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -70,7 +71,7 @@ func runSignal(
 ) error {
 	resp, err := c.Process.Signal(ctx, target, client.ProcessSignalInput{
 		PID:    1234,
-		Signal: client.ProcessSignalRequestSignal("TERM"),
+		Signal: types.Signal("TERM"),
 	})
 	if err != nil {
 		return err

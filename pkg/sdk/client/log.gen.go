@@ -32,7 +32,7 @@ type LogListParams struct {
 
 	// Priority is the priority of the query: only the entries at this priority or
 	// above. The zero value leaves it out.
-	Priority GetNodeLogPriority
+	Priority Priority
 }
 
 // List is the operation GetNodeLog: list the entries of the journal.

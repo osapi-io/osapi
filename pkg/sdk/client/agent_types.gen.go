@@ -157,8 +157,8 @@ type MemoryResponse struct {
 
 // NetworkInterfaceResponse is the NetworkInterfaceResponse of the spec.
 type NetworkInterfaceResponse struct {
-	// IP address family. It is one of: inet, inet6, dual.
-	Family NetworkInterfaceResponseFamily `json:"family,omitzero"`
+	// Family is the property family.
+	Family types.AddressFamily `json:"family,omitzero"`
 
 	// IPv4 is the property ipv4.
 	IPv4 string `json:"ipv4,omitempty"`
@@ -172,16 +172,6 @@ type NetworkInterfaceResponse struct {
 	// Name is the property name.
 	Name string `json:"name"`
 }
-
-// NetworkInterfaceResponseFamily: IP address family.
-type NetworkInterfaceResponseFamily string
-
-// The values of NetworkInterfaceResponseFamily.
-const (
-	NetworkInterfaceResponseFamilyInet  NetworkInterfaceResponseFamily = "inet"
-	NetworkInterfaceResponseFamilyInet6 NetworkInterfaceResponseFamily = "inet6"
-	NetworkInterfaceResponseFamilyDual  NetworkInterfaceResponseFamily = "dual"
-)
 
 // NodeCondition is the NodeCondition of the spec.
 type NodeCondition struct {

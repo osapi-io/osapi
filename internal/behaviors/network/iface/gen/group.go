@@ -79,15 +79,15 @@ type CreateRequest struct {
 
 // InterfaceCreateRequest is the body of interface create.
 type InterfaceCreateRequest struct {
-	Type       string   `doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,oneof=ethernet dummy"`
-	DHCP4      bool     `doc:"Take an IPv4 address from DHCP" json:"dhcp4,omitempty" validate:"omitempty"`
-	DHCP6      bool     `doc:"Take an IPv6 address from DHCP" json:"dhcp6,omitempty" validate:"omitempty"`
-	Addresses  []string `doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24" json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
-	Gateway4   string   `doc:"The IPv4 default gateway" json:"gateway4,omitempty" validate:"omitempty,ipv4"`
-	Gateway6   string   `doc:"The IPv6 default gateway" json:"gateway6,omitempty" validate:"omitempty,ipv6"`
-	MTU        int      `doc:"The MTU, from 68 to 9000" json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
-	MACAddress string   `doc:"The MAC address to set" json:"mac_address,omitempty" validate:"omitempty,mac_address"`
-	WakeOnLAN  bool     `doc:"Turn on wake-on-LAN" json:"wakeonlan,omitempty" validate:"omitempty"`
+	Type       types.InterfaceType `doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,enum"`
+	DHCP4      bool                `doc:"Take an IPv4 address from DHCP" json:"dhcp4,omitempty" validate:"omitempty"`
+	DHCP6      bool                `doc:"Take an IPv6 address from DHCP" json:"dhcp6,omitempty" validate:"omitempty"`
+	Addresses  []string            `doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24" json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
+	Gateway4   string              `doc:"The IPv4 default gateway" json:"gateway4,omitempty" validate:"omitempty,ipv4"`
+	Gateway6   string              `doc:"The IPv6 default gateway" json:"gateway6,omitempty" validate:"omitempty,ipv6"`
+	MTU        int                 `doc:"The MTU, from 68 to 9000" json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
+	MACAddress string              `doc:"The MAC address to set" json:"mac_address,omitempty" validate:"omitempty,mac_address"`
+	WakeOnLAN  bool                `doc:"Turn on wake-on-LAN" json:"wakeonlan,omitempty" validate:"omitempty"`
 }
 
 // InterfaceResult is the result of interface on one host.
@@ -123,15 +123,15 @@ type UpdateRequest struct {
 
 // InterfaceUpdateRequest is the body of interface update.
 type InterfaceUpdateRequest struct {
-	Type       string   `doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,oneof=ethernet dummy"`
-	DHCP4      bool     `doc:"Take an IPv4 address from DHCP" json:"dhcp4,omitempty" validate:"omitempty"`
-	DHCP6      bool     `doc:"Take an IPv6 address from DHCP" json:"dhcp6,omitempty" validate:"omitempty"`
-	Addresses  []string `doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24" json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
-	Gateway4   string   `doc:"The IPv4 default gateway" json:"gateway4,omitempty" validate:"omitempty,ipv4"`
-	Gateway6   string   `doc:"The IPv6 default gateway" json:"gateway6,omitempty" validate:"omitempty,ipv6"`
-	MTU        int      `doc:"The MTU, from 68 to 9000" json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
-	MACAddress string   `doc:"The MAC address to set" json:"mac_address,omitempty" validate:"omitempty,mac_address"`
-	WakeOnLAN  bool     `doc:"Turn on wake-on-LAN" json:"wakeonlan,omitempty" validate:"omitempty"`
+	Type       types.InterfaceType `doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,enum"`
+	DHCP4      bool                `doc:"Take an IPv4 address from DHCP" json:"dhcp4,omitempty" validate:"omitempty"`
+	DHCP6      bool                `doc:"Take an IPv6 address from DHCP" json:"dhcp6,omitempty" validate:"omitempty"`
+	Addresses  []string            `doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24" json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
+	Gateway4   string              `doc:"The IPv4 default gateway" json:"gateway4,omitempty" validate:"omitempty,ipv4"`
+	Gateway6   string              `doc:"The IPv6 default gateway" json:"gateway6,omitempty" validate:"omitempty,ipv6"`
+	MTU        int                 `doc:"The MTU, from 68 to 9000" json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
+	MACAddress string              `doc:"The MAC address to set" json:"mac_address,omitempty" validate:"omitempty,mac_address"`
+	WakeOnLAN  bool                `doc:"Turn on wake-on-LAN" json:"wakeonlan,omitempty" validate:"omitempty"`
 }
 
 // InterfaceUpdateResponse is each target host's result.

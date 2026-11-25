@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -59,7 +60,7 @@ func runList2(
 	c *client.Client,
 	target string,
 ) error {
-	resp, err := c.Docker.List(ctx, target, client.DockerListParams{State: client.GetNodeDockerState("stopped")})
+	resp, err := c.Docker.List(ctx, target, client.DockerListParams{State: types.ContainerState("stopped")})
 	if err != nil {
 		return err
 	}

@@ -5,10 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetNodeLogPriority = typeof GetNodeLogPriority[keyof typeof GetNodeLogPriority];
+export type Priority = typeof Priority[keyof typeof Priority];
 
 
-export const GetNodeLogPriority = {
+export const Priority = {
   emerg: 'emerg',
   alert: 'alert',
   crit: 'crit',

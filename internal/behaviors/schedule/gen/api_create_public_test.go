@@ -86,7 +86,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				"server1",
 				"schedule.create",
 				schedule.CreateInput{
-					Interval: "daily",
+					Interval: types.Interval("daily"),
 					Name:     "osapitest",
 					Object:   "osapitest.sh",
 				},
@@ -107,7 +107,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				"_all",
 				"schedule.create",
 				schedule.CreateInput{
-					Interval: "daily",
+					Interval: types.Interval("daily"),
 					Name:     "osapitest",
 					Object:   "osapitest.sh",
 				},
@@ -224,7 +224,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				"server1",
 				"schedule.create",
 				schedule.CreateInput{
-					Interval: "daily",
+					Interval: types.Interval("daily"),
 					Name:     "osapitest",
 					Object:   "osapitest.sh",
 				},
@@ -245,7 +245,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				"_all",
 				"schedule.create",
 				schedule.CreateInput{
-					Interval: "daily",
+					Interval: types.Interval("daily"),
 					Name:     "osapitest",
 					Object:   "osapitest.sh",
 				},

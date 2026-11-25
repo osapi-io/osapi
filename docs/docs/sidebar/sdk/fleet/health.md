@@ -89,7 +89,7 @@ System status and component health, with --component agent,
 `go run health.go status-2`:
 
 ```go
-resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: client.GetHealthStatusComponent("agent")})
+resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: types.ComponentType("agent")})
 ```
 
 ## Types
@@ -136,19 +136,19 @@ The fields of each type are the properties of its schema in the API's spec.
 | `URL`        | `string`           | Where a person opens a sub-component, from its url config key.                               |
 | `Version`    | `string`           | Build version of the component's binary.                                                     |
 
+### ComponentType
+
+Show only the components of this type: controller, nats or agent. The other
+parts of the status stay.
+
+A `string`, one of `controller`, `nats`, `agent`.
+
 ### ConditionType
 
 A condition that an agent or a component evaluates.
 
 A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
 `ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`.
-
-### GetHealthStatusComponent
-
-Show only the components of this type: controller, nats or agent. The other
-parts of the status stay.
-
-A `string`, one of `controller`, `nats`, `agent`.
 
 ### HealthResponse
 

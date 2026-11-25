@@ -268,7 +268,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A group longer than 32 characters",
 			UpdateInput{Name: "alice", Groups: []string{strings.Repeat("a", 33)}}, "max").
 		Fails("A lock that is not locked or unlocked",
-			UpdateInput{Name: "alice", Lock: "maybe"}, "oneof"),
+			UpdateInput{Name: "alice", Lock: "maybe"}, "enum"),
 	behavior.Write("delete", Delete).Key("name").
 		AdminOnly().
 		On(behavior.PlatformDebian).

@@ -26,6 +26,11 @@ components:
           example: not_found
           type: string
       type: object
+    SpanStatus:
+      enum:
+        - ok
+        - error
+      type: string
     TraceNode:
       properties:
         children:
@@ -126,13 +131,7 @@ components:
           format: date-time
           type: string
         status:
-          description: Whether the work of the span failed.
-          enum:
-            - ok
-            - error
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok error
+          $ref: '#/components/schemas/SpanStatus'
         status_message:
           description: The error of a failed span.
           type: string

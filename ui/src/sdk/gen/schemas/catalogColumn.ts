@@ -4,15 +4,14 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { CatalogColumnKind } from './catalogColumnKind';
+import type { ColumnKind } from './columnKind';
 
 export interface CatalogColumn {
   /** The columns of an object, or of a list of objects. */
   columns?: CatalogColumn[];
   /** What the field is. */
   doc: string;
-  /** What the field holds: value, values, object or list. */
-  kind: CatalogColumnKind;
+  kind: ColumnKind;
   /** The label of the field. */
   label: string;
   /** The json name of the field. */

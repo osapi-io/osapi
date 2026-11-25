@@ -5,13 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * How a form takes the value: string, number, bool, list or object.
- */
-export type CatalogFieldKind = typeof CatalogFieldKind[keyof typeof CatalogFieldKind];
+export type FieldKind = typeof FieldKind[keyof typeof FieldKind];
 
 
-export const CatalogFieldKind = {
+export const FieldKind = {
   string: 'string',
   number: 'number',
   bool: 'bool',

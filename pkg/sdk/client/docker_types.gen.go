@@ -100,14 +100,3 @@ type DockerResult struct {
 	// timeout, the host did not answer, so nobody knows whether it ran.
 	Status types.RowStatus `json:"status"`
 }
-
-// GetNodeDockerState: Only the containers in this state: running, stopped or
-// all, the default.
-type GetNodeDockerState string
-
-// The values of GetNodeDockerState.
-const (
-	GetNodeDockerStateRunning GetNodeDockerState = "running"
-	GetNodeDockerStateStopped GetNodeDockerState = "stopped"
-	GetNodeDockerStateAll     GetNodeDockerState = "all"
-)

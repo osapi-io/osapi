@@ -55,7 +55,7 @@ func runList2(
 ) error {
 	resp, err := c.Log.List(ctx, target, client.LogListParams{
 		Lines:    1,
-		Priority: client.GetNodeLogPriority("info"),
+		Priority: client.Priority("info"),
 		Since:    "1 hour ago",
 		Unit:     "nginx.service",
 	})

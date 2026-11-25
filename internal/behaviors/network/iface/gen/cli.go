@@ -8,6 +8,7 @@ import (
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var interfaceListCmd = &cobra.Command{
@@ -66,7 +67,7 @@ var interfaceCreateCmd = &cobra.Command{
 		mACAddress, _ := cmd.Flags().GetString("mac-address")
 		wakeOnLAN, _ := cmd.Flags().GetBool("wakeonlan")
 
-		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Name: name, Body: InterfaceCreateRequest{Type: typeFlag, DHCP4: dhcp4, DHCP6: dhcp6, Addresses: addresses, Gateway4: gateway4, Gateway6: gateway6, MTU: mtu, MACAddress: mACAddress, WakeOnLAN: wakeOnLAN}})
+		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Name: name, Body: InterfaceCreateRequest{Type: types.InterfaceType(typeFlag), DHCP4: dhcp4, DHCP6: dhcp6, Addresses: addresses, Gateway4: gateway4, Gateway6: gateway6, MTU: mtu, MACAddress: mACAddress, WakeOnLAN: wakeOnLAN}})
 	},
 	Short: "Configure a network interface",
 	Use:   "create",
@@ -93,7 +94,7 @@ var interfaceUpdateCmd = &cobra.Command{
 		mACAddress, _ := cmd.Flags().GetString("mac-address")
 		wakeOnLAN, _ := cmd.Flags().GetBool("wakeonlan")
 
-		endpointcommand.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, Name: name, Body: InterfaceUpdateRequest{Type: typeFlag, DHCP4: dhcp4, DHCP6: dhcp6, Addresses: addresses, Gateway4: gateway4, Gateway6: gateway6, MTU: mtu, MACAddress: mACAddress, WakeOnLAN: wakeOnLAN}})
+		endpointcommand.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, Name: name, Body: InterfaceUpdateRequest{Type: types.InterfaceType(typeFlag), DHCP4: dhcp4, DHCP6: dhcp6, Addresses: addresses, Gateway4: gateway4, Gateway6: gateway6, MTU: mtu, MACAddress: mACAddress, WakeOnLAN: wakeOnLAN}})
 	},
 	Short: "Change the config osapi has of a network interface",
 	Use:   "update",

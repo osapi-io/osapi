@@ -130,13 +130,13 @@ type CatalogMethod struct { //nolint:revive // the schema name is part of the AP
 // CatalogField is one input field of a method: a field of the form of a
 // step.
 type CatalogField struct { //nolint:revive // the schema name is part of the API
-	Name     string   `json:"name"              doc:"The json name of the field."                                                         example:"servers"`
-	In       string   `json:"in"                doc:"Where the field goes in the request: path, query or body."                           example:"body"    validate:"oneof=path query body"`
-	Kind     string   `json:"kind"              doc:"How a form takes the value: string, number, bool, list or object."                   example:"list"    validate:"oneof=string number bool list object"`
-	Required bool     `json:"required"          doc:"The request needs the field."`
-	Doc      string   `json:"doc"               doc:"What the field is."`
-	Options  []string `json:"options,omitempty" doc:"The values that the field takes: those of its type with enum, or of its oneof rule."`
-	Secret   bool     `json:"secret,omitempty"  doc:"The field is a secret."`
+	Name     string          `json:"name"              doc:"The json name of the field."                                                         example:"servers"`
+	In       types.FieldIn   `json:"in"                doc:"Where the field goes in the request: path, query or body."                           example:"body"    validate:"enum"`
+	Kind     types.FieldKind `json:"kind"              doc:"How a form takes the value: string, number, bool, list or object."                   example:"list"    validate:"enum"`
+	Required bool            `json:"required"          doc:"The request needs the field."`
+	Doc      string          `json:"doc"               doc:"What the field is."`
+	Options  []string        `json:"options,omitempty" doc:"The values that the field takes: those of its type with enum, or of its oneof rule."`
+	Secret   bool            `json:"secret,omitempty"  doc:"The field is a secret."`
 }
 
 // CatalogColumn is one field of the rows that a method answers, as the
@@ -144,12 +144,12 @@ type CatalogField struct { //nolint:revive // the schema name is part of the API
 // field that holds an object or a list of objects has the columns of the
 // object, so the UI shows it as the CLI does, with no card of its own.
 type CatalogColumn struct { //nolint:revive // the schema name is part of the API
-	Name    string          `json:"name"              doc:"The json name of the field."                          example:"total"`
-	Label   string          `json:"label"             doc:"The label of the field."                              example:"Total"`
-	Doc     string          `json:"doc"               doc:"What the field is."`
-	Render  string          `json:"render,omitempty"  doc:"The render tag of the field, such as bytes."          example:"bytes"`
-	Kind    string          `json:"kind"              doc:"What the field holds: value, values, object or list." example:"value" validate:"oneof=value values object list"`
-	Columns []CatalogColumn `json:"columns,omitempty" doc:"The columns of an object, or of a list of objects."`
+	Name    string           `json:"name"              doc:"The json name of the field."                          example:"total"`
+	Label   string           `json:"label"             doc:"The label of the field."                              example:"Total"`
+	Doc     string           `json:"doc"               doc:"What the field is."`
+	Render  string           `json:"render,omitempty"  doc:"The render tag of the field, such as bytes."          example:"bytes"`
+	Kind    types.ColumnKind `json:"kind"              doc:"What the field holds: value, values, object or list." example:"value" validate:"enum"`
+	Columns []CatalogColumn  `json:"columns,omitempty" doc:"The columns of an object, or of a list of objects."`
 }
 
 // CatalogCall is one call that a method makes to another behavior, with the

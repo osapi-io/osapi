@@ -95,7 +95,7 @@ Stop a process, `go run process.go signal`:
 ```go
 resp, err := c.Process.Signal(ctx, target, client.ProcessSignalInput{
 	PID:    1234,
-	Signal: client.ProcessSignalRequestSignal("TERM"),
+	Signal: types.Signal("TERM"),
 })
 ```
 
@@ -128,21 +128,15 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
 | `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
 | `PID`      | `int`       | The process ID.                                                                                                                                                                                                          |
-| `Signal`   | `string`    | The signal that was sent.                                                                                                                                                                                                |
+| `Signal`   | `Signal`    |                                                                                                                                                                                                                          |
 | `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### ProcessSignalInput
 
-| Field    | Type                         | Description                                                                                     |
-| -------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `PID`    | `int`                        | The pid of the path. The process ID, such as 1234.                                              |
-| `Signal` | `ProcessSignalRequestSignal` | The signal: TERM, KILL, HUP, INT, USR1 or USR2. It is one of: TERM, KILL, HUP, INT, USR1, USR2. |
-
-### ProcessSignalRequestSignal
-
-The signal: TERM, KILL, HUP, INT, USR1 or USR2.
-
-A `string`, one of `TERM`, `KILL`, `HUP`, `INT`, `USR1`, `USR2`.
+| Field    | Type     | Description                                        |
+| -------- | -------- | -------------------------------------------------- |
+| `PID`    | `int`    | The pid of the path. The process ID, such as 1234. |
+| `Signal` | `Signal` |                                                    |
 
 ### RowStatus
 
@@ -151,6 +145,10 @@ and did not succeed; skipped, the host's OS family does not support it; timeout,
 the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### Signal
+
+A `string`, one of `TERM`, `KILL`, `HUP`, `INT`, `USR1`, `USR2`.
 
 ## Example
 

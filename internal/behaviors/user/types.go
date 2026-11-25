@@ -20,7 +20,10 @@
 
 package user
 
-import "github.com/osapi-io/osapi/internal/secret"
+import (
+	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // ListInput is list's input: it takes none.
 type ListInput struct{}
@@ -47,11 +50,11 @@ type CreateInput struct {
 
 // UpdateInput changes a user. An empty field keeps what the user has.
 type UpdateInput struct {
-	Name   string   `json:"name"             validate:"required,max=32,account_name"        doc:"The user, such as alice"`
-	Shell  string   `json:"shell,omitempty"  validate:"omitempty,startswith=/,no_linebreak" doc:"Its login shell, such as /bin/bash"`
-	Home   string   `json:"home,omitempty"   validate:"omitempty,startswith=/,no_linebreak" doc:"Its home directory, which usermod moves the files to"`
-	Groups []string `json:"groups,omitempty" validate:"omitempty,dive,max=32,account_name"  doc:"The groups it is a member of, which replace the groups it has"`
-	Lock   string   `json:"lock,omitempty"   validate:"omitempty,oneof=locked unlocked"     doc:"Whether to refuse logins with its password: locked refuses them, unlocked allows them"`
+	Name   string     `json:"name"             validate:"required,max=32,account_name"        doc:"The user, such as alice"`
+	Shell  string     `json:"shell,omitempty"  validate:"omitempty,startswith=/,no_linebreak" doc:"Its login shell, such as /bin/bash"`
+	Home   string     `json:"home,omitempty"   validate:"omitempty,startswith=/,no_linebreak" doc:"Its home directory, which usermod moves the files to"`
+	Groups []string   `json:"groups,omitempty" validate:"omitempty,dive,max=32,account_name"  doc:"The groups it is a member of, which replace the groups it has"`
+	Lock   types.Lock `json:"lock,omitempty"   validate:"omitempty,enum"                      doc:"Whether to refuse logins with its password: locked refuses them, unlocked allows them"`
 }
 
 // DeleteInput names the user to remove.

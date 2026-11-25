@@ -20,13 +20,17 @@
 
 package docker
 
-import "context"
+import (
+	"context"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // Provider reads the containers of the host and changes them. host.go is the
 // one implementation: it reads through gohai's docker collector and changes
 // through the docker CLI, the same on each platform.
 type Provider interface {
-	List(ctx context.Context, state string) ([]Entry, error)
+	List(ctx context.Context, state types.ContainerState) ([]Entry, error)
 	Get(ctx context.Context, name string) (Entry, error)
 	Create(ctx context.Context, in CreateInput) (Result, error)
 	Delete(ctx context.Context, name string) (bool, error)

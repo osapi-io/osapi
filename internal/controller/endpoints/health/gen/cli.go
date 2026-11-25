@@ -9,6 +9,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var healthLivenessCmd = &cobra.Command{
@@ -47,7 +48,7 @@ var healthStatusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		component, _ := cmd.Flags().GetString("component")
 
-		endpointcommand.Run(cmd, health.Group, "status", health.StatusInput{Component: component})
+		endpointcommand.Run(cmd, health.Group, "status", health.StatusInput{Component: types.ComponentType(component)})
 	},
 	Short: "System status and component health",
 	Use:   "status",

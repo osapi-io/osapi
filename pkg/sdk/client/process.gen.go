@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ProcessService calls the API's Process group: the processes of the host.
@@ -50,9 +52,8 @@ type ProcessSignalInput struct {
 	// The pid of the path: the process ID, such as 1234.
 	PID int `json:"-"`
 
-	// The signal: TERM, KILL, HUP, INT, USR1 or USR2. It is one of: TERM, KILL,
-	// HUP, INT, USR1, USR2.
-	Signal ProcessSignalRequestSignal `json:"signal"`
+	// Signal is the property signal.
+	Signal types.Signal `json:"signal"`
 }
 
 // Signal is the operation PostNodeProcessSignal: send a signal to a process.

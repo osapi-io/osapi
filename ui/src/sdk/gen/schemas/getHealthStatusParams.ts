@@ -4,9 +4,9 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GetHealthStatusComponent } from './getHealthStatusComponent';
+import type { ComponentType } from './componentType';
 
 export type GetHealthStatusParams = {
   /** Show only the components of this type: controller, nats or agent. The other parts of the status stay. */
-  component?: GetHealthStatusComponent;
+  component?: ComponentType;
 };

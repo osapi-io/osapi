@@ -20,12 +20,16 @@
 
 package process
 
-import "context"
+import (
+	"context"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // Provider reads the processes of the host through gohai, and sends a
 // signal to one.
 type Provider interface {
 	List(ctx context.Context) ([]Entry, error)
 	Get(ctx context.Context, pid int) (Entry, error)
-	Signal(ctx context.Context, pid int, signal string) error
+	Signal(ctx context.Context, pid int, signal types.Signal) error
 }

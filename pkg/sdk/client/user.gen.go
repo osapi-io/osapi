@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // UserService calls the API's User group: the users of the host.
@@ -103,9 +105,8 @@ type UserUpdateInput struct {
 	// Its home directory, which usermod moves the files to.
 	Home string `json:"home,omitempty"`
 
-	// Whether to refuse logins with its password: locked refuses them, unlocked
-	// allows them. It is one of: locked, unlocked.
-	Lock UserUpdateRequestLock `json:"lock,omitzero"`
+	// Lock is the property lock.
+	Lock types.Lock `json:"lock,omitzero"`
 
 	// Its login shell, such as /bin/bash.
 	Shell string `json:"shell,omitempty"`

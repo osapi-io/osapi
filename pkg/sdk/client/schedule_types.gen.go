@@ -4,18 +4,6 @@ package client
 
 import types "github.com/osapi-io/osapi/pkg/sdk/types"
 
-// ScheduleCreateRequestInterval: The interval of a script in /etc/cron.daily
-// and the like; give it or schedule.
-type ScheduleCreateRequestInterval string
-
-// The values of ScheduleCreateRequestInterval.
-const (
-	ScheduleCreateRequestIntervalHourly  ScheduleCreateRequestInterval = "hourly"
-	ScheduleCreateRequestIntervalDaily   ScheduleCreateRequestInterval = "daily"
-	ScheduleCreateRequestIntervalWeekly  ScheduleCreateRequestInterval = "weekly"
-	ScheduleCreateRequestIntervalMonthly ScheduleCreateRequestInterval = "monthly"
-)
-
 // ScheduleEntry is the ScheduleEntry of the spec.
 type ScheduleEntry struct {
 	// Error message if the agent failed.

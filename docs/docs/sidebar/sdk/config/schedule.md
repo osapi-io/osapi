@@ -86,7 +86,7 @@ A script that runs daily, `go run schedule.go create-2`:
 
 ```go
 resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-	Interval: client.ScheduleCreateRequestInterval("daily"),
+	Interval: types.Interval("daily"),
 	Name:     "osapitest",
 	Object:   "osapitest.sh",
 })
@@ -227,6 +227,10 @@ it with Go text/template and the agent's facts.
 
 A `string`, one of `raw`, `template`.
 
+### Interval
+
+A `string`, one of `hourly`, `daily`, `weekly`, `monthly`.
+
 ### RowStatus
 
 What happened on the host: ok, the operation ran and succeeded; failed, it ran
@@ -237,21 +241,15 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ScheduleCreateInput
 
-| Field         | Type                            | Description                                                                                                                    |
-| ------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ContentType` | `ContentType`                   | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Interval`    | `ScheduleCreateRequestInterval` | The interval of a script in /etc/cron.daily and the like; give it or schedule. It is one of: hourly, daily, weekly, monthly.   |
-| `Name`        | `string`                        | The entry, and its file name, such as backup.                                                                                  |
-| `Object`      | `string`                        | The object that holds the entry, from osapi client file upload.                                                                |
-| `Schedule`    | `string`                        | A cron expression, such as */5 * * * *; give it or interval.                                                                   |
-| `User`        | `string`                        | The user the entry runs as.                                                                                                    |
-| `Vars`        | `map[string]string`             | The vars of a template, as key=value.                                                                                          |
-
-### ScheduleCreateRequestInterval
-
-The interval of a script in /etc/cron.daily and the like; give it or schedule.
-
-A `string`, one of `hourly`, `daily`, `weekly`, `monthly`.
+| Field         | Type                | Description                                                                                                                    |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `ContentType` | `ContentType`       | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Interval`    | `Interval`          |                                                                                                                                |
+| `Name`        | `string`            | The entry, and its file name, such as backup.                                                                                  |
+| `Object`      | `string`            | The object that holds the entry, from osapi client file upload.                                                                |
+| `Schedule`    | `string`            | A cron expression, such as */5 * * * *; give it or interval.                                                                   |
+| `User`        | `string`            | The user the entry runs as.                                                                                                    |
+| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                          |
 
 ### ScheduleEntry
 

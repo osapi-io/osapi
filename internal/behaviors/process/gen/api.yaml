@@ -137,8 +137,7 @@ components:
           description: The process ID
           type: integer
         signal:
-          description: The signal that was sent
-          type: string
+          $ref: '#/components/schemas/Signal'
         status:
           $ref: '#/components/schemas/RowStatus'
       required:
@@ -148,17 +147,7 @@ components:
     ProcessSignalRequest:
       properties:
         signal:
-          description: 'The signal: TERM, KILL, HUP, INT, USR1 or USR2'
-          enum:
-            - TERM
-            - KILL
-            - HUP
-            - INT
-            - USR1
-            - USR2
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,oneof=TERM KILL HUP INT USR1 USR2
+          $ref: '#/components/schemas/Signal'
       required:
         - signal
       type: object
@@ -185,6 +174,15 @@ components:
         - failed
         - skipped
         - timeout
+      type: string
+    Signal:
+      enum:
+        - TERM
+        - KILL
+        - HUP
+        - INT
+        - USR1
+        - USR2
       type: string
   securitySchemes:
     BearerAuth:

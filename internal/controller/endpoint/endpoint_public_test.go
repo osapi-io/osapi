@@ -40,6 +40,13 @@ import (
 	"github.com/osapi-io/osapi/internal/secret"
 )
 
+// letter is a name of a test, a closed set for the enum rule.
+type letter string
+
+func (letter) Values() []letter { return []letter{"a", "b"} }
+
+func (v letter) Valid() bool { return v == "a" || v == "b" }
+
 type EndpointPublicTestSuite struct {
 	suite.Suite
 }
@@ -83,7 +90,7 @@ type keyInput struct {
 }
 
 type bodyInput struct {
-	Name  string   `json:"name"  validate:"required,oneof=a b"`
+	Name  letter   `json:"name"  validate:"required,enum"`
 	Count uint     `json:"count"`
 	Ratio float32  `json:"ratio"`
 	Tags  []string `json:"tags"`
@@ -461,7 +468,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPI() {
 			},
 			want: []string{
 				"op POST /api/node id=PostNodeCreate tags=[node] auth=BearerAuth:node:write params=[] " +
-					"body=application/json:{count:integer,name!:string(a|b),ratio:number,tags:[string]}! " +
+					"body=application/json:{count:integer,name!:letter,ratio:number,tags:[string]}! " +
 					"responses=[200=application/json:{ok!:boolean} 400=application/json:ErrorResponse " +
 					"401=application/json:ErrorResponse 403=application/json:ErrorResponse " +
 					"500=application/json:ErrorResponse]",

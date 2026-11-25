@@ -4,16 +4,14 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { CatalogFieldIn } from './catalogFieldIn';
-import type { CatalogFieldKind } from './catalogFieldKind';
+import type { FieldIn } from './fieldIn';
+import type { FieldKind } from './fieldKind';
 
 export interface CatalogField {
   /** What the field is. */
   doc: string;
-  /** Where the field goes in the request: path, query or body. */
-  in: CatalogFieldIn;
-  /** How a form takes the value: string, number, bool, list or object. */
-  kind: CatalogFieldKind;
+  in: FieldIn;
+  kind: FieldKind;
   /** The json name of the field. */
   name: string;
   /** The values that the field takes: those of its type with enum, or of its oneof rule. */

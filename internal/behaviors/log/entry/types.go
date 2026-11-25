@@ -20,6 +20,8 @@
 
 package entry
 
+import "slices"
+
 // Priority is the priority of a journal entry, by the name that journald
 // gives it.
 type Priority string
@@ -36,6 +38,16 @@ const (
 	PriorityDebug   Priority = "debug"
 )
 
+// Values are the priorities, for the enum rule.
+func (Priority) Values() []Priority {
+	return Priorities()
+}
+
+// Valid reports whether p is a priority of journald.
+func (p Priority) Valid() bool {
+	return slices.Contains(Priorities(), p)
+}
+
 // Priorities are the priorities in journald's order: the index of each is
 // its number, 0 for emerg to 7 for debug.
 func Priorities() []Priority {
@@ -47,10 +59,10 @@ func Priorities() []Priority {
 
 // ListInput selects the entries: each field is a query parameter and a flag.
 type ListInput struct {
-	Unit     string   `json:"unit,omitempty"     validate:"omitempty,unit_name"                                            doc:"Only the entries of this systemd unit, such as nginx.service"`
-	Lines    int      `json:"lines,omitempty"    validate:"omitempty,min=1,max=10000"                                      doc:"How many of the newest entries; 100 when it is not set"`
-	Since    string   `json:"since,omitempty"    validate:"omitempty"                                                      doc:"Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago"`
-	Priority Priority `json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug" doc:"Only the entries at this priority or above"`
+	Unit     string   `json:"unit,omitempty"     validate:"omitempty,unit_name"       doc:"Only the entries of this systemd unit, such as nginx.service"`
+	Lines    int      `json:"lines,omitempty"    validate:"omitempty,min=1,max=10000" doc:"How many of the newest entries; 100 when it is not set"`
+	Since    string   `json:"since,omitempty"    validate:"omitempty"                 doc:"Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago"`
+	Priority Priority `json:"priority,omitempty" validate:"omitempty,enum"            doc:"Only the entries at this priority or above"`
 }
 
 // Entry is one entry of the journal.

@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	docker "github.com/osapi-io/osapi/internal/behaviors/container/docker"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -102,7 +103,7 @@ func (mr *MockProviderMockRecorder) Get(ctx, name any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockProvider) List(ctx context.Context, state string) ([]docker.Entry, error) {
+func (m *MockProvider) List(ctx context.Context, state types.ContainerState) ([]docker.Entry, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, state)
 	ret0, _ := ret[0].([]docker.Entry)

@@ -68,8 +68,7 @@ components:
           description: The process that wrote it
           type: integer
         priority:
-          description: Its priority, by name
-          type: string
+          $ref: '#/components/schemas/Priority'
         status:
           $ref: '#/components/schemas/RowStatus'
         timestamp:
@@ -82,6 +81,17 @@ components:
         - hostname
         - status
       type: object
+    Priority:
+      enum:
+        - emerg
+        - alert
+        - crit
+        - err
+        - warning
+        - notice
+        - info
+        - debug
+      type: string
     RowStatus:
       description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
       enum:
@@ -135,18 +145,9 @@ paths:
           in: query
           name: priority
           schema:
-            enum:
-              - emerg
-              - alert
-              - crit
-              - err
-              - warning
-              - notice
-              - info
-              - debug
-            type: string
+            $ref: '#/components/schemas/Priority'
           x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=emerg alert crit err warning notice info debug
+            validate: omitempty,enum
       responses:
         "200":
           content:

@@ -4,9 +4,8 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessSignalRequestSignal } from './processSignalRequestSignal';
+import type { Signal } from './signal';
 
 export interface ProcessSignalRequest {
-  /** The signal: TERM, KILL, HUP, INT, USR1 or USR2 */
-  signal: ProcessSignalRequestSignal;
+  signal: Signal;
 }

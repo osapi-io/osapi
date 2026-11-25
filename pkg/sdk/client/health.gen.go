@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // HealthService calls the API's Health group: health check endpoints for
@@ -42,7 +44,7 @@ type HealthStatusParams struct {
 	// Component is the component of the query: show only the components of this
 	// type: controller, nats or agent. The other parts of the status stay. The
 	// zero value leaves it out.
-	Component GetHealthStatusComponent
+	Component types.ComponentType
 }
 
 // Status is the operation GetHealthStatus: system status and component health.

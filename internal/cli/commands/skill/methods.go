@@ -63,7 +63,7 @@ func Install(
 ) (InstallOutput, error) {
 	names := in.Tools
 	if len(names) == 0 {
-		names = []string{"claude"}
+		names = []Tool{ToolClaude}
 	}
 	root := in.Path
 	if root == "" {
@@ -71,7 +71,7 @@ func Install(
 	}
 	tools := make([]skills.Tool, 0, len(names))
 	for _, n := range names {
-		tools = append(tools, skills.Tools[n])
+		tools = append(tools, skills.Tools[string(n)])
 	}
 
 	results, err := skills.Install(d.FS, root, tools, d.Installed, d.Version())

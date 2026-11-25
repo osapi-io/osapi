@@ -4,16 +4,6 @@ package client
 
 import types "github.com/osapi-io/osapi/pkg/sdk/types"
 
-// InterfaceCreateRequestType: The type: ethernet, the default, for an
-// interface the host has, or dummy for a dummy interface that netplan makes.
-type InterfaceCreateRequestType string
-
-// The values of InterfaceCreateRequestType.
-const (
-	InterfaceCreateRequestTypeEthernet InterfaceCreateRequestType = "ethernet"
-	InterfaceCreateRequestTypeDummy    InterfaceCreateRequestType = "dummy"
-)
-
 // InterfaceEntry is the InterfaceEntry of the spec.
 type InterfaceEntry struct {
 	// Each of its addresses, in CIDR notation.
@@ -74,13 +64,3 @@ type InterfaceResult struct {
 	// timeout, the host did not answer, so nobody knows whether it ran.
 	Status types.RowStatus `json:"status"`
 }
-
-// InterfaceUpdateRequestType: The type: ethernet, the default, for an
-// interface the host has, or dummy for a dummy interface that netplan makes.
-type InterfaceUpdateRequestType string
-
-// The values of InterfaceUpdateRequestType.
-const (
-	InterfaceUpdateRequestTypeEthernet InterfaceUpdateRequestType = "ethernet"
-	InterfaceUpdateRequestTypeDummy    InterfaceUpdateRequestType = "dummy"
-)

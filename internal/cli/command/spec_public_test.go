@@ -97,6 +97,8 @@ var notDSL = map[string]bool{
 	"ValidateOutput":               true,
 	"TagKeys":                      true,
 	"KnownParents":                 true,
+	"Values:Parent":                true,
+	"Valid:Parent":                 true,
 	"InputFlags":                   true,
 	"ExampleFlagProblems":          true,
 	"Now":                          true,

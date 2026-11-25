@@ -69,9 +69,8 @@ type CatalogColumn struct {
 	// What the field is.
 	Doc string `json:"doc"`
 
-	// What the field holds: value, values, object or list. It is one of: value,
-	// values, object, list.
-	Kind CatalogColumnKind `json:"kind"`
+	// Kind is the property kind.
+	Kind types.ColumnKind `json:"kind"`
 
 	// The label of the field.
 	Label string `json:"label"`
@@ -82,17 +81,6 @@ type CatalogColumn struct {
 	// The render tag of the field, such as bytes.
 	Render string `json:"render,omitempty"`
 }
-
-// CatalogColumnKind: What the field holds: value, values, object or list.
-type CatalogColumnKind string
-
-// The values of CatalogColumnKind.
-const (
-	CatalogColumnKindValue  CatalogColumnKind = "value"
-	CatalogColumnKindValues CatalogColumnKind = "values"
-	CatalogColumnKindObject CatalogColumnKind = "object"
-	CatalogColumnKindList   CatalogColumnKind = "list"
-)
 
 // CatalogExample is the CatalogExample of the spec.
 type CatalogExample struct {
@@ -111,13 +99,11 @@ type CatalogField struct {
 	// What the field is.
 	Doc string `json:"doc"`
 
-	// Where the field goes in the request: path, query or body. It is one of:
-	// path, query, body.
-	In CatalogFieldIn `json:"in"`
+	// In is the property in.
+	In types.FieldIn `json:"in"`
 
-	// How a form takes the value: string, number, bool, list or object. It is one
-	// of: string, number, bool, list, object.
-	Kind CatalogFieldKind `json:"kind"`
+	// Kind is the property kind.
+	Kind types.FieldKind `json:"kind"`
 
 	// The json name of the field.
 	Name string `json:"name"`
@@ -132,29 +118,6 @@ type CatalogField struct {
 	// The field is a secret.
 	Secret bool `json:"secret,omitempty"`
 }
-
-// CatalogFieldIn: Where the field goes in the request: path, query or body.
-type CatalogFieldIn string
-
-// The values of CatalogFieldIn.
-const (
-	CatalogFieldInPath  CatalogFieldIn = "path"
-	CatalogFieldInQuery CatalogFieldIn = "query"
-	CatalogFieldInBody  CatalogFieldIn = "body"
-)
-
-// CatalogFieldKind: How a form takes the value: string, number, bool, list or
-// object.
-type CatalogFieldKind string
-
-// The values of CatalogFieldKind.
-const (
-	CatalogFieldKindString CatalogFieldKind = "string"
-	CatalogFieldKindNumber CatalogFieldKind = "number"
-	CatalogFieldKindBool   CatalogFieldKind = "bool"
-	CatalogFieldKindList   CatalogFieldKind = "list"
-	CatalogFieldKindObject CatalogFieldKind = "object"
-)
 
 // CatalogMethod is the CatalogMethod of the spec.
 type CatalogMethod struct {

@@ -64,7 +64,7 @@ var scheduleCreateCmd = &cobra.Command{
 		contentType, _ := cmd.Flags().GetString("content-type")
 		vars, _ := cmd.Flags().GetStringToString("vars")
 
-		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: ScheduleCreateRequest{Name: name, Object: object, Schedule: scheduleFlag, Interval: interval, User: user, ContentType: types.ContentType(contentType), Vars: vars}})
+		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Body: ScheduleCreateRequest{Name: name, Object: object, Schedule: scheduleFlag, Interval: types.Interval(interval), User: user, ContentType: types.ContentType(contentType), Vars: vars}})
 	},
 	Short: "Deploy a cron entry",
 	Use:   "create",

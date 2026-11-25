@@ -58,7 +58,7 @@ var (
 // shows as the CLI prints it.
 var sampleInstall = InstallOutput{
 	Version: "v1.4.0",
-	Tools:   []string{"claude"},
+	Tools:   []Tool{ToolClaude},
 	Changed: 5,
 	Files: []skills.Result{
 		{Path: ".claude/skills/osapi/SKILL.md", Status: skills.Created},

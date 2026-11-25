@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { RowStatus } from './rowStatus';
+import type { Signal } from './signal';
 
 export interface ProcessResult {
   /** Whether the signal was sent */
@@ -15,7 +16,6 @@ export interface ProcessResult {
   hostname: string;
   /** The process ID */
   pid?: number;
-  /** The signal that was sent */
-  signal?: string;
+  signal?: Signal;
   status: RowStatus;
 }

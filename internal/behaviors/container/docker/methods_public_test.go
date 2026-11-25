@@ -25,6 +25,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -49,7 +51,9 @@ func (s *MethodsPublicTestSuite) TestMethods() {
 		{
 			name: "list hands over the state",
 			run: func(m *mocks.MockProvider) (any, error) {
-				m.EXPECT().List(gomock.Any(), "running").Return([]docker.Entry{{Name: "a"}}, nil)
+				m.EXPECT().
+					List(gomock.Any(), types.ContainerRunning).
+					Return([]docker.Entry{{Name: "a"}}, nil)
 				return docker.List(context.Background(), m, docker.ListInput{State: "running"})
 			},
 			want: []docker.Entry{{Name: "a"}},

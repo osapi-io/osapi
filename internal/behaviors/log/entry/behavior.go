@@ -80,6 +80,6 @@ var Behavior = behavior.Register(behavior.Define(
 		).
 		Fails("Lines below one", ListInput{Lines: -1}, "min").
 		Fails("More than 10000 lines", ListInput{Lines: 10001}, "max").
-		Fails("A priority that journald does not have", ListInput{Priority: "loud"}, "oneof").
+		Fails("A priority that journald does not have", ListInput{Priority: "loud"}, "enum").
 		Fails("A unit with a space in it", ListInput{Unit: "nginx service"}, "unit_name"),
 ))

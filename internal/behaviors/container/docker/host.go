@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	gohaidocker "github.com/osapi-io/gohai/pkg/gohai/collectors/docker"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
@@ -71,7 +73,7 @@ func (c *cli) containers(
 // List reads the containers, of state: running, stopped, or all when empty.
 func (c *cli) List(
 	ctx context.Context,
-	state string,
+	state types.ContainerState,
 ) ([]Entry, error) {
 	all, err := c.containers(ctx)
 	if err != nil {

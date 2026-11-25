@@ -130,5 +130,5 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A process that the host does not have",
 			SignalInput{PID: 99999, Signal: "TERM"}, "not found").
 		Fails("A process ID below 1", SignalInput{PID: -1, Signal: "TERM"}, "min").
-		Fails("A signal that osapi does not send", SignalInput{PID: 1234, Signal: "STOP"}, "oneof"),
+		Fails("A signal that osapi does not send", SignalInput{PID: 1234, Signal: "STOP"}, "enum"),
 ))

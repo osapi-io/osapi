@@ -23,6 +23,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -62,7 +64,7 @@ func Status(
 	if in.Component != "" {
 		kept := []ComponentEntry{}
 		for _, e := range out.Registry {
-			if e.Type == in.Component {
+			if types.ComponentType(e.Type) == in.Component {
 				kept = append(kept, e)
 			}
 		}

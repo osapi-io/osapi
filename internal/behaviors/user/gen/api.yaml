@@ -48,6 +48,11 @@ components:
           example: not_found
           type: string
       type: object
+    Lock:
+      enum:
+        - locked
+        - unlocked
+      type: string
     RowStatus:
       description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
       enum:
@@ -254,13 +259,7 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,startswith=/,no_linebreak
         lock:
-          description: 'Whether to refuse logins with its password: locked refuses them, unlocked allows them'
-          enum:
-            - locked
-            - unlocked
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=locked unlocked
+          $ref: '#/components/schemas/Lock'
         shell:
           description: Its login shell, such as /bin/bash
           pattern: ^[^\r\n]*$

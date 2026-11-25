@@ -82,7 +82,7 @@ func runCreate2(
 	target string,
 ) error {
 	resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-		Interval: client.ScheduleCreateRequestInterval("daily"),
+		Interval: types.Interval("daily"),
 		Name:     "osapitest",
 		Object:   "osapitest.sh",
 	})

@@ -62,11 +62,11 @@ List, describe and validate the local commands, and print their DSL.
 
 ### Flags (3)
 
-| FLAG          | TYPE   | VALIDATE                                 | HELP                                                                                          |
-| ------------- | ------ | ---------------------------------------- | --------------------------------------------------------------------------------------------- |
-| --name        | string | required                                 | The group's name: its command under osapi                                                     |
-| --description | string | required                                 | What the group is, in one line                                                                |
-| --under       | string | required,oneof=agent controller dsl nats | The word of the root that the group goes under, where it runs: agent, controller, dsl or nats |
+| FLAG          | TYPE   | VALIDATE      | HELP                                                                                          |
+| ------------- | ------ | ------------- | --------------------------------------------------------------------------------------------- |
+| --name        | string | required      | The group's name: its command under osapi                                                     |
+| --description | string | required      | What the group is, in one line                                                                |
+| --under       | string | required,enum | The word of the root that the group goes under, where it runs: agent, controller, dsl or nats |
 
 ## [osapi dsl command spec get](../../usage/cli/dsl/command/spec/get.md)
 

@@ -31,14 +31,14 @@ op GET /api/file/stale id=GetFileStale tags=[File_Management_API_file_operations
 op GET /api/file/{name} id=GetFileByName tags=[File_Management_API_file_operations] auth=BearerAuth:file:read params=[path:name!:string] body= responses=[200=application/json:FileInfoResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/health id=GetHealth tags=[Health_Check_API_health] auth=public params=[] body= responses=[200=application/json:HealthResponse 500=application/json:ErrorResponse]
 op GET /api/health/ready id=GetHealthReady tags=[Health_Check_API_health] auth=public params=[] body= responses=[200=application/json:ReadyResponse 500=application/json:ErrorResponse 503=application/json:ReadyResponse]
-op GET /api/health/status id=GetHealthStatus tags=[Health_Check_API_health] auth=BearerAuth:health:read params=[query:component:string(controller|nats|agent)] body= responses=[200=application/json:StatusResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/health/status id=GetHealthStatus tags=[Health_Check_API_health] auth=BearerAuth:health:read params=[query:component:ComponentType] body= responses=[200=application/json:StatusResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job id=GetJobs tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[query:limit:integer query:offset:integer query:status:JobStatus] body= responses=[200=application/json:ListJobsResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job/{id} id=GetJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[path:id!:string/uuid] body= responses=[200=application/json:JobDetailResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/certificate id=GetNodeCertificate tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string] body= responses=[200=application/json:CertificateCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/certificate/{name} id=GetNodeCertificateByKey tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:CertificateGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/disk id=GetNodeDisk tags=[Disk_API_disk_operations] auth=BearerAuth:disk:read params=[path:hostname!:string] body= responses=[200=application/json:DiskGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/dns/{interface_name} id=GetNodeDnsByKey tags=[Dns_API_dns_operations] auth=BearerAuth:dns:read params=[path:hostname!:string path:interface_name!:string] body= responses=[200=application/json:DnsGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/docker id=GetNodeDocker tags=[Docker_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string query:state:string(running|stopped|all)] body= responses=[200=application/json:DockerCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/docker id=GetNodeDocker tags=[Docker_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string query:state:ContainerState] body= responses=[200=application/json:DockerCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/docker/{name} id=GetNodeDockerByKey tags=[Docker_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:DockerGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/file id=GetNodeFile tags=[File_API_file_operations] auth=BearerAuth:file:read params=[path:hostname!:string query:path!:string] body= responses=[200=application/json:FileGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/group id=GetNodeGroup tags=[Group_API_group_operations] auth=BearerAuth:group:read params=[path:hostname!:string] body= responses=[200=application/json:GroupCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -49,7 +49,7 @@ op GET /api/node/{hostname}/interface id=GetNodeInterface tags=[Interface_API_in
 op GET /api/node/{hostname}/interface/{name} id=GetNodeInterfaceByKey tags=[Interface_API_interface_operations] auth=BearerAuth:interface:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:InterfaceGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/interface/{name}/route id=GetNodeInterfaceRoute tags=[Route_API_route_operations] auth=BearerAuth:interface:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:InterfaceRouteCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/load id=GetNodeLoad tags=[Load_API_load_operations] auth=BearerAuth:load:read params=[path:hostname!:string] body= responses=[200=application/json:LoadGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/log id=GetNodeLog tags=[Log_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string query:lines:integer query:priority:string(emerg|alert|crit|err|warning|notice|info|debug) query:since:string query:unit:string] body= responses=[200=application/json:LogCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/log id=GetNodeLog tags=[Log_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string query:lines:integer query:priority:Priority query:since:string query:unit:string] body= responses=[200=application/json:LogCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/log/source id=GetNodeLogSource tags=[Source_API_source_operations] auth=BearerAuth:log:read params=[path:hostname!:string] body= responses=[200=application/json:LogSourceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/memory id=GetNodeMemory tags=[Memory_API_memory_operations] auth=BearerAuth:memory:read params=[path:hostname!:string] body= responses=[200=application/json:MemoryGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/ntp id=GetNodeNtp tags=[Ntp_API_ntp_operations] auth=BearerAuth:ntp:read params=[path:hostname!:string] body= responses=[200=application/json:NtpGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -127,6 +127,7 @@ op PUT /api/node/{hostname}/timezone id=PutNodeTimezone tags=[Timezone_API_timez
 op PUT /api/node/{hostname}/user/{name} id=PutNodeUser tags=[User_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:UserUpdateRequest! responses=[200=application/json:UserUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/user/{name}/password id=PutNodeUserPassword tags=[Password_API_password_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:UserPasswordUpdateRequest! responses=[200=application/json:UserPasswordUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/secret/{vault}/{key} id=PutSecret tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:write params=[path:key!:string path:vault!:string] body=application/json:SecretUpdateRequest! responses=[200=application/json:SecretInfo 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+schema AddressFamily = string(inet|inet6|dual)
 schema Admission.admitted_at = string/date-time
 schema Admission.decided_at = string/date-time
 schema Admission.encryption_key = string
@@ -215,7 +216,7 @@ schema CatalogCall.calls = [CatalogCall]
 schema CatalogCall.method! = string
 schema CatalogColumn.columns = [CatalogColumn]
 schema CatalogColumn.doc! = string
-schema CatalogColumn.kind! = string(value|values|object|list)
+schema CatalogColumn.kind! = ColumnKind
 schema CatalogColumn.label! = string
 schema CatalogColumn.name! = string
 schema CatalogColumn.render = string
@@ -223,8 +224,8 @@ schema CatalogExample.doc! = string
 schema CatalogExample.input! = 
 schema CatalogExample.output = 
 schema CatalogField.doc! = string
-schema CatalogField.in! = string(path|query|body)
-schema CatalogField.kind! = string(string|number|bool|list|object)
+schema CatalogField.in! = FieldIn
+schema CatalogField.kind! = FieldKind
 schema CatalogField.name! = string
 schema CatalogField.options = [string]
 schema CatalogField.required! = boolean
@@ -292,6 +293,7 @@ schema CertificateUpdateResponse.results! = [CertificateResult]
 schema Check.error = string
 schema Check.name! = string
 schema Check.status! = string
+schema ColumnKind = string(value|values|object|list)
 schema CommandExecRequest.args = [string]
 schema CommandExecRequest.command! = string
 schema CommandExecRequest.cwd = string
@@ -322,6 +324,7 @@ schema ComponentEntry.status = string
 schema ComponentEntry.type = string
 schema ComponentEntry.url = string
 schema ComponentEntry.version = string
+schema ComponentType = string(controller|nats|agent)
 schema ConditionType = string(MemoryPressure|HighLoad|DiskPressure|DrainStuck|ConsumersUnavailable|ProcessMemoryPressure|ProcessHighCPU)
 schema ConnectivityPingRequest.address! = string
 schema ConnectivityPingResponse.job_id = string/uuid
@@ -336,6 +339,7 @@ schema ConnectivityPingResult.packet_loss = number/double
 schema ConnectivityPingResult.packets_received = integer
 schema ConnectivityPingResult.packets_sent = integer
 schema ConnectivityPingResult.status! = RowStatus
+schema ContainerState = string(running|stopped|all)
 schema ContentType = string(raw|template)
 schema CreateJobResponse.job_id! = string/uuid
 schema CreateJobResponse.revision = integer/int64
@@ -434,6 +438,8 @@ schema FactKeyEntry.description = string
 schema FactKeyEntry.key! = string
 schema FactKeysResponse.items! = [FactKeyEntry]
 schema FactKeysResponse.total_items! = integer
+schema FieldIn = string(path|query|body)
+schema FieldKind = string(string|number|bool|list|object)
 schema FileDeleteRequest.path! = string
 schema FileDeleteResponse.job_id = string/uuid
 schema FileDeleteResponse.results! = [FileDeleteResult]
@@ -557,7 +563,7 @@ schema InterfaceCreateRequest.gateway4 = string/ipv4
 schema InterfaceCreateRequest.gateway6 = string/ipv6
 schema InterfaceCreateRequest.mac_address = string
 schema InterfaceCreateRequest.mtu = integer
-schema InterfaceCreateRequest.type = string(ethernet|dummy)
+schema InterfaceCreateRequest.type = InterfaceType
 schema InterfaceCreateRequest.wakeonlan = boolean
 schema InterfaceCreateResponse.job_id = string/uuid
 schema InterfaceCreateResponse.results! = [InterfaceResult]
@@ -612,6 +618,7 @@ schema InterfaceRouteUpdateRequest.metric = integer
 schema InterfaceRouteUpdateRequest.via! = string/ip
 schema InterfaceRouteUpdateResponse.job_id = string/uuid
 schema InterfaceRouteUpdateResponse.results! = [InterfaceRouteResult]
+schema InterfaceType = string(ethernet|dummy)
 schema InterfaceUpdateRequest.addresses = [string/cidr]
 schema InterfaceUpdateRequest.dhcp4 = boolean
 schema InterfaceUpdateRequest.dhcp6 = boolean
@@ -619,10 +626,11 @@ schema InterfaceUpdateRequest.gateway4 = string/ipv4
 schema InterfaceUpdateRequest.gateway6 = string/ipv6
 schema InterfaceUpdateRequest.mac_address = string
 schema InterfaceUpdateRequest.mtu = integer
-schema InterfaceUpdateRequest.type = string(ethernet|dummy)
+schema InterfaceUpdateRequest.type = InterfaceType
 schema InterfaceUpdateRequest.wakeonlan = boolean
 schema InterfaceUpdateResponse.job_id = string/uuid
 schema InterfaceUpdateResponse.results! = [InterfaceResult]
+schema Interval = string(hourly|daily|weekly|monthly)
 schema JobDetailResponse.agent_states = [{duration:string,error:string,hostname!:string,status:AgentJobStatus}]
 schema JobDetailResponse.chain = [string]
 schema JobDetailResponse.changed = boolean
@@ -665,13 +673,14 @@ schema LoadEntry.load_average = Averages
 schema LoadEntry.status! = RowStatus
 schema LoadGetResponse.job_id = string/uuid
 schema LoadGetResponse.results! = [LoadEntry]
+schema Lock = string(locked|unlocked)
 schema LogCollectionResponse.job_id = string/uuid
 schema LogCollectionResponse.results! = [LogEntry]
 schema LogEntry.error = string
 schema LogEntry.hostname! = string
 schema LogEntry.message = string
 schema LogEntry.pid = integer
-schema LogEntry.priority = string
+schema LogEntry.priority = Priority
 schema LogEntry.status! = RowStatus
 schema LogEntry.timestamp = string
 schema LogEntry.unit = string
@@ -693,7 +702,7 @@ schema MemoryResponse.used! = integer
 schema MethodKind = string(read|write|action)
 schema NATSInfo.url! = string
 schema NATSInfo.version! = string
-schema NetworkInterfaceResponse.family = string(inet|inet6|dual)
+schema NetworkInterfaceResponse.family = AddressFamily
 schema NetworkInterfaceResponse.ipv4 = string
 schema NetworkInterfaceResponse.ipv6 = string
 schema NetworkInterfaceResponse.mac = string
@@ -788,6 +797,7 @@ schema PowerShutdownRequest.delay = integer
 schema PowerShutdownRequest.message = string
 schema PowerShutdownResponse.job_id = string/uuid
 schema PowerShutdownResponse.results! = [PowerResult]
+schema Priority = string(emerg|alert|crit|err|warning|notice|info|debug)
 schema ProcessCollectionResponse.job_id = string/uuid
 schema ProcessCollectionResponse.results! = [ProcessEntry]
 schema ProcessEntry.command = string
@@ -808,9 +818,9 @@ schema ProcessResult.changed = boolean
 schema ProcessResult.error = string
 schema ProcessResult.hostname! = string
 schema ProcessResult.pid = integer
-schema ProcessResult.signal = string
+schema ProcessResult.signal = Signal
 schema ProcessResult.status! = RowStatus
-schema ProcessSignalRequest.signal! = string(TERM|KILL|HUP|INT|USR1|USR2)
+schema ProcessSignalRequest.signal! = Signal
 schema ProcessSignalResponse.job_id = string/uuid
 schema ProcessSignalResponse.results! = [ProcessResult]
 schema ReadyResponse.error = string
@@ -828,7 +838,7 @@ schema RowStatus = string(ok|failed|skipped|timeout)
 schema ScheduleCollectionResponse.job_id = string/uuid
 schema ScheduleCollectionResponse.results! = [ScheduleEntry]
 schema ScheduleCreateRequest.content_type = ContentType
-schema ScheduleCreateRequest.interval = string(hourly|daily|weekly|monthly)
+schema ScheduleCreateRequest.interval = Interval
 schema ScheduleCreateRequest.name! = string
 schema ScheduleCreateRequest.object! = string
 schema ScheduleCreateRequest.schedule = string
@@ -906,6 +916,8 @@ schema ServiceStopResponse.results! = [ServiceResult]
 schema ServiceUpdateRequest.object! = string
 schema ServiceUpdateResponse.job_id = string/uuid
 schema ServiceUpdateResponse.results! = [ServiceResult]
+schema Signal = string(TERM|KILL|HUP|INT|USR1|USR2)
+schema SpanStatus = string(ok|error)
 schema StaleDeployment.current_sha! = string
 schema StaleDeployment.deployed_at! = string
 schema StaleDeployment.deployed_sha! = string
@@ -1017,7 +1029,7 @@ schema TraceSpan.parent_span_id = string
 schema TraceSpan.service! = string
 schema TraceSpan.span_id! = string
 schema TraceSpan.start_time! = string/date-time
-schema TraceSpan.status! = string(ok|error)
+schema TraceSpan.status! = SpanStatus
 schema TraceSpan.status_message = string
 schema UptimeEntry.error = string
 schema UptimeEntry.hostname! = string
@@ -1090,7 +1102,7 @@ schema UserSshkeyResult.hostname! = string
 schema UserSshkeyResult.status! = RowStatus
 schema UserUpdateRequest.groups = [string]
 schema UserUpdateRequest.home = string
-schema UserUpdateRequest.lock = string(locked|unlocked)
+schema UserUpdateRequest.lock = Lock
 schema UserUpdateRequest.shell = string
 schema UserUpdateResponse.job_id = string/uuid
 schema UserUpdateResponse.results! = [UserResult]

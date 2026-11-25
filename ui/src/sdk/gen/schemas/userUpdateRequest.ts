@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserUpdateRequestLock } from './userUpdateRequestLock';
+import type { Lock } from './lock';
 
 export interface UserUpdateRequest {
   /**
@@ -18,8 +18,7 @@ export interface UserUpdateRequest {
      * @pattern ^[^\r\n]*$
      */
   home?: string;
-  /** Whether to refuse logins with its password: locked refuses them, unlocked allows them */
-  lock?: UserUpdateRequestLock;
+  lock?: Lock;
   /**
      * Its login shell, such as /bin/bash
      * @pattern ^[^\r\n]*$

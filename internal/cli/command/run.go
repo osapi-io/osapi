@@ -174,9 +174,6 @@ func problem(
 		return flag + " is required"
 	case validation.Hint(ctx, fe) != "":
 		return flag + ": " + validation.Hint(ctx, fe)
-	case fe.Tag() == "oneof":
-		return fmt.Sprintf("%s: %q is not one of %s",
-			flag, fmt.Sprint(fe.Value()), strings.Join(strings.Fields(fe.Param()), ", "))
 	default:
 		return fmt.Sprintf("%s: %q breaks %s", flag, fmt.Sprint(fe.Value()), rule)
 	}

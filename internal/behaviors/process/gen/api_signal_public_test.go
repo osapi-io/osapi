@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	process "github.com/osapi-io/osapi/internal/behaviors/process"
 	"github.com/osapi-io/osapi/internal/behaviors/process/gen"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APISignalPublicTestSuite struct {
@@ -40,7 +41,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 				servertest.Completed("server1", `{"pid":1234,"signal":"TERM","changed":true}`),
 			),
@@ -60,7 +61,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 				servertest.Completed("server1", `{"pid":1234,"signal":"TERM","changed":true}`),
 				servertest.Skipped("server2"),
@@ -82,7 +83,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 				servertest.Skipped("server1"),
 			),
@@ -102,7 +103,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 				servertest.Failed("server1", "boom"),
 			),
@@ -122,7 +123,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 				servertest.TimedOut("server1"),
 			),
@@ -142,7 +143,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -160,7 +161,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -178,7 +179,7 @@ func (s *APISignalPublicTestSuite) TestSignal() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 			).Fails(servertest.NotFound("server1")),
 			WantCode: http.StatusNotFound,
@@ -309,7 +310,7 @@ func (s *APISignalPublicTestSuite) TestSignalRBACHTTP() {
 				"process.signal",
 				process.SignalInput{
 					PID:    1234,
-					Signal: "TERM",
+					Signal: types.Signal("TERM"),
 				},
 				servertest.Skipped("server1"),
 			),

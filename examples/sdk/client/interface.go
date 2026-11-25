@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -90,7 +91,7 @@ func runCreate(
 	resp, err := c.Interface.Create(ctx, target, client.InterfaceCreateInput{
 		Addresses: []string{"10.0.1.5/24"},
 		Name:      "osapi0",
-		Type:      client.InterfaceCreateRequestType("dummy"),
+		Type:      types.InterfaceType("dummy"),
 	})
 	if err != nil {
 		return err
@@ -111,7 +112,7 @@ func runCreate2(
 		MACAddress: "52:54:00:aa:bb:cc",
 		MTU:        9000,
 		Name:       "osapi0",
-		Type:       client.InterfaceCreateRequestType("dummy"),
+		Type:       types.InterfaceType("dummy"),
 	})
 	if err != nil {
 		return err
@@ -147,7 +148,7 @@ func runUpdate(
 	resp, err := c.Interface.Update(ctx, target, client.InterfaceUpdateInput{
 		DHCP4: true,
 		Name:  "osapi0",
-		Type:  client.InterfaceUpdateRequestType("dummy"),
+		Type:  types.InterfaceType("dummy"),
 	})
 	if err != nil {
 		return err

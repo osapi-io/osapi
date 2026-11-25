@@ -23,6 +23,7 @@ package command
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -136,6 +137,16 @@ const (
 	ParentDSL        Parent = "dsl"
 	ParentNATS       Parent = "nats"
 )
+
+// Values are the commands that a group can be Under, for the enum rule.
+func (Parent) Values() []Parent {
+	return KnownParents()
+}
+
+// Valid reports whether p is a command that a group can be Under.
+func (p Parent) Valid() bool {
+	return slices.Contains(KnownParents(), p)
+}
 
 // KnownParents are the commands that a group can be Under. Add a constant
 // here to make a new one.

@@ -45,7 +45,7 @@ var skillInstallCmd = &cobra.Command{
 		path, _ := cmd.Flags().GetString("path")
 		tools, _ := cmd.Flags().GetStringSlice("tool")
 
-		return clicommand.Run(cmd, skill.Group, "install", skill.InstallInput{Path: path, Tools: tools})
+		return clicommand.Run(cmd, skill.Group, "install", skill.InstallInput{Path: path, Tools: clicommand.Strings[skill.Tool](tools)})
 	},
 	Short: "Install the skills of this binary into a repository",
 	Use:   "install",

@@ -78,7 +78,7 @@ type ScheduleCreateRequest struct {
 	Name        string            `doc:"The entry, and its file name, such as backup" json:"name" validate:"required,max=64,resource_name"`
 	Object      string            `doc:"The object that holds the entry, from osapi client file upload" json:"object" validate:"required,min=1,max=255"`
 	Schedule    string            `doc:"A cron expression, such as */5 * * * *; give it or interval" json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
-	Interval    string            `doc:"The interval of a script in /etc/cron.daily and the like; give it or schedule" json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
+	Interval    types.Interval    `doc:"The interval of a script in /etc/cron.daily and the like; give it or schedule" json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,enum"`
 	User        string            `doc:"The user the entry runs as" json:"user,omitempty" validate:"omitempty,account_name"`
 	ContentType types.ContentType `doc:"The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty" json:"content_type,omitempty" validate:"omitempty,enum"`
 	Vars        map[string]string `doc:"The vars of a template, as key=value" json:"vars,omitempty" validate:"omitempty"`

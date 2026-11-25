@@ -33,6 +33,13 @@ import (
 	"github.com/osapi-io/osapi/internal/secret"
 )
 
+// onOff is a switch, a closed set for the enum rule.
+type onOff string
+
+func (onOff) Values() []onOff { return []onOff{"on", "off"} }
+
+func (v onOff) Valid() bool { return v == "on" || v == "off" }
+
 type SchemaPublicTestSuite struct {
 	suite.Suite
 }
@@ -53,7 +60,7 @@ type everything struct {
 	Size      uint8             `doc:"test"        json:"size"`
 	Tags      []string          `doc:"test"        json:"tags"            validate:"min=1,max=3"`
 	Exact     string            `doc:"test"        json:"exact"           validate:"len=4"`
-	Mode      string            `doc:"test"        json:"mode"            validate:"required,oneof=on off"`
+	Mode      onOff             `doc:"test"        json:"mode"            validate:"required,enum"`
 	Addr      string            `doc:"test"        json:"addr"            validate:"omitempty,ip"`
 	Custom    string            `doc:"test"        json:"custom"          validate:"test_custom"`
 	Formatted string            `doc:"test"        json:"formatted"       validate:"test_format"`

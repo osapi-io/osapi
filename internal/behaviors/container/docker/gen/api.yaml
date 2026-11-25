@@ -22,6 +22,12 @@ components:
       x-oapi-codegen-extra-tags:
         validate: required,min=1,valid_target
   schemas:
+    ContainerState:
+      enum:
+        - running
+        - stopped
+        - all
+      type: string
     DockerCollectionResponse:
       properties:
         job_id:
@@ -406,13 +412,9 @@ paths:
           in: query
           name: state
           schema:
-            enum:
-              - running
-              - stopped
-              - all
-            type: string
+            $ref: '#/components/schemas/ContainerState'
           x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=running stopped all
+            validate: omitempty,enum
       responses:
         "200":
           content:

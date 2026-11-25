@@ -5,13 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * What the field holds: value, values, object or list.
- */
-export type CatalogColumnKind = typeof CatalogColumnKind[keyof typeof CatalogColumnKind];
+export type ColumnKind = typeof ColumnKind[keyof typeof ColumnKind];
 
 
-export const CatalogColumnKind = {
+export const ColumnKind = {
   value: 'value',
   values: 'values',
   object: 'object',
