@@ -644,9 +644,9 @@ func writeSpec(
 	f *jen.File,
 	m *sdkmodel.Model,
 ) {
-	var services []jen.Code
+	services := make([]jen.Code, 0, len(m.Services))
 	for _, s := range m.Services {
-		var methods []jen.Code
+		methods := make([]jen.Code, 0, len(s.Methods))
 		for _, me := range s.Methods {
 			d := jen.Dict{
 				jen.Id("Name"):       jen.Lit(me.Name),
