@@ -86,21 +86,11 @@ func (a *Agent) startHeartbeat(
 			case <-ctx.Done():
 				a.deregister(machineID)
 				return
+			case <-a.renamed:
+				hostname = a.refreshHostname(hostname)
+				a.writeRegistration(ctx, machineID, hostname)
 			case <-ticker.C:
-				// Re-read current hostname for dynamic changes.
-				// Consumers use machine ID (permanent) so no resubscribe
-				// needed — only update the hostname for registry/logging.
-				newHostname, _ := getAgentHostnameFn(a.appConfig.Agent.Hostname)
-				if newHostname != hostname {
-					a.heartbeatLogger.Info(
-						"hostname changed",
-						slog.String("old_hostname", hostname),
-						slog.String("new_hostname", newHostname),
-					)
-					hostname = newHostname
-					a.hostname = newHostname
-				}
-
+				hostname = a.refreshHostname(hostname)
 				a.writeRegistration(ctx, machineID, hostname)
 				a.retryEnrollmentIfPending()
 
@@ -114,6 +104,25 @@ func (a *Agent) startHeartbeat(
 			}
 		}
 	}()
+}
+
+// refreshHostname is the host's hostname now, and logs and keeps it when it
+// is not hostname. Consumers use the machine ID, which does not change, so
+// nothing resubscribes: only the registry and the logs take the new name.
+func (a *Agent) refreshHostname(
+	hostname string,
+) string {
+	newHostname, _ := getAgentHostnameFn(a.appConfig.Agent.Hostname)
+	if newHostname != hostname {
+		a.heartbeatLogger.Info(
+			"hostname changed",
+			slog.String("old_hostname", hostname),
+			slog.String("new_hostname", newHostname),
+		)
+		a.hostname = newHostname
+	}
+
+	return newHostname
 }
 
 // writeRegistration marshals an agent registration and puts it to the registry KV.
