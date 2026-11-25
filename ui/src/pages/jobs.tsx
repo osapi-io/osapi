@@ -6,7 +6,7 @@ import { unwrap, usePolling } from "@/hooks/use-polling";
 import { useJob } from "@/hooks/use-job";
 import { enumLabel } from "@/lib/format";
 import { JobStatus } from "@/sdk/gen/schemas";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -53,7 +53,12 @@ export function Jobs() {
   const statusColor = useStatus();
 
   const [offset, setOffset] = useState(0);
-  const [statusFilter, setStatusFilter] = useState("");
+  // ?status=failed, from the dashboard's Failed jobs card, is the first
+  // filter.
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("status") ?? "",
+  );
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);

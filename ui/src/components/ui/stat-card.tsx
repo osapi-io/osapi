@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 interface StatCardProps {
   label: string;
@@ -8,6 +9,9 @@ interface StatCardProps {
   detail?: ReactNode;
   truncateDetail?: boolean;
   className?: string;
+  // to makes the card a link to the page that shows what it counts, such as
+  // the Jobs page filtered on failed.
+  to?: string;
 }
 
 export function StatCard({
@@ -16,9 +20,16 @@ export function StatCard({
   detail,
   truncateDetail,
   className,
+  to,
 }: StatCardProps) {
-  return (
-    <Card className={cn("p-3", className)}>
+  const card = (
+    <Card
+      className={cn(
+        "p-3",
+        to && "transition-colors group-hover:border-primary",
+        className,
+      )}
+    >
       <CardContent className="p-0">
         <p className="text-xs font-medium text-text-muted">{label}</p>
         <p className="text-lg font-semibold text-text">{value}</p>
@@ -34,5 +45,14 @@ export function StatCard({
         )}
       </CardContent>
     </Card>
+  );
+  if (!to) {
+    return card;
+  }
+
+  return (
+    <Link to={to} className="group block rounded-lg focus-visible:outline-2">
+      {card}
+    </Link>
   );
 }

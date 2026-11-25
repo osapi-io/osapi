@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { StatCard } from "@/components/ui/stat-card";
+import { useAuth } from "@/hooks/use-auth";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
@@ -25,6 +26,7 @@ import { type SubRow, subRows } from "@/lib/registry";
 
 export function Dashboard() {
   useVimScroll();
+  const { canCall } = useAuth();
   const statusColor = useStatus();
   const {
     data: health,
@@ -113,6 +115,9 @@ export function Dashboard() {
             {health.jobs && (
               <StatCard
                 label="Failed jobs"
+                to={
+                  canCall("GetJobs") ? "/admin/jobs?status=failed" : undefined
+                }
                 value={<Count n={health.jobs.failed} kind="failed" bare />}
                 detail={
                   <>
