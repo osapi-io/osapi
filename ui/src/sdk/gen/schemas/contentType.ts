@@ -6,7 +6,7 @@
  */
 
 /**
- * How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts.
+ * ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts.
  */
 export type ContentType = typeof ContentType[keyof typeof ContentType];
 

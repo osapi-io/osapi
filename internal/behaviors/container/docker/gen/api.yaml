@@ -23,6 +23,7 @@ components:
         validate: required,min=1,valid_target
   schemas:
     ContainerState:
+      description: ContainerState is the containers that a list shows, by their state.
       enum:
         - running
         - stopped

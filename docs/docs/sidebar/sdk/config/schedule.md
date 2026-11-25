@@ -222,12 +222,14 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ContentType
 
-How a deploy treats a file: raw writes its bytes as they are; template renders
-it with Go text/template and the agent's facts.
+ContentType is how a deploy treats a file: raw writes its bytes as they are;
+template renders it with Go text/template and the agent's facts.
 
 A `string`, one of `raw`, `template`.
 
 ### Interval
+
+Interval is how often a scheduled job runs, in place of a cron schedule.
 
 A `string`, one of `hourly`, `daily`, `weekly`, `monthly`.
 
@@ -241,15 +243,15 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ScheduleCreateInput
 
-| Field         | Type                | Description                                                                                                                    |
-| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ContentType` | `ContentType`       | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Interval`    | `Interval`          |                                                                                                                                |
-| `Name`        | `string`            | The entry, and its file name, such as backup.                                                                                  |
-| `Object`      | `string`            | The object that holds the entry, from osapi client file upload.                                                                |
-| `Schedule`    | `string`            | A cron expression, such as */5 * * * *; give it or interval.                                                                   |
-| `User`        | `string`            | The user the entry runs as.                                                                                                    |
-| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                          |
+| Field         | Type                | Description                                                                                                                                   |
+| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `ContentType`       | ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Interval`    | `Interval`          | Interval is how often a scheduled job runs, in place of a cron schedule.                                                                      |
+| `Name`        | `string`            | The entry, and its file name, such as backup.                                                                                                 |
+| `Object`      | `string`            | The object that holds the entry, from osapi client file upload.                                                                               |
+| `Schedule`    | `string`            | A cron expression, such as */5 * * * *; give it or interval.                                                                                  |
+| `User`        | `string`            | The user the entry runs as.                                                                                                                   |
+| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                                         |
 
 ### ScheduleEntry
 
@@ -277,14 +279,14 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### ScheduleUpdateInput
 
-| Field         | Type                | Description                                                                                                                    |
-| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `Name`        | `string`            | The name of the path. The entry, such as backup.                                                                               |
-| `ContentType` | `ContentType`       | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Object`      | `string`            | The object to deploy; the entry's own when empty.                                                                              |
-| `Schedule`    | `string`            | A new cron expression; the entry's own when empty.                                                                             |
-| `User`        | `string`            | The user the entry runs as; the entry's own when empty.                                                                        |
-| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                          |
+| Field         | Type                | Description                                                                                                                                   |
+| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Name`        | `string`            | The name of the path. The entry, such as backup.                                                                                              |
+| `ContentType` | `ContentType`       | ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Object`      | `string`            | The object to deploy; the entry's own when empty.                                                                                             |
+| `Schedule`    | `string`            | A new cron expression; the entry's own when empty.                                                                                            |
+| `User`        | `string`            | The user the entry runs as; the entry's own when empty.                                                                                       |
+| `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                                         |
 
 ## Example
 

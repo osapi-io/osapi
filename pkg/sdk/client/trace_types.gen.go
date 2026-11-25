@@ -94,7 +94,7 @@ type TraceSpan struct {
 	// When the span started.
 	StartTime time.Time `json:"start_time"`
 
-	// Status is the property status.
+	// SpanStatus is whether the work of a span failed.
 	Status types.SpanStatus `json:"status"`
 
 	// The error of a failed span.

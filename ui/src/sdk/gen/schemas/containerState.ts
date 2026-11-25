@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * ContainerState is the containers that a list shows, by their state.
+ */
 export type ContainerState = typeof ContainerState[keyof typeof ContainerState];
 
 

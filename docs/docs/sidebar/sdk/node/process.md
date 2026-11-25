@@ -128,15 +128,15 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
 | `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
 | `PID`      | `int`       | The process ID.                                                                                                                                                                                                          |
-| `Signal`   | `Signal`    |                                                                                                                                                                                                                          |
+| `Signal`   | `Signal`    | Signal is a signal that osapi sends to a process, by its name without SIG.                                                                                                                                               |
 | `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### ProcessSignalInput
 
-| Field    | Type     | Description                                        |
-| -------- | -------- | -------------------------------------------------- |
-| `PID`    | `int`    | The pid of the path. The process ID, such as 1234. |
-| `Signal` | `Signal` |                                                    |
+| Field    | Type     | Description                                                                |
+| -------- | -------- | -------------------------------------------------------------------------- |
+| `PID`    | `int`    | The pid of the path. The process ID, such as 1234.                         |
+| `Signal` | `Signal` | Signal is a signal that osapi sends to a process, by its name without SIG. |
 
 ### RowStatus
 
@@ -147,6 +147,8 @@ the host did not answer, so nobody knows whether it ran.
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### Signal
+
+Signal is a signal that osapi sends to a process, by its name without SIG.
 
 A `string`, one of `TERM`, `KILL`, `HUP`, `INT`, `USR1`, `USR2`.
 

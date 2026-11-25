@@ -138,8 +138,7 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ComponentType
 
-Show only the components of this type: controller, nats or agent. The other
-parts of the status stay.
+ComponentType is the type of a part of osapi that reports its health.
 
 A `string`, one of `controller`, `nats`, `agent`.
 

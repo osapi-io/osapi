@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * Lock is whether a user account refuses logins with its password.
+ */
 export type Lock = typeof Lock[keyof typeof Lock];
 
 

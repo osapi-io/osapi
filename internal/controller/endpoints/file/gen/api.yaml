@@ -2,7 +2,7 @@
 components:
   schemas:
     ContentType:
-      description: 'How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
+      description: 'ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
       enum:
         - raw
         - template

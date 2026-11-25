@@ -120,8 +120,8 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ContentType
 
-How a deploy treats a file: raw writes its bytes as they are; template renders
-it with Go text/template and the agent's facts.
+ContentType is how a deploy treats a file: raw writes its bytes as they are;
+template renders it with Go text/template and the agent's facts.
 
 A `string`, one of `raw`, `template`.
 
@@ -165,15 +165,15 @@ A `string`, one of `raw`, `template`.
 
 ### NodeFileUpdateInput
 
-| Field         | Type                | Description                                                                                                                    |
-| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ContentType` | `ContentType`       | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Group`       | `string`            | Group that owns the file; left as written when empty.                                                                          |
-| `Mode`        | `string`            | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                |
-| `ObjectName`  | `string`            | The object of the object store, from osapi client file list.                                                                   |
-| `Owner`       | `string`            | User that owns the file; left as written when empty.                                                                           |
-| `Path`        | `string`            | Absolute path of the file on the host.                                                                                         |
-| `Vars`        | `map[string]string` | Variables of a template, as .Vars, each as key=value.                                                                          |
+| Field         | Type                | Description                                                                                                                                   |
+| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `ContentType`       | ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Group`       | `string`            | Group that owns the file; left as written when empty.                                                                                         |
+| `Mode`        | `string`            | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                               |
+| `ObjectName`  | `string`            | The object of the object store, from osapi client file list.                                                                                  |
+| `Owner`       | `string`            | User that owns the file; left as written when empty.                                                                                          |
+| `Path`        | `string`            | Absolute path of the file on the host.                                                                                                        |
+| `Vars`        | `map[string]string` | Variables of a template, as .Vars, each as key=value.                                                                                         |
 
 ### RowStatus
 

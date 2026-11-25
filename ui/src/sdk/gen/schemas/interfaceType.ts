@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * InterfaceType is the type of a network interface that osapi manages.
+ */
 export type InterfaceType = typeof InterfaceType[keyof typeof InterfaceType];
 
 

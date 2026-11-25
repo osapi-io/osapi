@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * ComponentType is the type of a part of osapi that reports its health.
+ */
 export type ComponentType = typeof ComponentType[keyof typeof ComponentType];
 
 

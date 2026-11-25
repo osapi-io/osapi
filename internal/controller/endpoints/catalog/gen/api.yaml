@@ -326,6 +326,7 @@ components:
         - permissions
       type: object
     ColumnKind:
+      description: ColumnKind is what a field of an answer holds.
       enum:
         - value
         - values
@@ -358,12 +359,14 @@ components:
           type: string
       type: object
     FieldIn:
+      description: FieldIn is where a field of a request goes.
       enum:
         - path
         - query
         - body
       type: string
     FieldKind:
+      description: FieldKind is how a form takes the value of a field.
       enum:
         - string
         - number

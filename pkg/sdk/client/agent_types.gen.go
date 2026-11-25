@@ -157,7 +157,7 @@ type MemoryResponse struct {
 
 // NetworkInterfaceResponse is the NetworkInterfaceResponse of the spec.
 type NetworkInterfaceResponse struct {
-	// Family is the property family.
+	// AddressFamily is the IP address family of an interface.
 	Family types.AddressFamily `json:"family,omitzero"`
 
 	// IPv4 is the property ipv4.

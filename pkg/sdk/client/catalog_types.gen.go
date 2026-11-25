@@ -69,7 +69,7 @@ type CatalogColumn struct {
 	// What the field is.
 	Doc string `json:"doc"`
 
-	// Kind is the property kind.
+	// ColumnKind is what a field of an answer holds.
 	Kind types.ColumnKind `json:"kind"`
 
 	// The label of the field.
@@ -99,10 +99,10 @@ type CatalogField struct {
 	// What the field is.
 	Doc string `json:"doc"`
 
-	// In is the property in.
+	// FieldIn is where a field of a request goes.
 	In types.FieldIn `json:"in"`
 
-	// Kind is the property kind.
+	// FieldKind is how a form takes the value of a field.
 	Kind types.FieldKind `json:"kind"`
 
 	// The json name of the field.

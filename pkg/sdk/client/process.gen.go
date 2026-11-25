@@ -52,7 +52,7 @@ type ProcessSignalInput struct {
 	// The pid of the path: the process ID, such as 1234.
 	PID int `json:"-"`
 
-	// Signal is the property signal.
+	// Signal is a signal that osapi sends to a process, by its name without SIG.
 	Signal types.Signal `json:"signal"`
 }
 

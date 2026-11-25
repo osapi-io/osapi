@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * Interval is how often a scheduled job runs, in place of a cron schedule.
+ */
 export type Interval = typeof Interval[keyof typeof Interval];
 
 

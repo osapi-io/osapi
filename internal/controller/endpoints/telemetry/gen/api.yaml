@@ -27,6 +27,7 @@ components:
           type: string
       type: object
     SpanStatus:
+      description: SpanStatus is whether the work of a span failed.
       enum:
         - ok
         - error

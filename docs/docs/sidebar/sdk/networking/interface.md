@@ -214,7 +214,7 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Gateway6`   | `string`        | The IPv6 default gateway.                                                                     |
 | `MACAddress` | `string`        | The MAC address to set.                                                                       |
 | `MTU`        | `int`           | The MTU, from 68 to 9000.                                                                     |
-| `Type`       | `InterfaceType` |                                                                                               |
+| `Type`       | `InterfaceType` | InterfaceType is the type of a network interface that osapi manages.                          |
 | `Wakeonlan`  | `bool`          | Turn on wake-on-LAN.                                                                          |
 
 ### InterfaceEntry
@@ -246,6 +246,8 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### InterfaceType
 
+InterfaceType is the type of a network interface that osapi manages.
+
 A `string`, one of `ethernet`, `dummy`.
 
 ### InterfaceUpdateInput
@@ -260,7 +262,7 @@ A `string`, one of `ethernet`, `dummy`.
 | `Gateway6`   | `string`        | The IPv6 default gateway.                                                                     |
 | `MACAddress` | `string`        | The MAC address to set.                                                                       |
 | `MTU`        | `int`           | The MTU, from 68 to 9000.                                                                     |
-| `Type`       | `InterfaceType` |                                                                                               |
+| `Type`       | `InterfaceType` | InterfaceType is the type of a network interface that osapi manages.                          |
 | `Wakeonlan`  | `bool`          | Turn on wake-on-LAN.                                                                          |
 
 ### RowStatus
