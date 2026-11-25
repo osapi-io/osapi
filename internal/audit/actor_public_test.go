@@ -61,6 +61,7 @@ func (s *ActorPublicTestSuite) TestChange() {
 	s.Equal("m-1", e.Target)
 	s.Equal(200, e.ResponseCode)
 	s.Empty(e.TraceID)
+	s.NotNil(e.Roles, "an empty list: the response's roles are never null")
 
 	ctx := trace.ContextWithSpanContext(
 		context.Background(),

@@ -26,6 +26,8 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -66,6 +68,7 @@ func Change(
 		ID:             uuid.New().String(),
 		Timestamp:      time.Now(),
 		User:           name,
+		Roles:          []types.Role{},
 		Actor:          actor,
 		Action:         action,
 		Target:         target,
