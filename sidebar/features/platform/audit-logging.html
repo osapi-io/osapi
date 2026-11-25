@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Audit logging | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Audit logging | OSAPI"><meta data-rh="true" name="description" content="OSAPI records a structured audit trail of every API request. Audit entries"><meta data-rh="true" property="og:description" content="OSAPI records a structured audit trail of every API request. Audit entries"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Audit logging","item":"https://osapi-io.github.io/osapi/sidebar/features/platform/audit-logging"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.076ad077.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.992b223b.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.8ff415e8.js" defer="defer"></script>
 </head>
 <body>
@@ -133,6 +133,49 @@ a timeout, is not in the entry. Its steps are in the job. A method that calls no
 other behavior has no <code>steps</code> and no <code>chain</code>.</p>
 <p>The entry keeps the steps for the time that it keeps the entry. Thus the chain
 of an entry stays after the job expires from the job bucket.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="changes-that-do-not-go-through-the-api">Changes that do not go through the API<a href="#changes-that-do-not-go-through-the-api" class="hash-link" aria-label="Direct link to Changes that do not go through the API" title="Direct link to Changes that do not go through the API" translate="no">​</a></h3>
+<p>Some changes do not go through the API, and the log has them too. Such an entry
+has an <code>actor</code>, the kind of who made the change, an <code>action</code> and a <code>target</code>. Its
+<code>user</code> is the name of the actor:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Actor</th><th>User</th><th>Action</th><th>Target</th></tr></thead><tbody><tr><td><code>system</code></td><td><code>auto_admit</code></td><td><code>agent.admit</code></td><td>the machine ID</td></tr><tr><td><code>system</code></td><td><code>delete_after</code></td><td><code>agent.delete</code></td><td>the machine ID</td></tr><tr><td><code>join-token</code></td><td>the token&#x27;s ID</td><td><code>agent.join</code> (200, or 403 when refused)</td><td>the machine ID</td></tr><tr><td><code>local</code></td><td>the user of the operating system of a command</td><td><code>jointoken.create</code>, <code>jointoken.revoke</code></td><td>the token&#x27;s ID</td></tr></tbody></table>
+<p>A local command connects to NATS as the controller does, and writes its entry to
+the audit stream. An entry never has the token or a secret: only its ID. An
+entry of a request through the API has no <code>actor</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="viewing-audit-logs">Viewing audit logs<a href="#viewing-audit-logs" class="hash-link" aria-label="Direct link to Viewing audit logs" title="Direct link to Viewing audit logs" translate="no">​</a></h2>
 <p>Query audit entries through the API or CLI. You can list recent entries
 (paginated), get a specific entry by ID, or export all entries. Refer to
@@ -167,6 +210,6 @@ permission of each method.</p>
 get, export)</li>
 <li class=""><a class="" href="/osapi/gen/api/audit-log-api-audit">API Reference</a>: REST API documentation</li>
 <li class=""><a class="" href="/osapi/sidebar/usage/configuration">Configuration</a>: full configuration reference</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/platform/agent-lifecycle"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent lifecycle</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/platform/authentication"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Authentication &amp; RBAC</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#what-the-request-asked-for" class="table-of-contents__link toc-highlight">What the request asked for</a></li><li><a href="#the-chain-of-the-job" class="table-of-contents__link toc-highlight">The chain of the job</a></li></ul></li><li><a href="#viewing-audit-logs" class="table-of-contents__link toc-highlight">Viewing audit logs</a></li><li><a href="#export" class="table-of-contents__link toc-highlight">Export</a></li><li><a href="#retention" class="table-of-contents__link toc-highlight">Retention</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/platform/agent-lifecycle"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent lifecycle</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/platform/authentication"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Authentication &amp; RBAC</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#what-the-request-asked-for" class="table-of-contents__link toc-highlight">What the request asked for</a></li><li><a href="#the-chain-of-the-job" class="table-of-contents__link toc-highlight">The chain of the job</a></li><li><a href="#changes-that-do-not-go-through-the-api" class="table-of-contents__link toc-highlight">Changes that do not go through the API</a></li></ul></li><li><a href="#viewing-audit-logs" class="table-of-contents__link toc-highlight">Viewing audit logs</a></li><li><a href="#export" class="table-of-contents__link toc-highlight">Export</a></li><li><a href="#retention" class="table-of-contents__link toc-highlight">Retention</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
