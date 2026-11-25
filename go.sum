@@ -680,8 +680,8 @@ github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAl
 github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9yPro=
 github.com/onsi/gomega v1.42.1 h1:iN1rCUX+44NZ1Dc97MPoeFYbFR0vh8zxoxMFwKdyZ6I=
 github.com/onsi/gomega v1.42.1/go.mod h1:REff/hsDsodHoKlWsP2mAPhu1+5/6hVYNf9rIEBpeSg=
-github.com/osapi-io/gohai v1.12.1 h1:tK18Q0S34Hm/8/oHenZ5o3B7iOZ0FLbQIJZhGCVsfN8=
-github.com/osapi-io/gohai v1.12.1/go.mod h1:fmsyNm+5v02BwP4r8IHDEGexCa6PPmJed6usfT3jT/A=
+github.com/osapi-io/gohai v1.13.0 h1:YBXCgCog0mEe6W7GPRySoEl83/OiNPq71RUfd65rwyc=
+github.com/osapi-io/gohai v1.13.0/go.mod h1:fmsyNm+5v02BwP4r8IHDEGexCa6PPmJed6usfT3jT/A=
 github.com/osapi-io/nats-client v1.2.0 h1:5wxYnEHukjuDigPsG7eR6HIkZPzLfelmIxDjg8iTEX8=
 github.com/osapi-io/nats-client v1.2.0/go.mod h1:QyP+WVKK05r02ZK6lJ9omZAlP3iQ9nRhBrVEnpJFqfU=
 github.com/osapi-io/nats-server v1.1.0 h1:plerqk29UH3YNrkubnf4CjUGjC99BLMDQ7BpFAauFAk=
