@@ -31,6 +31,10 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/object"
 )
 
+// notAContentType is a content type that the behavior refuses, for its
+// Fails.
+const notAContentType = "zip"
+
 // The objects of the examples: an entry with a cron expression, a new
 // version of it, a daily script, and a template.
 const (
@@ -229,7 +233,7 @@ var Behavior = behavior.Register(behavior.Define(
 				Name:        "osapitest",
 				Object:      "osapitest.cron",
 				Schedule:    "0 2 * * *",
-				ContentType: "yaml",
+				ContentType: notAContentType,
 			},
 			"ContentType"),
 	behavior.Write("update", Update).Key("name").
@@ -282,7 +286,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("An object name over 255 characters",
 			UpdateInput{Name: "osapitest", Object: strings.Repeat("a", 256)}, "Object").
 		Fails("A user that is not an account name", UpdateInput{Name: "osapitest", User: "a b"}, "User").
-		Fails("A content type that is not one", UpdateInput{Name: "osapitest", ContentType: "yaml"},
+		Fails("A content type that is not one", UpdateInput{Name: "osapitest", ContentType: notAContentType},
 			"ContentType"),
 	behavior.Write("delete", Delete).Key("name").
 		AdminOnly().

@@ -35,6 +35,10 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/object"
 )
 
+// notAContentType is a content type that the behavior refuses, for its
+// Fails.
+const notAContentType = "zip"
+
 // The objects and the path of the examples. The integration test runs the
 // write examples as root on CI's runner; nothing there has this path.
 const (
@@ -129,7 +133,11 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("An owner that is an option",
 			UpdateInput{ObjectName: "example.conf", Path: path, Owner: "-r"}, "account_name").
 		Fails("A content type that is neither",
-			UpdateInput{ObjectName: "example.conf", Path: path, ContentType: "binary"}, "enum"),
+			UpdateInput{
+				ObjectName:  "example.conf",
+				Path:        path,
+				ContentType: notAContentType,
+			}, "enum"),
 	behavior.Write("delete", Delete).
 		Describe("Remove a file that osapi deployed").
 		Explain("Removes the file and keeps its record, marked undeployed, so status reports "+
