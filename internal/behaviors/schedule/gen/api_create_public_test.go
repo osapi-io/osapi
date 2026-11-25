@@ -524,7 +524,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/schedule",
-				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","content_type":"yaml"}`,
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","content_type":"zip"}`,
 			},
 			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
