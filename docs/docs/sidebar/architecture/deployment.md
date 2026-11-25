@@ -49,6 +49,9 @@ graph TD
 
 ## An external NATS cluster
 
+[Running osapi on your NATS](nats.md) tells what osapi needs from the cluster,
+and what its administrator provisions.
+
 Use a NATS cluster, not the embedded server, for a fleet of hundreds of hosts.
 Also use one when the state must stay when you lose a host. Use JetStream with
 file storage and replicas, and set them in the section of each store in `nats`.

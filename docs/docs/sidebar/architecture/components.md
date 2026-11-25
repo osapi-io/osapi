@@ -34,6 +34,8 @@ The server authenticates its clients in one of these modes (`nats.server.auth`):
 - operator mode, with a credentials file for each user
 
 Each client sets its own mode in its `nats.auth` section.
+[Running osapi on your NATS](nats.md) tells a NATS administrator what to
+provision for each mode.
 
 ## Controller
 
