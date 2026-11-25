@@ -25,9 +25,11 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // signingMarshalFn is the JSON marshal function used by signing helpers.
@@ -154,5 +156,38 @@ func verifyAgentResponse(
 		)
 	}
 
+	response.MachineID = envelope.MachineID
+
 	return &response, nil
+}
+
+// hostnameUpdate is the operation of the hostname behavior's update.
+const hostnameUpdate = job.OperationType(job.CategoryBehavior + ".hostname.update")
+
+// followRename records the new name of a host that an operator renamed
+// through osapi, so the agent's later answers and registrations, which carry
+// the new name, verify. The answer of the update itself carries the old
+// name, which the stored record still has.
+func (c *Client) followRename(
+	ctx context.Context,
+	req *job.Request,
+	r *job.Response,
+) {
+	if req.Operation != hostnameUpdate || r.Status != types.AgentJobStatusCompleted {
+		return
+	}
+	var out struct {
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(r.Data, &out); err != nil || out.Name == "" ||
+		out.Name == r.Hostname {
+		return
+	}
+	if err := c.agentKeyStore.RenameAgentKey(ctx, r.MachineID, out.Name); err != nil {
+		c.logger.WarnContext(ctx, "record the new hostname of a renamed host",
+			slog.String("machine_id", r.MachineID),
+			slog.String("hostname", out.Name),
+			slog.String("error", err.Error()),
+		)
+	}
 }

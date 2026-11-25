@@ -496,6 +496,7 @@ func (a *Agent) handleJobMessage(
 	} else {
 		response.Status = types.AgentJobStatusCompleted
 		response.Data = result
+		a.noteRename(jobRequest)
 
 		// Extract "changed" from result data for mutation operations
 		if jobRequest.Type == types.JobTypeModify {
@@ -672,4 +673,19 @@ func (a *Agent) openJob(
 	}
 
 	return seal.Open(req.JobID, sealed, req.SealedFrom, a.pkiManager.EncryptionKey())
+}
+
+// noteRename tells the heartbeat that a hostname update completed, so the
+// agent registers with its new hostname at once. A rename that the heartbeat
+// has not read yet covers this one.
+func (a *Agent) noteRename(
+	req job.Request,
+) {
+	if req.Category != job.CategoryBehavior || req.Operation != "hostname.update" {
+		return
+	}
+	select {
+	case a.renamed <- struct{}{}:
+	default:
+	}
 }

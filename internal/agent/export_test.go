@@ -986,3 +986,21 @@ func ExportStoreObjects(
 ) behaviorHost.Objects {
 	return storeObjects{store: store, bucket: bucket}
 }
+
+// SignalRenamed tells the heartbeat of a that a hostname update completed.
+func SignalRenamed(
+	a *Agent,
+) {
+	a.renamed <- struct{}{}
+}
+
+// ExportNoteRename exposes the private noteRename for testing, and reports
+// whether the heartbeat has a rename to read.
+func ExportNoteRename(
+	a *Agent,
+	req job.Request,
+) bool {
+	a.noteRename(req)
+
+	return len(a.renamed) == 1
+}

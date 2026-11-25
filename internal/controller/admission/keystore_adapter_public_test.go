@@ -89,6 +89,16 @@ func (s *KeyStoreAdapterPublicTestSuite) SetupSubTest() {
 	)
 }
 
+func (s *KeyStoreAdapterPublicTestSuite) TestRenameAgentKey() {
+	s.mockKV.EXPECT().
+		KVGet(gomock.Any(), "enrollment", "accepted.machine-404").
+		Return(nil, jetstream.ErrKeyNotFound)
+
+	err := s.watcher.KeyStore().RenameAgentKey(s.ctx, "machine-404", "db-01")
+
+	s.ErrorIs(err, admission.ErrAgentKeyNotFound)
+}
+
 func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 	tests := []struct {
 		name         string

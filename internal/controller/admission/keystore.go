@@ -162,6 +162,40 @@ func (w *Watcher) LookupAgentKey(
 	return &record, nil
 }
 
+// RenameAgentKey records hostname as the name that an accepted machine
+// answers as. Only a hostname update that an operator ran through osapi
+// calls it: the machine ID and the key stay the anchor, and an agent cannot
+// move its own name (GHSA-j73r).
+func (w *Watcher) RenameAgentKey(
+	ctx context.Context,
+	machineID string,
+	hostname string,
+) error {
+	record, err := w.LookupAgentKey(ctx, machineID)
+	if err != nil {
+		return err
+	}
+	renamed := *record
+	renamed.Hostname = hostname
+
+	data, err := marshalFn(renamed)
+	if err != nil {
+		return fmt.Errorf("marshal accepted agent %s: %w", machineID, err)
+	}
+	if _, err := w.enrollmentKV.KVPut(
+		ctx,
+		w.enrollmentBucket,
+		acceptedKey(machineID),
+		data,
+	); err != nil {
+		return fmt.Errorf("rename accepted agent %s: %w", machineID, err)
+	}
+
+	w.invalidateAgentKey(machineID)
+
+	return nil
+}
+
 // RemoveAgentKey deletes an agent's stored record. After it returns, nothing
 // signed by the removed key verifies.
 func (w *Watcher) RemoveAgentKey(

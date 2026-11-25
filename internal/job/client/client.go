@@ -385,6 +385,7 @@ func (c *Client) publishAndWait(
 				slog.String("job_id", jobID),
 				slog.String("status", string(response.Status)),
 			)
+			c.followRename(ctx, req, response)
 
 			endCollectSpan(colSpan, 1, map[string]*job.Response{response.Hostname: response})
 
@@ -572,6 +573,7 @@ func (c *Client) publishAndCollect(
 				slog.String("hostname", hostname),
 				slog.String("status", string(response.Status)),
 			)
+			c.followRename(ctx, req, response)
 
 			responses[hostname] = response
 			audit.RecordSteps(ctx, jobID, hostname, response.Steps)

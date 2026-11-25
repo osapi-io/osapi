@@ -55,3 +55,17 @@ func (mr *MockAgentKeyStoreMockRecorder) LookupAgentKey(ctx, machineID any) *gom
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupAgentKey", reflect.TypeOf((*MockAgentKeyStore)(nil).LookupAgentKey), ctx, machineID)
 }
+
+// RenameAgentKey mocks base method.
+func (m *MockAgentKeyStore) RenameAgentKey(ctx context.Context, machineID, hostname string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RenameAgentKey", ctx, machineID, hostname)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenameAgentKey indicates an expected call of RenameAgentKey.
+func (mr *MockAgentKeyStoreMockRecorder) RenameAgentKey(ctx, machineID, hostname any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenameAgentKey", reflect.TypeOf((*MockAgentKeyStore)(nil).RenameAgentKey), ctx, machineID, hostname)
+}

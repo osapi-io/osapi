@@ -712,6 +712,78 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 	}
 }
 
+// TestStartHeartbeatRenamed registers with the new hostname as soon as a
+// hostname update completes, not at the next tick.
+func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRenamed() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	mockKV := agentMocks.NewMockNATSClient(ctrl)
+	mockJobClient := mocks.NewMockJobClient(ctrl)
+	mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false).AnyTimes()
+	testAgent := newTestAgent(newTestAgentParams{
+		jobClient:       mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMocks.NewDefaultMockProvider(ctrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(ctrl),
+		memoryProvider:  memoryMocks.NewDefaultMockProvider(ctrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(ctrl),
+		processProvider: processMocks.NewDefaultMockProvider(ctrl),
+		registryBucket:  "registry",
+		natsClient:      mockKV,
+	})
+	agent.SetAgentState(testAgent, types.AgentReady)
+	agent.SetAgentMachineID(testAgent, "test-machine-id")
+	agent.SetAgentHostname(testAgent, "web-01")
+	agent.SetGetAgentHostnameFn(func(_ string) (string, error) { return "db-01", nil })
+	defer agent.ResetGetAgentHostnameFn()
+
+	registered := make(chan struct{}, 2)
+	mockKV.EXPECT().
+		KVPut(gomock.Any(), "registry", "agents.test_machine_id", gomock.Any()).
+		DoAndReturn(func(context.Context, string, string, []byte) (uint64, error) {
+			registered <- struct{}{}
+
+			return 1, nil
+		}).
+		Times(2)
+	mockKV.EXPECT().KVDelete(gomock.Any(), "registry", "agents.test_machine_id").Return(nil)
+
+	// A tick never comes in this test, so only the rename registers again.
+	agent.SetHeartbeatInterval(time.Hour)
+	ctx, cancel := context.WithCancel(context.Background())
+	agent.ExportStartHeartbeat(ctx, testAgent, "test-machine-id", "web-01")
+	<-registered
+	agent.SignalRenamed(testAgent)
+	<-registered
+	cancel()
+	agent.WaitAgentWG(testAgent)
+
+	s.Equal("db-01", agent.GetAgentHostname(testAgent))
+}
+
+// TestNoteRename: only a hostname update tells the heartbeat, and a second
+// one before the heartbeat reads the first is the same news.
+func (s *HeartbeatLowLevelPublicTestSuite) TestNoteRename() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+	testAgent := newTestAgent(newTestAgentParams{
+		jobClient:       mocks.NewMockJobClient(ctrl),
+		hostProvider:    hostMocks.NewDefaultMockProvider(ctrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(ctrl),
+		memoryProvider:  memoryMocks.NewDefaultMockProvider(ctrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(ctrl),
+		processProvider: processMocks.NewDefaultMockProvider(ctrl),
+	})
+	get := job.Request{Category: job.CategoryBehavior, Operation: "hostname.get"}
+	update := job.Request{Category: job.CategoryBehavior, Operation: "hostname.update"}
+
+	s.False(agent.ExportNoteRename(testAgent, get), "a read is not a rename")
+	s.True(agent.ExportNoteRename(testAgent, update))
+	s.True(agent.ExportNoteRename(testAgent, update), "a second rename waits with the first")
+}
+
 func (s *HeartbeatLowLevelPublicTestSuite) TestRegistryKey() {
 	tests := []struct {
 		name         string

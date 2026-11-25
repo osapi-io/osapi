@@ -182,6 +182,85 @@ func (s *KeyStorePublicTestSuite) TestLookupAgentKey() {
 	}
 }
 
+// TestRenameAgentKey records a new hostname on an accepted record, and
+// keeps its machine ID and keys.
+func (s *KeyStorePublicTestSuite) TestRenameAgentKey() {
+	stored := func() {
+		entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+		entry.EXPECT().Value().Return(s.makeAcceptedJSON("machine-001", "web-01"))
+		s.mockKV.EXPECT().
+			KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+			Return(entry, nil)
+	}
+	tests := []struct {
+		name      string
+		setupMock func()
+		wantErr   string
+	}{
+		{
+			name: "when the record exists, it holds the new hostname",
+			setupMock: func() {
+				stored()
+				s.mockKV.EXPECT().
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+						var r admission.AcceptedAgent
+						s.Require().NoError(json.Unmarshal(data, &r))
+						s.Equal("db-01", r.Hostname)
+						s.Equal("machine-001", r.MachineID)
+						s.Equal(ed25519.PublicKey(s.pubKey), ed25519.PublicKey(r.PublicKey))
+
+						return 1, nil
+					})
+			},
+		},
+		{
+			name: "when there is no record, it is an error",
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
+			},
+			wantErr: "machine-001",
+		},
+		{
+			name: "when the record does not encode, it is an error",
+			setupMock: func() {
+				stored()
+				admission.SetMarshalFn(
+					func(any) ([]byte, error) { return nil, errors.New("encode") },
+				)
+			},
+			wantErr: "marshal accepted agent machine-001",
+		},
+		{
+			name: "when the store refuses the write, it is an error",
+			setupMock: func() {
+				stored()
+				s.mockKV.EXPECT().
+					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
+					Return(uint64(0), errors.New("kv error"))
+			},
+			wantErr: "rename accepted agent machine-001",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			defer admission.ResetMarshalFn()
+			tc.setupMock()
+
+			err := s.watcher.RenameAgentKey(s.ctx, "machine-001", "db-01")
+			if tc.wantErr != "" {
+				s.ErrorContains(err, tc.wantErr)
+
+				return
+			}
+			s.NoError(err)
+		})
+	}
+}
+
 // TestLookupAgentKeyCaches proves the second lookup does not read the store:
 // the Get is expected exactly once.
 func (s *KeyStorePublicTestSuite) TestLookupAgentKeyCaches() {

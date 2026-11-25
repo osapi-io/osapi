@@ -62,6 +62,7 @@ func New(
 	natsClient NATSClient,
 ) *Agent {
 	a := &Agent{
+		renamed:         make(chan struct{}, 1),
 		logger:          logger.With(slog.String("subsystem", "agent")),
 		appConfig:       appConfig,
 		appFs:           appFs,

@@ -114,6 +114,9 @@ type Response struct {
 	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.
 	Timestamp time.Time `json:"timestamp"`
+	// MachineID is the machine whose stored key verified the response. The
+	// controller sets it after verification; the payload cannot.
+	MachineID string `json:"-"`
 }
 
 // Operation type definitions for hierarchical job routing
