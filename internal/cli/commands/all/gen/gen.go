@@ -18,6 +18,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natssetup/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/role/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/sdk/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/startcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token/gen"

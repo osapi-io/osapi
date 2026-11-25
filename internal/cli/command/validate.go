@@ -81,7 +81,7 @@ type RootGroup struct {
 // goes where it runs and what it touches: client for a call to the API,
 // controller, agent or nats for the process or the files of that component
 // on this host, config for the config that each component reads, dsl for
-// the definitions of osapi, and skill for the skills in the binary. Only
+// the definitions of osapi, skill for the skills in the binary, and sdk for the Go SDK in the binary. Only
 // start and version act on the whole binary or host. TestCommandShape fails
 // on any other word. A new word is a decision of the owner, recorded in the
 // specs cli.md.
@@ -101,6 +101,10 @@ var RootGroups = []RootGroup{
 	{
 		Name:    "skill",
 		Purpose: "Show the agent skills in this binary, and install them into a repository",
+	},
+	{
+		Name:    "sdk",
+		Purpose: "List, describe and check the Go SDK in this binary: its types and its services",
 	},
 	{Name: "dsl", Purpose: "Describe, check and document the definitions of osapi, for authors"},
 	{Name: "client", Purpose: "Call the API of the controller"},
@@ -180,7 +184,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleRoot,
-		Requires: "A command goes where it runs and what it touches. Its first word is one of command.RootGroups: controller, agent or nats for the process or the files of that component on this host, config for the config that each component reads, dsl for the definitions of osapi, skill for the skills in the binary, and client for a call to the API. A local group calls no API, so it is never under client. Only start and version are commands of the root itself.",
+		Requires: "A command goes where it runs and what it touches. Its first word is one of command.RootGroups: controller, agent or nats for the process or the files of that component on this host, config for the config that each component reads, dsl for the definitions of osapi, skill for the skills in the binary, sdk for the Go SDK in the binary, and client for a call to the API. A local group calls no API, so it is never under client. Only start and version are commands of the root itself.",
 		Fix:      "Put the group Under the command.Parent of the component whose process or files it works on, or of dsl for a command for authors. Add a word to command.RootGroups only as a decision of the owner, recorded in the specs cli.md.",
 	},
 	{

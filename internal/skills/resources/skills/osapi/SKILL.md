@@ -45,9 +45,11 @@ host.
 
 ## Route
 
-| Need                                                        | Read                                               |
-| ----------------------------------------------------------- | -------------------------------------------------- |
-| What osapi can do, and the shape of a request               | [references/behaviors.md](references/behaviors.md) |
-| The agents, the jobs, the audit log: osapi's own operations | [references/endpoints.md](references/endpoints.md) |
-| Choosing hosts: one, any, all, or a label                   | [references/targets.md](references/targets.md)     |
-| A command failed                                            | [references/errors.md](references/errors.md)       |
+| Need                                                        | Read                                                       |
+| ----------------------------------------------------------- | ---------------------------------------------------------- |
+| What osapi can do, and the shape of a request               | [references/behaviors.md](references/behaviors.md)         |
+| The agents, the jobs, the audit log: osapi's own operations | [references/endpoints.md](references/endpoints.md)         |
+| Choosing hosts: one, any, all, or a label                   | [references/targets.md](references/targets.md)             |
+| A command failed                                            | [references/errors.md](references/errors.md)               |
+| What a host's facts are read with: gohai's collectors       | `osapi agent collector list --json`, then `get --name <c>` |
+| Calling osapi from a Go program, not the CLI                | the `osapi-sdk` skill, and `osapi sdk spec get --json`     |

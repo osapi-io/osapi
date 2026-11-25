@@ -57,6 +57,7 @@ var (
 		"config":     true,
 		"role":       true,
 		"skill":      true,
+		"sdk":        true,
 	}
 )
 

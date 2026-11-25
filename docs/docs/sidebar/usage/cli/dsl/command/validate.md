@@ -26,12 +26,12 @@ The rules:
   one of command.RootGroups: controller, agent or nats for the process or the
   files of that component on this host, config for the config that each
   component reads, dsl for the definitions of osapi, skill for the skills in the
-  binary, and client for a call to the API. A local group calls no API, so it is
-  never under client. Only start and version are commands of the root itself.
-  Fix: Put the group Under the command.Parent of the component whose process or
-  files it works on, or of dsl for a command for authors. Add a word to
-  command.RootGroups only as a decision of the owner, recorded in the specs
-  cli.md.
+  binary, sdk for the Go SDK in the binary, and client for a call to the API. A
+  local group calls no API, so it is never under client. Only start and version
+  are commands of the root itself. Fix: Put the group Under the command.Parent
+  of the component whose process or files it works on, or of dsl for a command
+  for authors. Add a word to command.RootGroups only as a decision of the owner,
+  recorded in the specs cli.md.
 - `help`: Each method has a Short, and a method with input has an Example. Each
   flag that an Example names is a flag of the command: a field of its input, a
   key that its Flag names, or --json, --debug or --osapi-file. Fix: Add

@@ -25,6 +25,9 @@ import (
 	"fmt"
 	"os"
 
+	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/guide/sdktypes"
 
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
@@ -56,6 +59,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
 	"github.com/osapi-io/osapi/internal/cli/commands/role"
+	"github.com/osapi-io/osapi/internal/cli/commands/sdk"
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
@@ -81,6 +85,9 @@ func init() {
 	})
 	command.Provide(configcmd.Group, func() configcmd.Deps {
 		return configcmd.Deps{File: func() string { return viper.GetString("osapiFile") }}
+	})
+	command.Provide(sdk.Group, func() sdk.Deps {
+		return sdk.Deps{Types: types.All, Services: sdkclient.Services}
 	})
 	command.Provide(skill.Group, func() skill.Deps {
 		return skill.Deps{
