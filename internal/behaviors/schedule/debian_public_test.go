@@ -24,6 +24,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -115,7 +117,7 @@ func (s *DebianPublicTestSuite) TestCreateRendersTheFacts() {
 			s.Equal("/etc/cron.d/arch", f.Path)
 			s.Equal("# arm64\n", string(f.Content))
 			s.Equal("arch.tmpl", f.Object)
-			s.Equal("template", f.ContentType)
+			s.Equal(types.ContentTemplate, f.ContentType)
 			s.Equal("object", f.ObjectSHA256)
 
 			return true, nil

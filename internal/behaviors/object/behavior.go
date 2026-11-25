@@ -52,15 +52,17 @@ var Behavior = behavior.Register(behavior.Define(
 			"reports skipped.").
 		Example("A unit file", GetInput{Name: "example.service"},
 			Object{
-				Name: "example.service", Content: unit, ContentType: "raw",
+				Name: "example.service", Content: unit, ContentType: types.ContentRaw,
 				SHA256: "4d38310b40344ae465b2f1f88758809f31ef1aa8287c756a1d65c76ca27dc243",
 			},
 			behavior.Stored("example.service", unit, types.ContentRaw),
 		).
 		Example("A template", GetInput{Name: "motd.tmpl"},
 			Object{
-				Name: "motd.tmpl", Content: "Welcome to {{ .Hostname }}\n", ContentType: "template",
-				SHA256: "08c60853fd0933d9903a112a64bb4c742c03961a4e56af1940173403a09746e2",
+				Name:        "motd.tmpl",
+				Content:     "Welcome to {{ .Hostname }}\n",
+				ContentType: types.ContentTemplate,
+				SHA256:      "08c60853fd0933d9903a112a64bb4c742c03961a4e56af1940173403a09746e2",
 			},
 			behavior.Stored("motd.tmpl", "Welcome to {{ .Hostname }}\n", types.ContentTemplate),
 		).

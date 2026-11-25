@@ -641,6 +641,31 @@ func (s *EndpointPublicTestSuite) TestEnum() {
 	s.ErrorContains(err, "the type has Values; use validate enum")
 }
 
+// tint is a closed set that describes itself, as a type of pkg/sdk/types
+// does.
+type tint string
+
+func (tint) Values() []tint { return []tint{"warm", "cool"} }
+
+func (t tint) Valid() bool { return t == "warm" || t == "cool" }
+
+func (tint) Doc() string { return "A tint." }
+
+// tinted holds a tint.
+type tinted struct {
+	Tint tint `json:"tint" validate:"required,enum"`
+}
+
+// TestEnumDoc takes a closed set's description from its Doc when the group
+// gives none, so two groups that use it describe it the same way.
+func (s *EndpointPublicTestSuite) TestEnumDoc() {
+	doc, err := endpoint.OpenAPI(endpoint.Define("tint", "The tints",
+		endpoint.Post[tinted, tinted]("create")))
+	s.Require().NoError(err)
+
+	s.Equal("A tint.", doc.Components.Schemas["tint"].Value.Description)
+}
+
 // TestBodyValidateTags holds a body field to its whole validate tag: the
 // items of an array, a pattern from startswith, and the tag in the extension.
 // TestPrefix puts a group under a prefix whose {field} is a shared path

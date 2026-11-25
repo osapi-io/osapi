@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	exec "github.com/osapi-io/osapi/internal/exec"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -143,11 +144,11 @@ func (m *MockObjects) EXPECT() *MockObjectsMockRecorder {
 }
 
 // Object mocks base method.
-func (m *MockObjects) Object(ctx context.Context, name string) ([]byte, string, error) {
+func (m *MockObjects) Object(ctx context.Context, name string) ([]byte, types.ContentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Object", ctx, name)
 	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(string)
+	ret1, _ := ret[1].(types.ContentType)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

@@ -12,6 +12,12 @@ components:
       x-oapi-codegen-extra-tags:
         validate: required,min=1,valid_target
   schemas:
+    ContentType:
+      description: 'How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
+      enum:
+        - raw
+        - template
+      type: string
     ErrorResponse:
       properties:
         details:
@@ -126,13 +132,7 @@ components:
     FileUpdateRequest:
       properties:
         content_type:
-          description: 'How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object''s own when empty'
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
+          $ref: '#/components/schemas/ContentType'
         group:
           description: Group that owns the file; left as written when empty
           pattern: ^[a-z_][a-z0-9_-]*\$?$

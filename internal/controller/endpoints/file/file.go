@@ -26,8 +26,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -63,9 +61,6 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("File Management API"),
 	endpoint.Tag("file_operations", "File", "Object Store file management operations."),
 	endpoint.Uses[Deps](),
-	endpoint.Doc[types.ContentType](
-		"How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts.",
-	),
 	endpoint.Get[ListInput, FileListResponse]("list").
 		Handle(List).
 		ID("GetFiles").

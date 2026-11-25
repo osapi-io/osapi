@@ -220,7 +220,7 @@ type FileState struct {
 	Owner        string            `json:"owner,omitempty"`
 	Group        string            `json:"group,omitempty"`
 	DeployedAt   string            `json:"deployed_at"`
-	ContentType  string            `json:"content_type"`
+	ContentType  types.ContentType `json:"content_type"`
 	UndeployedAt string            `json:"undeployed_at,omitempty"`
 	Metadata     map[string]string `json:"metadata,omitempty"`
 }

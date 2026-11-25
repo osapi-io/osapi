@@ -20,6 +20,8 @@
 
 package object
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // GetInput names the object to read.
 type GetInput struct {
 	Name string `json:"name" validate:"required,min=1,max=255" doc:"The name of the object, as osapi client file upload stored it, such as nginx.conf" telemetry:"attr"`
@@ -27,8 +29,8 @@ type GetInput struct {
 
 // Object is an object of the object store.
 type Object struct {
-	Name        string `json:"name"         doc:"The name of the object"`
-	Content     string `json:"content"      doc:"The content of the object"`
-	ContentType string `json:"content_type" doc:"raw, or template for an object whose content is a Go template"`
-	SHA256      string `json:"sha256"       doc:"The SHA-256 of the content, in hex"`
+	Name        string            `json:"name"         doc:"The name of the object"`
+	Content     string            `json:"content"      doc:"The content of the object"`
+	ContentType types.ContentType `json:"content_type" doc:"raw, or template for an object whose content is a Go template"`
+	SHA256      string            `json:"sha256"       doc:"The SHA-256 of the content, in hex"`
 }

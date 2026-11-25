@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ScheduleService calls the API's Schedule group: the cron entries that osapi
@@ -33,9 +35,9 @@ func (s *ScheduleService) List(
 // ScheduleCreateInput is the input of ScheduleService.Create. A field of the
 // path goes in the path, and each other field in the body.
 type ScheduleCreateInput struct {
-	// The content type: raw, or template to render the object with the agent's
-	// facts and vars; the object's own when empty. It is one of: raw, template.
-	ContentType ScheduleCreateRequestContentType `json:"content_type,omitzero"`
+	// How a deploy treats a file: raw writes its bytes as they are; template
+	// renders it with Go text/template and the agent's facts.
+	ContentType types.ContentType `json:"content_type,omitzero"`
 
 	// The interval of a script in /etc/cron.daily and the like; give it or
 	// schedule. It is one of: hourly, daily, weekly, monthly.
@@ -100,9 +102,9 @@ type ScheduleUpdateInput struct {
 	// The name of the path: the entry, such as backup.
 	Name string `json:"-"`
 
-	// The content type, raw or template; the object's own when empty. It is one
-	// of: raw, template.
-	ContentType ScheduleUpdateRequestContentType `json:"content_type,omitzero"`
+	// How a deploy treats a file: raw writes its bytes as they are; template
+	// renders it with Go text/template and the agent's facts.
+	ContentType types.ContentType `json:"content_type,omitzero"`
 
 	// The object to deploy; the entry's own when empty.
 	Object string `json:"object,omitempty"`

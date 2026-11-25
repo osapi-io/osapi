@@ -415,7 +415,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/schedule/osapitest",
-				Body:   `{"name":"osapitest","content_type":"yaml"}`,
+				Body:   `{"name":"osapitest","content_type":"zip"}`,
 			},
 			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,

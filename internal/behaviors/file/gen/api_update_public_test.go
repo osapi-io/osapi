@@ -383,7 +383,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/file",
-				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","content_type":"binary"}`,
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","content_type":"zip"}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,

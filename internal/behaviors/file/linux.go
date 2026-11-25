@@ -77,10 +77,10 @@ func (l *linux) Deploy(
 		contentType = obj.ContentType
 	}
 	if contentType == "" {
-		contentType = string(types.ContentRaw)
+		contentType = types.ContentRaw
 	}
 	content := obj.Content
-	if contentType == string(types.ContentTemplate) {
+	if contentType == types.ContentTemplate {
 		content, err = behavior.Render(content, behavior.TemplateData{
 			Facts:    l.factsNow(),
 			Vars:     in.Vars,

@@ -23,6 +23,8 @@ package managedfile
 import (
 	"crypto/sha256"
 	"encoding/hex"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // State is the record osapi keeps of a file it wrote, in the file-state
@@ -42,7 +44,7 @@ type State struct {
 	Owner        string            `json:"owner,omitempty"`
 	Group        string            `json:"group,omitempty"`
 	DeployedAt   string            `json:"deployed_at"`
-	ContentType  string            `json:"content_type"`
+	ContentType  types.ContentType `json:"content_type"`
 	UndeployedAt string            `json:"undeployed_at,omitempty"`
 	Metadata     map[string]string `json:"metadata,omitempty"`
 }

@@ -24,6 +24,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
@@ -44,7 +46,7 @@ func (s *ObjectsPublicTestSuite) TestObject() {
 		get       error
 		info      *jetstream.ObjectInfo
 		infoErr   error
-		wantType  string
+		wantType  types.ContentType
 		wantErr   error
 		wantError string
 	}{
@@ -53,17 +55,17 @@ func (s *ObjectsPublicTestSuite) TestObject() {
 			info: &jetstream.ObjectInfo{ObjectMeta: jetstream.ObjectMeta{
 				Headers: nats.Header{"Osapi-Content-Type": []string{"template"}},
 			}},
-			wantType: "template",
+			wantType: types.ContentTemplate,
 		},
 		{
 			name:     "when the object has no headers is raw",
 			info:     &jetstream.ObjectInfo{},
-			wantType: "raw",
+			wantType: types.ContentRaw,
 		},
 		{
 			name:     "when the info does not read is raw",
 			infoErr:  errors.New("boom"),
-			wantType: "raw",
+			wantType: types.ContentRaw,
 		},
 		{
 			name:    "when the store does not have the object is not found",

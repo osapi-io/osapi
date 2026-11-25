@@ -244,8 +244,8 @@ func (d *debian) deploy(
 		return false, err
 	}
 	content := obj.Content
-	kind := or(or(string(contentType), obj.ContentType), string(types.ContentRaw))
-	if kind == string(types.ContentTemplate) {
+	kind := or(or(contentType, obj.ContentType), types.ContentRaw)
+	if kind == types.ContentTemplate {
 		data := behavior.TemplateData{Vars: vars, Hostname: d.hostname}
 		if d.facts != nil {
 			data.Facts = d.facts()
@@ -356,10 +356,10 @@ func intervalDirs() []string {
 }
 
 // or is a, or b when a is empty.
-func or(
-	a string,
-	b string,
-) string {
+func or[T ~string](
+	a T,
+	b T,
+) T {
 	if a != "" {
 		return a
 	}

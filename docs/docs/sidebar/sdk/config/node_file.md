@@ -118,6 +118,13 @@ resp, err := c.NodeFile.Delete(ctx, target, client.NodeFileDeleteInput{Path: "/e
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### ContentType
+
+How a deploy treats a file: raw writes its bytes as they are; template renders
+it with Go text/template and the agent's facts.
+
+A `string`, one of `raw`, `template`.
+
 ### FileDeleteResult
 
 | Field      | Type        | Description                                                                                                                                                                                                              |
@@ -139,13 +146,6 @@ The fields of each type are the properties of its schema in the API's spec.
 | `State`    | `string`    | in-sync, drifted, missing or unmanaged.                                                                                                                                                                                  |
 | `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
-### FileUpdateRequestContentType
-
-How the object is written: raw as it is, or template rendered with .Facts, .Vars
-and .Hostname; the object's own when empty.
-
-A `string`, one of `raw`, `template`.
-
 ### FileUpdateResult
 
 | Field      | Type        | Description                                                                                                                                                                                                              |
@@ -165,15 +165,15 @@ A `string`, one of `raw`, `template`.
 
 ### NodeFileUpdateInput
 
-| Field         | Type                           | Description                                                                                                                                               |
-| ------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ContentType` | `FileUpdateRequestContentType` | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty. It is one of: raw, template. |
-| `Group`       | `string`                       | Group that owns the file; left as written when empty.                                                                                                     |
-| `Mode`        | `string`                       | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                                           |
-| `ObjectName`  | `string`                       | The object of the object store, from osapi client file list.                                                                                              |
-| `Owner`       | `string`                       | User that owns the file; left as written when empty.                                                                                                      |
-| `Path`        | `string`                       | Absolute path of the file on the host.                                                                                                                    |
-| `Vars`        | `map[string]string`            | Variables of a template, as .Vars, each as key=value.                                                                                                     |
+| Field         | Type                | Description                                                                                                                    |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `ContentType` | `ContentType`       | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Group`       | `string`            | Group that owns the file; left as written when empty.                                                                          |
+| `Mode`        | `string`            | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                |
+| `ObjectName`  | `string`            | The object of the object store, from osapi client file list.                                                                   |
+| `Owner`       | `string`            | User that owns the file; left as written when empty.                                                                           |
+| `Path`        | `string`            | Absolute path of the file on the host.                                                                                         |
+| `Vars`        | `map[string]string` | Variables of a template, as .Vars, each as key=value.                                                                          |
 
 ### RowStatus
 

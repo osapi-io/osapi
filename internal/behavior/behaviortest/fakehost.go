@@ -39,6 +39,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -478,7 +480,7 @@ type objects struct {
 func (o objects) Object(
 	_ context.Context,
 	name string,
-) ([]byte, string, error) {
+) ([]byte, types.ContentType, error) {
 	if err := o.h.next(); err != nil {
 		return nil, "", err
 	}
@@ -487,5 +489,5 @@ func (o objects) Object(
 		return nil, "", fmt.Errorf("object %q: %w", name, behavior.ErrNotFound)
 	}
 
-	return []byte(g.Content), string(g.ContentType), nil
+	return []byte(g.Content), g.ContentType, nil
 }

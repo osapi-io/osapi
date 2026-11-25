@@ -31,6 +31,10 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/object"
 )
 
+// notAContentType is a content type that the behavior refuses, for its
+// Fails.
+const notAContentType = "zip"
+
 // The objects of the examples: an entry with a cron expression, a new
 // version of it, a daily script, and a template.
 const (
@@ -135,13 +139,11 @@ var Behavior = behavior.Register(behavior.Define(
 		).
 		Example("A template, rendered with its vars",
 			CreateInput{
-				Name:     "osapitest",
-				Object:   "osapitest.tmpl",
-				Schedule: "0 2 * * *",
-				ContentType: string(
-					types.ContentTemplate,
-				),
-				Vars: map[string]string{"target": "/srv"},
+				Name:        "osapitest",
+				Object:      "osapitest.tmpl",
+				Schedule:    "0 2 * * *",
+				ContentType: types.ContentTemplate,
+				Vars:        map[string]string{"target": "/srv"},
 			},
 			Result{Name: "osapitest", Changed: true},
 			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw),
@@ -168,7 +170,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A template that reads a var the request does not give",
 			CreateInput{
 				Name: "osapitest", Object: "osapitest.tmpl", Schedule: "0 2 * * *",
-				ContentType: string(types.ContentTemplate),
+				ContentType: types.ContentTemplate,
 			},
 			"render template",
 			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw)).
@@ -231,7 +233,7 @@ var Behavior = behavior.Register(behavior.Define(
 				Name:        "osapitest",
 				Object:      "osapitest.cron",
 				Schedule:    "0 2 * * *",
-				ContentType: "yaml",
+				ContentType: notAContentType,
 			},
 			"ContentType"),
 	behavior.Write("update", Update).Key("name").
@@ -284,7 +286,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("An object name over 255 characters",
 			UpdateInput{Name: "osapitest", Object: strings.Repeat("a", 256)}, "Object").
 		Fails("A user that is not an account name", UpdateInput{Name: "osapitest", User: "a b"}, "User").
-		Fails("A content type that is not one", UpdateInput{Name: "osapitest", ContentType: "yaml"},
+		Fails("A content type that is not one", UpdateInput{Name: "osapitest", ContentType: notAContentType},
 			"ContentType"),
 	behavior.Write("delete", Delete).Key("name").
 		AdminOnly().
