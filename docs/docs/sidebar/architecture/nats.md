@@ -21,11 +21,12 @@ buckets at start, and needs nothing from you.
   log. [State and storage](state.md) lists each stream and bucket, and its size
   settings. The object store of the uploaded files is 10 GiB by default
   (`nats.objects.max_bytes`).
-- **Its own account, or its own users.** The isolation of osapi is the account,
-  or the users that you give it. osapi does not define a smaller set of
-  permissions for each of its processes yet (osapi-io/osapi#1415). Thus give
-  osapi an account of its own, or users that can use the subjects and the
-  JetStream API of its namespace.
+- **A user for each process.** Each osapi process needs only the subjects of its
+  role: the controller, an agent, or setup (`osapi nats setup`, and the embedded
+  server's own connection). `osapi nats permissions get --role <role>` prints
+  them for your config and namespace: the publish and subscribe lists, and the
+  flags of `nsc add user` for operator mode. An agent cannot make or change a
+  stream or a bucket. It opens the ones that `osapi nats setup` made.
 - **A namespace.** Each subject, stream and bucket of osapi starts with its
   namespace, `osapi` by default. Two deployments, such as staging and
   production, share a server with two namespaces
@@ -33,8 +34,7 @@ buckets at start, and needs nothing from you.
 - **Its streams and buckets.** `osapi nats setup` makes or updates each one to
   match the config, with the credentials of `controller.nats`. Run it one time,
   and again after a change to a stream or a bucket. A user that runs it needs
-  the JetStream API to make streams, buckets and object stores. An agent makes
-  the object store bucket of the uploaded files when it is not there.
+  the JetStream API to make streams, buckets and object stores: the setup role.
 - **TLS, if the network is not yours.** `nats.server.tls` is the embedded
   server's. For your server, set `controller.nats.tls` and `agent.nats.tls`
   ([TLS](../usage/configuration.md)). Without TLS, a job's payload, a command's
@@ -51,6 +51,29 @@ Each osapi process authenticates with its own `nats.auth`: `none`, `user_pass`,
 | Operator mode         | An account for osapi with JetStream on, and a user for the controller and for the agents (creds files) | `creds`: a credentials file |
 | Static users or nkeys | A user or an nkey for the controller, and one for the agents                                           | `user_pass` or `nkey`       |
 | No authentication     | Nothing. Use this only for development.                                                                | `none`                      |
+
+The embedded server applies the roles itself: give each user of
+`nats.server.auth.users` a `role`, and the server limits it to the subjects of
+that role.
+
+```yaml
+nats:
+  server:
+    auth:
+      type: user_pass
+      users:
+        - username: setup # the first user is the server's own connection
+          password: ...
+          role: setup
+        - username: controller
+          password: ...
+          role: controller
+        - username: agent
+          password: ...
+          role: agent
+```
+
+A user with no `role` can use each subject, as before.
 
 The agents can share one user. A NATS user is not the identity of an agent: the
 controller admits each agent by its own key, and verifies each answer that it
