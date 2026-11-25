@@ -67,7 +67,7 @@ type Spec struct {
 	Name    string         `mapstructure:"name"     validate:"required,resource_name,max=64" doc:"The name that a reference gives, such as default in secret://default/registry-token."`
 	Type    string         `mapstructure:"type"     validate:"required"                      doc:"The type of the vault, such as nats."`
 	Targets []string       `mapstructure:"targets"  validate:"dive,required"                 doc:"The targets that the secrets of the vault can go to, such as group:prod. Empty is each host."`
-	KeyFile string         `mapstructure:"key_file"                                          doc:"For a type that encrypts, such as nats: the file of the vault key. osapi controller vault key create writes it."`
+	KeyFile string         `mapstructure:"key_file"                                          doc:"For a type that encrypts, such as nats: the file of the vault key. osapi controller secret key create writes it."`
 	KeyEnv  string         `mapstructure:"key_env"                                           doc:"For a type that encrypts, such as nats: the environment variable of the vault key, in place of key_file."`
 	Config  map[string]any `mapstructure:"config"                                            doc:"The settings of the type. The struct of the type gives its keys."`
 }

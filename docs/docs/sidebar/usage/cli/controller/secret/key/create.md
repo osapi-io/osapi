@@ -10,13 +10,13 @@ of the key, not the key. The controller makes the key at start when the file is
 not there, so run this only to make the key before that.
 
 ```bash
-osapi controller vault key create [flags]
+osapi controller secret key create [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi controller vault key create --name default
+osapi controller secret key create --vault default
 ```
 
 ## Result
@@ -24,7 +24,7 @@ osapi controller vault key create --name default
 The command prints:
 
 ```ansi
-$ osapi controller vault key create --name default
+$ osapi controller secret key create --vault default
 [1;38;2;0;213;255mVault key:[0m
   [38;2;10;143;176mName:[0m      default
   [38;2;10;143;176mKey file:[0m  /etc/osapi/secrets.key
@@ -43,9 +43,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag     | Description                                                                  | Default |
-| -------- | ---------------------------------------------------------------------------- | ------- |
-| `--name` | The vault, as controller.secrets.vaults names it, such as default (required) |         |
+| Flag      | Description                                                                  | Default |
+| --------- | ---------------------------------------------------------------------------- | ------- |
+| `--vault` | The vault, as controller.secrets.vaults names it, such as default (required) |         |
 
 ## Global flags
 

@@ -165,8 +165,8 @@ osapi has one type, `nats`, in `internal/secret/vault/natsvault`:
 - The vault key comes from `key_file` or `key_env`. The vault reads it at each
   call, so a rotation applies with no restart.
 
-`osapi controller vault key create` writes a key, and
-`osapi controller vault key rotate` adds a new key, encrypts each value again
+`osapi controller secret key create` writes a key, and
+`osapi controller secret key rotate` adds a new key, encrypts each value again
 and removes the old key. A rotation does not encrypt the earlier versions in the
 history again, so they do not decrypt after it.
 [Configuration](../usage/configuration.md#vaults) has the settings.

@@ -83,11 +83,11 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	}{
 		{
 			name: "when the vault has no key writes one",
-			in:   vaultkey.Input{Name: "default"},
+			in:   vaultkey.Input{Vault: "default"},
 		},
 		{
 			name: "when the key is there refuses",
-			in:   vaultkey.Input{Name: "default"},
+			in:   vaultkey.Input{Vault: "default"},
 			setup: func(fs avfs.VFS) {
 				_, err := natsvault.CreateKey(context.Background(), fs, keyFile)
 				s.Require().NoError(err)
@@ -96,12 +96,12 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 		},
 		{
 			name:    "when the config has no such vault refuses",
-			in:      vaultkey.Input{Name: "nope"},
+			in:      vaultkey.Input{Vault: "nope"},
 			wantErr: `no vault "nope" in controller.secrets.vaults of the config`,
 		},
 		{
 			name:    "when the vault is not of type nats refuses",
-			in:      vaultkey.Input{Name: "prod"},
+			in:      vaultkey.Input{Vault: "prod"},
 			wantErr: `vault "prod" is of type hashicorp: only a nats vault has a key of osapi`,
 		},
 	}
@@ -142,7 +142,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 	}{
 		{
 			name: "when the vault has a key rotates it",
-			in:   vaultkey.Input{Name: "default"},
+			in:   vaultkey.Input{Vault: "default"},
 			setup: func(kv *mocks.MockKV) {
 				kv.EXPECT().KVStatus(gomock.Any(), "osapi-secrets").Return(nil, nil)
 				kv.EXPECT().KVKeys(gomock.Any(), "osapi-secrets", "default.>").Return(nil, nil)
@@ -150,18 +150,18 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		},
 		{
 			name:    "when the config has no such vault refuses",
-			in:      vaultkey.Input{Name: "nope"},
+			in:      vaultkey.Input{Vault: "nope"},
 			wantErr: `no vault "nope"`,
 		},
 		{
 			name:    "when NATS does not answer returns the error",
-			in:      vaultkey.Input{Name: "default"},
+			in:      vaultkey.Input{Vault: "default"},
 			dialErr: errors.New("connect to NATS: no route"),
 			wantErr: "connect to NATS: no route",
 		},
 		{
 			name: "when the bucket is not there tells to set it up",
-			in:   vaultkey.Input{Name: "default"},
+			in:   vaultkey.Input{Vault: "default"},
 			setup: func(kv *mocks.MockKV) {
 				kv.EXPECT().KVStatus(gomock.Any(), "osapi-secrets").
 					Return(nil, jetstream.ErrBucketNotFound)
@@ -170,7 +170,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		},
 		{
 			name: "when the key of the vault is in a variable that is not set returns the error",
-			in:   vaultkey.Input{Name: "env"},
+			in:   vaultkey.Input{Vault: "env"},
 			setup: func(kv *mocks.MockKV) {
 				kv.EXPECT().KVStatus(gomock.Any(), "osapi-secrets").Return(nil, nil)
 			},
@@ -178,13 +178,13 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		},
 		{
 			name:    "when no bucket is named refuses",
-			in:      vaultkey.Input{Name: "default"},
+			in:      vaultkey.Input{Vault: "default"},
 			bucket:  "-",
 			wantErr: `vault "default": nats.secrets.bucket is empty`,
 		},
 		{
 			name: "when the rotation fails returns the error",
-			in:   vaultkey.Input{Name: "default"},
+			in:   vaultkey.Input{Vault: "default"},
 			setup: func(kv *mocks.MockKV) {
 				kv.EXPECT().KVStatus(gomock.Any(), "osapi-secrets").Return(nil, nil)
 				kv.EXPECT().KVKeys(gomock.Any(), "osapi-secrets", "default.>").

@@ -18,17 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package vaultkey is the vault group under osapi controller: osapi
-// controller vault key create and rotate, which make and rotate the key of a
-// nats vault. They are local commands: the key is a file on the controller
+// Package vaultkey is the secret group under osapi controller: osapi
+// controller secret key create and rotate, which make and rotate the key of a
+// nats vault. Its word is secret, the area of osapi client secret, the
+// secret:// references and controller.secrets. They are local commands: the key is a file on the controller
 // host, and the API does not give it or change it.
 package vaultkey
 
 import "github.com/osapi-io/osapi/internal/cli/command"
 
-// Group is the vault group's definition.
+// Group is the secret group's definition.
 var Group = command.Register(command.Define(
-	"vault", "Work on the vaults of the controller on this host",
+	"secret", "Work on the secret vaults of the controller on this host",
 	command.Under(command.ParentController),
 	command.Uses[Deps](),
 	command.SubDoc("key", "Make and rotate the key of a nats vault"),
@@ -42,7 +43,7 @@ var Group = command.Register(command.Define(
 			"for that. It prints the ID of the key, not the key. The controller makes\n"+
 			"the key at start when the file is not there, so run this only to make the\n"+
 			"key before that.").
-		Example("--name default").
+		Example("--vault default").
 		Prints(sampleCreate).
 		Fails("no name", Input{}).
 		Handle(Create),
@@ -56,7 +57,7 @@ var Group = command.Register(command.Define(
 			"so it needs no restart. If the rotation stops, the file keeps the old key,\n"+
 			"and a second rotation completes it. The earlier versions of a value stay\n"+
 			"under the old key, and do not decrypt after the rotation.").
-		Example("--name default").
+		Example("--vault default").
 		Prints(sampleRotate).
 		Fails("no name", Input{}).
 		Handle(Rotate),

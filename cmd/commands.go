@@ -302,7 +302,7 @@ func joinDeps() join.Deps {
 	}
 }
 
-// vaultKeyDeps is what osapi controller vault key uses: the file system, the
+// vaultKeyDeps is what osapi controller secret key uses: the file system, the
 // config, and a connection to NATS as the controller makes it.
 func vaultKeyDeps() vaultkey.Deps {
 	return vaultkey.Deps{

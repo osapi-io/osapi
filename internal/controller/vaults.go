@@ -96,7 +96,7 @@ func OpenVaults(
 }
 
 // makeVaultKeys makes the key file of each nats vault whose key_file is not
-// there, as osapi controller vault key create does, so the default vault
+// there, as osapi controller secret key create does, so the default vault
 // works at the first start. It never replaces a key that is there: each
 // value under it would then not decrypt. A vault whose key is in key_env
 // gets no file.
