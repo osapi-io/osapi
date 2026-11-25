@@ -9,14 +9,15 @@ import (
 	"strconv"
 )
 
-// TraceService calls the API's Trace group: the spans of a trace.
-type TraceService struct {
+// TelemetryService calls the API's Telemetry group: telemetry through the
+// controller, such as the spans of a trace.
+type TelemetryService struct {
 	client *Client
 }
 
-// TraceGetParams are the parameters of TraceService.Get that a request can
-// leave out.
-type TraceGetParams struct {
+// TelemetryGetParams are the parameters of TelemetryService.Get that a request
+// can leave out.
+type TelemetryGetParams struct {
 	// All is the all of the query: show the NATS calls too, the reads and writes
 	// of the job queue. The zero value leaves it out.
 	All bool
@@ -30,15 +31,15 @@ type TraceGetParams struct {
 // with a target scope gets a trace only when each target that the trace
 // records is in its scope.
 //
-// It sends GET /api/trace/{id}, and needs the permission trace:read.
-func (s *TraceService) Get(
+// It sends GET /api/telemetry/trace/{id}, and needs the permission trace:read.
+func (s *TelemetryService) Get(
 	ctx context.Context,
 	id string,
-	params TraceGetParams,
+	params TelemetryGetParams,
 ) (*Response[TraceResponse], error) {
 	q := url.Values{}
 	if params.All != false {
 		q.Set("all", strconv.FormatBool(params.All))
 	}
-	return send[TraceResponse](ctx, s.client, http.MethodGet, "/api/trace/"+url.PathEscape(id), q, nil)
+	return send[TraceResponse](ctx, s.client, http.MethodGet, "/api/telemetry/trace/"+url.PathEscape(id), q, nil)
 }

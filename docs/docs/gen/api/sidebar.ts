@@ -1509,11 +1509,11 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "category",
-          label: "Trace",
-          key: "fleet-trace",
+          label: "Telemetry",
+          key: "fleet-telemetry",
           link: {
             type: "doc",
-            id: "gen/api/trace-api-trace",
+            id: "gen/api/telemetry-api-telemetry",
           },
           items: [
             {
@@ -1521,7 +1521,7 @@ const sidebar: SidebarsConfig = {
               id: "gen/api/get-trace",
               label: "Get the spans of a trace",
               className: "api-method get",
-              key: "fleet-trace-api-trace-gen-api-get-trace",
+              key: "fleet-telemetry-api-telemetry-gen-api-get-trace",
             },
           ],
         },

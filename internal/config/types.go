@@ -80,7 +80,7 @@ type TracingConfig struct {
 	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'." choice:"the collector of the operator; set with exporter otlp"`
 	// URL is where a person views the traces, such as a Jaeger UI. Health
 	// links to it, and the controller reads a trace from its query API for
-	// osapi client trace get. osapi does not run the backend.
+	// osapi client telemetry trace get. osapi does not run the backend.
 	URL string `mapstructure:"url" doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url" choice:"the tracing backend of the operator; empty reads no trace"`
 	// TLS is how osapi checks the tracing backend: the OTLP exporter, and
 	// the controller's reads of its query API at url.

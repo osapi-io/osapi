@@ -1049,6 +1049,19 @@ func Services() []ServiceSpec {
 		Name: "Sysctl",
 		Node: true,
 	}, {
+		Area: "fleet",
+		Doc:  "Telemetry through the controller, such as the spans of a trace.",
+		Methods: []MethodSpec{{
+			Doc:        "Get the spans of a trace",
+			Examples:   2,
+			HTTP:       "GET /api/telemetry/trace/{id}",
+			Name:       "Get",
+			Permission: "trace:read",
+			Result:     "TraceResponse",
+		}},
+		Name: "Telemetry",
+		Node: false,
+	}, {
 		Area: "config",
 		Doc:  "The timezone of the host",
 		Methods: []MethodSpec{{
@@ -1069,19 +1082,6 @@ func Services() []ServiceSpec {
 		}},
 		Name: "Timezone",
 		Node: true,
-	}, {
-		Area: "fleet",
-		Doc:  "The spans of a trace.",
-		Methods: []MethodSpec{{
-			Doc:        "Get the spans of a trace",
-			Examples:   2,
-			HTTP:       "GET /api/trace/{id}",
-			Name:       "Get",
-			Permission: "trace:read",
-			Result:     "TraceResponse",
-		}},
-		Name: "Trace",
-		Node: false,
 	}, {
 		Area: "node",
 		Doc:  "Get the uptime of target hosts",

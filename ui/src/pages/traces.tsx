@@ -14,7 +14,7 @@ import { Text } from "@/components/ui/text";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getTrace } from "@/sdk/gen/trace-api-trace/trace-api-trace";
+import { getTrace } from "@/sdk/gen/telemetry-api-telemetry/telemetry-api-telemetry";
 import type { TraceNode, TraceResponse } from "@/sdk/gen/schemas";
 import { useStatus } from "@/hooks/use-status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
