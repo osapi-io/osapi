@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Catalog | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/catalog"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Catalog | OSAPI"><meta data-rh="true" name="description" content="c.Catalog calls the API&#x27;s Catalog group. The behaviors, the permissions and"><meta data-rh="true" property="og:description" content="c.Catalog calls the API&#x27;s Catalog group. The behaviors, the permissions and"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/catalog"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/catalog" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/catalog" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SDK","item":"https://osapi-io.github.io/osapi/sidebar/sdk/"},{"@type":"ListItem","position":2,"name":"Catalog","item":"https://osapi-io.github.io/osapi/sidebar/sdk/fleet/catalog"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.397d0e6c.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.4a17ecba.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.8cc709e8.js" defer="defer"></script>
 </head>
 <body>
@@ -204,6 +204,43 @@ has catalog:read.</p>
 
 
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Columns</code></td><td><code>[]CatalogColumn</code></td><td>The columns of an object, or of a list of objects.</td></tr><tr><td><code>Doc</code></td><td><code>string</code></td><td>What the field is.</td></tr><tr><td><code>Kind</code></td><td><code>ColumnKind</code></td><td>ColumnKind is what a field of an answer holds.</td></tr><tr><td><code>Label</code></td><td><code>string</code></td><td>The label of the field.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The json name of the field.</td></tr><tr><td><code>Render</code></td><td><code>string</code></td><td>The render tag of the field, such as bytes.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catalogcontrollermethod">CatalogControllerMethod<a href="#catalogcontrollermethod" class="hash-link" aria-label="Direct link to CatalogControllerMethod" title="Direct link to CatalogControllerMethod" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Doc</code></td><td><code>string</code></td><td>What the method does, in one line.</td></tr><tr><td><code>Group</code></td><td><code>string</code></td><td>The endpoint group.</td></tr><tr><td><code>Method</code></td><td><code>string</code></td><td>The method.</td></tr><tr><td><code>Operation</code></td><td><code>OperationID</code></td><td>An operationId of an operation that needs a permission.</td></tr><tr><td><code>Permission</code></td><td><code>Permission</code></td><td>A permission that osapi knows, as resource:verb.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catalogexample">CatalogExample<a href="#catalogexample" class="hash-link" aria-label="Direct link to CatalogExample" title="Direct link to CatalogExample" translate="no">​</a></h3>
 
 
@@ -448,7 +485,27 @@ has catalog:read.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Areas</code></td><td><code>[]CatalogArea</code></td><td>Each area, in order, with its label.</td></tr><tr><td><code>Behaviors</code></td><td><code>[]CatalogBehavior</code></td><td>Each behavior that the API serves, and each internal behavior, in the order of the registry.</td></tr><tr><td><code>CountTones</code></td><td><code>map[string]string</code></td><td>The tone of a count above zero, by what it counts: ok, warn or err.</td></tr><tr><td><code>HostFamilies</code></td><td><code>[]string</code></td><td>The host platforms that gohai names. A method&#x27;s runs_on has * for any other Linux.</td></tr><tr><td><code>Operations</code></td><td><code>[]CatalogOperation</code></td><td>The permission of each operation that needs one, in the order of the operationIds.</td></tr><tr><td><code>Permissions</code></td><td><code>[]Permission</code></td><td>Each permission that osapi knows.</td></tr><tr><td><code>Roles</code></td><td><code>[]CatalogRole</code></td><td>The built-in roles, in order, with the permissions of each.</td></tr><tr><td><code>StatusTones</code></td><td><code>map[string]string</code></td><td>The tone of each status word, as the CLI colors it: ok, warn or err.</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Areas</code></td><td><code>[]CatalogArea</code></td><td>Each area, in order, with its label.</td></tr><tr><td><code>Behaviors</code></td><td><code>[]CatalogBehavior</code></td><td>Each behavior that the API serves, and each internal behavior, in the order of the registry.</td></tr><tr><td><code>Controller</code></td><td><code>[]CatalogControllerMethod</code></td><td>Each method of an endpoint group of the Object Store area: a call of the controller that takes no target.</td></tr><tr><td><code>CountTones</code></td><td><code>map[string]string</code></td><td>The tone of a count above zero, by what it counts: ok, warn or err.</td></tr><tr><td><code>HostFamilies</code></td><td><code>[]string</code></td><td>The host platforms that gohai names. A method&#x27;s runs_on has * for any other Linux.</td></tr><tr><td><code>Operations</code></td><td><code>[]CatalogOperation</code></td><td>The permission of each operation that needs one, in the order of the operationIds.</td></tr><tr><td><code>Outcomes</code></td><td><code>[]string</code></td><td>The outcomes of a host, from the best to the worst, as the CLI&#x27;s summary orders them.</td></tr><tr><td><code>Permissions</code></td><td><code>[]Permission</code></td><td>Each permission that osapi knows.</td></tr><tr><td><code>RenderTags</code></td><td><code>[]string</code></td><td>The render tags of an output field, as the CLI reads them. short= takes a number, such as short=12.</td></tr><tr><td><code>Roles</code></td><td><code>[]CatalogRole</code></td><td>The built-in roles, in order, with the permissions of each.</td></tr><tr><td><code>StatusTones</code></td><td><code>map[string]string</code></td><td>The tone of each status word, as the CLI colors it: ok, warn or err.</td></tr><tr><td><code>Targets</code></td><td><code>[]CatalogTarget</code></td><td>The targets that name no host: each agent, or any one agent.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catalogrole">CatalogRole<a href="#catalogrole" class="hash-link" aria-label="Direct link to CatalogRole" title="Direct link to CatalogRole" translate="no">​</a></h3>
 
 
@@ -476,6 +533,33 @@ has catalog:read.</p>
 
 
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Description</code></td><td><code>string</code></td><td>Who the role is for.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the role, as a token names it.</td></tr><tr><td><code>Permissions</code></td><td><code>[]Permission</code></td><td>The permissions of the role.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catalogtarget">CatalogTarget<a href="#catalogtarget" class="hash-link" aria-label="Direct link to CatalogTarget" title="Direct link to CatalogTarget" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Doc</code></td><td><code>string</code></td><td>What it sends the job to.</td></tr><tr><td><code>Label</code></td><td><code>string</code></td><td>Its label.</td></tr><tr><td><code>Value</code></td><td><code>string</code></td><td>The target, as a method takes it.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="columnkind">ColumnKind<a href="#columnkind" class="hash-link" aria-label="Direct link to ColumnKind" title="Direct link to ColumnKind" translate="no">​</a></h3>
 <p>ColumnKind is what a field of an answer holds.</p>
 <p>A <code>string</code>, one of <code>value</code>, <code>values</code>, <code>object</code>, <code>list</code>.</p>
@@ -543,6 +627,6 @@ action.</p>
 <code>secret:write</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="example">Example<a href="#example" class="hash-link" aria-label="Direct link to Example" title="Direct link to Example" translate="no">​</a></h2>
 <p><a href="https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/catalog.go" target="_blank" rel="noopener noreferrer" class=""><code>examples/sdk/client/catalog.go</code></a>
-runs each example of this page. With no argument, it lists them.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/sdk/fleet/agent"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/sdk/fleet/health"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Health</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#methods" class="table-of-contents__link toc-highlight">Methods</a><ul><li><a href="#get" class="table-of-contents__link toc-highlight">Get</a></li></ul></li><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#catalogarea" class="table-of-contents__link toc-highlight">CatalogArea</a></li><li><a href="#catalogbehavior" class="table-of-contents__link toc-highlight">CatalogBehavior</a></li><li><a href="#catalogcall" class="table-of-contents__link toc-highlight">CatalogCall</a></li><li><a href="#catalogcolumn" class="table-of-contents__link toc-highlight">CatalogColumn</a></li><li><a href="#catalogexample" class="table-of-contents__link toc-highlight">CatalogExample</a></li><li><a href="#catalogfield" class="table-of-contents__link toc-highlight">CatalogField</a></li><li><a href="#catalogmethod" class="table-of-contents__link toc-highlight">CatalogMethod</a></li><li><a href="#catalogoperation" class="table-of-contents__link toc-highlight">CatalogOperation</a></li><li><a href="#catalogresponse" class="table-of-contents__link toc-highlight">CatalogResponse</a></li><li><a href="#catalogrole" class="table-of-contents__link toc-highlight">CatalogRole</a></li><li><a href="#columnkind" class="table-of-contents__link toc-highlight">ColumnKind</a></li><li><a href="#fieldin" class="table-of-contents__link toc-highlight">FieldIn</a></li><li><a href="#fieldkind" class="table-of-contents__link toc-highlight">FieldKind</a></li><li><a href="#methodkind" class="table-of-contents__link toc-highlight">MethodKind</a></li><li><a href="#operationid" class="table-of-contents__link toc-highlight">OperationID</a></li><li><a href="#permission" class="table-of-contents__link toc-highlight">Permission</a></li></ul></li><li><a href="#example" class="table-of-contents__link toc-highlight">Example</a></li></ul></div></div></div></div></main></div></div></div></div>
+runs each example of this page. With no argument, it lists them.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/sdk/fleet/agent"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/sdk/fleet/health"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Health</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#methods" class="table-of-contents__link toc-highlight">Methods</a><ul><li><a href="#get" class="table-of-contents__link toc-highlight">Get</a></li></ul></li><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#catalogarea" class="table-of-contents__link toc-highlight">CatalogArea</a></li><li><a href="#catalogbehavior" class="table-of-contents__link toc-highlight">CatalogBehavior</a></li><li><a href="#catalogcall" class="table-of-contents__link toc-highlight">CatalogCall</a></li><li><a href="#catalogcolumn" class="table-of-contents__link toc-highlight">CatalogColumn</a></li><li><a href="#catalogcontrollermethod" class="table-of-contents__link toc-highlight">CatalogControllerMethod</a></li><li><a href="#catalogexample" class="table-of-contents__link toc-highlight">CatalogExample</a></li><li><a href="#catalogfield" class="table-of-contents__link toc-highlight">CatalogField</a></li><li><a href="#catalogmethod" class="table-of-contents__link toc-highlight">CatalogMethod</a></li><li><a href="#catalogoperation" class="table-of-contents__link toc-highlight">CatalogOperation</a></li><li><a href="#catalogresponse" class="table-of-contents__link toc-highlight">CatalogResponse</a></li><li><a href="#catalogrole" class="table-of-contents__link toc-highlight">CatalogRole</a></li><li><a href="#catalogtarget" class="table-of-contents__link toc-highlight">CatalogTarget</a></li><li><a href="#columnkind" class="table-of-contents__link toc-highlight">ColumnKind</a></li><li><a href="#fieldin" class="table-of-contents__link toc-highlight">FieldIn</a></li><li><a href="#fieldkind" class="table-of-contents__link toc-highlight">FieldKind</a></li><li><a href="#methodkind" class="table-of-contents__link toc-highlight">MethodKind</a></li><li><a href="#operationid" class="table-of-contents__link toc-highlight">OperationID</a></li><li><a href="#permission" class="table-of-contents__link toc-highlight">Permission</a></li></ul></li><li><a href="#example" class="table-of-contents__link toc-highlight">Example</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
