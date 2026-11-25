@@ -175,7 +175,7 @@ func joinNATS(
 	saved, err := readJoin(fs, keyDir)
 	if err != nil {
 		// The span names the server, never the token or the users.
-		spanCtx, span := opspan.Start(ctx, "osapi-agent", "agent.join",
+		spanCtx, span := opspan.Root(ctx, "osapi-agent", "agent.join",
 			attribute.String("osapi.join.transport", "nats"),
 		)
 		saved, err = joinNow(spanCtx, log, fs, cfg)

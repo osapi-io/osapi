@@ -34,6 +34,10 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/secret/vault"
@@ -108,7 +112,7 @@ func (v *Vault) Name() string {
 }
 
 // Get is the value of key, decrypted, and its metadata.
-func (v *Vault) Get(
+func (v *Vault) get(
 	ctx context.Context,
 	key string,
 ) ([]byte, vault.Meta, error) {
@@ -131,7 +135,7 @@ func (v *Vault) Get(
 // Put encrypts value under the current key and writes it as the next
 // version of key. A Put at the same time as a different one fails, and
 // does not overwrite it.
-func (v *Vault) Put(
+func (v *Vault) put(
 	ctx context.Context,
 	key string,
 	value []byte,
@@ -159,7 +163,7 @@ func (v *Vault) Put(
 
 // Delete deletes key. The bucket keeps its earlier versions, as its
 // history allows.
-func (v *Vault) Delete(
+func (v *Vault) delete(
 	ctx context.Context,
 	key string,
 ) error {
@@ -202,7 +206,7 @@ func (v *Vault) List(
 // Rotate encrypts each value of the vault that is not under the current
 // key of ring again, with that key, and is how many it changed. A value that
 // changes at the same time is read again. The metadata of each value stays.
-func (v *Vault) Rotate(
+func (v *Vault) rotate(
 	ctx context.Context,
 	ring Keyring,
 ) (int, error) {
@@ -327,3 +331,65 @@ func (r record) meta(
 ) vault.Meta {
 	return vault.Meta{Key: key, Version: r.Version, Changed: r.Changed, By: r.By}
 }
+
+// Get is the value of key, in a vault.get span that names the vault and the
+// key, never the value.
+func (v *Vault) Get(
+	ctx context.Context,
+	key string,
+) ([]byte, vault.Meta, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "vault.get", v.attrs(key)...)
+	value, meta, err := v.get(ctx, key)
+
+	return value, meta, opspan.End(span, err)
+}
+
+// Put stores value under key, in a vault.put span.
+func (v *Vault) Put(
+	ctx context.Context,
+	key string,
+	value []byte,
+) (vault.Meta, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "vault.put", v.attrs(key)...)
+	meta, err := v.put(ctx, key, value)
+
+	return meta, opspan.End(span, err)
+}
+
+// Delete removes key, in a vault.delete span.
+func (v *Vault) Delete(
+	ctx context.Context,
+	key string,
+) error {
+	ctx, span := opspan.Start(ctx, tracerName, "vault.delete", v.attrs(key)...)
+
+	return opspan.End(span, v.delete(ctx, key))
+}
+
+// Rotate encrypts each value again with ring, in a vault.rotate span.
+func (v *Vault) Rotate(
+	ctx context.Context,
+	ring Keyring,
+) (int, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "vault.rotate", v.attrs("")...)
+	n, err := v.rotate(ctx, ring)
+	span.SetAttributes(attribute.Int("osapi.vault.rotated", n))
+
+	return n, opspan.End(span, err)
+}
+
+// attrs are the attributes of a span on key: the vault, and the key when
+// there is one. A value is never an attribute.
+func (v *Vault) attrs(
+	key string,
+) []attribute.KeyValue {
+	out := []attribute.KeyValue{attribute.String("osapi.vault.name", v.name)}
+	if key != "" {
+		out = append(out, attribute.String("osapi.secret.key", key))
+	}
+
+	return out
+}
+
+// tracerName is the tracer of the nats vault.
+const tracerName = "osapi-natsvault"

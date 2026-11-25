@@ -39,6 +39,10 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -105,7 +109,7 @@ var randRead = rand.Read
 // Create makes a token that admits uses agents until expires has passed, and
 // gives each the labels. It returns the token, which it does not keep, and
 // what it keeps.
-func (s Store) Create(
+func (s Store) create(
 	ctx context.Context,
 	expires time.Duration,
 	uses int,
@@ -137,7 +141,7 @@ func (s Store) Create(
 }
 
 // List is each token that the controller keeps, by when it was made.
-func (s Store) List(
+func (s Store) list(
 	ctx context.Context,
 ) ([]Token, error) {
 	keys, err := s.KV.KVKeys(ctx, s.Bucket, prefix+">")
@@ -158,7 +162,7 @@ func (s Store) List(
 }
 
 // Revoke removes the token id, so it admits no agent.
-func (s Store) Revoke(
+func (s Store) revoke(
 	ctx context.Context,
 	id string,
 ) error {
@@ -175,7 +179,7 @@ func (s Store) Revoke(
 // Consume checks token, and takes one of its uses: ErrInvalid, ErrExpired
 // or ErrUsed when it does not admit. Two joins at once cannot both take the
 // last use: the update is a compare and swap on the revision.
-func (s Store) Consume(
+func (s Store) consume(
 	ctx context.Context,
 	token string,
 ) (Token, error) {
@@ -263,3 +267,60 @@ func hash(
 
 	return hex.EncodeToString(sum[:])
 }
+
+// Create makes a token, in a jointoken.create span that names its ID. The
+// span never holds the token.
+func (s Store) Create(
+	ctx context.Context,
+	expires time.Duration,
+	uses int,
+	labels map[string]string,
+) (string, Token, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "jointoken.create",
+		attribute.Int("osapi.jointoken.uses", uses),
+	)
+	token, t, err := s.create(ctx, expires, uses, labels)
+	span.SetAttributes(attribute.String("osapi.jointoken.id", t.ID))
+
+	return token, t, opspan.End(span, err)
+}
+
+// List is each token, in a jointoken.list span.
+func (s Store) List(
+	ctx context.Context,
+) ([]Token, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "jointoken.list")
+	tokens, err := s.list(ctx)
+
+	return tokens, opspan.End(span, err)
+}
+
+// Revoke removes the token with id, in a jointoken.revoke span.
+func (s Store) Revoke(
+	ctx context.Context,
+	id string,
+) error {
+	ctx, span := opspan.Start(ctx, tracerName, "jointoken.revoke",
+		attribute.String("osapi.jointoken.id", id),
+	)
+
+	return opspan.End(span, s.revoke(ctx, id))
+}
+
+// Consume takes a use of token, in a jointoken.consume span that names the
+// token's ID, never the token.
+func (s Store) Consume(
+	ctx context.Context,
+	token string,
+) (Token, error) {
+	id, _ := ID(token)
+	ctx, span := opspan.Start(ctx, tracerName, "jointoken.consume",
+		attribute.String("osapi.jointoken.id", id),
+	)
+	t, err := s.consume(ctx, token)
+
+	return t, opspan.End(span, err)
+}
+
+// tracerName is the tracer of the join token store.
+const tracerName = "osapi-jointoken"

@@ -28,6 +28,10 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/pki"
@@ -150,6 +154,8 @@ func (w *Watcher) handleEnrollmentRequest(
 	ctx context.Context,
 	msg *nats.Msg,
 ) {
+	ctx, span := opspan.Start(ctx, tracerName, "admission.enroll")
+	defer span.End()
 	var req pki.EnrollmentRequest
 	if err := unmarshalFn(msg.Data, &req); err != nil {
 		w.logger.Warn(
@@ -158,6 +164,7 @@ func (w *Watcher) handleEnrollmentRequest(
 		)
 		return
 	}
+	span.SetAttributes(attribute.String("osapi.agent.machine_id", req.MachineID))
 
 	// The fingerprint that admits the agent covers its encryption key. An
 	// agent older than the controller sends none, and there is no
