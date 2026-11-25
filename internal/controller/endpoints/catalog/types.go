@@ -59,15 +59,35 @@ func (id OperationID) Valid() bool {
 // of each operation, the tones of the statuses and the counts, and the
 // host families.
 type CatalogResponse struct { //nolint:revive // the schema name is part of the API
-	_            struct{}           `title:"Catalog"`
-	Behaviors    []CatalogBehavior  `                json:"behaviors"     doc:"Each behavior that the API serves, and each internal behavior, in the order of the registry."`
-	Areas        []CatalogArea      `                json:"areas"         doc:"Each area, in order, with its label."`
-	Permissions  []types.Permission `                json:"permissions"   doc:"Each permission that osapi knows."                                                            render:"-"`
-	Roles        []CatalogRole      `                json:"roles"         doc:"The built-in roles, in order, with the permissions of each."`
-	Operations   []CatalogOperation `                json:"operations"    doc:"The permission of each operation that needs one, in the order of the operationIds."`
-	StatusTones  map[string]string  `                json:"status_tones"  doc:"The tone of each status word, as the CLI colors it: ok, warn or err."                         render:"-"`
-	CountTones   map[string]string  `                json:"count_tones"   doc:"The tone of a count above zero, by what it counts: ok, warn or err."                          render:"-"`
-	HostFamilies []string           `                json:"host_families" doc:"The host platforms that gohai names. A method's runs_on has * for any other Linux."`
+	_            struct{}                  `title:"Catalog"`
+	Behaviors    []CatalogBehavior         `                json:"behaviors"     doc:"Each behavior that the API serves, and each internal behavior, in the order of the registry."`
+	Areas        []CatalogArea             `                json:"areas"         doc:"Each area, in order, with its label."`
+	Permissions  []types.Permission        `                json:"permissions"   doc:"Each permission that osapi knows."                                                                         render:"-"`
+	Roles        []CatalogRole             `                json:"roles"         doc:"The built-in roles, in order, with the permissions of each."`
+	Operations   []CatalogOperation        `                json:"operations"    doc:"The permission of each operation that needs one, in the order of the operationIds."`
+	StatusTones  map[string]string         `                json:"status_tones"  doc:"The tone of each status word, as the CLI colors it: ok, warn or err."                                      render:"-"`
+	CountTones   map[string]string         `                json:"count_tones"   doc:"The tone of a count above zero, by what it counts: ok, warn or err."                                       render:"-"`
+	HostFamilies []string                  `                json:"host_families" doc:"The host platforms that gohai names. A method's runs_on has * for any other Linux."`
+	Targets      []CatalogTarget           `                json:"targets"       doc:"The targets that name no host: each agent, or any one agent."`
+	Controller   []CatalogControllerMethod `                json:"controller"    doc:"Each method of an endpoint group of the Object Store area: a call of the controller that takes no target."`
+	RenderTags   []string                  `                json:"render_tags"   doc:"The render tags of an output field, as the CLI reads them. short= takes a number, such as short=12."`
+	Outcomes     []string                  `                json:"outcomes"      doc:"The outcomes of a host, from the best to the worst, as the CLI's summary orders them."`
+}
+
+// CatalogControllerMethod is a method of an endpoint group of the controller.
+type CatalogControllerMethod struct { //nolint:revive // the schema name is part of the API
+	Group      string           `json:"group"      doc:"The endpoint group."                    example:"file"`
+	Method     string           `json:"method"     doc:"The method."                            example:"list"`
+	Doc        string           `json:"doc"        doc:"What the method does, in one line."`
+	Operation  OperationID      `json:"operation"  doc:"The operationId that the method calls."`
+	Permission types.Permission `json:"permission" doc:"The permission that it needs."`
+}
+
+// CatalogTarget is a target that names no host.
+type CatalogTarget struct { //nolint:revive // the schema name is part of the API
+	Value string `json:"value" doc:"The target, as a method takes it." example:"_all"`
+	Label string `json:"label" doc:"Its label."                        example:"All agents"`
+	Doc   string `json:"doc"   doc:"What it sends the job to."`
 }
 
 // CatalogArea is one area: a section of the Behaviors page.

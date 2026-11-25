@@ -82,6 +82,24 @@ type CatalogColumn struct {
 	Render string `json:"render,omitempty"`
 }
 
+// CatalogControllerMethod is the CatalogControllerMethod of the spec.
+type CatalogControllerMethod struct {
+	// What the method does, in one line.
+	Doc string `json:"doc"`
+
+	// The endpoint group.
+	Group string `json:"group"`
+
+	// The method.
+	Method string `json:"method"`
+
+	// An operationId of an operation that needs a permission.
+	Operation OperationID `json:"operation"`
+
+	// A permission that osapi knows, as resource:verb.
+	Permission types.Permission `json:"permission"`
+}
+
 // CatalogExample is the CatalogExample of the spec.
 type CatalogExample struct {
 	// What the example does.
@@ -195,6 +213,10 @@ type CatalogResponse struct {
 	// of the registry.
 	Behaviors []CatalogBehavior `json:"behaviors"`
 
+	// Each method of an endpoint group of the Object Store area: a call of the
+	// controller that takes no target.
+	Controller []CatalogControllerMethod `json:"controller"`
+
 	// The tone of a count above zero, by what it counts: ok, warn or err.
 	CountTones map[string]string `json:"count_tones"`
 
@@ -206,14 +228,25 @@ type CatalogResponse struct {
 	// operationIds.
 	Operations []CatalogOperation `json:"operations"`
 
+	// The outcomes of a host, from the best to the worst, as the CLI's summary
+	// orders them.
+	Outcomes []string `json:"outcomes"`
+
 	// Each permission that osapi knows.
 	Permissions []types.Permission `json:"permissions"`
+
+	// The render tags of an output field, as the CLI reads them. short= takes a
+	// number, such as short=12.
+	RenderTags []string `json:"render_tags"`
 
 	// The built-in roles, in order, with the permissions of each.
 	Roles []CatalogRole `json:"roles"`
 
 	// The tone of each status word, as the CLI colors it: ok, warn or err.
 	StatusTones map[string]string `json:"status_tones"`
+
+	// The targets that name no host: each agent, or any one agent.
+	Targets []CatalogTarget `json:"targets"`
 }
 
 // CatalogRole is the CatalogRole of the spec.
@@ -226,6 +259,18 @@ type CatalogRole struct {
 
 	// The permissions of the role.
 	Permissions []types.Permission `json:"permissions"`
+}
+
+// CatalogTarget is the CatalogTarget of the spec.
+type CatalogTarget struct {
+	// What it sends the job to.
+	Doc string `json:"doc"`
+
+	// Its label.
+	Label string `json:"label"`
+
+	// The target, as a method takes it.
+	Value string `json:"value"`
 }
 
 // OperationID: An operationId of an operation that needs a permission.

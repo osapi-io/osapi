@@ -1,3 +1,4 @@
+import { ComponentType } from "@/sdk/gen/schemas";
 import { useMemo, type ReactNode } from "react";
 import { AgentState } from "@/sdk/gen/schemas";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
@@ -47,9 +48,11 @@ export function Dashboard() {
   const error = healthErr || agentErr;
 
   const controllerEntry = health?.registry?.find(
-    (r) => r.type === "controller",
+    (r) => r.type === ComponentType.controller,
   );
-  const natsEntry = health?.registry?.find((r) => r.type === "nats");
+  const natsEntry = health?.registry?.find(
+    (r) => r.type === ComponentType.nats,
+  );
   const grouped = useMemo(
     () =>
       health

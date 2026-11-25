@@ -1140,3 +1140,12 @@ func exampleInput(
 
 	return v.Interface()
 }
+
+// RenderTags are the render tags of an output field, as the CLI and the UI
+// read them. short= takes a number after it, such as short=12.
+func RenderTags() []string {
+	return []string{
+		RenderHidden, RenderBytes, RenderAge, RenderTime, RenderDuration,
+		RenderDurationMs, RenderStatus, RenderBody, RenderShort,
+	}
+}

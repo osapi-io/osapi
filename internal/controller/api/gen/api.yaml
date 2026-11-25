@@ -9528,6 +9528,30 @@ components:
         - doc
         - kind
       type: object
+    CatalogControllerMethod:
+      properties:
+        doc:
+          description: What the method does, in one line.
+          type: string
+        group:
+          description: The endpoint group.
+          example: file
+          type: string
+        method:
+          description: The method.
+          example: list
+          type: string
+        operation:
+          $ref: '#/components/schemas/OperationID'
+        permission:
+          $ref: '#/components/schemas/Permission'
+      required:
+        - group
+        - method
+        - doc
+        - operation
+        - permission
+      type: object
     CatalogExample:
       properties:
         doc:
@@ -9672,6 +9696,11 @@ components:
           items:
             $ref: '#/components/schemas/CatalogBehavior'
           type: array
+        controller:
+          description: 'Each method of an endpoint group of the Object Store area: a call of the controller that takes no target.'
+          items:
+            $ref: '#/components/schemas/CatalogControllerMethod'
+          type: array
         count_tones:
           additionalProperties:
             type: string
@@ -9687,10 +9716,20 @@ components:
           items:
             $ref: '#/components/schemas/CatalogOperation'
           type: array
+        outcomes:
+          description: The outcomes of a host, from the best to the worst, as the CLI's summary orders them.
+          items:
+            type: string
+          type: array
         permissions:
           description: Each permission that osapi knows.
           items:
             $ref: '#/components/schemas/Permission'
+          type: array
+        render_tags:
+          description: The render tags of an output field, as the CLI reads them. short= takes a number, such as short=12.
+          items:
+            type: string
           type: array
         roles:
           description: The built-in roles, in order, with the permissions of each.
@@ -9702,6 +9741,11 @@ components:
             type: string
           description: 'The tone of each status word, as the CLI colors it: ok, warn or err.'
           type: object
+        targets:
+          description: 'The targets that name no host: each agent, or any one agent.'
+          items:
+            $ref: '#/components/schemas/CatalogTarget'
+          type: array
       required:
         - behaviors
         - areas
@@ -9711,6 +9755,10 @@ components:
         - status_tones
         - count_tones
         - host_families
+        - targets
+        - controller
+        - render_tags
+        - outcomes
       type: object
     CatalogRole:
       properties:
@@ -9730,6 +9778,24 @@ components:
         - name
         - description
         - permissions
+      type: object
+    CatalogTarget:
+      properties:
+        doc:
+          description: What it sends the job to.
+          type: string
+        label:
+          description: Its label.
+          example: All agents
+          type: string
+        value:
+          description: The target, as a method takes it.
+          example: _all
+          type: string
+      required:
+        - value
+        - label
+        - doc
       type: object
     ColumnKind:
       description: ColumnKind is what a field of an answer holds.

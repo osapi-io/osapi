@@ -462,6 +462,15 @@ func (s *OutputPublicTestSuite) TestOutput() {
 	}
 }
 
+// TestRenderTags lists each render tag that an output field can have, which
+// the catalog serves to the UI.
+func (s *OutputPublicTestSuite) TestRenderTags() {
+	tags := command.RenderTags()
+	s.Contains(tags, command.RenderBytes)
+	s.Contains(tags, command.RenderShort)
+	s.Len(tags, 9)
+}
+
 func (s *OutputPublicTestSuite) TestFormat() {
 	type fields struct {
 		Bytes  int        `json:"bytes"  render:"bytes"`

@@ -86,6 +86,16 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Name`    | `string`          | The json name of the field.                        |
 | `Render`  | `string`          | The render tag of the field, such as bytes.        |
 
+### CatalogControllerMethod
+
+| Field        | Type          | Description                                             |
+| ------------ | ------------- | ------------------------------------------------------- |
+| `Doc`        | `string`      | What the method does, in one line.                      |
+| `Group`      | `string`      | The endpoint group.                                     |
+| `Method`     | `string`      | The method.                                             |
+| `Operation`  | `OperationID` | An operationId of an operation that needs a permission. |
+| `Permission` | `Permission`  | A permission that osapi knows, as resource:verb.        |
+
 ### CatalogExample
 
 | Field    | Type     | Description                |
@@ -137,16 +147,20 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CatalogResponse
 
-| Field          | Type                 | Description                                                                                  |
-| -------------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| `Areas`        | `[]CatalogArea`      | Each area, in order, with its label.                                                         |
-| `Behaviors`    | `[]CatalogBehavior`  | Each behavior that the API serves, and each internal behavior, in the order of the registry. |
-| `CountTones`   | `map[string]string`  | The tone of a count above zero, by what it counts: ok, warn or err.                          |
-| `HostFamilies` | `[]string`           | The host platforms that gohai names. A method's runs_on has * for any other Linux.           |
-| `Operations`   | `[]CatalogOperation` | The permission of each operation that needs one, in the order of the operationIds.           |
-| `Permissions`  | `[]Permission`       | Each permission that osapi knows.                                                            |
-| `Roles`        | `[]CatalogRole`      | The built-in roles, in order, with the permissions of each.                                  |
-| `StatusTones`  | `map[string]string`  | The tone of each status word, as the CLI colors it: ok, warn or err.                         |
+| Field          | Type                        | Description                                                                                               |
+| -------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `Areas`        | `[]CatalogArea`             | Each area, in order, with its label.                                                                      |
+| `Behaviors`    | `[]CatalogBehavior`         | Each behavior that the API serves, and each internal behavior, in the order of the registry.              |
+| `Controller`   | `[]CatalogControllerMethod` | Each method of an endpoint group of the Object Store area: a call of the controller that takes no target. |
+| `CountTones`   | `map[string]string`         | The tone of a count above zero, by what it counts: ok, warn or err.                                       |
+| `HostFamilies` | `[]string`                  | The host platforms that gohai names. A method's runs_on has * for any other Linux.                        |
+| `Operations`   | `[]CatalogOperation`        | The permission of each operation that needs one, in the order of the operationIds.                        |
+| `Outcomes`     | `[]string`                  | The outcomes of a host, from the best to the worst, as the CLI's summary orders them.                     |
+| `Permissions`  | `[]Permission`              | Each permission that osapi knows.                                                                         |
+| `RenderTags`   | `[]string`                  | The render tags of an output field, as the CLI reads them. short= takes a number, such as short=12.       |
+| `Roles`        | `[]CatalogRole`             | The built-in roles, in order, with the permissions of each.                                               |
+| `StatusTones`  | `map[string]string`         | The tone of each status word, as the CLI colors it: ok, warn or err.                                      |
+| `Targets`      | `[]CatalogTarget`           | The targets that name no host: each agent, or any one agent.                                              |
 
 ### CatalogRole
 
@@ -155,6 +169,14 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Description` | `string`       | Who the role is for.                       |
 | `Name`        | `string`       | The name of the role, as a token names it. |
 | `Permissions` | `[]Permission` | The permissions of the role.               |
+
+### CatalogTarget
+
+| Field   | Type     | Description                       |
+| ------- | -------- | --------------------------------- |
+| `Doc`   | `string` | What it sends the job to.         |
+| `Label` | `string` | Its label.                        |
+| `Value` | `string` | The target, as a method takes it. |
 
 ### ColumnKind
 

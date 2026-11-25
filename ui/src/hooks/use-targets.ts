@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useAgents } from "@/hooks/use-agents";
+import { useCatalog } from "@/hooks/use-catalog";
 
 export interface TargetOption {
   value: string;
@@ -9,12 +10,14 @@ export interface TargetOption {
 
 export function useTargets() {
   const { agents } = useAgents(30000);
+  const { targets } = useCatalog();
 
   const options = useMemo<TargetOption[]>(() => {
-    const opts: TargetOption[] = [
-      { value: "_all", label: "All agents", group: "builtin" },
-      { value: "_any", label: "Any agent", group: "builtin" },
-    ];
+    const opts: TargetOption[] = targets.map((t) => ({
+      value: t.value,
+      label: t.label,
+      group: "builtin",
+    }));
 
     // Add hostnames
     for (const agent of agents) {
@@ -42,7 +45,7 @@ export function useTargets() {
     }
 
     return opts;
-  }, [agents]);
+  }, [agents, targets]);
 
   return { options };
 }
