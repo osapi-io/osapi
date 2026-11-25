@@ -469,3 +469,14 @@ func TestLoadPublicTestSuite(
 ) {
 	suite.Run(t, new(LoadPublicTestSuite))
 }
+
+// TestLoadDefaultFile is a host with no config file at the default path: it
+// runs on the defaults, where a missing file that -f names is an error.
+func (s *LoadPublicTestSuite) TestLoadDefaultFile() {
+	if _, err := os.Stat(config.DefaultFile); err == nil {
+		s.T().Skip(config.DefaultFile + " is there on this host")
+	}
+	var c config.Config
+	s.Require().NoError(config.Load(viper.New(), config.DefaultFile, &c))
+	s.Equal(8080, c.Controller.API.Port, "the default of controller start")
+}

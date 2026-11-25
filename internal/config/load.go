@@ -80,7 +80,13 @@ func Check(
 	return Problems(c)
 }
 
-// read is Read, with a missing file as an error.
+// DefaultFile is the config file that osapi reads when -f and
+// OSAPI_OSAPIFILE name none.
+const DefaultFile = "/etc/osapi/osapi.yaml"
+
+// read is Read, with a missing file as an error, but the default file: a
+// host with no /etc/osapi/osapi.yaml runs on the defaults, as each key has
+// one, while a file that -f names and that is not there is a typo.
 func read(
 	v *viper.Viper,
 	path string,
@@ -90,7 +96,7 @@ func read(
 	if err != nil {
 		return err
 	}
-	if !found {
+	if !found && path != DefaultFile {
 		return broke(RuleFile, fmt.Errorf("read %s: %w", path, os.ErrNotExist))
 	}
 
