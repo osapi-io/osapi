@@ -20,7 +20,10 @@
 
 package config
 
-import osapiconfig "github.com/osapi-io/osapi/internal/config"
+import (
+	osapiconfig "github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/guide"
+)
 
 // The sample outputs of the examples, which the docs page of each command
 // shows as the CLI prints it.
@@ -29,7 +32,29 @@ var (
 		Content: "controller:\n  api:\n    # Port the REST API server listens on.\n    port: 8080\n",
 	}
 
-	sampleSpec = SpecOutput{Kinds: osapiconfig.Spec().Sections()[:1]}
+	// sampleSpec is two keys of the controller, written here: the defaults
+	// come from the groups that own them, which register after this
+	// package's variables are set, so a sample computed from the spec at
+	// that time had none.
+	sampleSpec = SpecOutput{Kinds: []guide.Section{{
+		Kind:  "controller",
+		Title: "controller",
+		Terms: []guide.Term{
+			{
+				Kind: "controller",
+				Name: "controller.api.port",
+				Does: "Port the REST API server listens on. Type: int. Default: 8080.",
+				When: "In osapi.yaml, or with OSAPI_CONTROLLER_API_PORT, which wins over the file. " +
+					"Rules: min=1,max=65535.",
+			},
+			{
+				Kind: "controller",
+				Name: "controller.ui.enabled",
+				Does: "Serve the embedded UI. Type: bool. Default: true.",
+				When: "In osapi.yaml, or with OSAPI_CONTROLLER_UI_ENABLED, which wins over the file.",
+			},
+		},
+	}}}
 
 	samplePort = Setting{
 		Name:     "controller.api.port",
