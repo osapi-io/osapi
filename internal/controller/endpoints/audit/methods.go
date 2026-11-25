@@ -198,7 +198,7 @@ func toEntry(
 		Actor:          string(e.Actor),
 		Action:         e.Action,
 		Target:         e.Target,
-		Roles:          e.Roles,
+		Roles:          rolesOf(e),
 		Targets:        e.Targets,
 		Method:         e.Method,
 		Path:           e.Path,
@@ -216,4 +216,17 @@ func toEntry(
 	}
 
 	return out
+}
+
+// rolesOf is the roles of e, or none: an entry that no token made, such as
+// one of a local command or of the system, has no roles, and the spec of
+// the response has a list, never null.
+func rolesOf(
+	e auditstore.Entry,
+) []types.Role {
+	if e.Roles == nil {
+		return []types.Role{}
+	}
+
+	return e.Roles
 }

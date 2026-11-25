@@ -381,6 +381,23 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name: "when the entry has no roles, it answers an empty list, never null",
+			setup: func() {
+				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&auditstore.Entry{
+					ID:     entryID,
+					Actor:  auditstore.ActorLocal,
+					User:   "ops",
+					Action: "jointoken.create",
+				}, nil)
+			},
+			validateFunc: func(got audit.AuditEntryResponse, err error) {
+				s.Require().NoError(err)
+				s.NotNil(got.Entry.Roles)
+				s.Empty(got.Entry.Roles)
+				s.Equal("local", got.Entry.Actor)
+			},
+		},
+		{
 			name: "when the store does not have the entry, it is ErrNotFound and names the ID",
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(nil, auditstore.ErrNotFound)
