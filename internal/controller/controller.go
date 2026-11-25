@@ -137,6 +137,11 @@ func newController(
 	if o.meterProvider != nil {
 		apiOpts = append(apiOpts, api.WithMeterProvider(o.meterProvider))
 	}
+	tlsOpts, err := tlsOptions(cfg)
+	if err != nil {
+		return nil, err
+	}
+	apiOpts = append(apiOpts, tlsOpts...)
 
 	auditStore, err := newAuditStore(ctx, log, conn.NATS, namespace, cfg.NATS.Audit)
 	if err != nil {
@@ -286,4 +291,24 @@ func background(
 			)
 		}
 	}()
+}
+
+// tlsOptions are the options that make the API serve HTTPS, when
+// controller.api.tls.enabled is on: the certificate that it names, or the
+// self-signed one in controller.pki.key_dir.
+func tlsOptions(
+	cfg config.Config,
+) ([]api.Option, error) {
+	if !cfg.Controller.API.TLS.Enabled {
+		return nil, nil
+	}
+	tlsConfig, err := api.TLSConfig(
+		cfg.Controller.API.TLS, cfg.Controller.PKI.KeyDir,
+		cfg.Controller.API.URL, cfg.Controller.UI.URL,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return []api.Option{api.WithTLS(tlsConfig)}, nil
 }

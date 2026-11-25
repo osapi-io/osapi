@@ -26,6 +26,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -85,6 +86,9 @@ func subComponents(
 		apiHost = "0.0.0.0"
 	}
 	api := httpAddr(apiHost, cfg.Controller.API.Port)
+	if cfg.Controller.API.TLS.Enabled {
+		api = "https" + strings.TrimPrefix(api, "http")
+	}
 
 	return map[string]job.SubComponentInfo{
 		"controller.api": {

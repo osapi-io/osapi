@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/controller/api"
+
 	"github.com/avfs/avfs"
 
 	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
@@ -212,4 +214,11 @@ func ExportTraceReader(
 	cfg config.TracingConfig,
 ) telemetry.TraceReader {
 	return traceReader(cfg)
+}
+
+// ExportTLSOptions calls tlsOptions.
+func ExportTLSOptions(
+	cfg config.Config,
+) ([]api.Option, error) {
+	return tlsOptions(cfg)
 }

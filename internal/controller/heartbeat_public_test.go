@@ -96,6 +96,17 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 		}
 	})
 
+	s.Run("when the API serves HTTPS reports an https address", func() {
+		var cfg config.Config
+		cfg.Controller.API.Port = 8443
+		cfg.Controller.API.TLS.Enabled = true
+
+		s.Equal(
+			"https://0.0.0.0:8443",
+			controller.ExportSubComponents(cfg)["controller.api"].Address,
+		)
+	})
+
 	s.Run("when url keys and an api host are set reports them", func() {
 		var cfg config.Config
 		cfg.Controller.API = config.APIServer{
@@ -188,5 +199,33 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 			s.Equal("disabled", got[name].Status, name)
 		}
 		s.Equal("ok", got["controller.pki"].Status, "PKI is always on")
+	})
+}
+
+func (s *HeartbeatPublicTestSuite) TestTLSOptions() {
+	s.Run("when TLS is off there is no option", func() {
+		opts, err := controller.ExportTLSOptions(config.Config{})
+		s.Require().NoError(err)
+		s.Empty(opts)
+	})
+
+	s.Run("when TLS is on the API gets the self-signed certificate", func() {
+		var cfg config.Config
+		cfg.Controller.API.TLS.Enabled = true
+		cfg.Controller.PKI.KeyDir = s.T().TempDir()
+		opts, err := controller.ExportTLSOptions(cfg)
+		s.Require().NoError(err)
+		s.Len(opts, 1)
+	})
+
+	s.Run("when the certificate does not load it is an error", func() {
+		var cfg config.Config
+		cfg.Controller.API.TLS = config.ServerTLS{
+			Enabled:  true,
+			CertFile: "/none.crt",
+			KeyFile:  "/none.key",
+		}
+		_, err := controller.ExportTLSOptions(cfg)
+		s.Error(err)
 	})
 }

@@ -357,6 +357,8 @@ type APIServer struct {
 	Port int `mapstructure:"port" doc:"Port the REST API server listens on." validate:"min=1,max=65535"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
 	Security ServerSecurity `mapstructure:"security"`
+	// TLS makes the server serve HTTPS.
+	TLS ServerTLS `mapstructure:"tls"`
 	// JobTimeout is how long the controller waits for agent responses
 	// before returning partial results. Uses Go duration format.
 	// Defaults to 30s when empty.
@@ -369,12 +371,34 @@ type Client struct {
 	URL string `mapstructure:"url" doc:"Base URL the CLI client connects to."`
 	// Security contains security-related configuration for the client, such as access tokens.
 	Security ClientSecurity `mapstructure:"security"`
+	// TLS is what the client trusts on an https:// URL.
+	TLS ClientTLS `mapstructure:"tls"`
+}
+
+// ClientTLS is what the CLI trusts on an https:// URL.
+type ClientTLS struct {
+	// CAFile is a PEM certificate that the client trusts, such as the
+	// self-signed api.crt of a controller. Without it, the system's roots.
+	CAFile string `mapstructure:"ca_file" doc:"A PEM certificate that the CLI trusts on an https:// URL, such as api.crt of a controller with a self-signed certificate, in its controller.pki.key_dir. Without it, the system's trusted roots."`
 }
 
 // CustomRole defines a named set of permissions that can be assigned to tokens.
 type CustomRole struct {
 	// Permissions granted to this role.
 	Permissions []types.Permission `mapstructure:"permissions" validate:"dive,permission"`
+}
+
+// ServerTLS makes the API serve HTTPS. With no certificate set, the
+// controller makes a self-signed one in controller.pki.key_dir at its first
+// start, and uses it after that. A certificate set later replaces it with no
+// other change.
+type ServerTLS struct {
+	// Enabled serves HTTPS on the API's port, in place of HTTP.
+	Enabled bool `mapstructure:"enabled" doc:"Serve HTTPS on the API's port, in place of HTTP. Without cert_file and key_file, the controller makes a self-signed certificate in controller.pki.key_dir."`
+	// CertFile is the PEM certificate to serve, with its chain.
+	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile"`
+	// KeyFile is the PEM private key of CertFile.
+	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile"`
 }
 
 // ServerSecurity represents security-related settings for the server.

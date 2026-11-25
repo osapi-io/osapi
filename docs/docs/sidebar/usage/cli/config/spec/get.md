@@ -39,6 +39,14 @@ $ osapi config spec get
     [38;2;138;138;138mOSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN, which wins over the file.[0m
     [38;2;138;138;138mRules: required. A secret: osapi prints it as ********.[0m
 
+  [1mcontroller.client.tls.ca_file[0m
+    A PEM certificate that the CLI trusts on an https:// URL, such as
+    api.crt of a controller with a self-signed certificate, in its
+    controller.pki.key_dir. Without it, the system's trusted roots. Type:
+    string.
+    [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_CLIENT_TLS_CA_FILE, which[0m
+    [38;2;138;138;138mwins over the file.[0m
+
   [1mcontroller.api.host[0m
     Host the REST API server, and the UI on its listener, binds to. Empty
     binds every interface. Type: string.
@@ -78,6 +86,25 @@ $ osapi config spec get
     Custom roles with fine-grained permissions. Type: map.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_SECURITY_ROLES, which[0m
     [38;2;138;138;138mwins over the file. Rules: dive.[0m
+
+  [1mcontroller.api.tls.enabled[0m
+    Serve HTTPS on the API's port, in place of HTTP. Without cert_file and
+    key_file, the controller makes a self-signed certificate in
+    controller.pki.key_dir. Type: bool.
+    [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_ENABLED, which wins[0m
+    [38;2;138;138;138mover the file.[0m
+
+  [1mcontroller.api.tls.cert_file[0m
+    The PEM certificate to serve, with its chain, such as one from tailscale
+    cert or certbot. Set it with key_file, or neither for the self-signed
+    certificate. Type: string.
+    [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_CERT_FILE, which[0m
+    [38;2;138;138;138mwins over the file. Rules: required_with=KeyFile.[0m
+
+  [1mcontroller.api.tls.key_file[0m
+    The PEM private key of cert_file. Type: string.
+    [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_KEY_FILE, which[0m
+    [38;2;138;138;138mwins over the file. Rules: required_with=CertFile.[0m
 
   [1mcontroller.api.job_timeout[0m
     How long to wait for agent responses before returning partial results.
@@ -238,6 +265,12 @@ With `--json`, the command prints:
         },
         {
           "kind": "controller",
+          "name": "controller.client.tls.ca_file",
+          "does": "A PEM certificate that the CLI trusts on an https:// URL, such as api.crt of a controller with a self-signed certificate, in its controller.pki.key_dir. Without it, the system's trusted roots. Type: string.",
+          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_CLIENT_TLS_CA_FILE, which wins over the file."
+        },
+        {
+          "kind": "controller",
           "name": "controller.api.host",
           "does": "Host the REST API server, and the UI on its listener, binds to. Empty binds every interface. Type: string.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_HOST, which wins over the file."
@@ -271,6 +304,24 @@ With `--json`, the command prints:
           "name": "controller.api.security.roles",
           "does": "Custom roles with fine-grained permissions. Type: map.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_SECURITY_ROLES, which wins over the file. Rules: dive."
+        },
+        {
+          "kind": "controller",
+          "name": "controller.api.tls.enabled",
+          "does": "Serve HTTPS on the API's port, in place of HTTP. Without cert_file and key_file, the controller makes a self-signed certificate in controller.pki.key_dir. Type: bool.",
+          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_ENABLED, which wins over the file."
+        },
+        {
+          "kind": "controller",
+          "name": "controller.api.tls.cert_file",
+          "does": "The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate. Type: string.",
+          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_CERT_FILE, which wins over the file. Rules: required_with=KeyFile."
+        },
+        {
+          "kind": "controller",
+          "name": "controller.api.tls.key_file",
+          "does": "The PEM private key of cert_file. Type: string.",
+          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_KEY_FILE, which wins over the file. Rules: required_with=CertFile."
         },
         {
           "kind": "controller",

@@ -21,6 +21,8 @@
 package api
 
 import (
+	"crypto/tls"
+
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/audit"
@@ -43,5 +45,14 @@ func WithMeterProvider(
 ) Option {
 	return func(s *Server) {
 		s.meterProvider = mp
+	}
+}
+
+// WithTLS makes the server serve HTTPS with c.
+func WithTLS(
+	c *tls.Config,
+) Option {
+	return func(s *Server) {
+		s.tls = c
 	}
 }

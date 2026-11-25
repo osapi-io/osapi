@@ -294,6 +294,17 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			wantErr: "create audit stream: ",
 		},
 		{
+			name: "when the API's certificate does not load returns the error",
+			cfg: func() config.Config {
+				cfg := startServer(s.T())
+				cfg.Controller.API.TLS = config.ServerTLS{
+					Enabled: true, CertFile: "/none.crt", KeyFile: "/none.key",
+				}
+				return cfg
+			},
+			wantErr: "load the API's certificate: ",
+		},
+		{
 			name: "when the keypair does not load returns the error",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())

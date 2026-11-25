@@ -22,6 +22,7 @@ package api
 
 import (
 	"log/slog"
+	"os"
 
 	"github.com/labstack/echo/v5"
 
@@ -53,3 +54,23 @@ var ExportUntraced = untraced
 
 // ExportTraceResponse exposes traceResponse for testing.
 var ExportTraceResponse = traceResponse
+
+// SetHostnameFn replaces the hostname of a self-signed certificate.
+func SetHostnameFn(
+	fn func() (string, error),
+) {
+	hostnameFn = fn
+}
+
+// SetWriteFileFn replaces how a self-signed certificate is written.
+func SetWriteFileFn(
+	fn func(string, []byte, os.FileMode) error,
+) {
+	writeFileFn = fn
+}
+
+// ResetTLSFns restores hostnameFn and writeFileFn.
+func ResetTLSFns() {
+	hostnameFn = os.Hostname
+	writeFileFn = os.WriteFile
+}
