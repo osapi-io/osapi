@@ -143,8 +143,10 @@ func names(
 // allStreams is each stream: the job, dead letter and audit streams, and the
 // stream of each bucket and object store.
 func (n infra) allStreams() []string {
-	out := []string{n.stream, n.dlq, n.audit, objStream(n.objects)}
-	for _, b := range []string{n.jobs, n.registry, n.facts, n.state, n.fileState, n.enrollment, n.secrets} {
+	buckets := []string{n.jobs, n.registry, n.facts, n.state, n.fileState, n.enrollment, n.secrets}
+	out := make([]string, 0, 4+len(buckets))
+	out = append(out, n.stream, n.dlq, n.audit, objStream(n.objects))
+	for _, b := range buckets {
 		out = append(out, kvStream(b))
 	}
 
