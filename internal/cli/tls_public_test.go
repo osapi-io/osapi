@@ -34,6 +34,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/config"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -108,7 +110,7 @@ func (s *TLSPublicTestSuite) TestTLSTransport() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.validateFunc(cli.TLSTransport(tc.caFile()))
+			tc.validateFunc(cli.TLSTransport(config.ClientTLS{CAFile: tc.caFile()}))
 		})
 	}
 }

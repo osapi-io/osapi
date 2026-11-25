@@ -211,9 +211,10 @@ func ExportRegisterTargetValidator(
 
 // ExportTraceReader calls traceReader.
 func ExportTraceReader(
+	log *slog.Logger,
 	cfg config.TracingConfig,
 ) telemetry.TraceReader {
-	return traceReader(cfg)
+	return traceReader(log, cfg)
 }
 
 // ExportTLSOptions calls tlsOptions.

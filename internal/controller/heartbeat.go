@@ -99,7 +99,7 @@ func subComponents(
 		"controller.heartbeat": {Status: "ok"},
 		"controller.metrics": {
 			Status:  enabledOrDisabled(cfg.Controller.Metrics.Enabled),
-			Address: httpAddr(cfg.Controller.Metrics.Host, cfg.Controller.Metrics.Port),
+			Address: cfg.Controller.Metrics.Address(),
 			URL:     cfg.Controller.Metrics.URL,
 		},
 		"controller.pki":      {Status: "ok"},

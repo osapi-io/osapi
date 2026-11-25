@@ -105,10 +105,14 @@ func controllerDeps() controllercmd.Deps {
 }
 
 // startTracer starts the tracer of the service name, with the version of
-// this binary.
+// this binary. It warns once for each process when telemetry.tracing.tls
+// accepts any certificate: the exporter and the controller's trace reader
+// both use it.
 func startTracer(
 	ctx context.Context,
 	name string,
 ) (func(context.Context) error, error) {
+	appConfig.Telemetry.Tracing.TLS.Warn(logger, "telemetry.tracing.tls")
+
 	return tracing.InitTracer(ctx, name, appConfig.Telemetry.Tracing, versionAttr())
 }

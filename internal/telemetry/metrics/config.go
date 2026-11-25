@@ -35,6 +35,18 @@ func FromConfig(
 	if !cfg.Enabled {
 		return nil
 	}
+	// A metrics server whose certificate does not load does not start: it
+	// does not fall back to plain HTTP.
+	tlsConfig, err := cfg.TLS.Config()
+	if err != nil {
+		log.Error("metrics server: tls", slog.String("error", err.Error()))
 
-	return New(cfg.Host, cfg.Port, log)
+		return nil
+	}
+	s := New(cfg.Host, cfg.Port, log)
+	if s != nil {
+		s.tls = tlsConfig
+	}
+
+	return s
 }

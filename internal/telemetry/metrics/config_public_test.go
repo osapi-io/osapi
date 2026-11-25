@@ -49,6 +49,30 @@ func (s *ConfigPublicTestSuite) TestFromConfig() {
 			},
 		},
 		{
+			name: "when TLS is on with no certificate, it does not start",
+			cfg: config.MetricsServer{
+				Enabled: true, Host: "127.0.0.1",
+				TLS: config.ServerTLS{Enabled: true},
+			},
+			validateFunc: func(got *metrics.Server) {
+				s.Nil(got, "no fall back to plain HTTP")
+			},
+		},
+		{
+			name: "when TLS is on with a certificate, it is made",
+			cfg: config.MetricsServer{
+				Enabled: true, Host: "127.0.0.1",
+				TLS: func() config.ServerTLS {
+					cert, key := writeCert(s.T())
+
+					return config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}
+				}(),
+			},
+			validateFunc: func(got *metrics.Server) {
+				s.NotNil(got)
+			},
+		},
+		{
 			name: "when the config turns it on, it is made with a meter provider",
 			cfg:  config.MetricsServer{Enabled: true, Host: "127.0.0.1", Port: 0},
 			validateFunc: func(got *metrics.Server) {

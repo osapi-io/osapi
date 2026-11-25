@@ -213,6 +213,7 @@ func (s *Server) Start() {
 
 		sc := echo.StartConfig{
 			Address:         s.addr,
+			TLSConfig:       s.tls,
 			HideBanner:      true,
 			GracefulTimeout: shutdownGracePeriod,
 		}

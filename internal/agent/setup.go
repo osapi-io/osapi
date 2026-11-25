@@ -282,13 +282,9 @@ func subComponents(
 		"agent.heartbeat": {Status: "ok"},
 		"agent.pki":       {Status: "ok"},
 		"agent.metrics": {
-			Status: enabledOrDisabled(cfg.Agent.Metrics.Enabled),
-			Address: fmt.Sprintf(
-				"http://%s:%d",
-				cfg.Agent.Metrics.Host,
-				cfg.Agent.Metrics.Port,
-			),
-			URL: cfg.Agent.Metrics.URL,
+			Status:  enabledOrDisabled(cfg.Agent.Metrics.Enabled),
+			Address: cfg.Agent.Metrics.Address(),
+			URL:     cfg.Agent.Metrics.URL,
 		},
 	}
 }
