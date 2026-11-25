@@ -141,7 +141,12 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				"$JS.API.STREAM.UPDATE.osapi-JOBS",
 				"osapi.enroll.request",
 			},
-			sub:    []string{"_INBOX.abc", "osapi.enroll.request", "osapi.join.request", "osapi.join.renew"},
+			sub: []string{
+				"_INBOX.abc",
+				"osapi.enroll.request",
+				"osapi.join.request",
+				"osapi.join.renew",
+			},
 			notSub: []string{"osapi.jobs.query._all"},
 		},
 		{
