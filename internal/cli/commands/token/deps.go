@@ -38,7 +38,7 @@ type Deps struct {
 	// Config is what the methods read from the osapi config.
 	Config Config
 	// Audit writes an entry to the audit log of the controller, or is nil.
-	Audit audit.Recorder
+	Audit func(ctx context.Context, e audit.Entry) error
 }
 
 // Tokens signs and checks tokens. *authtoken.Token is one.

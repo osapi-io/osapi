@@ -39,5 +39,5 @@ type Deps struct {
 	Config config.Config
 	Dial   func(ctx context.Context) (natsvault.KV, func(), error)
 	// Audit writes an entry to the audit log of the controller, or is nil.
-	Audit audit.Recorder
+	Audit func(ctx context.Context, e audit.Entry) error
 }
