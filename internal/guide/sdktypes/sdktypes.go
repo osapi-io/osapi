@@ -39,11 +39,19 @@ const Kind = "type"
 func Append(
 	s guide.Spec,
 ) guide.Spec {
+	return AppendOf(s, types.All())
+}
+
+// AppendOf is s with a section of ts at the end.
+func AppendOf(
+	s guide.Spec,
+	ts []types.TypeSpec,
+) guide.Spec {
 	s.Kinds = append(
 		append([]guide.Kind(nil), s.Kinds...),
 		guide.Kind{Kind: Kind, Title: "Types for values"},
 	)
-	s.Terms = append(append([]guide.Term(nil), s.Terms...), Terms(types.All())...)
+	s.Terms = append(append([]guide.Term(nil), s.Terms...), Terms(ts)...)
 
 	return s
 }

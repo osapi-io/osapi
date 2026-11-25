@@ -361,7 +361,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "Root(word) and RootGroups",
-			Does: "Where a command goes. The words under osapi are a closed list, each with its purpose: controller, agent or nats for the process or the files of that component on this host, config for the config that each component reads, dsl for the definitions of osapi, skill for the skills in the binary, and client for a call to the API. Only start and version are commands of the root. A local group calls no API, so it is never under client. Under client, the words follow the API path. dsl command validate refuses a group whose first word is not one of them, under the rule root, and TestCommandShape fails on any other word under osapi.",
+			Does: "Where a command goes. The words under osapi are a closed list, each with its purpose: controller, agent or nats for the process or the files of that component on this host, config for the config that each component reads, dsl for the definitions of osapi, skill for the skills in the binary, sdk for the Go SDK in the binary, and client for a call to the API. Only start and version are commands of the root. A local group calls no API, so it is never under client. Under client, the words follow the API path. dsl command validate refuses a group whose first word is not one of them, under the rule root, and TestCommandShape fails on any other word under osapi.",
 			When: "Before you name a group: put it Under the component whose process or files it works on, or Under dsl for a command for authors. A new word under osapi is a decision of the owner.",
 		},
 		{
