@@ -356,13 +356,13 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			want:   "# Zzderives (2)\nNAME | CONDS\na | -\nb | -\n",
 		},
 		{
-			name:   "when a row has children of its own type, they are a tree under it",
+			name:   "when a row has children of its own type, they are a tree under it, and each row counts",
 			method: "nodes",
 			answer: `[{"name":"controller","status":"ok","children":[` +
 				`{"name":"api","status":"ok","children":[{"name":"v1","status":"ok"}]},` +
 				`{"name":"metrics","status":"ok","children":[{"name":"m","status":"ok"}]}]},` +
 				`{"name":"nats","status":"ok"}]`,
-			want: "# Zzderives (2)\nNAME | STATUS\n" +
+			want: "# Zzderives (6)\nNAME | STATUS\n" +
 				"controller | ok\n" +
 				"├─ api | ok\n" +
 				"│  └─ v1 | ok\n" +

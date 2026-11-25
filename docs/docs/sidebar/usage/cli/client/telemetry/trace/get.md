@@ -39,7 +39,7 @@ $ osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
   [38;2;10;143;176mNATS calls left out:[0m  2
   [38;2;10;143;176mNATS call time:[0m       4ms
 
-[1;38;2;255;0;255mSpans (1):[0m
+[1;38;2;255;0;255mSpans (2):[0m
   [38;2;176;48;176mSPAN                                   [0m[38;2;176;48;176mON                [0m[38;2;176;48;176mDURATION  [0m[38;2;176;48;176mSTATUS[0m
   PUT /api/node/{hostname}/sysctl/{key}  [1mosapi-controller[0m  186ms     [38;2;103;234;147mok[0m
   [38;2;138;138;138m└─ [0mbehavior.sysctl.update              [1mweb-01[0m            171ms     [38;2;103;234;147mok[0m
