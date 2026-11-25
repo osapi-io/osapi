@@ -31,6 +31,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	fileEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/file"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/templates"
 )
 
 // fileBuckets is the part of a NATS client that the file endpoints use.
@@ -48,8 +49,18 @@ type fileBuckets interface {
 	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
 	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
 	ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error
+	ObjectPutBytes(
+		ctx context.Context,
+		bucket string,
+		name string,
+		data []byte,
+	) (*jetstream.ObjectInfo, error)
 	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
 }
+
+// seedTemplates puts osapi's system templates in the Object Store. Tests
+// swap it.
+var seedTemplates = templates.SeedSystemTemplates
 
 // openFileBuckets opens the Object Store of the file endpoints and the
 // file-state bucket of the stale deployment checks, and returns their names.
@@ -70,6 +81,10 @@ func openFileBuckets(
 				slog.String("error", err.Error()))
 		} else {
 			objBucket = objCfg.Bucket
+			if err := seedTemplates(ctx, log, nc, objBucket); err != nil {
+				log.Warn("failed to seed system templates",
+					slog.String("error", err.Error()))
+			}
 		}
 	}
 

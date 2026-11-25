@@ -128,6 +128,8 @@ type NATSServerUser struct {
 	Username string `mapstructure:"username"`
 	// Password for the user.
 	Password string `mapstructure:"password" mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
+	// Role limits the user to the subjects of one osapi process.
+	Role string `mapstructure:"role" validate:"omitempty,oneof=controller agent setup" doc:"The osapi process that the user is: controller, agent or setup. The user can then use only the subjects of that process. Empty lets the user use each subject."`
 }
 
 // NATS configuration settings.

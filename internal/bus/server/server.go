@@ -67,6 +67,9 @@ func New(
 	if err != nil {
 		return nil, fmt.Errorf("NATS server: %w", err)
 	}
+	if err := bus.ApplyRoles(opts, sc.Auth, sc.Namespace, cfg); err != nil {
+		return nil, fmt.Errorf("NATS server: %w", err)
+	}
 	// The server's own connection trusts its own certificate.
 	selfTLS := config.SelfClient(opts.TLSConfig)
 	opts.JetStreamKey, err = bus.JetStreamKey(sc.JetStream)

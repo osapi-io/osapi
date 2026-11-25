@@ -38,7 +38,6 @@ import (
 	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/osapi-io/osapi/internal/behavior/host"
-	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
@@ -105,17 +104,6 @@ func Setup(
 		return nil, nil, err
 	}
 
-	// The agent makes the Object Store bucket, so that it can open it below
-	// when the controller has not started yet.
-	if cfg.NATS.Objects.Bucket != "" {
-		objCfg := bus.ObjectStore(namespace, cfg.NATS.Objects)
-		if err := conn.NATS.ObjectStoreCreateOrUpdate(ctx, objCfg); err != nil {
-			log.Warn("Object Store not available, file endpoints disabled",
-				slog.String("bucket", objCfg.Bucket),
-				slog.String("error", err.Error()))
-		}
-	}
-
 	plat := detectFn()
 	if plat == "darwin" {
 		log.Info("running on darwin")
@@ -178,9 +166,8 @@ func (a *Agent) SubComponents() map[string]job.SubComponentInfo {
 // is one.
 type fileStores interface {
 	ObjectReader
-	TemplateStore
 	ObjectStoreStatus(ctx context.Context, bucket string) (jetstream.ObjectStoreStatus, error)
-	KVCreateOrUpdate(ctx context.Context, config jetstream.KeyValueConfig) error
+	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
 	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
 	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
 }
@@ -209,24 +196,19 @@ func openFiles(
 		return "", nil
 	}
 
-	fileStateCfg := bus.FileStateKV(namespace, cfg.FileState)
-	if err := nc.KVCreateOrUpdate(ctx, fileStateCfg); err != nil {
+	// The agent opens the buckets and does not make them: its NATS user
+	// cannot. osapi nats setup makes them.
+	fileState := job.ApplyNamespaceToInfraName(namespace, cfg.FileState.Bucket)
+	if _, err := nc.KVStatus(ctx, fileState); err != nil {
 		e.log.Warn(
 			"file state KV not available, file operations disabled",
-			slog.String("bucket", fileStateCfg.Bucket),
+			slog.String("bucket", fileState),
 			slog.String("error", err.Error()),
 		)
 		return "", nil
 	}
 
-	if err := SeedSystemTemplates(ctx, e.log, nc, objBucket); err != nil {
-		e.log.Warn(
-			"failed to seed system templates",
-			slog.String("error", err.Error()),
-		)
-	}
-
-	return fileStateCfg.Bucket, storeObjects{store: nc, bucket: objBucket}
+	return fileState, storeObjects{store: nc, bucket: objBucket}
 }
 
 // ObjectReader reads the objects of the Object Store bucket. A

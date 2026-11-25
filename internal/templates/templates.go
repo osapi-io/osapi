@@ -18,7 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package agent
+// Package templates holds the system templates of osapi, which the controller
+// keeps in the Object Store under osapi/.
+package templates
 
 import (
 	"context"
@@ -72,7 +74,7 @@ func SeedSystemTemplates(
 	objStore TemplateStore,
 	bucket string,
 ) error {
-	logger = logger.With(slog.String("subsystem", "agent.seed"))
+	logger = logger.With(slog.String("subsystem", "controller.templates"))
 
 	var seeded int
 
