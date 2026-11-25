@@ -24,8 +24,6 @@ import (
 	"context"
 	"fmt"
 
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
-
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -40,12 +38,17 @@ func Setup(
 	n := d.Config.Controller.NATS
 	job.Init(n.Namespace)
 
-	if err := d.Prepare(ctx, d.Logger.With("component", "nats"), &natsclient.Options{
-		Host: n.Host,
-		Port: n.Port,
-		Auth: bus.AuthOptions(n.Auth),
-		Name: "osapi-nats-setup",
-	}, n.Namespace, d.Config.NATS); err != nil {
+	opts, err := bus.ConnectionOptions(n, "osapi-nats-setup")
+	if err != nil {
+		return Output{}, err
+	}
+	if err := d.Prepare(
+		ctx,
+		d.Logger.With("component", "nats"),
+		opts,
+		n.Namespace,
+		d.Config.NATS,
+	); err != nil {
 		return Output{}, fmt.Errorf("set up JetStream on %s:%d: %w", n.Host, n.Port, err)
 	}
 

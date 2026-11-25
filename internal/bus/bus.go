@@ -60,6 +60,27 @@ func Close(
 	nc.Close()
 }
 
+// ConnectionOptions are the options of a connection to NATS from conn: its
+// host, port, auth and TLS, with name. It is an error when conn's TLS does
+// not load: the connection does not fall back to plain text.
+func ConnectionOptions(
+	conn config.NATSConnection,
+	name string,
+) (*natsclient.Options, error) {
+	tlsConfig, err := conn.TLS.Dial()
+	if err != nil {
+		return nil, fmt.Errorf("nats tls: %w", err)
+	}
+
+	return &natsclient.Options{
+		Host: conn.Host,
+		Port: conn.Port,
+		Auth: AuthOptions(conn.Auth),
+		Name: name,
+		TLS:  tlsConfig,
+	}, nil
+}
+
 // AuthOptions converts a config NATSAuth to natsclient.AuthOptions.
 func AuthOptions(
 	auth config.NATSAuth,
@@ -99,7 +120,12 @@ func ServerOptions(
 	port int,
 	storeDir string,
 	serverAuth config.NATSServerAuth,
+	serverTLS config.ServerTLS,
 ) (*natsserver.Options, error) {
+	tlsConfig, err := serverTLS.Config()
+	if err != nil {
+		return nil, fmt.Errorf("tls: %w", err)
+	}
 	opts := &natsserver.Options{}
 	if serverAuth.Type == "operator" {
 		if serverAuth.ResolverFile == "" {
@@ -121,6 +147,7 @@ func ServerOptions(
 	opts.StoreDir = storeDir
 	opts.NoSigs = true
 	opts.NoLog = false
+	opts.TLSConfig = tlsConfig
 
 	switch serverAuth.Type {
 	case "user_pass":

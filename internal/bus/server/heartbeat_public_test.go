@@ -111,6 +111,19 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 			},
 		},
 		{
+			name: "when the server serves TLS reports a tls:// address",
+			sc: config.NATSServer{
+				Host: "0.0.0.0",
+				Port: 4222,
+				TLS:  config.ServerTLS{Enabled: true},
+			},
+			want: map[string]job.SubComponentInfo{
+				"nats.heartbeat": {Status: "ok"},
+				"nats.server":    {Status: "ok", Address: "tls://0.0.0.0:4222"},
+				"nats.metrics":   {Status: "disabled"},
+			},
+		},
+		{
 			name: "when metrics are on reports their address",
 			sc: config.NATSServer{
 				Host: "0.0.0.0",

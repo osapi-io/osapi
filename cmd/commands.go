@@ -37,7 +37,6 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/chain"
 
 	"github.com/avfs/avfs/vfs/osfs"
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/spf13/viper"
 
@@ -289,12 +288,11 @@ func joinDeps() join.Deps {
 		Now:    time.Now,
 		Dial: func(context.Context) (jointoken.KV, func(), error) {
 			n := appConfig.Controller.NATS
-			nc, err := bus.Dial(logger, &natsclient.Options{
-				Host: n.Host,
-				Port: n.Port,
-				Auth: bus.AuthOptions(n.Auth),
-				Name: "osapi-join-token",
-			})
+			opts, err := bus.ConnectionOptions(n, "osapi-join-token")
+			if err != nil {
+				return nil, nil, err
+			}
+			nc, err := bus.Dial(logger, opts)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -312,12 +310,11 @@ func vaultKeyDeps() vaultkey.Deps {
 		Config: appConfig,
 		Dial: func(context.Context) (natsvault.KV, func(), error) {
 			n := appConfig.Controller.NATS
-			nc, err := bus.Dial(logger, &natsclient.Options{
-				Host: n.Host,
-				Port: n.Port,
-				Auth: bus.AuthOptions(n.Auth),
-				Name: "osapi-vault-key",
-			})
+			opts, err := bus.ConnectionOptions(n, "osapi-vault-key")
+			if err != nil {
+				return nil, nil, err
+			}
+			nc, err := bus.Dial(logger, opts)
 			if err != nil {
 				return nil, nil, err
 			}

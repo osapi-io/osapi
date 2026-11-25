@@ -40,6 +40,7 @@ type MethodsPublicTestSuite struct {
 func (s *MethodsPublicTestSuite) TestSetup() {
 	tests := []struct {
 		name         string
+		tls          config.ClientTLS
 		prepareErr   error
 		validateFunc func(natssetup.Output, *natsclient.Options, error)
 	}{
@@ -60,6 +61,14 @@ func (s *MethodsPublicTestSuite) TestSetup() {
 			},
 		},
 		{
+			name: "when the connection's TLS does not load, it is the error",
+			tls:  config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"},
+			validateFunc: func(_ natssetup.Output, opts *natsclient.Options, err error) {
+				s.ErrorContains(err, "nats tls: ")
+				s.Nil(opts, "it does not connect")
+			},
+		},
+		{
 			name:       "when the server cannot be prepared, it is the error",
 			prepareErr: errors.New("no route"),
 			validateFunc: func(_ natssetup.Output, _ *natsclient.Options, err error) {
@@ -75,6 +84,7 @@ func (s *MethodsPublicTestSuite) TestSetup() {
 			cfg.Controller.NATS.Port = 4222
 			cfg.Controller.NATS.Namespace = "osapi"
 			cfg.Controller.NATS.Auth.Type = "none"
+			cfg.Controller.NATS.TLS = tc.tls
 			var opts *natsclient.Options
 			d := natssetup.Deps{
 				Config: cfg,

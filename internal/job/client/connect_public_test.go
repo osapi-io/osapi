@@ -149,6 +149,18 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 			wantErr: "connect to NATS: ",
 		},
 		{
+			name: "when the connection's TLS does not load returns the error",
+			setup: func() (config.NATS, config.NATSConnection) {
+				return natsConfig(config.NATSServer{}), config.NATSConnection{
+					Host: "127.0.0.1",
+					Port: s.freePort(),
+					Auth: config.NATSAuth{Type: "none"},
+					TLS:  config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"},
+				}
+			},
+			wantErr: "nats tls: ",
+		},
+		{
 			name: "when the job client fails returns the error",
 			setup: func() (config.NATS, config.NATSConnection) {
 				client.SetNewFn(

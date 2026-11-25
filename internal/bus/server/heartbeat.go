@@ -84,7 +84,7 @@ func SubComponents(
 		"nats.heartbeat": {Status: "ok"},
 		"nats.server": {
 			Status:  "ok",
-			Address: fmt.Sprintf("nats://%s:%d", sc.Host, sc.Port),
+			Address: fmt.Sprintf("%s://%s:%d", natsScheme(sc.TLS), sc.Host, sc.Port),
 			URL:     sc.URL,
 		},
 		"nats.metrics": {Status: "disabled"},
@@ -99,4 +99,15 @@ func SubComponents(
 	}
 
 	return scs
+}
+
+// natsScheme is tls when the server serves TLS, else nats.
+func natsScheme(
+	t config.ServerTLS,
+) string {
+	if t.Enabled {
+		return "tls"
+	}
+
+	return "nats"
 }
