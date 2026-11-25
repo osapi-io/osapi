@@ -144,6 +144,11 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					Times(1)
 
 					// 3 base + 1 label = 4 consumers per job type, x2 (query+modify) = 8
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
@@ -180,6 +185,11 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 			name: "when registryKV is nil skips heartbeat",
 			setupFunc: func() *agent.Agent {
 				// 3 base + 1 label = 4 consumers per job type, x2 (query+modify) = 8
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).

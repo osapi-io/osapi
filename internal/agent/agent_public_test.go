@@ -177,6 +177,11 @@ func (s *AgentPublicTestSuite) TestStart() {
 		{
 			name: "starts and stops gracefully",
 			setupFunc: func() *agent.Agent {
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
@@ -205,6 +210,11 @@ func (s *AgentPublicTestSuite) TestStart() {
 				agent.SetLookPath(func(string) (string, error) {
 					return "", errors.New("not found")
 				})
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
@@ -395,6 +405,11 @@ func (s *AgentPublicTestSuite) TestStart() {
 					Enabled: true,
 				}
 
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
@@ -431,6 +446,11 @@ func (s *AgentPublicTestSuite) TestStart() {
 			setupFunc: func() *agent.Agent {
 				blockCh := make(chan struct{})
 
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
@@ -497,6 +517,11 @@ func (s *AgentPublicTestSuite) TestIsReady() {
 		{
 			name: "returns nil when agent is started",
 			setupFunc: func() *agent.Agent {
+				// Start and Stop write started and stopped to the timeline.
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Return(nil).
@@ -594,4 +619,28 @@ func TestAgentPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(AgentPublicTestSuite))
+}
+
+// TestLifecycle: an event goes to the agent's timeline under its machine
+// ID, and a write that fails is logged, not fatal.
+func (s *AgentPublicTestSuite) TestLifecycle() {
+	a := s.buildAgent()
+	s.mockJobClient.EXPECT().
+		WriteAgentTimelineEvent(gomock.Any(), "m-1", "web-01", "started", "started, version v1.2.3").
+		Return(nil)
+	a.SetVersion("v1.2.3")
+	agent.ExportLifecycle(
+		a,
+		"m-1",
+		"web-01",
+		"started",
+		"started, version "+agent.ExportVersionOrUnknown(a),
+	)
+
+	s.mockJobClient.EXPECT().
+		WriteAgentTimelineEvent(gomock.Any(), "m-1", "web-01", "stopped", "stopped").
+		Return(errors.New("kv down"))
+	s.NotPanics(func() { agent.ExportLifecycle(a, "m-1", "web-01", "stopped", "stopped") })
+
+	s.Equal("unknown", agent.ExportVersionOrUnknown(s.buildAgent()))
 }

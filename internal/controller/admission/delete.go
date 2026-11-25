@@ -53,7 +53,13 @@ func (w *Watcher) Delete(
 		attribute.String("osapi.agent.machine_id", machineID),
 	)
 
-	return opspan.End(span, w.delete(ctx, machineID))
+	hostname := w.hostnameOf(ctx, machineID)
+	if err := w.delete(ctx, machineID); err != nil {
+		return opspan.End(span, err)
+	}
+	w.event(ctx, machineID, hostname, "deleted", "deleted by an operator")
+
+	return opspan.End(span, nil)
 }
 
 func (w *Watcher) delete(
@@ -132,6 +138,8 @@ func (w *Watcher) DeleteStale(
 			slog.Time("last_seen", at),
 			slog.Duration("delete_after", after),
 		)
+		w.event(ctx, r.MachineID, r.Hostname, "deleted",
+			"deleted by delete_after: not seen since "+at.UTC().Format(time.RFC3339))
 		deleted = append(deleted, r.MachineID)
 	}
 

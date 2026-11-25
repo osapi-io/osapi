@@ -143,17 +143,20 @@ func ComputeAgentState(
 		return types.AgentReady
 	}
 
-	latest := events[len(events)-1]
-	switch latest.Event {
-	case "drain":
-		return types.AgentDraining
-	case "cordoned":
-		return types.AgentCordoned
-	case "undrain", "ready":
-		return types.AgentReady
-	default:
-		return types.AgentReady
+	// The latest event that schedules decides: the timeline also has
+	// lifecycle events, such as admitted or hostname_changed, which do not.
+	for i := len(events) - 1; i >= 0; i-- {
+		switch events[i].Event {
+		case "drain":
+			return types.AgentDraining
+		case "cordoned":
+			return types.AgentCordoned
+		case "undrain", "ready":
+			return types.AgentReady
+		}
 	}
+
+	return types.AgentReady
 }
 
 // GetAgentTimeline returns the timeline of an agent, in an agent.timeline

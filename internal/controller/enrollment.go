@@ -108,6 +108,9 @@ func startEnrollment(
 		jointoken.Store{KV: conn.NATS, Bucket: enrollmentCfg.Bucket, Now: time.Now},
 	)
 
+	// Each admission decision is an event of the machine's timeline.
+	watcher.SetTimeline(conn.Jobs)
+
 	background(ctx, log, "enrollment watcher", watcher.Start)
 
 	// A join over NATS: the agent sends the same signed request as over

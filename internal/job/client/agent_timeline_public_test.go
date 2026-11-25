@@ -447,6 +447,26 @@ func (s *AgentTimelinePublicTestSuite) TestComputeAgentState() {
 			},
 		},
 		{
+			name: "when a lifecycle event follows a drain the drain decides",
+			events: []job.TimelineEvent{
+				{Timestamp: time.Now(), Event: "drain", Hostname: "server1"},
+				{Timestamp: time.Now(), Event: "admitted", Hostname: "server1"},
+				{Timestamp: time.Now(), Event: "hostname_changed", Hostname: "server2"},
+			},
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentDraining, got)
+			},
+		},
+		{
+			name: "when only lifecycle events are there returns Ready",
+			events: []job.TimelineEvent{
+				{Timestamp: time.Now(), Event: "started", Hostname: "server1"},
+			},
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
+			},
+		},
+		{
 			name: "when latest event is cordoned returns Cordoned",
 			events: []job.TimelineEvent{
 				{

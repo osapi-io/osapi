@@ -77,6 +77,8 @@ type Watcher struct {
 	// also the behaviour when nothing configures it.
 	rotationGrace time.Duration
 
+	// timeline is where the lifecycle events of each machine go, or nil.
+	timeline Timeline
 	// joinTokens is the store of join tokens, which Join takes a use of.
 	joinTokens JoinTokens
 	// joinAudit is the audit log of the joins over NATS, or nil.
@@ -221,6 +223,9 @@ func (w *Watcher) handleEnrollmentRequest(
 		slog.String("key", key),
 	)
 
+	w.event(ctx, req.MachineID, req.Hostname, "enrollment_requested",
+		"asked to be admitted, fingerprint "+pending.Fingerprint)
+
 	if w.autoAdmit {
 		if err := w.AcceptAgent(ctx, req.MachineID); err != nil {
 			w.logger.Warn(
@@ -228,7 +233,10 @@ func (w *Watcher) handleEnrollmentRequest(
 				slog.String("machine_id", req.MachineID),
 				slog.String("error", err.Error()),
 			)
+
+			return
 		}
+		w.event(ctx, req.MachineID, req.Hostname, "admitted", "admitted by auto_admit")
 	}
 }
 
