@@ -201,6 +201,15 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			},
 		},
 		{
+			name: "when the join's signing key does not load does not start",
+			cfg: func() config.Config {
+				cfg := startServer(s.T())
+				cfg.Controller.Join.SigningKeyFile = "/no/such/key"
+				return cfg
+			},
+			wantErr: "join over NATS: read the signing key",
+		},
+		{
 			name: "when the enrollment bucket fails does not start",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())

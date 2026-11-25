@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/controller/admission"
+
 	"github.com/osapi-io/osapi/internal/templates"
 
 	"github.com/osapi-io/osapi/internal/controller/api"
@@ -235,4 +237,12 @@ func SetSeedTemplates(
 	seedTemplates = fn
 
 	return func() { seedTemplates = old }
+}
+
+// ExportJoinAgentUser calls joinAgentUser.
+func ExportJoinAgentUser(
+	cfg config.Config,
+	namespace string,
+) (admission.AgentUser, error) {
+	return joinAgentUser(cfg, namespace)
 }

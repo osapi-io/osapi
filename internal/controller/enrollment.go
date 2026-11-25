@@ -22,6 +22,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -34,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/validation"
 )
@@ -113,12 +115,12 @@ func startEnrollment(
 	if auditLog != nil {
 		watcher.SetJoinAudit(auditLog)
 	}
-	_, agentUser := cfg.JoinUsers()
+	agentUser, err := joinAgentUser(cfg, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("join over NATS: %w", err)
+	}
 	background(ctx, log, "join over NATS", func(ctx context.Context) error {
-		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, pki.JoinNATS{
-			Username: agentUser.Username,
-			Password: agentUser.Password,
-		})
+		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, agentUser)
 	})
 
 	// A machine that went away without a delete keeps its key until an
@@ -130,4 +132,42 @@ func startEnrollment(
 	}
 
 	return watcher, nil
+}
+
+// errNoUserKey is a join in operator mode from an agent that sent no NATS
+// user key: an agent older than the controller.
+var errNoUserKey = errors.New("the agent sent no NATS user key: upgrade it")
+
+// joinAgentUser is the NATS user that a join gives an agent: in operator
+// mode, a JWT for the agent's own user key, with the agent's permissions,
+// signed with controller.join.signing_key_file; else the static agent user.
+func joinAgentUser(
+	cfg config.Config,
+	namespace string,
+) (admission.AgentUser, error) {
+	j := cfg.Controller.Join
+	if j.SigningKeyFile == "" {
+		_, user := cfg.JoinUsers()
+
+		return admission.StaticUser(
+			pki.JoinNATS{Username: user.Username, Password: user.Password},
+		), nil
+	}
+	signer, err := natsjwt.Load(j.SigningKeyFile, j.Account)
+	if err != nil {
+		return nil, err
+	}
+	perms, _ := bus.RolePermissions(bus.RoleAgent, namespace, cfg.NATS)
+
+	return func(req pki.JoinRequest) (pki.JoinNATS, error) {
+		if req.NATSUserKey == "" {
+			return pki.JoinNATS{}, errNoUserKey
+		}
+		token, err := signer.Mint(req.NATSUserKey, req.MachineID, perms, time.Time{})
+		if err != nil {
+			return pki.JoinNATS{}, err
+		}
+
+		return pki.JoinNATS{JWT: token}, nil
+	}, nil
 }
