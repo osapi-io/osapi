@@ -1025,6 +1025,8 @@ func NoteRename(
 	req job.Request,
 ) {
 	a.noteRename(req)
+}
+
 // ExportJoinNATS calls joinNATS.
 func ExportJoinNATS(
 	ctx context.Context,
