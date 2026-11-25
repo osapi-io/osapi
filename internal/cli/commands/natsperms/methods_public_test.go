@@ -22,6 +22,7 @@ package natsperms_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -48,6 +49,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		wantErr bool
 	}{
 		{name: "a role prints its subjects", role: "agent"},
+		{name: "the controller answers requests", role: "controller"},
 		{name: "a role that osapi does not have is the error", role: "admin", wantErr: true},
 	}
 
@@ -60,10 +62,10 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			}
 			s.Require().NoError(err)
 			s.Equal("osapi", got.Namespace)
-			s.Contains(got.Publish, "osapi.enroll.request")
 			s.Contains(got.Subscribe, "_INBOX.>")
 			s.Contains(got.NSC, "--allow-pub \"")
-			s.Contains(got.NSC, "osapi.enroll.request")
+			s.Equal(tt.role == "controller", got.Responses)
+			s.Equal(tt.role == "controller", strings.Contains(got.NSC, "--allow-pub-response 1"))
 		})
 	}
 }

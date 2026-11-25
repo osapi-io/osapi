@@ -32,5 +32,6 @@ type GetOutput struct {
 	Namespace string   `                         json:"namespace"`
 	Publish   []string `                         json:"publish"`
 	Subscribe []string `                         json:"subscribe"`
+	Responses bool     `                         json:"responses" label:"Answers requests"`
 	NSC       string   `                         json:"nsc"       label:"nsc"`
 }

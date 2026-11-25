@@ -32,6 +32,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ErrJoinSignature is a join request whose signature is not by the key that
@@ -83,6 +84,18 @@ func (w *Watcher) join(
 	if !req.Verify() {
 		return nil, ErrJoinSignature
 	}
+	// A join that admitted the machine, whose reply did not reach the
+	// agent, is answered again: the same machine, key and token take no
+	// second use of the token.
+	if w.joinedBefore(ctx, req) {
+		w.logger.Info(
+			"answered a join again",
+			slog.String("machine_id", req.MachineID),
+			slog.String("hostname", req.Hostname),
+		)
+
+		return w.pkiProvider.PublicKey(), nil
+	}
 	t, err := w.joinTokens.Consume(ctx, req.Token)
 	if err != nil {
 		return nil, err
@@ -112,4 +125,22 @@ func (w *Watcher) join(
 	)
 
 	return w.pkiProvider.PublicKey(), nil
+}
+
+// joinedBefore reports whether the token of req already admitted its
+// machine with its keys.
+func (w *Watcher) joinedBefore(
+	ctx context.Context,
+	req pki.JoinRequest,
+) bool {
+	id, ok := jointoken.ID(req.Token)
+	if !ok {
+		return false
+	}
+	r, err := w.Get(ctx, req.MachineID)
+
+	return err == nil &&
+		r.State == types.AdmissionAdmitted &&
+		r.JoinToken == id &&
+		r.Fingerprint == pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey)
 }

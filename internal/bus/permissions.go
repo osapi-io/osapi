@@ -23,6 +23,7 @@ package bus
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
 
@@ -60,6 +61,10 @@ var Roles = []Role{RoleController, RoleAgent, RoleSetup, RoleJoin}
 type Permissions struct {
 	Publish   []string `json:"publish"`
 	Subscribe []string `json:"subscribe"`
+	// Responses lets the role answer each request that it receives, once,
+	// on the requester's reply subject, which it cannot otherwise publish
+	// to: allow_responses in a server's config, --allow-pub-response in nsc.
+	Responses bool `json:"responses"`
 }
 
 // RolePermissions are the permissions of role on a NATS server with the
@@ -101,6 +106,10 @@ func RolePermissions(
 		p.pub[subject(namespace, pki.EnrollResponsePrefix)+".>"] = true
 		p.sub[subject(namespace, pki.EnrollRequestSuffix)] = true
 		p.sub[subject(namespace, pki.JoinRequestSuffix)] = true
+		out := p.sorted()
+		out.Responses = true
+
+		return out, nil
 	case RoleJoin:
 		return Permissions{
 			Publish:   []string{subject(namespace, pki.JoinRequestSuffix)},
@@ -265,6 +274,12 @@ func ApplyRoles(
 		u.Permissions = &natsserver.Permissions{
 			Publish:   &natsserver.SubjectPermission{Allow: p.Publish},
 			Subscribe: &natsserver.SubjectPermission{Allow: p.Subscribe},
+		}
+		if p.Responses {
+			u.Permissions.Response = &natsserver.ResponsePermission{
+				MaxMsgs: 1,
+				Expires: time.Minute,
+			}
 		}
 	}
 
