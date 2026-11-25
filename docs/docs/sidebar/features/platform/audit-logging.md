@@ -95,6 +95,23 @@ other behavior has no `steps` and no `chain`.
 The entry keeps the steps for the time that it keeps the entry. Thus the chain
 of an entry stays after the job expires from the job bucket.
 
+### Changes that do not go through the API
+
+Some changes do not go through the API, and the log has them too. Such an entry
+has an `actor`, the kind of who made the change, an `action` and a `target`. Its
+`user` is the name of the actor:
+
+| Actor        | User                                          | Action                                  | Target         |
+| ------------ | --------------------------------------------- | --------------------------------------- | -------------- |
+| `system`     | `auto_admit`                                  | `agent.admit`                           | the machine ID |
+| `system`     | `delete_after`                                | `agent.delete`                          | the machine ID |
+| `join-token` | the token's ID                                | `agent.join` (200, or 403 when refused) | the machine ID |
+| `local`      | the user of the operating system of a command | `jointoken.create`, `jointoken.revoke`  | the token's ID |
+
+A local command connects to NATS as the controller does, and writes its entry to
+the audit stream. An entry never has the token or a secret: only its ID. An
+entry of a request through the API has no `actor`.
+
 ## Viewing audit logs
 
 Query audit entries through the API or CLI. You can list recent entries

@@ -100,8 +100,8 @@ func (s *StorePublicTestSuite) serveJoin(
 func (s *StorePublicTestSuite) TestServeJoin() {
 	s.Run("a token that admits gets the controller's key and the agent user", func() {
 		log := &joinLog{}
-		s.watcher.SetJoinAudit(log)
-		defer s.watcher.SetJoinAudit(nil)
+		s.watcher.SetAudit(log)
+		defer s.watcher.SetAudit(nil)
 		s.watcher.SetJoinTokens(fakeTokens{})
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 
@@ -117,7 +117,10 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		)
 		s.Require().Len(log.entries, 1)
 		e := log.entries[0]
-		s.Equal("join-token:t1", e.User, "the token's ID, never the token")
+		s.Equal("t1", e.User, "the token's ID, never the token")
+		s.Equal(audit.ActorJoinToken, e.Actor)
+		s.Equal("agent.join", e.Action)
+		s.Equal("m-1", e.Target)
 		s.Equal("NATS", e.Method)
 		s.Equal("osapi.join.request", e.Path)
 		s.Equal("agent.join", e.OperationID)
@@ -129,8 +132,8 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 
 	s.Run("a token that does not admit gets why, and no user", func() {
 		log := &joinLog{err: errors.New("audit down")}
-		s.watcher.SetJoinAudit(log)
-		defer s.watcher.SetJoinAudit(nil)
+		s.watcher.SetAudit(log)
+		defer s.watcher.SetAudit(nil)
 		s.watcher.SetJoinTokens(fakeTokens{err: jointoken.ErrExpired})
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 
@@ -180,11 +183,12 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 
 	s.Run("a request that is not JSON gets why", func() {
 		log := &joinLog{}
-		s.watcher.SetJoinAudit(log)
-		defer s.watcher.SetJoinAudit(nil)
+		s.watcher.SetAudit(log)
+		defer s.watcher.SetAudit(nil)
 		reply := s.serveJoin([]byte("{"), nil)
 		s.Require().Len(log.entries, 1)
-		s.Equal("join-token", log.entries[0].User)
+		s.Equal(audit.ActorJoinToken, log.entries[0].Actor)
+		s.Empty(log.entries[0].User, "a request that is not JSON names no token")
 
 		s.Equal("the join request is not JSON", reply.Error)
 	})

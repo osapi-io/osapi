@@ -33,8 +33,17 @@ type Entry struct {
 	ID string `json:"id"`
 	// Timestamp is when the request was processed.
 	Timestamp time.Time `json:"timestamp"`
-	// User is the authenticated subject (from JWT sub claim).
+	// User is who did it: the authenticated subject (from JWT sub claim) of
+	// a request, or the name of the actor of another kind.
 	User string `json:"user"`
+	// Actor is the kind of who did it: empty for a request through the API,
+	// or system, join-token or local (osapi-io/osapi#1425).
+	Actor Actor `json:"actor,omitempty"`
+	// Action is what a change that did not go through the API did, such as
+	// agent.admit or jointoken.create.
+	Action string `json:"action,omitempty"`
+	// Target is what the action was on, such as a machine ID or a token ID.
+	Target string `json:"target,omitempty"`
 	// Roles are the roles from the JWT token.
 	Roles []types.Role `json:"roles"`
 	// Targets are the target scope from the JWT token, empty when the token

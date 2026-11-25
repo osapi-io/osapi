@@ -9379,6 +9379,14 @@ components:
       type: object
     AuditEntry:
       properties:
+        action:
+          description: What a change that did not go through the API did, such as agent.admit or jointoken.create.
+          example: agent.admit
+          type: string
+        actor:
+          description: 'The kind of who made a change that did not go through the API: system, join-token or local. Absent for a request through the API.'
+          example: system
+          type: string
         chain:
           description: 'The steps on one line for each host, such as web-01: managedfile update (changed).'
           items:
@@ -9446,6 +9454,10 @@ components:
               - steps
             type: object
           type: array
+        target:
+          description: What the action was on, such as a machine ID or a join token's ID.
+          example: 5f3c9a2b8d7e4f60a1b2c3d4e5f60718
+          type: string
         targets:
           description: The target scope of the JWT token, absent when the token acts on each host.
           items:
@@ -9461,7 +9473,7 @@ components:
           example: 4bf92f3577b34da6a3ce929d0e0e4736
           type: string
         user:
-          description: Authenticated user (JWT subject).
+          description: 'Who did it: the authenticated user (JWT subject), or the name of another actor.'
           example: ops@example.com
           type: string
       required:

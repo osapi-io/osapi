@@ -24,6 +24,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 )
@@ -35,4 +37,7 @@ type Deps struct {
 	Config config.Config
 	Dial   func(ctx context.Context) (jointoken.KV, func(), error)
 	Now    func() time.Time
+	// Audit writes an entry to the audit log of the controller, or is nil
+	// when the controller keeps none.
+	Audit func(ctx context.Context, e audit.Entry) error
 }

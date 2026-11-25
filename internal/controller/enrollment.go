@@ -27,6 +27,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 
 	"github.com/avfs/avfs/vfs/osfs"
@@ -51,7 +53,7 @@ func startEnrollment(
 	conn *jobclient.Connection,
 	namespace string,
 	cfg config.Config,
-	auditLog admission.JoinAudit,
+	auditLog audit.Writer,
 ) (*admission.Watcher, error) {
 	enrollmentCfg := bus.EnrollmentKV(namespace, cfg.NATS.Enrollment)
 	if err := conn.NATS.KVCreateOrUpdate(ctx, enrollmentCfg); err != nil {
@@ -116,7 +118,7 @@ func startEnrollment(
 	// A join over NATS: the agent sends the same signed request as over
 	// HTTPS, and gets the NATS user that it connects with after the join.
 	if auditLog != nil {
-		watcher.SetJoinAudit(auditLog)
+		watcher.SetAudit(auditLog)
 	}
 	agentUser, err := joinAgentUser(cfg, namespace)
 	if err != nil {

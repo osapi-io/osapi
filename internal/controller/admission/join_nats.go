@@ -28,9 +28,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
@@ -92,18 +90,31 @@ func (w *Watcher) ServeJoin(
 	return nil
 }
 
-// JoinAudit is where a join over NATS is audited: the audit log of the
-// controller. A *audit.StreamStore is one.
-type JoinAudit interface {
-	Write(ctx context.Context, entry audit.Entry) error
+// SetAudit gives the watcher the audit log, which each change that it makes
+// on its own writes an entry to: a join over NATS, an admission by
+// auto_admit, a deletion by delete_after. Without it, a change is only
+// logged.
+func (w *Watcher) SetAudit(
+	a audit.Writer,
+) {
+	w.audit = a
 }
 
-// SetJoinAudit gives the watcher the audit log, which each join over NATS
-// writes an entry to. Without it, a join is only logged.
-func (w *Watcher) SetJoinAudit(
-	a JoinAudit,
+// record writes the audit entry e, and logs a failure: the change stands
+// without it.
+func (w *Watcher) record(
+	ctx context.Context,
+	e audit.Entry,
 ) {
-	w.joinAudit = a
+	if w.audit == nil {
+		return
+	}
+	if err := w.audit.Write(context.WithoutCancel(ctx), e); err != nil {
+		w.logger.Warn("failed to write an audit entry",
+			slog.String("action", e.Action),
+			slog.String("error", err.Error()),
+		)
+	}
 }
 
 // respondJoin replies to the join request of msg, and audits it.
@@ -126,8 +137,8 @@ func (w *Watcher) respondJoin(
 }
 
 // auditJoin writes the audit entry of a join over NATS: the token that
-// admitted, or tried to, is the actor, and the machine is what it asked for.
-// It holds no secret: the token's ID, never the token.
+// admitted, or tried to, is the actor, and the machine is the target. It
+// holds no secret: the token's ID, never the token.
 func (w *Watcher) auditJoin(
 	ctx context.Context,
 	subject string,
@@ -135,35 +146,18 @@ func (w *Watcher) auditJoin(
 	reply pki.JoinReply,
 	start time.Time,
 ) {
-	if w.joinAudit == nil {
-		return
-	}
-	actor := "join-token"
-	if id, ok := jointoken.ID(req.Token); ok {
-		actor += ":" + id
-	}
+	id, _ := jointoken.ID(req.Token)
 	code := http.StatusOK
 	if reply.Error != "" {
 		code = http.StatusForbidden
 	}
-	entry := audit.Entry{
-		ID:           uuid.New().String(),
-		Timestamp:    start,
-		User:         actor,
-		Method:       "NATS",
-		Path:         subject,
-		OperationID:  "agent.join",
-		ResponseCode: code,
-		DurationMs:   nowFn().Sub(start).Milliseconds(),
-		RequestSummary: fmt.Sprintf("machine_id=%s hostname=%s",
-			req.MachineID, req.Hostname),
-	}
-	if sc := trace.SpanContextFromContext(ctx); sc.HasTraceID() {
-		entry.TraceID = sc.TraceID().String()
-	}
-	if err := w.joinAudit.Write(context.WithoutCancel(ctx), entry); err != nil {
-		w.logger.Warn("failed to audit a join", slog.String("error", err.Error()))
-	}
+	e := audit.Change(ctx, audit.ActorJoinToken, id, "agent.join", req.MachineID, code,
+		fmt.Sprintf("machine_id=%s hostname=%s", req.MachineID, req.Hostname))
+	e.Timestamp = start
+	e.Method = "NATS"
+	e.Path = subject
+	e.DurationMs = nowFn().Sub(start).Milliseconds()
+	w.record(ctx, e)
 }
 
 // joinReply is the request in data, and its reply: the controller's key and
