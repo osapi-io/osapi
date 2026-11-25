@@ -56,6 +56,14 @@ func (testSigner) ControllerPublicKey() ed25519.PublicKey { return testControlle
 // m-<hostname> is an agent admitted as <hostname>, with testAgentPub.
 type testAgentKeys struct{}
 
+func (testAgentKeys) RenameAgentKey(
+	context.Context,
+	string,
+	string,
+) error {
+	return nil
+}
+
 func (testAgentKeys) LookupAgentKey(
 	_ context.Context,
 	machineID string,

@@ -145,3 +145,13 @@ func SetNewSealer(
 func ResetNewSealer() {
 	newSealer = seal.New
 }
+
+// ExportFollowRename exposes the private followRename for testing.
+func ExportFollowRename(
+	c *Client,
+	ctx context.Context,
+	req *job.Request,
+	r *job.Response,
+) {
+	c.followRename(ctx, req, r)
+}

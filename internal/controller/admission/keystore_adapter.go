@@ -41,6 +41,15 @@ func (w *Watcher) KeyStore() client.AgentKeyStore {
 	return clientKeyStore{watcher: w}
 }
 
+// RenameAgentKey implements client.AgentKeyStore.
+func (s clientKeyStore) RenameAgentKey(
+	ctx context.Context,
+	machineID string,
+	hostname string,
+) error {
+	return s.watcher.RenameAgentKey(ctx, machineID, hostname)
+}
+
 // LookupAgentKey implements client.AgentKeyStore, translating this package's
 // causes into the client's. The distinction between them is preserved: a
 // missing record and an unreadable store never collapse into one answer.

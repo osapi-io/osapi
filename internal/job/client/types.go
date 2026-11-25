@@ -105,6 +105,13 @@ type AgentKeyStore interface {
 		ctx context.Context,
 		machineID string,
 	) (*AgentKey, error)
+	// RenameAgentKey records hostname as the name that machineID answers
+	// as, after an operator renamed the host through osapi.
+	RenameAgentKey(
+		ctx context.Context,
+		machineID string,
+		hostname string,
+	) error
 }
 
 // The causes of a rejected response stay distinct so an operator can tell an
