@@ -41,11 +41,6 @@ type Placement string
 // system. What the controller answers itself is not a behavior.
 const NodePlacement Placement = "node"
 
-// adminVerbs are the permission verbs that only the admin role gets. An
-// action declared with .PermitAs takes one of them, so its permission is
-// apart from the <name>:execute of the other actions of its behavior.
-var adminVerbs = []types.Verb{types.VerbShell, types.VerbExec}
-
 // Behavior is one area of a host that osapi manages, such as kernel
 // parameters or DNS resolver settings.
 type Behavior struct {
@@ -537,7 +532,7 @@ func (m *Method) AdminOnly() *Method {
 // permission: it is declared with .AdminOnly, or with .PermitAs or .Shell,
 // whose verb only the admin role gets.
 func (m *Method) AdminRole() bool {
-	return m.Admin || slices.Contains(adminVerbs, m.PermitVerb)
+	return m.Admin || m.PermitVerb.AdminOnly()
 }
 
 // Describe sets the method's one-line description.
