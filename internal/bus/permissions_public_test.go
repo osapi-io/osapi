@@ -211,6 +211,20 @@ func (s *PermissionsPublicTestSuite) TestControllerAnswersRequests() {
 	s.Equal(1, opts.Users[0].Permissions.Response.MaxMsgs)
 }
 
+func (s *PermissionsPublicTestSuite) TestNothingNamed() {
+	for _, role := range bus.Roles {
+		p, err := bus.RolePermissions(role, "osapi", config.NATS{})
+		s.Require().NoError(err)
+		for _, subj := range append(p.Publish, p.Subscribe...) {
+			s.NotContains(subj, "..", "%s: %s", role, subj)
+			s.False(strings.HasSuffix(subj, "."), "%s: %s", role, subj)
+			s.NotContains(subj, "KV_.", "%s: %s", role, subj)
+			s.NotContains(subj, "OBJ_.", "%s: %s", role, subj)
+			s.NotContains(subj, "osapi-.", "%s: %s", role, subj)
+		}
+	}
+}
+
 func (s *PermissionsPublicTestSuite) TestNoNamespace() {
 	p, err := bus.RolePermissions(bus.RoleAgent, "", s.cfg)
 	s.Require().NoError(err)

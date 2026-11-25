@@ -109,6 +109,11 @@ func AuthOptions(
 	}
 }
 
+// MaxControlLine is the longest protocol line, in bytes, that the embedded
+// server takes. A NATS server that osapi does not run needs at least this in
+// its max_control_line, in operator mode.
+const MaxControlLine = 32 * 1024
+
 // ServerOptions is the embedded server's options: host, port and
 // JetStream, and the authentication serverAuth describes. For operator auth the
 // options start from serverAuth.ResolverFile, read by NATS's own config parser,
@@ -147,6 +152,10 @@ func ServerOptions(
 	opts.StoreDir = storeDir
 	opts.NoSigs = true
 	opts.NoLog = false
+	// A user JWT carries the subjects of its role, and the controller's is
+	// about 7 KB: more than the 4 KB of a CONNECT line that NATS takes by
+	// default.
+	opts.MaxControlLine = MaxControlLine
 	opts.TLSConfig = tlsConfig
 
 	switch serverAuth.Type {

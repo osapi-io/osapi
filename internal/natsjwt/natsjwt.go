@@ -71,6 +71,15 @@ func Load(
 	return &Signer{key: key, account: account}, nil
 }
 
+// NewSigner is the signer of key, a signing key of the account with public
+// key account.
+func NewSigner(
+	key nkeys.KeyPair,
+	account string,
+) *Signer {
+	return &Signer{key: key, account: account}
+}
+
 // Mint is a user JWT for the user nkey userKey, named name, with the
 // permissions p, that expires at expires, or never when it is zero.
 func (s *Signer) Mint(

@@ -58,6 +58,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/join"
+	natsauthcmd "github.com/osapi-io/osapi/internal/cli/commands/natsauth"
 	"github.com/osapi-io/osapi/internal/cli/commands/natskey"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsperms"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
@@ -107,6 +108,9 @@ func init() {
 	command.Provide(controllercmd.Group, controllerDeps)
 	command.Provide(controllerkey.Group, func() controllerkey.Deps {
 		return controllerkey.Deps{FS: osfs.NewWithNoIdm(), KeyDir: appConfig.Controller.PKI.KeyDir}
+	})
+	command.Provide(natsauthcmd.Group, func() natsauthcmd.Deps {
+		return natsauthcmd.Deps{FS: appFs, Config: appConfig}
 	})
 	command.Provide(natsperms.Group, func() natsperms.Deps {
 		return natsperms.Deps{Config: appConfig}
