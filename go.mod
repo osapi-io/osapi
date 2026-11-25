@@ -21,7 +21,7 @@ require (
 	github.com/muesli/termenv v0.16.0
 	github.com/nats-io/jwt/v2 v2.8.3
 	github.com/nats-io/nats-server/v2 v2.15.3
-	github.com/nats-io/nats.go v1.55.0
+	github.com/nats-io/nats.go v1.56.0
 	github.com/nats-io/nkeys v0.4.17
 	github.com/osapi-io/gohai v1.13.0
 	github.com/osapi-io/nats-client v1.2.0
