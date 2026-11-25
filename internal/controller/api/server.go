@@ -143,6 +143,7 @@ func (s *Server) Start() {
 			),
 			HideBanner:      true,
 			GracefulTimeout: shutdownGracePeriod,
+			TLSConfig:       s.tls,
 		}
 		if err := sc.Start(ctx, s.Echo); err != nil &&
 			!errors.Is(err, http.ErrServerClosed) {

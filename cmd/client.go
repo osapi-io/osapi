@@ -24,7 +24,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -93,11 +92,15 @@ var clientCmd = &cobra.Command{
 			cli.LogFatal(logger, "failed to resolve the bearer token", err)
 		}
 
+		base, err := cli.TLSTransport(appConfig.Controller.Client.TLS.CAFile)
+		if err != nil {
+			cli.LogFatal(logger, "failed to read controller.client.tls.ca_file", err)
+		}
 		sdkClient = client.New(
 			appConfig.Controller.Client.URL,
 			appConfig.Controller.Client.Security.BearerToken,
 			client.WithLogger(logger),
-			client.WithHTTPTransport(cli.TraceTransport{Base: http.DefaultTransport}),
+			client.WithHTTPTransport(cli.TraceTransport{Base: base}),
 		)
 	},
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {
