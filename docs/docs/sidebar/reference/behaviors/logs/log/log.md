@@ -81,13 +81,13 @@ None. Declare them with behavior.Config.
 
 ### Output (5)
 
-| FIELD     | TYPE    | DESCRIPTION                            |
-| --------- | ------- | -------------------------------------- |
-| timestamp | string  | When journald recorded it, in RFC 3339 |
-| unit      | string  | The syslog identifier that wrote it    |
-| priority  | string  | Its priority, by name                  |
-| message   | string  | The message                            |
-| pid       | integer | The process that wrote it              |
+| FIELD     | TYPE    | DESCRIPTION                                                                |
+| --------- | ------- | -------------------------------------------------------------------------- |
+| timestamp | string  | When journald recorded it, in RFC 3339                                     |
+| unit      | string  | The syslog identifier that wrote it                                        |
+| priority  | string  | Its priority, by name. An entry that journald has no priority for has none |
+| message   | string  | The message                                                                |
+| pid       | integer | The process that wrote it                                                  |
 
 ### Examples (2)
 

@@ -55,14 +55,19 @@ func (s *LinuxPublicTestSuite) TestEntries() {
 			want: []entry.Entry{{Message: "ok", Priority: "err"}},
 		},
 		{
-			name: "when the time and the priority are not numbers they stay as given",
+			name: "when the time is not a number it stays as given, and a priority that is not one is left out",
 			out:  `{"__REALTIME_TIMESTAMP":"yesterday","PRIORITY":"weird","MESSAGE":"m","_PID":"x"}`,
-			want: []entry.Entry{{Timestamp: "yesterday", Priority: "weird", Message: "m"}},
+			want: []entry.Entry{{Timestamp: "yesterday", Message: "m"}},
 		},
 		{
-			name: "when the priority is a number that journald does not have it stays as given",
+			name: "when the priority is a number that journald does not have the entry has none",
 			out:  `{"PRIORITY":"8","MESSAGE":"m"}` + "\n" + `{"PRIORITY":"-1","MESSAGE":"n"}`,
-			want: []entry.Entry{{Priority: "8", Message: "m"}, {Priority: "-1", Message: "n"}},
+			want: []entry.Entry{{Message: "m"}, {Message: "n"}},
+		},
+		{
+			name: "when an entry has no priority it has none, so the response keeps to the spec",
+			out:  `{"MESSAGE":"audit: type=1400"}`,
+			want: []entry.Entry{{Message: "audit: type=1400"}},
 		},
 		{
 			name: "when the journal has no entries",
