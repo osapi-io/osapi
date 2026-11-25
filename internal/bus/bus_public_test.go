@@ -272,7 +272,13 @@ func (suite *BusPublicTestSuite) TestBuildNATSServerOptions() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			got, err := bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats", tc.auth)
+			got, err := bus.ServerOptions(
+				"0.0.0.0",
+				4222,
+				"/var/lib/nats",
+				tc.auth,
+				config.ServerTLS{},
+			)
 
 			if tc.wantErr != "" {
 				suite.ErrorContains(err, tc.wantErr)
@@ -918,4 +924,39 @@ func (suite *BusPublicTestSuite) TestBuildSecretsKVConfig() {
 			tc.validateFunc(got)
 		})
 	}
+}
+
+func (suite *BusPublicTestSuite) TestServerOptionsTLS() {
+	cert, key := writeCert(suite.T())
+	got, err := bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
+		config.NATSServerAuth{Type: "none"},
+		config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key})
+	suite.Require().NoError(err)
+	suite.NotNil(got.TLSConfig)
+
+	_, err = bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
+		config.NATSServerAuth{Type: "none"}, config.ServerTLS{Enabled: true})
+	suite.ErrorContains(err, "tls: tls.enabled needs cert_file and key_file")
+}
+
+func (suite *BusPublicTestSuite) TestConnectionOptions() {
+	conn := config.NATSConnection{
+		Host: "nats.lab",
+		Port: 4222,
+		Auth: config.NATSAuth{Type: "none"},
+	}
+	got, err := bus.ConnectionOptions(conn, "osapi-agent")
+	suite.Require().NoError(err)
+	suite.Equal("nats.lab", got.Host)
+	suite.Equal("osapi-agent", got.Name)
+	suite.Nil(got.TLS, "plain text when TLS is off")
+
+	conn.TLS = config.ClientTLS{Enabled: true, ServerName: "hub.lab"}
+	got, err = bus.ConnectionOptions(conn, "osapi-agent")
+	suite.Require().NoError(err)
+	suite.Equal("hub.lab", got.TLS.ServerName)
+
+	conn.TLS = config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"}
+	_, err = bus.ConnectionOptions(conn, "osapi-agent")
+	suite.ErrorContains(err, "nats tls: ")
 }

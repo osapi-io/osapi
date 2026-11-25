@@ -28,6 +28,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,6 +39,16 @@ import (
 // returns their paths.
 func writeCert(
 	t *testing.T,
+) (string, string) {
+	return writeCertFor(t, []string{"localhost"}, nil)
+}
+
+// writeCertFor writes a self-signed certificate for names and ips and its
+// key, and returns their paths.
+func writeCertFor(
+	t *testing.T,
+	names []string,
+	ips []net.IP,
 ) (string, string) {
 	t.Helper()
 	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -53,7 +64,8 @@ func writeCert(
 		},
 		BasicConstraintsValid: true,
 		IsCA:                  true,
-		DNSNames:              []string{"localhost"},
+		DNSNames:              names,
+		IPAddresses:           ips,
 	}
 	der, _ := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &key.PublicKey, key)
 	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)

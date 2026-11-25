@@ -63,10 +63,12 @@ func New(
 ) (*Server, error) {
 	sc := cfg.Server
 
-	opts, err := bus.ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth)
+	opts, err := bus.ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth, sc.TLS)
 	if err != nil {
-		return nil, fmt.Errorf("NATS server auth: %w", err)
+		return nil, fmt.Errorf("NATS server: %w", err)
 	}
+	// The server's own connection trusts its own certificate.
+	selfTLS := config.SelfClient(opts.TLSConfig)
 	opts.JetStreamKey, err = bus.JetStreamKey(sc.JetStream)
 	if err != nil {
 		return nil, err
@@ -85,6 +87,7 @@ func New(
 		Port: sc.Port,
 		Auth: bus.ServerClientAuth(sc.Auth),
 		Name: "osapi-nats-server",
+		TLS:  selfTLS,
 	}, mp))
 	if err != nil {
 		s.Stop()

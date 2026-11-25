@@ -112,7 +112,25 @@ func (s *ServerPublicTestSuite) TestNew() {
 				c.Server.Auth = config.NATSServerAuth{Type: "operator"}
 				return c
 			},
-			wantErr: "NATS server auth: ",
+			wantErr: "NATS server: ",
+		},
+		{
+			name: "when TLS is on with no certificate returns the error",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				c.Server.TLS = config.ServerTLS{Enabled: true}
+				return c
+			},
+			wantErr: "tls.enabled needs cert_file and key_file",
+		},
+		{
+			name: "when TLS is on with a certificate, it sets itself up over TLS",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				cert, key := writeCert(s.T())
+				c.Server.TLS = config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}
+				return c
+			},
 		},
 		{
 			name: "when the port is in use returns the error",
@@ -360,4 +378,33 @@ func (s *ServerPublicTestSuite) TestJetStreamEncryption() {
 		s.Require().NoError(err)
 		s.Equal("SECRET-MARK-2", got)
 	})
+}
+
+// TestTLS is a client of a server that serves TLS: one that trusts the
+// certificate connects, and one without TLS is refused.
+func (s *ServerPublicTestSuite) TestTLS() {
+	cfg := serverNATS(s.T())
+	cert, key := writeCert(s.T())
+	cfg.Server.TLS = config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}
+	srv, err := server.New(context.Background(), slog.Default(), cfg, nil)
+	s.Require().NoError(err)
+	defer srv.Stop(context.Background())
+
+	conn := config.NATSConnection{
+		Host: "127.0.0.1",
+		Port: cfg.Server.Port,
+		Auth: config.NATSAuth{Type: "none"},
+		TLS:  config.ClientTLS{Enabled: true, CAFile: cert},
+	}
+	opts, err := bus.ConnectionOptions(conn, "test")
+	s.Require().NoError(err)
+	nc, err := bus.Dial(slog.Default(), opts)
+	s.Require().NoError(err)
+	bus.Close(nc)
+
+	conn.TLS = config.ClientTLS{}
+	opts, err = bus.ConnectionOptions(conn, "test")
+	s.Require().NoError(err)
+	_, err = bus.Dial(slog.Default(), opts)
+	s.Error(err, "plain text is refused")
 }

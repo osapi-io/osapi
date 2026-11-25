@@ -69,6 +69,43 @@ func (c ClientTLS) Config() (*tls.Config, error) {
 	return out, nil
 }
 
+// Dial is the TLS config of a connection that has no scheme to decide, such
+// as one to NATS: nil when c is not enabled, else Config.
+func (c ClientTLS) Dial() (*tls.Config, error) {
+	if !c.Enabled {
+		return nil, nil
+	}
+
+	return c.Config()
+}
+
+// SelfClient is the TLS config with which a server of osapi connects to
+// itself, such as the NATS server for its setup and heartbeat, from the
+// config that it serves: it trusts its own certificate, and checks the first
+// name in it, since it dials an address that the certificate may not name.
+// Nil when the server serves no TLS.
+func SelfClient(
+	server *tls.Config,
+) *tls.Config {
+	if server == nil {
+		return nil
+	}
+	// LoadX509KeyPair fills Leaf.
+	leaf := server.Certificates[0].Leaf
+	pool := x509.NewCertPool()
+	pool.AddCert(leaf)
+	names := append([]string{}, leaf.DNSNames...)
+	for _, ip := range leaf.IPAddresses {
+		names = append(names, ip.String())
+	}
+	name := "localhost"
+	if len(names) > 0 {
+		name = names[0]
+	}
+
+	return &tls.Config{RootCAs: pool, ServerName: name, MinVersion: tls.VersionTLS12}
+}
+
 // Warn logs a warning when c accepts any certificate, with the key of its
 // setting, such as telemetry.tracing.tls, at each start that has it on.
 func (c ClientTLS) Warn(
@@ -81,9 +118,9 @@ func (c ClientTLS) Warn(
 	}
 }
 
-// Config is the TLS config that a metrics server with s serves: its
-// certificate, or nil when s is not enabled. A metrics server has no
-// self-signed fallback, so TLS on with no certificate is an error.
+// Config is the TLS config that a server with s serves, a metrics server or
+// the NATS server: its certificate, or nil when s is not enabled. Neither has
+// a self-signed fallback, so TLS on with no certificate is an error.
 func (s ServerTLS) Config() (*tls.Config, error) {
 	if !s.Enabled {
 		return nil, nil

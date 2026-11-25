@@ -240,6 +240,8 @@ type NATSServer struct {
 	// Auth holds server-side authentication configuration.
 	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
 	Metrics MetricsServer  `mapstructure:"metrics"`
+	// TLS makes the server serve TLS: each client then connects with tls://.
+	TLS ServerTLS `mapstructure:"tls"`
 }
 
 // NATSServerJetStream is the encryption of the JetStream store of the
@@ -318,6 +320,8 @@ type NATSConnection struct {
 	Namespace string `mapstructure:"namespace" doc:"Subject namespace prefix. Must match nats.server.namespace." validate:"omitempty,nats_name"`
 	// Auth holds client-side authentication configuration.
 	Auth NATSAuth `mapstructure:"auth,omitempty"`
+	// TLS is how the connection checks a NATS server that serves TLS.
+	TLS ClientTLS `mapstructure:"tls"`
 }
 
 // Controller holds the control plane configuration.
@@ -381,8 +385,8 @@ type Client struct {
 }
 
 // ClientTLS is how osapi checks a server that it connects to over TLS: the
-// CLI to the controller, and the OTLP exporter and the trace reader to the
-// tracing backend. ClientTLS.Config builds the TLS config of each.
+// CLI to the controller, the OTLP exporter and the trace reader to the
+// tracing backend, and the controller and each agent to NATS. ClientTLS.Config builds the TLS config of each.
 type ClientTLS struct {
 	// Enabled connects with TLS. A URL with https:// uses TLS without it.
 	Enabled bool `mapstructure:"enabled" doc:"Connect with TLS. A URL that starts with https:// uses TLS without it."`
@@ -408,13 +412,13 @@ type CustomRole struct {
 	Permissions []types.Permission `mapstructure:"permissions" validate:"dive,permission"`
 }
 
-// ServerTLS makes a server of osapi serve HTTPS: the API, and each metrics
-// server. With no certificate set, the API makes a self-signed one in
-// controller.pki.key_dir at its first start, and uses it after that; a
-// metrics server needs one.
+// ServerTLS makes a server of osapi serve TLS: the API, each metrics
+// server, and the NATS server. With no certificate set, the API makes a
+// self-signed one in controller.pki.key_dir at its first start, and uses it
+// after that; a metrics server and the NATS server need one.
 type ServerTLS struct {
-	// Enabled serves HTTPS on the server's port, in place of HTTP.
-	Enabled bool `mapstructure:"enabled" doc:"Serve HTTPS on the port, in place of HTTP. Without cert_file and key_file, the API makes a self-signed certificate in controller.pki.key_dir; a metrics server needs both."`
+	// Enabled serves TLS on the server's port, in place of plain text.
+	Enabled bool `mapstructure:"enabled" doc:"Serve TLS on the port (HTTPS for the API and metrics), in place of plain text. Without cert_file and key_file, the API makes a self-signed certificate in controller.pki.key_dir; a metrics server and the NATS server need both."`
 	// CertFile is the PEM certificate to serve, with its chain.
 	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty is the API's self-signed certificate"`
 	// KeyFile is the PEM private key of CertFile.

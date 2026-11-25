@@ -75,12 +75,11 @@ func Connect(
 ) (*Connection, error) {
 	namespace := conn.Namespace
 
-	nc, err := bus.Dial(log, bus.Telemetry(&natsclient.Options{
-		Host: conn.Host,
-		Port: conn.Port,
-		Auth: bus.AuthOptions(conn.Auth),
-		Name: conn.ClientName,
-	}, mp))
+	opts, err := bus.ConnectionOptions(conn, conn.ClientName)
+	if err != nil {
+		return nil, err
+	}
+	nc, err := bus.Dial(log, bus.Telemetry(opts, mp))
 	if err != nil {
 		return nil, err
 	}

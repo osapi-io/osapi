@@ -24,8 +24,6 @@ import (
 	"context"
 	"fmt"
 
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
-
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
@@ -44,12 +42,11 @@ func resolveReferences(
 		return nil
 	}
 	n := appConfig.Controller.NATS
-	nc, err := bus.Dial(logger, &natsclient.Options{
-		Host: n.Host,
-		Port: n.Port,
-		Auth: bus.AuthOptions(n.Auth),
-		Name: "osapi-references",
-	})
+	opts, err := bus.ConnectionOptions(n, "osapi-references")
+	if err != nil {
+		return fmt.Errorf("resolve the references of the config: %w", err)
+	}
+	nc, err := bus.Dial(logger, opts)
 	if err != nil {
 		return fmt.Errorf("resolve the references of the config: %w", err)
 	}

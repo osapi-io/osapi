@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"log/slog"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -135,6 +136,41 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 	got, err = config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
 	s.Require().NoError(err)
 	s.Len(got.Certificates, 1)
+}
+
+func (s *TLSPublicTestSuite) TestDial() {
+	got, err := config.ClientTLS{CAFile: "/no/such/ca.crt"}.Dial()
+	s.Require().NoError(err, "off reads nothing")
+	s.Nil(got)
+
+	got, err = config.ClientTLS{Enabled: true, ServerName: "hub.lab"}.Dial()
+	s.Require().NoError(err)
+	s.Equal("hub.lab", got.ServerName)
+}
+
+func (s *TLSPublicTestSuite) TestSelfClient() {
+	s.Nil(config.SelfClient(nil), "no TLS is plain text")
+
+	for _, tc := range []struct {
+		name  string
+		names []string
+		ips   []net.IP
+		want  string
+	}{
+		{name: "the first DNS name", names: []string{"hub.lab", "localhost"}, want: "hub.lab"},
+		{name: "an IP when it has no DNS name", ips: []net.IP{net.IPv4(10, 0, 0, 1)}, want: "10.0.0.1"},
+		{name: "localhost when it has neither", want: "localhost"},
+	} {
+		s.Run(tc.name, func() {
+			cert, key := writeCertFor(s.T(), tc.names, tc.ips)
+			server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
+			s.Require().NoError(err)
+
+			got := config.SelfClient(server)
+			s.Equal(tc.want, got.ServerName)
+			s.NotNil(got.RootCAs)
+		})
+	}
 }
 
 func (s *TLSPublicTestSuite) TestAddress() {
