@@ -783,6 +783,21 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestNoteRename() {
 	s.False(agent.ExportNoteRename(testAgent, get), "a read is not a rename")
 	s.True(agent.ExportNoteRename(testAgent, update))
 	s.True(agent.ExportNoteRename(testAgent, update), "a second rename waits with the first")
+	agent.AnswerRename(testAgent)
+
+	// The update waits for the registration, not for the whole wait.
+	defer agent.SetRenameWait(time.Hour)()
+	go agent.AnswerRename(testAgent)
+	done := make(chan struct{})
+	go func() {
+		agent.NoteRename(testAgent, update)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		s.Fail("the update did not return when the agent registered")
+	}
 }
 
 func (s *HeartbeatLowLevelPublicTestSuite) TestRegistryKey() {

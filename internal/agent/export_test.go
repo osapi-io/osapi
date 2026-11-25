@@ -1042,3 +1042,19 @@ func ExportVerifyPin(
 ) error {
 	return verifyPin(fingerprint, certs)
 }
+
+// AnswerRename does what the heartbeat does with a rename: it takes the
+// rename of a, and closes it once the agent registered.
+func AnswerRename(
+	a *Agent,
+) {
+	close(<-a.renamed)
+}
+
+// NoteRename calls the private noteRename.
+func NoteRename(
+	a *Agent,
+	req job.Request,
+) {
+	a.noteRename(req)
+}
