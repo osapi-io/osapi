@@ -38,12 +38,15 @@ var (
 
 // Group is the telemetry group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"trace", "Read the traces of requests through the controller",
+	"telemetry", "Read telemetry through the controller",
 	endpoint.Area(area.Fleet),
-	endpoint.Title("Trace API"),
-	endpoint.Tag("trace", "Trace", "The spans of a trace."),
+	endpoint.SubDoc("trace", "Read a trace from the tracing backend"),
+	endpoint.Title("Telemetry API"),
+	endpoint.Tag("telemetry", "Telemetry",
+		"Telemetry through the controller, such as the spans of a trace."),
 	endpoint.Uses[Deps](),
 	endpoint.Get[TraceInput, TraceResponse]("get").
+		Sub("trace").
 		Handle(Get).
 		ID("GetTrace").
 		Permission(types.PermTraceRead).

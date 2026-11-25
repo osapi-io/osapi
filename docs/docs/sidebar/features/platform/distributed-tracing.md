@@ -122,7 +122,7 @@ You can read a trace without access to the tracing backend. The controller reads
 it for you:
 
 ```bash
-osapi client trace get --id 26e448c9dbe1c4a8d216a98c675079c9
+osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
 ```
 
 ```text
@@ -258,7 +258,7 @@ telemetry:
     exporter: otlp
     otlp_endpoint: localhost:4317
     # Where a person opens Jaeger. The controller also reads traces from it
-    # for osapi client trace get and the Traces page.
+    # for osapi client telemetry trace get and the Traces page.
     url: http://jaeger:16686
 ```
 

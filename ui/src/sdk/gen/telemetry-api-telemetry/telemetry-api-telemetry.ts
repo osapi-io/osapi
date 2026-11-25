@@ -69,7 +69,7 @@ export const getGetTraceUrl = (id: string,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/trace/${id}?${stringifiedParams}` : `/api/trace/${id}`
+  return stringifiedParams.length > 0 ? `/api/telemetry/trace/${id}?${stringifiedParams}` : `/api/telemetry/trace/${id}`
 }
 
 /**

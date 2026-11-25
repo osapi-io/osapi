@@ -396,7 +396,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindDeps,
 			Name: "Traces",
-			Does: "The TraceReader: it reads one trace from the tracing backend that the config names, for osapi client trace get.",
+			Does: "The TraceReader: it reads one trace from the tracing backend that the config names, for osapi client telemetry trace get.",
 			When: "For the telemetry group.",
 		},
 		{

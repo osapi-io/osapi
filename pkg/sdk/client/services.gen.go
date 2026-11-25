@@ -125,11 +125,12 @@ type services struct {
 	// files and applied.
 	Sysctl *SysctlService
 
+	// Telemetry calls the API's Telemetry group: telemetry through the controller,
+	// such as the spans of a trace.
+	Telemetry *TelemetryService
+
 	// Timezone calls the API's Timezone group: the timezone of the host.
 	Timezone *TimezoneService
-
-	// Trace calls the API's Trace group: the spans of a trace.
-	Trace *TraceService
 
 	// Uptime calls the API's Uptime group: get the uptime of target hosts.
 	Uptime *UptimeService
@@ -181,8 +182,8 @@ func (s *services) wire(c *Client) {
 	s.Service = &ServiceService{client: c}
 	s.Status = &StatusService{client: c}
 	s.Sysctl = &SysctlService{client: c}
+	s.Telemetry = &TelemetryService{client: c}
 	s.Timezone = &TimezoneService{client: c}
-	s.Trace = &TraceService{client: c}
 	s.Uptime = &UptimeService{client: c}
 	s.User = &UserService{client: c}
 	s.UserPassword = &UserPasswordService{client: c}

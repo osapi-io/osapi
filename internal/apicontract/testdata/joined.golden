@@ -75,7 +75,7 @@ op GET /api/secret id=GetSecretVaults tags=[Secret_Management_API_secret_operati
 op GET /api/secret/{vault} id=GetSecrets tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[path:vault!:string] body= responses=[200=application/json:SecretListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret/{vault}/{key} id=GetSecret tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[path:key!:string path:vault!:string] body= responses=[200=application/json:SecretInfo 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret/{vault}/{key}/value id=GetSecretValue tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:reveal params=[path:key!:string path:vault!:string] body= responses=[200=application/json:SecretValue 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/trace/{id} id=GetTrace tags=[Trace_API_trace] auth=BearerAuth:trace:read params=[path:id!:string query:all:boolean] body= responses=[200=application/json:TraceResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
+op GET /api/telemetry/trace/{id} id=GetTrace tags=[Telemetry_API_telemetry] auth=BearerAuth:trace:read params=[path:id!:string query:all:boolean] body= responses=[200=application/json:TraceResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op POST /api/admission/{machine_id}/admit id=AdmitMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body=application/json:AdmitRequest! responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/admission/{machine_id}/reject id=RejectMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body=application/json:RejectRequest! responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/admission/{machine_id}/revoke id=RevokeMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -1159,8 +1159,8 @@ tag Source_API_source_operations
 tag Sshkey_API_sshkey_operations
 tag Status_API_status_operations
 tag Sysctl_API_sysctl_operations
+tag Telemetry_API_telemetry
 tag Timezone_API_timezone_operations
-tag Trace_API_trace
 tag Updates_API_updates_operations
 tag Uptime_API_uptime_operations
 tag User_API_user_operations

@@ -213,11 +213,11 @@ tags:
     x-displayName: Job
     x-osapi-area: fleet
     x-osapi-group: job
-  - description: The spans of a trace.
-    name: Trace_API_trace
-    x-displayName: Trace
+  - description: Telemetry through the controller, such as the spans of a trace.
+    name: Telemetry_API_telemetry
+    x-displayName: Telemetry
     x-osapi-area: fleet
-    x-osapi-group: trace
+    x-osapi-group: telemetry
 paths:
   /api/admission:
     get:
@@ -2368,7 +2368,7 @@ paths:
             key: registry-token
             vault: default
       x-osapi-method: reveal
-  /api/trace/{id}:
+  /api/telemetry/trace/{id}:
     get:
       description: Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet. A token with a target scope gets a trace only when each target that the trace records is in its scope.
       operationId: GetTrace
@@ -2437,7 +2437,7 @@ paths:
             - trace:read
       summary: Get the spans of a trace
       tags:
-        - Trace_API_trace
+        - Telemetry_API_telemetry
       x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get the spans of a trace
@@ -14946,7 +14946,7 @@ x-tagGroups:
       - Catalog_API_catalog
       - Health_Check_API_health
       - Job_Management_API_job_operations
-      - Trace_API_trace
+      - Telemetry_API_telemetry
 x-osapi-areas:
   - name: services
     label: Services

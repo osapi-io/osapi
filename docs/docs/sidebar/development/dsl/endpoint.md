@@ -487,7 +487,7 @@ Use: For a group that reports whether a part of osapi is up.
 ### `Traces`
 
 The TraceReader: it reads one trace from the tracing backend that the config
-names, for osapi client trace get.
+names, for osapi client telemetry trace get.
 
 Use: For the telemetry group.
 

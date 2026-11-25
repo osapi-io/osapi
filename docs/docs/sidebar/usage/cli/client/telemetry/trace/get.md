@@ -14,15 +14,15 @@ backend gets the spans a few seconds after the request: a trace that is not
 found yet is there after a few seconds.
 
 ```bash
-osapi client trace get [flags]
+osapi client telemetry trace get [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi client trace get --id 26e448c9dbe1c4a8d216a98c675079c9
-osapi client trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --all
-osapi client trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --json
+osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
+osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --all
+osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --json
 ```
 
 ## Result
@@ -30,7 +30,7 @@ osapi client trace get --id 26e448c9dbe1c4a8d216a98c675079c9 --json
 The command prints:
 
 ```ansi
-$ osapi client trace get --id 26e448c9dbe1c4a8d216a98c675079c9
+$ osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
 [1;38;2;0;213;255mTrace:[0m
   [38;2;10;143;176mID:[0m                   26e448c9dbe1c4a8d216a98c675079c9
   [38;2;10;143;176mStarted:[0m              2026-01-15 09:58:12
@@ -122,5 +122,5 @@ shows what a role grants.
 | `-f, --osapi-file` | Path to config file                                         | `/etc/osapi/osapi.yaml` |
 | `--url`            | Base URL the CLI client connects to (controller.client.url) | `http://localhost:8080` |
 
-[Output](../../output.md) tells how the result is printed, and what `--json`
+[Output](../../../output.md) tells how the result is printed, and what `--json`
 gives.
