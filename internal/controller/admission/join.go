@@ -65,40 +65,51 @@ func (w *Watcher) Join(
 	ctx context.Context,
 	req pki.JoinRequest,
 ) (ed25519.PublicKey, error) {
+	key, _, err := w.joinLabels(ctx, req)
+
+	return key, err
+}
+
+// joinLabels is Join, with the labels of the token that admitted the
+// machine, which the agent takes.
+func (w *Watcher) joinLabels(
+	ctx context.Context,
+	req pki.JoinRequest,
+) (ed25519.PublicKey, map[string]string, error) {
 	ctx, span := opspan.Start(ctx, tracerName, "admission.join",
 		attribute.String("osapi.agent.machine_id", req.MachineID),
 	)
-	key, err := w.join(ctx, req)
+	key, labels, err := w.join(ctx, req)
 
-	return key, opspan.End(span, err)
+	return key, labels, opspan.End(span, err)
 }
 
 // join checks the signature, takes a use of the token, and admits.
 func (w *Watcher) join(
 	ctx context.Context,
 	req pki.JoinRequest,
-) (ed25519.PublicKey, error) {
+) (ed25519.PublicKey, map[string]string, error) {
 	if w.joinTokens == nil {
-		return nil, ErrNoJoinTokens
+		return nil, nil, ErrNoJoinTokens
 	}
 	if !req.Verify() {
-		return nil, ErrJoinSignature
+		return nil, nil, ErrJoinSignature
 	}
 	// A join that admitted the machine, whose reply did not reach the
 	// agent, is answered again: the same machine, key and token take no
 	// second use of the token.
-	if w.joinedBefore(ctx, req) {
+	if labels, ok := w.joinedBefore(ctx, req); ok {
 		w.logger.Info(
 			"answered a join again",
 			slog.String("machine_id", req.MachineID),
 			slog.String("hostname", req.Hostname),
 		)
 
-		return w.pkiProvider.PublicKey(), nil
+		return w.pkiProvider.PublicKey(), labels, nil
 	}
 	t, err := w.joinTokens.Consume(ctx, req.Token)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	pending := PendingAgent{
 		MachineID:     req.MachineID,
@@ -107,9 +118,10 @@ func (w *Watcher) join(
 		EncryptionKey: req.EncryptionKey,
 		Fingerprint:   pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey),
 		RequestedAt:   nowFn(),
+		JoinLabels:    t.Labels,
 	}
 	if err := w.recordAgentKey(ctx, pending, t.ID); err != nil {
-		return nil, fmt.Errorf("admit %s: %w", req.MachineID, err)
+		return nil, nil, fmt.Errorf("admit %s: %w", req.MachineID, err)
 	}
 	// A join decides as admit does: an earlier request, rejection or
 	// revocation of the machine is cleared.
@@ -124,23 +136,24 @@ func (w *Watcher) join(
 		slog.String("join_token", t.ID),
 	)
 
-	return w.pkiProvider.PublicKey(), nil
+	return w.pkiProvider.PublicKey(), t.Labels, nil
 }
 
 // joinedBefore reports whether the token of req already admitted its
-// machine with its keys.
+// machine with its keys, and the labels that the token gave it.
 func (w *Watcher) joinedBefore(
 	ctx context.Context,
 	req pki.JoinRequest,
-) bool {
+) (map[string]string, bool) {
 	id, ok := jointoken.ID(req.Token)
 	if !ok {
-		return false
+		return nil, false
 	}
 	r, err := w.Get(ctx, req.MachineID)
+	if err != nil || r.State != types.AdmissionAdmitted || r.JoinToken != id ||
+		r.Fingerprint != pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey) {
+		return nil, false
+	}
 
-	return err == nil &&
-		r.State == types.AdmissionAdmitted &&
-		r.JoinToken == id &&
-		r.Fingerprint == pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey)
+	return r.JoinLabels, true
 }

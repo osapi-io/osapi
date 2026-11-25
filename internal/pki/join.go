@@ -35,7 +35,11 @@ type JoinRequest struct {
 	Hostname      string
 	PublicKey     ed25519.PublicKey
 	EncryptionKey string
-	Signature     []byte
+	// NATSUserKey is the public key (U...) of the agent's own NATS user, for
+	// a join in operator mode: the controller mints a JWT for it. The seed
+	// stays with the agent.
+	NATSUserKey string `json:",omitempty"`
+	Signature   []byte
 }
 
 // joinDomain starts the bytes that a join request signs, so that a
@@ -56,6 +60,11 @@ func (r JoinRequest) signed() []byte {
 		[]byte(r.EncryptionKey),
 	} {
 		b.Write(f)
+		b.WriteByte(0)
+	}
+	// An older agent sends no user key, and signs the same bytes as before.
+	if r.NATSUserKey != "" {
+		b.WriteString(r.NATSUserKey)
 		b.WriteByte(0)
 	}
 
@@ -82,11 +91,15 @@ func (r JoinRequest) Verify() bool {
 type JoinReply struct {
 	ControllerPublicKey ed25519.PublicKey `json:"controller_public_key,omitempty"`
 	NATS                JoinNATS          `json:"nats"`
-	Error               string            `json:"error,omitempty"`
+	// Labels are the labels of the join token, which the agent takes.
+	Labels map[string]string `json:"labels,omitempty"`
+	Error  string            `json:"error,omitempty"`
 }
 
 // JoinNATS is the NATS user of an agent, which the join gives it.
 type JoinNATS struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+	// JWT is, in operator mode, the user JWT of the agent's NATS user key.
+	JWT string `json:"jwt,omitempty"`
 }

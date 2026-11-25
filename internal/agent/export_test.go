@@ -1053,3 +1053,14 @@ func SetJoinNATSFns(
 
 	return func() { getIdentity, natsRequest = oldID, oldReq }
 }
+
+// SetNewNATSUser swaps how the agent makes its NATS user nkey, and returns a
+// func that puts it back.
+func SetNewNATSUser(
+	fn func() ([]byte, string, error),
+) func() {
+	old := newNATSUser
+	newNATSUser = fn
+
+	return func() { newNATSUser = old }
+}

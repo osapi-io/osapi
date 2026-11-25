@@ -27,19 +27,23 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"math/big"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/nats-io/jwt/v2"
 	natstest "github.com/nats-io/nats-server/v2/test"
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/agent"
@@ -93,6 +97,7 @@ func (s *NATSJoinPublicTestSuite) reply(
 var admitted = pki.JoinReply{
 	ControllerPublicKey: make([]byte, 32),
 	NATS:                pki.JoinNATS{Username: "agent", Password: "ap"},
+	Labels:              map[string]string{"group": "web", "dc": "east"},
 }
 
 func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
@@ -117,6 +122,11 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		)
 		s.False(got.Agent.NATS.TLS.Enabled)
 		s.Empty(got.Agent.Join, "the join is spent")
+		s.Equal(
+			map[string]string{"group": "web", "dc": "east"},
+			got.Agent.Labels,
+			"the token's labels",
+		)
 		info, err := s.fs.Stat(filepath.Join("/pki", agent.NATSJoinFile))
 		s.Require().NoError(err)
 		s.Equal("-rw-------", info.Mode().Perm().String())
@@ -180,6 +190,11 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		},
 		{name: "a join with no port", join: "nats://hub?token=t", wantErr: "is not nats://"},
 		{name: "a join with no token", join: "nats://hub:4222", wantErr: "is not nats://"},
+		{
+			name:    "creds that are not base64",
+			join:    "nats://hub:4222?token=t&creds=%25%25",
+			wantErr: "is not nats://",
+		},
 		{
 			name: "a host with no machine ID",
 			id: func(avfs.VFS, string) (*identity.Identity, error) {
@@ -246,6 +261,106 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 			s.ErrorContains(err, tt.wantErr)
 		})
 	}
+
+	s.Run("operator mode: the bootstrap creds connect, and the agent keeps its own creds", func() {
+		acct, _ := nkeys.CreateAccount()
+		acctPub, _ := acct.PublicKey()
+		boot, _ := nkeys.CreateUser()
+		bootPub, _ := boot.PublicKey()
+		bootSeed, _ := boot.Seed()
+		bootJWT, _ := jwt.NewUserClaims(bootPub).Encode(acct)
+		bootCreds, _ := jwt.FormatUserConfig(bootJWT, bootSeed)
+		s.cfg.Agent.Join = "nats://hub:4222?token=t&creds=" + base64.RawURLEncoding.EncodeToString(
+			bootCreds,
+		)
+		defer agent.SetJoinNATSFns(
+			id,
+			func(_ string, opts []nats.Option, _ string, data []byte) ([]byte, error) {
+				o := nats.GetDefaultOptions()
+				for _, opt := range opts {
+					s.Require().NoError(opt(&o))
+				}
+				s.NotNil(o.UserJWT, "it connects with the bootstrap creds")
+				var req pki.JoinRequest
+				s.Require().NoError(json.Unmarshal(data, &req))
+				s.True(strings.HasPrefix(req.NATSUserKey, "U"))
+				uc := jwt.NewUserClaims(req.NATSUserKey)
+				uc.IssuerAccount = acctPub
+				agentJWT, _ := uc.Encode(acct)
+
+				return json.Marshal(pki.JoinReply{
+					ControllerPublicKey: make([]byte, 32),
+					NATS:                pki.JoinNATS{JWT: agentJWT},
+				})
+			},
+		)()
+
+		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.Require().NoError(err)
+		s.Equal(config.NATSAuth{Type: "creds", CredsFile: "/pki/nats.creds"}, got.Agent.NATS.Auth)
+		info, err := s.fs.Stat("/pki/nats.creds")
+		s.Require().NoError(err)
+		s.Equal("-rw-------", info.Mode().Perm().String())
+		creds, _ := avfs.ReadFile(s.fs, "/pki/nats.creds")
+		_, err = jwt.ParseDecoratedNKey(creds)
+		s.NoError(err, "the agent's seed is in its creds")
+	})
+
+	s.Run("operator mode: a JWT that is not one is the error", func() {
+		defer agent.SetJoinNATSFns(id, s.reply(pki.JoinReply{
+			ControllerPublicKey: make([]byte, 32),
+			NATS:                pki.JoinNATS{JWT: "not-a-jwt"},
+		}, "osapi.join.request"))()
+
+		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.ErrorContains(err, "the JWT of the join")
+	})
+
+	s.Run("operator mode: creds that cannot be kept are the error", func() {
+		s.Require().NoError(s.fs.MkdirAll("/pki/nats.creds/x", 0o700))
+		acct, _ := nkeys.CreateAccount()
+		defer agent.SetJoinNATSFns(
+			id,
+			func(_ string, _ []nats.Option, _ string, data []byte) ([]byte, error) {
+				var req pki.JoinRequest
+				s.Require().NoError(json.Unmarshal(data, &req))
+				agentJWT, _ := jwt.NewUserClaims(req.NATSUserKey).Encode(acct)
+
+				return json.Marshal(pki.JoinReply{
+					ControllerPublicKey: make([]byte, 32),
+					NATS:                pki.JoinNATS{JWT: agentJWT},
+				})
+			},
+		)()
+
+		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.ErrorContains(err, "join over NATS: ")
+		s.NotContains(err.Error(), "the JWT of the join")
+	})
+
+	s.Run("a user nkey that cannot be made is the error", func() {
+		defer agent.SetNewNATSUser(func() ([]byte, string, error) {
+			return nil, "", errors.New("no entropy")
+		})()
+		defer agent.SetJoinNATSFns(id, s.reply(admitted, "osapi.join.request"))()
+
+		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.ErrorContains(err, "no entropy")
+	})
+
+	s.Run("the agent's own labels win over the token's", func() {
+		s.cfg.Agent.Labels = map[string]string{"group": "db"}
+		defer agent.SetJoinNATSFns(id, s.reply(admitted, "osapi.join.request"))()
+
+		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.Require().NoError(err)
+		s.Equal(map[string]string{"group": "db", "dc": "east"}, got.Agent.Labels)
+	})
 
 	s.Run("a saved join that is not JSON joins again", func() {
 		s.Require().NoError(avfs.WriteFile(s.fs, "/pki/"+agent.NATSJoinFile, []byte("{"), 0o600))

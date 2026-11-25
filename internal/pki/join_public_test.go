@@ -60,6 +60,14 @@ func (s *JoinPublicTestSuite) TestSignVerify() {
 	short := r
 	short.PublicKey = pub[:10]
 	s.False(short.Verify(), "a key of the wrong size")
+
+	withUser := r
+	withUser.NATSUserKey = "UA1"
+	s.False(withUser.Verify(), "the user key is signed too")
+	withUser.Sign(priv)
+	s.True(withUser.Verify())
+	withUser.NATSUserKey = "UA2"
+	s.False(withUser.Verify(), "another user key breaks the signature")
 }
 
 func TestJoinPublicTestSuite(t *testing.T) {

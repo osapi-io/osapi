@@ -96,13 +96,15 @@ func RolePermissions(
 		p.consume(n.stream)
 		p.consume(n.dlq)
 		p.consume(n.audit)
-		p.pub["$JS.API.STREAM.MSG.GET."+n.audit] = true
+		p.add("$JS.API.STREAM.MSG.GET.", n.audit, "")
 		for _, s := range []string{n.audit, kvStream(n.enrollment), objStream(n.objects)} {
 			p.admin(s)
 		}
-		p.pub["$JS.API.STREAM.PURGE."+objStream(n.objects)] = true
-		p.pub[job.ApplyNamespaceToSubjects(namespace, cfg.Stream.Subjects)] = true
-		p.pub[n.auditSubject+".>"] = true
+		p.add("$JS.API.STREAM.PURGE.", objStream(n.objects), "")
+		if cfg.Stream.Subjects != "" {
+			p.pub[job.ApplyNamespaceToSubjects(namespace, cfg.Stream.Subjects)] = true
+		}
+		p.add("", n.auditSubject, ".>")
 		p.pub[subject(namespace, pki.EnrollResponsePrefix)+".>"] = true
 		p.sub[subject(namespace, pki.EnrollRequestSuffix)] = true
 		p.sub[subject(namespace, pki.JoinRequestSuffix)] = true
@@ -141,21 +143,33 @@ func names(
 	namespace string,
 	cfg config.NATS,
 ) infra {
-	stream := job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name)
+	// A name that the config does not set is "": the role gets nothing on
+	// a stream or a bucket that osapi does not make.
+	named := func(raw, name string) string {
+		if raw == "" {
+			return ""
+		}
+
+		return name
+	}
+	stream := named(cfg.Stream.Name, job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name))
 
 	return infra{
-		stream:       stream,
-		dlq:          stream + "-DLQ",
-		audit:        AuditStream(namespace, cfg.Audit).Name,
-		auditSubject: job.ApplyNamespaceToSubjects(namespace, cfg.Audit.Subject),
-		jobs:         JobKV(namespace, cfg.KV).Bucket,
-		registry:     RegistryKV(namespace, cfg.Registry).Bucket,
-		facts:        FactsKV(namespace, cfg.Facts).Bucket,
-		state:        StateKV(namespace, cfg.State).Bucket,
-		fileState:    FileStateKV(namespace, cfg.FileState).Bucket,
-		enrollment:   EnrollmentKV(namespace, cfg.Enrollment).Bucket,
-		secrets:      SecretsKV(namespace, cfg.Secrets).Bucket,
-		objects:      ObjectStore(namespace, cfg.Objects).Bucket,
+		stream: stream,
+		dlq:    named(stream, stream+"-DLQ"),
+		audit:  named(cfg.Audit.Stream, AuditStream(namespace, cfg.Audit).Name),
+		auditSubject: named(
+			cfg.Audit.Subject,
+			job.ApplyNamespaceToSubjects(namespace, cfg.Audit.Subject),
+		),
+		jobs:       named(cfg.KV.Bucket, JobKV(namespace, cfg.KV).Bucket),
+		registry:   named(cfg.Registry.Bucket, RegistryKV(namespace, cfg.Registry).Bucket),
+		facts:      named(cfg.Facts.Bucket, FactsKV(namespace, cfg.Facts).Bucket),
+		state:      named(cfg.State.Bucket, StateKV(namespace, cfg.State).Bucket),
+		fileState:  named(cfg.FileState.Bucket, FileStateKV(namespace, cfg.FileState).Bucket),
+		enrollment: named(cfg.Enrollment.Bucket, EnrollmentKV(namespace, cfg.Enrollment).Bucket),
+		secrets:    named(cfg.Secrets.Bucket, SecretsKV(namespace, cfg.Secrets).Bucket),
+		objects:    named(cfg.Objects.Bucket, ObjectStore(namespace, cfg.Objects).Bucket),
 	}
 }
 
@@ -172,8 +186,23 @@ func (n infra) allStreams() []string {
 	return out
 }
 
-func kvStream(bucket string) string  { return "KV_" + bucket }
-func objStream(bucket string) string { return "OBJ_" + bucket }
+// kvStream is the stream of a bucket, or "" for no bucket.
+func kvStream(bucket string) string {
+	if bucket == "" {
+		return ""
+	}
+
+	return "KV_" + bucket
+}
+
+// objStream is the stream of an object store, or "" for none.
+func objStream(bucket string) string {
+	if bucket == "" {
+		return ""
+	}
+
+	return "OBJ_" + bucket
+}
 
 // subject is suffix under namespace, as osapi names its subjects.
 func subject(
@@ -192,9 +221,19 @@ type perms struct {
 	pub, sub map[string]bool
 }
 
+// add lets the role publish prefix+name+suffix, when name is not "".
+func (p perms) add(prefix, name, suffix string) {
+	if name != "" {
+		p.pub[prefix+name+suffix] = true
+	}
+}
+
 // consume lets the role read stream: its info, its consumers, their
 // messages and acks, and a direct get.
 func (p perms) consume(stream string) {
+	if stream == "" {
+		return
+	}
 	for _, s := range []string{
 		"$JS.API.STREAM.INFO." + stream,
 		"$JS.API.CONSUMER.*." + stream,
@@ -211,6 +250,9 @@ func (p perms) consume(stream string) {
 
 // kv lets the role read and write bucket.
 func (p perms) kv(bucket string) {
+	if bucket == "" {
+		return
+	}
 	p.consume(kvStream(bucket))
 	p.pub["$KV."+bucket+".>"] = true
 }
@@ -222,11 +264,17 @@ func (p perms) readObjects(bucket string) {
 
 // writeObjects lets the role write the object store bucket.
 func (p perms) writeObjects(bucket string) {
+	if bucket == "" {
+		return
+	}
 	p.pub["$O."+bucket+".>"] = true
 }
 
 // admin lets the role make and update stream.
 func (p perms) admin(stream string) {
+	if stream == "" {
+		return
+	}
 	for _, verb := range []string{"CREATE", "UPDATE", "INFO"} {
 		p.pub["$JS.API.STREAM."+verb+"."+stream] = true
 	}

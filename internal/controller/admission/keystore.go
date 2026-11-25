@@ -80,6 +80,7 @@ func (w *Watcher) recordAgentKey(
 ) error {
 	record := AcceptedAgent{
 		JoinToken:     joinToken,
+		JoinLabels:    pending.JoinLabels,
 		MachineID:     pending.MachineID,
 		Hostname:      pending.Hostname,
 		PublicKey:     pending.PublicKey,

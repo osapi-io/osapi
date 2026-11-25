@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -32,7 +33,8 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/natsjwt"
 
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
@@ -75,10 +77,11 @@ var errNoNATSURL = errors.New(
 var errNATSFingerprint = errors.New("read the certificate of the NATS server")
 
 // natsFingerprint is the SHA-256 fingerprint of the certificate of the NATS
-// server at url, which it connects to as user to read it. Tests swap it.
+// server at url, which it connects to with auth, the bootstrap user, to read
+// it. Tests swap it.
 var natsFingerprint = func(
 	url string,
-	user config.NATSUser,
+	auth []nats.Option,
 ) (string, error) {
 	var fp string
 	opts := []nats.Option{
@@ -99,10 +102,7 @@ var natsFingerprint = func(
 			},
 		}),
 	}
-	if user.Username != "" {
-		opts = append(opts, nats.UserInfo(user.Username, user.Password))
-	}
-	nc, err := nats.Connect(url, opts...)
+	nc, err := nats.Connect(url, append(opts, auth...)...)
 	if err != nil {
 		return "", fmt.Errorf("%w at %s: %w", errNATSFingerprint, url, err)
 	}
@@ -116,23 +116,32 @@ var natsFingerprint = func(
 // and reads the server's certificate, before a token is made.
 func natsJoin(
 	d Deps,
+	expires time.Time,
 ) (func(token string) string, error) {
 	raw := d.Config.JoinURL()
 	u, err := url.Parse(raw)
 	if raw == "" || err != nil || u.Host == "" {
 		return nil, errNoNATSURL
 	}
-	user, _ := d.Config.JoinUsers()
 	q := url.Values{}
-	if user.Username != "" {
+	var auth []nats.Option
+	if d.Config.Controller.Join.SigningKeyFile != "" {
+		creds, err := bootstrapCreds(d, expires)
+		if err != nil {
+			return nil, err
+		}
+		q.Set("creds", base64.RawURLEncoding.EncodeToString(creds))
+		auth = append(auth, nats.UserCredentialBytes(creds))
+	} else if user, _ := d.Config.JoinUsers(); user.Username != "" {
 		q.Set("user", user.Username)
 		q.Set("pass", user.Password)
+		auth = append(auth, nats.UserInfo(user.Username, user.Password))
 	}
 	if ns := d.Config.Controller.NATS.Namespace; ns != "" {
 		q.Set("ns", ns)
 	}
 	if u.Scheme == "tls" {
-		fp, err := natsFingerprint(raw, user)
+		fp, err := natsFingerprint(raw, auth)
 		if err != nil {
 			return nil, err
 		}
@@ -153,7 +162,8 @@ func Create(
 	in CreateInput,
 ) (CreateOutput, error) {
 	if in.Transport == "nats" {
-		join, err := natsJoin(d)
+		expires, _ := time.ParseDuration(in.Expires)
+		join, err := natsJoin(d, d.Now().Add(expires))
 		if err != nil {
 			return CreateOutput{}, err
 		}
@@ -249,4 +259,21 @@ func Revoke(
 	}
 
 	return RevokeOutput{ID: in.ID}, nil
+}
+
+// bootstrapCreds are, in operator mode, the credentials of a new bootstrap
+// user: a user JWT with the join role's permissions, which expires with the
+// token, signed with controller.join.signing_key_file.
+func bootstrapCreds(
+	d Deps,
+	expires time.Time,
+) ([]byte, error) {
+	j := d.Config.Controller.Join
+	signer, err := natsjwt.Load(j.SigningKeyFile, j.Account)
+	if err != nil {
+		return nil, err
+	}
+	perms, _ := bus.RolePermissions(bus.RoleJoin, d.Config.Controller.NATS.Namespace, d.Config.NATS)
+
+	return signer.NewCreds("osapi-join", perms, expires)
 }

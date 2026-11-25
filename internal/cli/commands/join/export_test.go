@@ -20,12 +20,12 @@
 
 package join
 
-import "github.com/osapi-io/osapi/internal/config"
+import "github.com/nats-io/nats.go"
 
 // SetNATSFingerprint swaps how create reads the certificate of the NATS
 // server, and returns a func that puts it back.
 func SetNATSFingerprint(
-	fn func(url string, user config.NATSUser) (string, error),
+	fn func(url string, auth []nats.Option) (string, error),
 ) func() {
 	old := natsFingerprint
 	natsFingerprint = fn

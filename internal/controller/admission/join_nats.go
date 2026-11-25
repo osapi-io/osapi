@@ -57,13 +57,24 @@ var respond = func(
 	return msg.Respond(data)
 }
 
+// AgentUser is the NATS user that a join gives the agent of req: one user
+// for each agent, or in operator mode a JWT for the agent's own user key.
+type AgentUser func(req pki.JoinRequest) (pki.JoinNATS, error)
+
+// StaticUser is the AgentUser that gives each agent user.
+func StaticUser(
+	user pki.JoinNATS,
+) AgentUser {
+	return func(pki.JoinRequest) (pki.JoinNATS, error) { return user, nil }
+}
+
 // ServeJoin answers each join over NATS until ctx ends: it admits the
-// machine as Join does, and replies with the controller's key and agent, the
-// NATS user that the agent connects with after the join.
+// machine as Join does, and replies with the controller's key and the NATS
+// user that agent gives, which the agent connects with after the join.
 func (w *Watcher) ServeJoin(
 	ctx context.Context,
 	listen JoinListener,
-	agent pki.JoinNATS,
+	agent AgentUser,
 ) error {
 	subject := enrollSubject(w.namespace, pki.JoinRequestSuffix)
 	sub, err := listen(subject, joinQueue, func(msg *nats.Msg) {
@@ -98,7 +109,7 @@ func (w *Watcher) SetJoinAudit(
 func (w *Watcher) respondJoin(
 	ctx context.Context,
 	msg *nats.Msg,
-	agent pki.JoinNATS,
+	agent AgentUser,
 ) {
 	start := nowFn()
 	req, reply := w.joinReply(ctx, msg.Data, agent)
@@ -155,13 +166,13 @@ func (w *Watcher) auditJoin(
 func (w *Watcher) joinReply(
 	ctx context.Context,
 	data []byte,
-	agent pki.JoinNATS,
+	agent AgentUser,
 ) (pki.JoinRequest, pki.JoinReply) {
 	var req pki.JoinRequest
 	if err := json.Unmarshal(data, &req); err != nil {
 		return req, pki.JoinReply{Error: "the join request is not JSON"}
 	}
-	key, err := w.Join(ctx, req)
+	key, labels, err := w.joinLabels(ctx, req)
 	if err != nil {
 		w.logger.Warn(
 			"refused a join over NATS",
@@ -173,5 +184,18 @@ func (w *Watcher) joinReply(
 		return req, pki.JoinReply{Error: err.Error()}
 	}
 
-	return req, pki.JoinReply{ControllerPublicKey: key, NATS: agent}
+	user, err := agent(req)
+	if err != nil {
+		w.logger.Warn(
+			"admitted a machine, but could not give it a NATS user",
+			slog.String("machine_id", req.MachineID),
+			slog.String("error", err.Error()),
+		)
+
+		return req, pki.JoinReply{
+			Error: "the controller could not give a NATS user: " + err.Error(),
+		}
+	}
+
+	return req, pki.JoinReply{ControllerPublicKey: key, NATS: user, Labels: labels}
 }

@@ -352,6 +352,11 @@ type ControllerJoin struct {
 	URL string `mapstructure:"url" doc:"Where an agent reaches NATS, nats://host:port or tls://host:port, which the join string carries. Empty is nats.server.url." validate:"omitempty,url,startswith=nats://|startswith=tls://" choice:"where the agents reach NATS; empty is nats.server.url"`
 	// User is the bootstrap user, which can only send the join request.
 	User NATSUser `mapstructure:"user" doc:"The bootstrap NATS user that the join string carries: a user that can only send the join request. Empty is the user of nats.server.auth.users with the role join." choice:"the deployment's own user; empty takes the embedded server's"`
+	// SigningKeyFile is, in operator mode, an account signing key seed, which
+	// the controller mints the users of a join with.
+	SigningKeyFile string `mapstructure:"signing_key_file" doc:"For a NATS server in operator mode: a file with a signing key seed (SA...) of osapi's account. The controller mints the join's bootstrap user, and each agent's own user, with it. Empty gives the static users." choice:"set for operator mode"`
+	// Account is the public key of the account of SigningKeyFile.
+	Account string `mapstructure:"account" doc:"For operator mode: the public key (A...) of osapi's account, which signing_key_file signs for." choice:"set for operator mode"`
 	// Agent is the NATS user that the join gives the agent.
 	Agent NATSUser `mapstructure:"agent" doc:"The NATS user that the join gives the agent. Empty is the user of nats.server.auth.users with the role agent." choice:"the deployment's own user; empty takes the embedded server's"`
 }

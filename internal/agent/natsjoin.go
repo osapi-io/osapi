@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -42,6 +43,7 @@ import (
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 )
@@ -50,6 +52,11 @@ import (
 // join over NATS gave it: the server, its NATS user, and the certificate of
 // the server. It is 0600: it holds the user's password.
 const NATSJoinFile = "nats-join.json"
+
+// natsCreds is the file in key_dir of the agent's NATS credentials, in
+// operator mode: the JWT that the join gave it, and the seed of its user,
+// which never left the host. It is 0600.
+const natsCreds = "nats.creds"
 
 // natsJoinCA is the file in key_dir of the certificate that the NATS server
 // showed at the join, which the agent trusts after it.
@@ -70,6 +77,8 @@ type natsJoinString struct {
 	password    string
 	fingerprint string
 	namespace   string
+	// creds is, in operator mode, the bootstrap user's credentials.
+	creds []byte
 }
 
 // savedJoin is what NATSJoinFile holds.
@@ -80,7 +89,10 @@ type savedJoin struct {
 	Namespace string `json:"namespace"`
 	Username  string `json:"username,omitempty"`
 	Password  string `json:"password,omitempty"`
-	CA        string `json:"ca,omitempty"`
+	CredsFile string `json:"creds_file,omitempty"`
+	// Labels are the labels of the join token.
+	Labels map[string]string `json:"labels,omitempty"`
+	CA     string            `json:"ca,omitempty"`
 }
 
 // isNATSJoin reports whether s is a join string for NATS.
@@ -108,12 +120,18 @@ func parseNATSJoin(
 		token: q.Get("token"), user: q.Get("user"), password: q.Get("pass"),
 		fingerprint: q.Get("fp"), namespace: q.Get("ns"),
 	}
-	if err != nil || portErr != nil || j.token == "" || (j.scheme == "tls" && j.fingerprint == "") {
+	creds, credsErr := base64.RawURLEncoding.DecodeString(q.Get("creds"))
+	j.creds = creds
+	if err != nil || portErr != nil || credsErr != nil || j.token == "" ||
+		(j.scheme == "tls" && j.fingerprint == "") {
 		return natsJoinString{}, errNATSJoinString
 	}
 
 	return j, nil
 }
+
+// newNATSUser makes the agent's own NATS user nkey. Tests swap it.
+var newNATSUser = natsjwt.NewUser
 
 // getIdentity is the machine ID and hostname of the host. Tests swap it.
 var getIdentity = identity.GetIdentity
@@ -211,12 +229,19 @@ func joinNow(
 	if err := keys.LoadOrGenerate(); err != nil {
 		return savedJoin{}, fmt.Errorf("load or make the agent's keys: %w", err)
 	}
+	// The agent's own NATS user, for operator mode: the controller mints a
+	// JWT for its public key, and the seed stays here.
+	userSeed, userKey, err := newNATSUser()
+	if err != nil {
+		return savedJoin{}, err
+	}
 	req := pki.JoinRequest{
 		Token:         j.token,
 		MachineID:     id.MachineID,
 		Hostname:      id.Hostname,
 		PublicKey:     keys.PublicKey(),
 		EncryptionKey: keys.EncryptionPublicKey(),
+		NATSUserKey:   userKey,
 	}
 	req.Sign(keys.PrivateKey())
 	data, _ := json.Marshal(req)
@@ -225,6 +250,9 @@ func joinNow(
 	opts := []nats.Option{nats.Name("osapi-agent-join"), nats.Timeout(10 * time.Second)}
 	if j.user != "" {
 		opts = append(opts, nats.UserInfo(j.user, j.password))
+	}
+	if len(j.creds) > 0 {
+		opts = append(opts, nats.UserCredentialBytes(j.creds))
 	}
 	if j.scheme == "tls" {
 		opts = append(opts, nats.Secure(&tls.Config{
@@ -276,6 +304,17 @@ func joinNow(
 	s := savedJoin{
 		Scheme: j.scheme, Host: j.host, Port: j.port, Namespace: j.namespace,
 		Username: reply.NATS.Username, Password: reply.NATS.Password,
+		Labels: reply.Labels,
+	}
+	if reply.NATS.JWT != "" {
+		creds, err := natsjwt.Creds(reply.NATS.JWT, userSeed)
+		if err != nil {
+			return savedJoin{}, fmt.Errorf("the JWT of the join: %w", err)
+		}
+		s.CredsFile = filepath.Join(keyDir, natsCreds)
+		if err := atomicfile.Write(ctx, fs, s.CredsFile, creds, 0o600); err != nil {
+			return savedJoin{}, err
+		}
 	}
 	if len(seen) > 0 {
 		s.CA = string(
@@ -306,7 +345,10 @@ func applyJoin(
 	n := &cfg.Agent.NATS
 	n.Host, n.Port, n.Namespace = s.Host, s.Port, s.Namespace
 	n.Auth = config.NATSAuth{Type: "none"}
-	if s.Username != "" {
+	switch {
+	case s.CredsFile != "":
+		n.Auth = config.NATSAuth{Type: "creds", CredsFile: s.CredsFile}
+	case s.Username != "":
 		n.Auth = config.NATSAuth{Type: "user_pass", Username: s.Username, Password: s.Password}
 	}
 	n.TLS = config.ClientTLS{}
@@ -325,6 +367,17 @@ func applyJoin(
 			}
 			n.TLS.CAFile = ca
 		}
+	}
+	// The labels of the token are the agent's, except a label that the
+	// agent's own config sets.
+	for k, v := range s.Labels {
+		if _, ok := cfg.Agent.Labels[k]; ok {
+			continue
+		}
+		if cfg.Agent.Labels == nil {
+			cfg.Agent.Labels = map[string]string{}
+		}
+		cfg.Agent.Labels[k] = v
 	}
 	cfg.Agent.Join = ""
 

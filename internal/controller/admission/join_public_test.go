@@ -48,7 +48,7 @@ func (f fakeTokens) Consume(
 		return jointoken.Token{}, jointoken.ErrInvalid
 	}
 
-	return jointoken.Token{ID: "t1"}, nil
+	return jointoken.Token{ID: "t1", Labels: map[string]string{"group": "web"}}, nil
 }
 
 // countingTokens admits each token whose ID is t1, and counts each use.
@@ -65,7 +65,7 @@ func (c countingTokens) Consume(
 		return jointoken.Token{}, jointoken.ErrInvalid
 	}
 
-	return jointoken.Token{ID: "t1"}, nil
+	return jointoken.Token{ID: "t1", Labels: map[string]string{"group": "web"}}, nil
 }
 
 // joinRequest is a join of m-1 with token, signed by its own key.
@@ -101,6 +101,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 		s.Require().NoError(err)
 		s.Equal(types.AdmissionAdmitted, got.State)
 		s.Equal("t1", got.JoinToken)
+		s.Equal(map[string]string{"group": "web"}, got.JoinLabels, "the token's labels are kept")
 		s.Equal(pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey), got.Fingerprint)
 		s.NotContains(s.kv.data, admission.KVPrefix()+"m-1")
 		s.NotContains(s.kv.data, "rejected.m-1")
@@ -116,6 +117,9 @@ func (s *StorePublicTestSuite) TestJoin() {
 
 			_, err := s.watcher.Join(context.Background(), req)
 			s.Require().NoError(err)
+			got, err := s.watcher.Get(context.Background(), "m-1")
+			s.Require().NoError(err)
+			s.Equal(map[string]string{"group": "web"}, got.JoinLabels)
 			key, err := s.watcher.Join(context.Background(), req)
 
 			s.Require().NoError(err)

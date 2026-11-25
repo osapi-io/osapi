@@ -27,13 +27,20 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"errors"
 	"math/big"
 	"net"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/nats-io/jwt/v2"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nkeys"
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
 	natstest "github.com/nats-io/nats-server/v2/test"
@@ -211,9 +218,9 @@ func (s *MethodsPublicTestSuite) TestCreateNATS() {
 	})
 
 	s.Run("a tls:// server: the fingerprint of its certificate", func() {
-		defer join.SetNATSFingerprint(func(url string, user config.NATSUser) (string, error) {
+		defer join.SetNATSFingerprint(func(url string, auth []nats.Option) (string, error) {
 			s.Equal("tls://hub:4222", url)
-			s.Equal("join", user.Username)
+			s.Len(auth, 1, "it connects as the join user")
 
 			return "SHA256:ab", nil
 		})()
@@ -224,7 +231,7 @@ func (s *MethodsPublicTestSuite) TestCreateNATS() {
 	})
 
 	s.Run("a tls:// server that cannot be read makes no token", func() {
-		defer join.SetNATSFingerprint(func(string, config.NATSUser) (string, error) {
+		defer join.SetNATSFingerprint(func(string, []nats.Option) (string, error) {
 			return "", errors.New("refused")
 		})()
 		before, err := join.List(ctx, s.deps(), join.ListInput{})
@@ -234,6 +241,34 @@ func (s *MethodsPublicTestSuite) TestCreateNATS() {
 		after, err := join.List(ctx, s.deps(), join.ListInput{})
 		s.Require().NoError(err)
 		s.Len(after.Items, len(before.Items))
+	})
+
+	s.Run("operator mode: a bootstrap user that expires with the token", func() {
+		d := natsDeps("nats://hub:4222")
+		d.Config.Controller.Join.SigningKeyFile, d.Config.Controller.Join.Account = signingKey(
+			s.T(),
+		)
+		got, err := join.Create(ctx, d, in)
+		s.Require().NoError(err)
+		u, _ := url.Parse(got.Join)
+		s.Empty(u.Query().Get("user"), "no static user")
+		creds, err := base64.RawURLEncoding.DecodeString(u.Query().Get("creds"))
+		s.Require().NoError(err)
+		userJWT, err := jwt.ParseDecoratedJWT(creds)
+		s.Require().NoError(err)
+		uc, err := jwt.DecodeUserClaims(userJWT)
+		s.Require().NoError(err)
+		s.Equal(jwt.StringList{"osapi.join.request"}, uc.Pub.Allow)
+		s.Equal(got.ExpiresAt.Unix(), uc.Expires)
+		_, err = jwt.ParseDecoratedNKey(creds)
+		s.NoError(err, "the bootstrap user's seed is in the string")
+	})
+
+	s.Run("operator mode with a signing key that does not load makes no token", func() {
+		d := natsDeps("nats://hub:4222")
+		d.Config.Controller.Join.SigningKeyFile = "/no/such/key"
+		_, err := join.Create(ctx, d, in)
+		s.ErrorContains(err, "read the signing key")
 	})
 
 	s.Run("no address of NATS is the error", func() {
@@ -322,4 +357,21 @@ func tlsServer(
 	}
 
 	return natstest.RunServer(&opts)
+}
+
+// signingKey is a file with a new account signing key seed, and the public
+// key of its account.
+func signingKey(
+	t *testing.T,
+) (string, string) {
+	t.Helper()
+	acct, _ := nkeys.CreateAccount()
+	pub, _ := acct.PublicKey()
+	seed, _ := acct.Seed()
+	file := filepath.Join(t.TempDir(), "signing.nk")
+	if err := os.WriteFile(file, seed, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	return file, pub
 }

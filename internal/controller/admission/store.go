@@ -85,6 +85,8 @@ type Record struct {
 	// JoinToken is the ID of the join token that admitted the machine, on
 	// an admitted record that a join made.
 	JoinToken string `json:"join_token,omitempty"`
+	// JoinLabels are the labels of that join token.
+	JoinLabels map[string]string `json:"join_labels,omitempty"`
 	// Previous is the state of the machine's earlier record, on a pending
 	// record; PreviousFingerprint is that record's fingerprint.
 	Previous            types.AdmissionState `json:"previous,omitempty"`
@@ -290,6 +292,7 @@ func (w *Watcher) read(
 			State:         types.AdmissionAdmitted,
 			AdmittedAt:    a.AcceptedAt,
 			JoinToken:     a.JoinToken,
+			JoinLabels:    a.JoinLabels,
 		}, true
 	default:
 		var r Record

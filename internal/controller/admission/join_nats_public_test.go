@@ -82,7 +82,7 @@ func (s *StorePublicTestSuite) serveJoin(
 	ctx, cancel := context.WithCancel(trace.ContextWithSpanContext(context.Background(), sc))
 	done := make(chan error, 1)
 	go func() {
-		done <- s.watcher.ServeJoin(ctx, listen, pki.JoinNATS{Username: "agent", Password: "pw"})
+		done <- s.watcher.ServeJoin(ctx, listen, admission.StaticUser(pki.JoinNATS{Username: "agent", Password: "pw"}))
 	}()
 	<-ready
 	handler(&nats.Msg{Subject: "osapi.join.request", Data: data})
@@ -110,6 +110,11 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		s.Empty(reply.Error)
 		s.Len(reply.ControllerPublicKey, 32)
 		s.Equal(pki.JoinNATS{Username: "agent", Password: "pw"}, reply.NATS)
+		s.Equal(
+			map[string]string{"group": "web"},
+			reply.Labels,
+			"the agent gets the token's labels",
+		)
 		s.Require().Len(log.entries, 1)
 		e := log.entries[0]
 		s.Equal("join-token:t1", e.User, "the token's ID, never the token")
@@ -138,6 +143,41 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		s.Empty(reply.ControllerPublicKey)
 	})
 
+	s.Run("a machine that is admitted but gets no user is told why", func() {
+		s.watcher.SetJoinTokens(fakeTokens{})
+		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
+		var handler nats.MsgHandler
+		ready := make(chan struct{})
+		var got []byte
+		defer admission.SetRespond(func(_ *nats.Msg, d []byte) error {
+			got = d
+
+			return nil
+		})()
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan error, 1)
+		go func() {
+			done <- s.watcher.ServeJoin(ctx,
+				func(_ string, _ string, h nats.MsgHandler) (*nats.Subscription, error) {
+					handler = h
+					close(ready)
+
+					return &nats.Subscription{}, nil
+				},
+				func(pki.JoinRequest) (pki.JoinNATS, error) {
+					return pki.JoinNATS{}, errors.New("no user key")
+				})
+		}()
+		<-ready
+		handler(&nats.Msg{Data: data})
+		cancel()
+		s.Require().NoError(<-done)
+		var reply pki.JoinReply
+		s.Require().NoError(json.Unmarshal(got, &reply))
+		s.Equal("the controller could not give a NATS user: no user key", reply.Error)
+		s.Empty(reply.ControllerPublicKey)
+	})
+
 	s.Run("a request that is not JSON gets why", func() {
 		log := &joinLog{}
 		s.watcher.SetJoinAudit(log)
@@ -160,7 +200,7 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 				close(ready)
 
 				return &nats.Subscription{}, nil
-			}, pki.JoinNATS{})
+			}, admission.StaticUser(pki.JoinNATS{}))
 		}()
 		<-ready
 		s.NotPanics(func() { handler(&nats.Msg{Data: []byte("{")}) })
@@ -174,7 +214,7 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 			func(string, string, nats.MsgHandler) (*nats.Subscription, error) {
 				return nil, errors.New("no permission")
 			},
-			pki.JoinNATS{},
+			admission.StaticUser(pki.JoinNATS{}),
 		)
 
 		s.ErrorContains(err, "subscribe to join requests: no permission")
