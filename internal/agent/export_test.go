@@ -22,6 +22,7 @@ package agent
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"io/fs"
 	"log/slog"
@@ -1021,4 +1022,12 @@ func HoldConsumers(
 	var once sync.Once
 
 	return func() { once.Do(wg.Done) }
+}
+
+// ExportVerifyPin calls verifyPin.
+func ExportVerifyPin(
+	fingerprint string,
+	certs []*x509.Certificate,
+) error {
+	return verifyPin(fingerprint, certs)
 }

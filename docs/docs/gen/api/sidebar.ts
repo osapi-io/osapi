@@ -1416,6 +1416,13 @@ const sidebar: SidebarsConfig = {
               className: "api-method get",
               key: "fleet-agent-management-api-agent-operations-gen-api-get-agent-facts",
             },
+            {
+              type: "doc",
+              id: "gen/api/join-agent",
+              label: "Join an agent with a join token",
+              className: "api-method post",
+              key: "fleet-agent-management-api-agent-operations-gen-api-join-agent",
+            },
           ],
         },
         {

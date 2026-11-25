@@ -21,8 +21,12 @@ package agent
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/internal/pki"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
@@ -268,4 +272,32 @@ func uint64ToInt(
 	}
 
 	return int(value)
+}
+
+// Join admits the agent of in at once, when its token admits, and answers the
+// controller's public key.
+func Join(
+	ctx context.Context,
+	d Deps,
+	in JoinInput,
+) (JoinResponse, error) {
+	if d.Joiner == nil {
+		return JoinResponse{}, admission.ErrNoJoinTokens
+	}
+	// The input's base64 rule refuses a key or a signature that is not.
+	pub, _ := base64.StdEncoding.DecodeString(in.Body.PublicKey)
+	sig, _ := base64.StdEncoding.DecodeString(in.Body.Signature)
+	key, err := d.Joiner.Join(ctx, pki.JoinRequest{
+		Token:         string(in.Body.Token),
+		MachineID:     in.Body.MachineID,
+		Hostname:      in.Body.Hostname,
+		PublicKey:     pub,
+		EncryptionKey: in.Body.EncryptionKey,
+		Signature:     sig,
+	})
+	if err != nil {
+		return JoinResponse{}, err
+	}
+
+	return JoinResponse{ControllerPublicKey: base64.StdEncoding.EncodeToString(key)}, nil
 }

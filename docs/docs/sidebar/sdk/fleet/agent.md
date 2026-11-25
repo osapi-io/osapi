@@ -11,13 +11,14 @@ details.
 
 ## Methods
 
-| Method                               | Returns                         | Permission    | Description         |
-| ------------------------------------ | ------------------------------- | ------------- | ------------------- |
-| [`List(ctx)`](#list)                 | `*Response[ListAgentsResponse]` | `agent:read`  | List active agents. |
-| [`Facts(ctx)`](#facts)               | `*Response[FactKeysResponse]`   | `agent:read`  | List the fact keys. |
-| [`Get(ctx, hostname)`](#get)         | `*Response[AgentInfo]`          | `agent:read`  | Get agent details.  |
-| [`Drain(ctx, hostname)`](#drain)     | `error`                         | `agent:write` | Drain an agent.     |
-| [`Undrain(ctx, hostname)`](#undrain) | `error`                         | `agent:write` | Undrain an agent.   |
+| Method                               | Returns                         | Permission    | Description                      |
+| ------------------------------------ | ------------------------------- | ------------- | -------------------------------- |
+| [`List(ctx)`](#list)                 | `*Response[ListAgentsResponse]` | `agent:read`  | List active agents.              |
+| [`Facts(ctx)`](#facts)               | `*Response[FactKeysResponse]`   | `agent:read`  | List the fact keys.              |
+| [`Join(ctx, input)`](#join)          | `*Response[JoinResponse]`       |               | Join an agent with a join token. |
+| [`Get(ctx, hostname)`](#get)         | `*Response[AgentInfo]`          | `agent:read`  | Get agent details.               |
+| [`Drain(ctx, hostname)`](#drain)     | `error`                         | `agent:write` | Drain an agent.                  |
+| [`Undrain(ctx, hostname)`](#undrain) | `error`                         | `agent:write` | Undrain an agent.                |
 
 ### List
 
@@ -63,6 +64,26 @@ List the fact keys, `go run agent.go facts`:
 ```go
 resp, err := c.Agent.Facts(ctx)
 ```
+
+### Join
+
+```go
+func (s *AgentService) Join(
+	ctx context.Context,
+	input AgentJoinInput,
+) (*Response[JoinResponse], error)
+```
+
+Join an agent with a join token.
+
+An agent calls it one time, at its first start, over HTTPS, after it checks the
+controller's certificate against the fingerprint of its join string. A token
+that admits admits the machine at once, as admit does, and the admission record
+names the token. The request is signed with the agent's signing key, which shows
+that it holds the key that it asks the controller to admit. It needs no bearer
+token: the join token authorizes it.
+
+It sends `POST /api/agent/join`, and needs no permission.
 
 ### Get
 
@@ -177,6 +198,17 @@ A `string`, one of `inet`, `inet6`, `dual`.
 | `Verified`         | `bool`                       | Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.  |
 | `Version`          | `string`                     | The build version of the agent binary. Absent for an agent that does not report it.                                                                                                                                           |
 
+### AgentJoinInput
+
+| Field           | Type     | Description                                                                                                                                   |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EncryptionKey` | `string` | The agent's X25519 encryption key, in the nkeys form.                                                                                         |
+| `Hostname`      | `string` | The hostname of the host.                                                                                                                     |
+| `MachineID`     | `string` | The machine ID of the host.                                                                                                                   |
+| `PublicKey`     | `string` | The agent's Ed25519 signing key, in base64.                                                                                                   |
+| `Signature`     | `string` | The signature of the request by the signing key, in base64.                                                                                   |
+| `Token`         | `string` | The join token, osapi_jt_<id>.<secret>, from osapi controller join token create. A secret: a reference, secret://<vault>/<key>, or the value. |
+
 ### AgentState
 
 The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain
@@ -205,6 +237,12 @@ A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
 | ------------ | ---------------- | ------------------------------------------ |
 | `Items`      | `[]FactKeyEntry` | Available fact keys for @fact. references. |
 | `TotalItems` | `int`            | Total number of fact keys.                 |
+
+### JoinResponse
+
+| Field                 | Type     | Description                                                                                     |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `ControllerPublicKey` | `string` | The controller's Ed25519 public key, in base64, which the agent keeps and checks each job with. |
 
 ### ListAgentsResponse
 

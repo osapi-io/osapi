@@ -89,7 +89,7 @@ func ExportRecordAgentKey(
 	w *Watcher,
 	pending PendingAgent,
 ) error {
-	return w.recordAgentKey(ctx, pending)
+	return w.recordAgentKey(ctx, pending, "")
 }
 
 // EnrollSubject exposes enrollSubject for testing.

@@ -117,6 +117,21 @@ func (a *Agent) handlePKIEnrollment(
 		return nil
 	}
 
+	// Not enrolled. With a join string, join over HTTPS, which admits at
+	// once; without one, or when the join fails, ask over NATS.
+	if a.appConfig.Agent.Join != "" {
+		err := a.join(ctx)
+		if err == nil {
+			a.pkiLogger.Info("joined the controller with the join token, agent enrolled")
+
+			return nil
+		}
+		a.pkiLogger.Warn(
+			"failed to join with the join string; asking to be admitted over NATS",
+			slog.String("error", err.Error()),
+		)
+	}
+
 	// Not enrolled — publish enrollment request and enter pending state.
 	if err := a.publishEnrollmentRequest(); err != nil {
 		a.pkiLogger.Warn(
@@ -281,30 +296,8 @@ func (a *Agent) handleEnrollmentResponse(
 		return
 	}
 
-	// Save controller public key to disk.
-	controllerPubKey := ed25519.PublicKey(resp.ControllerPublicKey)
-	a.pkiManager.SetControllerPublicKey(controllerPubKey)
-
-	keyDir := a.appConfig.Agent.PKI.KeyDir
-	controllerPubPath := filepath.Join(keyDir, EnrolledControllerKey)
-
-	pubPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "ED25519 PUBLIC KEY",
-		Bytes: controllerPubKey,
-	})
-
-	if err := atomicfile.Write(
-		context.Background(),
-		a.appFs,
-		controllerPubPath,
-		pubPEM,
-		0o644,
-	); err != nil {
-		a.pkiLogger.Error(
-			"failed to save controller public key",
-			slog.String("path", controllerPubPath),
-			slog.String("error", err.Error()),
-		)
+	if err := a.keepControllerKey(ed25519.PublicKey(resp.ControllerPublicKey)); err != nil {
+		a.pkiLogger.Error("failed to save controller public key", slog.String("error", err.Error()))
 
 		return
 	}
@@ -320,4 +313,20 @@ func (a *Agent) handleEnrollmentResponse(
 		"admitted, agent is now ready",
 		slog.String("controller_fingerprint", a.pkiManager.Fingerprint()),
 	)
+}
+
+// keepControllerKey uses key, the controller's public key that the agent got
+// when it was admitted, and saves it as EnrolledControllerKey, so that the
+// agent is admitted at its next start too.
+func (a *Agent) keepControllerKey(
+	key ed25519.PublicKey,
+) error {
+	a.pkiManager.SetControllerPublicKey(key)
+	path := filepath.Join(a.appConfig.Agent.PKI.KeyDir, EnrolledControllerKey)
+	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "ED25519 PUBLIC KEY", Bytes: key})
+	if err := atomicfile.Write(context.Background(), a.appFs, path, pubPEM, 0o644); err != nil {
+		return fmt.Errorf("write %s: %w", path, err)
+	}
+
+	return nil
 }

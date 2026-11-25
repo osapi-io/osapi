@@ -68,6 +68,15 @@ func Services() []ServiceSpec {
 			Permission: "agent:read",
 			Result:     "FactKeysResponse",
 		}, {
+			Doc:        "Join an agent with a join token",
+			Examples:   0,
+			HTTP:       "POST /api/agent/join",
+			Input:      "AgentJoinInput",
+			Name:       "Join",
+			Permission: "",
+			Program:    true,
+			Result:     "JoinResponse",
+		}, {
 			Doc:        "Get agent details",
 			Examples:   1,
 			HTTP:       "GET /api/agent/{hostname}",

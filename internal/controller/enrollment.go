@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
+
 	"github.com/avfs/avfs/vfs/osfs"
 
 	"github.com/osapi-io/osapi/internal/bus"
@@ -96,6 +98,12 @@ func startEnrollment(
 	if grace, err := time.ParseDuration(cfg.Controller.PKI.RotationGracePeriod); err == nil {
 		watcher.SetRotationGracePeriod(grace)
 	}
+
+	// A join takes a use of a token in the same bucket that join token
+	// create writes.
+	watcher.SetJoinTokens(
+		jointoken.Store{KV: conn.NATS, Bucket: enrollmentCfg.Bucket, Now: time.Now},
+	)
 
 	background(ctx, log, "enrollment watcher", watcher.Start)
 

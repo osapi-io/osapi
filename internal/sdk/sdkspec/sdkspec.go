@@ -123,7 +123,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleExample,
-		Requires: "Each method of the client has an example, which examples/sdk/client runs.",
+		Requires: "Each method of the client has an example, which examples/sdk/client runs, but a method that a program calls, which the spec marks x-osapi-program.",
 		Fix:      "Add an Example to the method's definition, and run just generate.",
 	},
 	{
@@ -176,7 +176,7 @@ func Validate(
 			if m.Doc == "" {
 				add(name, RuleDoc, "the method has no doc")
 			}
-			if m.Examples == 0 {
+			if m.Examples == 0 && !m.Program {
 				add(name, RuleExample, "the method has no example")
 			}
 			if ok {

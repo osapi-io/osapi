@@ -122,6 +122,8 @@ func (s *MainTestSuite) TestRun() {
 					`DnsEntryStatusFailed DnsEntryStatus = "failed"`)
 				s.Contains(job, ") error {\n\treturn sendEmpty(")
 				s.Contains(s.read("node_file.gen.go"), `q.Set("path", path)`)
+				s.Contains(s.read("spec.gen.go"), "Program:    true,",
+					"a method that a program calls is marked, so it needs no example")
 			},
 		},
 		{

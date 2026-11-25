@@ -34,6 +34,12 @@ func Routes(
 		},
 		{
 			Method:     http.MethodPost,
+			Path:       "/api/agent/join",
+			Permission: "",
+			Handler:    server.Serve(s, agent.Group, "join", agent.Join, decodeJoin),
+		},
+		{
+			Method:     http.MethodPost,
 			Path:       "/api/agent/:hostname/drain",
 			Permission: "agent:write",
 			Handler:    server.Serve(s, agent.Group, "drain", agent.Drain, decodeDrain),

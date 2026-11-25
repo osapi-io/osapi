@@ -42,6 +42,10 @@ import (
 // it.
 const MethodExtension = "x-osapi-method"
 
+// ProgramExtension marks an operation that a program calls, not a person,
+// as internal/controller/endpoint's ProgramExtension does.
+const ProgramExtension = "x-osapi-program"
+
 // ExamplesExtension is the extension of an operation of the spec that has
 // the examples of its method, each with its doc and its input. The endpoint
 // layer writes it.
@@ -114,6 +118,9 @@ type Method struct {
 	Description string
 	// Permission is the permission the operation needs, or "".
 	Permission string
+	// Program is a method that a program calls, not a person, such as the
+	// agent's join: it needs no example.
+	Program bool
 	// PathParams are the parameters in the path, in the order of the path.
 	PathParams []*Param
 	// Query are the parameters of the query, in the order of the spec.
@@ -546,6 +553,7 @@ func (b *builder) method(
 		Summary:     op.Summary,
 		Description: op.Description,
 	}
+	m.Program, _ = op.Extensions[ProgramExtension].(bool)
 	if raw, ok := op.Extensions[ExamplesExtension]; ok {
 		data, err := json.Marshal(raw)
 		if err == nil {

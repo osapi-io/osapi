@@ -61,6 +61,9 @@ type AcceptedAgent struct {
 	EncryptionKey string    `json:"encryption_key,omitempty"`
 	Fingerprint   string    `json:"fingerprint"`
 	AcceptedAt    time.Time `json:"accepted_at"`
+	// JoinToken is the ID of the join token that admitted the agent, or
+	// empty when an operator or auto_admit admitted it.
+	JoinToken string `json:"join_token,omitempty"`
 
 	// SupersededKey is the key replaced by the most recent rotation. It is
 	// absent unless a rotation is inside its grace period.

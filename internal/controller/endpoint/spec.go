@@ -280,8 +280,14 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: ".Public()",
-			Does: "Makes the method need no token. It has no 401 or 403.",
-			When: "Only for the health probes that a load balancer calls.",
+			Does: "Makes the method need no bearer token, so it has no 401, and no 403 for a permission.",
+			When: "For the health probes that a load balancer calls, and for the agent's join, which its join token authorizes.",
+		},
+		{
+			Kind: KindRefine,
+			Name: ".NoCommand()",
+			Does: "Gives the method no CLI command. Its route, its spec and its SDK method are as each other method's.",
+			When: "For a method that a program calls, not a person, such as the agent's join, whose request the agent signs.",
 		},
 		{
 			Kind: KindRefine,
@@ -392,6 +398,12 @@ var Spec = guide.Spec{
 			Name: "Health",
 			Does: "The health.Reporter of the controller: the state of NATS, the controller and its parts, for the health, controller, nats and agent groups.",
 			When: "For a group that reports whether a part of osapi is up.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Joiner",
+			Does: "The admission watcher, which admits the machine of a join request whose token admits, and gives the controller's public key.",
+			When: "For the agent group's join. A controller with no watcher gives none, and join answers 503.",
 		},
 		{
 			Kind: KindDeps,

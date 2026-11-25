@@ -324,9 +324,19 @@ agent:write or audit:read.
 
 ### `.Public()`
 
-Makes the method need no token. It has no 401 or 403.
+Makes the method need no bearer token, so it has no 401, and no 403 for a
+permission.
 
-Use: Only for the health probes that a load balancer calls.
+Use: For the health probes that a load balancer calls, and for the agent's join,
+which its join token authorizes.
+
+### `.NoCommand()`
+
+Gives the method no CLI command. Its route, its spec and its SDK method are as
+each other method's.
+
+Use: For a method that a program calls, not a person, such as the agent's join,
+whose request the agent signs.
 
 ### `.Status(code)`
 
@@ -483,6 +493,14 @@ The health.Reporter of the controller: the state of NATS, the controller and its
 parts, for the health, controller, nats and agent groups.
 
 Use: For a group that reports whether a part of osapi is up.
+
+### `Joiner`
+
+The admission watcher, which admits the machine of a join request whose token
+admits, and gives the controller's public key.
+
+Use: For the agent group's join. A controller with no watcher gives none, and
+join answers 503.
 
 ### `Traces`
 

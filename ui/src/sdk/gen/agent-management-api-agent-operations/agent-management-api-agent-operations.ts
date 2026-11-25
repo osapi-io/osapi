@@ -8,10 +8,32 @@ import type {
   AgentInfo,
   ErrorResponse,
   FactKeysResponse,
+  JoinRequest,
+  JoinResponse,
   ListAgentsResponse
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
+
+const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string | undefined>)[]) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries = source instanceof Headers
+      ? source.entries()
+      : Symbol.iterator in source
+        ? Array.from(source as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string])
+        : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<RequestInit['headers'], Record<string, unknown>>;
+};
 
 export type getAgentsResponse200 = {
   data: ListAgentsResponse
@@ -314,6 +336,64 @@ export const getAgentFacts = async ( options?: Parameters<typeof apiFetch>[1]): 
     method: 'GET'
 
 
+  }
+);}
+
+
+export type joinAgentResponse200 = {
+  data: JoinResponse
+  status: 200
+}
+
+export type joinAgentResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type joinAgentResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type joinAgentResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type joinAgentResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
+export type joinAgentResponseSuccess = (joinAgentResponse200) & {
+  headers: Headers;
+};
+export type joinAgentResponseError = (joinAgentResponse400 | joinAgentResponse403 | joinAgentResponse500 | joinAgentResponse503) & {
+  headers: Headers;
+};
+
+export type joinAgentResponse = (joinAgentResponseSuccess | joinAgentResponseError)
+
+export const getJoinAgentUrl = () => {
+
+
+
+
+  return `/api/agent/join`
+}
+
+/**
+ * An agent calls it one time, at its first start, over HTTPS, after it checks the controller's certificate against the fingerprint of its join string. A token that admits admits the machine at once, as admit does, and the admission record names the token. The request is signed with the agent's signing key, which shows that it holds the key that it asks the controller to admit. It needs no bearer token: the join token authorizes it.
+ * @summary Join an agent with a join token
+ */
+export const joinAgent = async (joinRequest: JoinRequest, options?: Parameters<typeof apiFetch>[1]): Promise<joinAgentResponse> => {
+
+  return apiFetch<joinAgentResponse>(getJoinAgentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(joinRequest)
   }
 );}
 

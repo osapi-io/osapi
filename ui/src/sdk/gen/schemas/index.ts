@@ -162,6 +162,8 @@ export * from './jobDetailResponseResponsesItem';
 export * from './jobDetailResponseTimelineItem';
 export * from './jobStats';
 export * from './jobStatus';
+export * from './joinRequest';
+export * from './joinResponse';
 export * from './kVBucketInfo';
 export * from './listAdmissionResponse';
 export * from './listAgentsResponse';

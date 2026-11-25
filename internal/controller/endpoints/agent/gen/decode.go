@@ -42,6 +42,21 @@ func decodeGet(
 	return in, "", true
 }
 
+// decodeJoin reads the join method's input from the request.
+func decodeJoin(
+	c *echo.Context,
+) (agent.JoinInput, string, bool) {
+	var in agent.JoinInput
+	if msg, ok := server.Body(c, &in.Body); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
 // decodeDrain reads the drain method's input from the request.
 func decodeDrain(
 	c *echo.Context,

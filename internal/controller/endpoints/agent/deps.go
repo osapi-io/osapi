@@ -21,6 +21,9 @@ package agent
 
 import (
 	"context"
+	"crypto/ed25519"
+
+	"github.com/osapi-io/osapi/internal/pki"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -30,6 +33,15 @@ import (
 type Deps struct {
 	// Jobs reads the registry and writes the drain flag and the timeline.
 	Jobs Jobs
+	// Joiner admits an agent that joins with a token. Nil on a controller
+	// that takes no join.
+	Joiner Joiner
+}
+
+// Joiner admits the machine of a join request whose token admits, and
+// returns the controller's public key.
+type Joiner interface {
+	Join(ctx context.Context, req pki.JoinRequest) (ed25519.PublicKey, error)
 }
 
 // Jobs is the part of the job client the agent group uses.

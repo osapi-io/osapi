@@ -37,6 +37,46 @@ func (s *AgentService) Facts(
 	return send[FactKeysResponse](ctx, s.client, http.MethodGet, "/api/agent/facts", nil, nil)
 }
 
+// AgentJoinInput is the input of AgentService.Join. A field of the path goes
+// in the path, and each other field in the body.
+type AgentJoinInput struct {
+	// The agent's X25519 encryption key, in the nkeys form.
+	EncryptionKey string `json:"encryption_key"`
+
+	// The hostname of the host.
+	Hostname string `json:"hostname"`
+
+	// The machine ID of the host.
+	MachineID string `json:"machine_id"`
+
+	// The agent's Ed25519 signing key, in base64.
+	PublicKey string `json:"public_key"`
+
+	// The signature of the request by the signing key, in base64.
+	Signature string `json:"signature"`
+
+	// The join token, osapi_jt_<id>.<secret>, from osapi controller join token
+	// create. A secret: a reference, secret://<vault>/<key>, or the value.
+	Token string `json:"token"`
+}
+
+// Join is the operation JoinAgent: join an agent with a join token.
+//
+// An agent calls it one time, at its first start, over HTTPS, after it checks
+// the controller's certificate against the fingerprint of its join string. A
+// token that admits admits the machine at once, as admit does, and the
+// admission record names the token. The request is signed with the agent's
+// signing key, which shows that it holds the key that it asks the controller
+// to admit. It needs no bearer token: the join token authorizes it.
+//
+// It sends POST /api/agent/join.
+func (s *AgentService) Join(
+	ctx context.Context,
+	input AgentJoinInput,
+) (*Response[JoinResponse], error) {
+	return send[JoinResponse](ctx, s.client, http.MethodPost, "/api/agent/join", nil, input)
+}
+
 // Get is the operation GetAgentDetails: get agent details.
 //
 // Get detailed information about a specific agent by hostname.

@@ -772,6 +772,29 @@ func (s *EndpointPublicTestSuite) TestCommandLayer() {
 	s.Equal(types.Permission("sysctl:admin"), g.CommandPermission(methods[1]))
 }
 
+// TestNoCommand is a method that a program calls: it has no command, and
+// the spec marks it, so the SDK needs no example of it.
+func (s *EndpointPublicTestSuite) TestNoCommand() {
+	g := endpoint.Define("agent", "Agents",
+		endpoint.Area(area.Fleet),
+		endpoint.Get[noInput, Node]("list"),
+		endpoint.Post[noInput, Node]("join").Sub("join").Public().NoCommand(),
+	)
+
+	methods := g.Commands()
+	s.Require().Len(methods, 1, "join has no command")
+	s.Equal("list", methods[0].MethodName())
+
+	doc, err := endpoint.OpenAPI(g)
+	s.Require().NoError(err)
+	join := doc.Paths.Find("/api/agent/join").Post
+	s.Require().NotNil(join)
+	s.Equal(true, join.Extensions[endpoint.ProgramExtension])
+	list := doc.Paths.Find("/api/agent").Get
+	s.Require().NotNil(list)
+	s.NotContains(list.Extensions, endpoint.ProgramExtension)
+}
+
 func (s *EndpointPublicTestSuite) TestRefusals() {
 	m := endpoint.Get[limited, Node]("get").Fails("a name over 3 characters", limited{Name: "abcd"})
 

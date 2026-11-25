@@ -21,10 +21,17 @@ package agent_test
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
+	"github.com/osapi-io/osapi/internal/pki"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 
@@ -478,6 +485,52 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 
 // TestSpecEnums: the spec's AgentState and ConditionType have each value
 // of their type, so a client checks a value when it compiles.
+func (s *MethodsPublicTestSuite) TestJoin() {
+	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
+	in := agent.JoinInput{Body: agent.JoinRequest{
+		Token:         "osapi_jt_t1.secret",
+		MachineID:     "m-1",
+		Hostname:      "web-01",
+		PublicKey:     base64.StdEncoding.EncodeToString(pub),
+		EncryptionKey: "XKEY",
+		Signature:     base64.StdEncoding.EncodeToString(ed25519.Sign(priv, []byte("x"))),
+	}}
+
+	s.Run("when the token admits, the answer is the controller's key", func() {
+		joiner := mocks.NewMockJoiner(s.ctrl)
+		ctrlKey := make(ed25519.PublicKey, ed25519.PublicKeySize)
+		joiner.EXPECT().
+			Join(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(_ context.Context, req pki.JoinRequest) (ed25519.PublicKey, error) {
+				s.Equal("osapi_jt_t1.secret", req.Token)
+				s.Equal(pub, req.PublicKey, "the key, decoded from base64")
+				s.Equal("XKEY", req.EncryptionKey)
+
+				return ctrlKey, nil
+			})
+
+		got, err := agent.Join(s.ctx, agent.Deps{Joiner: joiner}, in)
+
+		s.Require().NoError(err)
+		s.Equal(base64.StdEncoding.EncodeToString(ctrlKey), got.ControllerPublicKey)
+	})
+
+	s.Run("when the token does not admit, it is the error", func() {
+		joiner := mocks.NewMockJoiner(s.ctrl)
+		joiner.EXPECT().Join(gomock.Any(), gomock.Any()).Return(nil, jointoken.ErrExpired)
+
+		_, err := agent.Join(s.ctx, agent.Deps{Joiner: joiner}, in)
+
+		s.ErrorIs(err, jointoken.ErrExpired)
+	})
+
+	s.Run("when the controller takes no join, it says so", func() {
+		_, err := agent.Join(s.ctx, agent.Deps{}, in)
+
+		s.ErrorIs(err, admission.ErrNoJoinTokens)
+	})
+}
+
 func (s *MethodsPublicTestSuite) TestSpecEnums() {
 	doc, err := endpoint.OpenAPI(agent.Group)
 	s.Require().NoError(err)

@@ -109,6 +109,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			Hostname:   "web-01",
 			State:      types.AdmissionAdmitted,
 			AdmittedAt: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC),
+			JoinToken:  "t1",
 		},
 		{MachineID: "m-off", Hostname: "web-02", State: types.AdmissionAdmitted},
 		{
@@ -131,6 +132,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		s.True(got.Items[0].Online)
 		s.Equal(s.at, *got.Items[0].LastSeen, "an online node's last report is its registry entry")
 		s.NotNil(got.Items[0].AdmittedAt)
+		s.Equal("t1", got.Items[0].JoinToken, "the token that admitted it")
 		s.False(got.Items[1].Online)
 		s.Equal(s.at.Add(-time.Hour), *got.Items[1].LastSeen, "an offline node's is the stored one")
 		s.Nil(got.Items[1].AdmittedAt, "an unset time is absent")

@@ -195,6 +195,7 @@ The fields of each type are the properties of its schema in the API's spec.
 | `EncryptionKey`       | `string`         | The node's public X25519 encryption key, which the fingerprint covers.                    |
 | `Fingerprint`         | `string`         | The fingerprint of the node's two public keys: signing and encryption.                    |
 | `Hostname`            | `string`         | The hostname the node gave.                                                               |
+| `JoinToken`           | `string`         | On an admitted record that a join made, the ID of the join token that admitted the node.  |
 | `LastSeen`            | `time.Time`      | When the node last reported.                                                              |
 | `MachineID`           | `string`         | The machine ID of the node.                                                               |
 | `Online`              | `bool`           | Whether the node is running now: it is in the registry.                                   |

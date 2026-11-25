@@ -548,6 +548,10 @@ type ControllerPKI struct {
 
 // AgentConfig configuration settings.
 type AgentConfig struct {
+	// Join is the join string, osapi://<host>:<port>?token=...&fp=SHA256:...,
+	// that osapi controller join token create prints. An agent that is not
+	// admitted joins with it at its first start.
+	Join string `mapstructure:"join" mask:"password" doc:"The join string that osapi controller join token create prints. An agent that is not admitted joins with it at its first start, over HTTPS to the controller whose certificate the string pins, and is admitted at once. Without it, the agent asks to be admitted over NATS." choice:"the join string of the operator; empty asks over NATS"`
 	// NATS connection settings for the agent.
 	NATS NATSConnection `mapstructure:"nats"`
 	// Consumer settings for the agent's JetStream consumer.

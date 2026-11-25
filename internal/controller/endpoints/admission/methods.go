@@ -189,6 +189,7 @@ func admissionOf(
 		Reason:              r.Reason,
 		Previous:            r.Previous,
 		PreviousFingerprint: r.PreviousFingerprint,
+		JoinToken:           r.JoinToken,
 	}
 	if t, ok := seen.online[r.MachineID]; ok {
 		a.Online = true
