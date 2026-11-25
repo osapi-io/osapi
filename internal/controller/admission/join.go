@@ -128,6 +128,7 @@ func (w *Watcher) join(
 	for _, prefix := range []string{kvPrefix, rejectedKVPrefix, revokedKVPrefix} {
 		_ = w.enrollmentKV.KVDelete(ctx, w.enrollmentBucket, prefix+req.MachineID)
 	}
+	w.event(ctx, req.MachineID, req.Hostname, "admitted", "admitted by join token "+t.ID)
 	w.logger.Info(
 		"admitted agent by join token",
 		slog.String("machine_id", req.MachineID),

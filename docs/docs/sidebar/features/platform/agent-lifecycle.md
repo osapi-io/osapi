@@ -139,11 +139,29 @@ the agent had then. `agent get` shows all the changes:
 
 ```
 Timeline:
-  TIMESTAMP              EVENT      HOSTNAME  MESSAGE
-  2026-03-05 10:00:00    drain      web-01    Drain initiated
-  2026-03-05 10:05:23    cordoned   web-01    All jobs completed
-  2026-03-05 12:00:00    undrain    web-01    Resumed accepting jobs
+  TIMESTAMP              EVENT                 HOSTNAME  MESSAGE
+  2026-03-05 09:58:10    enrollment_requested  web-01    asked to be admitted, fingerprint SHA256:9f86d0...
+  2026-03-05 09:58:10    admitted              web-01    admitted by join token 1a2b3c4d
+  2026-03-05 09:58:11    started               web-01    started, version v1.4.0
+  2026-03-05 10:00:00    drain                 web-01    Drain initiated
+  2026-03-05 10:05:23    cordoned              web-01    All jobs completed
+  2026-03-05 12:00:00    undrain               web-01    Resumed accepting jobs
 ```
+
+The timeline also has the lifecycle of the machine. The controller writes each
+decision of admission, and the agent writes its own start and stop:
+
+| Event                  | Written by | Message                                                                  |
+| ---------------------- | ---------- | ------------------------------------------------------------------------ |
+| `enrollment_requested` | controller | the fingerprint of the request                                           |
+| `admitted`             | controller | by an operator, by `auto_admit`, or by join token `<id>`                 |
+| `rejected`             | controller | by an operator, with the reason                                          |
+| `revoked`, `deleted`   | controller | by an operator, or for `deleted` by `delete_after` with when it was seen |
+| `hostname_changed`     | controller | the old and the new hostname                                             |
+| `started`, `stopped`   | agent      | its version, at a start                                                  |
+
+The state of the agent comes from the latest drain event (`drain`, `cordoned`,
+`undrain`). A lifecycle event after a drain does not end the drain.
 
 ### CLI commands
 

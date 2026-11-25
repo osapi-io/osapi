@@ -134,7 +134,13 @@ func (w *Watcher) Admit(
 		attribute.String("osapi.agent.machine_id", machineID),
 	)
 
-	return opspan.End(span, w.admit(ctx, machineID, fingerprint))
+	hostname := w.hostnameOf(ctx, machineID)
+	if err := w.admit(ctx, machineID, fingerprint); err != nil {
+		return opspan.End(span, err)
+	}
+	w.event(ctx, machineID, hostname, "admitted", "admitted by an operator")
+
+	return opspan.End(span, nil)
 }
 
 // Reject rejects a pending machine with a reason, in an admission.reject
@@ -148,7 +154,13 @@ func (w *Watcher) Reject(
 		attribute.String("osapi.agent.machine_id", machineID),
 	)
 
-	return opspan.End(span, w.reject(ctx, machineID, reason))
+	hostname := w.hostnameOf(ctx, machineID)
+	if err := w.reject(ctx, machineID, reason); err != nil {
+		return opspan.End(span, err)
+	}
+	w.event(ctx, machineID, hostname, "rejected", "rejected by an operator: "+reason)
+
+	return opspan.End(span, nil)
 }
 
 // Revoke removes an admitted machine's key, in an admission.revoke span,
@@ -162,7 +174,13 @@ func (w *Watcher) Revoke(
 		attribute.String("osapi.agent.machine_id", machineID),
 	)
 
-	return opspan.End(span, w.revoke(ctx, machineID))
+	hostname := w.hostnameOf(ctx, machineID)
+	if err := w.revoke(ctx, machineID); err != nil {
+		return opspan.End(span, err)
+	}
+	w.event(ctx, machineID, hostname, "revoked", "revoked by an operator")
+
+	return opspan.End(span, nil)
 }
 
 // list reads every record of the bucket and keeps, for each machine, the

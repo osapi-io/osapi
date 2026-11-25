@@ -118,6 +118,7 @@ func (a *Agent) Start() {
 	// Register in agent registry and start heartbeat keepalive.
 	// Heartbeats run even in Pending state so the agent is visible.
 	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
+	a.lifecycle(a.ctx, "started", "started, version "+a.versionOrUnknown())
 
 	// Collect and publish system facts.
 	a.startFacts(a.ctx, a.machineID, a.hostname)
@@ -143,6 +144,9 @@ func (a *Agent) Stop(
 	ctx context.Context,
 ) {
 	a.logger.Info("node agent shutting down")
+	if a.machineID != "" {
+		a.lifecycle(ctx, "stopped", "stopped")
+	}
 	a.cancel()
 
 	done := make(chan struct{})
@@ -158,4 +162,31 @@ func (a *Agent) Stop(
 	case <-ctx.Done():
 		a.logger.Warn("node agent shutdown timed out")
 	}
+}
+
+// lifecycle writes an event of the agent's own lifecycle to its timeline. A
+// failed write is logged: the agent runs without it.
+func (a *Agent) lifecycle(
+	ctx context.Context,
+	event string,
+	message string,
+) {
+	if err := a.jobClient.WriteAgentTimelineEvent(
+		context.WithoutCancel(ctx), a.machineID, a.hostname, event, message,
+	); err != nil {
+		a.logger.Warn("failed to write a timeline event",
+			slog.String("event", event),
+			slog.String("error", err.Error()),
+		)
+	}
+}
+
+// versionOrUnknown is the agent's version, or "unknown" when SetVersion did
+// not set one.
+func (a *Agent) versionOrUnknown() string {
+	if a.version == "" {
+		return "unknown"
+	}
+
+	return a.version
 }
