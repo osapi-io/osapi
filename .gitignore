@@ -33,3 +33,4 @@ examples/**
 
 # Host network state written by `netplan status --format=json`
 netplanStatus.txt
+/.osapi/

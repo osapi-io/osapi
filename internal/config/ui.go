@@ -20,12 +20,8 @@
 
 package config
 
-// UIEnabled returns whether the embedded UI is enabled, defaulting to true
-// when the Enabled field is not set in config. The pointer semantics let us
-// distinguish "not set" (default to true) from an explicit false.
+// UIEnabled reports whether the controller serves the embedded UI. Its
+// default, true, is in controller start's defaults.
 func (c UIConfig) UIEnabled() bool {
-	if c.Enabled == nil {
-		return true
-	}
-	return *c.Enabled
+	return c.Enabled
 }

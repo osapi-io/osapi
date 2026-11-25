@@ -33,42 +33,8 @@ type UIPublicTestSuite struct {
 }
 
 func (s *UIPublicTestSuite) TestUIEnabled() {
-	trueVal := true
-	falseVal := false
-
-	tests := []struct {
-		name         string
-		cfg          config.UIConfig
-		validateFunc func(bool)
-	}{
-		{
-			name: "defaults to true when Enabled is nil",
-			cfg:  config.UIConfig{},
-			validateFunc: func(got bool) {
-				s.Equal(true, got)
-			},
-		},
-		{
-			name: "returns true when Enabled is explicitly true",
-			cfg:  config.UIConfig{Enabled: &trueVal},
-			validateFunc: func(got bool) {
-				s.Equal(true, got)
-			},
-		},
-		{
-			name: "returns false when Enabled is explicitly false",
-			cfg:  config.UIConfig{Enabled: &falseVal},
-			validateFunc: func(got bool) {
-				s.Equal(false, got)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.cfg.UIEnabled())
-		})
-	}
+	s.True(config.UIConfig{Enabled: true}.UIEnabled())
+	s.False(config.UIConfig{}.UIEnabled(), "the default, true, is in controller start's defaults")
 }
 
 func TestUIPublicTestSuite(

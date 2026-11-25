@@ -98,6 +98,16 @@ func (s *FlagsPublicTestSuite) TestBindFlags() {
 }
 
 // TestBindFlagsSets holds that a flag a person gives sets its key.
+func (s *FlagsPublicTestSuite) TestBindFlagAs() {
+	fs := pflag.NewFlagSet("client", pflag.ContinueOnError)
+	config.BindFlagAs(fs, "controller.client.url", "url")
+
+	f := fs.Lookup("url")
+	s.Require().NotNil(f)
+	s.Equal("http://localhost:8080", f.DefValue, "the default of the owner, not a copy")
+	s.Panics(func() { config.BindFlagAs(fs, "no.such.key", "nope") })
+}
+
 func (s *FlagsPublicTestSuite) TestBindFlagsSets() {
 	fs := pflag.NewFlagSet("t", pflag.ContinueOnError)
 	config.BindFlags(fs, "agent.max_jobs")

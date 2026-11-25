@@ -170,6 +170,12 @@ func (s *MethodsPublicTestSuite) TestSpec() {
 	s.Equal(osapiconfig.Spec().Sections(), got.Kinds)
 }
 
+func (s *MethodsPublicTestSuite) TestDefault() {
+	got, err := config.Default(context.Background(), config.Deps{}, config.DefaultInput{})
+	s.Require().NoError(err)
+	s.Equal(osapiconfig.DefaultYAML(), got.Content)
+}
+
 func (s *MethodsPublicTestSuite) TestValidate() {
 	tests := []struct {
 		name         string

@@ -18,9 +18,9 @@ user, root or a different user.
 
 <!-- osapi:config agent.privilege_escalation -->
 
-| Key                                  | Type | Default                               | Environment                                | Description                                                                     |
-| ------------------------------------ | ---- | ------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
-| `agent.privilege_escalation.enabled` | bool | none; `false` in `configs/osapi.yaml` | `OSAPI_AGENT_PRIVILEGE_ESCALATION_ENABLED` | Least-privilege mode: sudo for write commands and capability checks at startup. |
+| Key                                  | Type | Default | Environment                                | Description                                                                     |
+| ------------------------------------ | ---- | ------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `agent.privilege_escalation.enabled` | bool | `false` | `OSAPI_AGENT_PRIVILEGE_ESCALATION_ENABLED` | Least-privilege mode: sudo for write commands and capability checks at startup. |
 
 <!-- /osapi:config -->
 

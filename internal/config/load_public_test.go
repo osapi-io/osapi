@@ -103,6 +103,9 @@ func (s *LoadPublicTestSuite) TestLoad() {
 				s.Equal("/var/kv", behavior.Settings[kvSettings](s.kv).Dir,
 					"a behavior's setting default")
 				s.Equal(config.SourceDefault, config.Source(v, "behaviors.kv.dir"))
+				s.Equal(config.SourceUnset, config.Source(v, "controller.api.url"),
+					"a choice of the operator that nothing set")
+				s.Equal(config.SourceUnset, config.Source(v, "no.such.key"))
 			},
 		},
 		{
@@ -155,12 +158,13 @@ func (s *LoadPublicTestSuite) TestLoad() {
 			wantRule: config.RuleValue,
 		},
 		{
-			name: "when the list of signing keys is empty, the config does not load",
+			name: "when the list of signing keys is empty, the config loads: the controller makes a key",
 			body: strings.Replace(validConfig(),
 				"      signing_keys:\n        - id: test\n          key: "+testSigningKey,
 				`      signing_keys: ""`, 1),
-			wantErr:  `controller.api.security.signing_keys breaks its rule "min=1"`,
-			wantRule: config.RuleValue,
+			validateFunc: func(_ *viper.Viper, c config.Config) {
+				s.Empty(c.Controller.API.Security.SigningKeys)
+			},
 		},
 		{
 			name: "when two signing keys have one id, the config does not load",

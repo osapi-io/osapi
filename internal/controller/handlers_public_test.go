@@ -74,6 +74,7 @@ func (s *HandlersPublicTestSuite) TestTraceReader() {
 func (s *HandlersPublicTestSuite) TestHandlers() {
 	ctrl := gomock.NewController(s.T())
 	var cfg config.Config
+	cfg.Controller.UI.Enabled = true
 	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "test", Key: "test-key"}}
 	cfg.Controller.API.Security.Roles = map[types.Role]config.CustomRole{
 		"reader": {Permissions: []types.Permission{"status:read"}},
@@ -103,8 +104,7 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 			name: "when the UI is off leaves the UI handler out",
 			cfg: func() config.Config {
 				c := cfg
-				enabled := false
-				c.Controller.UI.Enabled = &enabled
+				c.Controller.UI.Enabled = false
 				return c
 			},
 			want: base - 1,

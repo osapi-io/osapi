@@ -19,11 +19,11 @@ metrics server is enabled.
 
 <!-- osapi:config controller.metrics.port agent.metrics.port nats.server.metrics.port -->
 
-| Key                        | Type | Default                              | Environment                      | Description                         |
-| -------------------------- | ---- | ------------------------------------ | -------------------------------- | ----------------------------------- |
-| `controller.metrics.port`  | int  | `9090`                               | `OSAPI_CONTROLLER_METRICS_PORT`  | Port the metrics server listens on. |
-| `agent.metrics.port`       | int  | none; `9091` in `configs/osapi.yaml` | `OSAPI_AGENT_METRICS_PORT`       | Port the metrics server listens on. |
-| `nats.server.metrics.port` | int  | none; `9092` in `configs/osapi.yaml` | `OSAPI_NATS_SERVER_METRICS_PORT` | Port the metrics server listens on. |
+| Key                        | Type | Default | Environment                      | Description                         |
+| -------------------------- | ---- | ------- | -------------------------------- | ----------------------------------- |
+| `controller.metrics.port`  | int  | `9090`  | `OSAPI_CONTROLLER_METRICS_PORT`  | Port the metrics server listens on. |
+| `agent.metrics.port`       | int  | `9091`  | `OSAPI_AGENT_METRICS_PORT`       | Port the metrics server listens on. |
+| `nats.server.metrics.port` | int  | `9092`  | `OSAPI_NATS_SERVER_METRICS_PORT` | Port the metrics server listens on. |
 
 <!-- /osapi:config -->
 
@@ -133,20 +133,20 @@ You can enable or disable the metrics server of each component separately:
 
 <!-- osapi:config controller.metrics agent.metrics nats.server.metrics -->
 
-| Key                           | Type   | Default                                 | Environment                         | Description                                                                         |
-| ----------------------------- | ------ | --------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
-| `controller.metrics.enabled`  | bool   | none; `true` in `configs/osapi.yaml`    | `OSAPI_CONTROLLER_METRICS_ENABLED`  | Enable the metrics endpoint (default: true).                                        |
-| `controller.metrics.host`     | string | none; `0.0.0.0` in `configs/osapi.yaml` | `OSAPI_CONTROLLER_METRICS_HOST`     | Host the metrics server binds to.                                                   |
-| `controller.metrics.port`     | int    | `9090`                                  | `OSAPI_CONTROLLER_METRICS_PORT`     | Port the metrics server listens on.                                                 |
-| `controller.metrics.url`      | string | none                                    | `OSAPI_CONTROLLER_METRICS_URL`      | Where a person opens the metrics endpoint, shown by health beside the bind address. |
-| `agent.metrics.enabled`       | bool   | none; `true` in `configs/osapi.yaml`    | `OSAPI_AGENT_METRICS_ENABLED`       | Enable the metrics endpoint (default: true).                                        |
-| `agent.metrics.host`          | string | none; `0.0.0.0` in `configs/osapi.yaml` | `OSAPI_AGENT_METRICS_HOST`          | Host the metrics server binds to.                                                   |
-| `agent.metrics.port`          | int    | none; `9091` in `configs/osapi.yaml`    | `OSAPI_AGENT_METRICS_PORT`          | Port the metrics server listens on.                                                 |
-| `agent.metrics.url`           | string | none                                    | `OSAPI_AGENT_METRICS_URL`           | Where a person opens the metrics endpoint, shown by health beside the bind address. |
-| `nats.server.metrics.enabled` | bool   | none; `true` in `configs/osapi.yaml`    | `OSAPI_NATS_SERVER_METRICS_ENABLED` | Enable the metrics endpoint (default: true).                                        |
-| `nats.server.metrics.host`    | string | none; `0.0.0.0` in `configs/osapi.yaml` | `OSAPI_NATS_SERVER_METRICS_HOST`    | Host the metrics server binds to.                                                   |
-| `nats.server.metrics.port`    | int    | none; `9092` in `configs/osapi.yaml`    | `OSAPI_NATS_SERVER_METRICS_PORT`    | Port the metrics server listens on.                                                 |
-| `nats.server.metrics.url`     | string | none                                    | `OSAPI_NATS_SERVER_METRICS_URL`     | Where a person opens the metrics endpoint, shown by health beside the bind address. |
+| Key                           | Type   | Default                                                       | Environment                         | Description                                                                         |
+| ----------------------------- | ------ | ------------------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `controller.metrics.enabled`  | bool   | `true`                                                        | `OSAPI_CONTROLLER_METRICS_ENABLED`  | Enable the metrics endpoint.                                                        |
+| `controller.metrics.host`     | string | `0.0.0.0`                                                     | `OSAPI_CONTROLLER_METRICS_HOST`     | Host the metrics server binds to.                                                   |
+| `controller.metrics.port`     | int    | `9090`                                                        | `OSAPI_CONTROLLER_METRICS_PORT`     | Port the metrics server listens on.                                                 |
+| `controller.metrics.url`      | string | none: where a person reaches it; empty shows the bind address | `OSAPI_CONTROLLER_METRICS_URL`      | Where a person opens the metrics endpoint, shown by health beside the bind address. |
+| `agent.metrics.enabled`       | bool   | `true`                                                        | `OSAPI_AGENT_METRICS_ENABLED`       | Enable the metrics endpoint.                                                        |
+| `agent.metrics.host`          | string | `0.0.0.0`                                                     | `OSAPI_AGENT_METRICS_HOST`          | Host the metrics server binds to.                                                   |
+| `agent.metrics.port`          | int    | `9091`                                                        | `OSAPI_AGENT_METRICS_PORT`          | Port the metrics server listens on.                                                 |
+| `agent.metrics.url`           | string | none: where a person reaches it; empty shows the bind address | `OSAPI_AGENT_METRICS_URL`           | Where a person opens the metrics endpoint, shown by health beside the bind address. |
+| `nats.server.metrics.enabled` | bool   | `true`                                                        | `OSAPI_NATS_SERVER_METRICS_ENABLED` | Enable the metrics endpoint.                                                        |
+| `nats.server.metrics.host`    | string | `0.0.0.0`                                                     | `OSAPI_NATS_SERVER_METRICS_HOST`    | Host the metrics server binds to.                                                   |
+| `nats.server.metrics.port`    | int    | `9092`                                                        | `OSAPI_NATS_SERVER_METRICS_PORT`    | Port the metrics server listens on.                                                 |
+| `nats.server.metrics.url`     | string | none: where a person reaches it; empty shows the bind address | `OSAPI_NATS_SERVER_METRICS_URL`     | Where a person opens the metrics endpoint, shown by health beside the bind address. |
 
 <!-- /osapi:config -->
 

@@ -633,19 +633,33 @@ agent has `agent.command.enabled` off, as the lab's agents do.
 
 ```bash
 just build     # Builds the React UI, then the Go binary
-export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS=dev=$(openssl rand -hex 32)
-./osapi controller start -f configs/osapi.yaml
 ```
 
-`configs/osapi.yaml` has a placeholder in `signing_keys`. The placeholder fails
-the startup validation on purpose. The variable takes `id=key` pairs, with a
-comma between them. Thus you must set the environment variable above to run the
-controller on your machine. The file also has a placeholder `bearer_token`, so a
-client request fails authentication until you set a token that the key signs:
+osapi needs no sample config: each key has a default, from the definition that
+owns it. `./osapi config default get` prints the whole config at its defaults.
+The defaults put osapi's files under `/etc/osapi` and `/var/lib/osapi`, so a run
+on your machine moves them to a directory you can write:
+
+```bash
+mkdir -p .osapi && cat > .osapi/dev.yaml <<'YAML'
+controller:
+  pki: { key_dir: .osapi/pki }
+  secrets:
+    vaults: [{ name: default, type: nats, key_file: .osapi/secrets.key }]
+agent:
+  pki: { key_dir: .osapi/pki }
+nats:
+  server: { store_dir: .osapi/jetstream }
+YAML
+./osapi start -f .osapi/dev.yaml
+```
+
+The controller makes its signing key in `.osapi/pki` at its first start, and
+`controller token generate` on the same machine signs with it:
 
 ```bash
 export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=$(./osapi controller token generate \
-  -f configs/osapi.yaml --roles admin --subject dev --json | jq -r .token)
+  -f .osapi/dev.yaml --roles admin --subject dev --json | jq -r .token)
 ```
 
 The environment variable overrides the value in the file. [Configuration] tells

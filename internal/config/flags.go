@@ -46,17 +46,27 @@ func BindFlags(
 	fs *pflag.FlagSet,
 	keys ...string,
 ) {
-	own := map[string]Key{}
-	for _, k := range walk(reflect.TypeFor[Config](), "", reflect.Value{}) {
-		own[k.Name] = k
-	}
 	for _, name := range keys {
-		k, ok := own[name]
-		if !ok {
-			panic(fmt.Sprintf("config: no key %q for a flag", name))
-		}
-		AddFlag(fs, viper.GetViper(), k, FlagName(name))
+		BindFlagAs(fs, name, FlagName(name))
 	}
+}
+
+// BindFlagAs is BindFlags for one key, with a flag name of its own, such as
+// --url for controller.client.url. Thus the flag's default is the key's,
+// from the definition that owns it, and not a second copy in the command.
+func BindFlagAs(
+	fs *pflag.FlagSet,
+	key string,
+	name string,
+) {
+	for _, k := range walk(reflect.TypeFor[Config](), "", ownedDefaults()) {
+		if k.Name == key {
+			AddFlag(fs, viper.GetViper(), k, name)
+
+			return
+		}
+	}
+	panic(fmt.Sprintf("config: no key %q for a flag", key))
 }
 
 // AddFlag adds the flag name to fs for k, with its type, default and doc,

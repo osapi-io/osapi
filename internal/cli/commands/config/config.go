@@ -37,6 +37,7 @@ var Group = command.Register(command.Define(
 	),
 	command.Uses[Deps](),
 	command.SubDoc("spec", "Print the parts of the config file"),
+	command.SubDoc("default", "Print the config at its defaults"),
 	command.Method[ListInput, ListOutput]("list").
 		Short("List every setting, its value in effect and where it came from").
 		Long("Each value shows where it came from: `env`, `file`, `default` or `unset`.\n"+
@@ -68,6 +69,17 @@ var Group = command.Register(command.Define(
 		Prints(sampleSpec).
 		Example("--json").
 		Handle(Spec),
+	command.Method[DefaultInput, DefaultOutput]("get").
+		Sub("default").
+		Short("Print the whole config, each key at its default, as YAML").
+		Long("Each key has its doc above it. A key with no default is a choice of the\n"+
+			"operator, commented out with why. Keep only the keys that you change: a\n"+
+			"config file needs no other. The defaults come from the definition that owns\n"+
+			"each section, such as controller start, so this is never out of date.").
+		Example("").
+		Prints(sampleDefault).
+		Example("> osapi.yaml").
+		Handle(Default),
 	command.Method[ValidateInput, ValidateOutput]("validate").
 		Short("Check a config file before osapi starts with it").
 		Long("The command starts nothing. It exits 1 when the config is not valid, and\n"+

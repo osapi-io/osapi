@@ -28,6 +28,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/osapi-io/osapi/internal/settings"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -57,6 +59,10 @@ type LocalGroup struct {
 	SubDocs map[string]string
 
 	provide func() any
+	// ConfigPrefix and ConfigDefaults are the section of the config that the
+	// group owns, and its defaults, which Config sets.
+	ConfigPrefix   string
+	ConfigDefaults any
 }
 
 // Option is a setting of a local group, or one of its methods.
@@ -113,6 +119,21 @@ func Long(
 	text string,
 ) Option {
 	return optionFunc(func(g *LocalGroup) { g.Long = text })
+}
+
+// Config declares that the group owns the section prefix of osapi's config,
+// such as controller, with defaults: a value of the section's type whose
+// fields are its keys' defaults. Each field becomes a key of osapi config
+// list, with its environment variable, and its default comes from here, as
+// a behavior's settings come from behavior.Config. A process group, such as
+// controller start, owns the section that its process reads.
+func Config(
+	prefix string,
+	defaults any,
+) Option {
+	return optionFunc(func(g *LocalGroup) {
+		g.ConfigPrefix, g.ConfigDefaults = prefix, defaults
+	})
 }
 
 // Flat makes the group add no word of its own: each method is a command
@@ -182,6 +203,9 @@ func Register(
 		panic(fmt.Sprintf("command: group %q registered twice", key))
 	}
 	locals[key] = g
+	if g.ConfigPrefix != "" {
+		settings.Own(g.ConfigPrefix, key, g.ConfigDefaults)
+	}
 
 	return g
 }

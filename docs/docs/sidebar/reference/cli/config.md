@@ -44,6 +44,13 @@ shows the same.
 | Method      | spec get                                                                   |
 | Description | Print the config file: each key, what it does, its type, default and rules |
 
+## [osapi config default get](../../usage/cli/config/default/get.md)
+
+|             |                                                          |
+| ----------- | -------------------------------------------------------- |
+| Method      | default get                                              |
+| Description | Print the whole config, each key at its default, as YAML |
+
 ## [osapi config validate](../../usage/cli/config/validate.md)
 
 |             |                                                 |

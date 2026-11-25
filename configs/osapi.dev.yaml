@@ -4,27 +4,8 @@
 # a "docker-dev" label for targeting: --target env:docker-dev
 debug: true
 
-# These fields are required by config validation even for agent-only mode.
-# Use dummy values since the agent doesn't need them.
-controller:
-  client:
-    security:
-      bearer_token: dev-not-used
-  api:
-    security:
-      # Meets the minimum length only so the agent-only container passes
-      # startup validation; the controller API is never run against it.
-      signing_keys:
-        - id: dev
-          key: dev-not-used-do-not-deploy-this-value
-  # PKI enrollment and job signing. Always on: the controller admits each
-  # agent before it takes a job, signs each job, and seals each secret of a
-  # job to its agents.
-  # pki:
-  #   key_dir: /etc/osapi/pki
-  #   auto_admit: false
-  #   rotation_grace_period: 24h
-  #   delete_after: ""
+# Each key has a default, so this file sets only what the container needs.
+# osapi config default get prints the rest.
 
 agent:
   nats:

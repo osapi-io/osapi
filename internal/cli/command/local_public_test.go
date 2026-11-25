@@ -32,6 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/settings"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
@@ -178,6 +179,16 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Empty(m.PageResult())
 	s.Equal([]command.Refusal{{Doc: "no name", Input: greetIn{}}}, m.Refusals())
 	s.NotNil(m.Handler())
+}
+
+func (s *LocalPublicTestSuite) TestConfig() {
+	type section struct{ Port int }
+	command.Register(command.Define("zzowner", "O", command.Config("zzsection", section{Port: 1})))
+
+	got, ok := settings.Of("zzsection")
+	s.Require().True(ok)
+	s.Equal("zzowner", got.By)
+	s.Equal(section{Port: 1}, got.Defaults)
 }
 
 func (s *LocalPublicTestSuite) TestRegistry() {
