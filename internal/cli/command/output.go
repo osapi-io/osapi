@@ -772,6 +772,11 @@ func list(
 		cols = []Column{{JSON: "", Header: "VALUE", Type: elem}}
 	}
 	branches := tree(items, children, "", "")
+	// A tree counts each of its rows, the children too, as the UI does: a
+	// trace of 28 spans under one root is Spans (28), not Spans (1).
+	if children != "" && heading != "" && total <= len(items) {
+		counted = fmt.Sprintf("%s (%d)", heading, len(branches))
+	}
 	all := make([]any, 0, len(branches))
 	for _, b := range branches {
 		all = append(all, b.item)
