@@ -57,6 +57,30 @@ controller admits it.
 
 Enrollment uses an accept and reject model, like Salt:
 
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant N as NATS
+    participant C as Controller
+    participant O as Administrator
+
+    A->>A: make agent.key and agent.xkey in key_dir
+    A->>N: publish osapi.enroll.request (machine ID, hostname, public keys)
+    N->>C: deliver the request
+    C->>N: record the machine as pending in the enrollment bucket
+    Note over A: Pending: the agent takes no job
+    A->>N: ask again at each heartbeat while pending
+    O->>C: osapi client admission admit --machine-id ...
+    C->>N: record the admitted key, publish osapi.enroll.response.<machine ID>
+    N->>A: deliver the controller's public key
+    A->>A: save enrolled-controller.pub
+    Note over A: Ready: the agent takes jobs, and signs each answer
+```
+
+With `controller.pki.auto_admit`, the controller admits each request at once,
+with no administrator. A join token also admits at once
+([Join with a token](#join-with-a-token)).
+
 1. **The agent makes its keys.** When the agent starts for the first time, it
    makes two keys in `agent.pki.key_dir` (`/etc/osapi/pki/agent` by default):
 
@@ -153,8 +177,28 @@ At its first start, an agent with a join string for NATS does these steps:
    starts to take jobs. Each later start reads `nats-join.json`, and does not
    join again.
 
-A join that fails, such as with an expired token, stops the agent with the
-reason. The join string sets the address of NATS: `controller.join.url`, or else
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant N as NATS
+    participant C as Controller
+
+    A->>A: make its keys and its NATS user key in key_dir
+    A->>N: connect as the bootstrap user of the join string (pin fp)
+    A->>N: request osapi.join.request (token, machine ID, keys, signed)
+    N->>C: deliver to one controller of the queue group
+    C->>C: check the signature, then take a use of the token
+    C->>N: record the machine as admitted, naming the token
+    C->>C: write the audit entry agent.join
+    C-->>A: reply: controller key and the agent's NATS user
+    A->>A: save enrolled-controller.pub and nats-join.json (or nats.creds)
+    A->>N: connect again as its own user
+    Note over A: Ready: the agent takes jobs
+```
+
+The bootstrap user can send the join request, and nothing else. A join that
+fails, such as with an expired token, stops the agent with the reason. The join
+string sets the address of NATS: `controller.join.url`, or else
 `nats.server.url`. The users default to the users of `nats.server.auth.users`
 with the roles `join` and `agent`, or set `controller.join.user` and
 `controller.join.agent` for a server that osapi does not run.
@@ -260,6 +304,34 @@ The signature includes:
 The other fields of a registration, for example uptime, load, memory and
 conditions, only report data. They do not route work, and the agent does not
 sign them. The signature is next to these fields, not in the signed bytes.
+
+### A hostname that changes
+
+The machine ID and the key are the identity, and the hostname follows the
+machine. A rename through osapi, by hand, or by a rebuild that keeps the machine
+ID keeps the machine admitted, and the host keeps its timeline.
+
+```mermaid
+sequenceDiagram
+    participant O as Operator
+    participant C as Controller
+    participant N as NATS
+    participant A as Agent
+
+    O->>C: osapi client node hostname update --target web-01 --name web-02
+    C->>N: send the job to web-01
+    N->>A: deliver the job
+    A->>A: rename the host
+    A->>N: register as web-02, signed
+    A->>N: answer the job
+    N->>C: the registration and the answer
+    C->>C: no other admitted machine is web-02, so the record moves to web-02
+    C->>N: timeline event hostname_changed
+    O->>C: a request to --target web-02 finds the host
+```
+
+The controller refuses the new hostname when another admitted machine holds it.
+Then the registration is not verified, and the host gets no work by that name.
 
 ### What the controller checks
 

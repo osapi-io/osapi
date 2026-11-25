@@ -97,6 +97,24 @@ stores the job (`request` in `internal/job/client`, and `internal/secret/seal`):
    The controller signs the job as before, so an agent knows that the controller
    sealed it.
 
+```mermaid
+sequenceDiagram
+    participant C as Controller
+    participant N as NATS
+    participant A as Agent
+    participant P as Provider
+
+    C->>C: make a job key, encrypt each secret of the input with it
+    C->>C: seal the job key to the X25519 key of each agent of the target
+    C->>C: sign the job
+    C->>N: write the job: sealed values, sealed_keys, sealed_from
+    N->>A: deliver the job
+    A->>A: verify the controller's signature
+    A->>A: open its job key with its X25519 key, then each value
+    A->>P: call the method with the plain values
+    Note over A,P: the plain values live only in this call
+```
+
 The agent opens its own job key with its X25519 key when it takes the job
 (`openJob` in `internal/agent`). The dispatch of a behavior decodes the input
 into the type of the method, opens each `secret.Value` with `secret.Map`, and

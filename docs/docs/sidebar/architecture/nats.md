@@ -41,6 +41,35 @@ buckets at start, and needs nothing from you.
   output and the facts cross the network in plain text; the controller still
   signs each job and verifies each answer.
 
+## What each osapi process can use
+
+Each osapi process connects as a NATS user with the role of the process. The
+server lets the user use the subjects of its role, and nothing else. An agent
+has no JetStream admin, cannot read the secrets or the enrollment records, and
+cannot send a job. `osapi nats permissions get --role <role>` prints each set.
+
+```mermaid
+flowchart LR
+    J[join user] -->|publish| JR(osapi.join.request)
+    A[agent] -->|publish| ER(osapi.enroll.request)
+    A -->|read and write| AB[(job-queue, registry, facts, state, file-state)]
+    A -->|consume| JS[(JOBS stream)]
+    A -->|read| OB[(file-objects)]
+    C[controller] -->|publish| JP(osapi.jobs.*)
+    C -->|publish| AU(osapi.audit.*)
+    C -->|subscribe, answer once| JR
+    C -->|subscribe| ER
+    C -->|read and write| CB[(each bucket, with secrets and enrollment)]
+    S[setup] -->|create and update| ST[(each stream and bucket)]
+```
+
+| Role         | Who connects as it                                 | It cannot                                            |
+| ------------ | -------------------------------------------------- | ---------------------------------------------------- |
+| `controller` | the controller, and the local controller commands  | make or delete the job stream                        |
+| `agent`      | each agent                                         | make a stream or a bucket, send a job, read a secret |
+| `setup`      | `osapi nats setup`, and the embedded server itself | write a job, a secret or a record                    |
+| `join`       | an agent with a join string, before its join       | anything but the join request                        |
+
 ## What each kind of server needs
 
 Each osapi process authenticates with its own `nats.auth`: `none`, `user_pass`,

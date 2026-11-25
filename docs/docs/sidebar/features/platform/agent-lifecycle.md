@@ -86,10 +86,12 @@ the registry, and that looks the same as a crash.
 
 Agents have an explicit scheduling state with three values:
 
-```
-Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
-  ^                                              │
-  └──────────────(undrain)───────────────────────┘
+```mermaid
+flowchart LR
+    R[Ready] -->|drain| D[Draining]
+    D -->|running jobs done| C[Cordoned]
+    C -->|undrain| R
+    D -->|undrain| R
 ```
 
 | State      | Meaning                                         |
@@ -101,7 +103,7 @@ Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
 ### How it works
 
 1. The operator runs `osapi client agent drain --hostname web-01`.
-1. The API writes a `drain.{hostname}` key to the state KV bucket.
+1. The API writes a `drain.<machine ID>` key to the state KV bucket.
 1. The agent finds the drain flag at its next heartbeat (10s).
 1. The agent changes to `Draining` and **stops its NATS JetStream
    subscriptions**. Thus it gets no new jobs.
@@ -111,11 +113,29 @@ Ready ──(drain)──> Draining ──(jobs done)──> Cordoned
 1. The API deletes the drain key. The agent subscribes again and changes to
    `Ready`.
 
+```mermaid
+sequenceDiagram
+    participant O as Operator
+    participant C as Controller
+    participant N as NATS
+    participant A as Agent
+
+    O->>C: osapi client agent drain --hostname web-01
+    C->>N: write drain.<machine ID> in agent-state, and a drain event
+    A->>N: read the drain flag at its heartbeat
+    A->>A: stop taking jobs, finish the running ones
+    A->>N: timeline event cordoned
+    O->>C: osapi client agent undrain --hostname web-01
+    C->>N: delete drain.<machine ID>, and an undrain event
+    A->>N: read no flag at its heartbeat, take jobs again
+```
+
 ### Timeline
 
 The agent records each change of state as an event in the state KV bucket
-(`agent-state`, no TTL). It only adds events, and does not change them.
-`agent get` shows all the changes:
+(`agent-state`, no TTL), under its machine ID. It only adds events, and does not
+change them. A rename keeps the timeline, and each event keeps the hostname that
+the agent had then. `agent get` shows all the changes:
 
 ```
 Timeline:
