@@ -110,3 +110,19 @@ func (s *OpSpanPublicTestSuite) TestOutsideATrace() {
 		s.Empty(s.recorder.Ended())
 	})
 }
+
+// TestRoot opens a span with no trace around it: the root of work that no
+// request started, such as a join over NATS or a timer's pass.
+func (s *OpSpanPublicTestSuite) TestRoot() {
+	s.Run("when the context has no span opens a root", func() {
+		_, span := opspan.Root(context.Background(), "osapi-test", "join.receive",
+			attribute.String("osapi.x", "y"))
+		s.True(span.SpanContext().IsValid())
+		s.NoError(opspan.End(span, nil))
+		s.Require().Len(s.recorder.Ended(), 1)
+		got := s.recorder.Ended()[0]
+		s.Equal("join.receive", got.Name())
+		s.False(got.Parent().IsValid())
+		s.Contains(got.Attributes(), attribute.String("osapi.x", "y"))
+	})
+}

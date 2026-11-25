@@ -50,6 +50,17 @@ func Start(
 	return otel.Tracer(tracer).Start(ctx, name, trace.WithAttributes(attrs...))
 }
 
+// Root starts a span whether or not ctx has one: the span of work that no
+// request or job started, such as a join over NATS or a timer's pass.
+func Root(
+	ctx context.Context,
+	tracer string,
+	name string,
+	attrs ...attribute.KeyValue,
+) (context.Context, trace.Span) {
+	return otel.Tracer(tracer).Start(ctx, name, trace.WithAttributes(attrs...))
+}
+
 // End ends span, with the error status when err is not nil, and returns
 // err, so a call can end with return opspan.End(span, err).
 func End(

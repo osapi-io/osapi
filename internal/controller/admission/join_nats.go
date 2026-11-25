@@ -35,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 )
 
 // joinQueue is the queue group of the controllers' join subscriptions, so
@@ -101,6 +102,10 @@ func (w *Watcher) respondJoin(
 	agent pki.JoinNATS,
 ) {
 	start := nowFn()
+	// A join comes on a queue subscription, which starts no span: this is
+	// the root of the join's trace.
+	ctx, span := opspan.Root(ctx, tracerName, "join.receive")
+	defer span.End()
 	req, reply := w.joinReply(ctx, msg.Data, agent)
 	data, _ := json.Marshal(reply)
 	if err := respond(msg, data); err != nil {

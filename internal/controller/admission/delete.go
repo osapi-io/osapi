@@ -158,9 +158,22 @@ func (w *Watcher) RunStaleCleanup(
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			if _, err := w.DeleteStale(ctx, seen, after); err != nil {
-				w.logger.Warn("stale machine cleanup skipped", slog.String("error", err.Error()))
-			}
+			w.cleanOnce(ctx, seen, after)
 		}
+	}
+}
+
+// cleanOnce is one pass of the stale cleanup, in an admission.stale_cleanup
+// span of its own: a timer starts it, not a request.
+func (w *Watcher) cleanOnce(
+	ctx context.Context,
+	seen Seen,
+	after time.Duration,
+) {
+	ctx, span := opspan.Root(ctx, tracerName, "admission.stale_cleanup")
+	deleted, err := w.DeleteStale(ctx, seen, after)
+	span.SetAttributes(attribute.Int("osapi.admission.deleted", len(deleted)))
+	if opspan.End(span, err) != nil {
+		w.logger.Warn("stale machine cleanup skipped", slog.String("error", err.Error()))
 	}
 }
