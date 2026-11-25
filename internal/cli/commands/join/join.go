@@ -1,0 +1,66 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+// Package join is the join group under osapi controller: osapi controller
+// join token create, list and revoke, which make, show and remove the tokens
+// that admit an agent at its join (osapi-io/osapi#1313). They are local
+// commands: they connect to NATS as the controller does, and the API does
+// not give a token.
+package join
+
+import "github.com/osapi-io/osapi/internal/cli/command"
+
+// Group is the join group's definition.
+var Group = command.Register(command.Define(
+	"join", "Make and remove the tokens that admit an agent at its join",
+	command.Under(command.ParentController),
+	command.Uses[Deps](),
+	command.SubDoc("token", "Make, list and revoke the join tokens"),
+	command.Method[CreateInput, CreateOutput]("create").
+		Sub("token").
+		Short("Make a join token, and print it with the join string").
+		Long("The token admits an agent at its join, until it expires or its uses are\n"+
+			"gone. The controller keeps a hash of it, not the token: this command prints\n"+
+			"the token one time. The join string has the controller's URL\n"+
+			"(`controller.api.url`) and the fingerprint of its certificate, so an agent\n"+
+			"checks the controller before it sends anything. It needs\n"+
+			"`controller.api.tls.enabled`.").
+		Example("").
+		Prints(sampleCreate).
+		Example("--expires 24h --uses 10 --labels group=web").
+		Fails("no expiry", CreateInput{Uses: 1}).
+		Fails("a duration that is not one", CreateInput{Expires: "soon", Uses: 1}).
+		Fails("no use", CreateInput{Expires: "1h", Uses: 0}).
+		Handle(Create),
+	command.Method[ListInput, ListOutput]("list").
+		Sub("token").
+		Short("List the join tokens, with their expiry and uses left").
+		Example("").
+		Prints(sampleList).
+		Example("--json").
+		Handle(List),
+	command.Method[RevokeInput, RevokeOutput]("revoke").
+		Sub("token").
+		Short("Revoke a join token, so it admits no agent").
+		Example("--id 1a2b3c4d").
+		Prints(sampleRevoke).
+		Fails("no id", RevokeInput{}).
+		Handle(Revoke),
+))
