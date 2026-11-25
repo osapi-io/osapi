@@ -24,6 +24,7 @@ import (
 	"context"
 	"io/fs"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v5"
@@ -100,7 +101,7 @@ func handlers(
 			customRoles,
 			agent.Deps{Jobs: d.jobs},
 			admissionDeps(d),
-			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
+			telemetry.Deps{Traces: traceReader(d.log, d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
 			jobEndpoint.Deps{Jobs: d.jobs},
 			healthEndpoint.Deps{Health: reporter},
@@ -125,16 +126,29 @@ func handlers(
 }
 
 // traceReader reads traces from the backend at cfg.URL, the address where a
-// person views the traces, which for Jaeger is also its query API. It is nil
-// when no URL is set, and the trace route then answers 503.
+// person views the traces, which for Jaeger is also its query API, with the
+// TLS of cfg.TLS. It is nil when no URL is set, or when its TLS does not
+// load, which it logs; the trace route then answers 503.
 func traceReader(
+	log *slog.Logger,
 	cfg config.TracingConfig,
 ) telemetry.TraceReader {
 	if cfg.URL == "" {
 		return nil
 	}
+	if cfg.TLS == (config.ClientTLS{}) {
+		return traces.NewJaeger(cfg.URL, nil)
+	}
+	tlsConfig, err := cfg.TLS.Config()
+	if err != nil {
+		log.Error("read traces: telemetry.tracing.tls", slog.String("error", err.Error()))
 
-	return traces.NewJaeger(cfg.URL, nil)
+		return nil
+	}
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.TLSClientConfig = tlsConfig
+
+	return traces.NewJaeger(cfg.URL, &http.Client{Timeout: 10 * time.Second, Transport: t})
 }
 
 // admissionDeps is what the admission group's handlers use: the watcher of

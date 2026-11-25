@@ -93,7 +93,7 @@ func SubComponents(
 	if sc.Metrics.Enabled {
 		scs["nats.metrics"] = job.SubComponentInfo{
 			Status:  "ok",
-			Address: fmt.Sprintf("http://%s:%d", sc.Metrics.Host, sc.Metrics.Port),
+			Address: sc.Metrics.Address(),
 			URL:     sc.Metrics.URL,
 		}
 	}

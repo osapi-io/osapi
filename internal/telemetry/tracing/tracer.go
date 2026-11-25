@@ -25,6 +25,8 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc/credentials"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -94,11 +96,15 @@ func InitTracer(
 
 		opts = append(opts, sdktrace.WithBatcher(exp))
 	case "otlp":
-		exp, err := otlptraceNewFn(
-			ctx,
-			otlptracegrpc.WithEndpoint(cfg.OTLPEndpoint),
-			otlptracegrpc.WithInsecure(),
-		)
+		conn := otlptracegrpc.WithInsecure()
+		if cfg.TLS.Enabled {
+			tlsConfig, err := cfg.TLS.Config()
+			if err != nil {
+				return nil, fmt.Errorf("telemetry.tracing.tls: %w", err)
+			}
+			conn = otlptracegrpc.WithTLSCredentials(credentials.NewTLS(tlsConfig))
+		}
+		exp, err := otlptraceNewFn(ctx, otlptracegrpc.WithEndpoint(cfg.OTLPEndpoint), conn)
 		if err != nil {
 			return nil, fmt.Errorf("creating OTLP exporter: %w", err)
 		}

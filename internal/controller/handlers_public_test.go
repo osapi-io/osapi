@@ -21,6 +21,7 @@
 package controller_test
 
 import (
+	"bytes"
 	"context"
 	"log/slog"
 	"testing"
@@ -64,11 +65,24 @@ func (s *HandlersPublicTestSuite) TestSecretDeps() {
 }
 
 func (s *HandlersPublicTestSuite) TestTraceReader() {
-	s.Nil(controller.ExportTraceReader(config.TracingConfig{}), "no URL is no backend")
+	var buf bytes.Buffer
+	log := slog.New(slog.NewTextHandler(&buf, nil))
+	s.Nil(controller.ExportTraceReader(log, config.TracingConfig{}), "no URL is no backend")
 	s.IsType(
 		&traces.Jaeger{},
-		controller.ExportTraceReader(config.TracingConfig{URL: "http://jaeger:16686"}),
+		controller.ExportTraceReader(log, config.TracingConfig{URL: "http://jaeger:16686"}),
 	)
+
+	s.IsType(&traces.Jaeger{}, controller.ExportTraceReader(log, config.TracingConfig{
+		URL: "https://jaeger:16686",
+		TLS: config.ClientTLS{InsecureSkipVerify: true},
+	}), "with TLS of its own")
+
+	s.Nil(controller.ExportTraceReader(log, config.TracingConfig{
+		URL: "https://jaeger:16686",
+		TLS: config.ClientTLS{CAFile: "/no/such/ca.crt"},
+	}), "TLS that does not load is no backend")
+	s.Contains(buf.String(), "read traces: telemetry.tracing.tls")
 }
 
 func (s *HandlersPublicTestSuite) TestHandlers() {

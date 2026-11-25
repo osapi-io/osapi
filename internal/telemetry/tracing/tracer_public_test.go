@@ -195,6 +195,47 @@ func (s *InitTracerPublicTestSuite) TestInitTracerWithInjection() {
 			},
 		},
 		{
+			name: "when the OTLP exporter has TLS on, it connects with TLS",
+			cfg: config.TracingConfig{
+				Enabled:      true,
+				Exporter:     "otlp",
+				OTLPEndpoint: "collector:4317",
+				TLS:          config.ClientTLS{Enabled: true, ServerName: "collector"},
+			},
+			setupFn: func() {
+				tracing.SetOtlptraceNewFn(func(
+					_ context.Context,
+					opts ...otlptracegrpc.Option,
+				) (*otlptrace.Exporter, error) {
+					s.Len(opts, 2, "the endpoint and the TLS credentials")
+
+					return tracing.ExportNewNoopOTLPExporter(), nil
+				})
+			},
+			teardownFn: func() {
+				tracing.ResetOtlptraceNewFn()
+			},
+			validateFunc: func(shutdown func(context.Context) error, err error) {
+				s.Require().NoError(err)
+				s.NoError(shutdown(s.ctx))
+			},
+		},
+		{
+			name: "when the OTLP exporter's TLS does not load returns error",
+			cfg: config.TracingConfig{
+				Enabled:      true,
+				Exporter:     "otlp",
+				OTLPEndpoint: "collector:4317",
+				TLS:          config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"},
+			},
+			setupFn:    func() {},
+			teardownFn: func() {},
+			validateFunc: func(shutdown func(context.Context) error, err error) {
+				s.ErrorContains(err, "telemetry.tracing.tls")
+				s.Nil(shutdown)
+			},
+		},
+		{
 			name: "when OTLP exporter creation fails returns error",
 			cfg: config.TracingConfig{
 				Enabled:      true,

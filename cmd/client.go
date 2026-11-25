@@ -92,9 +92,10 @@ var clientCmd = &cobra.Command{
 			cli.LogFatal(logger, "failed to resolve the bearer token", err)
 		}
 
-		base, err := cli.TLSTransport(appConfig.Controller.Client.TLS.CAFile)
+		appConfig.Controller.Client.TLS.Warn(logger, "controller.client.tls")
+		base, err := cli.TLSTransport(appConfig.Controller.Client.TLS)
 		if err != nil {
-			cli.LogFatal(logger, "failed to read controller.client.tls.ca_file", err)
+			cli.LogFatal(logger, "failed to read controller.client.tls", err)
 		}
 		sdkClient = client.New(
 			appConfig.Controller.Client.URL,

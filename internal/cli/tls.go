@@ -21,37 +21,26 @@
 package cli
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
-	"fmt"
 	"net/http"
-	"os"
+
+	"github.com/osapi-io/osapi/internal/config"
 )
 
-// TLSTransport is the transport of the CLI's client. With caFile, it trusts
-// that PEM certificate on an https:// URL, such as the self-signed api.crt of
-// a controller, as well as the system's roots. Without it, the default.
+// TLSTransport is the transport of the CLI's client, with the TLS config of
+// c: its CA, its client certificate and its server name. With nothing set
+// it is the default transport.
 func TLSTransport(
-	caFile string,
+	c config.ClientTLS,
 ) (http.RoundTripper, error) {
-	if caFile == "" {
+	if c == (config.ClientTLS{}) {
 		return http.DefaultTransport, nil
 	}
-	pem, err := os.ReadFile(caFile)
+	tlsConfig, err := c.Config()
 	if err != nil {
 		return nil, err
 	}
-	// The system pool is never an error on the platforms osapi runs on.
-	pool, _ := x509.SystemCertPool()
-	if !pool.AppendCertsFromPEM(pem) {
-		return nil, fmt.Errorf("%s: %w", caFile, errNoCertificate)
-	}
 	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.TLSClientConfig = &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}
+	t.TLSClientConfig = tlsConfig
 
 	return t, nil
 }
-
-// errNoCertificate is the error of a ca_file with no PEM certificate.
-var errNoCertificate = errors.New("no PEM certificate")

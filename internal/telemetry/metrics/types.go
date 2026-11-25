@@ -22,6 +22,7 @@ package metrics
 
 import (
 	"context"
+	"crypto/tls"
 	"log/slog"
 
 	"github.com/labstack/echo/v5"
@@ -38,6 +39,8 @@ type Server struct {
 	registry      *prometheus.Registry
 	meterProvider *sdkmetric.MeterProvider
 	readinessFunc func() error
+	// tls, when set, makes Start serve HTTPS.
+	tls *tls.Config
 
 	// stop cancels the context StartConfig.Start is listening on. v5 has no
 	// Shutdown method: cancelling the context is how the server is asked to

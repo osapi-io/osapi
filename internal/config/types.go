@@ -66,6 +66,8 @@ type MetricsServer struct {
 	// URL is where a person opens the metrics endpoint. Health shows it
 	// beside the bind address; osapi never requests it.
 	URL string `mapstructure:"url" doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url" choice:"where a person reaches it; empty shows the bind address"`
+	// TLS makes the metrics server serve HTTPS.
+	TLS ServerTLS `mapstructure:"tls"`
 }
 
 // TracingConfig configuration settings for distributed tracing.
@@ -80,6 +82,9 @@ type TracingConfig struct {
 	// links to it, and the controller reads a trace from its query API for
 	// osapi client trace get. osapi does not run the backend.
 	URL string `mapstructure:"url" doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url" choice:"the tracing backend of the operator; empty reads no trace"`
+	// TLS is how osapi checks the tracing backend: the OTLP exporter, and
+	// the controller's reads of its query API at url.
+	TLS ClientTLS `mapstructure:"tls"`
 }
 
 // NATSAuth holds client-side authentication settings for connecting to NATS.
@@ -375,11 +380,26 @@ type Client struct {
 	TLS ClientTLS `mapstructure:"tls"`
 }
 
-// ClientTLS is what the CLI trusts on an https:// URL.
+// ClientTLS is how osapi checks a server that it connects to over TLS: the
+// CLI to the controller, and the OTLP exporter and the trace reader to the
+// tracing backend. ClientTLS.Config builds the TLS config of each.
 type ClientTLS struct {
-	// CAFile is a PEM certificate that the client trusts, such as the
-	// self-signed api.crt of a controller. Without it, the system's roots.
-	CAFile string `mapstructure:"ca_file" doc:"A PEM certificate that the CLI trusts on an https:// URL, such as api.crt of a controller with a self-signed certificate, in its controller.pki.key_dir. Without it, the system's trusted roots." choice:"a certificate of the operator; empty trusts the system roots"`
+	// Enabled connects with TLS. A URL with https:// uses TLS without it.
+	Enabled bool `mapstructure:"enabled" doc:"Connect with TLS. A URL that starts with https:// uses TLS without it."`
+	// CAFile is a PEM certificate that osapi trusts, besides the system's
+	// roots, such as a private CA or a self-signed certificate.
+	CAFile string `mapstructure:"ca_file" doc:"A PEM certificate to trust besides the system's roots, such as a private CA or the self-signed api.crt in the controller.pki.key_dir of a controller." choice:"a certificate of the operator; empty trusts the system roots"`
+	// CertFile and KeyFile are the client certificate, for a server that
+	// asks for one (mutual TLS).
+	CertFile string `mapstructure:"cert_file" doc:"The PEM client certificate, for a server that asks for one (mutual TLS). Set it with key_file." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty sends none"`
+	// KeyFile is the PEM private key of CertFile.
+	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile" choice:"a certificate of the operator; empty sends none"`
+	// ServerName is the name to check the certificate against, when it is
+	// not the host that osapi connects to.
+	ServerName string `mapstructure:"server_name" doc:"The name to check the server's certificate against, when it is not the host of the address." choice:"empty checks the host of the address"`
+	// InsecureSkipVerify accepts any certificate. osapi logs a warning at
+	// each start that has it on.
+	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify" doc:"Accept any certificate of the server, so anyone in the path can read and change the traffic. For a test only: osapi logs a warning at each start that has it on."`
 }
 
 // CustomRole defines a named set of permissions that can be assigned to tokens.
@@ -388,17 +408,17 @@ type CustomRole struct {
 	Permissions []types.Permission `mapstructure:"permissions" validate:"dive,permission"`
 }
 
-// ServerTLS makes the API serve HTTPS. With no certificate set, the
-// controller makes a self-signed one in controller.pki.key_dir at its first
-// start, and uses it after that. A certificate set later replaces it with no
-// other change.
+// ServerTLS makes a server of osapi serve HTTPS: the API, and each metrics
+// server. With no certificate set, the API makes a self-signed one in
+// controller.pki.key_dir at its first start, and uses it after that; a
+// metrics server needs one.
 type ServerTLS struct {
-	// Enabled serves HTTPS on the API's port, in place of HTTP.
-	Enabled bool `mapstructure:"enabled" doc:"Serve HTTPS on the API's port, in place of HTTP. Without cert_file and key_file, the controller makes a self-signed certificate in controller.pki.key_dir."`
+	// Enabled serves HTTPS on the server's port, in place of HTTP.
+	Enabled bool `mapstructure:"enabled" doc:"Serve HTTPS on the port, in place of HTTP. Without cert_file and key_file, the API makes a self-signed certificate in controller.pki.key_dir; a metrics server needs both."`
 	// CertFile is the PEM certificate to serve, with its chain.
-	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty is the self-signed certificate"`
+	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty is the API's self-signed certificate"`
 	// KeyFile is the PEM private key of CertFile.
-	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile" choice:"a certificate of the operator; empty is the self-signed certificate"`
+	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile" choice:"a certificate of the operator; empty is the API's self-signed certificate"`
 }
 
 // ServerSecurity represents security-related settings for the server.
