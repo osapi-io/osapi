@@ -60,6 +60,25 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 | Whether a definition breaks a rule                                                                                            | `go run . dsl command validate`                            |
 | A complete group                                                                                                              | `internal/cli/commands/token`                              |
 
+## Types, not strings
+
+A value of a closed set has a type, never a string:
+
+- **The type of `pkg/sdk/types`**, when it has one.
+  `go run . dsl command spec get` lists each under "Types for values", and
+  `go run . sdk get --name <Type>` shows its values. The permissions
+  (`types.Perm...`), the roles (`types.Role...`), the verbs (`types.Verb...`)
+  and the targets (`types.TargetAll`, `types.TargetAny`) are constants there
+  too.
+- **A named type of the package**, in its `types.go`, with `Values()` and
+  `Valid()`, for a closed set that only this package has.
+- The field takes the rule `validate:"enum"`. `validate` refuses `oneof`.
+
+Use the constant, never its string: `types.ContentRaw`, not `"raw"`.
+`internal/dslcheck` fails on a string literal where a typed value goes, and on a
+string in the API of a DSL that `internal/dslcheck/testdata/strings.txt` does
+not list with its reason.
+
 ## Build a new group
 
 1. Write it:

@@ -55,6 +55,25 @@ question:
 | How tests fake each host service, and which pattern to copy for each kind of state                          | [references/services.md](references/services.md)                                                                       |
 | The walkthrough, with a worked behavior                                                                     | `docs/docs/sidebar/development/your-first-behavior.md`                                                                 |
 
+## Types, not strings
+
+A value of a closed set has a type, never a string:
+
+- **The type of `pkg/sdk/types`**, when it has one.
+  `go run . dsl behavior spec get` lists each under "Types for values", and
+  `go run . sdk get --name <Type>` shows its values. The permissions
+  (`types.Perm...`), the roles (`types.Role...`), the verbs (`types.Verb...`)
+  and the targets (`types.TargetAll`, `types.TargetAny`) are constants there
+  too.
+- **A named type of the package**, in its `types.go`, with `Values()` and
+  `Valid()`, for a closed set that only this package has.
+- The field takes the rule `validate:"enum"`. `validate` refuses `oneof`.
+
+Use the constant, never its string: `types.ContentRaw`, not `"raw"`.
+`internal/dslcheck` fails on a string literal where a typed value goes, and on a
+string in the API of a DSL that `internal/dslcheck/testdata/strings.txt` does
+not list with its reason.
+
 ## Decide first
 
 Decide these with the user before you write code. Each answer becomes a
