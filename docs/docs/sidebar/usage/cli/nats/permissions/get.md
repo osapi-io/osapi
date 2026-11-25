@@ -27,11 +27,12 @@ The command prints:
 ```ansi
 $ osapi nats permissions get --role agent
 [1;38;2;0;213;255mNATS permissions:[0m
-  [38;2;10;143;176mRole:[0m       agent
-  [38;2;10;143;176mNamespace:[0m  osapi
-  [38;2;10;143;176mPublish:[0m    $JS.API.INFO, $KV.osapi-agent-registry.>, osapi.enroll.request
-  [38;2;10;143;176mSubscribe:[0m  _INBOX.>, osapi.enroll.response.>
-  [38;2;10;143;176mnsc:[0m        --allow-pub "$JS.API.INFO,$KV.osapi-agent-registry.>,osapi.enroll.request" --allow-sub "_INBOX.>,osapi.enroll.response.>"
+  [38;2;10;143;176mRole:[0m              agent
+  [38;2;10;143;176mNamespace:[0m         osapi
+  [38;2;10;143;176mPublish:[0m           $JS.API.INFO, $KV.osapi-agent-registry.>, osapi.enroll.request
+  [38;2;10;143;176mSubscribe:[0m         _INBOX.>, osapi.enroll.response.>
+  [38;2;10;143;176mAnswers requests:[0m  no
+  [38;2;10;143;176mnsc:[0m               --allow-pub "$JS.API.INFO,$KV.osapi-agent-registry.>,osapi.enroll.request" --allow-sub "_INBOX.>,osapi.enroll.response.>"
 ```
 
 With `--json`, the command prints:
@@ -46,6 +47,7 @@ With `--json`, the command prints:
     "osapi.enroll.request"
   ],
   "subscribe": ["_INBOX.\u003e", "osapi.enroll.response.\u003e"],
+  "responses": false,
   "nsc": "--allow-pub \"$JS.API.INFO,$KV.osapi-agent-registry.\u003e,osapi.enroll.request\" --allow-sub \"_INBOX.\u003e,osapi.enroll.response.\u003e\""
 }
 ```
