@@ -36,6 +36,7 @@ var Group = command.Register(command.Define(
 			"and the command does not stop.",
 	),
 	command.Uses[Deps](),
+	command.SubDoc("spec", "Print the parts of the config file"),
 	command.Method[ListInput, ListOutput]("list").
 		Short("List every setting, its value in effect and where it came from").
 		Long("Each value shows where it came from: `env`, `file`, `default` or `unset`.\n"+
@@ -57,6 +58,16 @@ var Group = command.Register(command.Define(
 		Example("--key agent.labels -f ./osapi.yaml --json").
 		Fails("no key", GetInput{}).
 		Handle(Get),
+	command.Method[SpecInput, SpecOutput]("get").
+		Sub("spec").
+		Short("Print the config file: each key, what it does, its type, default and rules").
+		Long("The list comes from this binary. Thus it agrees with the build that you run.\n"+
+			"A section for each top word of a key, such as controller. `osapi config get\n"+
+			"--key <key>` shows one key with its value in effect.").
+		Example("").
+		Prints(sampleSpec).
+		Example("--json").
+		Handle(Spec),
 	command.Method[ValidateInput, ValidateOutput]("validate").
 		Short("Check a config file before osapi starts with it").
 		Long("The command starts nothing. It exits 1 when the config is not valid, and\n"+

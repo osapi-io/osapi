@@ -32,6 +32,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/config"
+	osapiconfig "github.com/osapi-io/osapi/internal/config"
 )
 
 type MethodsPublicTestSuite struct {
@@ -161,6 +162,12 @@ func (s *MethodsPublicTestSuite) TestFlag() {
 		}
 	}
 	s.Positive(flags, "a behavior's setting has a flag")
+}
+
+func (s *MethodsPublicTestSuite) TestSpec() {
+	got, err := config.Spec(context.Background(), config.Deps{}, config.SpecInput{})
+	s.Require().NoError(err)
+	s.Equal(osapiconfig.Spec().Sections(), got.Kinds)
 }
 
 func (s *MethodsPublicTestSuite) TestValidate() {
