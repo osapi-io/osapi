@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/features/platform/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.65fc29ca.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.978824e1.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.5550ef37.js" defer="defer"></script>
 </head>
 <body>
@@ -131,26 +131,39 @@ fingerprint as <code>previous_fingerprint</code>.</li>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="join-with-a-token">Join with a token<a href="#join-with-a-token" class="hash-link" aria-label="Direct link to Join with a token" title="Direct link to Join with a token" translate="no">​</a></h3>
 <p>An agent can join with a join token in place of a request that waits for an
 administrator. The administrator makes the token on the controller, and gives
-the agent the join string that the command prints:</p>
+the agent the join string that the command prints. The agent then needs the join
+string and nothing else: no NATS settings and no credentials.</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi controller </span><span class="token function" style="color:#00d5ff">join</span><span class="token plain"> token create </span><span class="token parameter variable" style="color:#6b5cff">--expires</span><span class="token plain"> 1h </span><span class="token parameter variable" style="color:#6b5cff">--uses</span><span class="token plain"> </span><span class="token number" style="color:#6b5cff">1</span><br></div></code></pre></div></div>
-<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">agent</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">join</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> osapi</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain">//controller.example.com</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain">8080</span><span class="token punctuation" style="color:#8a8a8a">?</span><span class="token plain">fp=SHA256%3A</span><span class="token punctuation" style="color:#8a8a8a">...</span><span class="token important" style="color:#ff00ff">&amp;token=osapi_jt_...</span><br></div></code></pre></div></div>
-<p>At its first start, an agent that is not admitted joins with the string:</p>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">agent</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">join</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> tls</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain">//nats.example.com</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain">4222</span><span class="token punctuation" style="color:#8a8a8a">?</span><span class="token plain">fp=SHA256%3A</span><span class="token punctuation" style="color:#8a8a8a">...</span><span class="token important" style="color:#ff00ff">&amp;ns=osapi&amp;pass=...&amp;token=osapi_jt_...&amp;user=join</span><br></div></code></pre></div></div>
+<p>At its first start, an agent with a join string for NATS does these steps:</p>
 <ol>
-<li class="">It connects to the controller over HTTPS, and refuses a certificate whose
-fingerprint is not the one in the string. Thus it sends the token only to the
-controller that made it.</li>
-<li class="">It sends <code>POST /api/agent/join</code> with the token, its machine ID, its hostname
-and its two public keys, signed with its signing key.</li>
+<li class="">It makes its signing key and its encryption key in <code>agent.pki.key_dir</code>.</li>
+<li class="">It connects to NATS as the bootstrap user of the string. That user can send
+the join request and nothing else. For a <code>tls://</code> server, the agent refuses a
+certificate whose fingerprint is not the one in the string.</li>
+<li class="">It sends the join request: the token, its machine ID, its hostname and its
+two public keys, signed with its signing key.</li>
 <li class="">A token that has not expired, has uses left and was not revoked admits the
 machine at once. The admission record names the token, as <code>join_token</code> in
 <code>osapi client admission get</code>.</li>
-<li class="">The agent saves the controller&#x27;s key as <code>enrolled-controller.pub</code>, and starts
-to take jobs.</li>
+<li class="">The controller replies with its key and the agent&#x27;s own NATS user. The agent
+saves the key as <code>enrolled-controller.pub</code>, and the user and the server&#x27;s
+certificate in <code>nats-join.json</code> (mode 0600), connects with its own user, and
+starts to take jobs. Each later start reads <code>nats-join.json</code>, and does not
+join again.</li>
 </ol>
-<p>A join that fails, such as with an expired token, logs the reason, and the agent
-asks to be admitted over NATS, as above. The controller needs
-<code>controller.api.tls.enabled</code> for join token create, because the join string pins
-the API&#x27;s certificate.</p>
+<p>A join that fails, such as with an expired token, stops the agent with the
+reason. The join string sets the address of NATS: <code>controller.join.url</code>, or else
+<code>nats.server.url</code>. The users default to the users of <code>nats.server.auth.users</code>
+with the roles <code>join</code> and <code>agent</code>, or set <code>controller.join.user</code> and
+<code>controller.join.agent</code> for a server that osapi does not run.</p>
+<p>With <code>--transport https</code>, the agent joins over the controller&#x27;s API in place of
+NATS. The string is
+<code>osapi://controller.example.com:8080?fp=SHA256%3A...&amp;token=osapi_jt_...</code>, the
+agent sends <code>POST /api/agent/join</code>, and it needs its NATS settings in its
+config. A join over HTTPS that fails makes the agent ask to be admitted over
+NATS, as above. The controller needs <code>controller.api.tls.enabled</code> for it,
+because the join string pins the API&#x27;s certificate.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="auto-admit-mode">Auto-admit mode<a href="#auto-admit-mode" class="hash-link" aria-label="Direct link to Auto-admit mode" title="Direct link to Auto-admit mode" translate="no">​</a></h3>
 <p>For development and tests, set <code>controller.pki.auto_admit: true</code>. Then the
 controller admits each machine that asks to join, without an administrator. Do
