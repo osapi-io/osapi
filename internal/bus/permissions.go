@@ -86,6 +86,7 @@ func RolePermissions(
 		p.readObjects(n.objects)
 		p.consume(n.stream)
 		p.pub[subject(namespace, pki.EnrollRequestSuffix)] = true
+		p.pub[subject(namespace, pki.RenewRequestSuffix)] = true
 		p.sub[subject(namespace, pki.EnrollResponsePrefix)+".>"] = true
 	case RoleController:
 		for _, b := range []string{n.jobs, n.registry, n.facts, n.state, n.fileState, n.enrollment, n.secrets} {
@@ -108,6 +109,7 @@ func RolePermissions(
 		p.pub[subject(namespace, pki.EnrollResponsePrefix)+".>"] = true
 		p.sub[subject(namespace, pki.EnrollRequestSuffix)] = true
 		p.sub[subject(namespace, pki.JoinRequestSuffix)] = true
+		p.sub[subject(namespace, pki.RenewRequestSuffix)] = true
 		out := p.sorted()
 		out.Responses = true
 

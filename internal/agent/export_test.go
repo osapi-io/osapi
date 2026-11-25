@@ -1083,3 +1083,50 @@ func ExportVersionOrUnknown(
 ) string {
 	return a.versionOrUnknown()
 }
+
+// SetRenewFns swaps the time, the check interval and the write of a
+// renewal, and returns a func that puts them back.
+func SetRenewFns(
+	now func() time.Time,
+	check time.Duration,
+	write func(context.Context, avfs.VFS, string, []byte, os.FileMode) error,
+) func() {
+	oldNow, oldCheck, oldWrite := renewNow, renewCheck, writeCreds
+	if now != nil {
+		renewNow = now
+	}
+	if check > 0 {
+		renewCheck = check
+	}
+	if write != nil {
+		writeCreds = write
+	}
+
+	return func() { renewNow, renewCheck, writeCreds = oldNow, oldCheck, oldWrite }
+}
+
+// ExportRenewIfDue calls renewIfDue with the join that key_dir keeps, as
+// the agent with machineID.
+func ExportRenewIfDue(
+	a *Agent,
+	machineID string,
+) error {
+	a.machineID = machineID
+	s, err := readJoin(a.appFs, a.appConfig.Agent.PKI.KeyDir)
+	if err != nil {
+		return err
+	}
+
+	return a.renewIfDue(s)
+}
+
+// ExportStartRenewal calls startRenewal, and waits for it to stop after
+// ctx ends.
+func ExportStartRenewal(
+	ctx context.Context,
+	a *Agent,
+) {
+	a.startRenewal(ctx)
+	<-ctx.Done()
+	a.wg.Wait()
+}

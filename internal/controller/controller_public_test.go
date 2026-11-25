@@ -29,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/nkeys"
+
 	"github.com/avfs/avfs/vfs/osfs"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/require"
@@ -198,6 +200,18 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			},
 			opts: []controller.Option{
 				controller.WithMeterProvider(sdkmetric.NewMeterProvider()),
+			},
+		},
+		{
+			name: "when the join is in operator mode serves renewals",
+			cfg: func() config.Config {
+				cfg := startServer(s.T())
+				acct, _ := nkeys.CreateAccount()
+				seed, _ := acct.Seed()
+				cfg.Controller.Join.Account, _ = acct.PublicKey()
+				cfg.Controller.Join.SigningKeyFile = filepath.Join(s.T().TempDir(), "signing.nk")
+				s.Require().NoError(os.WriteFile(cfg.Controller.Join.SigningKeyFile, seed, 0o600))
+				return cfg
 			},
 		},
 		{
