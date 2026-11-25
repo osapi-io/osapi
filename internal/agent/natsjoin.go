@@ -37,11 +37,13 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 )
 
 // NATSJoinFile is the file in agent.pki.key_dir where an agent keeps what a
@@ -154,8 +156,12 @@ func joinNATS(
 	keyDir := cfg.Agent.PKI.KeyDir
 	saved, err := readJoin(fs, keyDir)
 	if err != nil {
-		saved, err = joinNow(ctx, log, fs, cfg)
-		if err != nil {
+		// The span names the server, never the token or the users.
+		spanCtx, span := opspan.Start(ctx, "osapi-agent", "agent.join",
+			attribute.String("osapi.join.transport", "nats"),
+		)
+		saved, err = joinNow(spanCtx, log, fs, cfg)
+		if err := opspan.End(span, err); err != nil {
 			return cfg, fmt.Errorf("join over NATS: %w", err)
 		}
 	}

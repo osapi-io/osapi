@@ -25,12 +25,30 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/osapi-io/osapi/internal/audit"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/pki"
 )
+
+// joinLog keeps the audit entries of the joins.
+type joinLog struct {
+	entries []audit.Entry
+	err     error
+}
+
+func (l *joinLog) Write(
+	_ context.Context,
+	e audit.Entry,
+) error {
+	l.entries = append(l.entries, e)
+
+	return l.err
+}
 
 // serveJoin runs ServeJoin with a listener that keeps the handler, sends
 // data to it as a join request, and returns the reply.
@@ -57,13 +75,17 @@ func (s *StorePublicTestSuite) serveJoin(
 		return respondErr
 	})()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	sc := trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID: trace.TraceID{1},
+		SpanID:  trace.SpanID{1},
+	})
+	ctx, cancel := context.WithCancel(trace.ContextWithSpanContext(context.Background(), sc))
 	done := make(chan error, 1)
 	go func() {
 		done <- s.watcher.ServeJoin(ctx, listen, pki.JoinNATS{Username: "agent", Password: "pw"})
 	}()
 	<-ready
-	handler(&nats.Msg{Data: data})
+	handler(&nats.Msg{Subject: "osapi.join.request", Data: data})
 	cancel()
 	s.Require().NoError(<-done)
 	s.Equal("osapi.join.request", subject)
@@ -77,6 +99,9 @@ func (s *StorePublicTestSuite) serveJoin(
 
 func (s *StorePublicTestSuite) TestServeJoin() {
 	s.Run("a token that admits gets the controller's key and the agent user", func() {
+		log := &joinLog{}
+		s.watcher.SetJoinAudit(log)
+		defer s.watcher.SetJoinAudit(nil)
 		s.watcher.SetJoinTokens(fakeTokens{})
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 
@@ -85,21 +110,41 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		s.Empty(reply.Error)
 		s.Len(reply.ControllerPublicKey, 32)
 		s.Equal(pki.JoinNATS{Username: "agent", Password: "pw"}, reply.NATS)
+		s.Require().Len(log.entries, 1)
+		e := log.entries[0]
+		s.Equal("join-token:t1", e.User, "the token's ID, never the token")
+		s.Equal("NATS", e.Method)
+		s.Equal("osapi.join.request", e.Path)
+		s.Equal("agent.join", e.OperationID)
+		s.Equal(200, e.ResponseCode)
+		s.Equal("machine_id=m-1 hostname=web-01", e.RequestSummary)
+		s.NotContains(e.RequestSummary+e.User, "secret")
+		s.Equal(trace.TraceID{1}.String(), e.TraceID)
 	})
 
 	s.Run("a token that does not admit gets why, and no user", func() {
+		log := &joinLog{err: errors.New("audit down")}
+		s.watcher.SetJoinAudit(log)
+		defer s.watcher.SetJoinAudit(nil)
 		s.watcher.SetJoinTokens(fakeTokens{err: jointoken.ErrExpired})
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 
 		reply := s.serveJoin(data, errors.New("no reply subject"))
 
 		s.Equal(jointoken.ErrExpired.Error(), reply.Error)
+		s.Require().Len(log.entries, 1)
+		s.Equal(403, log.entries[0].ResponseCode)
 		s.Empty(reply.NATS.Password)
 		s.Empty(reply.ControllerPublicKey)
 	})
 
 	s.Run("a request that is not JSON gets why", func() {
+		log := &joinLog{}
+		s.watcher.SetJoinAudit(log)
+		defer s.watcher.SetJoinAudit(nil)
 		reply := s.serveJoin([]byte("{"), nil)
+		s.Require().Len(log.entries, 1)
+		s.Equal("join-token", log.entries[0].User)
 
 		s.Equal("the join request is not JSON", reply.Error)
 	})

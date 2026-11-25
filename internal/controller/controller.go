@@ -156,7 +156,7 @@ func newController(
 	}
 
 	// Each agent is admitted, and each job is signed: PKI is always on.
-	watcher, err := startEnrollment(ctx, log, conn, namespace, cfg)
+	watcher, err := startEnrollment(ctx, log, conn, namespace, cfg, auditLog)
 	if err != nil {
 		return nil, err
 	}
