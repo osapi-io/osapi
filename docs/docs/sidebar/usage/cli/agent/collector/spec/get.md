@@ -24,7 +24,7 @@ osapi agent collector spec get --json
 | Flag               | Description                                                                                                             | Default                 |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | `-d, --debug`      | Enable or disable debug mode                                                                                            |                         |
-| `-f, --osapi-file` | Path to config file                                                                                                     | `/etc/osapi/osapi.yaml` |
+| `-f, --osapi-file` | Path to config file; without one at the default path, osapi runs on the defaults                                        | `/etc/osapi/osapi.yaml` |
 | `--sysctl-dir`     | Directory the agent writes osapi's kernel parameter files to, one osapi-&lt;key&gt;.conf per key (behaviors.sysctl.dir) | `/etc/sysctl.d`         |
 
 [Output](../../../output.md) tells how the result is printed, and what `--json`
