@@ -37,11 +37,12 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// WriteAgentTimelineEvent writes an append-only timeline event
-// for an agent state transition.
+// WriteAgentTimelineEvent writes an append-only timeline event for an
+// agent state transition, under the agent's machine ID, which a rename does
+// not change. The event keeps the hostname that the agent had then.
 func (c *Client) WriteAgentTimelineEvent(
 	ctx context.Context,
-	hostname, event, message string,
+	machineID, hostname, event, message string,
 ) error {
 	if c.stateBucket == "" {
 		return fmt.Errorf("agent state bucket not configured")
@@ -50,7 +51,7 @@ func (c *Client) WriteAgentTimelineEvent(
 	now := time.Now()
 	key := fmt.Sprintf(
 		"timeline.%s.%s.%d",
-		job.SanitizeHostname(hostname),
+		job.SanitizeHostname(machineID),
 		event,
 		now.UnixNano(),
 	)
@@ -80,16 +81,23 @@ func (c *Client) WriteAgentTimelineEvent(
 	return nil
 }
 
-// GetAgentTimeline returns sorted timeline events for a hostname.
+// GetAgentTimeline returns the sorted timeline events of the agent with
+// machineID: its own, and the ones that an agent before #1423 wrote under
+// its hostname, so that an upgraded agent keeps its history.
 func (c *Client) agentTimeline(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) ([]job.TimelineEvent, error) {
 	if c.stateBucket == "" {
 		return nil, fmt.Errorf("agent state bucket not configured")
 	}
 
-	prefix := "timeline." + job.SanitizeHostname(hostname) + "."
+	prefixes := []string{"timeline." + job.SanitizeHostname(machineID) + "."}
+	if legacy := "timeline." + job.SanitizeHostname(hostname) + "."; hostname != "" &&
+		legacy != prefixes[0] {
+		prefixes = append(prefixes, legacy)
+	}
 
 	keys, err := c.natsClient.KVKeys(ctx, c.stateBucket)
 	if err != nil {
@@ -102,7 +110,7 @@ func (c *Client) agentTimeline(
 
 	events := []job.TimelineEvent{}
 	for _, key := range keys {
-		if !strings.HasPrefix(key, prefix) {
+		if !hasAnyPrefix(key, prefixes) {
 			continue
 		}
 
@@ -152,12 +160,28 @@ func ComputeAgentState(
 // span.
 func (c *Client) GetAgentTimeline(
 	ctx context.Context,
+	machineID string,
 	hostname string,
 ) ([]job.TimelineEvent, error) {
 	ctx, span := opspan.Start(ctx, tracerName, "agent.timeline",
+		attribute.String("osapi.agent.machine_id", machineID),
 		attribute.String("osapi.agent.hostname", hostname),
 	)
-	events, err := c.agentTimeline(ctx, hostname)
+	events, err := c.agentTimeline(ctx, machineID, hostname)
 
 	return events, opspan.End(span, err)
+}
+
+// hasAnyPrefix reports whether s starts with one of prefixes.
+func hasAnyPrefix(
+	s string,
+	prefixes []string,
+) bool {
+	for _, p := range prefixes {
+		if strings.HasPrefix(s, p) {
+			return true
+		}
+	}
+
+	return false
 }

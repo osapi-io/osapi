@@ -193,8 +193,10 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").
 					Return(&job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: types.AgentDraining}, nil)
 				s.jobs.EXPECT().DeleteDrainFlag(gomock.Any(), "m-1").Return(nil)
-				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
-					"Undrain initiated via API").Return(nil)
+				s.jobs.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), "server1", "undrain",
+						"Undrain initiated via API").
+					Return(nil)
 			},
 			wantCode: http.StatusNoContent,
 		},

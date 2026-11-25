@@ -220,10 +220,11 @@ type JobClient interface {
 	// Agent timeline
 	WriteAgentTimelineEvent(
 		ctx context.Context,
-		hostname, event, message string,
+		machineID, hostname, event, message string,
 	) error
 	GetAgentTimeline(
 		ctx context.Context,
+		machineID string,
 		hostname string,
 	) ([]job.TimelineEvent, error)
 

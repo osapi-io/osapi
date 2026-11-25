@@ -72,7 +72,7 @@ func (a *Agent) handleDrainDetection(
 		set := a.cancelConsumersLocked()
 		a.state = types.AgentDraining
 		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, hostname, "drain", "Drain initiated",
+			ctx, a.machineID, hostname, "drain", "Drain initiated",
 		)
 		a.wg.Add(1)
 		go a.finishDrain(ctx, set, hostname)
@@ -82,7 +82,7 @@ func (a *Agent) handleDrainDetection(
 		a.startConsumersLocked()
 		a.state = types.AgentReady
 		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, hostname, "undrain", "Resumed accepting jobs",
+			ctx, a.machineID, hostname, "undrain", "Resumed accepting jobs",
 		)
 	}
 }
@@ -130,7 +130,7 @@ func (a *Agent) finishDrain(
 	if cordoned {
 		a.logger.Info("all consumers stopped, agent cordoned")
 		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, hostname, "cordoned", "All jobs completed",
+			ctx, a.machineID, hostname, "cordoned", "All jobs completed",
 		)
 	}
 }

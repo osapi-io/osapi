@@ -189,6 +189,6 @@ func (c *Client) followRename(
 
 		return
 	}
-	_ = c.WriteAgentTimelineEvent(ctx, out.Name, "hostname_changed",
+	_ = c.WriteAgentTimelineEvent(ctx, r.MachineID, out.Name, "hostname_changed",
 		fmt.Sprintf("hostname changed from %s to %s", r.Hostname, out.Name))
 }

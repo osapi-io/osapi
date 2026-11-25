@@ -353,8 +353,10 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(ready, nil)
 				s.jobs.EXPECT().SetDrainFlag(gomock.Any(), "m-1").Return(nil)
-				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "drain",
-					"Drain initiated via API").Return(nil)
+				s.jobs.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), "server1", "drain",
+						"Drain initiated via API").
+					Return(nil)
 			},
 		},
 		{
@@ -407,8 +409,10 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(ready, nil)
 				s.jobs.EXPECT().SetDrainFlag(gomock.Any(), "m-1").Return(nil)
-				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "drain",
-					"Drain initiated via API").Return(errBoom)
+				s.jobs.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), "server1", "drain",
+						"Drain initiated via API").
+					Return(errBoom)
 			},
 			wantErr: errBoom,
 		},
@@ -418,8 +422,10 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(draining, nil)
 				s.jobs.EXPECT().DeleteDrainFlag(gomock.Any(), "m-1").Return(nil)
-				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
-					"Undrain initiated via API").Return(nil)
+				s.jobs.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), "server1", "undrain",
+						"Undrain initiated via API").
+					Return(nil)
 			},
 		},
 		{
@@ -428,8 +434,10 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(cordoned, nil)
 				s.jobs.EXPECT().DeleteDrainFlag(gomock.Any(), "m-1").Return(nil)
-				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
-					"Undrain initiated via API").Return(nil)
+				s.jobs.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), "server1", "undrain",
+						"Undrain initiated via API").
+					Return(nil)
 			},
 		},
 		{
@@ -465,8 +473,10 @@ func (s *MethodsPublicTestSuite) TestDrainAndUndrain() {
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(draining, nil)
 				s.jobs.EXPECT().DeleteDrainFlag(gomock.Any(), "m-1").Return(nil)
-				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
-					"Undrain initiated via API").Return(errBoom)
+				s.jobs.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), "server1", "undrain",
+						"Undrain initiated via API").
+					Return(errBoom)
 			},
 			wantErr: errBoom,
 		},
