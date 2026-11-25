@@ -115,6 +115,18 @@ func (s *ServerPublicTestSuite) TestNew() {
 			wantErr: "NATS server: ",
 		},
 		{
+			name: "when a user has a role that osapi does not have returns the error",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				c.Server.Auth = config.NATSServerAuth{
+					Type:  "user_pass",
+					Users: []config.NATSServerUser{{Username: "x", Password: "p", Role: "admin"}},
+				}
+				return c
+			},
+			wantErr: "NATS server: user x: no such role",
+		},
+		{
 			name: "when TLS is on with no certificate returns the error",
 			cfg: func() config.NATS {
 				c := serverNATS(s.T())
