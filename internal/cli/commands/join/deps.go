@@ -39,5 +39,5 @@ type Deps struct {
 	Now    func() time.Time
 	// Audit writes an entry to the audit log of the controller, or is nil
 	// when the controller keeps none.
-	Audit func(ctx context.Context, e audit.Entry) error
+	Audit audit.Recorder
 }

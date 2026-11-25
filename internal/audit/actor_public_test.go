@@ -83,3 +83,22 @@ func (s *ActorPublicTestSuite) TestLocalUser() {
 	defer audit.SetCurrentUser(func() (*user.User, error) { return nil, errors.New("no passwd") })()
 	s.Equal("unknown", audit.LocalUser())
 }
+
+func (s *ActorPublicTestSuite) TestRecordLocal() {
+	defer audit.SetCurrentUser(
+		func() (*user.User, error) { return &user.User{Username: "ops"}, nil },
+	)()
+	var got []audit.Entry
+	audit.RecordLocal(context.Background(), func(_ context.Context, e audit.Entry) error {
+		got = append(got, e)
+
+		return errors.New("the stream is down")
+	}, "token.generate", "admin@example.com", "roles=[admin]")
+	s.Require().Len(got, 1, "a failed write does not panic or retry")
+	s.Equal(audit.ActorLocal, got[0].Actor)
+	s.Equal("ops", got[0].User)
+	s.Equal("token.generate", got[0].Action)
+	s.Equal("admin@example.com", got[0].Target)
+
+	s.NotPanics(func() { audit.RecordLocal(context.Background(), nil, "x", "y", "") })
+}

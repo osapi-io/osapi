@@ -25,6 +25,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/nats.go/jetstream"
@@ -113,14 +115,26 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 				tc.setup(fs)
 			}
 
-			got, err := vaultkey.Create(context.Background(), deps(fs, nil, nil), tc.in)
+			d := deps(fs, nil, nil)
+			var entries []audit.Entry
+			d.Audit = func(_ context.Context, e audit.Entry) error {
+				entries = append(entries, e)
+
+				return nil
+			}
+			got, err := vaultkey.Create(context.Background(), d, tc.in)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
+				s.Empty(entries, "a refused create is not audited")
 
 				return
 			}
 			s.Require().NoError(err)
+			s.Require().Len(entries, 1)
+			s.Equal("vaultkey.create", entries[0].Action)
+			s.Equal("default", entries[0].Target)
+			s.Equal("key_id="+got.KeyID, entries[0].RequestSummary, "the key's ID, never the key")
 			s.Equal("default", got.Name)
 			s.Equal(keyFile, got.KeyFile)
 			ring, err := natsvault.Keys{FS: fs, File: keyFile}.Load()

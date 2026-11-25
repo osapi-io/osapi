@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -173,7 +175,22 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		s.Run(tc.name, func() {
 			tc.setup()
 
-			got, err := token.Generate(context.Background(), s.deps, tc.in)
+			var entries []audit.Entry
+			d := s.deps
+			d.Audit = func(_ context.Context, e audit.Entry) error {
+				entries = append(entries, e)
+
+				return nil
+			}
+			got, err := token.Generate(context.Background(), d, tc.in)
+			if err == nil {
+				s.Require().Len(entries, 1, "a token that is made is audited")
+				s.Equal("token.generate", entries[0].Action)
+				s.Equal(tc.in.Subject, entries[0].Target)
+				s.NotContains(entries[0].RequestSummary, got.Token, "never the token")
+			} else {
+				s.Empty(entries)
+			}
 
 			tc.validateFunc(got, err)
 		})

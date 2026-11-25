@@ -27,6 +27,8 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
@@ -68,6 +70,10 @@ func Generate(
 	if err != nil {
 		return GenerateOutput{}, fmt.Errorf("failed to generate token: %w", err)
 	}
+	// The entry names who the token is for and what it gives, never the
+	// token.
+	audit.RecordLocal(ctx, d.Audit, "token.generate", in.Subject, fmt.Sprintf(
+		"kid=%s roles=%v permissions=%v targets=%v", key.ID, in.Roles, in.Permissions, in.Targets))
 
 	return GenerateOutput{
 		Token:       token,

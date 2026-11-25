@@ -23,6 +23,8 @@ package vaultkey
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -36,4 +38,6 @@ type Deps struct {
 	FS     avfs.VFS
 	Config config.Config
 	Dial   func(ctx context.Context) (natsvault.KV, func(), error)
+	// Audit writes an entry to the audit log of the controller, or is nil.
+	Audit audit.Recorder
 }

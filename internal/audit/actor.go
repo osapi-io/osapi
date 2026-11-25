@@ -22,6 +22,7 @@ package audit
 
 import (
 	"context"
+	"net/http"
 	"os/user"
 	"time"
 
@@ -91,4 +92,25 @@ func LocalUser() string {
 	}
 
 	return u.Username
+}
+
+// Recorder writes an entry to the audit log of the controller. A local
+// command gets one from its deps, or nil when the controller keeps no log.
+type Recorder func(ctx context.Context, e Entry) error
+
+// RecordLocal writes, with record, the entry of a change that a local
+// command made, with the user of the operating system as the actor. A write
+// that fails does not fail the command, which already made the change. A nil
+// record writes nothing.
+func RecordLocal(
+	ctx context.Context,
+	record Recorder,
+	action string,
+	target string,
+	summary string,
+) {
+	if record == nil {
+		return
+	}
+	_ = record(ctx, Change(ctx, ActorLocal, LocalUser(), action, target, http.StatusOK, summary))
 }
