@@ -51,6 +51,8 @@ type DrainPublicTestSuite struct {
 	mockKV        *agentMocks.MockNATSClient
 	mockEntry     *mocks.MockKeyValueEntry
 	testAgent     *agent.Agent
+	// release lets the consumer that HoldConsumers gave the agent stop.
+	release func()
 	// cordoned closes when the cordoned timeline event is written.
 	cordoned chan struct{}
 }
@@ -280,6 +282,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			name:         "when drain flag set and agent is Ready moves to Draining, then Cordoned",
 			initialState: types.AgentReady,
 			setupMock: func() {
+				s.release = agent.HoldConsumers(s.testAgent)
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(true)
@@ -304,8 +307,10 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 					})
 			},
 			validateFunc: func(got types.AgentState) {
-				// The heartbeat does not wait for the consumers.
+				// The heartbeat does not wait for the consumers: one still
+				// runs, and the agent is Draining until it stops.
 				s.Equal(types.AgentDraining, got)
+				s.release()
 				select {
 				case <-s.cordoned:
 				case <-time.After(3 * time.Second):
