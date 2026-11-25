@@ -109,7 +109,10 @@ func parse(
 		if json.Unmarshal([]byte(strings.TrimSpace(line)), &je) != nil {
 			continue
 		}
-		priority := Priority(je.Priority)
+		// journald gives the number of a syslog priority. An entry with no
+		// PRIORITY, or one that is not 0 to 7, has none: the name is one
+		// of journald's or nothing (osapi-io/osapi#1434).
+		var priority Priority
 		if n, err := strconv.Atoi(je.Priority); err == nil && n >= 0 && n < len(Priorities()) {
 			priority = Priorities()[n]
 		}

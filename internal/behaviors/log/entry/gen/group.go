@@ -28,7 +28,7 @@ type LogEntry struct {
 	Status    types.RowStatus `doc:"The status of the operation for this host." json:"status"`
 	Timestamp *string         `doc:"When journald recorded it, in RFC 3339" json:"timestamp,omitempty"`
 	Unit      *string         `doc:"The syslog identifier that wrote it" json:"unit,omitempty"`
-	Priority  *entry.Priority `doc:"Its priority, by name" json:"priority,omitempty"`
+	Priority  *entry.Priority `doc:"Its priority, by name. An entry that journald has no priority for has none" json:"priority,omitempty"`
 	Message   *string         `doc:"The message" json:"message,omitempty"`
 	PID       *int            `doc:"The process that wrote it" json:"pid,omitempty"`
 	Error     *string         `doc:"Error message if the agent failed." json:"error,omitempty"`

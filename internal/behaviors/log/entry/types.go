@@ -67,9 +67,9 @@ type ListInput struct {
 
 // Entry is one entry of the journal.
 type Entry struct {
-	Timestamp string   `json:"timestamp"      doc:"When journald recorded it, in RFC 3339"`
-	Unit      string   `json:"unit,omitempty" doc:"The syslog identifier that wrote it"`
-	Priority  Priority `json:"priority"       doc:"Its priority, by name"`
-	Message   string   `json:"message"        doc:"The message"`
-	PID       int      `json:"pid,omitempty"  doc:"The process that wrote it"`
+	Timestamp string   `json:"timestamp"          doc:"When journald recorded it, in RFC 3339"`
+	Unit      string   `json:"unit,omitempty"     doc:"The syslog identifier that wrote it"`
+	Priority  Priority `json:"priority,omitempty" doc:"Its priority, by name. An entry that journald has no priority for has none"`
+	Message   string   `json:"message"            doc:"The message"`
+	PID       int      `json:"pid,omitempty"      doc:"The process that wrote it"`
 }
