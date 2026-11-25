@@ -136,3 +136,12 @@ func Spec(
 ) (SpecOutput, error) {
 	return SpecOutput{Kinds: osapiconfig.Spec().Sections()}, nil
 }
+
+// Default is the whole config at its defaults, as YAML.
+func Default(
+	_ context.Context,
+	_ Deps,
+	_ DefaultInput,
+) (DefaultOutput, error) {
+	return DefaultOutput{Content: osapiconfig.DefaultYAML()}, nil
+}

@@ -24,6 +24,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/settings"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -34,71 +36,16 @@ const EnvPrefix = "OSAPI"
 // controller makes when it is not there.
 const DefaultVaultKeyFile = "/etc/osapi/secrets.key"
 
-// Defaults are the values a key takes when neither the config file nor the
-// environment sets it. Every name here is a key of Config, which a test
-// checks, so a default cannot be set on a key that does not exist.
-var Defaults = map[string]any{
-	"controller.client.url":      "http://0.0.0.0:8080",
-	"controller.api.port":        8080,
-	"controller.api.job_timeout": "30s",
-	"controller.metrics.port":    9090,
-	"controller.nats.host":       "localhost",
-	"controller.nats.port":       4222,
-
-	"controller.pki.key_dir":               "/etc/osapi/pki",
-	"controller.pki.auto_admit":            false,
-	"controller.pki.rotation_grace_period": "24h",
-	"controller.pki.delete_after":          "",
-
-	// The vault that secret://default/<key> names. The controller makes
-	// its key at its first start.
-	"controller.secrets.vaults": []map[string]any{{
-		"name":     "default",
-		"type":     "nats",
-		"key_file": DefaultVaultKeyFile,
-	}},
-
-	"nats.server.host":         "localhost",
-	"nats.server.port":         4222,
-	"nats.stream.name":         "JOBS",
-	"nats.stream.subjects":     "jobs.>",
-	"nats.kv.bucket":           "job-queue",
-	"nats.registry.bucket":     "agent-registry",
-	"nats.registry.ttl":        "30s",
-	"nats.enrollment.bucket":   "agent-enrollment",
-	"nats.enrollment.storage":  "file",
-	"nats.enrollment.replicas": 1,
-	"nats.secrets.bucket":      "secrets",
-	"nats.secrets.history":     10,
-	"nats.secrets.storage":     "file",
-	"nats.secrets.replicas":    1,
-
-	"agent.nats.host":                            "localhost",
-	"agent.nats.port":                            4222,
-	"agent.max_jobs":                             10,
-	"agent.queue_group":                          "job-agents",
-	"agent.facts.interval":                       "60s",
-	"agent.conditions.memory_pressure_threshold": 90,
-	"agent.conditions.high_load_multiplier":      2.0,
-	"agent.conditions.disk_pressure_threshold":   90,
-	"agent.consumer.max_deliver":                 5,
-	"agent.consumer.ack_wait":                    "2m",
-	"agent.consumer.max_ack_pending":             1000,
-	"agent.consumer.replay_policy":               "instant",
-	"agent.consumer.back_off":                    []string{"30s", "2m", "5m", "15m", "30m"},
-	"agent.consumer.inactive_threshold":          "24h",
-	"agent.nats.client_name":                     "osapi-agent",
-	"agent.command.enabled":                      false,
-	"agent.pki.key_dir":                          "/etc/osapi/pki/agent",
-}
-
 // Key is one setting osapi reads: its dotted name, the environment variable
 // that sets it, its type, its default, its constraints and what it is for.
 type Key struct {
-	Name     string `json:"name"`
-	Env      string `json:"env"`
-	Type     string `json:"type"`
-	Default  any    `json:"default,omitempty"`
+	Name    string `json:"name"`
+	Env     string `json:"env"`
+	Type    string `json:"type"`
+	Default any    `json:"default,omitempty"`
+	// Choice says why the key has no default: it is a real choice of the
+	// operator, such as a URL or a credential.
+	Choice   string `json:"choice,omitempty"`
 	Validate string `json:"validate,omitempty"`
 	Doc      string `json:"doc,omitempty"`
 	// Secret is true for a value that is never printed: a password, a
@@ -123,7 +70,7 @@ func EnvName(
 // declare them, then each registered behavior's, under behaviors.<name>. A
 // struct is walked into; a list, a map or a scalar is one key.
 func Keys() []Key {
-	keys := walk(reflect.TypeFor[Config](), "", reflect.Value{})
+	keys := walk(reflect.TypeFor[Config](), "", ownedDefaults())
 	for _, b := range behavior.All() {
 		t := b.SettingsType()
 		if t == nil {
@@ -140,17 +87,29 @@ func Keys() []Key {
 	return keys
 }
 
-// defaultOf is key's default, from Defaults or a behavior's declared
-// settings.
+// ownedDefaults is a Config whose sections are the defaults that their
+// owners declare (settings.Own, through command.Config): the source of the
+// default of each key of osapi's own config.
+func ownedDefaults() reflect.Value {
+	root := reflect.New(reflect.TypeFor[Config]()).Elem()
+	t := root.Type()
+	for i := range t.NumField() {
+		name, _, _ := strings.Cut(t.Field(i).Tag.Get("mapstructure"), ",")
+		if o, ok := settings.Of(name); ok {
+			root.Field(i).Set(reflect.ValueOf(o.Defaults))
+		}
+	}
+
+	return root
+}
+
+// defaultOf is key's default, from the definition that owns it.
 func defaultOf(
 	key string,
 ) (any, bool) {
-	if d, ok := Defaults[key]; ok {
-		return d, true
-	}
 	for _, k := range Keys() {
-		if k.Name == key && k.Behavior != "" {
-			return k.Default, true
+		if k.Name == key {
+			return k.Default, k.Default != nil
 		}
 	}
 
@@ -182,21 +141,21 @@ func walk(
 		}
 
 		ft := f.Type
-		if ft.Kind() == reflect.Pointer {
-			ft = ft.Elem()
-		}
 		if ft.Kind() == reflect.Struct {
 			keys = append(keys, walk(ft, name, fieldDefault)...)
 
 			continue
 		}
 
-		def := Defaults[name]
-		if fieldDefault.IsValid() {
+		// A zero value is no default, but false is a default of a switch.
+		var def any
+		if fieldDefault.IsValid() &&
+			(!fieldDefault.IsZero() || fieldDefault.Kind() == reflect.Bool) {
 			def = fieldDefault.Interface()
 		}
 		keys = append(keys, Key{
 			Name:     name,
+			Choice:   f.Tag.Get("choice"),
 			Env:      EnvName(name),
 			Type:     typeName(ft),
 			Default:  def,

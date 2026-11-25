@@ -22,7 +22,10 @@
 // server, the controller and the agent in one process.
 package startcmd
 
-import "github.com/osapi-io/osapi/internal/cli/command"
+import (
+	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/config"
+)
 
 // Group is the start group's definition. It is flat at the root, so its
 // method is osapi start.
@@ -30,6 +33,7 @@ var Group = command.Register(command.Define(
 	"start", "Start all components (NATS, controller, agent)",
 	command.Flat(),
 	command.Uses[Deps](),
+	command.Config("telemetry", config.Telemetry{}),
 	command.Process("start").
 		Short("Start all components (NATS, controller, agent)").
 		Long("This runs the embedded NATS server, the API server and the agent together.\n"+

@@ -119,6 +119,7 @@ command.Column.Label string	boundary	what the output prints, derived from the st
 command.Column.None string	boundary	what the output prints, derived from the struct tags
 command.Column.Prefix string	boundary	what the output prints, derived from the struct tags
 command.Column.Render string	checked	from the render tag, which the tag rule checks
+command.Config(prefix string)	identity	the section of the config that the group owns, such as controller
 command.Done(flags string)	checked	the flags of an example, which validate checks against the command
 command.GlobalFlag(name string)	identity	a name that the registry, the route or the command path holds
 command.Define(doc string)	free text	prose for a page or a message
@@ -126,6 +127,7 @@ command.Define(name string)	identity	a name that the registry, the route or the 
 command.Example.Doc string	free text	prose for a page or a message
 command.Example.Flags string	checked	the flags of an example; validate checks each against the command
 command.ExampleFlagProblems(flags map[string]bool)	checked	the flag names of a command, from InputFlags of its input type
+command.LocalGroup.ConfigPrefix string	identity	the section of the config that the group owns, such as controller
 command.LocalGroup.Doc string	free text	prose for a page or a message
 command.LocalGroup.Long string	free text	prose for a page or a message
 command.LocalGroup.Method(name string)	identity	a name that the registry, the route or the command path holds

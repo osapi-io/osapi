@@ -23,8 +23,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -435,24 +433,14 @@ func endpointTitle(
 }
 
 // configTables is page with each generated table in it written again: the
-// config tables, from config.Keys and the config that osapi ships under
-// root, the role table, from authtoken.RolePermissions, the metrics
+// config tables, from config.Keys, the role table, from authtoken.RolePermissions, the metrics
 // reference, from instruments.All, and the screens of the CLI's output,
 // from the examples of a behavior.
 func configTables(
-	root string,
+	_ string,
 	page string,
 ) (string, error) {
-	data, err := os.ReadFile(filepath.Join(root, config.ShippedFile))
-	if err != nil {
-		return "", err
-	}
-	shipped, err := config.Shipped(data)
-	if err != nil {
-		return "", err
-	}
-
-	page = config.DocTables(page, shipped)
+	page = config.DocTables(page)
 
 	page = guide.Fill(page, "roles", func([]string) string {
 		return authtoken.RoleTable()

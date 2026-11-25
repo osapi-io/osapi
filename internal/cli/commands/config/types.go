@@ -70,6 +70,14 @@ type SpecOutput struct {
 	Kinds []guide.Section `json:"kinds" table:"sections"`
 }
 
+// DefaultInput is the input of default get, which has none.
+type DefaultInput struct{}
+
+// DefaultOutput is the config at its defaults, as YAML.
+type DefaultOutput struct {
+	Content string `json:"content" render:"body"`
+}
+
 // ValidateInput is the input of validate, which has none.
 type ValidateInput struct{}
 

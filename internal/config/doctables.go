@@ -22,66 +22,27 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/guide"
 )
 
-// ShippedFile is the config that osapi ships, from the repository's root. A
-// key with no default can have its value there.
-const ShippedFile = "configs/osapi.yaml"
-
-// Shipped is each value of a config file, by its dotted key.
-func Shipped(
-	data []byte,
-) (map[string]any, error) {
-	var root map[string]any
-	if err := yaml.Unmarshal(data, &root); err != nil {
-		return nil, fmt.Errorf("read %s: %w", ShippedFile, err)
-	}
-	out := map[string]any{}
-	var walk func(prefix string, m map[string]any)
-	walk = func(prefix string, m map[string]any) {
-		for k, v := range m {
-			key := k
-			if prefix != "" {
-				key = prefix + "." + k
-			}
-			if child, ok := v.(map[string]any); ok {
-				walk(key, child)
-
-				continue
-			}
-			out[key] = v
-		}
-	}
-	walk("", root)
-
-	return out, nil
-}
-
 // DocTables is page with each generated config table written again, from
-// Keys and the shipped config: a table goes between
-// <!-- osapi:config prefixes --> and <!-- /osapi:config -->. A page with no
-// markers is as it is.
+// Keys: a table goes between <!-- osapi:config prefixes --> and
+// <!-- /osapi:config -->. A page with no markers is as it is.
 func DocTables(
 	page string,
-	shipped map[string]any,
 ) string {
-	return guide.Fill(page, "config", func(prefixes []string) string {
-		return DocTable(prefixes, shipped)
-	})
+	return guide.Fill(page, "config", DocTable)
 }
 
 // DocTable is the keys under prefixes as a markdown table, its columns
 // padded as Prettier pads them: each key, its type, its default, the
 // environment variable that sets it and what it is for. A key with no
-// default says where its value comes from.
+// default says why: it is a choice of the operator.
 func DocTable(
 	prefixes []string,
-	shipped map[string]any,
 ) string {
 	rows := [][]string{{"Key", "Type", "Default", "Environment", "Description"}}
 	for _, k := range append(Keys(), VaultKeys()...) {
@@ -95,7 +56,7 @@ func DocTable(
 		rows = append(rows, []string{
 			"`" + k.Name + "`",
 			k.Type,
-			defaultText(k, shipped),
+			defaultText(k),
 			env,
 			strings.ReplaceAll(k.Doc, "|", "\\|"),
 		})
@@ -118,23 +79,23 @@ func under(
 	return false
 }
 
-// defaultText is k's default; the value of the shipped config for a key
-// with none; or none.
+// defaultText is k's default, a list or a block as JSON; or none, with why
+// it is a choice of the operator.
 func defaultText(
 	k Key,
-	shipped map[string]any,
 ) string {
-	if items, ok := k.Default.([]map[string]any); ok {
-		// A list of blocks, such as the default vault, reads as JSON.
-		data, _ := json.Marshal(items)
+	if k.Default != nil {
+		switch reflect.ValueOf(k.Default).Kind() {
+		case reflect.Slice, reflect.Map, reflect.Struct:
+			data, _ := json.Marshal(k.Default)
 
-		return fmt.Sprintf("`%s`", data)
+			return fmt.Sprintf("`%s`", data)
+		default:
+			return fmt.Sprintf("`%v`", k.Default)
+		}
 	}
-	if k.Default != nil && fmt.Sprint(k.Default) != "" {
-		return fmt.Sprintf("`%v`", k.Default)
-	}
-	if v, ok := shipped[k.Name]; ok {
-		return fmt.Sprintf("none; `%v` in `%s`", v, ShippedFile)
+	if k.Choice != "" {
+		return "none: " + k.Choice
 	}
 
 	return "none"

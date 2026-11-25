@@ -197,7 +197,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 			},
 		},
 		{
-			name: "missing bearer token",
+			name: "when there is no bearer token, it is valid: only the CLI needs one, when it calls",
 			config: config.Config{
 				Controller: config.Controller{
 					Client: config.Client{
@@ -213,12 +213,13 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 				},
 			},
 			validateFunc: func(err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "controller.client.security.bearer_token breaks its rule")
+				if err != nil {
+					s.NotContains(err.Error(), "bearer_token")
+				}
 			},
 		},
 		{
-			name:   "missing both required fields",
+			name:   "when nothing is set and no owner gave defaults, it is not valid",
 			config: config.Config{},
 			validateFunc: func(err error) {
 				s.Error(err)

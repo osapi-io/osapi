@@ -25,6 +25,10 @@ import osapiconfig "github.com/osapi-io/osapi/internal/config"
 // The sample outputs of the examples, which the docs page of each command
 // shows as the CLI prints it.
 var (
+	sampleDefault = DefaultOutput{
+		Content: "controller:\n  api:\n    # Port the REST API server listens on.\n    port: 8080\n",
+	}
+
 	sampleSpec = SpecOutput{Kinds: osapiconfig.Spec().Sections()[:1]}
 
 	samplePort = Setting{

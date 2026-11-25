@@ -32,6 +32,7 @@ var Group = command.Register(command.Define(
 	command.Flat(),
 	command.Under(command.ParentController),
 	command.Uses[Deps](),
+	command.Config("controller", Defaults),
 	command.Process("start").
 		Short("Start the controller").
 		Long("The controller serves the REST API, writes its heartbeat, and watches\n"+

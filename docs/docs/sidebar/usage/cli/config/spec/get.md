@@ -25,19 +25,17 @@ The command prints:
 $ osapi config spec get
 [1;38;2;0;213;255mcontroller:[0m
   [1mcontroller.client.url[0m
-    Base URL the CLI client connects to. Type: string. Default:
-    http://0.0.0.0:8080.
+    Base URL the CLI client connects to. Type: string.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_CLIENT_URL, which wins over[0m
     [38;2;138;138;138mthe file.[0m
 
   [1mcontroller.client.security.bearer_token[0m
-    JWT bearer token for client requests (required). Generate with osapi
-    controller token generate. It can be a reference,
-    secret://<vault>/<key>, which the command resolves from the vaults of
-    its config. Type: string.
+    JWT bearer token for client requests. Generate with osapi controller
+    token generate. It can be a reference, secret://<vault>/<key>, which the
+    command resolves from the vaults of its config. Type: string.
     [38;2;138;138;138mUse: In osapi.yaml, or with[0m
     [38;2;138;138;138mOSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN, which wins over the file.[0m
-    [38;2;138;138;138mRules: required. A secret: osapi prints it as ********.[0m
+    [38;2;138;138;138mRules: omitempty. A secret: osapi prints it as ********.[0m
 
   [1mcontroller.client.tls.ca_file[0m
     A PEM certificate that the CLI trusts on an https:// URL, such as
@@ -60,7 +58,7 @@ $ osapi config spec get
     [38;2;138;138;138mthe file. Rules: omitempty,http_url.[0m
 
   [1mcontroller.api.port[0m
-    Port the REST API server listens on. Type: int. Default: 8080.
+    Port the REST API server listens on. Type: int.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_PORT, which wins over[0m
     [38;2;138;138;138mthe file. Rules: min=1,max=65535.[0m
 
@@ -72,15 +70,17 @@ $ osapi config spec get
     [38;2;138;138;138mfile.[0m
 
   [1mcontroller.api.security.signing_keys[0m
-    HS256 keys for JWTs, each an id and a key (required). The first key
-    signs; each key verifies the tokens with its id as kid. The environment
+    HS256 keys for JWTs, each an id and a key. Without one, the controller
+    makes a key in controller.pki.key_dir at its first start, which
+    controller token generate on its host also uses. The first key signs;
+    each key verifies the tokens with its id as kid. The environment
     variable takes id=key pairs with commas between them. Generate a key
     with openssl rand -hex 32. A key can be a reference,
     secret://<vault>/<key>, which the controller resolves at startup. Type:
     list.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS,[0m
-    [38;2;138;138;138mwhich wins over the file. Rules: required,min=1,unique=ID,dive. A[0m
-    [38;2;138;138;138msecret: osapi prints it as ********.[0m
+    [38;2;138;138;138mwhich wins over the file. Rules: omitempty,unique=ID,dive. A secret:[0m
+    [38;2;138;138;138mosapi prints it as ********.[0m
 
   [1mcontroller.api.security.roles[0m
     Custom roles with fine-grained permissions. Type: map.
@@ -90,7 +90,7 @@ $ osapi config spec get
   [1mcontroller.api.tls.enabled[0m
     Serve HTTPS on the API's port, in place of HTTP. Without cert_file and
     key_file, the controller makes a self-signed certificate in
-    controller.pki.key_dir. Type: bool.
+    controller.pki.key_dir. Type: bool. Default: false.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_ENABLED, which wins[0m
     [38;2;138;138;138mover the file.[0m
 
@@ -108,17 +108,17 @@ $ osapi config spec get
 
   [1mcontroller.api.job_timeout[0m
     How long to wait for agent responses before returning partial results.
-    Go duration format (default: 30s). Type: string. Default: 30s.
+    Go duration format. Type: string.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_API_JOB_TIMEOUT, which wins[0m
     [38;2;138;138;138mover the file. Rules: omitempty,go_duration.[0m
 
   [1mcontroller.nats.host[0m
-    NATS server hostname to connect to. Type: string. Default: localhost.
+    NATS server hostname to connect to. Type: string.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_NATS_HOST, which wins over[0m
     [38;2;138;138;138mthe file.[0m
 
   [1mcontroller.nats.port[0m
-    NATS server port to connect to. Type: int. Default: 4222.
+    NATS server port to connect to. Type: int.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_NATS_PORT, which wins over[0m
     [38;2;138;138;138mthe file. Rules: min=1,max=65535.[0m
 
@@ -161,7 +161,7 @@ $ osapi config spec get
     [38;2;138;138;138mwins over the file.[0m
 
   [1mcontroller.metrics.enabled[0m
-    Enable the metrics endpoint (default: true). Type: bool.
+    Enable the metrics endpoint. Type: bool. Default: false.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_METRICS_ENABLED, which wins[0m
     [38;2;138;138;138mover the file.[0m
 
@@ -171,7 +171,7 @@ $ osapi config spec get
     [38;2;138;138;138mover the file.[0m
 
   [1mcontroller.metrics.port[0m
-    Port the metrics server listens on. Type: int. Default: 9090.
+    Port the metrics server listens on. Type: int.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_METRICS_PORT, which wins[0m
     [38;2;138;138;138mover the file. Rules: omitempty,min=1,max=65535.[0m
 
@@ -182,7 +182,7 @@ $ osapi config spec get
     [38;2;138;138;138mover the file. Rules: omitempty,http_url.[0m
 
   [1mcontroller.notifications.enabled[0m
-    Enable the condition watcher and notifier (default: true). Type: bool.
+    Enable the condition watcher and notifier. Type: bool. Default: false.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED,[0m
     [38;2;138;138;138mwhich wins over the file.[0m
 
@@ -199,7 +199,7 @@ $ osapi config spec get
     [38;2;138;138;138mfile. Rules: omitempty,go_duration.[0m
 
   [1mcontroller.ui.enabled[0m
-    Serve the embedded UI (default: true). Type: bool.
+    Serve the embedded UI. Type: bool. Default: false.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_UI_ENABLED, which wins over[0m
     [38;2;138;138;138mthe file.[0m
 
@@ -210,8 +210,7 @@ $ osapi config spec get
     [38;2;138;138;138mfile. Rules: omitempty,http_url.[0m
 
   [1mcontroller.pki.key_dir[0m
-    Directory for controller keypair storage. Type: string. Default:
-    /etc/osapi/pki.
+    Directory for controller keypair storage. Type: string.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_PKI_KEY_DIR, which wins[0m
     [38;2;138;138;138mover the file.[0m
 
@@ -223,7 +222,7 @@ $ osapi config spec get
 
   [1mcontroller.pki.rotation_grace_period[0m
     Grace period during key rotation where both old and new keys are
-    accepted. Go duration format. Type: string. Default: 24h.
+    accepted. Go duration format. Type: string.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD,[0m
     [38;2;138;138;138mwhich wins over the file. Rules: omitempty,go_duration.[0m
 
@@ -236,8 +235,7 @@ $ osapi config spec get
   [1mcontroller.secrets.vaults[0m
     The vaults that a reference such as secret://default/registry-token
     names, each with name, type, targets, key_file or key_env, and config.
-    Type: list. Default: [map[key_file:/etc/osapi/secrets.key name:default
-    type:nats]].
+    Type: list.
     [38;2;138;138;138mUse: In osapi.yaml, or with OSAPI_CONTROLLER_SECRETS_VAULTS, which wins[0m
     [38;2;138;138;138mover the file. Rules: dive.[0m
 ```
@@ -254,14 +252,14 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.client.url",
-          "does": "Base URL the CLI client connects to. Type: string. Default: http://0.0.0.0:8080.",
+          "does": "Base URL the CLI client connects to. Type: string.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_CLIENT_URL, which wins over the file."
         },
         {
           "kind": "controller",
           "name": "controller.client.security.bearer_token",
-          "does": "JWT bearer token for client requests (required). Generate with osapi controller token generate. It can be a reference, secret://\u003cvault\u003e/\u003ckey\u003e, which the command resolves from the vaults of its config. Type: string.",
-          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN, which wins over the file. Rules: required. A secret: osapi prints it as ********."
+          "does": "JWT bearer token for client requests. Generate with osapi controller token generate. It can be a reference, secret://\u003cvault\u003e/\u003ckey\u003e, which the command resolves from the vaults of its config. Type: string.",
+          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN, which wins over the file. Rules: omitempty. A secret: osapi prints it as ********."
         },
         {
           "kind": "controller",
@@ -284,7 +282,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.api.port",
-          "does": "Port the REST API server listens on. Type: int. Default: 8080.",
+          "does": "Port the REST API server listens on. Type: int.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_PORT, which wins over the file. Rules: min=1,max=65535."
         },
         {
@@ -296,8 +294,8 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.api.security.signing_keys",
-          "does": "HS256 keys for JWTs, each an id and a key (required). The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32. A key can be a reference, secret://\u003cvault\u003e/\u003ckey\u003e, which the controller resolves at startup. Type: list.",
-          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS, which wins over the file. Rules: required,min=1,unique=ID,dive. A secret: osapi prints it as ********."
+          "does": "HS256 keys for JWTs, each an id and a key. Without one, the controller makes a key in controller.pki.key_dir at its first start, which controller token generate on its host also uses. The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32. A key can be a reference, secret://\u003cvault\u003e/\u003ckey\u003e, which the controller resolves at startup. Type: list.",
+          "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS, which wins over the file. Rules: omitempty,unique=ID,dive. A secret: osapi prints it as ********."
         },
         {
           "kind": "controller",
@@ -308,7 +306,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.api.tls.enabled",
-          "does": "Serve HTTPS on the API's port, in place of HTTP. Without cert_file and key_file, the controller makes a self-signed certificate in controller.pki.key_dir. Type: bool.",
+          "does": "Serve HTTPS on the API's port, in place of HTTP. Without cert_file and key_file, the controller makes a self-signed certificate in controller.pki.key_dir. Type: bool. Default: false.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_TLS_ENABLED, which wins over the file."
         },
         {
@@ -326,19 +324,19 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.api.job_timeout",
-          "does": "How long to wait for agent responses before returning partial results. Go duration format (default: 30s). Type: string. Default: 30s.",
+          "does": "How long to wait for agent responses before returning partial results. Go duration format. Type: string.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_API_JOB_TIMEOUT, which wins over the file. Rules: omitempty,go_duration."
         },
         {
           "kind": "controller",
           "name": "controller.nats.host",
-          "does": "NATS server hostname to connect to. Type: string. Default: localhost.",
+          "does": "NATS server hostname to connect to. Type: string.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_NATS_HOST, which wins over the file."
         },
         {
           "kind": "controller",
           "name": "controller.nats.port",
-          "does": "NATS server port to connect to. Type: int. Default: 4222.",
+          "does": "NATS server port to connect to. Type: int.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_NATS_PORT, which wins over the file. Rules: min=1,max=65535."
         },
         {
@@ -386,7 +384,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.metrics.enabled",
-          "does": "Enable the metrics endpoint (default: true). Type: bool.",
+          "does": "Enable the metrics endpoint. Type: bool. Default: false.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_METRICS_ENABLED, which wins over the file."
         },
         {
@@ -398,7 +396,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.metrics.port",
-          "does": "Port the metrics server listens on. Type: int. Default: 9090.",
+          "does": "Port the metrics server listens on. Type: int.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_METRICS_PORT, which wins over the file. Rules: omitempty,min=1,max=65535."
         },
         {
@@ -410,7 +408,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.notifications.enabled",
-          "does": "Enable the condition watcher and notifier (default: true). Type: bool.",
+          "does": "Enable the condition watcher and notifier. Type: bool. Default: false.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_NOTIFICATIONS_ENABLED, which wins over the file."
         },
         {
@@ -428,7 +426,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.ui.enabled",
-          "does": "Serve the embedded UI (default: true). Type: bool.",
+          "does": "Serve the embedded UI. Type: bool. Default: false.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_UI_ENABLED, which wins over the file."
         },
         {
@@ -440,7 +438,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.pki.key_dir",
-          "does": "Directory for controller keypair storage. Type: string. Default: /etc/osapi/pki.",
+          "does": "Directory for controller keypair storage. Type: string.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_PKI_KEY_DIR, which wins over the file."
         },
         {
@@ -452,7 +450,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.pki.rotation_grace_period",
-          "does": "Grace period during key rotation where both old and new keys are accepted. Go duration format. Type: string. Default: 24h.",
+          "does": "Grace period during key rotation where both old and new keys are accepted. Go duration format. Type: string.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD, which wins over the file. Rules: omitempty,go_duration."
         },
         {
@@ -464,7 +462,7 @@ With `--json`, the command prints:
         {
           "kind": "controller",
           "name": "controller.secrets.vaults",
-          "does": "The vaults that a reference such as secret://default/registry-token names, each with name, type, targets, key_file or key_env, and config. Type: list. Default: [map[key_file:/etc/osapi/secrets.key name:default type:nats]].",
+          "does": "The vaults that a reference such as secret://default/registry-token names, each with name, type, targets, key_file or key_env, and config. Type: list.",
           "when": "In osapi.yaml, or with OSAPI_CONTROLLER_SECRETS_VAULTS, which wins over the file. Rules: dive."
         }
       ]

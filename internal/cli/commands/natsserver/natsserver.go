@@ -31,6 +31,7 @@ var Group = command.Register(command.Define(
 	command.Flat(),
 	command.Under(command.ParentNATS),
 	command.Uses[Deps](),
+	command.Config("nats", Defaults),
 	command.Process("start").
 		Short("Start the embedded NATS server").
 		Long("The server makes the streams, consumers and KV buckets that the job system\n"+

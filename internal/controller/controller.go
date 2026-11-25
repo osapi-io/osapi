@@ -170,6 +170,11 @@ func newController(
 	if err := config.ResolveReferences(ctx, &cfg, "controller.api", vaults.Resolve); err != nil {
 		return nil, fmt.Errorf("resolve the references of the config: %w", err)
 	}
+	// After the references: a key that a reference names wins, and with
+	// none, the key in controller.pki.key_dir.
+	if err := config.EnsureSigningKey(&cfg); err != nil {
+		return nil, err
+	}
 
 	objBucket, fileStateBucket := openFileBuckets(ctx, log, conn.NATS, namespace, cfg.NATS)
 	checker := newHealthChecker(conn.NATS, conn.JobsBucket)

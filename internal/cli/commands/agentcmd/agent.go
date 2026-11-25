@@ -32,6 +32,7 @@ var Group = command.Register(command.Define(
 	command.Flat(),
 	command.Under(command.ParentAgent),
 	command.Uses[Deps](),
+	command.Config("agent", Defaults),
 	command.Process("start").
 		Short("Start the node agent").
 		Long("The agent connects to NATS and subscribes to the job streams. It processes\n"+

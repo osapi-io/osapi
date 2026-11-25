@@ -295,9 +295,9 @@ controller on one host thus do not read the key of the other.
 
 <!-- osapi:config agent.pki -->
 
-| Key                 | Type   | Default                | Environment               | Description                          |
-| ------------------- | ------ | ---------------------- | ------------------------- | ------------------------------------ |
-| `agent.pki.key_dir` | string | `/etc/osapi/pki/agent` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory for agent keypair storage. |
+| Key                 | Type   | Default          | Environment               | Description                        |
+| ------------------- | ------ | ---------------- | ------------------------- | ---------------------------------- |
+| `agent.pki.key_dir` | string | `/etc/osapi/pki` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory of the agent's key pair. |
 
 <!-- /osapi:config -->
 
@@ -305,12 +305,12 @@ controller on one host thus do not read the key of the other.
 
 <!-- osapi:config controller.pki -->
 
-| Key                                    | Type   | Default          | Environment                                  | Description                                                                                                       |
-| -------------------------------------- | ------ | ---------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `controller.pki.key_dir`               | string | `/etc/osapi/pki` | `OSAPI_CONTROLLER_PKI_KEY_DIR`               | Directory for controller keypair storage.                                                                         |
-| `controller.pki.auto_admit`            | bool   | `false`          | `OSAPI_CONTROLLER_PKI_AUTO_ADMIT`            | Admit each machine that asks to join, with no operator (dev/test only).                                           |
-| `controller.pki.rotation_grace_period` | string | `24h`            | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD` | Grace period during key rotation where both old and new keys are accepted. Go duration format.                    |
-| `controller.pki.delete_after`          | string | none             | `OSAPI_CONTROLLER_PKI_DELETE_AFTER`          | Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format. |
+| Key                                    | Type   | Default                                          | Environment                                  | Description                                                                                                       |
+| -------------------------------------- | ------ | ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `controller.pki.key_dir`               | string | `/etc/osapi/pki`                                 | `OSAPI_CONTROLLER_PKI_KEY_DIR`               | Directory for controller keypair storage.                                                                         |
+| `controller.pki.auto_admit`            | bool   | `false`                                          | `OSAPI_CONTROLLER_PKI_AUTO_ADMIT`            | Admit each machine that asks to join, with no operator (dev/test only).                                           |
+| `controller.pki.rotation_grace_period` | string | `24h`                                            | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD` | Grace period during key rotation where both old and new keys are accepted. Go duration format.                    |
+| `controller.pki.delete_after`          | string | none: empty keeps a machine that stops reporting | `OSAPI_CONTROLLER_PKI_DELETE_AFTER`          | Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format. |
 
 <!-- /osapi:config -->
 

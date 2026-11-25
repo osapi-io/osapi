@@ -63,3 +63,10 @@ var KeyOf = keyOf
 
 // ValueProblems exposes valueProblems for testing.
 var ValueProblems = valueProblems
+
+// SetRandRead replaces how the signing key's random bytes are read.
+func SetRandRead(
+	fn func([]byte) (int, error),
+) {
+	randRead = fn
+}

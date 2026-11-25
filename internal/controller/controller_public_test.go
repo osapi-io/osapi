@@ -234,6 +234,18 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			wantErr: `resolve the references of the config: controller.api.security.signing_keys[0].key: secret://default/none: the vault "default" has no key "none"`,
 		},
 		{
+			name: "when there is no signing key and its file cannot be read returns the error",
+			cfg: func() config.Config {
+				cfg := withVault(s.T(), startServer(s.T()))
+				cfg.Controller.API.Security.SigningKeys = nil
+				cfg.Controller.PKI.KeyDir = s.T().TempDir()
+				s.Require().
+					NoError(os.Mkdir(filepath.Join(cfg.Controller.PKI.KeyDir, config.SigningKeyFile), 0o700))
+				return cfg
+			},
+			wantErr: "read the signing key",
+		},
+		{
 			name: "when the value of a signing key breaks its rule returns the error",
 			cfg: func() config.Config {
 				cfg := withSecret(s.T(), withVault(s.T(), startServer(s.T())), "jwt", "short")

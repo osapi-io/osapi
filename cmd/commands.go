@@ -172,6 +172,9 @@ func (tokenConfig) SigningKeys(
 	if err := resolveReferences(ctx, "controller.api.security.signing_keys"); err != nil {
 		return nil, err
 	}
+	if err := config.EnsureSigningKey(&appConfig); err != nil {
+		return nil, err
+	}
 
 	return appConfig.Controller.API.Security.Keys(), nil
 }

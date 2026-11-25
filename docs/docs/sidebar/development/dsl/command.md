@@ -52,6 +52,18 @@ as it does on success, then the command exits 1 with no message of its own.
 Use: For a check whose answer is the report, such as config validate, so a
 script or CI fails on it. For any other failure, return the error itself.
 
+### `Config("prefix", T{...})`
+
+Declares that the group owns the section prefix of osapi's config, such as
+controller, with a value of the section's type whose fields are the defaults of
+its keys. Each field becomes a key of osapi config list, with its environment
+variable and its default from here, as a behavior's settings come from
+behavior.Config.
+
+Use: For a process group, such as controller start, which owns the section that
+its process reads. A default lives here, never in a central file; a key with no
+default is a choice of the operator and says why with a choice tag.
+
 ### `Flat()`
 
 Makes the group add no word of its own: each method is a command under the

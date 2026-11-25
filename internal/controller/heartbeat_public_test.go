@@ -84,6 +84,7 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 		var cfg config.Config
 		cfg.Controller.API.Port = 8080
 		cfg.Controller.Metrics = config.MetricsServer{Enabled: true, Host: "127.0.0.1", Port: 9090}
+		cfg.Controller.UI.Enabled = true
 		cfg.Controller.Notifications.Enabled = true
 		cfg.Telemetry.Tracing.Enabled = true
 
@@ -190,8 +191,6 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 
 	s.Run("when the parts are off reports them as disabled", func() {
 		var cfg config.Config
-		off := false
-		cfg.Controller.UI.Enabled = &off
 
 		got := controller.ExportSubComponents(cfg)
 

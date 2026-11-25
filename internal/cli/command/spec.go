@@ -84,6 +84,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Config("prefix", T{...})`,
+			Does: "Declares that the group owns the section prefix of osapi's config, such as controller, with a value of the section's type whose fields are the defaults of its keys. Each field becomes a key of osapi config list, with its environment variable and its default from here, as a behavior's settings come from behavior.Config.",
+			When: "For a process group, such as controller start, which owns the section that its process reads. A default lives here, never in a central file; a key with no default is a choice of the operator and says why with a choice tag.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Flat()`,
 			Does: "Makes the group add no word of its own: each method is a command under the group's parent, the root or the words of Under. A command directly under the root is a leaf of command.RootGroups, such as version; any other has a verb or an action. The group's name stays its identity, for dsl command get --name and its package.",
 			When: "For a command that stands alone, such as osapi version, or that goes under a parent that holds other things, such as osapi controller start. Not for a family of commands under one noun, such as token.",

@@ -42,7 +42,7 @@ type Config struct {
 // dispatches ConditionEvents via the configured Notifier.
 type NotificationsConfig struct {
 	// Enabled activates the condition watcher and notifier.
-	Enabled bool `mapstructure:"enabled" doc:"Enable the condition watcher and notifier (default: true)."`
+	Enabled bool `mapstructure:"enabled" doc:"Enable the condition watcher and notifier."`
 	// Notifier selects the notification backend: "log" (default).
 	Notifier string `mapstructure:"notifier" doc:"Notifier backend: 'log' (default)."`
 	// RenotifyInterval is how often to re-fire active conditions.
@@ -58,28 +58,28 @@ type Telemetry struct {
 // MetricsServer configures the per-component metrics HTTP server.
 type MetricsServer struct {
 	// Enabled activates the metrics server.
-	Enabled bool `mapstructure:"enabled" doc:"Enable the metrics endpoint (default: true)."`
+	Enabled bool `mapstructure:"enabled" doc:"Enable the metrics endpoint."`
 	// Host the metrics server binds to.
 	Host string `mapstructure:"host" doc:"Host the metrics server binds to."`
 	// Port the metrics server listens on.
 	Port int `mapstructure:"port" doc:"Port the metrics server listens on." validate:"omitempty,min=1,max=65535"`
 	// URL is where a person opens the metrics endpoint. Health shows it
 	// beside the bind address; osapi never requests it.
-	URL string `mapstructure:"url" doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url" choice:"where a person reaches it; empty shows the bind address"`
 }
 
 // TracingConfig configuration settings for distributed tracing.
 type TracingConfig struct {
 	// Enabled enables or disables tracing.
-	Enabled bool `mapstructure:"enabled" doc:"Enable distributed tracing (default: false)."`
+	Enabled bool `mapstructure:"enabled" doc:"Enable distributed tracing."`
 	// Exporter selects the trace exporter: "stdout" or "otlp".
-	Exporter string `mapstructure:"exporter" doc:"Trace exporter: 'stdout' or 'otlp'."`
+	Exporter string `mapstructure:"exporter" doc:"Trace exporter: 'stdout' or 'otlp'." choice:"empty sends no trace"`
 	// OTLPEndpoint is the gRPC endpoint for the OTLP exporter (e.g., "localhost:4317").
-	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'."`
+	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'." choice:"the collector of the operator; set with exporter otlp"`
 	// URL is where a person views the traces, such as a Jaeger UI. Health
 	// links to it, and the controller reads a trace from its query API for
 	// osapi client trace get. osapi does not run the backend.
-	URL string `mapstructure:"url" doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url" choice:"the tracing backend of the operator; empty reads no trace"`
 }
 
 // NATSAuth holds client-side authentication settings for connecting to NATS.
@@ -87,14 +87,14 @@ type NATSAuth struct {
 	// Type is the auth method: "none", "user_pass", "nkey", or "creds".
 	Type string `mapstructure:"type" doc:"Authentication type: 'none', 'user_pass', 'nkey', or 'creds'."`
 	// Username for user_pass auth.
-	Username string `mapstructure:"username" doc:"Username for user_pass auth."`
+	Username string `mapstructure:"username" doc:"Username for user_pass auth." choice:"set for the auth type that uses it"`
 	// Password for user_pass auth.
-	Password string `mapstructure:"password" doc:"Password for user_pass auth." mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
+	Password string `mapstructure:"password" doc:"Password for user_pass auth." mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault" choice:"set for the auth type that uses it"`
 	// NKeyFile path to the NKey seed file for nkey auth.
-	NKeyFile string `mapstructure:"nkey_file" doc:"Path to the NKey seed file for nkey auth."`
+	NKeyFile string `mapstructure:"nkey_file" doc:"Path to the NKey seed file for nkey auth." choice:"set for the auth type that uses it"`
 	// CredsFile path to a NATS credentials file, a user JWT and its seed, for
 	// creds auth against a server in operator (JWT) mode.
-	CredsFile string `mapstructure:"creds_file" doc:"Path to a NATS credentials file (user JWT and seed) for creds auth."`
+	CredsFile string `mapstructure:"creds_file" doc:"Path to a NATS credentials file (user JWT and seed) for creds auth." choice:"set for the auth type that uses it"`
 }
 
 // NATSServerAuth holds server-side authentication settings for the embedded NATS server.
@@ -104,17 +104,17 @@ type NATSServerAuth struct {
 	// ResolverFile is, for operator auth, the server's half of an operator:
 	// its JWT, the system account and each account's JWT, as
 	// `nsc generate config --mem-resolver` writes it.
-	ResolverFile string `mapstructure:"resolver_file" doc:"For operator auth: the operator, system account and account JWTs, as nsc generate config --mem-resolver writes them."`
+	ResolverFile string `mapstructure:"resolver_file" doc:"For operator auth: the operator, system account and account JWTs, as nsc generate config --mem-resolver writes them." choice:"set for the auth type that uses it"`
 	// NKeyFile is, for nkey auth, a seed whose public key is in NKeys: the
 	// identity the server's own setup and heartbeat connect with.
-	NKeyFile string `mapstructure:"nkey_file" doc:"For nkey auth: a seed among nkeys, which the server's own setup and heartbeat connect with."`
+	NKeyFile string `mapstructure:"nkey_file" doc:"For nkey auth: a seed among nkeys, which the server's own setup and heartbeat connect with." choice:"set for the auth type that uses it"`
 	// CredsFile is, for operator auth, the credentials the server's own setup
 	// and heartbeat connect with: a user in an account with JetStream.
-	CredsFile string `mapstructure:"creds_file" doc:"For operator auth: a credentials file the server's own setup and heartbeat connect with."`
+	CredsFile string `mapstructure:"creds_file" doc:"For operator auth: a credentials file the server's own setup and heartbeat connect with." choice:"set for the auth type that uses it"`
 	// Users allowed to connect (for user_pass auth).
-	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)."`
+	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)." choice:"set for the auth type that uses it"`
 	// NKeys is a list of allowed public NKeys (for nkey auth).
-	NKeys []string `mapstructure:"nkeys" doc:"Allowed public NKeys, for nkey auth."`
+	NKeys []string `mapstructure:"nkeys" doc:"Allowed public NKeys, for nkey auth." choice:"set for the auth type that uses it"`
 }
 
 // NATSServerUser represents an allowed username/password pair for the NATS server.
@@ -225,7 +225,7 @@ type NATSServer struct {
 	Port int `mapstructure:"port" doc:"Port the embedded NATS server listens on."`
 	// URL is where a person reaches the server, as nats:// or tls://. Health
 	// shows it beside the bind address.
-	URL string `mapstructure:"url" doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://"`
+	URL string `mapstructure:"url" doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://" choice:"where a person reaches it; empty shows the bind address"`
 	// StoreDir the directory for JetStream file storage.
 	StoreDir string `mapstructure:"store_dir" doc:"Directory for JetStream file storage."`
 	// JetStream holds the encryption of the JetStream store.
@@ -241,7 +241,7 @@ type NATSServer struct {
 // embedded server. With no KeyFile, the store is not encrypted.
 type NATSServerJetStream struct {
 	// KeyFile is the file of the key that encrypts the store.
-	KeyFile string `mapstructure:"key_file" doc:"File of the key that encrypts each stream and bucket in store_dir. Unset, the store is not encrypted. osapi nats key create makes it."`
+	KeyFile string `mapstructure:"key_file" doc:"File of the key that encrypts each stream and bucket in store_dir. Unset, the store is not encrypted. osapi nats key create makes it." choice:"empty leaves the store unencrypted; osapi nats key create makes one"`
 }
 
 // NATSStream configuration for JetStream stream settings.
@@ -339,20 +339,20 @@ type ControllerSecrets struct {
 // UIConfig holds settings for the embedded management UI.
 type UIConfig struct {
 	// Enabled controls whether the embedded UI is served. Defaults to true.
-	Enabled *bool `mapstructure:"enabled" doc:"Serve the embedded UI (default: true)."`
+	Enabled bool `mapstructure:"enabled" doc:"Serve the embedded UI."`
 	// URL is where a person opens the UI. Health shows it beside the bind
 	// address of the API, whose listener serves the UI.
-	URL string `mapstructure:"url" doc:"Where a person opens the UI, shown by health beside the bind address." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person opens the UI, shown by health beside the bind address." validate:"omitempty,http_url" choice:"where a person reaches it; empty shows the bind address"`
 }
 
 // APIServer holds the HTTP server config (port + security).
 type APIServer struct {
 	// Host the server binds to. Empty binds every interface. The UI uses the
 	// same listener.
-	Host string `mapstructure:"host" doc:"Host the REST API server, and the UI on its listener, binds to. Empty binds every interface."`
+	Host string `mapstructure:"host" doc:"Host the REST API server, and the UI on its listener, binds to. Empty binds every interface." choice:"empty binds every interface"`
 	// URL is where a person reaches the API. Health shows it beside the bind
 	// address; osapi never requests it.
-	URL string `mapstructure:"url" doc:"Where a person reaches the API, shown by health beside the bind address." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person reaches the API, shown by health beside the bind address." validate:"omitempty,http_url" choice:"where a person reaches it; empty shows the bind address"`
 	// Port the server will bind to.
 	Port int `mapstructure:"port" doc:"Port the REST API server listens on." validate:"min=1,max=65535"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
@@ -362,7 +362,7 @@ type APIServer struct {
 	// JobTimeout is how long the controller waits for agent responses
 	// before returning partial results. Uses Go duration format.
 	// Defaults to 30s when empty.
-	JobTimeout string `mapstructure:"job_timeout" doc:"How long to wait for agent responses before returning partial results. Go duration format (default: 30s)." validate:"omitempty,go_duration"`
+	JobTimeout string `mapstructure:"job_timeout" doc:"How long to wait for agent responses before returning partial results. Go duration format." validate:"omitempty,go_duration"`
 }
 
 // Client configuration settings.
@@ -379,7 +379,7 @@ type Client struct {
 type ClientTLS struct {
 	// CAFile is a PEM certificate that the client trusts, such as the
 	// self-signed api.crt of a controller. Without it, the system's roots.
-	CAFile string `mapstructure:"ca_file" doc:"A PEM certificate that the CLI trusts on an https:// URL, such as api.crt of a controller with a self-signed certificate, in its controller.pki.key_dir. Without it, the system's trusted roots."`
+	CAFile string `mapstructure:"ca_file" doc:"A PEM certificate that the CLI trusts on an https:// URL, such as api.crt of a controller with a self-signed certificate, in its controller.pki.key_dir. Without it, the system's trusted roots." choice:"a certificate of the operator; empty trusts the system roots"`
 }
 
 // CustomRole defines a named set of permissions that can be assigned to tokens.
@@ -396,9 +396,9 @@ type ServerTLS struct {
 	// Enabled serves HTTPS on the API's port, in place of HTTP.
 	Enabled bool `mapstructure:"enabled" doc:"Serve HTTPS on the API's port, in place of HTTP. Without cert_file and key_file, the controller makes a self-signed certificate in controller.pki.key_dir."`
 	// CertFile is the PEM certificate to serve, with its chain.
-	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile"`
+	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty is the self-signed certificate"`
 	// KeyFile is the PEM private key of CertFile.
-	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile"`
+	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile" choice:"a certificate of the operator; empty is the self-signed certificate"`
 }
 
 // ServerSecurity represents security-related settings for the server.
@@ -407,9 +407,9 @@ type ServerSecurity struct {
 	CORS CORS `mapstructure:"cors"`
 	// SigningKeys are the keys that sign and verify tokens. The first key
 	// signs a new token. Each key verifies a token whose kid is its ID.
-	SigningKeys []SigningKey `mapstructure:"signing_keys" validate:"required,min=1,unique=ID,dive" mask:"password" doc:"HS256 keys for JWTs, each an id and a key (required). The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32. A key can be a reference, secret://<vault>/<key>, which the controller resolves at startup."`
+	SigningKeys []SigningKey `mapstructure:"signing_keys" validate:"omitempty,unique=ID,dive" mask:"password" doc:"HS256 keys for JWTs, each an id and a key. Without one, the controller makes a key in controller.pki.key_dir at its first start, which controller token generate on its host also uses. The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32. A key can be a reference, secret://<vault>/<key>, which the controller resolves at startup." choice:"the controller makes one at its first start when there is none"`
 	// Roles defines custom roles with fine-grained permissions.
-	Roles map[types.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
+	Roles map[types.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions." choice:"custom roles; the built-in roles need none"`
 }
 
 // SigningKey is one key of controller.api.security.signing_keys.
@@ -435,13 +435,13 @@ func (s ServerSecurity) Keys() authtoken.Keys {
 // ClientSecurity represents security-related settings for the client.
 type ClientSecurity struct {
 	// BearerToken is the JWT used for role-based access control.
-	BearerToken string `mapstructure:"bearer_token" validate:"required" mask:"password" doc:"JWT bearer token for client requests (required). Generate with osapi controller token generate. It can be a reference, secret://<vault>/<key>, which the command resolves from the vaults of its config."`
+	BearerToken string `mapstructure:"bearer_token" validate:"omitempty" mask:"password" doc:"JWT bearer token for client requests. Generate with osapi controller token generate. It can be a reference, secret://<vault>/<key>, which the command resolves from the vaults of its config." choice:"the token of the person or the program; osapi controller token generate makes one"`
 }
 
 // CORS represents the CORS (Cross-Origin Resource Sharing) settings.
 type CORS struct {
 	// List of origins allowed to access the server (e.g., "foo").
-	AllowOrigins []string `mapstructure:"allow_origins,omitempty" doc:"Origins allowed to make cross-origin requests. An empty list disables CORS headers entirely."`
+	AllowOrigins []string `mapstructure:"allow_origins,omitempty" doc:"Origins allowed to make cross-origin requests. An empty list disables CORS headers entirely." choice:"empty refuses cross-origin requests"`
 }
 
 // AgentConsumer configuration for the agent's JetStream consumer settings.
@@ -479,9 +479,9 @@ type AgentConditions struct {
 // ProcessConditions holds threshold configuration for process-level conditions.
 type ProcessConditions struct {
 	// MemoryPressureBytes is the RSS threshold in bytes (0 = disabled).
-	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes" doc:"Process RSS threshold in bytes (0 = disabled)."`
+	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes" doc:"Process RSS threshold in bytes (0 = disabled)." choice:"0 turns the condition off"`
 	// HighCPUPercent is the CPU usage threshold as a percentage (0 = disabled).
-	HighCPUPercent float64 `mapstructure:"high_cpu_percent" doc:"Process CPU threshold as percentage (0 = disabled)."`
+	HighCPUPercent float64 `mapstructure:"high_cpu_percent" doc:"Process CPU threshold as percentage (0 = disabled)." choice:"0 turns the condition off"`
 }
 
 // PrivilegeEscalation configuration for least-privilege agent mode.
@@ -505,7 +505,7 @@ type AgentCommand struct {
 // AgentPKI holds PKI configuration for the agent.
 type AgentPKI struct {
 	// KeyDir is the directory for agent keypair storage.
-	KeyDir string `mapstructure:"key_dir" doc:"Directory for agent keypair storage."`
+	KeyDir string `mapstructure:"key_dir" doc:"Directory of the agent's key pair."`
 }
 
 // ControllerPKI holds PKI configuration for the controller.
@@ -519,7 +519,7 @@ type ControllerPKI struct {
 	RotationGracePeriod string `mapstructure:"rotation_grace_period" doc:"Grace period during key rotation where both old and new keys are accepted. Go duration format." validate:"omitempty,go_duration"`
 	// DeleteAfter deletes an admitted machine that has not reported for
 	// this long. Empty is never. Uses Go duration format.
-	DeleteAfter string `mapstructure:"delete_after" doc:"Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format." validate:"omitempty,go_duration"`
+	DeleteAfter string `mapstructure:"delete_after" doc:"Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format." validate:"omitempty,go_duration" choice:"empty keeps a machine that stops reporting"`
 }
 
 // AgentConfig configuration settings.
@@ -533,13 +533,13 @@ type AgentConfig struct {
 	// QueueGroup for load balancing multiple agents.
 	QueueGroup string `mapstructure:"queue_group" doc:"Queue group for load-balanced (_any) subscriptions."`
 	// Hostname identifies this agent instance for routing.
-	Hostname string `mapstructure:"hostname" doc:"Agent hostname for direct routing. Defaults to the system hostname when empty."`
+	Hostname string `mapstructure:"hostname" doc:"Agent hostname for direct routing. Defaults to the system hostname when empty." choice:"empty is the host's own hostname"`
 	// MaxJobs maximum number of concurrent jobs to process.
 	MaxJobs int `mapstructure:"max_jobs" doc:"Maximum number of concurrent jobs to process." validate:"min=1"`
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
 	// Maximum 5 labels per agent — each label creates multiple NATS consumers
 	// for hierarchical prefix matching.
-	Labels map[string]string `mapstructure:"labels" doc:"Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details." validate:"max=5"`
+	Labels map[string]string `mapstructure:"labels" doc:"Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details." validate:"max=5" choice:"the labels of the host, which the operator picks"`
 	// Conditions holds threshold settings for node condition evaluation.
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.

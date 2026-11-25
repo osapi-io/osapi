@@ -90,11 +90,17 @@ func (s *KeysPublicTestSuite) TestKeys() {
 			},
 		},
 		{
-			name: "when every default names a real key",
+			name: "when every key has a default, or says why it is a choice",
 			validateFunc: func() {
-				for name := range config.Defaults {
-					_, ok := byName[name]
-					s.True(ok, "default for %s, which is not a key", name)
+				for _, k := range keys {
+					if k.Behavior != "" {
+						continue
+					}
+					s.True(
+						k.Default != nil || k.Choice != "",
+						"%s has no default: declare one where its section is owned, or tag it choice:\"<why>\"",
+						k.Name,
+					)
 				}
 			},
 		},

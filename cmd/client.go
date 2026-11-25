@@ -120,10 +120,7 @@ var clientCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(clientCmd)
 
-	clientCmd.PersistentFlags().
-		StringP("url", "", "http://0.0.0.0:8080", "URL the client will connect to")
-
-	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
+	config.BindFlagAs(clientCmd.PersistentFlags(), "controller.client.url", "url")
 
 	// node exists before the groups are attached, so a behavior's group
 	// joins it: sysctl is under node.
