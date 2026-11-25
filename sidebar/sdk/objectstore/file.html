@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">File | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/sdk/objectstore/file"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="File | OSAPI"><meta data-rh="true" name="description" content="c.File calls the API&#x27;s File group. Object Store file management operations."><meta data-rh="true" property="og:description" content="c.File calls the API&#x27;s File group. Object Store file management operations."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/sdk/objectstore/file"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/objectstore/file" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/objectstore/file" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SDK","item":"https://osapi-io.github.io/osapi/sidebar/sdk/"},{"@type":"ListItem","position":2,"name":"File","item":"https://osapi-io.github.io/osapi/sidebar/sdk/objectstore/file"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.e0de03d9.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.25b7ab2c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.134ff6db.js" defer="defer"></script>
 </head>
 <body>
@@ -128,8 +128,8 @@ not exist yet.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types" translate="no">​</a></h2>
 <p>The fields of each type are the properties of its schema in the API&#x27;s spec.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="contenttype">ContentType<a href="#contenttype" class="hash-link" aria-label="Direct link to ContentType" title="Direct link to ContentType" translate="no">​</a></h3>
-<p>How a deploy treats a file: raw writes its bytes as they are; template renders
-it with Go text/template and the agent&#x27;s facts.</p>
+<p>ContentType is how a deploy treats a file: raw writes its bytes as they are;
+template renders it with Go text/template and the agent&#x27;s facts.</p>
 <p>A <code>string</code>, one of <code>raw</code>, <code>template</code>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="fileinfo">FileInfo<a href="#fileinfo" class="hash-link" aria-label="Direct link to FileInfo" title="Direct link to FileInfo" translate="no">​</a></h3>
 
@@ -167,7 +167,7 @@ it with Go text/template and the agent&#x27;s facts.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>ContentType</code></td><td><code>ContentType</code></td><td>How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent&#x27;s facts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the file.</td></tr><tr><td><code>SHA256</code></td><td><code>string</code></td><td>SHA-256 hash of the file content.</td></tr><tr><td><code>Size</code></td><td><code>int</code></td><td>File size in bytes.</td></tr><tr><td><code>Source</code></td><td><code>string</code></td><td>Source of the file: &#x27;system&#x27; or &#x27;user&#x27;.</td></tr></tbody></table>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>ContentType</code></td><td><code>ContentType</code></td><td>ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent&#x27;s facts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the file.</td></tr><tr><td><code>SHA256</code></td><td><code>string</code></td><td>SHA-256 hash of the file content.</td></tr><tr><td><code>Size</code></td><td><code>int</code></td><td>File size in bytes.</td></tr><tr><td><code>Source</code></td><td><code>string</code></td><td>Source of the file: &#x27;system&#x27; or &#x27;user&#x27;.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="fileinforesponse">FileInfoResponse<a href="#fileinforesponse" class="hash-link" aria-label="Direct link to FileInfoResponse" title="Direct link to FileInfoResponse" translate="no">​</a></h3>
 
 
@@ -199,7 +199,7 @@ it with Go text/template and the agent&#x27;s facts.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>ContentType</code></td><td><code>ContentType</code></td><td>How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent&#x27;s facts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the file.</td></tr><tr><td><code>SHA256</code></td><td><code>string</code></td><td>SHA-256 hash of the file content.</td></tr><tr><td><code>Size</code></td><td><code>int</code></td><td>File size in bytes.</td></tr></tbody></table>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>ContentType</code></td><td><code>ContentType</code></td><td>ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent&#x27;s facts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the file.</td></tr><tr><td><code>SHA256</code></td><td><code>string</code></td><td>SHA-256 hash of the file content.</td></tr><tr><td><code>Size</code></td><td><code>int</code></td><td>File size in bytes.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="filelistresponse">FileListResponse<a href="#filelistresponse" class="hash-link" aria-label="Direct link to FileListResponse" title="Direct link to FileListResponse" translate="no">​</a></h3>
 
 
@@ -258,7 +258,7 @@ it with Go text/template and the agent&#x27;s facts.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Changed</code></td><td><code>bool</code></td><td>Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest.</td></tr><tr><td><code>ContentType</code></td><td><code>ContentType</code></td><td>How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent&#x27;s facts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the uploaded file.</td></tr><tr><td><code>SHA256</code></td><td><code>string</code></td><td>SHA-256 hash of the file content.</td></tr><tr><td><code>Size</code></td><td><code>int</code></td><td>File size in bytes.</td></tr></tbody></table>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Changed</code></td><td><code>bool</code></td><td>Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest.</td></tr><tr><td><code>ContentType</code></td><td><code>ContentType</code></td><td>ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent&#x27;s facts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The name of the uploaded file.</td></tr><tr><td><code>SHA256</code></td><td><code>string</code></td><td>SHA-256 hash of the file content.</td></tr><tr><td><code>Size</code></td><td><code>int</code></td><td>File size in bytes.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="staledeployment">StaleDeployment<a href="#staledeployment" class="hash-link" aria-label="Direct link to StaleDeployment" title="Direct link to StaleDeployment" translate="no">​</a></h3>
 
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Process | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/sdk/node/process"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Process | OSAPI"><meta data-rh="true" name="description" content="c.Process calls the API&#x27;s Process group. The processes of the host."><meta data-rh="true" property="og:description" content="c.Process calls the API&#x27;s Process group. The processes of the host."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/sdk/node/process"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/node/process" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/node/process" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SDK","item":"https://osapi-io.github.io/osapi/sidebar/sdk/"},{"@type":"ListItem","position":2,"name":"Process","item":"https://osapi-io.github.io/osapi/sidebar/sdk/node/process"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.e0de03d9.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.25b7ab2c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.134ff6db.js" defer="defer"></script>
 </head>
 <body>
@@ -192,7 +192,7 @@ permission <code>process:execute</code>.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Changed</code></td><td><code>bool</code></td><td>Whether the signal was sent.</td></tr><tr><td><code>Error</code></td><td><code>string</code></td><td>Error message if the agent failed.</td></tr><tr><td><code>Hostname</code></td><td><code>string</code></td><td>Hostname of the agent that produced this result.</td></tr><tr><td><code>PID</code></td><td><code>int</code></td><td>The process ID.</td></tr><tr><td><code>Signal</code></td><td><code>Signal</code></td><td></td></tr><tr><td><code>Status</code></td><td><code>RowStatus</code></td><td>What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host&#x27;s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.</td></tr></tbody></table>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Changed</code></td><td><code>bool</code></td><td>Whether the signal was sent.</td></tr><tr><td><code>Error</code></td><td><code>string</code></td><td>Error message if the agent failed.</td></tr><tr><td><code>Hostname</code></td><td><code>string</code></td><td>Hostname of the agent that produced this result.</td></tr><tr><td><code>PID</code></td><td><code>int</code></td><td>The process ID.</td></tr><tr><td><code>Signal</code></td><td><code>Signal</code></td><td>Signal is a signal that osapi sends to a process, by its name without SIG.</td></tr><tr><td><code>Status</code></td><td><code>RowStatus</code></td><td>What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host&#x27;s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="processsignalinput">ProcessSignalInput<a href="#processsignalinput" class="hash-link" aria-label="Direct link to ProcessSignalInput" title="Direct link to ProcessSignalInput" translate="no">​</a></h3>
 
 
@@ -214,13 +214,14 @@ permission <code>process:execute</code>.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>PID</code></td><td><code>int</code></td><td>The pid of the path. The process ID, such as 1234.</td></tr><tr><td><code>Signal</code></td><td><code>Signal</code></td><td></td></tr></tbody></table>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>PID</code></td><td><code>int</code></td><td>The pid of the path. The process ID, such as 1234.</td></tr><tr><td><code>Signal</code></td><td><code>Signal</code></td><td>Signal is a signal that osapi sends to a process, by its name without SIG.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="rowstatus">RowStatus<a href="#rowstatus" class="hash-link" aria-label="Direct link to RowStatus" title="Direct link to RowStatus" translate="no">​</a></h3>
 <p>What happened on the host: ok, the operation ran and succeeded; failed, it ran
 and did not succeed; skipped, the host&#x27;s OS family does not support it; timeout,
 the host did not answer, so nobody knows whether it ran.</p>
 <p>A <code>string</code>, one of <code>ok</code>, <code>failed</code>, <code>skipped</code>, <code>timeout</code>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="signal-1">Signal<a href="#signal-1" class="hash-link" aria-label="Direct link to Signal" title="Direct link to Signal" translate="no">​</a></h3>
+<p>Signal is a signal that osapi sends to a process, by its name without SIG.</p>
 <p>A <code>string</code>, one of <code>TERM</code>, <code>KILL</code>, <code>HUP</code>, <code>INT</code>, <code>USR1</code>, <code>USR2</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="example">Example<a href="#example" class="hash-link" aria-label="Direct link to Example" title="Direct link to Example" translate="no">​</a></h2>
 <p><a href="https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/process.go" target="_blank" rel="noopener noreferrer" class=""><code>examples/sdk/client/process.go</code></a>
