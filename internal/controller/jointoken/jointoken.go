@@ -225,6 +225,16 @@ func (s Store) get(
 	return t, e.Revision(), nil
 }
 
+// ID is the ID of token, which is not secret, and whether token has the
+// form of a join token.
+func ID(
+	token string,
+) (string, bool) {
+	id, _, ok := parse(token)
+
+	return id, ok
+}
+
 // parse splits a token into its ID and its secret.
 func parse(
 	token string,

@@ -51,6 +51,23 @@ func (f fakeTokens) Consume(
 	return jointoken.Token{ID: "t1"}, nil
 }
 
+// countingTokens admits each token whose ID is t1, and counts each use.
+type countingTokens struct {
+	calls *int
+}
+
+func (c countingTokens) Consume(
+	_ context.Context,
+	token string,
+) (jointoken.Token, error) {
+	*c.calls++
+	if id, ok := jointoken.ID(token); !ok || id != "t1" {
+		return jointoken.Token{}, jointoken.ErrInvalid
+	}
+
+	return jointoken.Token{ID: "t1"}, nil
+}
+
 // joinRequest is a join of m-1 with token, signed by its own key.
 func joinRequest(
 	token string,
@@ -89,6 +106,32 @@ func (s *StorePublicTestSuite) TestJoin() {
 		s.NotContains(s.kv.data, "rejected.m-1")
 		s.NotContains(s.kv.data, "revoked.m-1")
 	})
+
+	s.Run(
+		"when the reply was lost, the same machine, key and token join again with no use",
+		func() {
+			calls := 0
+			s.watcher.SetJoinTokens(countingTokens{calls: &calls})
+			req := joinRequest("osapi_jt_t1.c2VjcmV0")
+
+			_, err := s.watcher.Join(context.Background(), req)
+			s.Require().NoError(err)
+			key, err := s.watcher.Join(context.Background(), req)
+
+			s.Require().NoError(err)
+			s.Len(key, ed25519.PublicKeySize)
+			s.Equal(1, calls, "one use of the token")
+
+			other := joinRequest("osapi_jt_t1.c2VjcmV0")
+			_, err = s.watcher.Join(context.Background(), other)
+			s.Require().NoError(err)
+			s.Equal(2, calls, "a new key takes a use")
+
+			bad := joinRequest("not-a-token")
+			_, _ = s.watcher.Join(context.Background(), bad)
+			s.Equal(3, calls)
+		},
+	)
 
 	s.Run("when the request is not signed by its key, nothing is admitted", func() {
 		s.watcher.SetJoinTokens(fakeTokens{})

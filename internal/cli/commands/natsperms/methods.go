@@ -46,7 +46,20 @@ func Get(
 		Namespace: namespace,
 		Publish:   p.Publish,
 		Subscribe: p.Subscribe,
-		NSC: fmt.Sprintf("--allow-pub %q --allow-sub %q",
-			strings.Join(p.Publish, ","), strings.Join(p.Subscribe, ",")),
+		Responses: p.Responses,
+		NSC:       nscFlags(p),
 	}, nil
+}
+
+// nscFlags are the flags of nsc add user that give p.
+func nscFlags(
+	p bus.Permissions,
+) string {
+	flags := fmt.Sprintf("--allow-pub %q --allow-sub %q",
+		strings.Join(p.Publish, ","), strings.Join(p.Subscribe, ","))
+	if p.Responses {
+		flags += " --allow-pub-response 1"
+	}
+
+	return flags
 }

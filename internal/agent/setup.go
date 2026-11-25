@@ -88,6 +88,10 @@ func Setup(
 	cfg config.Config,
 	mp *sdkmetric.MeterProvider,
 ) (*Agent, *client.Connection, error) {
+	cfg, err := joinNATS(ctx, log, fs, cfg)
+	if err != nil {
+		return nil, nil, err
+	}
 	namespace := cfg.Agent.NATS.Namespace
 	timeout, _ := time.ParseDuration(cfg.Controller.API.JobTimeout)
 

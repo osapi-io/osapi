@@ -38,16 +38,24 @@ var Group = command.Register(command.Define(
 		Short("Make a join token, and print it with the join string").
 		Long("The token admits an agent at its join, until it expires or its uses are\n"+
 			"gone. The controller keeps a hash of it, not the token: this command prints\n"+
-			"the token one time. The join string has the controller's URL\n"+
-			"(`controller.api.url`) and the fingerprint of its certificate, so an agent\n"+
-			"checks the controller before it sends anything. It needs\n"+
-			"`controller.api.tls.enabled`.").
+			"the token one time.\n\n"+
+			"By default the agent joins over NATS, and needs to reach NATS only. The join\n"+
+			"string has the address of NATS (`controller.join.url`, or else\n"+
+			"`nats.server.url`), the bootstrap user, which can only send the join request,\n"+
+			"and for a `tls://` server the fingerprint of its certificate, which the agent\n"+
+			"pins. The controller gives the agent its own NATS user at the join.\n\n"+
+			"With `--transport https`, the agent joins over the controller's API: the join\n"+
+			"string has `controller.api.url` and the fingerprint of the API's certificate.\n"+
+			"It needs `controller.api.tls.enabled`.").
 		Example("").
 		Prints(sampleCreate).
 		Example("--expires 24h --uses 10 --labels group=web").
-		Fails("no expiry", CreateInput{Uses: 1}).
-		Fails("a duration that is not one", CreateInput{Expires: "soon", Uses: 1}).
-		Fails("no use", CreateInput{Expires: "1h", Uses: 0}).
+		Example("--transport https").
+		Fails("no expiry", CreateInput{Uses: 1, Transport: "nats"}).
+		Fails("a duration that is not one", CreateInput{Expires: "soon", Uses: 1, Transport: "nats"}).
+		Fails("no use", CreateInput{Expires: "1h", Uses: 0, Transport: "nats"}).
+		Fails("no transport", CreateInput{Expires: "1h", Uses: 1}).
+		Fails("a transport that osapi does not have", CreateInput{Expires: "1h", Uses: 1, Transport: "ssh"}).
 		Handle(Create),
 	command.Method[ListInput, ListOutput]("list").
 		Sub("token").

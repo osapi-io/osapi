@@ -26,6 +26,6 @@ Print the NATS subjects that each osapi process needs.
 
 ### Flags (1)
 
-| FLAG   | TYPE   | VALIDATE                              | HELP                                          |
-| ------ | ------ | ------------------------------------- | --------------------------------------------- |
-| --role | string | required,oneof=controller agent setup | The osapi process: controller, agent or setup |
+| FLAG   | TYPE   | VALIDATE                                   | HELP                                                |
+| ------ | ------ | ------------------------------------------ | --------------------------------------------------- |
+| --role | string | required,oneof=controller agent setup join | The osapi process: controller, agent, setup or join |

@@ -285,6 +285,14 @@ func (s *JoinTokenPublicTestSuite) TestListAndRevoke() {
 	s.ErrorContains(err, "list the join tokens")
 }
 
+func (s *JoinTokenPublicTestSuite) TestID() {
+	id, ok := jointoken.ID("osapi_jt_t1.c2VjcmV0")
+	s.True(ok)
+	s.Equal("t1", id)
+	_, ok = jointoken.ID("not-a-token")
+	s.False(ok)
+}
+
 func TestJoinTokenPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(JoinTokenPublicTestSuite))
 }

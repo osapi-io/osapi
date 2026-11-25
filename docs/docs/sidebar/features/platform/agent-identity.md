@@ -124,7 +124,8 @@ record has no encryption key. Enroll it again:
 
 An agent can join with a join token in place of a request that waits for an
 administrator. The administrator makes the token on the controller, and gives
-the agent the join string that the command prints:
+the agent the join string that the command prints. The agent then needs the join
+string and nothing else: no NATS settings and no credentials.
 
 ```bash
 osapi controller join token create --expires 1h --uses 1
@@ -132,26 +133,39 @@ osapi controller join token create --expires 1h --uses 1
 
 ```yaml
 agent:
-  join: osapi://controller.example.com:8080?fp=SHA256%3A...&token=osapi_jt_...
+  join: tls://nats.example.com:4222?fp=SHA256%3A...&ns=osapi&pass=...&token=osapi_jt_...&user=join
 ```
 
-At its first start, an agent that is not admitted joins with the string:
+At its first start, an agent with a join string for NATS does these steps:
 
-1. It connects to the controller over HTTPS, and refuses a certificate whose
-   fingerprint is not the one in the string. Thus it sends the token only to the
-   controller that made it.
-1. It sends `POST /api/agent/join` with the token, its machine ID, its hostname
-   and its two public keys, signed with its signing key.
+1. It makes its signing key and its encryption key in `agent.pki.key_dir`.
+1. It connects to NATS as the bootstrap user of the string. That user can send
+   the join request and nothing else. For a `tls://` server, the agent refuses a
+   certificate whose fingerprint is not the one in the string.
+1. It sends the join request: the token, its machine ID, its hostname and its
+   two public keys, signed with its signing key.
 1. A token that has not expired, has uses left and was not revoked admits the
    machine at once. The admission record names the token, as `join_token` in
    `osapi client admission get`.
-1. The agent saves the controller's key as `enrolled-controller.pub`, and starts
-   to take jobs.
+1. The controller replies with its key and the agent's own NATS user. The agent
+   saves the key as `enrolled-controller.pub`, and the user and the server's
+   certificate in `nats-join.json` (mode 0600), connects with its own user, and
+   starts to take jobs. Each later start reads `nats-join.json`, and does not
+   join again.
 
-A join that fails, such as with an expired token, logs the reason, and the agent
-asks to be admitted over NATS, as above. The controller needs
-`controller.api.tls.enabled` for join token create, because the join string pins
-the API's certificate.
+A join that fails, such as with an expired token, stops the agent with the
+reason. The join string sets the address of NATS: `controller.join.url`, or else
+`nats.server.url`. The users default to the users of `nats.server.auth.users`
+with the roles `join` and `agent`, or set `controller.join.user` and
+`controller.join.agent` for a server that osapi does not run.
+
+With `--transport https`, the agent joins over the controller's API in place of
+NATS. The string is
+`osapi://controller.example.com:8080?fp=SHA256%3A...&token=osapi_jt_...`, the
+agent sends `POST /api/agent/join`, and it needs its NATS settings in its
+config. A join over HTTPS that fails makes the agent ask to be admitted over
+NATS, as above. The controller needs `controller.api.tls.enabled` for it,
+because the join string pins the API's certificate.
 
 ### Auto-admit mode
 

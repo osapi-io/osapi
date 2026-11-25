@@ -27,7 +27,7 @@ var (
 	sampleCreate = CreateOutput{
 		ID:        "1a2b3c4d",
 		Token:     "osapi_jt_1a2b3c4d.vC3m9...",
-		Join:      "osapi://osapi.example.com:8080?fp=SHA256%3A9f86d08...&token=osapi_jt_1a2b3c4d.vC3m9...",
+		Join:      "tls://nats.example.com:4222?fp=SHA256%3A9f86d08...&ns=osapi&pass=...&token=osapi_jt_1a2b3c4d.vC3m9...&user=join",
 		ExpiresAt: time.Date(2026, 11, 25, 13, 0, 0, 0, time.UTC),
 		Uses:      1,
 	}

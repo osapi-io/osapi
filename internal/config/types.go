@@ -129,7 +129,7 @@ type NATSServerUser struct {
 	// Password for the user.
 	Password string `mapstructure:"password" mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
 	// Role limits the user to the subjects of one osapi process.
-	Role string `mapstructure:"role" validate:"omitempty,oneof=controller agent setup" doc:"The osapi process that the user is: controller, agent or setup. The user can then use only the subjects of that process. Empty lets the user use each subject."`
+	Role string `mapstructure:"role" validate:"omitempty,oneof=controller agent setup join" doc:"The osapi process that the user is: controller, agent, setup, or join, the bootstrap user of a join over NATS. The user can then use only the subjects of that process. Empty lets the user use each subject."`
 }
 
 // NATS configuration settings.
@@ -339,6 +339,54 @@ type Controller struct {
 	PKI ControllerPKI `mapstructure:"pki,omitempty"`
 	// Secrets holds the vaults that the controller resolves secrets from.
 	Secrets ControllerSecrets `mapstructure:"secrets,omitempty"`
+	// Join is the join of an agent over NATS.
+	Join ControllerJoin `mapstructure:"join,omitempty"`
+}
+
+// ControllerJoin is the join of an agent over NATS: where the agent reaches
+// NATS, the bootstrap user that the join string carries, and the user that
+// the join gives the agent. With the embedded server, the two users default
+// to the users of nats.server.auth.users with the roles join and agent.
+type ControllerJoin struct {
+	// URL is where an agent reaches NATS, in the join string.
+	URL string `mapstructure:"url" doc:"Where an agent reaches NATS, nats://host:port or tls://host:port, which the join string carries. Empty is nats.server.url." validate:"omitempty,url,startswith=nats://|startswith=tls://" choice:"where the agents reach NATS; empty is nats.server.url"`
+	// User is the bootstrap user, which can only send the join request.
+	User NATSUser `mapstructure:"user" doc:"The bootstrap NATS user that the join string carries: a user that can only send the join request. Empty is the user of nats.server.auth.users with the role join." choice:"the deployment's own user; empty takes the embedded server's"`
+	// Agent is the NATS user that the join gives the agent.
+	Agent NATSUser `mapstructure:"agent" doc:"The NATS user that the join gives the agent. Empty is the user of nats.server.auth.users with the role agent." choice:"the deployment's own user; empty takes the embedded server's"`
+}
+
+// NATSUser is a NATS user and its password.
+type NATSUser struct {
+	Username string `mapstructure:"username" doc:"The username." choice:"the deployment's own user"`
+	Password string `mapstructure:"password" doc:"The password." choice:"the deployment's own user" mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
+}
+
+// JoinUsers are the bootstrap user and the agent user of the join over
+// NATS: controller.join's, or else the users of the embedded server with
+// the roles join and agent.
+func (c Config) JoinUsers() (NATSUser, NATSUser) {
+	join, agent := c.Controller.Join.User, c.Controller.Join.Agent
+	for _, u := range c.NATS.Server.Auth.Users {
+		switch {
+		case u.Role == "join" && join.Username == "":
+			join = NATSUser{Username: u.Username, Password: u.Password}
+		case u.Role == "agent" && agent.Username == "":
+			agent = NATSUser{Username: u.Username, Password: u.Password}
+		}
+	}
+
+	return join, agent
+}
+
+// JoinURL is where an agent reaches NATS in a join: controller.join.url, or
+// else nats.server.url.
+func (c Config) JoinURL() string {
+	if c.Controller.Join.URL != "" {
+		return c.Controller.Join.URL
+	}
+
+	return c.NATS.Server.URL
 }
 
 // ControllerSecrets holds the vaults of the controller.
@@ -550,10 +598,11 @@ type ControllerPKI struct {
 
 // AgentConfig configuration settings.
 type AgentConfig struct {
-	// Join is the join string, osapi://<host>:<port>?token=...&fp=SHA256:...,
+	// Join is the join string: nats:// or tls:// for a join over NATS, or
+	// osapi://<host>:<port>?token=...&fp=SHA256:... for one over HTTPS,
 	// that osapi controller join token create prints. An agent that is not
 	// admitted joins with it at its first start.
-	Join string `mapstructure:"join" mask:"password" doc:"The join string that osapi controller join token create prints. An agent that is not admitted joins with it at its first start, over HTTPS to the controller whose certificate the string pins, and is admitted at once. Without it, the agent asks to be admitted over NATS." choice:"the join string of the operator; empty asks over NATS"`
+	Join string `mapstructure:"join" mask:"password" doc:"The join string that osapi controller join token create prints. An agent that is not admitted joins with it at its first start and is admitted at once: over NATS for nats:// and tls://, which also gives the agent its NATS user, or over HTTPS for osapi://. Without it, the agent asks to be admitted over NATS." choice:"the join string of the operator; empty asks over NATS"`
 	// NATS connection settings for the agent.
 	NATS NATSConnection `mapstructure:"nats"`
 	// Consumer settings for the agent's JetStream consumer.

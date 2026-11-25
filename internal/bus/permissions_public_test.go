@@ -140,8 +140,20 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				"$JS.API.STREAM.UPDATE.osapi-JOBS",
 				"osapi.enroll.request",
 			},
-			sub:    []string{"_INBOX.abc", "osapi.enroll.request"},
+			sub:    []string{"_INBOX.abc", "osapi.enroll.request", "osapi.join.request"},
 			notSub: []string{"osapi.jobs.query._all"},
+		},
+		{
+			name: "the join user sends the join request, and nothing else",
+			role: bus.RoleJoin,
+			pub:  []string{"osapi.join.request"},
+			notPub: []string{
+				"osapi.enroll.request",
+				"$JS.API.INFO",
+				"$KV.osapi-agent-registry.x",
+			},
+			sub:    []string{"_INBOX.abc"},
+			notSub: []string{"osapi.join.request"},
 		},
 		{
 			name: "setup makes and updates each stream, and nothing else",
@@ -183,6 +195,22 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 	}
 }
 
+func (s *PermissionsPublicTestSuite) TestControllerAnswersRequests() {
+	p, err := bus.RolePermissions(bus.RoleController, "osapi", s.cfg)
+	s.Require().NoError(err)
+	s.True(p.Responses)
+	s.False(allows(p.Publish, "_INBOX.abc"), "it answers through the response permission only")
+
+	auth := config.NATSServerAuth{Type: "user_pass", Users: []config.NATSServerUser{
+		{Username: "c", Password: "p", Role: "controller"},
+	}}
+	opts, err := bus.ServerOptions("127.0.0.1", 4222, "", auth, config.ServerTLS{})
+	s.Require().NoError(err)
+	s.Require().NoError(bus.ApplyRoles(opts, auth, "osapi", s.cfg))
+	s.Require().NotNil(opts.Users[0].Permissions.Response)
+	s.Equal(1, opts.Users[0].Permissions.Response.MaxMsgs)
+}
+
 func (s *PermissionsPublicTestSuite) TestNoNamespace() {
 	p, err := bus.RolePermissions(bus.RoleAgent, "", s.cfg)
 	s.Require().NoError(err)
@@ -213,6 +241,7 @@ func (s *PermissionsPublicTestSuite) TestApplyRoles() {
 				s.True(allows(opts.Users[0].Permissions.Publish.Allow, "osapi.enroll.request"))
 				s.False(allows(opts.Users[0].Permissions.Publish.Allow, "osapi.jobs.modify._all"))
 				s.True(allows(opts.Users[0].Permissions.Subscribe.Allow, "_INBOX.x"))
+				s.Nil(opts.Users[0].Permissions.Response, "an agent answers no request")
 				s.Nil(opts.Users[1].Permissions)
 			},
 		},

@@ -13,17 +13,18 @@ import (
 var joinTokenCreateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey: "token",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi controller join token create\n\x1b[1;38;2;0;213;255mJoin token:\x1b[0m\n  \x1b[38;2;10;143;176mID:\x1b[0m           1a2b3c4d\n  \x1b[38;2;10;143;176mToken:\x1b[0m        osapi_jt_1a2b3c4d.vC3m9...\n  \x1b[38;2;10;143;176mJoin string:\x1b[0m  osapi://osapi.example.com:8080?fp=SHA256%3A9f86d08...&token=osapi_jt_1a2b3c4d.vC3m9...\n  \x1b[38;2;10;143;176mExpires:\x1b[0m      2026-11-25 13:00:00\n  \x1b[38;2;10;143;176mUses:\x1b[0m         1\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"id\": \"1a2b3c4d\",\n  \"token\": \"osapi_jt_1a2b3c4d.vC3m9...\",\n  \"join\": \"osapi://osapi.example.com:8080?fp=SHA256%3A9f86d08...\\u0026token=osapi_jt_1a2b3c4d.vC3m9...\",\n  \"expires_at\": \"2026-11-25T13:00:00Z\",\n  \"uses\": 1\n}\n```",
+		reference.Result:  "The command prints:\n\n```ansi\n$ osapi controller join token create\n\x1b[1;38;2;0;213;255mJoin token:\x1b[0m\n  \x1b[38;2;10;143;176mID:\x1b[0m           1a2b3c4d\n  \x1b[38;2;10;143;176mToken:\x1b[0m        osapi_jt_1a2b3c4d.vC3m9...\n  \x1b[38;2;10;143;176mJoin string:\x1b[0m  tls://nats.example.com:4222?fp=SHA256%3A9f86d08...&ns=osapi&pass=...&token=osapi_jt_1a2b3c4d.vC3m9...&user=join\n  \x1b[38;2;10;143;176mExpires:\x1b[0m      2026-11-25 13:00:00\n  \x1b[38;2;10;143;176mUses:\x1b[0m         1\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"id\": \"1a2b3c4d\",\n  \"token\": \"osapi_jt_1a2b3c4d.vC3m9...\",\n  \"join\": \"tls://nats.example.com:4222?fp=SHA256%3A9f86d08...\\u0026ns=osapi\\u0026pass=...\\u0026token=osapi_jt_1a2b3c4d.vC3m9...\\u0026user=join\",\n  \"expires_at\": \"2026-11-25T13:00:00Z\",\n  \"uses\": 1\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi controller join token create\n  osapi controller join token create --expires 24h --uses 10 --labels group=web",
-	Long:    "The token admits an agent at its join, until it expires or its uses are\ngone. The controller keeps a hash of it, not the token: this command prints\nthe token one time. The join string has the controller's URL\n(`controller.api.url`) and the fingerprint of its certificate, so an agent\nchecks the controller before it sends anything. It needs\n`controller.api.tls.enabled`.",
+	Example: "  osapi controller join token create\n  osapi controller join token create --expires 24h --uses 10 --labels group=web\n  osapi controller join token create --transport https",
+	Long:    "The token admits an agent at its join, until it expires or its uses are\ngone. The controller keeps a hash of it, not the token: this command prints\nthe token one time.\n\nBy default the agent joins over NATS, and needs to reach NATS only. The join\nstring has the address of NATS (`controller.join.url`, or else\n`nats.server.url`), the bootstrap user, which can only send the join request,\nand for a `tls://` server the fingerprint of its certificate, which the agent\npins. The controller gives the agent its own NATS user at the join.\n\nWith `--transport https`, the agent joins over the controller's API: the join\nstring has `controller.api.url` and the fingerprint of the API's certificate.\nIt needs `controller.api.tls.enabled`.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		expires, _ := cmd.Flags().GetString("expires")
 		uses, _ := cmd.Flags().GetInt("uses")
 		labels, _ := cmd.Flags().GetStringToString("labels")
+		transport, _ := cmd.Flags().GetString("transport")
 
-		return clicommand.Run(cmd, join.Group, "token create", join.CreateInput{Expires: expires, Uses: uses, Labels: labels})
+		return clicommand.Run(cmd, join.Group, "token create", join.CreateInput{Expires: expires, Uses: uses, Labels: labels, Transport: transport})
 	},
 	Short: "Make a join token, and print it with the join string",
 	Use:   "create",
@@ -63,6 +64,7 @@ func init() {
 	joinTokenCreateCmd.Flags().String("expires", "1h", "How long the token admits agents, as a Go duration such as 1h")
 	joinTokenCreateCmd.Flags().Int("uses", 1, "How many agents the token admits")
 	joinTokenCreateCmd.Flags().StringToString("labels", nil, "Labels that each agent that joins with the token gets, as key=value")
+	joinTokenCreateCmd.Flags().String("transport", "nats", "How the agent joins: nats, over the NATS server, or https, over the controller's API")
 	joinTokenRevokeCmd.Flags().String("id", "", "The token, as token list shows it")
 	_ = joinTokenRevokeCmd.MarkFlagRequired("id")
 	clicommand.AddCommands(join.Group, joinTokenCreateCmd, joinTokenListCmd, joinTokenRevokeCmd)

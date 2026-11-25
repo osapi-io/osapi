@@ -100,24 +100,26 @@ host needs:
   that has not reported for that time. Thus a host that went away leaves no
   record.
 
-## Planned: agents that join over NATS
+## Agents that join over NATS
 
-This part is planned work (osapi-io/osapi#1313, osapi-io/osapi#1416). Today an
-agent needs its NATS settings and credentials in its own config. With the
-planned join, a host needs only a join string. The agent connects to NATS with a
-bootstrap credential that can only ask to join, the controller admits it, and
-gives it its own credential and its config over NATS. An agent then needs to
-reach NATS, and nothing else, which fits a site behind a NATS leaf node or a
-firewall that lets only NATS through.
+A host needs only a join string
+([Join with a token](../features/platform/agent-identity.md#join-with-a-token)).
+The agent connects to NATS as the bootstrap user, which can only send the join
+request. The controller admits it, and gives it its own NATS user. An agent then
+needs to reach NATS, and nothing else, which fits a site behind a NATS leaf node
+or a firewall that lets only NATS through.
 
-What you provision then depends on your server:
+What you provision depends on your server:
 
-| Your NATS server   | What you give osapi                                                            |
-| ------------------ | ------------------------------------------------------------------------------ |
-| Operator mode      | An account, and a scoped signing key whose template is the agent's permissions |
-| Auth callout       | An `auth_callout` block that names osapi's issuer key (NATS 2.10 or later)     |
-| Static users       | A join user that can send only the join request, and an agent user             |
-| osapi's own server | Nothing                                                                        |
+| Your NATS server   | What you give osapi                                                                                        | Built                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| osapi's own server | Users with the roles `join` and `agent` in `nats.server.auth.users`                                        | yes                           |
+| Static users       | A join user that can send only the join request, and an agent user, in `controller.join.user` and `.agent` | yes                           |
+| Operator mode      | An account, and a scoped signing key whose template is the agent's permissions                             | planned (osapi-io/osapi#1416) |
+| Auth callout       | An `auth_callout` block that names osapi's issuer key (NATS 2.10 or later)                                 | planned (osapi-io/osapi#1416) |
+
+`osapi nats permissions get --role join` and `--role agent` print the subjects
+of the two users.
 
 With a scoped signing key, the operator's key stays with you: the template sets
 the most that osapi can give an agent. The design is
