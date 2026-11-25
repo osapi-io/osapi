@@ -119,12 +119,17 @@ func subComponents(
 
 // tracingAddr is where the controller sends its spans, the OTLP gRPC
 // endpoint. Tracing listens on nothing, so this is the one sub-component whose
-// address is a destination, not a bind address. stdout exports nowhere.
+// address is a destination, not a bind address, with grpcs:// when it
+// connects with TLS. stdout exports nowhere.
 func tracingAddr(
 	tc config.TracingConfig,
 ) string {
 	if !tc.Enabled || tc.Exporter != "otlp" || tc.OTLPEndpoint == "" {
 		return ""
+	}
+
+	if tc.TLS.Enabled {
+		return "grpcs://" + tc.OTLPEndpoint
 	}
 
 	return "grpc://" + tc.OTLPEndpoint

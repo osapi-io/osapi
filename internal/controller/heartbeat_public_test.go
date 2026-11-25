@@ -167,6 +167,20 @@ func (s *HeartbeatPublicTestSuite) TestSubComponents() {
 		s.Equal("grpc://127.0.0.1:4317", got["controller.tracing"].Address)
 	})
 
+	s.Run("when tracing exports over otlp with TLS reports grpcs://", func() {
+		var cfg config.Config
+		cfg.Telemetry.Tracing = config.TracingConfig{
+			Enabled:      true,
+			Exporter:     "otlp",
+			OTLPEndpoint: "127.0.0.1:4317",
+			TLS:          config.ClientTLS{Enabled: true},
+		}
+
+		got := controller.ExportSubComponents(cfg)
+
+		s.Equal("grpcs://127.0.0.1:4317", got["controller.tracing"].Address)
+	})
+
 	s.Run("when tracing exports to stdout or is off reports no address", func() {
 		for _, tc := range []config.TracingConfig{
 			{Enabled: true, Exporter: "stdout"},
