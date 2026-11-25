@@ -23,6 +23,8 @@ package token
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -35,6 +37,8 @@ type Deps struct {
 	Tokens Tokens
 	// Config is what the methods read from the osapi config.
 	Config Config
+	// Audit writes an entry to the audit log of the controller, or is nil.
+	Audit func(ctx context.Context, e audit.Entry) error
 }
 
 // Tokens signs and checks tokens. *authtoken.Token is one.
