@@ -127,3 +127,12 @@ func read(
 
 	return file, settings, nil
 }
+
+// Spec is each key of the config file, by section.
+func Spec(
+	_ context.Context,
+	_ Deps,
+	_ SpecInput,
+) (SpecOutput, error) {
+	return SpecOutput{Kinds: osapiconfig.Spec().Sections()}, nil
+}

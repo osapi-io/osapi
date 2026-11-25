@@ -35,7 +35,7 @@ type DescribePublicTestSuite struct {
 // each DSL, the Go SDK and gohai's collectors. CONTRIBUTING.md of the specs
 // says each has the same four commands.
 var describers = []string{
-	"dsl behavior", "dsl endpoint", "dsl command", "dsl chain", "sdk", "agent collector",
+	"dsl behavior", "dsl endpoint", "dsl command", "dsl chain", "sdk", "agent collector", "config",
 }
 
 // TestFourCommands: each group that describes a part of osapi-io has list,

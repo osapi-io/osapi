@@ -20,7 +20,10 @@
 
 package config
 
-import osapiconfig "github.com/osapi-io/osapi/internal/config"
+import (
+	osapiconfig "github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/guide"
+)
 
 // ListInput is the input of list, which has none.
 type ListInput struct{}
@@ -57,6 +60,14 @@ type GetOutput struct {
 	_       struct{} `title:"Config"`
 	File    string   `               json:"file"`
 	Setting Setting  `               json:"setting"`
+}
+
+// SpecInput is the input of spec get, which has none.
+type SpecInput struct{}
+
+// SpecOutput is each section of the config file, with its keys.
+type SpecOutput struct {
+	Kinds []guide.Section `json:"kinds" table:"sections"`
 }
 
 // ValidateInput is the input of validate, which has none.

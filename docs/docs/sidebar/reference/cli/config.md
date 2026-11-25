@@ -37,6 +37,13 @@ shows the same.
 | ----- | ------ | -------- | ------------------------------------------------ |
 | --key | string | required | The setting to show, such as controller.api.port |
 
+## [osapi config spec get](../../usage/cli/config/spec/get.md)
+
+|             |                                                                            |
+| ----------- | -------------------------------------------------------------------------- |
+| Method      | spec get                                                                   |
+| Description | Print the config file: each key, what it does, its type, default and rules |
+
 ## [osapi config validate](../../usage/cli/config/validate.md)
 
 |             |                                                 |
