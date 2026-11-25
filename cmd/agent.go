@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	gohaicmd "github.com/osapi-io/gohai/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -38,6 +39,13 @@ var agentCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(agentCmd)
+
+	// gohai's own collector commands, as gohai collector has them: the agent
+	// reads its facts through these collectors, and the two binaries print
+	// the same thing from the same code (osapi-io/osapi#1364).
+	agentCmd.AddCommand(gohaicmd.NewCollectorCommand("osapi agent collector"))
+	// They describe the build, not a host, so they read no config.
+	skipConfigCmds["collector"] = true
 
 	// Each behavior's settings, as --<behavior>-<setting> flags bound to
 	// behaviors.<behavior>.<setting>. The agent runs the methods that read
