@@ -54,4 +54,8 @@ type MethodSpec struct {
 	Result string `json:"result,omitempty"`
 	// Examples is the number of examples of the call in the SDK's examples.
 	Examples int `json:"examples"`
+	// Program is a method that a program calls, not a person, such as the
+	// agent's join. It has no example, which would run it against a
+	// controller.
+	Program bool `json:"program,omitempty"`
 }

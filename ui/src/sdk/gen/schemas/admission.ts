@@ -17,6 +17,8 @@ export interface Admission {
   fingerprint: string;
   /** The hostname the node gave. */
   hostname: string;
+  /** On an admitted record that a join made, the ID of the join token that admitted the node. */
+  join_token?: string;
   /** When the node last reported. */
   last_seen?: string;
   /** The machine ID of the node. */

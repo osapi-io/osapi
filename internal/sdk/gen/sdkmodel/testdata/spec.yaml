@@ -120,6 +120,7 @@ paths:
     get:
       operationId: GetNodeFile
       x-osapi-method: status
+      x-osapi-program: true
       x-osapi-examples:
         - doc: A file
           input: {hostname: web-01, path: /etc/hosts}

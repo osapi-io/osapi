@@ -22,6 +22,8 @@ package agent
 import (
 	"time"
 
+	"github.com/osapi-io/osapi/internal/secret"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -142,4 +144,26 @@ type TimelineEvent struct {
 	Hostname  string    `json:"hostname,omitempty"`
 	Message   string    `json:"message,omitempty"`
 	Error     string    `json:"error,omitempty"`
+}
+
+// JoinInput is an agent's join: its request, in the body.
+type JoinInput struct {
+	Body JoinRequest `in:"body" validate:"required"`
+}
+
+// JoinRequest is what an agent sends to join: the join token, who it is, its
+// two public keys, and its signature over them with its signing key.
+type JoinRequest struct {
+	Token         secret.Value `json:"token"          validate:"required,max=256"        mask:"password" doc:"The join token, osapi_jt_<id>.<secret>, from osapi controller join token create."`
+	MachineID     string       `json:"machine_id"     validate:"required,min=1,max=255"                  doc:"The machine ID of the host."`
+	Hostname      string       `json:"hostname"       validate:"required,min=1,max=255"                  doc:"The hostname of the host."`
+	PublicKey     string       `json:"public_key"     validate:"required,max=128,base64"                 doc:"The agent's Ed25519 signing key, in base64."`
+	EncryptionKey string       `json:"encryption_key" validate:"required,max=128"                        doc:"The agent's X25519 encryption key, in the nkeys form."`
+	Signature     string       `json:"signature"      validate:"required,max=256,base64"                 doc:"The signature of the request by the signing key, in base64."`
+}
+
+// JoinResponse is the controller's answer to a join that admits.
+type JoinResponse struct {
+	_                   struct{} `title:"Join"`
+	ControllerPublicKey string   `             json:"controller_public_key" doc:"The controller's Ed25519 public key, in base64, which the agent keeps and checks each job with."`
 }

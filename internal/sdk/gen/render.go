@@ -658,6 +658,9 @@ func writeSpec(
 			if me.Input != nil {
 				d[jen.Id("Input")] = jen.Lit(me.Input.Name)
 			}
+			if me.Program {
+				d[jen.Id("Program")] = jen.True()
+			}
 			if me.Result != nil {
 				d[jen.Id("Result")] = jen.Lit(me.Result.String())
 			}

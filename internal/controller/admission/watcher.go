@@ -72,6 +72,9 @@ type Watcher struct {
 	// acceptable. Zero means a replacement takes effect at once, which is
 	// also the behaviour when nothing configures it.
 	rotationGrace time.Duration
+
+	// joinTokens is the store of join tokens, which Join takes a use of.
+	joinTokens JoinTokens
 }
 
 // SetRotationGracePeriod sets how long a replaced key keeps verifying after a

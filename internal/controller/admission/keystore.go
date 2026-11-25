@@ -76,8 +76,10 @@ func acceptedKey(
 func (w *Watcher) recordAgentKey(
 	ctx context.Context,
 	pending PendingAgent,
+	joinToken string,
 ) error {
 	record := AcceptedAgent{
+		JoinToken:     joinToken,
 		MachineID:     pending.MachineID,
 		Hostname:      pending.Hostname,
 		PublicKey:     pending.PublicKey,

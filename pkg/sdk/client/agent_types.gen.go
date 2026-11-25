@@ -122,6 +122,13 @@ type FactKeysResponse struct {
 	TotalItems int `json:"total_items"`
 }
 
+// JoinResponse is the JoinResponse of the spec.
+type JoinResponse struct {
+	// The controller's Ed25519 public key, in base64, which the agent keeps and
+	// checks each job with.
+	ControllerPublicKey string `json:"controller_public_key"`
+}
+
 // ListAgentsResponse is the ListAgentsResponse of the spec.
 type ListAgentsResponse struct {
 	// The active agents.

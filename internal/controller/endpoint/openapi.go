@@ -98,6 +98,11 @@ const AreasExtension = "x-osapi-areas"
 // x-displayName is a title for a person, such as Package updates.
 const GroupExtension = "x-osapi-group"
 
+// ProgramExtension marks an operation that a program calls, not a person,
+// which NoCommand sets: it has no CLI command, and the SDK needs no example
+// of it, since an example would run it against a controller.
+const ProgramExtension = "x-osapi-program"
+
 // SecretExtension marks a field, or the value of a map, of type
 // secret.Value: a reference, secret://<vault>/<key>, or the value.
 const SecretExtension = "x-osapi-secret"
@@ -176,6 +181,9 @@ func (b *builder) operation(
 		// the SDK's generator names each typed method, and the group's area,
 		// which puts the method's SDK page in its folder.
 		Extensions: map[string]any{MethodExtension: m.Name, AreaExtension: string(g.Area)},
+	}
+	if m.noCommand {
+		op.Extensions[ProgramExtension] = true
 	}
 	// The examples of the method, as the input that each one sends. The
 	// SDK's generator writes a program that calls the method with each one.

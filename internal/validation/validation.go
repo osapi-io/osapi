@@ -287,6 +287,9 @@ func init() {
 	rule.Register("package_version", rule.Pattern(PackageVersionPattern.String()))
 	rule.Register("no_linebreak", rule.Pattern(`^[^\r\n]*$`))
 	rule.Register("file_mode", rule.Pattern(`^[0-7]{3,4}$`))
+	// base64 is the validator's own rule, standard base64 with padding, which
+	// OpenAPI names the format byte.
+	rule.Register("base64", rule.Format("byte"))
 	rule.Register("resource_name", rule.Pattern(resourceNamePattern.String()))
 	rule.Register("nats_name", rule.Pattern(natsNamePattern.String()))
 	rule.Register("container_id", rule.Pattern(containerIDPattern.String()))

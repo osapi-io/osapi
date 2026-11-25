@@ -11,11 +11,52 @@ package mocks
 
 import (
 	context "context"
+	ed25519 "crypto/ed25519"
 	reflect "reflect"
 
 	job "github.com/osapi-io/osapi/internal/job"
+	pki "github.com/osapi-io/osapi/internal/pki"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockJoiner is a mock of Joiner interface.
+type MockJoiner struct {
+	ctrl     *gomock.Controller
+	recorder *MockJoinerMockRecorder
+	isgomock struct{}
+}
+
+// MockJoinerMockRecorder is the mock recorder for MockJoiner.
+type MockJoinerMockRecorder struct {
+	mock *MockJoiner
+}
+
+// NewMockJoiner creates a new mock instance.
+func NewMockJoiner(ctrl *gomock.Controller) *MockJoiner {
+	mock := &MockJoiner{ctrl: ctrl}
+	mock.recorder = &MockJoinerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockJoiner) EXPECT() *MockJoinerMockRecorder {
+	return m.recorder
+}
+
+// Join mocks base method.
+func (m *MockJoiner) Join(ctx context.Context, req pki.JoinRequest) (ed25519.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Join", ctx, req)
+	ret0, _ := ret[0].(ed25519.PublicKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Join indicates an expected call of Join.
+func (mr *MockJoinerMockRecorder) Join(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Join", reflect.TypeOf((*MockJoiner)(nil).Join), ctx, req)
+}
 
 // MockJobs is a mock of Jobs interface.
 type MockJobs struct {

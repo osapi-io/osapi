@@ -17,22 +17,24 @@ Manage the agents in the fleet: discovery, drain and PKI enrollment.
 | Description | Manage the agents in the fleet: discovery, drain and PKI enrollment |
 | Area        | fleet                                                               |
 
-### Methods (5)
+### Methods (6)
 
-| NAME    | VERB | PATH                                    | PERMISSION  | OPERATION ID    |
-| ------- | ---- | --------------------------------------- | ----------- | --------------- |
-| facts   | GET  | /api/agent/facts                        | agent:read  | GetAgentFacts   |
-| list    | GET  | /api/agent                              | agent:read  | GetAgents       |
-| get     | GET  | /api/agent/&#123;hostname&#125;         | agent:read  | GetAgentDetails |
-| drain   | POST | /api/agent/&#123;hostname&#125;/drain   | agent:write | DrainAgent      |
-| undrain | POST | /api/agent/&#123;hostname&#125;/undrain | agent:write | UndrainAgent    |
+| NAME    | VERB | PATH                                    | PERMISSION    | OPERATION ID    |
+| ------- | ---- | --------------------------------------- | ------------- | --------------- |
+| facts   | GET  | /api/agent/facts                        | agent:read    | GetAgentFacts   |
+| list    | GET  | /api/agent                              | agent:read    | GetAgents       |
+| get     | GET  | /api/agent/&#123;hostname&#125;         | agent:read    | GetAgentDetails |
+| join    | POST | /api/agent/join                         | none (public) | JoinAgent       |
+| drain   | POST | /api/agent/&#123;hostname&#125;/drain   | agent:write   | DrainAgent      |
+| undrain | POST | /api/agent/&#123;hostname&#125;/undrain | agent:write   | UndrainAgent    |
 
-### Types (5)
+### Types (6)
 
 | NAME    | INPUT                                 | OUTPUT                                                                                                                                                                                                                                                                                                                                   |
 | ------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | facts   | FactsInput                            | FactKeysResponse &#123; items, total_items &#125;                                                                                                                                                                                                                                                                                        |
 | list    | ListInput                             | ListAgentsResponse &#123; items, total_items &#125;                                                                                                                                                                                                                                                                                      |
 | get     | GetInput &#123; hostname\* &#125;     | AgentInfo &#123; hostname, machine_id, state, conditions, labels, started_at, load_average, os_info, version, fingerprint, registered_at, uptime, memory, architecture, kernel_version, cpu_count, fqdn, service_mgr, package_mgr, primary_interface, interfaces, routes, missing_programs, facts, timeline, key_stored, verified &#125; |
+| join    | JoinInput                             | JoinResponse &#123; controller_public_key &#125;                                                                                                                                                                                                                                                                                         |
 | drain   | DrainInput &#123; hostname\* &#125;   |                                                                                                                                                                                                                                                                                                                                          |
 | undrain | UndrainInput &#123; hostname\* &#125; |                                                                                                                                                                                                                                                                                                                                          |

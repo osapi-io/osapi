@@ -30,6 +30,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/secret"
+
+	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
+
 	"github.com/osapi-io/osapi/internal/area"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -107,6 +112,41 @@ var Group = endpoint.Register(endpoint.Define(
 		Explain("Get detailed information about a specific agent by hostname.").
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
+	endpoint.Post[JoinInput, JoinResponse]("join").
+		Handle(Join).
+		Sub("join").
+		ID("JoinAgent").
+		Public().
+		NoCommand().
+		Describe("Join an agent with a join token").
+		Explain("An agent calls it one time, at its first start, over HTTPS, after it checks "+
+			"the controller's certificate against the fingerprint of its join string. A token "+
+			"that admits admits the machine at once, as admit does, and the admission record "+
+			"names the token. The request is signed with the agent's signing key, which shows "+
+			"that it holds the key that it asks the controller to admit. It needs no bearer "+
+			"token: the join token authorizes it.").
+		Returns("The machine is admitted.").
+		Fails("no token", joinWith(func(r *JoinRequest) { r.Token = "" })).
+		Fails("a token over 256 characters", joinWith(func(r *JoinRequest) { r.Token = secret.Value(strings.Repeat("a", 257)) })).
+		Fails("no machine ID", joinWith(func(r *JoinRequest) { r.MachineID = "" })).
+		Fails("a machine ID over 255 characters", joinWith(func(r *JoinRequest) { r.MachineID = long })).
+		Fails("no hostname", joinWith(func(r *JoinRequest) { r.Hostname = "" })).
+		Fails("a hostname over 255 characters", joinWith(func(r *JoinRequest) { r.Hostname = long })).
+		Fails("no public key", joinWith(func(r *JoinRequest) { r.PublicKey = "" })).
+		Fails("a public key over 128 characters", joinWith(func(r *JoinRequest) { r.PublicKey = strings.Repeat("a", 132) })).
+		Fails("a public key that is not base64", joinWith(func(r *JoinRequest) { r.PublicKey = "not base64!" })).
+		Fails("no encryption key", joinWith(func(r *JoinRequest) { r.EncryptionKey = "" })).
+		Fails("an encryption key over 128 characters", joinWith(func(r *JoinRequest) { r.EncryptionKey = strings.Repeat("a", 129) })).
+		Fails("no signature", joinWith(func(r *JoinRequest) { r.Signature = "" })).
+		Fails("a signature over 256 characters", joinWith(func(r *JoinRequest) { r.Signature = strings.Repeat("a", 260) })).
+		Fails("a signature that is not base64", joinWith(func(r *JoinRequest) { r.Signature = "not base64!" })).
+		Errors(
+			endpoint.Forbidden(jointoken.ErrInvalid, "The token is not one the controller has, or it was revoked."),
+			endpoint.Forbidden(jointoken.ErrExpired, "The token has expired."),
+			endpoint.Forbidden(jointoken.ErrUsed, "The token has no use left."),
+			endpoint.Forbidden(admission.ErrJoinSignature, "The request is not signed by the key that it asks to admit."),
+			endpoint.Unavailable(admission.ErrNoJoinTokens, "This controller takes no join."),
+		),
 	endpoint.Post[DrainInput, struct{}]("drain").
 		AdminOnly().
 		Fails("a hostname over 255 characters", DrainInput{Hostname: long}).
@@ -149,3 +189,20 @@ var Group = endpoint.Register(endpoint.Define(
 // long is a name over the 255 characters each name may have, for the inputs
 // that Fails declares.
 var long = strings.Repeat("a", 256)
+
+// joinWith is a valid join, with one change, for the Fails of join.
+func joinWith(
+	change func(*JoinRequest),
+) JoinInput {
+	r := JoinRequest{
+		Token:         "osapi_jt_1a2b3c4d.secret",
+		MachineID:     "d530664edc1c431eb5ef1e9dfd6617a5",
+		Hostname:      "web-01",
+		PublicKey:     "MCowBQYDK2VwAyEA",
+		EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		Signature:     "c2lnbmF0dXJl",
+	}
+	change(&r)
+
+	return JoinInput{Body: r}
+}

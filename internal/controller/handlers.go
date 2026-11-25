@@ -99,7 +99,7 @@ func handlers(
 			d.log,
 			signingKeys,
 			customRoles,
-			agent.Deps{Jobs: d.jobs},
+			agentDeps(d),
 			admissionDeps(d),
 			telemetry.Deps{Traces: traceReader(d.log, d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
@@ -149,6 +149,20 @@ func traceReader(
 	t.TLSClientConfig = tlsConfig
 
 	return traces.NewJaeger(cfg.URL, &http.Client{Timeout: 10 * time.Second, Transport: t})
+}
+
+// agentDeps is what the agent group uses: the job client, and the
+// admission watcher as the joiner. A controller with no watcher gives no
+// joiner, not an interface that holds a nil pointer.
+func agentDeps(
+	d handlerDeps,
+) agent.Deps {
+	deps := agent.Deps{Jobs: d.jobs}
+	if d.admission != nil {
+		deps.Joiner = d.admission
+	}
+
+	return deps
 }
 
 // admissionDeps is what the admission group's handlers use: the watcher of

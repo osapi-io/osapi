@@ -355,10 +355,14 @@ func (g *Group) GroupNotes() string {
 	return g.CommandNotes
 }
 
-// Commands are the group's methods, for the command layer.
+// Commands are the group's methods, for the command layer, but a method
+// that NoCommand marks.
 func (g *Group) Commands() []command.Command {
 	out := make([]command.Command, 0, len(g.Methods))
 	for _, m := range g.Methods {
+		if m.noCommand {
+			continue
+		}
 		out = append(out, m)
 	}
 
@@ -453,21 +457,23 @@ type Method struct {
 	returns          string
 	permission       types.Permission
 	public           bool
-	adminOnly        bool
-	handler          any
-	cmdShort         string
-	location         string
-	cmdUse           string
-	cmdLong          string
-	examples         []CommandExample
-	unprinted        bool
-	prefix           []string
-	refusals         []Refusal
-	notes, result    string
-	status           int
-	says             string
-	errors           []Error
-	answers          []Answered
+	// noCommand is a method with no CLI command, which NoCommand sets.
+	noCommand     bool
+	adminOnly     bool
+	handler       any
+	cmdShort      string
+	location      string
+	cmdUse        string
+	cmdLong       string
+	examples      []CommandExample
+	unprinted     bool
+	prefix        []string
+	refusals      []Refusal
+	notes, result string
+	status        int
+	says          string
+	errors        []Error
+	answers       []Answered
 }
 
 func (m *Method) apply(
@@ -613,7 +619,17 @@ func (m *Method) AdminOnly() *Method {
 	return m
 }
 
-// Public makes the method need no auth. Only the health probes are public.
+// NoCommand makes the method have no CLI command: a program calls it, not a
+// person, such as the agent's join. Its route, its spec and its SDK method
+// are as each other method's.
+func (m *Method) NoCommand() *Method {
+	m.noCommand = true
+
+	return m
+}
+
+// Public makes the method need no auth: the health probes, and the agent's
+// join, which the join token authorizes.
 func (m *Method) Public() *Method {
 	m.public = true
 

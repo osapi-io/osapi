@@ -51,7 +51,7 @@ func (w *Watcher) AcceptAgent(
 	// authority for every later verification, and acceptance is the only
 	// event allowed to write it. Deleting the pending entry below discards
 	// the only other copy.
-	if err := w.recordAgentKey(ctx, pending); err != nil {
+	if err := w.recordAgentKey(ctx, pending, ""); err != nil {
 		return err
 	}
 

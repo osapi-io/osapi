@@ -82,6 +82,9 @@ type Record struct {
 	DecidedAt time.Time `json:"decided_at,omitempty"`
 	// Reason is why a machine was rejected.
 	Reason string `json:"reason,omitempty"`
+	// JoinToken is the ID of the join token that admitted the machine, on
+	// an admitted record that a join made.
+	JoinToken string `json:"join_token,omitempty"`
 	// Previous is the state of the machine's earlier record, on a pending
 	// record; PreviousFingerprint is that record's fingerprint.
 	Previous            types.AdmissionState `json:"previous,omitempty"`
@@ -286,6 +289,7 @@ func (w *Watcher) read(
 			EncryptionKey: a.EncryptionKey,
 			State:         types.AdmissionAdmitted,
 			AdmittedAt:    a.AcceptedAt,
+			JoinToken:     a.JoinToken,
 		}, true
 	default:
 		var r Record

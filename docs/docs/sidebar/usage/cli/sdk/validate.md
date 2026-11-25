@@ -13,7 +13,8 @@ The rules:
 - `values`: Each type for values has at least one value. Fix: Give the type
   constants and list them in its Values.
 - `example`: Each method of the client has an example, which examples/sdk/client
-  runs. Fix: Add an Example to the method's definition, and run just generate.
+  runs, but a method that a program calls, which the spec marks x-osapi-program.
+  Fix: Add an Example to the method's definition, and run just generate.
 - `client`: Each service that client.Services lists is a field of client.Client,
   and each of its methods is a method of that field. Fix: Run just generate:
   client.Services and the client come from one run.

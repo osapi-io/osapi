@@ -120,6 +120,39 @@ record has no encryption key. Enroll it again:
 1. Admit the machine with that fingerprint. The pending record shows the old
    fingerprint as `previous_fingerprint`.
 
+### Join with a token
+
+An agent can join with a join token in place of a request that waits for an
+administrator. The administrator makes the token on the controller, and gives
+the agent the join string that the command prints:
+
+```bash
+osapi controller join token create --expires 1h --uses 1
+```
+
+```yaml
+agent:
+  join: osapi://controller.example.com:8080?fp=SHA256%3A...&token=osapi_jt_...
+```
+
+At its first start, an agent that is not admitted joins with the string:
+
+1. It connects to the controller over HTTPS, and refuses a certificate whose
+   fingerprint is not the one in the string. Thus it sends the token only to the
+   controller that made it.
+1. It sends `POST /api/agent/join` with the token, its machine ID, its hostname
+   and its two public keys, signed with its signing key.
+1. A token that has not expired, has uses left and was not revoked admits the
+   machine at once. The admission record names the token, as `join_token` in
+   `osapi client admission get`.
+1. The agent saves the controller's key as `enrolled-controller.pub`, and starts
+   to take jobs.
+
+A join that fails, such as with an expired token, logs the reason, and the agent
+asks to be admitted over NATS, as above. The controller needs
+`controller.api.tls.enabled` for join token create, because the join string pins
+the API's certificate.
+
 ### Auto-admit mode
 
 For development and tests, set `controller.pki.auto_admit: true`. Then the

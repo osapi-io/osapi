@@ -25,6 +25,10 @@ type Admission struct {
 	// The hostname the node gave.
 	Hostname string `json:"hostname"`
 
+	// On an admitted record that a join made, the ID of the join token that
+	// admitted the node.
+	JoinToken string `json:"join_token,omitempty"`
+
 	// When the node last reported.
 	LastSeen time.Time `json:"last_seen,omitzero"`
 
