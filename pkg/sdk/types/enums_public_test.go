@@ -34,7 +34,7 @@ type EnumsPublicTestSuite struct {
 
 // TestDoc: a type that describes itself in the spec says what it is.
 func (s *EnumsPublicTestSuite) TestDoc() {
-	s.Contains(types.ContentRaw.Doc(), "How a deploy treats a file")
+	s.Contains(types.ContentRaw.Doc(), "how a deploy treats a file")
 }
 
 // TestValid: a value of a closed set is valid when its type lists it.
@@ -105,4 +105,20 @@ func TestEnumsPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(EnumsPublicTestSuite))
+}
+
+// TestAll: each closed set of the SDK is listed once, says what it is, and
+// lists values that it holds valid.
+func (s *EnumsPublicTestSuite) TestAll() {
+	all := types.All()
+	s.NotEmpty(all)
+	seen := map[string]bool{}
+	for _, t := range all {
+		s.False(seen[t.Name], "%s is listed once", t.Name)
+		seen[t.Name] = true
+		s.NotEmpty(t.Doc, "%s says what it is", t.Name)
+		s.NotEmpty(t.Values, "%s has values", t.Name)
+	}
+	s.True(seen["ContentType"])
+	s.Contains(types.ContentRaw.Doc(), "how a deploy treats a file")
 }

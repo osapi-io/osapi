@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * SpanStatus is whether the work of a span failed.
+ */
 export type SpanStatus = typeof SpanStatus[keyof typeof SpanStatus];
 
 

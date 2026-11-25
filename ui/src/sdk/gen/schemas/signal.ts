@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * Signal is a signal that osapi sends to a process, by its name without SIG.
+ */
 export type Signal = typeof Signal[keyof typeof Signal];
 
 

@@ -141,6 +141,8 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### AddressFamily
 
+AddressFamily is the IP address family of an interface.
+
 A `string`, one of `inet`, `inet6`, `dual`.
 
 ### AgentInfo
@@ -233,13 +235,13 @@ Memory usage information.
 
 ### NetworkInterfaceResponse
 
-| Field    | Type            | Description |
-| -------- | --------------- | ----------- |
-| `Family` | `AddressFamily` |             |
-| `IPv4`   | `string`        |             |
-| `IPv6`   | `string`        |             |
-| `MAC`    | `string`        |             |
-| `Name`   | `string`        |             |
+| Field    | Type            | Description                                             |
+| -------- | --------------- | ------------------------------------------------------- |
+| `Family` | `AddressFamily` | AddressFamily is the IP address family of an interface. |
+| `IPv4`   | `string`        |                                                         |
+| `IPv6`   | `string`        |                                                         |
+| `MAC`    | `string`        |                                                         |
+| `Name`   | `string`        |                                                         |
 
 ### NodeCondition
 

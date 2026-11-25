@@ -148,6 +148,13 @@ func run(
 		}
 		out[rel] = f
 	}
+	tf, err := typesDocFile(filepath.Join(root, typesDir))
+	if err != nil {
+		return err
+	}
+	if tf != nil {
+		out[filepath.Join(typesDir, typesDocName)] = tf
+	}
 	for rel, f := range out {
 		if err := w.Go(rel, f); err != nil {
 			return err

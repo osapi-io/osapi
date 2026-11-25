@@ -235,7 +235,7 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ContainerState
 
-Only the containers in this state: running, stopped or all, the default.
+ContainerState is the containers that a list shows, by their state.
 
 A `string`, one of `running`, `stopped`, `all`.
 

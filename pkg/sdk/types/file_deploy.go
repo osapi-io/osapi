@@ -22,7 +22,8 @@ package types
 
 import "slices"
 
-// ContentType is how a deploy treats a file: as bytes, or as a template.
+// ContentType is how a deploy treats a file: raw writes its bytes as they
+// are; template renders it with Go text/template and the agent's facts.
 type ContentType string
 
 // The content types of a file.
@@ -37,13 +38,6 @@ const (
 // Values are each content type.
 func (ContentType) Values() []ContentType {
 	return []ContentType{ContentRaw, ContentTemplate}
-}
-
-// Doc is the description of ContentType in the spec of each group that uses
-// it.
-func (ContentType) Doc() string {
-	return "How a deploy treats a file: raw writes its bytes as they are; " +
-		"template renders it with Go text/template and the agent's facts."
 }
 
 // Valid reports whether c is one of the content types.

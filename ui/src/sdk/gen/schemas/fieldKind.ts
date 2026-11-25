@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * FieldKind is how a form takes the value of a field.
+ */
 export type FieldKind = typeof FieldKind[keyof typeof FieldKind];
 
 

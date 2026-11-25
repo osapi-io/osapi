@@ -8957,6 +8957,7 @@ components:
             validate: omitempty,max=1024
       type: object
     AddressFamily:
+      description: AddressFamily is the IP address family of an interface.
       enum:
         - inet
         - inet6
@@ -9731,6 +9732,7 @@ components:
         - permissions
       type: object
     ColumnKind:
+      description: ColumnKind is what a field of an answer holds.
       enum:
         - value
         - values
@@ -9738,12 +9740,14 @@ components:
         - list
       type: string
     FieldIn:
+      description: FieldIn is where a field of a request goes.
       enum:
         - path
         - query
         - body
       type: string
     FieldKind:
+      description: FieldKind is how a form takes the value of a field.
       enum:
         - string
         - number
@@ -9955,7 +9959,7 @@ components:
         - secret:write
       type: string
     ContentType:
-      description: 'How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
+      description: 'ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
       enum:
         - raw
         - template
@@ -10207,6 +10211,7 @@ components:
           type: string
       type: object
     ComponentType:
+      description: ComponentType is the type of a part of osapi that reports its health.
       enum:
         - controller
         - nats
@@ -10688,6 +10693,7 @@ components:
         - total_items
       type: object
     SpanStatus:
+      description: SpanStatus is whether the work of a span failed.
       enum:
         - ok
         - error
@@ -11334,6 +11340,7 @@ components:
         - results
       type: object
     ContainerState:
+      description: ContainerState is the containers that a list shows, by their state.
       enum:
         - running
         - stopped
@@ -12403,6 +12410,7 @@ components:
         - status
       type: object
     InterfaceType:
+      description: InterfaceType is the type of a network interface that osapi manages.
       enum:
         - ethernet
         - dummy
@@ -13442,6 +13450,7 @@ components:
         - results
       type: object
     Signal:
+      description: Signal is a signal that osapi sends to a process, by its name without SIG.
       enum:
         - TERM
         - KILL
@@ -13451,6 +13460,7 @@ components:
         - USR2
       type: string
     Interval:
+      description: Interval is how often a scheduled job runs, in place of a cron schedule.
       enum:
         - hourly
         - daily
@@ -14238,6 +14248,7 @@ components:
         - results
       type: object
     Lock:
+      description: Lock is whether a user account refuses logins with its password.
       enum:
         - locked
         - unlocked

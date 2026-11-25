@@ -49,6 +49,7 @@ components:
           type: string
       type: object
     Lock:
+      description: Lock is whether a user account refuses logins with its password.
       enum:
         - locked
         - unlocked

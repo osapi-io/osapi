@@ -6,8 +6,8 @@ import types "github.com/osapi-io/osapi/pkg/sdk/types"
 
 // FileInfo is the FileInfo of the spec.
 type FileInfo struct {
-	// How a deploy treats a file: raw writes its bytes as they are; template
-	// renders it with Go text/template and the agent's facts.
+	// ContentType is how a deploy treats a file: raw writes its bytes as they are;
+	// template renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type"`
 
 	// The name of the file.
@@ -25,8 +25,8 @@ type FileInfo struct {
 
 // FileInfoResponse is the FileInfoResponse of the spec.
 type FileInfoResponse struct {
-	// How a deploy treats a file: raw writes its bytes as they are; template
-	// renders it with Go text/template and the agent's facts.
+	// ContentType is how a deploy treats a file: raw writes its bytes as they are;
+	// template renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type"`
 
 	// The name of the file.
@@ -54,8 +54,8 @@ type FileUploadResponse struct {
 	// an object with the same SHA-256 digest.
 	Changed bool `json:"changed"`
 
-	// How a deploy treats a file: raw writes its bytes as they are; template
-	// renders it with Go text/template and the agent's facts.
+	// ContentType is how a deploy treats a file: raw writes its bytes as they are;
+	// template renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type"`
 
 	// The name of the uploaded file.

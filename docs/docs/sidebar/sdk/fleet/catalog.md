@@ -81,7 +81,7 @@ The fields of each type are the properties of its schema in the API's spec.
 | --------- | ----------------- | -------------------------------------------------- |
 | `Columns` | `[]CatalogColumn` | The columns of an object, or of a list of objects. |
 | `Doc`     | `string`          | What the field is.                                 |
-| `Kind`    | `ColumnKind`      |                                                    |
+| `Kind`    | `ColumnKind`      | ColumnKind is what a field of an answer holds.     |
 | `Label`   | `string`          | The label of the field.                            |
 | `Name`    | `string`          | The json name of the field.                        |
 | `Render`  | `string`          | The render tag of the field, such as bytes.        |
@@ -99,8 +99,8 @@ The fields of each type are the properties of its schema in the API's spec.
 | Field      | Type        | Description                                                                         |
 | ---------- | ----------- | ----------------------------------------------------------------------------------- |
 | `Doc`      | `string`    | What the field is.                                                                  |
-| `In`       | `FieldIn`   |                                                                                     |
-| `Kind`     | `FieldKind` |                                                                                     |
+| `In`       | `FieldIn`   | FieldIn is where a field of a request goes.                                         |
+| `Kind`     | `FieldKind` | FieldKind is how a form takes the value of a field.                                 |
 | `Name`     | `string`    | The json name of the field.                                                         |
 | `Options`  | `[]string`  | The values that the field takes: those of its type with enum, or of its oneof rule. |
 | `Required` | `bool`      | The request needs the field.                                                        |
@@ -158,13 +158,19 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ColumnKind
 
+ColumnKind is what a field of an answer holds.
+
 A `string`, one of `value`, `values`, `object`, `list`.
 
 ### FieldIn
 
+FieldIn is where a field of a request goes.
+
 A `string`, one of `path`, `query`, `body`.
 
 ### FieldKind
+
+FieldKind is how a form takes the value of a field.
 
 A `string`, one of `string`, `number`, `bool`, `list`, `object`.
 

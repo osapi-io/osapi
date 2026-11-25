@@ -35,11 +35,11 @@ func (s *ScheduleService) List(
 // ScheduleCreateInput is the input of ScheduleService.Create. A field of the
 // path goes in the path, and each other field in the body.
 type ScheduleCreateInput struct {
-	// How a deploy treats a file: raw writes its bytes as they are; template
-	// renders it with Go text/template and the agent's facts.
+	// ContentType is how a deploy treats a file: raw writes its bytes as they are;
+	// template renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type,omitzero"`
 
-	// Interval is the property interval.
+	// Interval is how often a scheduled job runs, in place of a cron schedule.
 	Interval types.Interval `json:"interval,omitzero"`
 
 	// The entry, and its file name, such as backup.
@@ -101,8 +101,8 @@ type ScheduleUpdateInput struct {
 	// The name of the path: the entry, such as backup.
 	Name string `json:"-"`
 
-	// How a deploy treats a file: raw writes its bytes as they are; template
-	// renders it with Go text/template and the agent's facts.
+	// ContentType is how a deploy treats a file: raw writes its bytes as they are;
+	// template renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type,omitzero"`
 
 	// The object to deploy; the entry's own when empty.

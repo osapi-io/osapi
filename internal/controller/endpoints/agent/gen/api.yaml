@@ -2,6 +2,7 @@
 components:
   schemas:
     AddressFamily:
+      description: AddressFamily is the IP address family of an interface.
       enum:
         - inet
         - inet6

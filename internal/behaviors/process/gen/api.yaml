@@ -176,6 +176,7 @@ components:
         - timeout
       type: string
     Signal:
+      description: Signal is a signal that osapi sends to a process, by its name without SIG.
       enum:
         - TERM
         - KILL

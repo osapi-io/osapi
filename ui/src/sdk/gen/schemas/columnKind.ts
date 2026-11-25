@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * ColumnKind is what a field of an answer holds.
+ */
 export type ColumnKind = typeof ColumnKind[keyof typeof ColumnKind];
 
 

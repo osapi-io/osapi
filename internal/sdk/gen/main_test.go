@@ -186,3 +186,39 @@ func replaceOnce(
 ) string {
 	return strings.Replace(text, old, repl, 1)
 }
+
+// TestRunTypesDoc writes types.gen.go beside the shared types that have
+// Values, and fails when the package of the types does not parse.
+func (s *MainTestSuite) TestRunTypesDoc() {
+	tests := []struct {
+		name         string
+		types        string
+		validateFunc func(error)
+	}{
+		{
+			name:  "when a shared type has Values, its Doc is written",
+			types: "package types\n\n// Shade is a tone.\ntype Shade string\n\nfunc (Shade) Values() []Shade { return nil }\n",
+			validateFunc: func(err error) {
+				s.Require().NoError(err)
+				data, err := os.ReadFile(filepath.Join(s.root, typesDir, typesDocName))
+				s.Require().NoError(err)
+				s.Contains(string(data), "func (Shade) Doc() string")
+			},
+		},
+		{
+			name:  "when the shared types do not parse, it is an error",
+			types: "package types\n\ntype\n",
+			validateFunc: func(err error) {
+				s.Error(err)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.write(typesDir+"/shade.go", tc.types)
+			tc.validateFunc(generate(s.root, false))
+		})
+	}
+}

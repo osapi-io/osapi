@@ -59,7 +59,7 @@ type ProcessResult struct {
 	// The process ID.
 	PID int `json:"pid,omitempty"`
 
-	// Signal is the property signal.
+	// Signal is a signal that osapi sends to a process, by its name without SIG.
 	Signal types.Signal `json:"signal,omitzero"`
 
 	// What happened on the host: ok, the operation ran and succeeded; failed, it

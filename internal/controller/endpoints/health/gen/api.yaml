@@ -104,6 +104,7 @@ components:
           type: string
       type: object
     ComponentType:
+      description: ComponentType is the type of a part of osapi that reports its health.
       enum:
         - controller
         - nats

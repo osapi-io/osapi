@@ -76,7 +76,7 @@ type InterfaceCreateInput struct {
 	// The MTU, from 68 to 9000.
 	MTU int `json:"mtu,omitempty"`
 
-	// Type is the property type.
+	// InterfaceType is the type of a network interface that osapi manages.
 	Type types.InterfaceType `json:"type,omitzero"`
 
 	// Turn on wake-on-LAN.
@@ -137,7 +137,7 @@ type InterfaceUpdateInput struct {
 	// The MTU, from 68 to 9000.
 	MTU int `json:"mtu,omitempty"`
 
-	// Type is the property type.
+	// InterfaceType is the type of a network interface that osapi manages.
 	Type types.InterfaceType `json:"type,omitzero"`
 
 	// Turn on wake-on-LAN.

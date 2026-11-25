@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * AddressFamily is the IP address family of an interface.
+ */
 export type AddressFamily = typeof AddressFamily[keyof typeof AddressFamily];
 
 

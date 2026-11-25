@@ -200,29 +200,29 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ContentType
 
-How a deploy treats a file: raw writes its bytes as they are; template renders
-it with Go text/template and the agent's facts.
+ContentType is how a deploy treats a file: raw writes its bytes as they are;
+template renders it with Go text/template and the agent's facts.
 
 A `string`, one of `raw`, `template`.
 
 ### FileInfo
 
-| Field         | Type          | Description                                                                                                                    |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ContentType` | `ContentType` | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Name`        | `string`      | The name of the file.                                                                                                          |
-| `SHA256`      | `string`      | SHA-256 hash of the file content.                                                                                              |
-| `Size`        | `int`         | File size in bytes.                                                                                                            |
-| `Source`      | `string`      | Source of the file: 'system' or 'user'.                                                                                        |
+| Field         | Type          | Description                                                                                                                                   |
+| ------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `ContentType` | ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Name`        | `string`      | The name of the file.                                                                                                                         |
+| `SHA256`      | `string`      | SHA-256 hash of the file content.                                                                                                             |
+| `Size`        | `int`         | File size in bytes.                                                                                                                           |
+| `Source`      | `string`      | Source of the file: 'system' or 'user'.                                                                                                       |
 
 ### FileInfoResponse
 
-| Field         | Type          | Description                                                                                                                    |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `ContentType` | `ContentType` | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Name`        | `string`      | The name of the file.                                                                                                          |
-| `SHA256`      | `string`      | SHA-256 hash of the file content.                                                                                              |
-| `Size`        | `int`         | File size in bytes.                                                                                                            |
+| Field         | Type          | Description                                                                                                                                   |
+| ------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `ContentType` | ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Name`        | `string`      | The name of the file.                                                                                                                         |
+| `SHA256`      | `string`      | SHA-256 hash of the file content.                                                                                                             |
+| `Size`        | `int`         | File size in bytes.                                                                                                                           |
 
 ### FileListResponse
 
@@ -233,13 +233,13 @@ A `string`, one of `raw`, `template`.
 
 ### FileUploadResponse
 
-| Field         | Type          | Description                                                                                                                    |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `Changed`     | `bool`        | Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest.             |
-| `ContentType` | `ContentType` | How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
-| `Name`        | `string`      | The name of the uploaded file.                                                                                                 |
-| `SHA256`      | `string`      | SHA-256 hash of the file content.                                                                                              |
-| `Size`        | `int`         | File size in bytes.                                                                                                            |
+| Field         | Type          | Description                                                                                                                                   |
+| ------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Changed`     | `bool`        | Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest.                            |
+| `ContentType` | `ContentType` | ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts. |
+| `Name`        | `string`      | The name of the uploaded file.                                                                                                                |
+| `SHA256`      | `string`      | SHA-256 hash of the file content.                                                                                                             |
+| `Size`        | `int`         | File size in bytes.                                                                                                                           |
 
 ### StaleDeployment
 

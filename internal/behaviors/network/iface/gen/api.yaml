@@ -229,6 +229,7 @@ components:
         - status
       type: object
     InterfaceType:
+      description: InterfaceType is the type of a network interface that osapi manages.
       enum:
         - ethernet
         - dummy

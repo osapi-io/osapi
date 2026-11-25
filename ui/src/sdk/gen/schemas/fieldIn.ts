@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * FieldIn is where a field of a request goes.
+ */
 export type FieldIn = typeof FieldIn[keyof typeof FieldIn];
 
 

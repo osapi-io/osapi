@@ -39,8 +39,8 @@ func (s *NodeFileService) Get(
 // NodeFileUpdateInput is the input of NodeFileService.Update. A field of the
 // path goes in the path, and each other field in the body.
 type NodeFileUpdateInput struct {
-	// How a deploy treats a file: raw writes its bytes as they are; template
-	// renders it with Go text/template and the agent's facts.
+	// ContentType is how a deploy treats a file: raw writes its bytes as they are;
+	// template renders it with Go text/template and the agent's facts.
 	ContentType types.ContentType `json:"content_type,omitzero"`
 
 	// Group that owns the file; left as written when empty.

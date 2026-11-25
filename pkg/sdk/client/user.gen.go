@@ -105,7 +105,7 @@ type UserUpdateInput struct {
 	// Its home directory, which usermod moves the files to.
 	Home string `json:"home,omitempty"`
 
-	// Lock is the property lock.
+	// Lock is whether a user account refuses logins with its password.
 	Lock types.Lock `json:"lock,omitzero"`
 
 	// Its login shell, such as /bin/bash.

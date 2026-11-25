@@ -207,6 +207,8 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### Lock
 
+Lock is whether a user account refuses logins with its password.
+
 A `string`, one of `locked`, `unlocked`.
 
 ### RowStatus
@@ -262,7 +264,7 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 | `Name`   | `string`   | The name of the path. The user to remove, with its home directory, such as alice. |
 | `Groups` | `[]string` | The groups it is a member of, which replace the groups it has.                    |
 | `Home`   | `string`   | Its home directory, which usermod moves the files to.                             |
-| `Lock`   | `Lock`     |                                                                                   |
+| `Lock`   | `Lock`     | Lock is whether a user account refuses logins with its password.                  |
 | `Shell`  | `string`   | Its login shell, such as /bin/bash.                                               |
 
 ## Example
