@@ -371,6 +371,12 @@ func (b *builder) enum(
 	if _, ok := b.schemas[t.Name()]; !ok {
 		s := openapi3.NewStringSchema()
 		s.Description = b.docs[t]
+		// A type of pkg/sdk/types that describes itself has one description
+		// in each spec that uses it, so two specs merge.
+		if d, ok := reflect.Zero(t).Interface().(interface{ Doc() string }); ok &&
+			s.Description == "" {
+			s.Description = d.Doc()
+		}
 		for _, v := range values {
 			s.Enum = append(s.Enum, v)
 		}

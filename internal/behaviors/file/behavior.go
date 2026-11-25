@@ -129,7 +129,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("An owner that is an option",
 			UpdateInput{ObjectName: "example.conf", Path: path, Owner: "-r"}, "account_name").
 		Fails("A content type that is neither",
-			UpdateInput{ObjectName: "example.conf", Path: path, ContentType: "binary"}, "oneof"),
+			UpdateInput{ObjectName: "example.conf", Path: path, ContentType: "binary"}, "enum"),
 	behavior.Write("delete", Delete).
 		Describe("Remove a file that osapi deployed").
 		Explain("Removes the file and keeps its record, marked undeployed, so status reports "+

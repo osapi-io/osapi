@@ -247,7 +247,7 @@ type storeObjects struct {
 func (o storeObjects) Object(
 	ctx context.Context,
 	name string,
-) ([]byte, string, error) {
+) ([]byte, types.ContentType, error) {
 	content, err := o.store.ObjectGetBytes(ctx, o.bucket, name)
 	if errors.Is(err, jetstream.ErrObjectNotFound) {
 		return nil, "", fmt.Errorf("object %q: %w", name, behavior.ErrNotFound)
@@ -255,10 +255,10 @@ func (o storeObjects) Object(
 	if err != nil {
 		return nil, "", fmt.Errorf("object %q: %w", name, err)
 	}
-	contentType := string(types.ContentRaw)
+	contentType := types.ContentRaw
 	if info, err := o.store.ObjectInfo(ctx, o.bucket, name); err == nil && info.Headers != nil {
 		if ct := info.Headers.Get("Osapi-Content-Type"); ct != "" {
-			contentType = ct
+			contentType = types.ContentType(ct)
 		}
 	}
 

@@ -20,7 +20,11 @@
 
 package managedfile
 
-import "io/fs"
+import (
+	"io/fs"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // UpdateInput is a file to write and keep a record of.
 type UpdateInput struct {
@@ -36,7 +40,7 @@ type UpdateInput struct {
 	Object string `json:"object" validate:"omitempty" doc:"The object of the object store that the content came from; empty when it came from no object"`
 	// ContentType is how the content was made from the object: as it is, or
 	// rendered as a template.
-	ContentType string `json:"content_type" validate:"omitempty,oneof=raw template" doc:"How the content was made from its object: raw or template"`
+	ContentType types.ContentType `json:"content_type" validate:"omitempty,enum" doc:"How the content was made from its object: raw or template"`
 	// ObjectSHA256 is the checksum of the object as it was read, which the
 	// stale check compares with the object's now. The content's own checksum
 	// is not it when the object is a template.
@@ -87,6 +91,6 @@ type File struct {
 	// Object, ContentType and ObjectSHA256 are where the content came from,
 	// for the record. A secret's record keeps no ObjectSHA256 either.
 	Object       string
-	ContentType  string
+	ContentType  types.ContentType
 	ObjectSHA256 string
 }

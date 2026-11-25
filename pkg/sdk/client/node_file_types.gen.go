@@ -47,17 +47,6 @@ type FileStatus struct {
 	Status types.RowStatus `json:"status"`
 }
 
-// FileUpdateRequestContentType: How the object is written: raw as it is, or
-// template rendered with .Facts, .Vars and .Hostname; the object's own when
-// empty.
-type FileUpdateRequestContentType string
-
-// The values of FileUpdateRequestContentType.
-const (
-	FileUpdateRequestContentTypeRaw      FileUpdateRequestContentType = "raw"
-	FileUpdateRequestContentTypeTemplate FileUpdateRequestContentType = "template"
-)
-
 // FileUpdateResult is the FileUpdateResult of the spec.
 type FileUpdateResult struct {
 	// Whether the host changed.

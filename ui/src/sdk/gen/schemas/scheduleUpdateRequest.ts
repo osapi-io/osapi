@@ -4,12 +4,11 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ScheduleUpdateRequestContentType } from './scheduleUpdateRequestContentType';
+import type { ContentType } from './contentType';
 import type { ScheduleUpdateRequestVars } from './scheduleUpdateRequestVars';
 
 export interface ScheduleUpdateRequest {
-  /** The content type, raw or template; the object's own when empty */
-  content_type?: ScheduleUpdateRequestContentType;
+  content_type?: ContentType;
   /**
      * The object to deploy; the entry's own when empty
      * @minLength 1

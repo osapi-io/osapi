@@ -20,16 +20,18 @@
 
 package file
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // UpdateInput is what update writes: an object of the object store, at a
 // path, with its mode and ownership.
 type UpdateInput struct {
-	ObjectName  string            `json:"object_name"            validate:"required,min=1,max=255"       doc:"The object of the object store, from osapi client file list"`
-	Path        string            `json:"path"                   validate:"required,startswith=/"        doc:"Absolute path of the file on the host"                                                                                       telemetry:"attr"`
-	Mode        string            `json:"mode,omitempty"         validate:"omitempty,file_mode"          doc:"Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644"`
-	Owner       string            `json:"owner,omitempty"        validate:"omitempty,account_name"       doc:"User that owns the file; left as written when empty"`
-	Group       string            `json:"group,omitempty"        validate:"omitempty,account_name"       doc:"Group that owns the file; left as written when empty"`
-	ContentType string            `json:"content_type,omitempty" validate:"omitempty,oneof=raw template" doc:"How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty"`
-	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                    doc:"Variables of a template, as .Vars, each as key=value"`
+	ObjectName  string            `json:"object_name"            validate:"required,min=1,max=255" doc:"The object of the object store, from osapi client file list"`
+	Path        string            `json:"path"                   validate:"required,startswith=/"  doc:"Absolute path of the file on the host"                                                                                       telemetry:"attr"`
+	Mode        string            `json:"mode,omitempty"         validate:"omitempty,file_mode"    doc:"Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644"`
+	Owner       string            `json:"owner,omitempty"        validate:"omitempty,account_name" doc:"User that owns the file; left as written when empty"`
+	Group       string            `json:"group,omitempty"        validate:"omitempty,account_name" doc:"Group that owns the file; left as written when empty"`
+	ContentType types.ContentType `json:"content_type,omitempty" validate:"omitempty,enum"         doc:"How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty"`
+	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"              doc:"Variables of a template, as .Vars, each as key=value"`
 }
 
 // UpdateResult is the file that update wrote.

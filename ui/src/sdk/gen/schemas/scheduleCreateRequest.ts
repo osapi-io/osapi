@@ -4,13 +4,12 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ScheduleCreateRequestContentType } from './scheduleCreateRequestContentType';
+import type { ContentType } from './contentType';
 import type { ScheduleCreateRequestInterval } from './scheduleCreateRequestInterval';
 import type { ScheduleCreateRequestVars } from './scheduleCreateRequestVars';
 
 export interface ScheduleCreateRequest {
-  /** The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty */
-  content_type?: ScheduleCreateRequestContentType;
+  content_type?: ContentType;
   /** The interval of a script in /etc/cron.daily and the like; give it or schedule */
   interval?: ScheduleCreateRequestInterval;
   /**

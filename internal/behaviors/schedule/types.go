@@ -20,6 +20,8 @@
 
 package schedule
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ListInput takes nothing: list reads every entry that osapi deployed.
 type ListInput struct{}
 
@@ -37,7 +39,7 @@ type CreateInput struct {
 	Schedule    string            `json:"schedule,omitempty"     validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"                     doc:"A cron expression, such as */5 * * * *; give it or interval"`
 	Interval    string            `json:"interval,omitempty"     validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly" doc:"The interval of a script in /etc/cron.daily and the like; give it or schedule"`
 	User        string            `json:"user,omitempty"         validate:"omitempty,account_name"                                                                       doc:"The user the entry runs as"`
-	ContentType string            `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"                                                                 doc:"The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty"`
+	ContentType types.ContentType `json:"content_type,omitempty" validate:"omitempty,enum"                                                                               doc:"The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty"`
 	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                                                                                    doc:"The vars of a template, as key=value"`
 }
 
@@ -48,7 +50,7 @@ type UpdateInput struct {
 	Object      string            `json:"object,omitempty"       validate:"omitempty,min=1,max=255"       doc:"The object to deploy; the entry's own when empty"`
 	Schedule    string            `json:"schedule,omitempty"     validate:"omitempty,cron_schedule"       doc:"A new cron expression; the entry's own when empty"`
 	User        string            `json:"user,omitempty"         validate:"omitempty,account_name"        doc:"The user the entry runs as; the entry's own when empty"`
-	ContentType string            `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"  doc:"The content type, raw or template; the object's own when empty"`
+	ContentType types.ContentType `json:"content_type,omitempty" validate:"omitempty,enum"                doc:"The content type, raw or template; the object's own when empty"`
 	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                     doc:"The vars of a template, as key=value"`
 }
 

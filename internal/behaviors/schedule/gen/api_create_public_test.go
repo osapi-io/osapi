@@ -11,6 +11,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	schedule "github.com/osapi-io/osapi/internal/behaviors/schedule"
 	"github.com/osapi-io/osapi/internal/behaviors/schedule/gen"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APICreatePublicTestSuite struct {
@@ -129,7 +130,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				"server1",
 				"schedule.create",
 				schedule.CreateInput{
-					ContentType: "template",
+					ContentType: types.ContentType("template"),
 					Name:        "osapitest",
 					Object:      "osapitest.tmpl",
 					Schedule:    "0 2 * * *",
@@ -152,7 +153,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				"_all",
 				"schedule.create",
 				schedule.CreateInput{
-					ContentType: "template",
+					ContentType: types.ContentType("template"),
 					Name:        "osapitest",
 					Object:      "osapitest.tmpl",
 					Schedule:    "0 2 * * *",

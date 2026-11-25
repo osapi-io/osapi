@@ -135,13 +135,11 @@ var Behavior = behavior.Register(behavior.Define(
 		).
 		Example("A template, rendered with its vars",
 			CreateInput{
-				Name:     "osapitest",
-				Object:   "osapitest.tmpl",
-				Schedule: "0 2 * * *",
-				ContentType: string(
-					types.ContentTemplate,
-				),
-				Vars: map[string]string{"target": "/srv"},
+				Name:        "osapitest",
+				Object:      "osapitest.tmpl",
+				Schedule:    "0 2 * * *",
+				ContentType: types.ContentTemplate,
+				Vars:        map[string]string{"target": "/srv"},
 			},
 			Result{Name: "osapitest", Changed: true},
 			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw),
@@ -168,7 +166,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A template that reads a var the request does not give",
 			CreateInput{
 				Name: "osapitest", Object: "osapitest.tmpl", Schedule: "0 2 * * *",
-				ContentType: string(types.ContentTemplate),
+				ContentType: types.ContentTemplate,
 			},
 			"render template",
 			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw)).

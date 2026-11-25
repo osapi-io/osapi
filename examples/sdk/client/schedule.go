@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -99,7 +100,7 @@ func runCreate3(
 	target string,
 ) error {
 	resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
-		ContentType: client.ScheduleCreateRequestContentType("template"),
+		ContentType: types.ContentType("template"),
 		Name:        "osapitest",
 		Object:      "osapitest.tmpl",
 		Schedule:    "0 2 * * *",

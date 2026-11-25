@@ -23,6 +23,12 @@ components:
       x-oapi-codegen-extra-tags:
         validate: required,max=64,resource_name
   schemas:
+    ContentType:
+      description: 'How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
+      enum:
+        - raw
+        - template
+      type: string
     ErrorResponse:
       properties:
         details:
@@ -75,13 +81,7 @@ components:
     ScheduleCreateRequest:
       properties:
         content_type:
-          description: 'The content type: raw, or template to render the object with the agent''s facts and vars; the object''s own when empty'
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
+          $ref: '#/components/schemas/ContentType'
         interval:
           description: The interval of a script in /etc/cron.daily and the like; give it or schedule
           enum:
@@ -231,13 +231,7 @@ components:
     ScheduleUpdateRequest:
       properties:
         content_type:
-          description: The content type, raw or template; the object's own when empty
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
+          $ref: '#/components/schemas/ContentType'
         object:
           description: The object to deploy; the entry's own when empty
           maxLength: 255

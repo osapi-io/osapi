@@ -4,17 +4,6 @@ package client
 
 import types "github.com/osapi-io/osapi/pkg/sdk/types"
 
-// ScheduleCreateRequestContentType: The content type: raw, or template to
-// render the object with the agent's facts and vars; the object's own when
-// empty.
-type ScheduleCreateRequestContentType string
-
-// The values of ScheduleCreateRequestContentType.
-const (
-	ScheduleCreateRequestContentTypeRaw      ScheduleCreateRequestContentType = "raw"
-	ScheduleCreateRequestContentTypeTemplate ScheduleCreateRequestContentType = "template"
-)
-
 // ScheduleCreateRequestInterval: The interval of a script in /etc/cron.daily
 // and the like; give it or schedule.
 type ScheduleCreateRequestInterval string
@@ -78,13 +67,3 @@ type ScheduleResult struct {
 	// timeout, the host did not answer, so nobody knows whether it ran.
 	Status types.RowStatus `json:"status"`
 }
-
-// ScheduleUpdateRequestContentType: The content type, raw or template; the
-// object's own when empty.
-type ScheduleUpdateRequestContentType string
-
-// The values of ScheduleUpdateRequestContentType.
-const (
-	ScheduleUpdateRequestContentTypeRaw      ScheduleUpdateRequestContentType = "raw"
-	ScheduleUpdateRequestContentTypeTemplate ScheduleUpdateRequestContentType = "template"
-)

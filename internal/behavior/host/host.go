@@ -31,6 +31,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/provider"
@@ -255,5 +257,8 @@ type Objects interface {
 	// Object is the content of the object name, and the content type that
 	// its uploader gave it: raw, or template. An object that is not there
 	// is an error that wraps behavior.ErrNotFound.
-	Object(ctx context.Context, name string) (content []byte, contentType string, err error)
+	Object(
+		ctx context.Context,
+		name string,
+	) (content []byte, contentType types.ContentType, err error)
 }

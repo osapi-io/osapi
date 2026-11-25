@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // NodeFileService calls the API's NodeFile group: files of the object store,
@@ -37,10 +39,9 @@ func (s *NodeFileService) Get(
 // NodeFileUpdateInput is the input of NodeFileService.Update. A field of the
 // path goes in the path, and each other field in the body.
 type NodeFileUpdateInput struct {
-	// How the object is written: raw as it is, or template rendered with .Facts,
-	// .Vars and .Hostname; the object's own when empty. It is one of: raw,
-	// template.
-	ContentType FileUpdateRequestContentType `json:"content_type,omitzero"`
+	// How a deploy treats a file: raw writes its bytes as they are; template
+	// renders it with Go text/template and the agent's facts.
+	ContentType types.ContentType `json:"content_type,omitzero"`
 
 	// Group that owns the file; left as written when empty.
 	Group string `json:"group,omitempty"`

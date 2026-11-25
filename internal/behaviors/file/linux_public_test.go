@@ -25,6 +25,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -71,7 +73,7 @@ func (s *LinuxPublicTestSuite) TestDeploy() {
 					Return(object.Object{Name: "a", Content: "x\n", SHA256: "sum"}, nil)
 				s.files.EXPECT().Write(gomock.Any(), gomock.Any()).DoAndReturn(
 					func(_ context.Context, f managedfile.File) (bool, error) {
-						s.Equal("raw", f.ContentType)
+						s.Equal(types.ContentRaw, f.ContentType)
 						s.Equal("sum", f.ObjectSHA256)
 						s.Equal("a", f.Object)
 						s.Equal("x\n", string(f.Content))

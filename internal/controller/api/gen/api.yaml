@@ -11772,13 +11772,7 @@ components:
     FileUpdateRequest:
       properties:
         content_type:
-          description: 'How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object''s own when empty'
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
+          $ref: '#/components/schemas/ContentType'
         group:
           description: Group that owns the file; left as written when empty
           pattern: ^[a-z_][a-z0-9_-]*\$?$
@@ -13488,13 +13482,7 @@ components:
     ScheduleCreateRequest:
       properties:
         content_type:
-          description: 'The content type: raw, or template to render the object with the agent''s facts and vars; the object''s own when empty'
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
+          $ref: '#/components/schemas/ContentType'
         interval:
           description: The interval of a script in /etc/cron.daily and the like; give it or schedule
           enum:
@@ -13644,13 +13632,7 @@ components:
     ScheduleUpdateRequest:
       properties:
         content_type:
-          description: The content type, raw or template; the object's own when empty
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
+          $ref: '#/components/schemas/ContentType'
         object:
           description: The object to deploy; the entry's own when empty
           maxLength: 255

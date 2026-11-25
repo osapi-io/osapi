@@ -32,6 +32,11 @@ type EnumsPublicTestSuite struct {
 	suite.Suite
 }
 
+// TestDoc: a type that describes itself in the spec says what it is.
+func (s *EnumsPublicTestSuite) TestDoc() {
+	s.Contains(types.ContentRaw.Doc(), "How a deploy treats a file")
+}
+
 // TestValid: a value of a closed set is valid when its type lists it.
 func (s *EnumsPublicTestSuite) TestValid() {
 	tests := []struct {

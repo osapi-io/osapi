@@ -4,12 +4,11 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileUpdateRequestContentType } from './fileUpdateRequestContentType';
+import type { ContentType } from './contentType';
 import type { FileUpdateRequestVars } from './fileUpdateRequestVars';
 
 export interface FileUpdateRequest {
-  /** How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty */
-  content_type?: FileUpdateRequestContentType;
+  content_type?: ContentType;
   /**
      * Group that owns the file; left as written when empty
      * @pattern ^[a-z_][a-z0-9_-]*\$?$

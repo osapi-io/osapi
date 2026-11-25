@@ -110,7 +110,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A mode that is not octal",
 			UpdateInput{Path: path, Content: "on\n", Mode: "rw-------"}, "invalid mode").
 		Fails("A content type that is neither raw nor template",
-			UpdateInput{Path: path, Content: "on\n", ContentType: "binary"}, "oneof").
+			UpdateInput{Path: path, Content: "on\n", ContentType: "binary"}, "enum").
 		Fails("An owner that is not a user name",
 			UpdateInput{Path: path, Content: "on\n", Owner: "root;reboot"}, "invalid owner").
 		Fails("A group that is not a group name",
