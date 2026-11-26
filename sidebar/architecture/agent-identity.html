@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.d15a3f60.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.cc640aa3.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.8b93be95.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.dfcb161e.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -75,14 +75,14 @@ makes two keys in <code>agent.pki.key_dir</code> (<code>/etc/osapi/pki/agent</co
 
 
 
-<table><thead><tr><th>File</th><th>Mode</th><th>Key</th></tr></thead><tbody><tr><td><code>agent.key</code></td><td>0600</td><td>Ed25519 signing key. It signs results.</td></tr><tr><td><code>agent.pub</code></td><td>0644</td><td>The public half of the signing key.</td></tr><tr><td><code>agent.xkey</code></td><td>0600</td><td>X25519 encryption key, as an nkeys curve seed.</td></tr></tbody></table>
+<table><thead><tr><th>File</th><th>Mode</th><th>Key</th></tr></thead><tbody><tr><td><code>agent.key</code></td><td>0600</td><td>Ed25519 signing key. It signs results.</td></tr><tr><td><code>agent.pub</code></td><td>0644</td><td>The public half of the signing key.</td></tr><tr><td><code>agent.ekey</code></td><td>0600</td><td>P-256 ECDH encryption key, as a PKCS #8 PEM private key.</td></tr></tbody></table>
 <p>One key does not do both jobs. The signing key signs. The encryption key
 opens the secrets that the controller seals for this agent
 (<a class="" href="/osapi/sidebar/operate/secure/secrets#sealed-values">Secrets</a>). The agent makes each
 key only when its file does not exist.</p>
 <p>The user that runs the agent must own the directory. The agent does not
-replace a key that it cannot read, or half of a key pair, or an <code>agent.xkey</code>
-that is not a curve seed. It writes the error to the log and stops. A new key
+replace a key that it cannot read, or half of a key pair, or an <code>agent.ekey</code>
+that is not a P-256 key. It writes the error to the log and stops. A new key
 is not the key that the controller accepted. Thus a host with a replaced key
 gets no work until you enroll it again. If you change the user of the agent,
 also change the owner of the directory (<code>chown -R osapi /etc/osapi/pki</code>).</p>
@@ -90,11 +90,11 @@ also change the owner of the directory (<code>chown -R osapi /etc/osapi/pki</cod
 <li class="">
 <p><strong>The agent sends an enrollment request.</strong> It publishes a request to the
 controller through NATS. The request has its machine ID, hostname, the two
-public keys and the fingerprint. The fingerprint is the SHA-256 of the
-Ed25519 public key, then the X25519 public key. Thus the administrator who
-admits the fingerprint admits the two keys. The controller does not keep a
-request without an encryption key. An agent older than the controller sends
-that request. Upgrade the agent.</p>
+public keys and the fingerprint. The public encryption key is base64url, with
+no padding, of the 65 bytes of the uncompressed P-256 point. The fingerprint
+is the SHA-256 of the 32 bytes of the Ed25519 public key, then those 65
+bytes. Thus the administrator who admits the fingerprint admits the two keys.
+The controller does not keep a request without a valid P-256 encryption key.</p>
 </li>
 <li class="">
 <p><strong>The agent waits.</strong> The controller stores the request in a JetStream KV
@@ -120,14 +120,19 @@ restarts, the agent loads the controller key from disk and does not enroll
 again.</p>
 </li>
 </ol>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="an-agent-admitted-before-the-encryption-key">An agent admitted before the encryption key<a href="#an-agent-admitted-before-the-encryption-key" class="hash-link" aria-label="Direct link to An agent admitted before the encryption key" title="Direct link to An agent admitted before the encryption key" translate="no">​</a></h3>
-<p>An agent that was admitted before agents had an encryption key makes
-<code>agent.xkey</code> when you upgrade it. Its fingerprint changes, and its admitted
-record has no encryption key. Enroll it again:</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="an-agent-admitted-with-an-x25519-key">An agent admitted with an X25519 key<a href="#an-agent-admitted-with-an-x25519-key" class="hash-link" aria-label="Direct link to An agent admitted with an X25519 key" title="Direct link to An agent admitted with an X25519 key" translate="no">​</a></h3>
+<p>Before osapi-io/osapi#1382, the encryption key of an agent was an X25519 key in
+<code>agent.xkey</code>. FIPS 140-3 does not approve X25519. When you upgrade the agent, it
+makes a new P-256 key in <code>agent.ekey</code> and removes <code>agent.xkey</code>. Its fingerprint
+changes. Its admitted record holds the old X25519 key, and the controller cannot
+seal a secret to that key. Thus a job with a secret for that agent fails at the
+controller with <code>seal the job key</code>. A job with no secret continues to operate.
+Admit the agent again with its new key:</p>
 <ol>
-<li class="">On the machine, delete <code>enrolled-controller.pub</code> in <code>agent.pki.key_dir</code>
-(<code>controller.pub</code> on an agent admitted before osapi-io/osapi#1398), and
-restart the agent. It sends a new request with the two keys.</li>
+<li class="">On the machine, delete <code>enrolled-controller.pub</code> in <code>agent.pki.key_dir</code>, and
+restart the agent. It sends a new enrollment request with the two keys. An
+agent that joined with a join string does this too: after its first join it
+reads its NATS user from <code>agent.pki.key_dir</code>, not the join string.</li>
 <li class="">On the machine, run <code>osapi pki key get --name agent</code>.</li>
 <li class="">Admit the machine with that fingerprint. The pending record shows the old
 fingerprint as <code>previous_fingerprint</code>.</li>
@@ -406,6 +411,6 @@ agents. It does not replace JWT.</li>
 <li class=""><strong>NATS transport.</strong> NATS connections still use their own authentication
 (<code>none</code>, <code>user_pass</code>, <code>nkey</code> or <code>creds</code>). PKI operates on the job payloads,
 not on the transport.</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">UI architecture</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/architecture/agent-lifecycle"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent lifecycle</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#machine-identity" class="table-of-contents__link toc-highlight">Machine identity</a><ul><li><a href="#cli-targeting" class="table-of-contents__link toc-highlight">CLI targeting</a></li></ul></li><li><a href="#pki-enrollment" class="table-of-contents__link toc-highlight">PKI enrollment</a><ul><li><a href="#enrollment-flow" class="table-of-contents__link toc-highlight">Enrollment flow</a></li><li><a href="#an-agent-admitted-before-the-encryption-key" class="table-of-contents__link toc-highlight">An agent admitted before the encryption key</a></li><li><a href="#join-with-a-token" class="table-of-contents__link toc-highlight">Join with a token</a></li><li><a href="#auto-admit-mode" class="table-of-contents__link toc-highlight">Auto-admit mode</a></li><li><a href="#commands" class="table-of-contents__link toc-highlight">Commands</a></li></ul></li><li><a href="#job-signing" class="table-of-contents__link toc-highlight">Job signing</a><ul><li><a href="#verification-and-failures" class="table-of-contents__link toc-highlight">Verification and failures</a></li></ul></li><li><a href="#registration-signing" class="table-of-contents__link toc-highlight">Registration signing</a><ul><li><a href="#a-hostname-that-changes" class="table-of-contents__link toc-highlight">A hostname that changes</a></li><li><a href="#what-the-controller-checks" class="table-of-contents__link toc-highlight">What the controller checks</a></li><li><a href="#check-the-state-of-a-fleet" class="table-of-contents__link toc-highlight">Check the state of a fleet</a></li></ul></li><li><a href="#key-rotation" class="table-of-contents__link toc-highlight">Key rotation</a></li><li><a href="#upgrade-a-fleet" class="table-of-contents__link toc-highlight">Upgrade a fleet</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#agent-pki" class="table-of-contents__link toc-highlight">Agent PKI</a></li><li><a href="#controller-pki" class="table-of-contents__link toc-highlight">Controller PKI</a></li></ul></li><li><a href="#what-does-not-change" class="table-of-contents__link toc-highlight">What does not change</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">UI architecture</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/architecture/agent-lifecycle"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent lifecycle</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#machine-identity" class="table-of-contents__link toc-highlight">Machine identity</a><ul><li><a href="#cli-targeting" class="table-of-contents__link toc-highlight">CLI targeting</a></li></ul></li><li><a href="#pki-enrollment" class="table-of-contents__link toc-highlight">PKI enrollment</a><ul><li><a href="#enrollment-flow" class="table-of-contents__link toc-highlight">Enrollment flow</a></li><li><a href="#an-agent-admitted-with-an-x25519-key" class="table-of-contents__link toc-highlight">An agent admitted with an X25519 key</a></li><li><a href="#join-with-a-token" class="table-of-contents__link toc-highlight">Join with a token</a></li><li><a href="#auto-admit-mode" class="table-of-contents__link toc-highlight">Auto-admit mode</a></li><li><a href="#commands" class="table-of-contents__link toc-highlight">Commands</a></li></ul></li><li><a href="#job-signing" class="table-of-contents__link toc-highlight">Job signing</a><ul><li><a href="#verification-and-failures" class="table-of-contents__link toc-highlight">Verification and failures</a></li></ul></li><li><a href="#registration-signing" class="table-of-contents__link toc-highlight">Registration signing</a><ul><li><a href="#a-hostname-that-changes" class="table-of-contents__link toc-highlight">A hostname that changes</a></li><li><a href="#what-the-controller-checks" class="table-of-contents__link toc-highlight">What the controller checks</a></li><li><a href="#check-the-state-of-a-fleet" class="table-of-contents__link toc-highlight">Check the state of a fleet</a></li></ul></li><li><a href="#key-rotation" class="table-of-contents__link toc-highlight">Key rotation</a></li><li><a href="#upgrade-a-fleet" class="table-of-contents__link toc-highlight">Upgrade a fleet</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a><ul><li><a href="#agent-pki" class="table-of-contents__link toc-highlight">Agent PKI</a></li><li><a href="#controller-pki" class="table-of-contents__link toc-highlight">Controller PKI</a></li></ul></li><li><a href="#what-does-not-change" class="table-of-contents__link toc-highlight">What does not change</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
