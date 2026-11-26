@@ -431,6 +431,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: `_ struct{} ` + "`schema:\"Name\"`",
+			Does: "Names the schema of a type in the spec, as json names a field: on the type's blank field, because Go has no tag on a type. Without it, the schema is the type's Go name. It keeps an API name when the Go name is shorter: agent.Info has the schema AgentInfo, and the SDK and the UI keep their names. It sits beside title, which the CLI reads: _ struct{} `title:\"Agent\" schema:\"AgentInfo\"`. The spec refuses two types with one schema name.",
+			When: "On each type of a group's package whose Go name would repeat its package: the stutter rule refuses agent.AgentInfo, and revive does too. Never write //nolint:revive.",
+		},
+		{
+			Kind: KindCheck,
+			Name: "SchemaName(t)",
+			Does: "The schema name of t in the spec: its schema tag, or its Go name.",
+			When: "Nothing to call: give a type the tag, and the spec reads it.",
+		},
+		{
+			Kind: KindTag,
 			Name: "secret.Value",
 			Does: "Not a tag: the type of an input field that holds a secret, from internal/secret; map[string]secret.Value is a map of them. It is a reference, secret://<vault>/<key>, or the value. The spec makes it a string of format password, writeOnly and x-osapi-secret, and its description says what it takes. The audit redacts it by name, but keeps a reference. The CLI flag takes a reference, or - to read the value from standard input, and refuses a value. Its String, Format, MarshalJSON and LogValue give the reference or [redacted]; Reveal gives the value. The route resolves a reference from its vault, after the limits of use: secret:use, and the targets of the vault. The secret rule refuses one in:\"path\" or in:\"query\", or with telemetry:\"attr\".",
 			When: "On each input that holds a password, a key or a token. Not a string: a string whose name is on the audit denylist fails TestSecretsAreTyped.",

@@ -106,7 +106,7 @@ func (s *MethodsPublicTestSuite) TestConfig() {
 			SetAgentConfig(gomock.Any(), "m-1", job.AgentConfig{Labels: labels, MaxJobs: 4}).
 			Return(job.AgentConfig{Version: 3, Labels: labels, MaxJobs: 4, UpdatedAt: at}, nil)
 		got, err := agent.SetConfig(ctx, s.deps(), agent.ConfigSetInput{
-			Hostname: "server1", Body: agent.AgentConfigRequest{Labels: labels, MaxJobs: 4},
+			Hostname: "server1", Body: agent.ConfigRequest{Labels: labels, MaxJobs: 4},
 		})
 		s.Require().NoError(err)
 		s.Equal(3, got.Version)

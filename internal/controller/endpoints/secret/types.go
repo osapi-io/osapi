@@ -46,9 +46,11 @@ type RevealInput struct {
 	Key   string `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
 }
 
-// SecretValue is the value of a key: the answer of reveal only. The CLI
+// Value is the value of a key: the answer of reveal only. The CLI
 // prints it as it is, for a pipe.
-type SecretValue struct { //nolint:revive // the schema name is part of the API
+type Value struct {
+	_ struct{} `schema:"SecretValue"`
+
 	Value string `json:"value" doc:"The value of the key." example:"glpat-xxxxxxxxxxxxxxxxxxxx" render:"body"`
 }
 
@@ -60,13 +62,15 @@ type DeleteInput struct {
 
 // UpdateInput is the key to write, and its new value.
 type UpdateInput struct {
-	Vault string              `json:"vault" in:"path" validate:"required,resource_name,max=64"  doc:"The name of the vault, such as default."      example:"default"`
-	Key   string              `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
-	Body  SecretUpdateRequest `json:"body"  in:"body" validate:"required"`
+	Vault string        `json:"vault" in:"path" validate:"required,resource_name,max=64"  doc:"The name of the vault, such as default."      example:"default"`
+	Key   string        `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
+	Body  UpdateRequest `json:"body"  in:"body" validate:"required"`
 }
 
-// SecretUpdateRequest is the value of a key. The API never gives it back.
-type SecretUpdateRequest struct { //nolint:revive // the schema name is part of the API
+// UpdateRequest is the value of a key. The API never gives it back.
+type UpdateRequest struct {
+	_ struct{} `schema:"SecretUpdateRequest"`
+
 	Value secretvalue.Value `json:"value" validate:"required,max=65536" doc:"The value of the key, which no method gives back"`
 }
 
@@ -85,9 +89,11 @@ type VaultListResponse struct {
 	TotalItems int         `               json:"total_items" doc:"The number of vaults."                                                                                    example:"1"`
 }
 
-// SecretInfo is the metadata of one key. It has no value: no method gives
+// Info is the metadata of one key. It has no value: no method gives
 // one.
-type SecretInfo struct { //nolint:revive // the schema name is part of the API
+type Info struct {
+	_ struct{} `schema:"SecretInfo"`
+
 	Vault   string    `json:"vault"   doc:"The name of the vault."                                          example:"default"              table:"-"`
 	Key     string    `json:"key"     doc:"The name of the key."                                            example:"registry-token"`
 	Version int64     `json:"version" doc:"1 for the first value of the key, and one more for each update." example:"3"`
@@ -95,9 +101,9 @@ type SecretInfo struct { //nolint:revive // the schema name is part of the API
 	By      string    `json:"by"      doc:"Who did the last update, or empty when it is not known."         example:"ops@example.com"                              none:"-"`
 }
 
-// SecretListResponse is the metadata of each key of a vault.
-type SecretListResponse struct { //nolint:revive // the schema name is part of the API
-	_          struct{}     `title:"Keys"`
-	Items      []SecretInfo `             json:"items"       doc:"The keys of the vault, sorted by key." empty:"The vault has no key. Add one with osapi client secret update."`
-	TotalItems int          `             json:"total_items" doc:"The number of keys."                                                                                          example:"1"`
+// ListResponse is the metadata of each key of a vault.
+type ListResponse struct {
+	_          struct{} `title:"Keys" schema:"SecretListResponse"`
+	Items      []Info   `                                         json:"items"       doc:"The keys of the vault, sorted by key." empty:"The vault has no key. Add one with osapi client secret update."`
+	TotalItems int      `                                         json:"total_items" doc:"The number of keys."                                                                                          example:"1"`
 }

@@ -48,7 +48,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[types.MethodKind](
 		"What a method does to a host, by the verb of its permission: read, write or action.",
 	),
-	endpoint.Get[GetInput, CatalogResponse]("get").
+	endpoint.Get[GetInput, Response]("get").
 		Handle(Get).
 		ID("GetCatalog").
 		Describe("Get the catalog").

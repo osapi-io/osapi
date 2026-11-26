@@ -60,7 +60,7 @@ func List(
 		return ListJobsResponse{}, endpoint.Internal("failed to list jobs", err)
 	}
 
-	items := make([]JobDetailResponse, 0, len(result.Jobs))
+	items := make([]DetailResponse, 0, len(result.Jobs))
 	for _, qj := range result.Jobs {
 		items = append(items, summary(qj))
 	}
@@ -77,13 +77,13 @@ func Get(
 	ctx context.Context,
 	d Deps,
 	in GetInput,
-) (JobDetailResponse, error) {
+) (DetailResponse, error) {
 	qj, err := d.Jobs.GetJobStatus(ctx, in.ID)
 	if apierr.IsMissing(err) || (err == nil && !authtoken.Sees(ctx, qj.Target)) {
-		return JobDetailResponse{}, endpoint.Errorf(ErrNotFound, "job %s not found", in.ID)
+		return DetailResponse{}, endpoint.Errorf(ErrNotFound, "job %s not found", in.ID)
 	}
 	if err != nil {
-		return JobDetailResponse{}, endpoint.Internal("failed to get job", err)
+		return DetailResponse{}, endpoint.Internal("failed to get job", err)
 	}
 
 	out := summary(qj)
@@ -214,7 +214,7 @@ func visible(
 // secrets of its operation masked.
 func summary(
 	qj *job.QueuedJob,
-) JobDetailResponse {
+) DetailResponse {
 	// A job stored before targets were kept has only the host that
 	// answered.
 	target := qj.Target
@@ -222,7 +222,7 @@ func summary(
 		target = qj.Hostname
 	}
 
-	return JobDetailResponse{
+	return DetailResponse{
 		ID:        qj.ID,
 		Status:    qj.Status,
 		Created:   qj.Created,

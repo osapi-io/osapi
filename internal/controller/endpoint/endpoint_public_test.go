@@ -144,6 +144,27 @@ type BadNamed struct {
 	C chan int `json:"c"`
 }
 
+// EndpointNode repeats its package, endpoint, as agent.AgentInfo did.
+type EndpointNode struct {
+	Name string `json:"name"`
+}
+
+// tagged has the schema name of Twin, with a title for the CLI beside it.
+type tagged struct {
+	_ struct{} `title:"Tagged" schema:"Twin"`
+	A string   `                             json:"a"`
+}
+
+// Twin is a second type with the schema name Twin.
+type Twin struct {
+	B string `json:"b"`
+}
+
+type twinOut struct {
+	One tagged `json:"one"`
+	Two Twin   `json:"two"`
+}
+
 type deps struct{}
 
 func handleNode(
@@ -1038,6 +1059,27 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			),
 			want: []string{
 				`an error of 409 has the reason "not_manged", which is not one of the values of types.Reason.`,
+			},
+		},
+		{
+			name: "when a type repeats its package",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[noInput, []EndpointNode]("list"),
+			),
+			want: []string{
+				"type endpoint_test.EndpointNode repeats its package: name it Node, and give it " +
+					"_ struct{} `schema:\"EndpointNode\"` to keep its schema name.",
+			},
+		},
+		{
+			name: "when two types have one schema name",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[noInput, twinOut]("list"),
+			),
+			want: []string{
+				"the spec does not build: node list: response: twinOut: Two: the schema Twin is " +
+					"both endpoint_test.tagged and endpoint_test.Twin: give one of them a schema tag, " +
+					"such as _ struct{} `schema:\"EndpointTwin\"`.",
 			},
 		},
 		{

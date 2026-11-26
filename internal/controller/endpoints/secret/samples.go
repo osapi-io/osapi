@@ -41,7 +41,7 @@ var (
 		},
 	}
 
-	sampleInfo = SecretInfo{
+	sampleInfo = Info{
 		Vault:   "default",
 		Key:     "registry-token",
 		Version: 3,
@@ -49,9 +49,9 @@ var (
 		By:      "ops@example.com",
 	}
 
-	sampleList = SecretListResponse{
+	sampleList = ListResponse{
 		TotalItems: 2,
-		Items: []SecretInfo{
+		Items: []Info{
 			sampleInfo,
 			{
 				Vault:   "default",
@@ -63,9 +63,9 @@ var (
 		},
 	}
 
-	sampleValue = SecretValue{Value: "glpat-xxxxxxxxxxxxxxxxxxxx"}
+	sampleValue = Value{Value: "glpat-xxxxxxxxxxxxxxxxxxxx"}
 
-	sampleUpdate = SecretInfo{
+	sampleUpdate = Info{
 		Vault:   "default",
 		Key:     "registry-token",
 		Version: 4,
@@ -77,6 +77,6 @@ var (
 // body is a value of n bytes, for the inputs that Fails declares.
 func body(
 	n int,
-) SecretUpdateRequest {
-	return SecretUpdateRequest{Value: secretvalue.Value(strings.Repeat("v", n))}
+) UpdateRequest {
+	return UpdateRequest{Value: secretvalue.Value(strings.Repeat("v", n))}
 }

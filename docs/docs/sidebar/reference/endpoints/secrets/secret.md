@@ -30,11 +30,11 @@ Manage the secrets in the vaults of the controller.
 
 ### Types (6)
 
-| NAME   | INPUT                                            | OUTPUT                                                    |
-| ------ | ------------------------------------------------ | --------------------------------------------------------- |
-| vaults | VaultListInput                                   | VaultListResponse &#123; items, total_items &#125;        |
-| list   | ListInput &#123; vault\* &#125;                  | SecretListResponse &#123; items, total_items &#125;       |
-| get    | GetInput &#123; vault\*, key\* &#125;            | SecretInfo &#123; vault, key, version, changed, by &#125; |
-| reveal | RevealInput &#123; vault\*, key\* &#125;         | SecretValue &#123; value &#125;                           |
-| update | UpdateInput &#123; vault\*, key\*, body\* &#125; | SecretInfo &#123; vault, key, version, changed, by &#125; |
-| delete | DeleteInput &#123; vault\*, key\* &#125;         |                                                           |
+| NAME   | INPUT                                            | OUTPUT                                              |
+| ------ | ------------------------------------------------ | --------------------------------------------------- |
+| vaults | VaultListInput                                   | VaultListResponse &#123; items, total_items &#125;  |
+| list   | ListInput &#123; vault\* &#125;                  | ListResponse &#123; items, total_items &#125;       |
+| get    | GetInput &#123; vault\*, key\* &#125;            | Info &#123; vault, key, version, changed, by &#125; |
+| reveal | RevealInput &#123; vault\*, key\* &#125;         | Value &#123; value &#125;                           |
+| update | UpdateInput &#123; vault\*, key\*, body\* &#125; | Info &#123; vault, key, version, changed, by &#125; |
+| delete | DeleteInput &#123; vault\*, key\* &#125;         |                                                     |

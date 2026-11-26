@@ -30,7 +30,7 @@ var (
 	sampleID      = "550e8400-e29b-41d4-a716-446655440000"
 	sampleChanged = true
 
-	sampleDetail = JobDetailResponse{
+	sampleDetail = DetailResponse{
 		ID:      sampleID,
 		Status:  "completed",
 		Created: "2026-01-15T09:58:12Z",
@@ -64,7 +64,7 @@ var (
 			types.JobStatusCompleted: 1,
 			types.JobStatusFailed:    1,
 		},
-		Items: []JobDetailResponse{
+		Items: []DetailResponse{
 			sampleDetail,
 			{
 				ID:        "7c9e6679-7425-40de-944b-e07fc1f90ae7",

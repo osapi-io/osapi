@@ -29,7 +29,7 @@ import (
 // The sample answers of the examples, which the docs page of each command
 // shows as the CLI prints them.
 var (
-	sampleEntry = AuditEntry{
+	sampleEntry = Entry{
 		ID:           "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:    time.Date(2026, time.January, 15, 9, 58, 12, 0, time.UTC),
 		User:         "ops@example.com",
@@ -58,7 +58,7 @@ var (
 
 	sampleList = ListAuditResponse{
 		TotalItems: 2,
-		Items: []AuditEntry{
+		Items: []Entry{
 			sampleEntry,
 			{
 				ID:           "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -75,5 +75,5 @@ var (
 		},
 	}
 
-	sampleGet = AuditEntryResponse{Entry: sampleEntry}
+	sampleGet = EntryResponse{Entry: sampleEntry}
 )

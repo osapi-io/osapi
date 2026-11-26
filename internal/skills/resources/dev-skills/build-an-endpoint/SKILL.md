@@ -139,13 +139,16 @@ The spec:
 
 1. Read the hand-written spec of the group. Each schema becomes a Go type, and
    each operation becomes a method.
-2. Write `types.go`. Give each type the name of its schema: the spec takes the
-   component name from the type. Use the tags that `spec` lists under "Tags on
-   input and output fields", with `example` and `doc` from the hand-written
-   spec. A schema that the spec has in place, with no name, is a type alias of a
-   struct with no name, such as `Message`. Copy the type's description with
-   `Doc`: the full spec fails when two groups define one schema in different
-   words.
+2. Write `types.go`. The spec takes the name of each schema from the type: its
+   Go name, or the `schema` tag of its blank field. Do not repeat the group in a
+   Go name, such as `agent.AgentInfo`: `validate` and revive refuse it. Name it
+   `Info`, and keep the schema name of the hand-written spec with
+   `` _ struct{} `schema:"AgentInfo"`  ``. Never write `//nolint:revive`. Use
+   the tags that `spec` lists under "Tags on input and output fields", with
+   `example` and `doc` from the hand-written spec. A schema that the spec has in
+   place, with no name, is a type alias of a struct with no name, such as
+   `Message`. Copy the type's description with `Doc`: the full spec fails when
+   two groups define one schema in different words.
 3. Write `<group>.go`. Copy `Title` and `Tag` from the hand-written spec. The
    UI's client files get their names from them. Give each method the operationId
    of the hand-written spec with `.ID`. Use `.Sub` for a fixed segment, `.Key`

@@ -41,13 +41,13 @@ type Runs func(b *behavior.Behavior) []behaviortest.ChainRun
 func Behaviors(
 	all []*behavior.Behavior,
 	runs Runs,
-) []CatalogBehavior {
-	out := []CatalogBehavior{}
+) []Behavior {
+	out := []Behavior{}
 	for _, b := range all {
 		if !b.API && !b.Internal {
 			continue
 		}
-		cb := CatalogBehavior{
+		cb := Behavior{
 			Name:      b.Name,
 			Title:     b.Title,
 			Area:      string(b.Area),
@@ -57,7 +57,7 @@ func Behaviors(
 			Uses:      names(b.Requires),
 			UsedBy:    names(behavior.RequiredBy(b)),
 			Chain:     behavior.Tree(b),
-			Methods:   []CatalogMethod{},
+			Methods:   []Method{},
 		}
 		if b.Parent != nil {
 			cb.Parent = b.Parent.Name
@@ -65,7 +65,7 @@ func Behaviors(
 		for _, pp := range b.Platforms {
 			cb.Platforms = append(cb.Platforms, string(pp.Name))
 		}
-		calls := map[string][]CatalogCall{}
+		calls := map[string][]Call{}
 		for _, r := range runs(b) {
 			calls[r.Method] = merge(calls[r.Method], r.Root.Steps)
 		}
@@ -103,9 +103,9 @@ func runsOn(
 func method(
 	b *behavior.Behavior,
 	m *behavior.Method,
-	calls []CatalogCall,
-) CatalogMethod {
-	cm := CatalogMethod{
+	calls []Call,
+) Method {
+	cm := Method{
 		Name:       m.Name,
 		Kind:       kindOf(m),
 		Doc:        m.Doc,
@@ -116,12 +116,12 @@ func method(
 		Fields:     fields(m),
 		Columns:    columns(m.Out),
 		Calls:      calls,
-		Examples:   []CatalogExample{},
+		Examples:   []Example{},
 		Disruptive: m.Disruptive,
 		Disruption: m.Disruption,
 	}
 	if cm.Calls == nil {
-		cm.Calls = []CatalogCall{}
+		cm.Calls = []Call{}
 	}
 	if b.API {
 		cm.HTTPMethod = m.HTTPMethod()
@@ -135,7 +135,7 @@ func method(
 		}
 	}
 	for _, ex := range m.Examples {
-		cm.Examples = append(cm.Examples, CatalogExample{
+		cm.Examples = append(cm.Examples, Example{
 			Doc:    ex.Doc,
 			Input:  behavior.Redact(ex.Input),
 			Output: ex.Output,
@@ -165,9 +165,9 @@ func kindOf(
 // gains the calls under it, and a new one goes at the end, so each call
 // that any example made shows once, in the order that they first ran.
 func merge(
-	calls []CatalogCall,
+	calls []Call,
 	steps []*behavior.Step,
-) []CatalogCall {
+) []Call {
 	for _, s := range steps {
 		i := -1
 		for j, c := range calls {
@@ -178,7 +178,7 @@ func merge(
 			}
 		}
 		if i < 0 {
-			calls = append(calls, CatalogCall{Behavior: s.Behavior, Method: s.Method})
+			calls = append(calls, Call{Behavior: s.Behavior, Method: s.Method})
 			i = len(calls) - 1
 		}
 		calls[i].Calls = merge(calls[i].Calls, s.Steps)
@@ -203,8 +203,8 @@ func names(
 // or a body field of a write.
 func fields(
 	m *behavior.Method,
-) []CatalogField {
-	out := []CatalogField{}
+) []Field {
+	out := []Field{}
 	t := m.In
 	for t != nil && t.Kind() == reflect.Pointer {
 		t = t.Elem()
@@ -226,7 +226,7 @@ func fields(
 			in = types.FieldInQuery
 		}
 		rules := f.Tag.Get("validate")
-		field := CatalogField{
+		field := Field{
 			Name:     name,
 			In:       in,
 			Kind:     kind(f.Type),
@@ -267,7 +267,7 @@ func kind(
 // render tags. A struct field, or a list of structs, has its own columns.
 func columns(
 	t reflect.Type,
-) []CatalogColumn {
+) []Column {
 	e := t
 	for e.Kind() == reflect.Pointer || e.Kind() == reflect.Slice {
 		e = e.Elem()
@@ -280,9 +280,9 @@ func columns(
 	}
 
 	cols := clicommand.Columns(t)
-	out := make([]CatalogColumn, 0, len(cols))
+	out := make([]Column, 0, len(cols))
 	for _, c := range cols {
-		col := CatalogColumn{
+		col := Column{
 			Name:   c.JSON,
 			Label:  c.Label,
 			Doc:    docs[c.JSON],

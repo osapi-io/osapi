@@ -97,7 +97,7 @@ var secretUpdateCmd = &cobra.Command{
 			return
 		}
 
-		endpointcommand.Run(cmd, secret.Group, "update", secret.UpdateInput{Vault: vault, Key: key, Body: secret.SecretUpdateRequest{Value: valueValue}})
+		endpointcommand.Run(cmd, secret.Group, "update", secret.UpdateInput{Vault: vault, Key: key, Body: secret.UpdateRequest{Value: valueValue}})
 	},
 	Short: "Write the value of a key",
 	Use:   "update",

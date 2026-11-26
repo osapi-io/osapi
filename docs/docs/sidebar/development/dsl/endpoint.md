@@ -536,6 +536,20 @@ components.parameters.Name, and each operation refers to it.
 Use: On a path field that each method of a group has, such as the hostname of a
 behavior's target.
 
+### `` _ struct{} `schema:"Name"` ``
+
+Names the schema of a type in the spec, as json names a field: on the type's
+blank field, because Go has no tag on a type. Without it, the schema is the
+type's Go name. It keeps an API name when the Go name is shorter: agent.Info has
+the schema AgentInfo, and the SDK and the UI keep their names. It sits beside
+title, which the CLI reads: _ struct&#123;&#125;
+`title:"Agent" schema:"AgentInfo"`. The spec refuses two types with one schema
+name.
+
+Use: On each type of a group's package whose Go name would repeat its package:
+the stutter rule refuses agent.AgentInfo, and revive does too. Never write
+//nolint:revive.
+
 ### `secret.Value`
 
 Not a tag: the type of an input field that holds a secret, from internal/secret;
@@ -673,6 +687,12 @@ Use: Give a type the name its schema has. Use an alias of a struct with no name,
 such as Message, for a schema that the spec has in place.
 
 ## What holds a group to its spec
+
+### `SchemaName(t)`
+
+The schema name of t in the spec: its schema tag, or its Go name.
+
+Use: Nothing to call: give a type the tag, and the spec reads it.
 
 ### `SecretFields()`
 

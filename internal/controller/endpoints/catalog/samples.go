@@ -27,8 +27,8 @@ import (
 // sampleCatalog is the sample answer of the example, which the docs page of
 // the command shows as the CLI prints it: one behavior with one method, and
 // one of each other part.
-var sampleCatalog = CatalogResponse{
-	Behaviors: []CatalogBehavior{{
+var sampleCatalog = Response{
+	Behaviors: []Behavior{{
 		Name:      "hostname",
 		Title:     "Hostname",
 		Area:      "node",
@@ -36,7 +36,7 @@ var sampleCatalog = CatalogResponse{
 		Platforms: []string{"debian", "darwin"},
 		Uses:      []string{},
 		UsedBy:    []string{},
-		Methods: []CatalogMethod{{
+		Methods: []Method{{
 			Name:       "get",
 			Kind:       types.KindRead,
 			Doc:        "Get the hostname.",
@@ -47,22 +47,22 @@ var sampleCatalog = CatalogResponse{
 			RunsOn:     []string{"debian", "darwin"},
 			Input:      "GetInput {}",
 			Output:     "GetOutput { hostname }",
-			Fields:     []CatalogField{},
-			Columns: []CatalogColumn{
+			Fields:     []Field{},
+			Columns: []Column{
 				{Name: "hostname", Label: "Hostname", Doc: "The hostname.", Kind: "value"},
 			},
-			Calls:    []CatalogCall{},
-			Examples: []CatalogExample{},
+			Calls:    []Call{},
+			Examples: []Example{},
 		}},
 	}},
-	Areas:       []CatalogArea{{Name: "node", Label: "Node"}},
+	Areas:       []Area{{Name: "node", Label: "Node"}},
 	Permissions: []types.Permission{types.PermHostnameRead, types.PermHostnameWrite},
-	Roles: []CatalogRole{{
+	Roles: []Role{{
 		Name:        types.RoleObserver,
 		Description: "A dashboard or a monitor.",
 		Permissions: []types.Permission{types.PermHealthRead},
 	}},
-	Operations: []CatalogOperation{
+	Operations: []Operation{
 		{ID: "GetNodeHostname", Permission: types.PermHostnameRead},
 	},
 	StatusTones:  map[string]string{"ok": "ok", "failed": "err"},

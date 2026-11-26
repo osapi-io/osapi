@@ -39,11 +39,11 @@ var Group = endpoint.Register(endpoint.Define(
 	"widget", "Widgets of the controller",
 	endpoint.Area(area.Fleet),
 	endpoint.Uses[Deps](),
-	endpoint.Get[ListInput, WidgetList]("list").
+	endpoint.Get[ListInput, ItemList]("list").
 		Handle(List).
 		Describe("List the widget items").
 		Example(""),
-	endpoint.Get[GetInput, WidgetItem]("get").
+	endpoint.Get[GetInput, Item]("get").
 		Handle(Get).
 		Key("name").
 		Describe("Get one widget item").

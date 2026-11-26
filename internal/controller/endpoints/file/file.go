@@ -61,7 +61,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("File Management API"),
 	endpoint.Tag("file_operations", "File", "Object Store file management operations."),
 	endpoint.Uses[Deps](),
-	endpoint.Get[ListInput, FileListResponse]("list").
+	endpoint.Get[ListInput, ListResponse]("list").
 		Handle(List).
 		ID("GetFiles").
 		Describe("List stored files").
@@ -72,7 +72,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleList).
 		Example("--json").
 		Errors(noStore503),
-	endpoint.Post[UploadInput, FileUploadResponse]("upload").
+	endpoint.Post[UploadInput, UploadResponse]("upload").
 		Fails("no name", UploadInput{File: content}).
 		Fails("no file", UploadInput{Name: "app.conf"}).
 		Fails("a name over 255 characters", UploadInput{Name: long, File: content}).
@@ -100,7 +100,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleUpload).
 		Example("--name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template").
 		Prints(sampleUploadTemplate),
-	endpoint.Get[GetInput, FileInfoResponse]("get").
+	endpoint.Get[GetInput, InfoResponse]("get").
 		Fails("a name over 255 characters", GetInput{Name: long}).
 		Handle(Get).
 		ID("GetFileByName").
@@ -112,7 +112,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleInfo).
 		Example("--name app.conf --json").
 		Errors(endpoint.NotFound(ErrNotFound, "File not found."), noStore503),
-	endpoint.Put[UpdateInput, FileUploadResponse]("update").
+	endpoint.Put[UpdateInput, UploadResponse]("update").
 		Fails("no file", UpdateInput{Name: "app.conf"}).
 		Fails("a name over 255 characters", UpdateInput{Name: long, File: content}).
 		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: notAContentType, File: content}).

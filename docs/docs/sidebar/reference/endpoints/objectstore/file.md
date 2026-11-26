@@ -30,11 +30,11 @@ the same.
 
 ### Types (6)
 
-| NAME   | INPUT                                                  | OUTPUT                                                                     |
-| ------ | ------------------------------------------------------ | -------------------------------------------------------------------------- |
-| list   | ListInput                                              | FileListResponse &#123; items, total_items &#125;                          |
-| upload | UploadInput &#123; name\*, content_type, file\* &#125; | FileUploadResponse &#123; name, sha256, size, changed, content_type &#125; |
-| get    | GetInput &#123; name\* &#125;                          | FileInfoResponse &#123; name, sha256, size, content_type &#125;            |
-| update | UpdateInput &#123; name\*, content_type, file\* &#125; | FileUploadResponse &#123; name, sha256, size, changed, content_type &#125; |
-| delete | DeleteInput &#123; name\* &#125;                       |                                                                            |
-| stale  | StaleInput                                             | StaleDeploymentsResponse &#123; items, total_items &#125;                  |
+| NAME   | INPUT                                                  | OUTPUT                                                                 |
+| ------ | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| list   | ListInput                                              | ListResponse &#123; items, total_items &#125;                          |
+| upload | UploadInput &#123; name\*, content_type, file\* &#125; | UploadResponse &#123; name, sha256, size, changed, content_type &#125; |
+| get    | GetInput &#123; name\* &#125;                          | InfoResponse &#123; name, sha256, size, content_type &#125;            |
+| update | UpdateInput &#123; name\*, content_type, file\* &#125; | UploadResponse &#123; name, sha256, size, changed, content_type &#125; |
+| delete | DeleteInput &#123; name\* &#125;                       |                                                                        |
+| stale  | StaleInput                                             | StaleDeploymentsResponse &#123; items, total_items &#125;              |

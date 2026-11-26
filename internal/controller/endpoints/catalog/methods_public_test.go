@@ -78,7 +78,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			s.Less(string(got.Operations[i-1].ID), string(op.ID), "in the order of the IDs")
 		}
 	}
-	s.Contains(got.Operations, catalog.CatalogOperation{
+	s.Contains(got.Operations, catalog.Operation{
 		ID: "GetCatalog", Permission: types.PermCatalogRead,
 	})
 

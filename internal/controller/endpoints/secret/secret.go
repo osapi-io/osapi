@@ -72,7 +72,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("").
 		Prints(sampleVaults).
 		Example("--json"),
-	endpoint.Get[ListInput, SecretListResponse]("list").
+	endpoint.Get[ListInput, ListResponse]("list").
 		Handle(List).
 		Key("vault").
 		ID("GetSecrets").
@@ -89,7 +89,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a vault name that is not letters, digits, - or _", ListInput{Vault: "a.b"}).
 		Fails("a vault name over 64 characters", ListInput{Vault: long(65)}).
 		Errors(noVault404),
-	endpoint.Get[GetInput, SecretInfo]("get").
+	endpoint.Get[GetInput, Info]("get").
 		Handle(Get).
 		Key("vault", "key").
 		ID("GetSecret").
@@ -106,7 +106,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a key that is not letters, digits, - or _", GetInput{Vault: "default", Key: "a.b"}).
 		Fails("a key over 128 characters", GetInput{Vault: "default", Key: long(129)}).
 		Errors(noVault404, endpoint.NotFound(ErrNoKey, "The vault has no key with that name.")),
-	endpoint.Get[RevealInput, SecretValue]("reveal").
+	endpoint.Get[RevealInput, Value]("reveal").
 		Handle(Reveal).
 		Key("vault", "key").
 		Action("value").
@@ -132,7 +132,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a key that is not letters, digits, - or _", RevealInput{Vault: "default", Key: "a.b"}).
 		Fails("a key over 128 characters", RevealInput{Vault: "default", Key: long(129)}).
 		Errors(noVault404, endpoint.NotFound(ErrNoKey, "The vault has no key with that name.")),
-	endpoint.Put[UpdateInput, SecretInfo]("update").
+	endpoint.Put[UpdateInput, Info]("update").
 		Handle(Update).
 		Key("vault", "key").
 		ID("PutSecret").

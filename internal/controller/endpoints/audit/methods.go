@@ -134,23 +134,23 @@ func Get(
 	ctx context.Context,
 	d Deps,
 	in GetInput,
-) (AuditEntryResponse, error) {
+) (EntryResponse, error) {
 	if d.Store == nil {
-		return AuditEntryResponse{}, notConfigured()
+		return EntryResponse{}, notConfigured()
 	}
 
 	// An entry outside the scope of the token does not exist for it.
 	entry, err := d.Store.Get(ctx, in.ID)
 	if errors.Is(err, auditstore.ErrNotFound) ||
 		(err == nil && !authtoken.Sees(ctx, target(*entry))) {
-		return AuditEntryResponse{}, endpoint.Errorf(ErrNotFound,
+		return EntryResponse{}, endpoint.Errorf(ErrNotFound,
 			"audit entry %s not found", in.ID)
 	}
 	if err != nil {
-		return AuditEntryResponse{}, endpoint.Internal("failed to get audit entry", err)
+		return EntryResponse{}, endpoint.Internal("failed to get audit entry", err)
 	}
 
-	return AuditEntryResponse{Entry: toEntry(*entry)}, nil
+	return EntryResponse{Entry: toEntry(*entry)}, nil
 }
 
 // nodePrefix is the start of the path of each request that acts on a
@@ -179,8 +179,8 @@ func notConfigured() error {
 
 func toEntries(
 	entries []auditstore.Entry,
-) []AuditEntry {
-	items := make([]AuditEntry, 0, len(entries))
+) []Entry {
+	items := make([]Entry, 0, len(entries))
 	for _, e := range entries {
 		items = append(items, toEntry(e))
 	}
@@ -190,8 +190,8 @@ func toEntries(
 
 func toEntry(
 	e auditstore.Entry,
-) AuditEntry {
-	out := AuditEntry{
+) Entry {
+	out := Entry{
 		ID:             e.ID,
 		Timestamp:      e.Timestamp,
 		User:           e.User,

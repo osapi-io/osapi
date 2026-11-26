@@ -36,14 +36,18 @@ type GetInput struct {
 	Name string `json:"name" in:"path" validate:"required,min=1,max=255" doc:"The name of the item." example:"example"`
 }
 
-// WidgetItem is one item. Its name is the name of its schema, so it has the
-// group's name in front. Each field becomes a schema property.
-type WidgetItem struct {
+// Item is one item. Its schema tag gives its schema the group's name in
+// front, so it is unique in the full spec. Each field becomes a schema property.
+type Item struct {
+	_ struct{} `schema:"WidgetItem"`
+
 	Name string `json:"name" doc:"The name of the item." example:"example"`
 }
 
-// WidgetList is the items, with the total.
-type WidgetList struct {
-	Items []WidgetItem `json:"items"`
-	Total int          `json:"total" doc:"The number of items."`
+// ItemList is the items, with the total.
+type ItemList struct {
+	_ struct{} `schema:"WidgetList"`
+
+	Items []Item `json:"items"`
+	Total int    `json:"total" doc:"The number of items."`
 }
