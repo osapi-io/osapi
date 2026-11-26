@@ -245,51 +245,6 @@ func (suite *ThemePublicTestSuite) TestBanner() {
 	}
 }
 
-func (suite *ThemePublicTestSuite) TestPrintJSONAndNote() {
-	tests := []struct {
-		name  string
-		print func()
-		want  string
-	}{
-		{
-			name:  "when PrintJSON prints the body on one line",
-			print: func() { cli.PrintJSON([]byte(`{"a":1}`)) },
-			want:  "{\"a\":1}\n",
-		},
-		{
-			name:  "when PrintNote prints an indented note",
-			print: func() { cli.PrintNote("No files found.") },
-			want:  "  No files found.\n",
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			assert.Equal(suite.T(), tc.want, captureStdout(tc.print))
-		})
-	}
-}
-
-func (suite *ThemePublicTestSuite) TestCount() {
-	tests := []struct {
-		name string
-		n    int
-		kind string
-		want string
-	}{
-		{name: "when the count is zero", n: 0, kind: "failed", want: "0 failed"},
-		{name: "when the kind has a status color", n: 2, kind: "failed", want: "2 failed"},
-		{name: "when the kind is plain", n: 5, kind: "total", want: "5 total"},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			suite.Contains(cli.Count(tc.n, tc.kind), tc.want[:1])
-			suite.Contains(cli.Count(tc.n, tc.kind), tc.kind)
-		})
-	}
-}
-
 func (suite *ThemePublicTestSuite) TestRenderCell() {
 	tests := []struct {
 		name   string
@@ -442,4 +397,12 @@ func TestThemePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ThemePublicTestSuite))
+}
+
+func (suite *ThemePublicTestSuite) TestPrintJSON() {
+	assert.Equal(
+		suite.T(),
+		"{\"a\":1}\n",
+		captureStdout(func() { cli.PrintJSON([]byte(`{"a":1}`)) }),
+	)
 }

@@ -174,33 +174,6 @@ var CountTones = map[string]string{
 	"skipped":   ToneWarn,
 }
 
-// Count renders a count of kind, such as 3 failed, in the style of what it
-// counts: green for completed, red for failed, yellow for waiting, plain for
-// a total, and dim for zero.
-func Count(
-	n int,
-	kind string,
-) string {
-	return CountValue(n, kind) + " " + kind
-}
-
-// CountValue renders just the number of a count, for a key-value pair whose
-// label already says what it counts.
-func CountValue(
-	n int,
-	kind string,
-) string {
-	s := fmt.Sprintf("%d", n)
-	if n == 0 {
-		return DimStyle.Render(s)
-	}
-	if tone, ok := CountTones[strings.ToLower(kind)]; ok {
-		return toneStyles[tone].Render(s)
-	}
-
-	return ValueStyle.Render(s)
-}
-
 // treeLines are the tree lines at the start of cell, such as "│  └─ ", or ""
 // for a cell that has none.
 func treeLines(
@@ -633,15 +606,6 @@ func PrintJSON(
 ) {
 	FlushKV()
 	_, _ = fmt.Fprintln(os.Stdout, string(body))
-}
-
-// PrintNote prints a one-line message where a table would be, such as an
-// empty result, indented like the tables and in the secondary color.
-func PrintNote(
-	msg string,
-) {
-	FlushKV()
-	_, _ = fmt.Fprintln(os.Stdout, "  "+Mute(os.Stdout, msg))
 }
 
 // httpVerbs are the methods a ROUTE cell can start with.

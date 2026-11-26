@@ -26,13 +26,11 @@ import (
 	"log/slog"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/google/uuid"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
@@ -170,16 +168,6 @@ func buildTable(
 		Rows:    rows,
 		Errors:  errors,
 	}
-}
-
-// BoolToSafeString converts a *bool to a string. Returns "" if nil.
-func BoolToSafeString(
-	b *bool,
-) string {
-	if b != nil {
-		return fmt.Sprintf("%v", *b)
-	}
-	return ""
 }
 
 // PrintHeading prints a section heading the way help prints one: a blank
@@ -656,129 +644,6 @@ func FormatBytes(
 	}
 }
 
-// FormatList helper function to convert []string to a formatted string.
-func FormatList(
-	list []string,
-) string {
-	if len(list) == 0 {
-		return "None"
-	}
-	return strings.Join(list, ", ")
-}
-
-// FormatLabels formats a label map as "key:value, key:value" sorted by key.
-func FormatLabels(
-	labels map[string]string,
-) string {
-	if len(labels) == 0 {
-		return ""
-	}
-
-	keys := make([]string, 0, len(labels))
-	for k := range labels {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	parts := make([]string, 0, len(keys))
-	for _, k := range keys {
-		parts = append(parts, k+":"+labels[k])
-	}
-	return strings.Join(parts, ", ")
-}
-
-// CalculateColumnWidths calculates the optimal width for each column based on content.
-func CalculateColumnWidths(
-	headers []string,
-	rows [][]string,
-	minPadding int,
-) []int {
-	if len(headers) == 0 {
-		return []int{}
-	}
-
-	widths := make([]int, len(headers))
-
-	// Start with header lengths
-	for i, header := range headers {
-		widths[i] = len(header)
-	}
-
-	// Check all row data to find max width per column
-	for _, row := range rows {
-		for i, cell := range row {
-			if i < len(widths) {
-				// For multi-line content, use the width of the longest line
-				maxLineWidth := GetMaxLineWidth(cell)
-				if maxLineWidth > widths[i] {
-					widths[i] = maxLineWidth
-				}
-			}
-		}
-	}
-
-	// Add padding to each column
-	for i := range widths {
-		widths[i] += minPadding * 2 // padding on both sides
-	}
-
-	return widths
-}
-
-// GetMaxLineWidth returns the width of the longest line in a multi-line string.
-func GetMaxLineWidth(
-	text string,
-) int {
-	lines := strings.Split(text, "\n")
-	maxWidth := 0
-	for _, line := range lines {
-		if len(line) > maxWidth {
-			maxWidth = len(line)
-		}
-	}
-	return maxWidth
-}
-
-// SafeString function to safely dereference string pointers.
-func SafeString(
-	s *string,
-) string {
-	if s != nil {
-		return *s
-	}
-	return ""
-}
-
-// SafeUUID converts a *uuid.UUID to its string representation. Returns "" if nil.
-func SafeUUID(
-	u *uuid.UUID,
-) string {
-	if u != nil {
-		return u.String()
-	}
-	return ""
-}
-
-// Float64ToSafeString converts a *float64 to a string. Returns "N/A" if nil.
-func Float64ToSafeString(
-	f *float64,
-) string {
-	if f != nil {
-		return fmt.Sprintf("%f", *f)
-	}
-	return "N/A"
-}
-
-// IntToSafeString converts a *int to a string. Returns "N/A" if nil.
-func IntToSafeString(
-	i *int,
-) string {
-	if i != nil {
-		return fmt.Sprintf("%d", *i)
-	}
-	return "N/A"
-}
-
 // HandleError reports err and exits 1: one line for a person, or under --json
 // the error document with the API's status code named.
 func HandleError(
@@ -815,57 +680,6 @@ func HandleError(
 	}
 	WriteErrorJSON(errOut, doc)
 	osExit(ExitError)
-}
-
-// Summarize renders a value for one cell or key-value pair: a scalar as
-// itself, a list by its length and an object by its field count, and nothing
-// as "none".
-func Summarize(
-	v any,
-) string {
-	switch t := v.(type) {
-	case nil:
-		return "none"
-	case []any:
-		return Plural(len(t), "item", "items")
-	case map[string]any:
-		return Plural(len(t), "field", "fields")
-	case float64:
-		if t == float64(int64(t)) {
-			return strconv.FormatInt(int64(t), 10)
-		}
-
-		return strconv.FormatFloat(t, 'f', -1, 64)
-	default:
-		return fmt.Sprint(t)
-	}
-}
-
-// Plural renders a count with the noun that agrees with it: 1 key, 2 keys.
-func Plural(
-	n int,
-	one string,
-	many string,
-) string {
-	if n == 1 {
-		return "1 " + one
-	}
-
-	return strconv.Itoa(n) + " " + many
-}
-
-// FormatTime renders an RFC 3339 time as local "2006-01-02 15:04:05", the
-// one format human output uses. A value that does not parse is returned as
-// it is.
-func FormatTime(
-	s string,
-) string {
-	t, err := time.Parse(time.RFC3339Nano, s)
-	if err != nil {
-		return s
-	}
-
-	return LocalTime(t)
 }
 
 // LocalTime renders a time as local "2006-01-02 15:04:05", the one format
