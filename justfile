@@ -133,7 +133,7 @@ endpoint-scaffold-check:
     cd "$tmp"
     go run . dsl endpoint create --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/controller/endpoints/all
-    go run . dsl endpoint validate >/dev/null
+    go run . dsl endpoint validate >"$tmp/validate.out" || { cat "$tmp/validate.out"; exit 1; }
     go test -count=1 ./internal/controller/endpoints/scaffoldcheck/... ./internal/controller/endpoints/all/ ./internal/controller/
 
 # Fail when a group that osapi dsl command create writes does not pass its tests
@@ -152,7 +152,7 @@ command-scaffold-check:
     cd "$tmp"
     go run . dsl command create --name scaffoldcheck --description "A scaffold check" --under controller >/dev/null
     go generate ./internal/cli/commands/all
-    go run . dsl command validate >/dev/null
+    go run . dsl command validate >"$tmp/validate.out" || { cat "$tmp/validate.out"; exit 1; }
     go test -count=1 ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/
 
 # Fail when a behavior's own code is not fully covered
