@@ -132,12 +132,14 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest", Changed: true},
 			stored,
 			behavior.Wrote(backupPath, backupText),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *", User: "root"}),
 		).
 		Example("A script that runs daily",
 			CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"},
 			Result{Name: "osapitest", Changed: true},
 			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
 			behavior.Wrote(scriptPath, scriptText),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"}),
 		).
 		Example("A template, rendered with its vars",
 			CreateInput{
@@ -150,6 +152,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest", Changed: true},
 			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw),
 			behavior.Wrote(backupPath, "0 2 * * * root /usr/local/bin/backup /srv\n"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.tmpl", Schedule: "0 2 * * *"}),
 		).
 		Example("An entry that has the content",
 			CreateInput{
@@ -160,12 +163,14 @@ var Behavior = behavior.Register(behavior.Define(
 			},
 			Result{Name: "osapitest"},
 			stored, deployed,
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *", User: "root"}),
 		).
 		Example("An entry of the name in a different directory",
 			CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"},
 			Result{Name: "osapitest"},
 			stored, deployed,
 			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *"}),
 		).
 		Fails("An object the store does not have",
 			CreateInput{Name: "osapitest", Object: "nosuch", Schedule: "0 2 * * *"}, "not found").
@@ -250,6 +255,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest", Changed: true},
 			stored, deployed, storedV2,
 			behavior.Wrote(backupPath, backupV2Text),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest-v2.cron"}),
 		).
 		Example("A new cron expression, with the same object",
 			UpdateInput{Name: "osapitest", Schedule: "30 2 * * *"},
@@ -258,6 +264,7 @@ var Behavior = behavior.Register(behavior.Define(
 			// The file keeps its content; the entry's record takes the new
 			// cron expression, which a list then gives.
 			behavior.Wrote(backupPath, backupText),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Schedule: "30 2 * * *"}),
 		).
 		Example("A new object, cron expression and user",
 			UpdateInput{
@@ -269,6 +276,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest", Changed: true},
 			stored, deployed, storedV2,
 			behavior.Wrote(backupPath, backupV2Text),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest-v2.cron", Schedule: "30 2 * * *", User: "nobody"}),
 		).
 		Example("A daily script with a new object",
 			UpdateInput{Name: "osapitest", Object: "osapitest-v2.sh"},
@@ -277,6 +285,7 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"}),
 			behavior.Stored("osapitest-v2.sh", scriptText+"/usr/local/bin/prune\n", types.ContentRaw),
 			behavior.Wrote(scriptPath, scriptText+"/usr/local/bin/prune\n"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest-v2.sh", Interval: "daily"}),
 		).
 		Fails("An entry that osapi did not deploy",
 			UpdateInput{Name: "osapitest", Object: "osapitest.cron"}, "not found").
@@ -299,9 +308,11 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest", Changed: true},
 			stored, deployed,
 			behavior.Removed(backupPath),
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Entry{Name: "osapitest"}, "name"),
 		).
 		Example("An entry that osapi did not deploy", DeleteInput{Name: "osapitest"},
 			Result{Name: "osapitest"},
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Entry{Name: "osapitest"}, "name"),
 		).
 		Fails("A name with a space", DeleteInput{Name: "a b"}, "Name").
 		Fails("A name that is an option", DeleteInput{Name: "--now"}, "not a valid entry name").

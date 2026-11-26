@@ -228,6 +228,7 @@ var Behavior = behavior.Register(behavior.Define(
 			stored,
 			behavior.Wrote(debPath, pem),
 			behavior.Ran("update-ca-certificates"),
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca.pem"}),
 		).
 		Example("Add a CA on the RHEL family", CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
 			Result{Name: "internal-ca", Changed: true},
@@ -235,6 +236,7 @@ var Behavior = behavior.Register(behavior.Define(
 			stored,
 			behavior.Wrote(rhelPath, pem),
 			behavior.Ran("update-ca-trust"),
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca.pem"}),
 		).
 		Example("Add a CA on SUSE", CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
 			Result{Name: "internal-ca", Changed: true},
@@ -242,11 +244,13 @@ var Behavior = behavior.Register(behavior.Define(
 			stored,
 			behavior.Wrote(susePath, pem),
 			behavior.Ran("update-ca-certificates"),
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca.pem"}),
 		).
 		Example("A CA that osapi deployed with the same content",
 			CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
 			Result{Name: "internal-ca"},
 			stored, deployed,
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca.pem"}),
 		).
 		Fails("A file that osapi did not write", CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
 			"osapi did not deploy it",
@@ -269,6 +273,7 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, stored2, deployed,
 			behavior.Wrote(debPath, pem2),
 			behavior.Ran("update-ca-certificates"),
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca-2.pem"}),
 		).
 		Example("Write a CA from a new object on the RHEL family",
 			UpdateInput{Name: "internal-ca", Object: "internal-ca-2.pem"},
@@ -277,6 +282,7 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, stored2, deployed,
 			behavior.Wrote(rhelPath, pem2),
 			behavior.Ran("update-ca-trust"),
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca-2.pem"}),
 		).
 		Example("Write a CA from a new object on SUSE",
 			UpdateInput{Name: "internal-ca", Object: "internal-ca-2.pem"},
@@ -285,10 +291,12 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, stored2, deployed,
 			behavior.Wrote(susePath, pem2),
 			behavior.Ran("update-ca-certificates"),
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true, Object: "internal-ca-2.pem"}),
 		).
 		Example("The object that it was deployed from", UpdateInput{Name: "internal-ca"},
 			Result{Name: "internal-ca"},
 			stored, deployed,
+			behavior.Reads(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true}),
 		).
 		Fails("A CA that osapi did not deploy", UpdateInput{Name: "nothing"}, "not found").
 		Fails("A name that is an option", UpdateInput{Name: "-r"}, "not a valid name").
@@ -308,6 +316,7 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, deployed,
 			behavior.Removed(debPath),
 			behavior.Ran("update-ca-certificates --fresh"),
+			behavior.ReadsNone(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true}, "name", "managed"),
 		).
 		Example("Remove a CA on the RHEL family", DeleteInput{Name: "internal-ca"},
 			Result{Name: "internal-ca", Changed: true},
@@ -315,6 +324,7 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, deployed,
 			behavior.Removed(rhelPath),
 			behavior.Ran("update-ca-trust"),
+			behavior.ReadsNone(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true}, "name", "managed"),
 		).
 		Example("Remove a CA on SUSE", DeleteInput{Name: "internal-ca"},
 			Result{Name: "internal-ca", Changed: true},
@@ -322,9 +332,11 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, deployed,
 			behavior.Removed(susePath),
 			behavior.Ran("update-ca-certificates --fresh"),
+			behavior.ReadsNone(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true}, "name", "managed"),
 		).
 		Example("A CA that osapi did not deploy", DeleteInput{Name: "internal-ca"},
 			Result{Name: "internal-ca"},
+			behavior.ReadsNone(GetInput{Name: "internal-ca"}, Entry{Name: "internal-ca", Managed: true}, "name", "managed"),
 		).
 		Fails("A name that is an option", DeleteInput{Name: "-r"}, "not a valid name").
 		Fails("A name with a space", DeleteInput{Name: "a b"}, "resource_name"),

@@ -49,6 +49,85 @@ type Example struct {
 	// live host of the integration test; NotLive sets it. Empty runs it on
 	// both.
 	NotLive string `json:"not_live,omitempty"`
+	// ReadBacks are the reads that show what a write example changed, which
+	// Reads and ReadsNone add. The integration test runs each one on the
+	// live host after the example.
+	ReadBacks []ReadBack `json:"read_backs,omitempty"`
+	// NoReadBack is why no read shows what a write example changed, which
+	// NoReadBack sets.
+	NoReadBack string `json:"no_read_back,omitempty"`
+}
+
+// ReadBack is a read of the behavior, or of its parent, that shows what a
+// write example changed: the read whose input type Input is, run with
+// Input, and the fields of Want that it must answer. With None, no row
+// answers them: the example removed the item.
+type ReadBack struct {
+	// Input is a value of the read's input type.
+	Input any `json:"input"`
+	// Want is a value of the read's output type, or of its element for a
+	// read that answers a list.
+	Want any `json:"want"`
+	// Fields are the JSON names of the fields of Want to compare. With
+	// none, each field of Want that is not its zero value.
+	Fields []string `json:"fields,omitempty"`
+	// None is a read that no row of answers Want: the item is gone, or the
+	// read reports that it is not found.
+	None bool `json:"none,omitempty"`
+}
+
+// Reads says what a read answers on the live host after a write example:
+// the read whose input type input is, run with input, answers a row with
+// the fields of want that fields names, or with none, each field of want
+// that is not its zero value. Name a field to compare its zero value, such
+// as managed for false. A list matches a list that has each of its values. The read can be the parent's, as a key's read for a
+// user. The integration test runs it, so a write that reports changed but
+// does nothing fails.
+func Reads(
+	input any,
+	want any,
+	fields ...string,
+) HostOption {
+	return exampleReadBack(ReadBack{Input: input, Want: want, Fields: fields})
+}
+
+// ReadsNone says that after a write example no row of the read whose input
+// type input is answers want, or the read reports the item not found: the
+// example removed it. fields names the fields of want to compare, as for
+// Reads.
+func ReadsNone(
+	input any,
+	want any,
+	fields ...string,
+) HostOption {
+	return exampleReadBack(ReadBack{Input: input, Want: want, Fields: fields, None: true})
+}
+
+// exampleReadBack is the HostOption of Reads and ReadsNone.
+type exampleReadBack ReadBack
+
+func (r exampleReadBack) applyExample(
+	e *Example,
+) {
+	e.ReadBacks = append(e.ReadBacks, ReadBack(r))
+}
+
+// NoReadBack says why no read of the behavior shows what a write example
+// changed, such as a command's run, whose output is its result. The gate
+// takes it in place of a Reads.
+func NoReadBack(
+	why string,
+) HostOption {
+	return exampleNoReadBack(why)
+}
+
+// exampleNoReadBack is the HostOption of NoReadBack.
+type exampleNoReadBack string
+
+func (n exampleNoReadBack) applyExample(
+	e *Example,
+) {
+	e.NoReadBack = string(n)
 }
 
 // NotLive keeps a write example off the live host of the integration test,

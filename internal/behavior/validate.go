@@ -115,6 +115,10 @@ const (
 	// on a served method with a secret field, and each field tagged before
 	// is set by one.
 	RuleBefore = "before"
+	// RuleReadBack: each write example that the integration test runs on
+	// the live host says what a read answers after it, with Reads or
+	// ReadsNone, or says why no read can, with NoReadBack or ReadsNothing.
+	RuleReadBack = "readback"
 )
 
 // tagProblems are the RuleTag problems of t's fields, and of the fields of
@@ -456,6 +460,9 @@ func ValidateBehavior(
 	for _, m := range b.Methods {
 		for _, msg := range beforeProblems(b, m) {
 			add(m.Name, RuleBefore, "%s", msg)
+		}
+		for _, msg := range readBackProblems(b, m) {
+			add(m.Name, RuleReadBack, "%s", msg)
 		}
 		// Two methods on one verb and path would be one route, and only one
 		// of them could be served.

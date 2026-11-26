@@ -117,12 +117,15 @@ var Behavior = behavior.Register(behavior.Define(
 			"reports skipped.").
 		Example("Set the servers of an interface", UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}},
 			Result{InterfaceName: "osapi0", Changed: true},
-			append([]behavior.HostOption{
-				behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
-				behavior.Wrote(osapi0File, osapi0YAML),
-				behavior.Ran("netplan", "generate"),
-				behavior.Ran("netplan", "apply"),
-			}, linuxHost...)...,
+			append(
+				append([]behavior.HostOption{
+					behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
+					behavior.Wrote(osapi0File, osapi0YAML),
+					behavior.Ran("netplan", "generate"),
+					behavior.Ran("netplan", "apply"),
+				}, linuxHost...),
+				behavior.Reads(GetInput{InterfaceName: "osapi0"}, Entry{Servers: []string{"9.9.9.9"}}),
+			)...,
 		).
 		Example("Set the search domains, and keep the servers",
 			UpdateInput{
@@ -131,20 +134,23 @@ var Behavior = behavior.Register(behavior.Define(
 				OverrideDHCP:  true,
 			},
 			Result{InterfaceName: "osapi0", Changed: true},
-			append([]behavior.HostOption{
-				behavior.Prints(
-					"netplan status --format json",
-					`{"osapi0":{"type":"ethernet","id":"osapi0"}}`,
-				),
-				behavior.Wrote(
-					osapi0File,
-					"network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n"+
-						"        addresses:\n          - 1.1.1.1\n          - 8.8.8.8\n        search:\n          - corp.example\n"+
-						"      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false\n",
-				),
-				behavior.Ran("netplan", "generate"),
-				behavior.Ran("netplan", "apply"),
-			}, linuxHost...)...,
+			append(
+				append([]behavior.HostOption{
+					behavior.Prints(
+						"netplan status --format json",
+						`{"osapi0":{"type":"ethernet","id":"osapi0"}}`,
+					),
+					behavior.Wrote(
+						osapi0File,
+						"network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n"+
+							"        addresses:\n          - 1.1.1.1\n          - 8.8.8.8\n        search:\n          - corp.example\n"+
+							"      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false\n",
+					),
+					behavior.Ran("netplan", "generate"),
+					behavior.Ran("netplan", "apply"),
+				}, linuxHost...),
+				behavior.Reads(GetInput{InterfaceName: "osapi0"}, Entry{SearchDomains: []string{"corp.example"}}),
+			)...,
 		).
 		Example("An interface with no resolvers yet",
 			UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}},
@@ -157,6 +163,7 @@ var Behavior = behavior.Register(behavior.Define(
 				"        addresses:\n          - 9.9.9.9\n"),
 			behavior.Ran("netplan", "generate"),
 			behavior.Ran("netplan", "apply"),
+			behavior.Reads(GetInput{InterfaceName: "osapi0"}, Entry{Servers: []string{"9.9.9.9"}}),
 		).
 		Fails("No servers and no search domains", UpdateInput{InterfaceName: "osapi0"},
 			"give servers or search domains").
@@ -208,10 +215,13 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
 				behavior.Removed(osapi0File),
 				behavior.Ran("netplan", "apply"),
+				behavior.ReadsNone(GetInput{InterfaceName: "osapi0"}, Entry{Servers: []string{"9.9.9.9"}}, "servers"),
 			)...,
 		).
 		Example("An interface osapi set nothing on", DeleteInput{InterfaceName: "osapi0"},
-			Result{InterfaceName: "osapi0"}).
+			Result{InterfaceName: "osapi0"},
+			behavior.ReadsNone(GetInput{InterfaceName: "osapi0"}, Entry{Servers: []string{"9.9.9.9"}}, "servers"),
+		).
 		Fails("An interface name that is not alphanumeric", DeleteInput{InterfaceName: "osapi0;reboot"},
 			"InterfaceName"),
 ))

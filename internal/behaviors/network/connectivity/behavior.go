@@ -72,6 +72,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Runs("ping"),
 	behavior.RunsOnPlatform(behavior.PlatformDarwin, "ping6"),
 	behavior.Action("ping", Ping).
+		ReadsNothing("a ping changes nothing on the host: its result is what the call answers").
 		Describe("Ping an address from the host").
 		Explain("Sends three ICMP echo requests from the host and reports how many came "+
 			"back, and their round-trip times. A host that does not answer is 100% loss, "+

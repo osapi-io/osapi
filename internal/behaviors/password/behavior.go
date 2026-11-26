@@ -77,6 +77,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Requires(user.Behavior),
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Write("update", Update).
+		ReadsNothing("no read shows a password or its hash: the host keeps them, and osapi never reads them back").
 		AdminOnly().
 		Sudo("chpasswd").
 		Always().

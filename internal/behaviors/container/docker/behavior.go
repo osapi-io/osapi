@@ -139,10 +139,12 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("Create a container", toCreate, Result{Name: name, ID: id, Changed: true},
 			answers, made, created, details,
 			behavior.Ran("docker", "create", "--name", name, image, "sleep", "300"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Image: "alpine:3.20"}),
 		).
 		Example("A container that the host has", toCreate, Result{Name: name, ID: id},
 			answers, made, created, details,
 			behavior.After(toCreate),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Image: "alpine:3.20"}),
 		).
 		Fails("A name that is an option", CreateInput{Name: "-f", Image: image}, "container_id").
 		Fails("No image", CreateInput{Name: name}, "required").
@@ -171,9 +173,11 @@ var Behavior = behavior.Register(behavior.Define(
 			answers, made, created, removed, details,
 			behavior.After(toCreate),
 			behavior.Ran("docker", "rm", "-f", name),
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Entry{Name: "osapitest"}, "name"),
 		).
 		Example("A container that the host does not have", DeleteInput{Name: name},
 			Result{Name: name}, answers,
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Entry{Name: "osapitest"}, "name"),
 		).
 		Fails("A name that is an option", DeleteInput{Name: "-f"}, "container_id"),
 	behavior.Action("start", Start).Key("name").
@@ -184,10 +188,12 @@ var Behavior = behavior.Register(behavior.Define(
 			answers, made, created, started, details,
 			behavior.After(toCreate),
 			behavior.Ran("docker", "start", name),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", State: "running"}),
 		).
 		Example("A container that runs already", StartInput{Name: name}, Result{Name: name},
 			answers, made, created, started, details,
 			behavior.After(toRun),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", State: "running"}),
 		).
 		Fails("A container that the host does not have", StartInput{Name: "nothere"}, "not found").
 		Fails("A name that is an option", StartInput{Name: "-f"}, "container_id"),
@@ -200,16 +206,19 @@ var Behavior = behavior.Register(behavior.Define(
 			answers, made, created, started, stopped, details,
 			behavior.After(toRun),
 			behavior.Ran("docker", "stop", "-t", "1", name),
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", State: "running"}, "name", "state"),
 		).
 		Example("A container that does not run", StopInput{Name: name, Timeout: 1}, Result{Name: name},
 			answers, made, created, details,
 			behavior.After(toCreate),
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", State: "running"}, "name", "state"),
 		).
 		Fails("A container that the host does not have", StopInput{Name: "nothere"}, "not found").
 		Fails("A name that is an option", StopInput{Name: "-f"}, "container_id").
 		Fails("A timeout longer than 300 seconds", StopInput{Name: name, Timeout: 301}, "max").
 		Fails("A negative timeout", StopInput{Name: name, Timeout: -1}, "min"),
 	behavior.Action("exec", Exec).Key("name").
+		ReadsNothing("the output of the command in the container is its result, which the call answers").
 		PermitAs(types.VerbExec).
 		Always().
 		Describe("Run a command in a container").

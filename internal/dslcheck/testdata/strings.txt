@@ -19,6 +19,7 @@ behavior.Effect.Command string	fixture	what an example sets up or expects
 behavior.Effect.Content string	fixture	what an example sets up or expects
 behavior.Effect.Path string	fixture	what an example sets up or expects
 behavior.Example.Doc string	free text	prose for a page or a message
+behavior.Example.NoReadBack string	free text	prose for a page or a message
 behavior.Example.NotLive string	free text	prose for a page or a message
 behavior.Exists(content string)	fixture	what an example sets up or expects
 behavior.Exists(path string)	path pattern	a path or a path.Match pattern
@@ -48,13 +49,16 @@ behavior.Method.Name string	identity	a name that the registry, the route or the 
 behavior.Method.Disruption string	free text	prose for a page or a message
 behavior.Method.NonFact string	free text	prose for a page or a message
 behavior.Method.Disrupts(why string)	free text	prose for a page or a message
+behavior.Method.NoReadBack string	free text	prose for a page or a message
 behavior.Method.NotAFact(why string)	free text	prose for a page or a message
+behavior.Method.ReadsNothing(why string)	free text	prose for a page or a message
 behavior.Method.Runs(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Method.RunsPrograms []string	program	a program name, which preflight and the fake host check
 behavior.Method.Sudo(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Method.SudoPrograms []string	program	a program name, which preflight and the fake host check
 behavior.NewStep(behavior string)	identity	a name that the registry, the route or the command path holds
 behavior.NewStep(method string)	identity	a name that the registry, the route or the command path holds
+behavior.NoReadBack(why string)	free text	prose for a page or a message
 behavior.NotLive(why string)	free text	prose for a page or a message
 behavior.PlatformPrograms.Programs []string	program	a program name, which preflight and the fake host check
 behavior.Prints(command string)	fixture	what an example sets up or expects
@@ -267,3 +271,6 @@ command.LocalMethod.NoCheck(why string)	free text	a reason that a person reads
 command.ReadBack.Command string	fixture	what an example sets up or expects
 command.ReadBack.Fails string	fixture	what an example sets up or expects
 command.ReadBack.Flags string	fixture	what an example sets up or expects
+behavior.ReadBack.Fields []string	identity	the JSON names of the fields of a want, which validate checks against the type
+behavior.Reads(fields []string)	identity	the JSON names of the fields of a want, which validate checks against the type
+behavior.ReadsNone(fields []string)	identity	the JSON names of the fields of a want, which validate checks against the type

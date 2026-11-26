@@ -57,6 +57,7 @@ var Behavior = behavior.Register(behavior.Define(
 				"openssl/noble-updates 3.0.13-0ubuntu3.1 amd64 [upgradable from: 3.0.13-0ubuntu3]\n"),
 		),
 	behavior.Write("update", Update).
+		ReadsNothing("it refreshes the package index, whose updates are what the repositories have: no value of the example is in the read").
 		Sudo("apt-get").
 		Describe("Refresh the package index").
 		Explain("Runs apt-get update. It reports changed: true when the Release file "+

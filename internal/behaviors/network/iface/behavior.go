@@ -220,19 +220,27 @@ var Behavior = behavior.Register(behavior.Define(
 			"reports skipped.").
 		Example("A dummy interface with a static address", osapi0Static,
 			Result{Name: "osapi0", Changed: true},
-			append([]behavior.HostOption{behavior.Wrote(osapi0File, osapi0YAML)}, writes...)...).
+			append(
+				append([]behavior.HostOption{behavior.Wrote(osapi0File, osapi0YAML)}, writes...),
+				behavior.Reads(GetInput{Name: "osapi0"}, Entry{Name: "osapi0", Addresses: []string{"10.0.1.5/24"}}),
+			)...,
+		).
 		Example("Each setting",
 			CreateInput{
 				Name: "osapi0", Type: "dummy", DHCP6: true, Addresses: []string{"2001:db8::5/64"},
 				MTU: 9000, MACAddress: "52:54:00:aa:bb:cc",
 			},
 			Result{Name: "osapi0", Changed: true},
-			append([]behavior.HostOption{
-				behavior.Wrote(osapi0File, "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"+
-					"      dhcp4: false\n      dhcp6: true\n"+
-					"      addresses:\n        - 2001:db8::5/64\n"+
-					"      mtu: 9000\n      macaddress: 52:54:00:aa:bb:cc\n"),
-			}, writes...)...).
+			append(
+				append([]behavior.HostOption{
+					behavior.Wrote(osapi0File, "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"+
+						"      dhcp4: false\n      dhcp6: true\n"+
+						"      addresses:\n        - 2001:db8::5/64\n"+
+						"      mtu: 9000\n      macaddress: 52:54:00:aa:bb:cc\n"),
+				}, writes...),
+				behavior.Reads(GetInput{Name: "osapi0"}, Entry{Name: "osapi0", MTU: 9000, MAC: "52:54:00:aa:bb:cc"}),
+			)...,
+		).
 		Example("An interface the host has",
 			CreateInput{Name: "eth1", DHCP4: true, WakeOnLAN: true},
 			Result{Name: "eth1", Changed: true},
@@ -242,7 +250,12 @@ var Behavior = behavior.Register(behavior.Define(
 						"      dhcp4: true\n      dhcp6: false\n      wakeonlan: true\n"),
 			}, eth1Host...)...).
 		Example("An interface osapi already configures", osapi0Static, Result{Name: "osapi0"},
-			append(slices.Clone(osapi0Host), behavior.After(osapi0Static))...).
+			append(
+				slices.Clone(osapi0Host),
+				behavior.After(osapi0Static),
+				behavior.Reads(GetInput{Name: "osapi0"}, Entry{Name: "osapi0", Addresses: []string{"10.0.1.5/24"}}),
+			)...,
+		).
 		Fails("An interface in a match that takes other interfaces",
 			CreateInput{Name: "enp0s1", DHCP4: true}, "also takes enp0s2",
 			behavior.Exists("/sys/class/net/enp0s1/ifindex", "2"),
@@ -272,7 +285,9 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.After(osapi0Static),
 				behavior.Wrote(osapi0File, "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"+
 					"      dhcp4: true\n      dhcp6: false\n"),
-			)...).
+				behavior.ReadsNone(GetInput{Name: "osapi0"}, Entry{Name: "osapi0", Addresses: []string{"10.0.1.5/24"}}),
+			)...,
+		).
 		Fails("An interface osapi does not configure", UpdateInput{Name: "osapi0", DHCP4: true},
 			"not found"),
 		func(c Config) any { return UpdateInput(c) }),
@@ -289,9 +304,12 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.Removed(osapi0File),
 				behavior.Ran("netplan", "apply"),
 				behavior.Ran("ip", "link", "delete", "osapi0"),
+				behavior.ReadsNone(GetInput{Name: "osapi0"}, Entry{Name: "osapi0"}, "name"),
 			)...,
 		).
 		Example("An interface osapi does not configure", DeleteInput{Name: "osapi0"},
-			Result{Name: "osapi0"}).
+			Result{Name: "osapi0"},
+			behavior.ReadsNone(GetInput{Name: "osapi0"}, Entry{Name: "osapi0"}, "name"),
+		).
 		Fails("A name that is not an interface name", DeleteInput{Name: "eth0;reboot"}, "Name"),
 ))

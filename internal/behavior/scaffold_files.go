@@ -311,6 +311,8 @@ func (sc scaffold) behaviorFile() *jen.File {
 			Add(next("Example", jen.Lit("A new value"), jen.Id("UpdateInput").Values(example("example")),
 				jen.Id("Result").Values(field("Changed", jen.True())),
 				jen.Line().Add(b("Wrote").Call(jen.Id("defaultPath"), jen.Lit("example"))).
+					Op(",").Line().
+					Add(b("Reads").Call(jen.Id("GetInput").Values(), jen.Id("Entry").Values(example("example")))).
 					Op(",").Line())),
 	)
 

@@ -311,6 +311,10 @@ type Method struct {
 	Disruptive bool
 	// Disruption is why, as .Disrupts gives it.
 	Disruption string
+	// NoReadBack is why no read shows what the method's examples change,
+	// as .ReadsNothing gives it, for a write whose result is its own output,
+	// such as a command's run.
+	NoReadBack string
 	// PermitVerb is the permission verb of an action declared with
 	// .PermitAs or .Shell, such as exec: its permission is <name>:exec in
 	// place of <name>:execute, which only the admin role gets. Empty for
@@ -472,6 +476,18 @@ func (m *Method) Disrupts(
 ) *Method {
 	m.Disruptive = true
 	m.Disruption = why
+
+	return m
+}
+
+// ReadsNothing says why no read of the behavior shows what the write's
+// examples change, for a write whose result is its own output, such as the
+// output of a command that it runs. The gate takes it in place of a Reads
+// on each example.
+func (m *Method) ReadsNothing(
+	why string,
+) *Method {
+	m.NoReadBack = why
 
 	return m
 }
