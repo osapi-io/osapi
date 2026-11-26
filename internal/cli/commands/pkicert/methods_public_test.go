@@ -25,6 +25,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/fips140"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -145,7 +146,14 @@ func (s *MethodsPublicTestSuite) writeCert(
 		SerialNumber: big.NewInt(1), NotAfter: time.Now().Add(24 * time.Hour),
 		SignatureAlgorithm: alg,
 	}
-	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, key.Public(), key)
+	// A fixture of a weak certificate, such as one signed with SHA-1, is
+	// made with no FIPS 140-3 enforcement, so the test of its report runs
+	// in only mode too.
+	var der []byte
+	var err error
+	fips140.WithoutEnforcement(func() {
+		der, err = x509.CreateCertificate(rand.Reader, tmpl, tmpl, key.Public(), key)
+	})
 	s.Require().NoError(err)
 	cert, _ := config.SelfSignedFiles(s.dir, name)
 	s.Require().
@@ -153,7 +161,8 @@ func (s *MethodsPublicTestSuite) writeCert(
 }
 
 func (s *MethodsPublicTestSuite) TestAlgorithms() {
-	rsa1024, _ := rsa.GenerateKey(rand.Reader, 1024)
+	var rsa1024 *rsa.PrivateKey
+	fips140.WithoutEnforcement(func() { rsa1024, _ = rsa.GenerateKey(rand.Reader, 1024) })
 	rsa2048, _ := rsa.GenerateKey(rand.Reader, 2048)
 	p224, _ := ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
 	p384, _ := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)

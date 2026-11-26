@@ -191,7 +191,9 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 				)
 				return t
 			},
-			signingKeys: authtoken.Keys{{ID: "2026-11", Secret: "wrong-key"}},
+			signingKeys: authtoken.Keys{
+				{ID: "2026-11", Secret: "a-different-signing-key-of-32-by"},
+			},
 			expectError: true,
 			errContains: "signature is invalid",
 		},
