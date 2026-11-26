@@ -40,7 +40,9 @@ func FromConfig(
 	}
 	// A metrics server whose certificate does not load does not start: it
 	// does not fall back to plain HTTP.
-	t, err := cfg.TLS.WithSelfSigned(keyDir, name)
+	// Nothing pins a metrics certificate, so a renamed host makes a new one
+	// for its new name (osapi-io/osapi#1493).
+	t, err := cfg.TLS.WithCurrentSelfSigned(keyDir, name)
 	if err != nil {
 		log.Error("metrics server: tls", slog.String("error", err.Error()))
 

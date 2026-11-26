@@ -77,6 +77,47 @@ func (s ServerTLS) WithSelfSigned(
 	return s, nil
 }
 
+// WithCurrentSelfSigned is WithSelfSigned, except that a self-signed
+// certificate that does not name this host's hostname now is made again: a
+// renamed host, whose metrics certificate named its old name, gets one for
+// its new name at its next start (osapi-io/osapi#1493). Only a certificate
+// that nothing pins may change this way: not NATS's, which each join string
+// pins, nor the API's, which clients on other hosts trust.
+func (s ServerTLS) WithCurrentSelfSigned(
+	dir string,
+	name string,
+) (ServerTLS, error) {
+	if !s.Enabled || s.CertFile != "" {
+		return s, nil
+	}
+	certFile, keyFile := SelfSignedFiles(dir, name)
+	if host, _ := SelfSignedHostname(); host != "" && !certNames(certFile, host) {
+		_ = os.Remove(certFile)
+		_ = os.Remove(keyFile)
+	}
+
+	return s.WithSelfSigned(dir, name)
+}
+
+// certNames reports whether the certificate in file names host, or false
+// when there is no certificate to read.
+func certNames(
+	file string,
+	host string,
+) bool {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return false
+	}
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return false
+	}
+	c, err := x509.ParseCertificate(block.Bytes)
+
+	return err == nil && c.VerifyHostname(host) == nil
+}
+
 // writeSelfSigned makes an ECDSA P-256 certificate for this host, localhost
 // and the hosts of urls, and writes it and its key.
 func writeSelfSigned(
