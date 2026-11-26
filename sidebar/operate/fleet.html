@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Run the fleet | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/fleet"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Run the fleet | OSAPI"><meta data-rh="true" name="description" content="This page tells how to see the fleet, and how to change it after the setup."><meta data-rh="true" property="og:description" content="This page tells how to see the fleet, and how to change it after the setup."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"Run the fleet","item":"https://osapi-io.github.io/osapi/sidebar/operate/fleet"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.e9fbab7d.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.dfcb161e.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.9b448fde.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.be18b3a4.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -89,6 +89,32 @@ that is admitted, for a request that its key signed.</p>
 expires. Select the TTL by how fast a revocation must apply, and how long a host
 can be off: a host that is off for longer than the TTL cannot renew, and must
 join again. An empty <code>agent_ttl</code> gives a JWT that does not expire.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rotate-an-agents-keys">Rotate an agent&#x27;s keys<a href="#rotate-an-agents-keys" class="hash-link" aria-label="Direct link to Rotate an agent&#x27;s keys" title="Direct link to Rotate an agent&#x27;s keys" translate="no">​</a></h2>
+<p>The agent sends the rotation on the NATS subject <code>join.rotate</code>. In operator
+mode, a setup that an older osapi made does not have that subject: run
+<a class="" href="/osapi/sidebar/operate/nats#check-it"><code>osapi nats auth operator update</code></a> first.</p>
+<p>Run this on the agent&#x27;s host, with the agent&#x27;s config:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token function" style="color:#00d5ff">sudo</span><span class="token plain"> osapi pki key rotate </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> agent</span><br></div></code></pre></div></div>
+<ol>
+<li class="">The command makes two new keys in <code>agent.pki.key_dir</code>, beside the old keys,
+as <code>agent.next.key</code>, <code>agent.next.pub</code> and <code>agent.next.ekey</code>.</li>
+<li class="">It sends the new public keys to the controller over NATS, as the agent
+connects. The old signing key signs the request, and the new key signs it
+too.</li>
+<li class="">The controller checks the old signature against the admission, and that the
+machine is admitted. Then it puts the new keys in the admission. No new
+admission is necessary.</li>
+<li class="">The command moves the new keys in place of the old keys. The agent reads them
+at its next heartbeat.</li>
+<li class="">During <code>controller.pki.rotation_grace_period</code> (<code>24h</code>), the controller also
+accepts the old signing key, for a result that the agent signed before it
+read the new keys. The agent also opens a job that the controller sealed to
+its old encryption key.</li>
+</ol>
+<p>The controller refuses a revoked machine, and keys that it did not admit. Then
+the command removes the new keys, and the agent keeps its keys. When the
+controller does not answer, the new keys stay. Run the command again: it sends
+the same keys. The audit log records each rotation as <code>agent.key.rotate</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rotate-the-controllers-key">Rotate the controller&#x27;s key<a href="#rotate-the-controllers-key" class="hash-link" aria-label="Direct link to Rotate the controller&#x27;s key" title="Direct link to Rotate the controller&#x27;s key" translate="no">​</a></h2>
 <ol>
 <li class="">Put a new key pair in <code>controller.pki.key_dir</code>.</li>
@@ -101,6 +127,6 @@ old key and the new key, and gets the new key.</li>
 <a class="" href="/osapi/sidebar/operate/controller#1-make-a-signing-key">3. Controller</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="remove-a-host">Remove a host<a href="#remove-a-host" class="hash-link" aria-label="Direct link to Remove a host" title="Direct link to Remove a host" translate="no">​</a></h2>
 <p><a class="" href="/osapi/sidebar/operate/join#remove-a-host">4. Join hosts</a> tells the difference between <code>revoke</code> and
-<code>delete</code>.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/operate/join"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">4. Join hosts</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/operate/secure/agent-hardening"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent Hardening</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#see-the-fleet" class="table-of-contents__link toc-highlight">See the fleet</a></li><li><a href="#change-the-labels-and-the-settings-of-an-agent" class="table-of-contents__link toc-highlight">Change the labels and the settings of an agent</a></li><li><a href="#drain-a-host" class="table-of-contents__link toc-highlight">Drain a host</a></li><li><a href="#rename-a-host" class="table-of-contents__link toc-highlight">Rename a host</a></li><li><a href="#upgrade-the-fleet" class="table-of-contents__link toc-highlight">Upgrade the fleet</a></li><li><a href="#renew-and-revoke-the-nats-user-of-an-agent" class="table-of-contents__link toc-highlight">Renew and revoke the NATS user of an agent</a></li><li><a href="#rotate-the-controllers-key" class="table-of-contents__link toc-highlight">Rotate the controller&#39;s key</a></li><li><a href="#remove-a-host" class="table-of-contents__link toc-highlight">Remove a host</a></li></ul></div></div></div></div></main></div></div></div></div>
+<code>delete</code>.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/operate/join"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">4. Join hosts</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/operate/secure/agent-hardening"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent Hardening</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#see-the-fleet" class="table-of-contents__link toc-highlight">See the fleet</a></li><li><a href="#change-the-labels-and-the-settings-of-an-agent" class="table-of-contents__link toc-highlight">Change the labels and the settings of an agent</a></li><li><a href="#drain-a-host" class="table-of-contents__link toc-highlight">Drain a host</a></li><li><a href="#rename-a-host" class="table-of-contents__link toc-highlight">Rename a host</a></li><li><a href="#upgrade-the-fleet" class="table-of-contents__link toc-highlight">Upgrade the fleet</a></li><li><a href="#renew-and-revoke-the-nats-user-of-an-agent" class="table-of-contents__link toc-highlight">Renew and revoke the NATS user of an agent</a></li><li><a href="#rotate-an-agents-keys" class="table-of-contents__link toc-highlight">Rotate an agent&#39;s keys</a></li><li><a href="#rotate-the-controllers-key" class="table-of-contents__link toc-highlight">Rotate the controller&#39;s key</a></li><li><a href="#remove-a-host" class="table-of-contents__link toc-highlight">Remove a host</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
