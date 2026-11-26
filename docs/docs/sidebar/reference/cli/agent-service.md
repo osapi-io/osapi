@@ -22,6 +22,7 @@ Run the agent of this host as a service that starts at boot.
 | ----------- | ---------------------------------------------------------------- |
 | Method      | install                                                          |
 | Description | Install the agent as a service, with a join string, and start it |
+| Refuses     | no join string, a join string of more than 8192 characters       |
 
 ### Flags (3)
 

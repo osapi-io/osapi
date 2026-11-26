@@ -22,7 +22,11 @@
 // config that has the join string.
 package agentservice
 
-import "github.com/osapi-io/osapi/internal/cli/command"
+import (
+	"strings"
+
+	"github.com/osapi-io/osapi/internal/cli/command"
+)
 
 // Group is osapi agent service.
 var Group = command.Register(command.Define(
@@ -39,6 +43,10 @@ var Group = command.Register(command.Define(
 			"reads them: the join string is used one time.").
 		Example("--join 'tls://nats.example.com:4222?creds=...&fp=SHA256%3A...&ns=osapi&token=osapi_jt_...'").
 		Prints(sampleInstall).
+		Fails("no join string", InstallInput{}).
+		Fails("a join string of more than 8192 characters", InstallInput{
+			Join: "tls://" + strings.Repeat("a", 8193),
+		}).
 		Handle(Install),
 	command.Method[UninstallInput, UninstallOutput]("uninstall").
 		Short("Stop the agent's service and remove it").
