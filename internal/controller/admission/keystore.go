@@ -140,6 +140,7 @@ func (w *Watcher) LookupAgentKey(
 	if record, ok := w.cachedAgentKey(machineID); ok {
 		return record, nil
 	}
+	gen := w.keyCacheGeneration()
 
 	entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, acceptedKey(machineID))
 	if err != nil {
@@ -161,7 +162,7 @@ func (w *Watcher) LookupAgentKey(
 		)
 	}
 
-	w.cacheAgentKey(machineID, &record)
+	w.cacheAgentKey(machineID, &record, gen)
 
 	return &record, nil
 }
@@ -239,12 +240,26 @@ func (w *Watcher) cachedAgentKey(
 func (w *Watcher) cacheAgentKey(
 	machineID string,
 	record *AcceptedAgent,
+	gen uint64,
 ) {
 	w.keyCacheMu.Lock()
 	defer w.keyCacheMu.Unlock()
 
+	// A removal ran after this record was read: the record may be the one
+	// that it removed.
+	if w.keyCacheGen != gen {
+		return
+	}
 	cached := *record
 	w.keyCache[machineID] = &cached
+}
+
+// keyCacheGeneration is the count of removals from the cache so far.
+func (w *Watcher) keyCacheGeneration() uint64 {
+	w.keyCacheMu.RLock()
+	defer w.keyCacheMu.RUnlock()
+
+	return w.keyCacheGen
 }
 
 // invalidateAgentKey drops a machine ID's cached record.
@@ -255,4 +270,5 @@ func (w *Watcher) invalidateAgentKey(
 	defer w.keyCacheMu.Unlock()
 
 	delete(w.keyCache, machineID)
+	w.keyCacheGen++
 }

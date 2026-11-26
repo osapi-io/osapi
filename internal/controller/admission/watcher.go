@@ -74,6 +74,10 @@ type Watcher struct {
 	// hit the KV in steady state. Invalidated by acceptance and removal.
 	keyCacheMu sync.RWMutex
 	keyCache   map[string]*AcceptedAgent
+	// keyCacheGen counts each removal from keyCache. A lookup caches what
+	// it read only when no removal ran since it began, so a record that a
+	// revocation removed while the lookup read it is never cached again.
+	keyCacheGen uint64
 
 	// rotationGrace is how long the key an acceptance replaces stays
 	// acceptable. Zero means a replacement takes effect at once, which is
