@@ -46,26 +46,6 @@ export function formatAgeSince(s?: string): string {
   return formatAge(Date.now() - t);
 }
 
-/**
- * The API's uptime, "2 days, 23 hours, 50 minutes", as FormatAge prints it:
- * "2d 23h". A string in a different form comes back unchanged.
- */
-export function formatUptime(uptime: string): string {
-  const unit = (name: string) => {
-    const m = uptime.match(new RegExp(`(\\d+)\\s+${name}s?\\b`));
-    return m ? Number(m[1]) : undefined;
-  };
-  const days = unit("day");
-  const hours = unit("hour");
-  const minutes = unit("minute");
-  if (days === undefined && hours === undefined && minutes === undefined) {
-    return uptime;
-  }
-  return formatAge(
-    ((days ?? 0) * 1440 + (hours ?? 0) * 60 + (minutes ?? 0)) * 60_000,
-  );
-}
-
 // Trims a fixed-point number's trailing zeros, as Go's Duration.String does.
 const trim = (n: number, digits: number) =>
   n.toFixed(digits).replace(/\.?0+$/, "");
