@@ -10,6 +10,11 @@ components:
       type: string
     AgentConfigRequest:
       properties:
+        facts_interval:
+          description: How often the agent collects its facts, as a Go duration such as 5m. Empty keeps the interval of the agent's config file.
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,go_duration
         labels:
           additionalProperties:
             type: string
@@ -29,6 +34,9 @@ components:
       type: object
     AgentConfigResponse:
       properties:
+        facts_interval:
+          description: How often the agent collects its facts; empty keeps the agent's config file.
+          type: string
         labels:
           additionalProperties:
             type: string
@@ -769,7 +777,7 @@ paths:
             hostname: web-01
       x-osapi-method: getconfig
     put:
-      description: 'Sets the labels, the max jobs and the log level of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, runs at most max jobs at the same time, logs at the level, and no restart is necessary.'
+      description: 'Sets the labels, the max jobs, the log level and the facts interval of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, runs at most max jobs at the same time, logs at the level, collects its facts at the interval, and no restart is necessary.'
       operationId: PutAgentConfig
       parameters:
         - description: The hostname of the agent.
@@ -835,6 +843,7 @@ paths:
       x-osapi-examples:
         - doc: Set the config of an agent
           input:
+            facts_interval: 5m
             hostname: web-01
             labels:
               dc: east

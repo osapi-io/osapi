@@ -8,6 +8,8 @@ import type { AgentConfigResponseLabels } from './agentConfigResponseLabels';
 import type { LogLevel } from './logLevel';
 
 export interface AgentConfigResponse {
+  /** How often the agent collects its facts; empty keeps the agent's config file. */
+  facts_interval?: string;
   /** The labels that the controller gives the agent. */
   labels?: AgentConfigResponseLabels;
   log_level?: LogLevel;

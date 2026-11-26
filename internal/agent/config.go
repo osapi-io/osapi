@@ -64,15 +64,34 @@ func (a *Agent) applyConfig(
 		_ = level.UnmarshalText([]byte(string(cfg.LogLevel)))
 	}
 
+	facts := factsIntervalOf(a.fileFactsInterval)
+	if cfg.FactsInterval != "" {
+		facts = factsIntervalOf(cfg.FactsInterval)
+	}
+
 	a.lifecycleMu.Lock()
 	a.configVersion = cfg.Version
+	refacts := facts != a.currentFactsInterval()
+	if refacts {
+		a.factsInterval = facts
+		// The loop takes the newest; a full channel holds one it has not
+		// read, which this one replaces.
+		select {
+		case <-a.factsReset:
+		default:
+		}
+		select {
+		case a.factsReset <- facts:
+		default:
+		}
+	}
 	relevel := a.logLevel != nil && a.logLevel.Level() != level
 	if relevel {
 		a.logLevel.Set(level)
 	}
 	restart := !maps.Equal(labels, a.appConfig.Agent.Labels) ||
 		maxJobs != a.appConfig.Agent.MaxJobs
-	changed := restart || relevel
+	changed := restart || relevel || refacts
 	if restart {
 		running := a.consumerCancel != nil
 		if running {
@@ -88,11 +107,21 @@ func (a *Agent) applyConfig(
 
 	a.logger.Info("applied the agent's config",
 		slog.Int("version", cfg.Version), slog.Any("labels", labels),
-		slog.Int("max_jobs", maxJobs), slog.String("log_level", level.String()))
+		slog.Int("max_jobs", maxJobs), slog.String("log_level", level.String()),
+		slog.Duration("facts_interval", facts))
 	if changed {
-		a.lifecycle(ctx, "config_applied",
-			fmt.Sprintf("config version %d, labels %s, max jobs %d, log level %s",
-				cfg.Version, labelString(labels), maxJobs, strings.ToLower(level.String())))
+		a.lifecycle(
+			ctx,
+			"config_applied",
+			fmt.Sprintf(
+				"config version %d, labels %s, max jobs %d, log level %s, facts interval %s",
+				cfg.Version,
+				labelString(labels),
+				maxJobs,
+				strings.ToLower(level.String()),
+				facts,
+			),
+		)
 	}
 }
 

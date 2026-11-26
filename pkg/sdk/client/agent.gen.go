@@ -44,6 +44,10 @@ func (s *AgentService) Getconfig(
 // AgentSetconfigInput is the input of AgentService.Setconfig. A field of the
 // path goes in the path, and each other field in the body.
 type AgentSetconfigInput struct {
+	// How often the agent collects its facts, as a Go duration such as 5m. Empty
+	// keeps the interval of the agent's config file.
+	FactsInterval string `json:"facts_interval,omitempty"`
+
 	// The labels of the agent, as key=value. They replace the labels of the
 	// agent's config file with the same keys. Empty removes each.
 	Labels map[string]string `json:"labels,omitempty"`
@@ -58,10 +62,11 @@ type AgentSetconfigInput struct {
 
 // Setconfig is the operation PutAgentConfig: set the config of an agent.
 //
-// Sets the labels, the max jobs and the log level of the agent as the next
-// version of its config. The agent applies them at once: it takes the jobs of
-// the new labels, runs at most max jobs at the same time, logs at the level,
-// and no restart is necessary.
+// Sets the labels, the max jobs, the log level and the facts interval of the
+// agent as the next version of its config. The agent applies them at once: it
+// takes the jobs of the new labels, runs at most max jobs at the same time,
+// logs at the level, collects its facts at the interval, and no restart is
+// necessary.
 //
 // It sends PUT /api/agent/config/{hostname}, and needs the permission
 // agent:write.

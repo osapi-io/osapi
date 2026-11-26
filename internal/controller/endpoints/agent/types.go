@@ -189,18 +189,20 @@ type ConfigSetInput struct {
 type ConfigRequest struct {
 	_ struct{} `schema:"AgentConfigRequest"`
 
-	Labels   map[string]string `json:"labels,omitempty"    validate:"omitempty"                doc:"The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each."`
-	MaxJobs  int               `json:"max_jobs,omitempty"  validate:"omitempty,min=1,max=1000" doc:"The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's."`
-	LogLevel types.LogLevel    `json:"log_level,omitempty" validate:"omitempty,enum"           doc:"The level that the agent logs at: debug, info, warn or error. Empty keeps the level of the agent's config file."`
+	Labels        map[string]string `json:"labels,omitempty"         validate:"omitempty"                doc:"The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each."`
+	MaxJobs       int               `json:"max_jobs,omitempty"       validate:"omitempty,min=1,max=1000" doc:"The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's."`
+	LogLevel      types.LogLevel    `json:"log_level,omitempty"      validate:"omitempty,enum"           doc:"The level that the agent logs at: debug, info, warn or error. Empty keeps the level of the agent's config file."`
+	FactsInterval string            `json:"facts_interval,omitempty" validate:"omitempty,go_duration"    doc:"How often the agent collects its facts, as a Go duration such as 5m. Empty keeps the interval of the agent's config file."`
 }
 
 // ConfigResponse is the config that the controller holds for an
 // agent.
 type ConfigResponse struct {
-	_         struct{}          `title:"Agent config" schema:"AgentConfigResponse"`
-	Version   int               `                                                  json:"version"              doc:"One more at each change; 0 when nothing was set."`
-	Labels    map[string]string `                                                  json:"labels,omitempty"     doc:"The labels that the controller gives the agent."`
-	MaxJobs   int               `                                                  json:"max_jobs,omitempty"   doc:"The most jobs that the agent runs at the same time; empty keeps the agent's config file." label:"Max jobs"`
-	LogLevel  types.LogLevel    `                                                  json:"log_level,omitempty"  doc:"The level that the agent logs at; empty keeps the agent's config file."                   label:"Log level"`
-	UpdatedAt *time.Time        `                                                  json:"updated_at,omitempty" doc:"When the config last changed."                                                            label:"Updated"   render:"time"`
+	_             struct{}          `title:"Agent config" schema:"AgentConfigResponse"`
+	Version       int               `                                                  json:"version"                  doc:"One more at each change; 0 when nothing was set."`
+	Labels        map[string]string `                                                  json:"labels,omitempty"         doc:"The labels that the controller gives the agent."`
+	MaxJobs       int               `                                                  json:"max_jobs,omitempty"       doc:"The most jobs that the agent runs at the same time; empty keeps the agent's config file." label:"Max jobs"`
+	LogLevel      types.LogLevel    `                                                  json:"log_level,omitempty"      doc:"The level that the agent logs at; empty keeps the agent's config file."                   label:"Log level"`
+	FactsInterval string            `                                                  json:"facts_interval,omitempty" doc:"How often the agent collects its facts; empty keeps the agent's config file."             label:"Facts interval"`
+	UpdatedAt     *time.Time        `                                                  json:"updated_at,omitempty"     doc:"When the config last changed."                                                            label:"Updated"        render:"time"`
 }

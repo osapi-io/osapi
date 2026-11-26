@@ -8,6 +8,8 @@ import type { AgentConfigRequestLabels } from './agentConfigRequestLabels';
 import type { LogLevel } from './logLevel';
 
 export interface AgentConfigRequest {
+  /** How often the agent collects its facts, as a Go duration such as 5m. Empty keeps the interval of the agent's config file. */
+  facts_interval?: string;
   /** The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. */
   labels?: AgentConfigRequestLabels;
   log_level?: LogLevel;

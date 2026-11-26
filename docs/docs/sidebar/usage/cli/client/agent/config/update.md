@@ -1,12 +1,12 @@
 # Update
 
-Set the labels, the max jobs and the log level of an agent.
+Set the labels, the max jobs, the log level and the facts interval of an agent.
 
 The labels replace the labels of the agent's config file with the same keys. Max
-jobs replaces its max_jobs, and the log level replaces the level of its debug
-setting; with neither, the agent keeps the file's. The agent applies them at
-once, with no restart. A host that joins with a join token gets the labels of
-the token.
+jobs replaces its max_jobs, the log level the level of its debug setting, and
+the facts interval its agent.facts.interval; with none, the agent keeps the
+file's. The agent applies them at once, with no restart. A host that joins with
+a join token gets the labels of the token.
 
 ```bash
 osapi client agent config update [flags]
@@ -15,7 +15,7 @@ osapi client agent config update [flags]
 ## Examples
 
 ```bash
-osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug
+osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug --facts-interval 5m
 ```
 
 ## Result
@@ -23,15 +23,16 @@ osapi client agent config update --hostname web-01 --labels group=web --labels d
 The command prints:
 
 ```ansi
-$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug
+$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug --facts-interval 5m
 [1;38;2;0;213;255mAgent config:[0m
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
-  [38;2;10;143;176mVersion:[0m    2
-  [38;2;10;143;176mLabels:[0m     dc:east, group:web
-  [38;2;10;143;176mMax jobs:[0m   4
-  [38;2;10;143;176mLog level:[0m  debug
-  [38;2;10;143;176mUpdated:[0m    2026-11-25 12:00:00
+  [38;2;10;143;176mVersion:[0m         2
+  [38;2;10;143;176mLabels:[0m          dc:east, group:web
+  [38;2;10;143;176mMax jobs:[0m        4
+  [38;2;10;143;176mLog level:[0m       debug
+  [38;2;10;143;176mFacts interval:[0m  5m
+  [38;2;10;143;176mUpdated:[0m         2026-11-25 12:00:00
 ```
 
 With `--json`, the API's response:
@@ -45,6 +46,7 @@ With `--json`, the API's response:
   },
   "max_jobs": 4,
   "log_level": "debug",
+  "facts_interval": "5m",
   "updated_at": "2026-11-25T12:00:00Z"
 }
 ```
@@ -56,12 +58,13 @@ shows what a role grants.
 
 ## Flags
 
-| Flag          | Description                                                                                                                               | Default |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `--hostname`  | The hostname of the agent (required)                                                                                                      |         |
-| `--labels`    | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each          |         |
-| `--log-level` | The level that the agent logs at: debug, info, warn or error. Empty keeps the level of the agent's config file (debug, info, warn, error) |         |
-| `--max-jobs`  | The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's               |         |
+| Flag               | Description                                                                                                                               | Default |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--facts-interval` | How often the agent collects its facts, as a Go duration such as 5m. Empty keeps the interval of the agent's config file                  |         |
+| `--hostname`       | The hostname of the agent (required)                                                                                                      |         |
+| `--labels`         | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each          |         |
+| `--log-level`      | The level that the agent logs at: debug, info, warn or error. Empty keeps the level of the agent's config file (debug, info, warn, error) |         |
+| `--max-jobs`       | The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's               |         |
 
 ## Global flags
 

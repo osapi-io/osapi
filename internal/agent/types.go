@@ -120,6 +120,13 @@ type Agent struct {
 	// A nil logLevel is a logger whose level the agent does not change.
 	logLevel     *slog.LevelVar
 	fileLogLevel slog.Level
+	// fileFactsInterval is the facts interval of the agent's config file,
+	// which the controller's config replaces when it sets one, and
+	// factsInterval the one that the controller's config set, or 0 for the
+	// file's. factsReset gives the facts loop a new one.
+	fileFactsInterval string
+	factsInterval     time.Duration
+	factsReset        chan time.Duration
 	// configVersion is the version of the controller's config that the
 	// agent applied, 0 for none.
 	configVersion int
