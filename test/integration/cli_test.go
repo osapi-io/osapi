@@ -567,7 +567,7 @@ func (f *fixtures) readBack(
 	deadline := time.Now().Add(30 * time.Second)
 	for {
 		problems = problems[:0]
-		stdout, stderr, code := runCLIIn(f.dir, "", args...)
+		stdout, stderr, code := runCLIWith(f.dir, "", nil, args...)
 		switch {
 		case rb.Fails != "" && code == 0:
 			problems = append(problems, "the read succeeded: "+stdout)
