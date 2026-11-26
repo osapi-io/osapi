@@ -1592,7 +1592,7 @@ AgentJobStatus is the status of a job on one host: the event that a status key
 of the job records, the state of an agent, and the status of an agent's
 response. The controller records submitted and retried for the host _api, and an
 agent records the others. It is one of Values. Values: submitted, acknowledged,
-started, completed, failed, skipped, retried, timeout.
+started, completed, failed, skipped, retried, timeout, refused.
 
 Use: A field that takes one of these values: types.AgentJobStatus with
 validate:"enum". A closed set that pkg/sdk/types does not have is a named type

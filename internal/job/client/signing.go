@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -87,6 +88,47 @@ func unwrapSignedEnvelope(
 	return envelope.Payload, nil
 }
 
+// RefusedError is a response whose signature is not the key that the
+// controller admitted for its machine. Hostname is the name recorded at the
+// admission, not the one the response claims.
+type RefusedError struct {
+	MachineID string
+	Hostname  string
+}
+
+func (e *RefusedError) Error() string {
+	return fmt.Sprintf("%s: machine %s", ErrResponseSignatureInvalid, e.MachineID)
+}
+
+func (e *RefusedError) Unwrap() error {
+	return ErrResponseSignatureInvalid
+}
+
+// refused is the row of the host whose response verify refused, and true, or
+// false for a response that is not a refusal, such as one that is not signed.
+// The controller records the refusal as the host's state of the job, which
+// outranks what the agent reported (osapi-io/osapi#1484).
+func (c *Client) refused(
+	ctx context.Context,
+	jobID string,
+	verifyErr error,
+) (*job.Response, bool) {
+	var r *RefusedError
+	if !errors.As(verifyErr, &r) || r.Hostname == "" {
+		return nil, false
+	}
+	msg := "the controller refused the result: its signature is not the key that the controller admitted for " + r.Hostname
+	if err := c.WriteStatusEvent(ctx, jobID, types.AgentJobStatusRefused, r.Hostname,
+		map[string]interface{}{"error": msg}); err != nil {
+		c.logger.WarnContext(ctx, "failed to record a refused result",
+			slog.String("job_id", jobID), slog.String("error", err.Error()))
+	}
+
+	return &job.Response{
+		JobID: jobID, Status: types.AgentJobStatusRefused, Hostname: r.Hostname, Error: msg,
+	}, true
+}
+
 // verifyAgentResponse checks a response against the key stored for the agent
 // that claims to have sent it, and returns the response in its payload.
 //
@@ -130,11 +172,7 @@ func verifyAgentResponse(
 	}
 
 	if !verified {
-		return nil, fmt.Errorf(
-			"%w: machine %s",
-			ErrResponseSignatureInvalid,
-			envelope.MachineID,
-		)
+		return nil, &RefusedError{MachineID: envelope.MachineID, Hostname: record.Hostname}
 	}
 
 	var response job.Response

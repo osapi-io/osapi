@@ -110,6 +110,11 @@ you read the job:
 | `failed`       | The job ran and did not succeed                                     |
 | `skipped`      | The host cannot do the job, for example a Debian operation on macOS |
 | `timeout`      | No answer in `controller.api.job_timeout`                           |
+| `refused`      | The controller refused the result: the admitted key did not sign it |
+
+`refused` is the controller's event, not the agent's. It outranks what the agent
+reported, and the job counts it as failed. The agent then shows `Refused` with
+the `KeyMismatch` condition in `osapi client agent list`.
 
 `timeout` is not `failed`. It does not tell if the operation ran. The agent can
 be gone, or it can still do the work and answer soon. A job sent to many agents

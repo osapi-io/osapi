@@ -155,3 +155,13 @@ func ExportFollowRename(
 ) {
 	c.followRename(ctx, req, r)
 }
+
+// ExportRefused calls refused.
+func ExportRefused(
+	ctx context.Context,
+	c *Client,
+	jobID string,
+	verifyErr error,
+) (*job.Response, bool) {
+	return c.refused(ctx, jobID, verifyErr)
+}

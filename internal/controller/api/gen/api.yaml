@@ -10777,6 +10777,7 @@ components:
         - skipped
         - retried
         - timeout
+        - refused
       type: string
     CreateJobResponse:
       properties:

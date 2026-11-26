@@ -1751,6 +1751,14 @@ func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
 			s.mockNATSClient.EXPECT().
 				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
+			// A refused response is recorded as the host's state of the job.
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Cond(func(k any) bool {
+					return strings.HasPrefix(k.(string), "status.") &&
+						strings.Contains(k.(string), ".refused.")
+				}), gomock.Any()).
+				Return(uint64(1), nil).
+				AnyTimes()
 			s.mockNATSClient.EXPECT().
 				Publish(gomock.Any(), subject, gomock.Any()).
 				Return(nil)
@@ -1776,6 +1784,33 @@ func (s *ClientPublicTestSuite) TestQueryWithAgentKeyStoreEnforcing() {
 			tt.validateFunc(resp)
 		})
 	}
+}
+
+// TestRefused holds that a refusal is the host's row also when its status
+// event cannot be stored, and that an error that is not a refusal is none.
+func (s *ClientPublicTestSuite) TestRefused() {
+	c, err := newTrusted(s.mockNATSClient, &client.Options{JobsBucket: "jobs", StreamName: "JOBS"})
+	s.Require().NoError(err)
+
+	s.Run("a status event that cannot be stored", func() {
+		s.mockNATSClient.EXPECT().
+			KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+			Return(uint64(0), errors.New("nats: timeout"))
+		row, ok := client.ExportRefused(s.ctx, c, "j-1",
+			&client.RefusedError{MachineID: "m-1", Hostname: "web-01"})
+		s.Require().True(ok)
+		s.Equal(types.AgentJobStatusRefused, row.Status)
+		s.Equal("web-01", row.Hostname)
+	})
+	s.Run("an error that is not a refusal", func() {
+		_, ok := client.ExportRefused(s.ctx, c, "j-1", client.ErrResponseNotSigned)
+		s.False(ok)
+	})
+	s.Run("the error says the cause", func() {
+		err := &client.RefusedError{MachineID: "m-1", Hostname: "web-01"}
+		s.ErrorIs(err, client.ErrResponseSignatureInvalid)
+		s.Contains(err.Error(), "machine m-1")
+	})
 }
 
 // TestModifyBroadcastWithAgentKeyStoreEnforcing covers the broadcast path: a
@@ -1817,6 +1852,30 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			validateFunc: func(responses map[string]*job.Response) {
 				s.Len(responses, 1)
 				s.Equal(types.AgentJobStatusCompleted, responses["server1"].Status)
+			},
+		},
+		{
+			name: "a response that the admitted key did not sign is a refused row",
+			responseData: func(store *jobmocks.MockAgentKeyStore) []byte {
+				signer, _ := newSigner(s.mockCtrl)
+				otherPub, _, _ := ed25519.GenerateKey(rand.Reader)
+				store.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "server1",
+						PublicKey: otherPub,
+					}, nil)
+				inner := []byte(`{"status":"completed","hostname":"server1"}`)
+				wrapped, _ := client.ExportWrapInSignedEnvelope(signer, "machine-001", inner)
+
+				return wrapped
+			},
+			validateFunc: func(responses map[string]*job.Response) {
+				s.Require().Contains(responses, "server1")
+				s.Equal(types.AgentJobStatusRefused, responses["server1"].Status,
+					"not completed, and not a timeout later")
+				s.Contains(responses["server1"].Error, "refused the result")
 			},
 		},
 		{
@@ -1876,6 +1935,14 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			s.mockNATSClient.EXPECT().
 				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
+			// A refused response is recorded as the host's state of the job.
+			s.mockNATSClient.EXPECT().
+				KVPut(gomock.Any(), "jobs", gomock.Cond(func(k any) bool {
+					return strings.HasPrefix(k.(string), "status.") &&
+						strings.Contains(k.(string), ".refused.")
+				}), gomock.Any()).
+				Return(uint64(1), nil).
+				AnyTimes()
 			s.mockNATSClient.EXPECT().
 				Publish(gomock.Any(), subject, gomock.Any()).
 				Return(nil)
