@@ -47,16 +47,16 @@ func List(
 	ctx context.Context,
 	d Deps,
 	_ ListInput,
-) (FileListResponse, error) {
+) (ListResponse, error) {
 	if d.Objects == nil {
-		return FileListResponse{}, noStore()
+		return ListResponse{}, noStore()
 	}
 	objects, err := d.Objects.List(ctx)
 	if err != nil {
-		return FileListResponse{}, endpoint.Internal("failed to list files", err)
+		return ListResponse{}, endpoint.Internal("failed to list files", err)
 	}
 
-	files := make([]FileInfo, 0, len(objects))
+	files := make([]Info, 0, len(objects))
 	for _, obj := range objects {
 		if obj.Deleted {
 			continue
@@ -65,7 +65,7 @@ func List(
 		if protected(obj.Name) {
 			source = "osapi"
 		}
-		files = append(files, FileInfo{
+		files = append(files, Info{
 			Name:        obj.Name,
 			Sha256:      hexDigest(obj.Digest),
 			Size:        int(obj.Size), //nolint:gosec // an object's size fits an int
@@ -74,7 +74,7 @@ func List(
 		})
 	}
 
-	return FileListResponse{Items: files, TotalItems: len(files)}, nil
+	return ListResponse{Items: files, TotalItems: len(files)}, nil
 }
 
 // Get is the metadata of a file.
@@ -82,19 +82,19 @@ func Get(
 	ctx context.Context,
 	d Deps,
 	in GetInput,
-) (FileInfoResponse, error) {
+) (InfoResponse, error) {
 	if d.Objects == nil {
-		return FileInfoResponse{}, noStore()
+		return InfoResponse{}, noStore()
 	}
 	info, err := d.Objects.Info(ctx, in.Name)
 	if errors.Is(err, jetstream.ErrObjectNotFound) {
-		return FileInfoResponse{}, endpoint.Errorf(ErrNotFound, "file %s not found", in.Name)
+		return InfoResponse{}, endpoint.Errorf(ErrNotFound, "file %s not found", in.Name)
 	}
 	if err != nil {
-		return FileInfoResponse{}, endpoint.Internal("failed to get file info", err)
+		return InfoResponse{}, endpoint.Internal("failed to get file info", err)
 	}
 
-	return FileInfoResponse{
+	return InfoResponse{
 		Name:        info.Name,
 		Sha256:      hexDigest(info.Digest),
 		Size:        int(info.Size), //nolint:gosec // an object's size fits an int
@@ -109,12 +109,12 @@ func Upload(
 	ctx context.Context,
 	d Deps,
 	in UploadInput,
-) (FileUploadResponse, error) {
+) (UploadResponse, error) {
 	if d.Objects == nil {
-		return FileUploadResponse{}, noStore()
+		return UploadResponse{}, noStore()
 	}
 	if protected(in.Name) {
-		return FileUploadResponse{}, endpoint.Errorf(ErrProtected,
+		return UploadResponse{}, endpoint.Errorf(ErrProtected,
 			"cannot write osapi file %s", in.Name)
 	}
 	w := write{name: in.Name, contentType: in.ContentType, data: in.File}
@@ -125,12 +125,12 @@ func Upload(
 			return w.result(false), endpoint.Answer(200)
 		}
 
-		return FileUploadResponse{}, endpoint.Errorf(ErrExists,
+		return UploadResponse{}, endpoint.Errorf(ErrExists,
 			"file %s exists with other content; replace it with file update", in.Name)
 	}
 
 	if err := w.store(ctx, d.Objects); err != nil {
-		return FileUploadResponse{}, err
+		return UploadResponse{}, err
 	}
 
 	return w.result(true), nil
@@ -142,12 +142,12 @@ func Update(
 	ctx context.Context,
 	d Deps,
 	in UpdateInput,
-) (FileUploadResponse, error) {
+) (UploadResponse, error) {
 	if d.Objects == nil {
-		return FileUploadResponse{}, noStore()
+		return UploadResponse{}, noStore()
 	}
 	if protected(in.Name) {
-		return FileUploadResponse{}, endpoint.Errorf(ErrProtected,
+		return UploadResponse{}, endpoint.Errorf(ErrProtected,
 			"cannot write osapi file %s", in.Name)
 	}
 	w := write{name: in.Name, contentType: in.ContentType, data: in.File}
@@ -159,7 +159,7 @@ func Update(
 	}
 
 	if err := w.store(ctx, d.Objects); err != nil {
-		return FileUploadResponse{}, err
+		return UploadResponse{}, err
 	}
 	if existed {
 		return w.result(true), endpoint.Answer(200)
@@ -278,10 +278,10 @@ func (w write) kind() types.ContentType {
 
 func (w write) result(
 	changed bool,
-) FileUploadResponse {
+) UploadResponse {
 	sum := sha256.Sum256(w.data)
 
-	return FileUploadResponse{
+	return UploadResponse{
 		Name:        w.name,
 		Sha256:      hex.EncodeToString(sum[:]),
 		Size:        len(w.data),

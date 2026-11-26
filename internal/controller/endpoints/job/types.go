@@ -64,12 +64,14 @@ type ListJobsResponse struct {
 	_            struct{}                `title:"Jobs"`
 	TotalItems   int                     `             json:"total_items,omitempty"   doc:"Total number of jobs matching the filter."                                                         example:"42"`
 	StatusCounts map[types.JobStatus]int `             json:"status_counts,omitempty" doc:"Count of all jobs by status. Derived from key names during the listing pass, with no extra reads."`
-	Items        []JobDetailResponse     `             json:"items,omitempty"`
+	Items        []DetailResponse        `             json:"items,omitempty"`
 }
 
-// JobDetailResponse is one job, with what each agent did with it. The
+// DetailResponse is one job, with what each agent did with it. The
 // fields of a list come first, in the order of its columns.
-type JobDetailResponse struct { //nolint:revive // the schema name is part of the API
+type DetailResponse struct {
+	_ struct{} `schema:"JobDetailResponse"`
+
 	ID          string          `json:"id,omitempty"           validate:"uuid" doc:"Unique identifier of the job."                                                                                                                                    label:"Job ID"`
 	Status      types.JobStatus `json:"status,omitempty"                       doc:"Current status of the job."                                                                                                                                                       render:"status"`
 	Created     string          `json:"created,omitempty"                      doc:"Creation timestamp."                                                                                                                                                              render:"time"`

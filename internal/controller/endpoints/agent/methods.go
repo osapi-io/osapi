@@ -46,7 +46,7 @@ func List(
 		return ListAgentsResponse{}, err
 	}
 
-	infos := make([]AgentInfo, 0, len(agents))
+	infos := make([]Info, 0, len(agents))
 	for i := range agents {
 		infos = append(infos, withController(ctx, d, buildAgentInfo(&agents[i])))
 	}
@@ -59,14 +59,14 @@ func Get(
 	ctx context.Context,
 	d Deps,
 	in GetInput,
-) (AgentInfo, error) {
+) (Info, error) {
 	info, err := d.Jobs.GetAgent(ctx, in.Hostname)
 	if err != nil {
 		if apierr.IsMissing(err) {
-			return AgentInfo{}, endpoint.Errorf(ErrNotFound, "%s", err.Error())
+			return Info{}, endpoint.Errorf(ErrNotFound, "%s", err.Error())
 		}
 
-		return AgentInfo{}, err
+		return Info{}, err
 	}
 
 	return withController(ctx, d, buildAgentInfo(info)), nil
@@ -77,8 +77,8 @@ func Get(
 func withController(
 	ctx context.Context,
 	d Deps,
-	info AgentInfo,
-) AgentInfo {
+	info Info,
+) Info {
 	return withKeys(ctx, d, withConfig(ctx, d, info))
 }
 
@@ -91,8 +91,8 @@ func withController(
 func withKeys(
 	ctx context.Context,
 	d Deps,
-	info AgentInfo,
-) AgentInfo {
+	info Info,
+) Info {
 	if d.Admissions == nil || info.Fingerprint == "" {
 		return info
 	}
@@ -121,8 +121,8 @@ func withKeys(
 func withConfig(
 	ctx context.Context,
 	d Deps,
-	info AgentInfo,
-) AgentInfo {
+	info Info,
+) Info {
 	cfg, err := d.Jobs.GetAgentConfig(ctx, info.MachineID)
 	if err != nil || cfg.Version == 0 {
 		return info
@@ -211,9 +211,9 @@ func lookup(
 // out; key_stored and verified are always there.
 func buildAgentInfo(
 	a *job.AgentInfo,
-) AgentInfo {
+) Info {
 	keyStored, verified := a.KeyStored, a.Verified
-	info := AgentInfo{
+	info := Info{
 		MachineID:        a.MachineID,
 		Fingerprint:      a.Fingerprint,
 		Version:          a.AgentVersion,
@@ -369,14 +369,14 @@ func GetConfig(
 	ctx context.Context,
 	d Deps,
 	in ConfigGetInput,
-) (AgentConfigResponse, error) {
+) (ConfigResponse, error) {
 	info, err := lookup(ctx, d, in.Hostname)
 	if err != nil {
-		return AgentConfigResponse{}, err
+		return ConfigResponse{}, err
 	}
 	cfg, err := d.Jobs.GetAgentConfig(ctx, info.MachineID)
 	if err != nil {
-		return AgentConfigResponse{}, err
+		return ConfigResponse{}, err
 	}
 
 	return toConfig(cfg), nil
@@ -389,16 +389,16 @@ func SetConfig(
 	ctx context.Context,
 	d Deps,
 	in ConfigSetInput,
-) (AgentConfigResponse, error) {
+) (ConfigResponse, error) {
 	info, err := lookup(ctx, d, in.Hostname)
 	if err != nil {
-		return AgentConfigResponse{}, err
+		return ConfigResponse{}, err
 	}
 	cfg, err := d.Jobs.SetAgentConfig(ctx, info.MachineID, job.AgentConfig{
 		Labels: in.Body.Labels, MaxJobs: in.Body.MaxJobs,
 	})
 	if err != nil {
-		return AgentConfigResponse{}, err
+		return ConfigResponse{}, err
 	}
 
 	return toConfig(cfg), nil
@@ -407,8 +407,8 @@ func SetConfig(
 // toConfig is cfg in the response.
 func toConfig(
 	cfg job.AgentConfig,
-) AgentConfigResponse {
-	out := AgentConfigResponse{Version: cfg.Version, Labels: cfg.Labels, MaxJobs: cfg.MaxJobs}
+) ConfigResponse {
+	out := ConfigResponse{Version: cfg.Version, Labels: cfg.Labels, MaxJobs: cfg.MaxJobs}
 	if !cfg.UpdatedAt.IsZero() {
 		t := cfg.UpdatedAt
 		out.UpdatedAt = &t

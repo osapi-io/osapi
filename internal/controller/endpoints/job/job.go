@@ -73,7 +73,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("").
 		Prints(sampleList).
 		Example("--status completed --limit 3"),
-	endpoint.Get[GetInput, JobDetailResponse]("get").
+	endpoint.Get[GetInput, DetailResponse]("get").
 		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).
 		Handle(Get).
 		ID("GetJobByID").

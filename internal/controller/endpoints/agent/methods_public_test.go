@@ -154,7 +154,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 	tests := []struct {
 		name         string
 		info         job.AgentInfo
-		validateFunc func(agent.AgentInfo)
+		validateFunc func(agent.Info)
 	}{
 		{
 			name: "when the registry has every field, each one is in the answer",
@@ -190,7 +190,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				KeyStored: true,
 				Verified:  true,
 			},
-			validateFunc: func(got agent.AgentInfo) {
+			validateFunc: func(got agent.Info) {
 				s.Equal("m-1", got.MachineID)
 				s.Equal("v1.4.0", got.Version)
 				s.Equal(map[string]string{"role": "web"}, got.Labels)
@@ -228,7 +228,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 		{
 			name: "when the registry has only the hostname, the rest is left out, but key_stored and verified are false",
 			info: job.AgentInfo{Hostname: "server1"},
-			validateFunc: func(got agent.AgentInfo) {
+			validateFunc: func(got agent.Info) {
 				s.Empty(got.MachineID)
 				s.Nil(got.Labels)
 				s.Nil(got.Facts)
@@ -251,14 +251,14 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				Hostname:    "server1",
 				MemoryStats: &memory.Result{Total: ^uint64(0)},
 			},
-			validateFunc: func(got agent.AgentInfo) {
+			validateFunc: func(got agent.Info) {
 				s.Equal(int(^uint(0)>>1), got.Memory.Total)
 			},
 		},
 		{
 			name: "when the uptime is one of each, the words are singular",
 			info: job.AgentInfo{Hostname: "server1", Uptime: 25*time.Hour + time.Minute},
-			validateFunc: func(got agent.AgentInfo) {
+			validateFunc: func(got agent.Info) {
 				s.Equal("1 day, 1 hour, 1 minute", got.Uptime)
 			},
 		},

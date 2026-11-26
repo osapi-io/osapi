@@ -23,7 +23,7 @@ package health
 // The sample answers of the examples, which the docs page of each command
 // shows as the CLI prints them.
 var (
-	sampleLiveness = HealthResponse{Status: "ok"}
+	sampleLiveness = Response{Status: "ok"}
 	sampleReady    = ReadyResponse{Status: "ready"}
 
 	sampleStatus = StatusResponse{

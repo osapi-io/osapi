@@ -33,8 +33,8 @@ func Liveness(
 	_ context.Context,
 	_ Deps,
 	_ LivenessInput,
-) (HealthResponse, error) {
-	return HealthResponse{Status: "ok"}, nil
+) (Response, error) {
+	return Response{Status: "ok"}, nil
 }
 
 // Ready says whether the controller can take traffic, and why not with a

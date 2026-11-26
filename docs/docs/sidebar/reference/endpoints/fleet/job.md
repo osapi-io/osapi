@@ -28,9 +28,9 @@ same.
 
 ### Types (4)
 
-| NAME   | INPUT                                         | OUTPUT                                                                                                                                                         |
-| ------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| list   | ListInput &#123; status, limit, offset &#125; | ListJobsResponse &#123; total_items, status_counts, items &#125;                                                                                               |
-| get    | GetInput &#123; id &#125;                     | JobDetailResponse &#123; id, status, created, target, operation, hostname, updated_at, changed, error, result, responses, chain, agent_states, timeline &#125; |
-| delete | DeleteInput &#123; id &#125;                  |                                                                                                                                                                |
-| retry  | RetryInput &#123; id &#125;                   | CreateJobResponse &#123; job_id, status, revision, timestamp &#125;                                                                                            |
+| NAME   | INPUT                                         | OUTPUT                                                                                                                                                      |
+| ------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| list   | ListInput &#123; status, limit, offset &#125; | ListJobsResponse &#123; total_items, status_counts, items &#125;                                                                                            |
+| get    | GetInput &#123; id &#125;                     | DetailResponse &#123; id, status, created, target, operation, hostname, updated_at, changed, error, result, responses, chain, agent_states, timeline &#125; |
+| delete | DeleteInput &#123; id &#125;                  |                                                                                                                                                             |
+| retry  | RetryInput &#123; id &#125;                   | CreateJobResponse &#123; job_id, status, revision, timestamp &#125;                                                                                         |

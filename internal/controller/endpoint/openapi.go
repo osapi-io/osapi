@@ -161,7 +161,10 @@ func OpenAPI(
 
 // builder adds each named type it meets to the components, once.
 type builder struct {
-	schemas  openapi3.Schemas
+	schemas openapi3.Schemas
+	// owners is the Go type of each schema name, so two types with one
+	// name are refused rather than one silently being the other.
+	owners   map[string]reflect.Type
 	params   openapi3.ParametersMap
 	docs     map[reflect.Type]string
 	examples map[reflect.Type]map[string]string
@@ -348,15 +351,19 @@ func (b *builder) ref(
 		return openapi3.NewSchemaRef("", s), nil
 	}
 
-	ref := "#/components/schemas/" + t.Name()
-	if _, ok := b.schemas[t.Name()]; !ok {
+	name := SchemaName(t)
+	if err := b.own(name, t); err != nil {
+		return nil, err
+	}
+	ref := "#/components/schemas/" + name
+	if _, ok := b.schemas[name]; !ok {
 		// The name goes in first, so a type that refers to itself ends.
-		b.schemas[t.Name()] = &openapi3.SchemaRef{}
+		b.schemas[name] = &openapi3.SchemaRef{}
 		s, err := b.object(fields(t), true)
 		if err != nil {
-			delete(b.schemas, t.Name())
+			delete(b.schemas, name)
 
-			return nil, fmt.Errorf("%s: %w", t.Name(), err)
+			return nil, fmt.Errorf("%s: %w", name, err)
 		}
 		s.Description = b.docs[t]
 		for name, ex := range b.examples[t] {
@@ -364,10 +371,68 @@ func (b *builder) ref(
 				p.Value.Example = example(p.Value, ex)
 			}
 		}
-		b.schemas[t.Name()] = openapi3.NewSchemaRef("", s)
+		b.schemas[name] = openapi3.NewSchemaRef("", s)
 	}
 
 	return &openapi3.SchemaRef{Ref: ref}, nil
+}
+
+// SchemaName is the name of the schema of t in the spec: the schema tag of
+// its blank field, or its Go name. The tag keeps an API name when the Go name
+// is shorter, so agent.Info is the schema AgentInfo:
+//
+//	type Info struct {
+//		_ struct{} `schema:"AgentInfo"`
+//	}
+func SchemaName(
+	t reflect.Type,
+) string {
+	if t.Kind() == reflect.Struct {
+		for f := range t.Fields() {
+			if name := f.Tag.Get("schema"); f.Name == "_" && name != "" {
+				return name
+			}
+		}
+	}
+
+	return t.Name()
+}
+
+// own records t as the type of the schema name, and refuses a second type
+// with the same name.
+func (b *builder) own(
+	name string,
+	t reflect.Type,
+) error {
+	if b.owners == nil {
+		b.owners = map[string]reflect.Type{}
+	}
+	if o, ok := b.owners[name]; ok && o != t {
+		return fmt.Errorf(
+			"the schema %s is both %s and %s: give one of them a schema tag, such as "+
+				"_ struct{} `schema:\"%s%s\"`",
+			name, o, t, exportedPkg(t), t.Name(),
+		)
+	}
+	b.owners[name] = t
+
+	return nil
+}
+
+// exportedPkg is the last element of the package path of t, a named type,
+// with its first letter in capitals: Agent for internal/controller/endpoints/agent, and Endpoint
+// for the external test of internal/controller/endpoint.
+func exportedPkg(
+	t reflect.Type,
+) string {
+	p := t.PkgPath()
+	if i := strings.LastIndexByte(p, '/'); i >= 0 {
+		p = p[i+1:]
+	}
+	// The package of an external test is the package it tests.
+	p = strings.TrimSuffix(p, "_test")
+
+	return strings.ToUpper(p[:1]) + p[1:]
 }
 
 // enum is a $ref to the schema of t, a closed set, which it adds the first

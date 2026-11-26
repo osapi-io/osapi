@@ -54,14 +54,16 @@ type Message = struct {
 
 // ListAgentsResponse is the agents that report.
 type ListAgentsResponse struct {
-	Items      []AgentInfo `json:"items"       doc:"The active agents."             empty:"An agent appears here once it starts and connects."`
-	TotalItems int         `json:"total_items" doc:"Total number of active agents."`
+	Items      []Info `json:"items"       doc:"The active agents."             empty:"An agent appears here once it starts and connects."`
+	TotalItems int    `json:"total_items" doc:"Total number of active agents."`
 }
 
-// AgentInfo is one agent: its identity, its host's facts and its state. The
-// spec names its schema for the type, so the name stays AgentInfo, as the
+// Info is one agent: its identity, its host's facts and its state. The
+// spec names its schema for the type, so the name stays Info, as the
 // hand-written spec and the clients made from it have it.
-type AgentInfo struct { //nolint:revive // the schema name is part of the API
+type Info struct {
+	_ struct{} `schema:"AgentInfo"`
+
 	Hostname         string                     `json:"hostname"                    doc:"The hostname of the agent."`
 	MachineID        string                     `json:"machine_id,omitempty"        doc:"The permanent machine identifier."`
 	State            types.AgentState           `json:"state"                       doc:"The scheduling state of the agent: Ready, Draining, Cordoned, Pending, or Refused when the controller refuses its results because its keys are not the admitted keys. A drain that the agent has not applied yet is Draining." render:"status"`
@@ -178,22 +180,24 @@ type ConfigGetInput struct {
 
 // ConfigSetInput names the agent and the labels of its config.
 type ConfigSetInput struct {
-	Hostname string             `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the agent."`
-	Body     AgentConfigRequest `json:"body"     in:"body" validate:"required"`
+	Hostname string        `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the agent."`
+	Body     ConfigRequest `json:"body"     in:"body" validate:"required"`
 }
 
-// AgentConfigRequest is the config that the controller gives an agent.
-type AgentConfigRequest struct { //nolint:revive // the schema name is part of the API
+// ConfigRequest is the config that the controller gives an agent.
+type ConfigRequest struct {
+	_ struct{} `schema:"AgentConfigRequest"`
+
 	Labels  map[string]string `json:"labels,omitempty"   validate:"omitempty"                doc:"The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each."`
 	MaxJobs int               `json:"max_jobs,omitempty" validate:"omitempty,min=1,max=1000" doc:"The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's."`
 }
 
-// AgentConfigResponse is the config that the controller holds for an
+// ConfigResponse is the config that the controller holds for an
 // agent.
-type AgentConfigResponse struct { //nolint:revive // the schema name is part of the API
-	_         struct{}          `title:"Agent config"`
-	Version   int               `                     json:"version"              doc:"One more at each change; 0 when nothing was set."`
-	Labels    map[string]string `                     json:"labels,omitempty"     doc:"The labels that the controller gives the agent."`
-	MaxJobs   int               `                     json:"max_jobs,omitempty"   doc:"The most jobs that the agent runs at the same time; empty keeps the agent's config file." label:"Max jobs"`
-	UpdatedAt *time.Time        `                     json:"updated_at,omitempty" doc:"When the config last changed."                                                            label:"Updated"  render:"time"`
+type ConfigResponse struct {
+	_         struct{}          `title:"Agent config" schema:"AgentConfigResponse"`
+	Version   int               `                                                  json:"version"              doc:"One more at each change; 0 when nothing was set."`
+	Labels    map[string]string `                                                  json:"labels,omitempty"     doc:"The labels that the controller gives the agent."`
+	MaxJobs   int               `                                                  json:"max_jobs,omitempty"   doc:"The most jobs that the agent runs at the same time; empty keeps the agent's config file." label:"Max jobs"`
+	UpdatedAt *time.Time        `                                                  json:"updated_at,omitempty" doc:"When the config last changed."                                                            label:"Updated"  render:"time"`
 }

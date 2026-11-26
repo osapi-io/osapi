@@ -30,4 +30,4 @@ Read the audit log. `osapi dsl endpoint get --name audit` shows the same.
 | ------ | ---------------------------------------------------------------------- | -------------------------------------------------- |
 | list   | ListInput &#123; limit, offset, writes, user, operation, status &#125; | ListAuditResponse &#123; total_items, items &#125; |
 | export | ExportInput                                                            | ListAuditResponse &#123; total_items, items &#125; |
-| get    | GetInput &#123; id &#125;                                              | AuditEntryResponse &#123; entry &#125;             |
+| get    | GetInput &#123; id &#125;                                              | EntryResponse &#123; entry &#125;                  |

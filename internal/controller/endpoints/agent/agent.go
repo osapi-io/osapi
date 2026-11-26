@@ -101,7 +101,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("List active agents").
 		Explain("Discover all active agents in the fleet.").
 		Returns("List of active agents."),
-	endpoint.Get[GetInput, AgentInfo]("get").
+	endpoint.Get[GetInput, Info]("get").
 		Fails("a hostname over 255 characters", GetInput{Hostname: long}).
 		Command("Get agent details",
 			"This command reads the agent heartbeat registry directly. It makes no job.\nThe data comes from the last heartbeat of the agent. `node status` runs a\nfull inspection through the job system, with disk usage and more metrics.").
@@ -167,7 +167,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.NotFound(ErrNotFound, "Agent not found."),
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
-	endpoint.Get[ConfigGetInput, AgentConfigResponse]("getconfig").
+	endpoint.Get[ConfigGetInput, ConfigResponse]("getconfig").
 		Handle(GetConfig).
 		Sub("config").
 		Use("get").
@@ -183,7 +183,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleConfig).
 		Fails("a hostname over 255 characters", ConfigGetInput{Hostname: long}).
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found.")),
-	endpoint.Put[ConfigSetInput, AgentConfigResponse]("setconfig").
+	endpoint.Put[ConfigSetInput, ConfigResponse]("setconfig").
 		Handle(SetConfig).
 		Sub("config").
 		Use("update").
@@ -203,10 +203,10 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleConfig).
 		Fails("a hostname over 255 characters", ConfigSetInput{Hostname: long}).
 		Fails("max jobs below 1", ConfigSetInput{
-			Hostname: "web-01", Body: AgentConfigRequest{MaxJobs: -1},
+			Hostname: "web-01", Body: ConfigRequest{MaxJobs: -1},
 		}).
 		Fails("max jobs over 1000", ConfigSetInput{
-			Hostname: "web-01", Body: AgentConfigRequest{MaxJobs: 1001},
+			Hostname: "web-01", Body: ConfigRequest{MaxJobs: 1001},
 		}).
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found.")),
 	endpoint.Post[UndrainInput, struct{}]("undrain").

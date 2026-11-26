@@ -28,15 +28,15 @@ import (
 
 // items stand in for what the group reads, such as a KV bucket: a
 // handler gets it from Deps.
-var items = []WidgetItem{{Name: "example"}}
+var items = []Item{{Name: "example"}}
 
 // List is every item.
 func List(
 	_ context.Context,
 	_ Deps,
 	_ ListInput,
-) (WidgetList, error) {
-	return WidgetList{Items: items, Total: len(items)}, nil
+) (ItemList, error) {
+	return ItemList{Items: items, Total: len(items)}, nil
 }
 
 // Get is the item with the name. An item that is not there is ErrNotFound,
@@ -45,12 +45,12 @@ func Get(
 	_ context.Context,
 	_ Deps,
 	in GetInput,
-) (WidgetItem, error) {
+) (Item, error) {
 	for _, it := range items {
 		if it.Name == in.Name {
 			return it, nil
 		}
 	}
 
-	return WidgetItem{}, endpoint.Errorf(ErrNotFound, "no item named %q", in.Name)
+	return Item{}, endpoint.Errorf(ErrNotFound, "no item named %q", in.Name)
 }

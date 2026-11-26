@@ -73,9 +73,19 @@ func (sc groupScaffold) pkg() string {
 	return module + "/internal/controller/endpoints/" + sc.name
 }
 
-// typeName is a type of the group, with the group's name in front, so its
-// schema cannot have the name of another group's in the full spec.
+// typeName is a type of the group. Go reads it with the package in front,
+// as widget.ItemList, so the name does not repeat the group's name, and it
+// is not the name of a handler, such as List.
 func (sc groupScaffold) typeName(
+	suffix string,
+) string {
+	return suffix
+}
+
+// schemaName is the schema name of the type suffix: the group's name in
+// front, so it cannot have the name of another group's in the full spec. The
+// type's schema tag gives it.
+func (sc groupScaffold) schemaName(
 	suffix string,
 ) string {
 	return strings.ToUpper(sc.name[:1]) + sc.name[1:] + suffix
@@ -179,7 +189,7 @@ func (sc groupScaffold) groupFile() *jen.File {
 		// the area that fits.
 		e("Area").Call(jen.Qual(areaPath, "Fleet")),
 		e("Uses").Index(jen.Id("Deps")).Call(),
-		e("Get").Index(jen.List(jen.Id("ListInput"), jen.Id(sc.typeName("List")))).
+		e("Get").Index(jen.List(jen.Id("ListInput"), jen.Id(sc.typeName("ItemList")))).
 			Call(jen.Lit("list")).
 			Add(next("Handle", jen.Id("List"))).
 			Add(next("Describe", jen.Lit("List the "+sc.name+" items"))).
@@ -216,7 +226,7 @@ func (sc groupScaffold) depsFile() *jen.File {
 
 func (sc groupScaffold) typesFile() *jen.File {
 	f := sc.newFile()
-	item, list := sc.typeName("Item"), sc.typeName("List")
+	item, list := sc.typeName("Item"), sc.typeName("ItemList")
 
 	comments(f, "ListInput is list's input, which has none.")
 	f.Type().Id("ListInput").Struct()
@@ -239,16 +249,20 @@ func (sc groupScaffold) typesFile() *jen.File {
 	)
 	f.Line()
 	comments(f,
-		item+" is one item. Its name is the name of its schema, so it has the",
-		"group's name in front. Each field becomes a schema property.",
+		item+" is one item. Its schema tag gives its schema the group's name in",
+		"front, so it is unique in the full spec. Each field becomes a schema property.",
 	)
 	f.Type().Id(item).Struct(
+		jen.Id("_").Struct().Add(tagged("schema", sc.schemaName("Item"))),
+		jen.Line(),
 		jen.Id("Name").String().Add(tagged("json", "name", "doc", "The name of the item.",
 			"example", "example")),
 	)
 	f.Line()
 	comments(f, list+" is the items, with the total.")
 	f.Type().Id(list).Struct(
+		jen.Id("_").Struct().Add(tagged("schema", sc.schemaName("List"))),
+		jen.Line(),
 		jen.Id("Items").Index().Id(item).Add(tagged("json", "items")),
 		jen.Id("Total").Int().Add(tagged("json", "total", "doc", "The number of items.")),
 	)
@@ -258,7 +272,7 @@ func (sc groupScaffold) typesFile() *jen.File {
 
 func (sc groupScaffold) methodsFile() *jen.File {
 	f := sc.newFile()
-	item, list := sc.typeName("Item"), sc.typeName("List")
+	item, list := sc.typeName("Item"), sc.typeName("ItemList")
 	ctx := jen.Id("_").Qual("context", "Context")
 
 	comments(f,

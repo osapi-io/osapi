@@ -116,7 +116,7 @@ func (s *MethodsPublicTestSuite) TestStatusComponent() {
 func (s *MethodsPublicTestSuite) TestLiveness() {
 	got, err := health.Liveness(context.Background(), health.Deps{}, health.LivenessInput{})
 	s.Require().NoError(err)
-	s.Equal(health.HealthResponse{Status: "ok"}, got)
+	s.Equal(health.Response{Status: "ok"}, got)
 }
 
 func (s *MethodsPublicTestSuite) TestReady() {

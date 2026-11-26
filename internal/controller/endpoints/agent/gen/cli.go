@@ -109,7 +109,7 @@ var agentSetconfigCmd = &cobra.Command{
 		labels, _ := cmd.Flags().GetStringToString("labels")
 		maxJobs, _ := cmd.Flags().GetInt("max-jobs")
 
-		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.AgentConfigRequest{Labels: labels, MaxJobs: maxJobs}})
+		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.ConfigRequest{Labels: labels, MaxJobs: maxJobs}})
 	},
 	Short: "Set the labels and the max jobs of an agent",
 	Use:   "update",

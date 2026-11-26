@@ -48,7 +48,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("Audit Log API"),
 	endpoint.Tag("audit", "Audit", "Audit log endpoints for viewing API activity."),
 	endpoint.Uses[Deps](),
-	endpoint.Example[AuditEntry](
+	endpoint.Example[Entry](
 		"request_summary",
 		`{"command":"systemctl","args":["restart","nginx"]}`,
 	),
@@ -96,7 +96,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleList).
 		Example("--json").
 		Errors(notConfigured503),
-	endpoint.Get[GetInput, AuditEntryResponse]("get").
+	endpoint.Get[GetInput, EntryResponse]("get").
 		AdminOnly().
 		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).
 		Handle(Get).

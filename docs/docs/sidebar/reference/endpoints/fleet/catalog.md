@@ -25,6 +25,6 @@ The catalog of what the controller serves.
 
 ### Types (1)
 
-| NAME | INPUT    | OUTPUT                                                                                                                                                               |
-| ---- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| get  | GetInput | CatalogResponse &#123; behaviors, areas, permissions, roles, operations, status_tones, count_tones, host_families, targets, controller, render_tags, outcomes &#125; |
+| NAME | INPUT    | OUTPUT                                                                                                                                                        |
+| ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| get  | GetInput | Response &#123; behaviors, areas, permissions, roles, operations, status_tones, count_tones, host_families, targets, controller, render_tags, outcomes &#125; |

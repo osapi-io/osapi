@@ -42,23 +42,23 @@ func Get(
 	_ context.Context,
 	_ Deps,
 	_ GetInput,
-) (CatalogResponse, error) {
-	out := CatalogResponse{
+) (Response, error) {
+	out := Response{
 		Behaviors:    Behaviors(behavior.All(), behaviortest.Chains),
-		Areas:        []CatalogArea{},
+		Areas:        []Area{},
 		Permissions:  authtoken.AllPermissions(),
-		Roles:        []CatalogRole{},
-		Operations:   []CatalogOperation{},
+		Roles:        []Role{},
+		Operations:   []Operation{},
 		StatusTones:  cli.StatusTones,
 		CountTones:   cli.CountTones,
 		HostFamilies: []string{},
 	}
 	for _, a := range area.All {
-		out.Areas = append(out.Areas, CatalogArea{Name: string(a.Name), Label: a.Label})
+		out.Areas = append(out.Areas, Area{Name: string(a.Name), Label: a.Label})
 	}
 	for _, r := range authtoken.Roles() {
 		perms, _ := authtoken.RolePermissions(r)
-		out.Roles = append(out.Roles, CatalogRole{
+		out.Roles = append(out.Roles, Role{
 			Name:        r,
 			Description: authtoken.RoleDescription(r),
 			Permissions: perms,
@@ -66,7 +66,7 @@ func Get(
 	}
 	ops := authtoken.Operations()
 	for _, id := range slices.Sorted(maps.Keys(ops)) {
-		out.Operations = append(out.Operations, CatalogOperation{
+		out.Operations = append(out.Operations, Operation{
 			ID:         OperationID(id),
 			Permission: ops[id],
 		})
@@ -74,7 +74,7 @@ func Get(
 	for _, f := range behavior.HostFamilies {
 		out.HostFamilies = append(out.HostFamilies, string(f))
 	}
-	out.Targets = []CatalogTarget{
+	out.Targets = []Target{
 		{
 			Value: types.TargetAll,
 			Label: "All agents",
@@ -98,15 +98,15 @@ func Get(
 func controllerMethods(
 	groups []*endpoint.Group,
 	ops map[string]types.Permission,
-) []CatalogControllerMethod {
-	out := []CatalogControllerMethod{}
+) []ControllerMethod {
+	out := []ControllerMethod{}
 	for _, g := range groups {
 		if g.Area != area.ObjectStore {
 			continue
 		}
 		for _, m := range g.Methods {
 			id := m.OperationID(g)
-			out = append(out, CatalogControllerMethod{
+			out = append(out, ControllerMethod{
 				Group:      g.Name,
 				Method:     m.Name,
 				Doc:        m.CommandShort(),

@@ -88,6 +88,9 @@ const (
 	// RuleSecret: a secret.Value input field is not in the path or the
 	// query, which logs keep with the URL, and is not recorded on a span.
 	RuleSecret = "secret"
+	// RuleStutter: a type of the group's package does not repeat the name
+	// of its package, as agent.AgentInfo does. Go reads it as agent.Info.
+	RuleStutter = "stutter"
 )
 
 // inValues are the values of the in tag: where a field of a request comes
@@ -117,6 +120,11 @@ func hasField(
 // rule, so an author or an agent can read the rules before breaking one.
 // The tests trigger each rule, and fail on a rule without a check.
 var Checks = guide.Checks{
+	{
+		Rule:     RuleStutter,
+		Requires: "No type of the group's package that a method uses repeats the name of its package, such as agent.AgentInfo: Go code reads it as agent.Info. revive's exported rule refuses it too.",
+		Fix:      "Drop the package's name from the type, and keep its API name with a schema tag on its blank field: type Info struct { _ struct{} `schema:\"AgentInfo\"` }. Never write //nolint:revive.",
+	},
 	{
 		Rule:     RuleSecret,
 		Requires: "No secret.Value input field is tagged in:\"path\" or in:\"query\", or telemetry:\"attr\": a URL goes in logs, and a span is no place for a secret.",
@@ -276,6 +284,10 @@ func Validate(
 	slices.Sort(named)
 	for _, msg := range named {
 		add("", RuleField, msg)
+	}
+
+	for _, msg := range stutters(g) {
+		add("", RuleStutter, msg)
 	}
 
 	names := map[string]bool{}
@@ -563,6 +575,47 @@ func keyProblems(
 			out = append(out, "path field "+f+" is not in Key or the prefix.")
 		}
 	}
+
+	return out
+}
+
+// stutters are the types that the group's methods use, of a package under
+// internal/, whose name repeats the name of their package, in order. A type
+// of pkg/sdk is the SDK's to name.
+func stutters(
+	g *Group,
+) []string {
+	var out []string
+	seen := map[reflect.Type]bool{}
+	var walk func(t reflect.Type)
+	walk = func(t reflect.Type) {
+		for t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice ||
+			t.Kind() == reflect.Array || t.Kind() == reflect.Map {
+			t = t.Elem()
+		}
+		if t.Kind() != reflect.Struct || t.Name() == "" || seen[t] {
+			return
+		}
+		seen[t] = true
+		if pkg := exportedPkg(t); strings.Contains(t.PkgPath(), "/internal/") &&
+			strings.HasPrefix(t.Name(), pkg) && len(t.Name()) > len(pkg) {
+			out = append(out, fmt.Sprintf(
+				"type %s repeats its package: name it %s, and give it _ struct{} `schema:%q` "+
+					"to keep its schema name.", t, strings.TrimPrefix(t.Name(), pkg), SchemaName(t)))
+		}
+		for f := range t.Fields() {
+			walk(f.Type)
+		}
+	}
+	for _, m := range g.Methods {
+		if m.In != nil {
+			walk(m.In)
+		}
+		if m.Out != nil {
+			walk(m.Out)
+		}
+	}
+	slices.Sort(out)
 
 	return out
 }

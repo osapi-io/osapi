@@ -221,7 +221,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		name         string
 		scope        []string
 		setup        func()
-		validateFunc func(jobgroup.JobDetailResponse, error)
+		validateFunc func(jobgroup.DetailResponse, error)
 	}{
 		{
 			name: "when the job is a broadcast, it has each agent's answer, state and the timeline",
@@ -256,7 +256,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				}
 				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
 			},
-			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(got jobgroup.DetailResponse, err error) {
 				s.Require().NoError(err)
 				s.Require().Len(got.Responses, 2, "a list, sorted by hostname")
 				s.Equal("web-01", got.Responses[0].Hostname)
@@ -288,7 +288,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(queued(), nil)
 			},
-			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(got jobgroup.DetailResponse, err error) {
 				s.Require().NoError(err)
 				s.Nil(got.Responses)
 				s.Nil(got.AgentStates)
@@ -300,7 +300,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(nil, job.ErrNotFound)
 			},
-			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(_ jobgroup.DetailResponse, err error) {
 				s.ErrorIs(err, jobgroup.ErrNotFound)
 				s.ErrorContains(err, jobID)
 			},
@@ -312,7 +312,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 					GetJobStatus(gomock.Any(), jobID).
 					Return(nil, errors.New("nats: timeout"))
 			},
-			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(_ jobgroup.DetailResponse, err error) {
 				s.EqualError(err, "failed to get job")
 			},
 		},
@@ -324,7 +324,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				qj.Target = "group:web.dev"
 				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
 			},
-			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(got jobgroup.DetailResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal("group:web.dev", got.Target)
 			},
@@ -337,7 +337,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				qj.Target = "group:db"
 				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
 			},
-			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(_ jobgroup.DetailResponse, err error) {
 				s.ErrorIs(err, jobgroup.ErrNotFound)
 			},
 		},
@@ -349,7 +349,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				qj.Target = "_all"
 				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
 			},
-			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+			validateFunc: func(_ jobgroup.DetailResponse, err error) {
 				s.ErrorIs(err, jobgroup.ErrNotFound)
 			},
 		},

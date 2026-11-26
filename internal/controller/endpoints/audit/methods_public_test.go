@@ -128,7 +128,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 				s.Require().NoError(err)
 				s.Equal(150, got.TotalItems)
 				s.Require().Len(got.Items, 2)
-				s.Equal(audit.AuditEntry{
+				s.Equal(audit.Entry{
 					ID:             entryID,
 					Timestamp:      when,
 					User:           "ops@example.com",
@@ -166,7 +166,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			},
 			validateFunc: func(got audit.ListAuditResponse, err error) {
 				s.Require().NoError(err)
-				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.AuditEntry{}}, got)
+				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.Entry{}}, got)
 			},
 		},
 		{
@@ -213,7 +213,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			},
 			validateFunc: func(got audit.ListAuditResponse, err error) {
 				s.Require().NoError(err)
-				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.AuditEntry{}}, got)
+				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.Entry{}}, got)
 			},
 		},
 		{
@@ -313,7 +313,7 @@ func (s *MethodsPublicTestSuite) TestExport() {
 			},
 			validateFunc: func(got audit.ListAuditResponse, err error) {
 				s.Require().NoError(err)
-				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.AuditEntry{}}, got)
+				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.Entry{}}, got)
 			},
 		},
 		{
@@ -366,14 +366,14 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		scope        []string
 		noStore      bool
 		setup        func()
-		validateFunc func(audit.AuditEntryResponse, error)
+		validateFunc func(audit.EntryResponse, error)
 	}{
 		{
 			name: "when the store has the entry, it answers it",
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&full, nil)
 			},
-			validateFunc: func(got audit.AuditEntryResponse, err error) {
+			validateFunc: func(got audit.EntryResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(entryID, got.Entry.ID)
 				s.Equal("7c9e6679-7425-40de-944b-e07fc1f90ae7", got.Entry.JobID)
@@ -390,7 +390,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 					Action: "jointoken.create",
 				}, nil)
 			},
-			validateFunc: func(got audit.AuditEntryResponse, err error) {
+			validateFunc: func(got audit.EntryResponse, err error) {
 				s.Require().NoError(err)
 				s.NotNil(got.Entry.Roles)
 				s.Empty(got.Entry.Roles)
@@ -402,7 +402,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(nil, auditstore.ErrNotFound)
 			},
-			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+			validateFunc: func(_ audit.EntryResponse, err error) {
 				s.ErrorIs(err, audit.ErrNotFound)
 				s.ErrorContains(err, entryID)
 			},
@@ -411,7 +411,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			name:    "when the audit log is not configured, it is ErrNotConfigured",
 			noStore: true,
 			setup:   func() {},
-			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+			validateFunc: func(_ audit.EntryResponse, err error) {
 				s.ErrorIs(err, audit.ErrNotConfigured)
 			},
 		},
@@ -420,7 +420,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(nil, errors.New("nats: timeout"))
 			},
-			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+			validateFunc: func(_ audit.EntryResponse, err error) {
 				s.EqualError(err, "failed to get audit entry")
 			},
 		},
@@ -430,7 +430,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&web, nil)
 			},
-			validateFunc: func(got audit.AuditEntryResponse, err error) {
+			validateFunc: func(got audit.EntryResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal("web", got.Entry.ID)
 			},
@@ -441,7 +441,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&all, nil)
 			},
-			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+			validateFunc: func(_ audit.EntryResponse, err error) {
 				s.ErrorIs(err, audit.ErrNotFound)
 			},
 		},
@@ -451,7 +451,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			setup: func() {
 				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&bare, nil)
 			},
-			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+			validateFunc: func(_ audit.EntryResponse, err error) {
 				s.ErrorIs(err, audit.ErrNotFound)
 			},
 		},

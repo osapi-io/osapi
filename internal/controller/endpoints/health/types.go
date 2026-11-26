@@ -32,8 +32,10 @@ type StatusInput struct {
 	Component types.ComponentType `json:"component,omitempty" in:"query" validate:"omitempty,enum" doc:"Show only the components of this type: controller, nats or agent. The other parts of the status stay."`
 }
 
-// HealthResponse is the liveness probe's answer.
-type HealthResponse struct { //nolint:revive // the schema name is part of the API
+// Response is the liveness probe's answer.
+type Response struct {
+	_ struct{} `schema:"HealthResponse"`
+
 	Status string `json:"status" doc:"Health status." example:"ok" render:"status"`
 }
 

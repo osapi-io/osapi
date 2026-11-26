@@ -29,6 +29,6 @@ the same.
 
 | NAME     | INPUT                               | OUTPUT                                                                                                                                    |
 | -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| liveness | LivenessInput                       | HealthResponse &#123; status &#125;                                                                                                       |
+| liveness | LivenessInput                       | Response &#123; status &#125;                                                                                                             |
 | ready    | ReadyInput                          | ReadyResponse &#123; status, error &#125;                                                                                                 |
 | status   | StatusInput &#123; component &#125; | StatusResponse &#123; status, version, uptime, checks, registry, jobs, streams, kv_buckets, object_stores, consumers, nats, agents &#125; |

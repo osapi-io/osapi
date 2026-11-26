@@ -52,8 +52,10 @@ type UpdateInput struct {
 	File        []byte            `json:"file"         in:"form" validate:"required,min=1"         doc:"The file content."`
 }
 
-// FileInfo is a stored file.
-type FileInfo struct { //nolint:revive // the schema name is part of the API
+// Info is a stored file.
+type Info struct {
+	_ struct{} `schema:"FileInfo"`
+
 	Name        string            `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
 	Sha256      string            `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
 	Size        int               `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
@@ -61,22 +63,28 @@ type FileInfo struct { //nolint:revive // the schema name is part of the API
 	Source      string            `json:"source"       doc:"Source of the file: 'system' or 'user'."                         example:"user"`
 }
 
-// FileInfoResponse is the metadata of a file.
-type FileInfoResponse struct { //nolint:revive // the schema name is part of the API
+// InfoResponse is the metadata of a file.
+type InfoResponse struct {
+	_ struct{} `schema:"FileInfoResponse"`
+
 	Name        string            `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
 	Sha256      string            `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
 	Size        int               `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
 	ContentType types.ContentType `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"`
 }
 
-// FileListResponse is each stored file.
-type FileListResponse struct { //nolint:revive // the schema name is part of the API
-	Items      []FileInfo `json:"items"       doc:"List of stored files."  empty:"Upload one with osapi client file upload."`
-	TotalItems int        `json:"total_items" doc:"Total number of files."                                                   example:"5"`
+// ListResponse is each stored file.
+type ListResponse struct {
+	_ struct{} `schema:"FileListResponse"`
+
+	Items      []Info `json:"items"       doc:"List of stored files."  empty:"Upload one with osapi client file upload."`
+	TotalItems int    `json:"total_items" doc:"Total number of files."                                                   example:"5"`
 }
 
-// FileUploadResponse is the file that an upload or an update wrote.
-type FileUploadResponse struct { //nolint:revive // the schema name is part of the API
+// UploadResponse is the file that an upload or an update wrote.
+type UploadResponse struct {
+	_ struct{} `schema:"FileUploadResponse"`
+
 	Name        string            `json:"name"         doc:"The name of the uploaded file."                                                                                     example:"nginx.conf"`
 	Sha256      string            `json:"sha256"       doc:"SHA-256 hash of the file content."                                                                                  example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
 	Size        int               `json:"size"         doc:"File size in bytes."                                                                                                example:"1024"                                                             render:"bytes"`

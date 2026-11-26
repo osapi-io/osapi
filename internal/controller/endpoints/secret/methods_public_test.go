@@ -91,7 +91,7 @@ func (s *MethodsPublicTestSuite) TestNoVault() {
 				return err
 			},
 			func() error {
-				_, err := secret.Update(ctx, d, secret.UpdateInput{Vault: "default", Key: "k", Body: secret.SecretUpdateRequest{Value: "v"}})
+				_, err := secret.Update(ctx, d, secret.UpdateInput{Vault: "default", Key: "k", Body: secret.UpdateRequest{Value: "v"}})
 				return err
 			},
 			func() error {
@@ -162,7 +162,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 	tests := []struct {
 		name    string
 		setup   func()
-		want    []secret.SecretInfo
+		want    []secret.Info
 		wantErr string
 	}{
 		{
@@ -170,7 +170,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			setup: func() {
 				s.vault.EXPECT().List(gomock.Any()).Return([]vault.Meta{meta}, nil)
 			},
-			want: []secret.SecretInfo{
+			want: []secret.Info{
 				{
 					Vault:   "default",
 					Key:     "registry-token",
@@ -185,7 +185,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			setup: func() {
 				s.vault.EXPECT().List(gomock.Any()).Return(nil, nil)
 			},
-			want: []secret.SecretInfo{},
+			want: []secret.Info{},
 		},
 		{
 			name: "when the vault fails, it is a failure of the controller",
@@ -265,7 +265,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				return
 			}
 			s.Require().NoError(err)
-			s.Equal(secret.SecretInfo{
+			s.Equal(secret.Info{
 				Vault:   "default",
 				Key:     "registry-token",
 				Version: 3,
@@ -318,7 +318,7 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 				secret.UpdateInput{
 					Vault: "default",
 					Key:   "registry-token",
-					Body:  secret.SecretUpdateRequest{Value: "s3cret"},
+					Body:  secret.UpdateRequest{Value: "s3cret"},
 				},
 			)
 			if tc.wantErr != "" {
@@ -328,7 +328,7 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 				return
 			}
 			s.Require().NoError(err)
-			s.Equal(secret.SecretInfo{
+			s.Equal(secret.Info{
 				Vault:   "default",
 				Key:     "registry-token",
 				Version: 4,

@@ -63,21 +63,21 @@ func List(
 	ctx context.Context,
 	d Deps,
 	in ListInput,
-) (SecretListResponse, error) {
+) (ListResponse, error) {
 	v, err := open(d, in.Vault)
 	if err != nil {
-		return SecretListResponse{}, err
+		return ListResponse{}, err
 	}
 	metas, err := v.List(ctx)
 	if err != nil {
-		return SecretListResponse{}, endpoint.Internal("failed to list the keys of the vault", err)
+		return ListResponse{}, endpoint.Internal("failed to list the keys of the vault", err)
 	}
-	items := make([]SecretInfo, 0, len(metas))
+	items := make([]Info, 0, len(metas))
 	for _, m := range metas {
 		items = append(items, info(in.Vault, m))
 	}
 
-	return SecretListResponse{Items: items, TotalItems: len(items)}, nil
+	return ListResponse{Items: items, TotalItems: len(items)}, nil
 }
 
 // Get is the metadata of one key, and not its value.
@@ -85,14 +85,14 @@ func Get(
 	ctx context.Context,
 	d Deps,
 	in GetInput,
-) (SecretInfo, error) {
+) (Info, error) {
 	v, err := open(d, in.Vault)
 	if err != nil {
-		return SecretInfo{}, err
+		return Info{}, err
 	}
 	m, err := find(ctx, v, in.Vault, in.Key)
 	if err != nil {
-		return SecretInfo{}, err
+		return Info{}, err
 	}
 
 	return info(in.Vault, m), nil
@@ -105,20 +105,20 @@ func Reveal(
 	ctx context.Context,
 	d Deps,
 	in RevealInput,
-) (SecretValue, error) {
+) (Value, error) {
 	v, err := open(d, in.Vault)
 	if err != nil {
-		return SecretValue{}, err
+		return Value{}, err
 	}
 	value, _, err := v.Get(ctx, in.Key)
 	if errors.Is(err, vault.ErrNotFound) {
-		return SecretValue{}, endpoint.Errorf(ErrNoKey, "vault %s has no key %s", in.Vault, in.Key)
+		return Value{}, endpoint.Errorf(ErrNoKey, "vault %s has no key %s", in.Vault, in.Key)
 	}
 	if err != nil {
-		return SecretValue{}, endpoint.Internal("failed to read the key", err)
+		return Value{}, endpoint.Internal("failed to read the key", err)
 	}
 
-	return SecretValue{Value: string(value)}, nil
+	return Value{Value: string(value)}, nil
 }
 
 // Update writes the value as the next version of the key, and records the
@@ -127,15 +127,15 @@ func Update(
 	ctx context.Context,
 	d Deps,
 	in UpdateInput,
-) (SecretInfo, error) {
+) (Info, error) {
 	v, err := open(d, in.Vault)
 	if err != nil {
-		return SecretInfo{}, err
+		return Info{}, err
 	}
 	ctx = vault.WithActor(ctx, authtoken.SubjectFrom(ctx))
 	m, err := v.Put(ctx, in.Key, []byte(in.Body.Value.Reveal()))
 	if err != nil {
-		return SecretInfo{}, endpoint.Internal("failed to write the key", err)
+		return Info{}, endpoint.Internal("failed to write the key", err)
 	}
 
 	return info(in.Vault, m), nil
@@ -202,8 +202,8 @@ func find(
 func info(
 	vaultName string,
 	m vault.Meta,
-) SecretInfo {
-	return SecretInfo{
+) Info {
+	return Info{
 		Vault:   vaultName,
 		Key:     m.Key,
 		Version: int64(m.Version), //nolint:gosec // a version is a count of updates

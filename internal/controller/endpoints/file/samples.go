@@ -27,9 +27,9 @@ import "github.com/osapi-io/osapi/pkg/sdk/types"
 var (
 	sampleSum = "a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5"
 
-	sampleList = FileListResponse{
+	sampleList = ListResponse{
 		TotalItems: 2,
-		Items: []FileInfo{
+		Items: []Info{
 			{
 				Name:        "app.conf",
 				Sha256:      sampleSum,
@@ -47,7 +47,7 @@ var (
 		},
 	}
 
-	sampleUpload = FileUploadResponse{
+	sampleUpload = UploadResponse{
 		Name:        "app.conf",
 		Sha256:      sampleSum,
 		Size:        1024,
@@ -55,7 +55,7 @@ var (
 		ContentType: types.ContentRaw,
 	}
 
-	sampleUploadTemplate = FileUploadResponse{
+	sampleUploadTemplate = UploadResponse{
 		Name:        "app.conf.tmpl",
 		Sha256:      "7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8",
 		Size:        512,
@@ -63,7 +63,7 @@ var (
 		ContentType: types.ContentTemplate,
 	}
 
-	sampleInfo = FileInfoResponse{
+	sampleInfo = InfoResponse{
 		Name:        "app.conf",
 		Sha256:      sampleSum,
 		Size:        1024,

@@ -227,6 +227,11 @@ just go-fmt         # Auto-fix formatting
 just go-vet         # Run linter
 ```
 
+Do not write `//nolint:revive`. It hides a problem. Fix the name or the code. A
+type whose API name must differ from its Go name gets an explicit name, as a
+field gets one with `json`: the controller's endpoint types use the `schema` tag
+(`osapi dsl endpoint spec` describes it).
+
 `.golangci.yml` lists the linters that run. Read the list there. A copy of the
 list in a page becomes incorrect when the configuration changes. Formatting does
 not apply to generated files (`*.gen.go`, `*.pb.go`).

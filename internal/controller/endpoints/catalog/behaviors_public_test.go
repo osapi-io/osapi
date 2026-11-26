@@ -175,18 +175,18 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	s.Equal([]string{"debian", "darwin"}, list.Platforms)
 	s.Equal("itemIn { name*, mode, count, on, tags, labels, token }", list.Input)
 	s.Equal("[]row { name, changed, size, usage, disks, tags, ptr, hidden }", list.Output)
-	s.Equal([]catalog.CatalogExample{
+	s.Equal([]catalog.Example{
 		{Doc: "Lists the items", Input: map[string]any{
 			"name": "a", "mode": "", "count": float64(0), "on": false, "tags": nil,
 			"labels": nil, "token": "[redacted]",
 		}, Output: []row{{Name: "a"}}},
 	}, list.Examples, "an example's secret is redacted")
 	s.Equal(
-		[]catalog.CatalogCall{},
+		[]catalog.Call{},
 		list.Calls,
 		"a method whose examples call nothing has no calls",
 	)
-	s.Equal([]catalog.CatalogField{
+	s.Equal([]catalog.Field{
 		{Name: "name", In: "query", Kind: "string", Required: true, Doc: "The item"},
 		{Name: "mode", In: "query", Kind: "string", Doc: "The mode", Options: []string{"a", "b"}},
 		{Name: "count", In: "query", Kind: "number", Doc: "How many"},
@@ -195,10 +195,10 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 		{Name: "labels", In: "query", Kind: "object", Doc: "Labels"},
 		{Name: "token", In: "query", Kind: "string", Doc: "A secret", Secret: true},
 	}, list.Fields)
-	total := []catalog.CatalogColumn{
+	total := []catalog.Column{
 		{Name: "total", Label: "Total", Doc: "Total bytes", Render: "bytes", Kind: "value"},
 	}
-	s.Equal([]catalog.CatalogColumn{
+	s.Equal([]catalog.Column{
 		{Name: "name", Label: "Name", Doc: "The item", Kind: "value"},
 		{Name: "changed", Label: "Changed", Doc: "Whether the host changed", Kind: "value"},
 		{Name: "size", Label: "Bytes", Doc: "Its size", Render: "bytes", Kind: "value"},
@@ -214,8 +214,8 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	s.Equal([]string{"debian"}, update.Platforms, "On limits the platforms")
 	s.Equal(types.FieldInPath, update.Fields[0].In, "the key goes in the path")
 	s.Equal(types.FieldInBody, update.Fields[1].In, "a write's other fields go in the body")
-	s.Equal([]catalog.CatalogCall{
-		{Behavior: "inner", Method: "list", Calls: []catalog.CatalogCall{
+	s.Equal([]catalog.Call{
+		{Behavior: "inner", Method: "list", Calls: []catalog.Call{
 			{Behavior: "deep", Method: "get"},
 			{Behavior: "deep", Method: "set"},
 		}},

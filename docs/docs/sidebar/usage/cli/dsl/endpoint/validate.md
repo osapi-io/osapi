@@ -8,6 +8,12 @@ describes each part of a group.
 
 The rules:
 
+- `stutter`: No type of the group's package that a method uses repeats the name
+  of its package, such as agent.AgentInfo: Go code reads it as agent.Info.
+  revive's exported rule refuses it too. Fix: Drop the package's name from the
+  type, and keep its API name with a schema tag on its blank field: type Info
+  struct &#123; _ struct&#123;&#125; `schema:"AgentInfo"` &#125;. Never write
+  //nolint:revive.
 - `secret`: No secret.Value input field is tagged in:"path" or in:"query", or
   telemetry:"attr": a URL goes in logs, and a span is no place for a secret.
   Fix: Send the secret in the body: drop its in tag, or tag it in:"body" or

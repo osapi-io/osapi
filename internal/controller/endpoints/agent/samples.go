@@ -33,7 +33,7 @@ var (
 	sampleStarted = time.Date(2026, time.January, 13, 7, 0, 0, 0, time.UTC)
 	sampleSeen    = time.Date(2026, time.January, 15, 9, 59, 52, 0, time.UTC)
 
-	sampleWeb01 = AgentInfo{
+	sampleWeb01 = Info{
 		Hostname:     "web-01",
 		MachineID:    "4c4c4544-0035-4b10-8031-b4c04f4d3332",
 		State:        types.AgentReady,
@@ -57,7 +57,7 @@ var (
 		PackageMgr:       "apt",
 		PrimaryInterface: "eth0",
 	}
-	sampleMac01 = AgentInfo{
+	sampleMac01 = Info{
 		Hostname:     "mac-01",
 		State:        types.AgentDraining,
 		StartedAt:    time.Date(2026, time.January, 15, 8, 30, 0, 0, time.UTC),
@@ -67,11 +67,11 @@ var (
 		Version:      "v1.4.0",
 	}
 
-	sampleList = ListAgentsResponse{Items: []AgentInfo{sampleWeb01, sampleMac01}, TotalItems: 2}
+	sampleList = ListAgentsResponse{Items: []Info{sampleWeb01, sampleMac01}, TotalItems: 2}
 )
 
 // sampleConfig is the config of an agent, as the CLI prints it.
-var sampleConfig = AgentConfigResponse{
+var sampleConfig = ConfigResponse{
 	Version: 2,
 	Labels:  map[string]string{"group": "web", "dc": "east"},
 	MaxJobs: 4,

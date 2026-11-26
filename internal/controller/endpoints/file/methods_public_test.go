@@ -148,7 +148,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		setup        func()
-		validateFunc func(file.FileListResponse, error)
+		validateFunc func(file.ListResponse, error)
 	}{
 		{
 			name: "when the store has files, each one but a deleted one is in the list",
@@ -168,10 +168,10 @@ func (s *MethodsPublicTestSuite) TestList() {
 					{ObjectMeta: jetstream.ObjectMeta{Name: "gone"}, Deleted: true},
 				}, nil)
 			},
-			validateFunc: func(got file.FileListResponse, err error) {
+			validateFunc: func(got file.ListResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(2, got.TotalItems)
-				s.Equal(file.FileInfo{
+				s.Equal(file.Info{
 					Name: "nginx.conf", Sha256: hexOf(content), Size: 21,
 					ContentType: "template", Source: "user",
 				}, got.Items[0])
@@ -183,7 +183,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		{
 			name:  "when the store fails, the caller gets a message without its error",
 			setup: func() { s.objects.EXPECT().List(gomock.Any()).Return(nil, errBoom) },
-			validateFunc: func(_ file.FileListResponse, err error) {
+			validateFunc: func(_ file.ListResponse, err error) {
 				s.EqualError(err, "failed to list files")
 			},
 		},
@@ -200,7 +200,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	tests := []struct {
 		name         string
 		setup        func()
-		validateFunc func(file.FileInfoResponse, error)
+		validateFunc func(file.InfoResponse, error)
 	}{
 		{
 			name: "when the file is there, it answers its metadata",
@@ -211,10 +211,10 @@ func (s *MethodsPublicTestSuite) TestGet() {
 					}, Size: 21, Digest: digest(content),
 				}, nil)
 			},
-			validateFunc: func(got file.FileInfoResponse, err error) {
+			validateFunc: func(got file.InfoResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(
-					file.FileInfoResponse{Name: "nginx.conf", Sha256: hexOf(content), Size: 21},
+					file.InfoResponse{Name: "nginx.conf", Sha256: hexOf(content), Size: 21},
 					got,
 				)
 			},
@@ -226,14 +226,14 @@ func (s *MethodsPublicTestSuite) TestGet() {
 					Info(gomock.Any(), "nginx.conf").
 					Return(nil, jetstream.ErrObjectNotFound)
 			},
-			validateFunc: func(_ file.FileInfoResponse, err error) { s.ErrorIs(err, file.ErrNotFound) },
+			validateFunc: func(_ file.InfoResponse, err error) { s.ErrorIs(err, file.ErrNotFound) },
 		},
 		{
 			name: "when the store fails, it is a 500",
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(nil, errBoom)
 			},
-			validateFunc: func(_ file.FileInfoResponse, err error) {
+			validateFunc: func(_ file.InfoResponse, err error) {
 				s.EqualError(err, "failed to get file info")
 			},
 		},
@@ -363,7 +363,7 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
-			var got file.FileUploadResponse
+			var got file.UploadResponse
 			var err error
 			if tc.update {
 				got, err = file.Update(context.Background(), s.deps(),
