@@ -79,12 +79,11 @@ type Keyring struct {
 }
 
 // record is a value in the bucket: its metadata, the ID of the key that
-// encrypts it, and the encrypted value.
+// encrypts it, and the encrypted value, with its nonce in front.
 type record struct {
 	Version uint64    `json:"version"`
 	Changed time.Time `json:"changed"`
 	By      string    `json:"by,omitempty"`
 	KeyID   string    `json:"key_id"`
-	Nonce   []byte    `json:"nonce"`
 	Data    []byte    `json:"data"`
 }
