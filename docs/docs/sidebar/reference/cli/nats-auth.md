@@ -45,3 +45,18 @@ Make the NATS authentication of osapi, a credential for each role.
 | ------- | ------ | --------- | ------------------------------------------------------------------------------- |
 | --out   | string | required  | The directory that the files go to. It is made, mode 0700, when it is not there |
 | --print | bool   | omitempty | Also print the server's part: its authorization block, or its resolver file     |
+
+## [osapi nats auth nkey create](../../usage/cli/nats/auth/nkey/create.md)
+
+|             |                                  |
+| ----------- | -------------------------------- |
+| Method      | nkey create                      |
+| Description | Make an nkey for each osapi role |
+| Refuses     | no directory                     |
+
+### Flags (2)
+
+| FLAG    | TYPE   | VALIDATE  | HELP                                                                            |
+| ------- | ------ | --------- | ------------------------------------------------------------------------------- |
+| --out   | string | required  | The directory that the files go to. It is made, mode 0700, when it is not there |
+| --print | bool   | omitempty | Also print the server's part: its authorization block, or its resolver file     |

@@ -62,3 +62,14 @@ func SetKeyMakers(
 
 	return func() { createOperator, createAccount = oldO, oldA }
 }
+
+// SetCreateUser swaps how the nkey of a user is made, and returns a func
+// that puts it back.
+func SetCreateUser(
+	fn func() (nkeys.KeyPair, error),
+) func() {
+	old := createUser
+	createUser = fn
+
+	return func() { createUser = old }
+}

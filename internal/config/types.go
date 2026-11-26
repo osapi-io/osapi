@@ -120,6 +120,8 @@ type NATSServerAuth struct {
 	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)." choice:"set for the auth type that uses it"`
 	// NKeys is a list of allowed public NKeys (for nkey auth).
 	NKeys []string `mapstructure:"nkeys" doc:"Allowed public NKeys, for nkey auth." choice:"set for the auth type that uses it"`
+	// NKeyRoles is the osapi role of each nkey of NKeys, by its public key.
+	NKeyRoles map[string]string `mapstructure:"nkey_roles" doc:"The osapi role of each nkey, by its public key: controller, agent, setup or join. The nkey can then use only the subjects of that role. An nkey with no role can use each subject." choice:"empty: each nkey can use each subject"`
 }
 
 // NATSServerUser represents an allowed username/password pair for the NATS server.

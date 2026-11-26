@@ -27,6 +27,13 @@ var (
 		{Role: "osapi", Path: "/etc/osapi/nats/osapi-nats.yaml"},
 		{Role: "server", Path: "/etc/osapi/nats/nats-server.conf"},
 	}}
+	sampleNKey = CreateOutput{Files: []Written{
+		{Role: "setup", Path: "/etc/osapi/nats/setup.nk"},
+		{Role: "controller", Path: "/etc/osapi/nats/controller.nk"},
+		{Role: "agent", Path: "/etc/osapi/nats/agent.nk"},
+		{Role: "osapi", Path: "/etc/osapi/nats/osapi-nats.yaml"},
+		{Role: "server", Path: "/etc/osapi/nats/nats-server.conf"},
+	}}
 	sampleOperator = CreateOutput{Files: []Written{
 		{Role: "agent", Path: "/etc/osapi/nats/agent.creds"},
 		{Role: "controller", Path: "/etc/osapi/nats/controller.creds"},

@@ -72,6 +72,17 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 		s.Empty(got.Server)
 	})
 
+	s.Run("nkey: a seed for each role and the server's block", func() {
+		got, err := natsauth.NKey(
+			ctx,
+			s.deps(),
+			natsauth.CreateInput{Out: s.T().TempDir(), Print: true},
+		)
+		s.Require().NoError(err)
+		s.Len(got.Files, 5)
+		s.Contains(got.Server, "nkey:")
+	})
+
 	s.Run("a directory that cannot be made is the error", func() {
 		file := filepath.Join(s.T().TempDir(), "file")
 		s.Require().NoError(os.WriteFile(file, nil, 0o600))

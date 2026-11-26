@@ -77,11 +77,26 @@ osapi nats auth password create --out /etc/osapi/nats --print
 
 3. Run `osapi nats setup` with the setup user, then make a join token.
 
-## Nkeys and auth callout
+## Nkeys
 
-`osapi nats auth nkey create` is osapi-io/osapi#1435, and the join with auth
-callout is osapi-io/osapi#1416. Until then, give each role the subjects that
-`osapi nats permissions get` prints.
+```bash
+osapi nats auth nkey create --out /etc/osapi/nats --print
+```
+
+1. Load the `authorization` block of `nats-server.conf` into the config of your
+   server. It has an nkey for the setup, controller and agent roles, with the
+   permissions of each.
+2. Give the controller `controller.nk` and the agents `agent.nk`, as
+   `osapi-nats.yaml` shows, and run `osapi nats setup` with `setup.nk`.
+
+A join over NATS needs a password or a JWT for its bootstrap user: use the
+static users or operator mode for it. With osapi's own server, `osapi-nats.yaml`
+sets `nats.server.auth.nkey_roles`, which limits each nkey to its role.
+
+## Auth callout
+
+The join with auth callout is osapi-io/osapi#1416. Until then, give each role
+the subjects that `osapi nats permissions get` prints.
 
 [Running osapi on your NATS](architecture/nats.md) is the reference for each
 setting.
