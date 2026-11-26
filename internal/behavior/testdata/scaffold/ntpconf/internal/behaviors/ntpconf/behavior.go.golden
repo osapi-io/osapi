@@ -52,5 +52,6 @@ var Behavior = behavior.Register(behavior.Define(
 			"already has reports changed: false.").
 		Example("A new value", UpdateInput{Value: "example"}, Result{Changed: true},
 			behavior.Wrote(defaultPath, "example"),
+			behavior.Reads(GetInput{}, Entry{Value: "example"}),
 		),
 ))
