@@ -31,7 +31,7 @@ function tone(ev: TimelineEvent): string {
     case "cordoned":
       return "bg-status-pending";
     case "hostname_changed":
-      return "bg-status-applied";
+      return "bg-heading-1";
     case "revoked":
     case "rejected":
     case "deleted":
@@ -147,7 +147,13 @@ export function AgentTimeline({
                 />
                 <div className="flex min-w-0 items-baseline gap-2">
                   <span
-                    className={ev.error ? "text-status-error" : "text-text"}
+                    className={
+                      ev.error
+                        ? "text-status-error"
+                        : ev.event === "hostname_changed"
+                          ? "text-heading-1"
+                          : "text-text"
+                    }
                   >
                     {label}
                   </span>
