@@ -341,9 +341,19 @@ func runCLIStdin(
 	stdin string,
 	args ...string,
 ) (string, string, int) {
+	return runCLIEnv(stdin, nil, args...)
+}
+
+// runCLIEnv is runCLIStdin with env added to the client's environment,
+// such as the NATS user that a command connects as.
+func runCLIEnv(
+	stdin string,
+	env []string,
+	args ...string,
+) (string, string, int) {
 	fullArgs := append([]string{"-f", configPath}, args...)
 	cmd := exec.Command(binaryPath, fullArgs...)
-	cmd.Env = clientEnv()
+	cmd.Env = append(clientEnv(), env...)
 	cmd.Stdin = strings.NewReader(stdin)
 
 	var stdout, stderr bytes.Buffer

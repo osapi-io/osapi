@@ -115,6 +115,9 @@ type cliPolicy struct {
 	// write is a local command that changes the server's state, which runs
 	// with OSAPI_INTEGRATION_WRITES=1.
 	write bool
+	// env is what the command runs with besides the client's environment,
+	// such as the NATS user that it connects as.
+	env []string
 }
 
 const (
@@ -158,13 +161,18 @@ var cliPolicies = map[string]cliPolicy{
 	"controller join token revoke": {host: true, write: true},
 	"controller token generate":    {host: true},
 	"controller token validate":    {host: true},
-	"nats setup":                   {host: true, write: true},
-	"pki cert list":                {host: true},
-	"pki key list":                 {host: true},
-	"pki key get":                  {host: true},
-	"pki key rotate":               {host: true, write: true},
-	"pki list":                     {host: true},
-	"pki cert get":                 {host: true},
+	// An operator runs nats setup as the setup user, which may create and
+	// update the streams; the controller's user may not (#1415).
+	"nats setup": {host: true, write: true, env: []string{
+		"OSAPI_CONTROLLER_NATS_AUTH_USERNAME=setup",
+		"OSAPI_CONTROLLER_NATS_AUTH_PASSWORD=integration-setup",
+	}},
+	"pki cert list":  {host: true},
+	"pki key list":   {host: true},
+	"pki key get":    {host: true},
+	"pki key rotate": {host: true, write: true},
+	"pki list":       {host: true},
+	"pki cert get":   {host: true},
 }
 
 // undo is a command that undoes an example on the agent that the other

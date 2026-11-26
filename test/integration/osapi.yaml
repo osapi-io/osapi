@@ -59,6 +59,12 @@ nats:
         - username: agent
           password: integration-agent
           role: agent
+        # The bootstrap user of a join string, which can only send the join
+        # request: join token create connects as it to read the server's
+        # certificate.
+        - username: join
+          password: integration-join
+          role: join
 
   stream:
     name: JOBS

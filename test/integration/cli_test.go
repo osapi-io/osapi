@@ -106,7 +106,7 @@ func (s *CommandSmokeSuite) TestExamples() {
 				words, stdin := s.fx.example(c, flags)
 				args := append(strings.Fields(c.path), words...)
 				s.fx.before(c, i, args)
-				stdout, stderr, code := runRetried(s.fx.dir, stdin, args...)
+				stdout, stderr, code := runRetried(s.fx.dir, stdin, p.env, args...)
 				s.Require().Zero(code, "%s: %s%s", strings.Join(args, " "), stderr, stdout)
 				if slices.Contains(args, "--json") {
 					s.True(json.Valid([]byte(strings.TrimSpace(stdout))),
@@ -154,11 +154,12 @@ func runDirect(
 func runRetried(
 	dir string,
 	stdin string,
+	env []string,
 	args ...string,
 ) (string, string, int) {
 	deadline := time.Now().Add(30 * time.Second)
 	for {
-		stdout, stderr, code := runCLIIn(dir, stdin, args...)
+		stdout, stderr, code := runCLIWith(dir, stdin, env, args...)
 		if code == 0 || !strings.Contains(stderr, "try again") || time.Now().After(deadline) {
 			return stdout, stderr, code
 		}
@@ -211,6 +212,16 @@ func runCLIIn(
 	stdin string,
 	args ...string,
 ) (string, string, int) {
+	return runCLIWith(dir, stdin, nil, args...)
+}
+
+// runCLIWith is runCLIIn with env added to the client's environment.
+func runCLIWith(
+	dir string,
+	stdin string,
+	env []string,
+	args ...string,
+) (string, string, int) {
 	prev, err := os.Getwd()
 	if err != nil {
 		return "", err.Error(), -1
@@ -220,7 +231,7 @@ func runCLIIn(
 	}
 	defer func() { _ = os.Chdir(prev) }()
 
-	return runCLIStdin(stdin, args...)
+	return runCLIEnv(stdin, env, args...)
 }
 
 // fixtures are the things that the examples name, which the suite makes:
