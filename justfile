@@ -153,7 +153,9 @@ command-scaffold-check:
     go run . dsl command create --name scaffoldcheck --description "A scaffold check" --under controller >/dev/null
     go generate ./internal/cli/commands/all
     go run . dsl command validate >"$tmp/validate.out" || { cat "$tmp/validate.out"; exit 1; }
-    go test -count=1 ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/
+    # The scaffold is not a command that a user runs, so no skill teaches it.
+    go test -count=1 -skip TestSkillsTeachEachGroup \
+        ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/
 
 # Fail when a behavior's own code is not fully covered
 #
