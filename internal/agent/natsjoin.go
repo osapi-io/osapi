@@ -58,6 +58,10 @@ const NATSJoinFile = "nats-join.json"
 // which never left the host. It is 0600.
 const natsCreds = "nats.creds"
 
+// natsUserSeed is the file in key_dir of the seed of the agent's own NATS
+// user, with a NATS server's auth callout. It is 0600.
+const natsUserSeed = "nats-user.nk"
+
 // natsJoinCA is the file in key_dir of the certificate that the NATS server
 // showed at the join, which the agent trusts after it.
 const natsJoinCA = "nats-join-ca.pem"
@@ -90,6 +94,8 @@ type savedJoin struct {
 	Username  string `json:"username,omitempty"`
 	Password  string `json:"password,omitempty"`
 	CredsFile string `json:"creds_file,omitempty"`
+	// NKeyFile is, with auth callout, the seed of the agent's own NATS user.
+	NKeyFile string `json:"nkey_file,omitempty"`
 	// Labels are the labels of the join token.
 	Labels map[string]string `json:"labels,omitempty"`
 	CA     string            `json:"ca,omitempty"`
@@ -254,6 +260,11 @@ func joinNow(
 	if len(j.creds) > 0 {
 		opts = append(opts, nats.UserCredentialBytes(j.creds))
 	}
+	// A string with no user is for a server whose auth callout checks the
+	// token itself, or one with no auth, which ignores it.
+	if j.user == "" && len(j.creds) == 0 {
+		opts = append(opts, nats.Token(j.token))
+	}
 	if j.scheme == "tls" {
 		opts = append(opts, nats.Secure(&tls.Config{
 			MinVersion: tls.VersionTLS12,
@@ -306,6 +317,14 @@ func joinNow(
 		Username: reply.NATS.Username, Password: reply.NATS.Password,
 		Labels: reply.Labels,
 	}
+	// With auth callout, the agent connects with its own user key, which
+	// the callout admits as this machine.
+	if reply.NATS.Callout {
+		s.NKeyFile = filepath.Join(keyDir, natsUserSeed)
+		if err := atomicfile.Write(ctx, fs, s.NKeyFile, userSeed, 0o600); err != nil {
+			return savedJoin{}, err
+		}
+	}
 	if reply.NATS.JWT != "" {
 		creds, err := natsjwt.Creds(reply.NATS.JWT, userSeed)
 		if err != nil {
@@ -348,6 +367,8 @@ func applyJoin(
 	switch {
 	case s.CredsFile != "":
 		n.Auth = config.NATSAuth{Type: "creds", CredsFile: s.CredsFile}
+	case s.NKeyFile != "":
+		n.Auth = config.NATSAuth{Type: "nkey", NKeyFile: s.NKeyFile}
 	case s.Username != "":
 		n.Auth = config.NATSAuth{Type: "user_pass", Username: s.Username, Password: s.Password}
 	}

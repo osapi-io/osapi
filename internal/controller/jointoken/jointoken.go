@@ -183,30 +183,44 @@ func (s Store) consume(
 	ctx context.Context,
 	token string,
 ) (Token, error) {
-	id, secret, ok := parse(token)
-	if !ok {
-		return Token{}, ErrInvalid
-	}
-	t, rev, err := s.get(ctx, id)
+	t, rev, err := s.check(ctx, token)
 	if err != nil {
 		return Token{}, err
 	}
-	if subtle.ConstantTimeCompare([]byte(t.Hash), []byte(hash(secret))) != 1 {
-		return Token{}, ErrInvalid
-	}
-	if !s.Now().Before(t.ExpiresAt) {
-		return Token{}, ErrExpired
-	}
-	if t.UsesLeft < 1 {
-		return Token{}, ErrUsed
-	}
 	t.UsesLeft--
 	data, _ := json.Marshal(t)
-	if _, err := s.KV.KVUpdate(ctx, s.Bucket, prefix+id, data, rev); err != nil {
+	if _, err := s.KV.KVUpdate(ctx, s.Bucket, prefix+t.ID, data, rev); err != nil {
 		return Token{}, fmt.Errorf("take a use of the join token: %w", err)
 	}
 
 	return t, nil
+}
+
+// check is the token, and its revision, when it admits now: ErrInvalid,
+// ErrExpired or ErrUsed when it does not. It takes no use.
+func (s Store) check(
+	ctx context.Context,
+	token string,
+) (Token, uint64, error) {
+	id, secret, ok := parse(token)
+	if !ok {
+		return Token{}, 0, ErrInvalid
+	}
+	t, rev, err := s.get(ctx, id)
+	if err != nil {
+		return Token{}, 0, err
+	}
+	if subtle.ConstantTimeCompare([]byte(t.Hash), []byte(hash(secret))) != 1 {
+		return Token{}, 0, ErrInvalid
+	}
+	if !s.Now().Before(t.ExpiresAt) {
+		return Token{}, 0, ErrExpired
+	}
+	if t.UsesLeft < 1 {
+		return Token{}, 0, ErrUsed
+	}
+
+	return t, rev, nil
 }
 
 // get is the token id and its revision; ErrInvalid when there is none.
@@ -318,6 +332,22 @@ func (s Store) Consume(
 		attribute.String("osapi.jointoken.id", id),
 	)
 	t, err := s.consume(ctx, token)
+
+	return t, opspan.End(span, err)
+}
+
+// Check is token when it admits now, in a jointoken.check span that names
+// the token's ID, never the token. It takes no use: the auth callout checks
+// a token at each connection of its join.
+func (s Store) Check(
+	ctx context.Context,
+	token string,
+) (Token, error) {
+	id, _ := ID(token)
+	ctx, span := opspan.Start(ctx, tracerName, "jointoken.check",
+		attribute.String("osapi.jointoken.id", id),
+	)
+	t, _, err := s.check(ctx, token)
 
 	return t, opspan.End(span, err)
 }

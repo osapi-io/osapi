@@ -215,6 +215,34 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			},
 		},
 		{
+			name: "when the join is through a server's auth callout serves it",
+			cfg: func() config.Config {
+				cfg := startServer(s.T())
+				acct, _ := nkeys.CreateAccount()
+				seed, _ := acct.Seed()
+				cfg.Controller.Join.Callout.IssuerKeyFile = filepath.Join(
+					s.T().TempDir(),
+					"issuer.nk",
+				)
+				cfg.Controller.Join.Callout.Account = "OSAPI"
+				cfg.Controller.Join.Callout.Auth = config.NATSAuth{
+					Type: "user_pass", Username: "callout", Password: "pw",
+				}
+				s.Require().
+					NoError(os.WriteFile(cfg.Controller.Join.Callout.IssuerKeyFile, seed, 0o600))
+				return cfg
+			},
+		},
+		{
+			name: "when the issuer key of the auth callout does not load does not start",
+			cfg: func() config.Config {
+				cfg := startServer(s.T())
+				cfg.Controller.Join.Callout.IssuerKeyFile = "/no/such/key"
+				return cfg
+			},
+			wantErr: "auth callout: read the issuer key",
+		},
+		{
 			name: "when the join's signing key does not load does not start",
 			cfg: func() config.Config {
 				cfg := startServer(s.T())

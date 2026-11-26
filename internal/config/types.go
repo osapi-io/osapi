@@ -370,6 +370,24 @@ type ControllerJoin struct {
 	Account string `mapstructure:"account" doc:"For operator mode: the public key (A...) of osapi's account, which signing_key_file signs for." choice:"set for operator mode"`
 	// Agent is the NATS user that the join gives the agent.
 	Agent NATSUser `mapstructure:"agent" doc:"The NATS user that the join gives the agent. Empty is the user of nats.server.auth.users with the role agent." choice:"the deployment's own user; empty takes the embedded server's"`
+	// Callout is osapi's auth callout service, for a NATS server whose
+	// auth_callout block names osapi's issuer key.
+	Callout JoinCallout `mapstructure:"callout"`
+}
+
+// JoinCallout is osapi's auth callout service: the NATS server sends it
+// each connection that is not one of its auth_users, and the controller
+// decides it, a join token or an admitted agent's key.
+type JoinCallout struct {
+	// IssuerKeyFile is the seed of the account key that the server's
+	// auth_callout block names as its issuer.
+	IssuerKeyFile string `mapstructure:"issuer_key_file" doc:"For a NATS server with auth callout: a file with the seed (SA...) of the account key that the server's auth_callout names as its issuer. The controller decides each connection of a join or an agent, and signs its user with it. Empty turns the callout off." choice:"set for auth callout"`
+	// Account is the account that a join or an agent goes in.
+	Account string `mapstructure:"account" doc:"For auth callout: the account that a join or an agent goes in, the account of osapi's streams, such as OSAPI." choice:"set for auth callout"`
+	// Auth is how the controller connects as the user of the server's
+	// auth_users that answers the server. Make it an nkey: a server with no
+	// nkey user offers no nonce, and an agent signs the nonce with its key.
+	Auth NATSAuth `mapstructure:"auth" doc:"For auth callout: how the controller connects as the user, among the server's auth_users, that answers the server's requests. Use type nkey: a NATS server offers each connection a nonce only when it has an nkey user, and an agent proves its key by signing it."`
 }
 
 // NATSUser is a NATS user and its password.

@@ -28,12 +28,13 @@ secret, send a job, or make a stream.
 osapi makes the credentials of each role for you. Each secret goes to a file of
 mode 0600, and none is on the command line.
 
-| Type     | Command                           | Join over NATS | Use it when                                                                 |
-| -------- | --------------------------------- | -------------- | --------------------------------------------------------------------------- |
-| Operator | `osapi nats auth operator create` | Yes            | Recommended. Each agent gets its own NATS user, which can expire and renew. |
-| Password | `osapi nats auth password create` | Yes            | Your server has static users. The agents share one user.                    |
-| Nkey     | `osapi nats auth nkey create`     | No             | Your server uses nkeys. Each agent needs its nkey in its config.            |
-| None     | nothing                           | Yes            | Development only.                                                           |
+| Type     | Command                           | Join over NATS | Use it when                                                                                |
+| -------- | --------------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| Operator | `osapi nats auth operator create` | Yes            | Recommended. Each agent gets its own NATS user, which can expire and renew.                |
+| Password | `osapi nats auth password create` | Yes            | Your server has static users. The agents share one user.                                   |
+| Nkey     | `osapi nats auth nkey create`     | No             | Your server uses nkeys. Each agent needs its nkey in its config.                           |
+| Callout  | your server's `auth_callout`      | Yes            | Your server asks osapi about each connection. A revocation applies at the next connection. |
+| None     | nothing                           | Yes            | Development only.                                                                          |
 
 A shared NATS user does not let one agent answer for another. The controller
 admits each agent by its own key, and checks the signature of each answer
@@ -99,6 +100,22 @@ Your server needs:
 - **The streams and buckets of osapi.** `osapi nats setup` makes them, or
   changes them to match the config. Run it one time, and again after an upgrade
   that changes a stream or a bucket.
+
+### When someone else runs the server
+
+osapi cannot add an operator to a server that it does not run: the operator is
+in the server's own config. It needs an account, and a key that lets it make the
+users of that account. Ask the administrator of the server for one of these, one
+time. After it, a host that joins or leaves needs nothing from them.
+
+| Ask for                                                                                           | Then                                                                            |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| An account for osapi with JetStream, and two scoped signing keys with the agent and join subjects | [Operator mode](#operator-mode): osapi makes the NATS user of each agent itself |
+| An `auth_callout` block that names osapi's issuer key, and an nkey callout user                   | [Auth callout](#auth-callout): osapi decides each connection to its account     |
+| A join user and an agent user, with the subjects of each role                                     | [Static users](#static-users): the agents share one user                        |
+
+`osapi nats permissions get --role <role>` prints the subjects to give them.
+Each way also needs the controller's user and setup's user in the same account.
 
 ### Operator mode
 
@@ -169,7 +186,74 @@ admits it ([4. Join hosts](join.md)).
 
 ### Auth callout
 
-Not built yet: osapi-io/osapi#1416. Until then, use one of the types above.
+With auth callout (NATS 2.10 or later), your server sends each new connection to
+the controller, and the controller decides it:
+
+- A connection with a join token that admits now gets the join role, for 10
+  minutes at most.
+- A connection with the NATS user key of an admitted agent, which signs the
+  server's nonce with it, gets the agent role.
+- The controller refuses each other connection. It refuses a revoked agent at
+  its next connection.
+
+Each decision is an entry of the audit log, `nats.connect`.
+
+1. Make the issuer key and the nkeys:
+
+   ```bash
+   osapi nats auth operator create --out /etc/osapi/nats   # account.nk is the issuer
+   osapi nats auth nkey create --out /etc/osapi/nats-nkeys
+   ```
+
+   The second command makes an nkey for setup, for the controller and for the
+   agents. With auth callout each agent connects with its own key, so no agent
+   uses `agent.nk`: use it as the callout user.
+
+1. Give your server an account for the callout user, an account for osapi with
+   JetStream, and the `auth_callout` block. The callout user, the controller and
+   setup are in `auth_users`, so the callout does not decide them:
+
+   ```text
+   accounts {
+     AUTH  { users: [ { nkey: "<callout user, U...>" } ] }
+     OSAPI {
+       jetstream: enabled
+       users: [ { nkey: "<controller, U...>" }, { nkey: "<setup, U...>" } ]
+     }
+   }
+   authorization {
+     auth_callout {
+       issuer: "<public key of account.nk, A...>"
+       auth_users: [ "<callout user>", "<controller>", "<setup>" ]
+       account: AUTH
+     }
+   }
+   ```
+
+   Make the callout user an nkey. A server offers each connection a nonce only
+   when it has an nkey user, and an agent proves its key by signing the nonce.
+
+1. Give the controller the callout:
+
+   ```yaml
+   controller:
+     join:
+       url: tls://nats.example.com:4222
+       agent_ttl: 1h
+       callout:
+         issuer_key_file: /etc/osapi/nats/account.nk
+         account: OSAPI
+         auth:
+           type: nkey
+           nkey_file: /etc/osapi/nats-nkeys/agent.nk
+   ```
+
+   `agent_ttl` is how long an agent's connection lasts before the server asks
+   the controller again. Thus it is the longest time that a revoked agent stays
+   connected.
+
+1. Run `osapi nats setup` as the setup user, and make a join token. The join
+   string has no user: the agent connects with its token.
 
 ### TLS to your server
 
