@@ -164,6 +164,74 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			WantBody: `{"job_id":"job-1","results":[{"description":"Example app","enabled":false,"hostname":"server1","managed":true,"name":"app","state":"dead","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"A daemon on a Mac, by its label\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/service/com.apple.cron",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"service.get",
+				service.GetInput{Name: "com.apple.cron"},
+				servertest.Completed("server1", `{"name":"com.apple.cron","state":"running","enabled":true,"description":"","managed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"description":"","enabled":true,"hostname":"server1","managed":false,"name":"com.apple.cron","state":"running","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A daemon on a Mac, by its label\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/service/com.apple.cron",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"service.get",
+				service.GetInput{Name: "com.apple.cron"},
+				servertest.Completed("server1", `{"name":"com.apple.cron","state":"running","enabled":true,"description":"","managed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"description":"","enabled":true,"hostname":"server1","managed":false,"name":"com.apple.cron","state":"running","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A daemon that osapi deployed and launchd has not loaded\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/service/app",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"service.get",
+				service.GetInput{Name: "app"},
+				servertest.Completed("server1", `{"name":"app","state":"dead","enabled":true,"description":"","managed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"description":"","enabled":true,"hostname":"server1","managed":true,"name":"app","state":"dead","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A daemon that osapi deployed and launchd has not loaded\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/service/app",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"service.get",
+				service.GetInput{Name: "app"},
+				servertest.Completed("server1", `{"name":"app","state":"dead","enabled":true,"description":"","managed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"description":"","enabled":true,"hostname":"server1","managed":true,"name":"app","state":"dead","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,

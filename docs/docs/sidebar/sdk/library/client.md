@@ -61,9 +61,9 @@ the spec.
 
 ### Services
 
-| Service                           | Description                       |
-| --------------------------------- | --------------------------------- |
-| [Service](../services/service.md) | The systemd services of the host. |
+| Service                           | Description                                                   |
+| --------------------------------- | ------------------------------------------------------------- |
+| [Service](../services/service.md) | The services of the host: systemd on Linux, launchd on macOS. |
 
 ### Software
 

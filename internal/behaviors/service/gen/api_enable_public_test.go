@@ -64,6 +64,42 @@ func (s *APIEnablePublicTestSuite) TestEnable() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"Enable the daemon on a Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/service/app/enable",
+				Body:   `{"name":"app"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"service.enable",
+				service.EnableInput{Name: "app"},
+				servertest.Completed("server1", `{"name":"app","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Enable the daemon on a Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/service/app/enable",
+				Body:   `{"name":"app"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"service.enable",
+				service.EnableInput{Name: "app"},
+				servertest.Completed("server1", `{"name":"app","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the example \"A unit with no [Install] section\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,

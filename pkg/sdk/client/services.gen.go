@@ -115,7 +115,8 @@ type services struct {
 	// metadata of their keys. No operation gives a value.
 	Secret *SecretService
 
-	// Service calls the API's Service group: the systemd services of the host.
+	// Service calls the API's Service group: the services of the host: systemd on
+	// Linux, launchd on macOS.
 	Service *ServiceService
 
 	// Status calls the API's Status group: the status summary of a node.

@@ -95,7 +95,7 @@ export const getGetNodeServiceUrl = (hostname: string,) => {
 }
 
 /**
- * Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped.
+ * Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. On a Mac, it lists each daemon that launchd has loaded in the system domain, by its label. A daemon that osapi deployed reads by the name it was deployed with, app for io.osapi.app.
  * @summary List the services of the host
  */
 export const getNodeService = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeServiceResponse> => {
@@ -163,7 +163,7 @@ export const getPostNodeServiceUrl = (hostname: string,) => {
 }
 
 /**
- * Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent's own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.
+ * Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent's own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions. On a Mac, the object is the plist of the daemon, /Library/LaunchDaemons/io.osapi.app.plist for app, with the label io.osapi.app, and launchd does not load it until start.
  * @summary Deploy a service
  */
 export const postNodeService = async (hostname: string,
@@ -233,7 +233,7 @@ export const getDeleteNodeServiceUrl = (hostname: string,
 }
 
 /**
- * Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change.
+ * Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change. On a Mac, it boots the daemon out of launchd when it is loaded, and removes its plist.
  * @summary Remove a service that osapi deployed
  */
 export const deleteNodeService = async (hostname: string,
@@ -303,7 +303,7 @@ export const getGetNodeServiceByKeyUrl = (hostname: string,
 }
 
 /**
- * Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
+ * Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found. On a Mac, a daemon that osapi deployed and launchd has not loaded is dead.
  * @summary Get one service
  */
 export const getNodeServiceByKey = async (hostname: string,
@@ -373,7 +373,7 @@ export const getPutNodeServiceUrl = (hostname: string,
 }
 
 /**
- * Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.
+ * Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found. On a Mac, it writes the plist, and a daemon that runs keeps its old plist until restart.
  * @summary Deploy a new unit file for a service
  */
 export const putNodeService = async (hostname: string,

@@ -940,7 +940,7 @@ func Services() []ServiceSpec {
 		Node: false,
 	}, {
 		Area: "services",
-		Doc:  "The systemd services of the host",
+		Doc:  "The services of the host: systemd on Linux, launchd on macOS",
 		Methods: []MethodSpec{{
 			Doc:        "List the services of the host",
 			Examples:   1,
@@ -950,7 +950,7 @@ func Services() []ServiceSpec {
 			Result:     "Collection[ServiceEntry]",
 		}, {
 			Doc:        "Deploy a service",
-			Examples:   1,
+			Examples:   2,
 			HTTP:       "POST /api/node/{hostname}/service",
 			Input:      "ServiceCreateInput",
 			Name:       "Create",
@@ -958,14 +958,14 @@ func Services() []ServiceSpec {
 			Result:     "Collection[ServiceResult]",
 		}, {
 			Doc:        "Get one service",
-			Examples:   4,
+			Examples:   5,
 			HTTP:       "GET /api/node/{hostname}/service/{name}",
 			Name:       "Get",
 			Permission: "service:read",
 			Result:     "Collection[ServiceEntry]",
 		}, {
 			Doc:        "Deploy a new unit file for a service",
-			Examples:   1,
+			Examples:   2,
 			HTTP:       "PUT /api/node/{hostname}/service/{name}",
 			Input:      "ServiceUpdateInput",
 			Name:       "Update",

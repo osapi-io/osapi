@@ -301,14 +301,14 @@ components:
       scheme: bearer
       type: http
 info:
-  description: The systemd services of the host.
+  description: 'The services of the host: systemd on Linux, launchd on macOS.'
   title: Service API
   version: 1.0.0
 openapi: 3.0.0
 paths:
   /api/node/{hostname}/service:
     get:
-      description: Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped.
+      description: Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. On a Mac, it lists each daemon that launchd has loaded in the system domain, by its label. A daemon that osapi deployed reads by the name it was deployed with, app for io.osapi.app.
       operationId: GetNodeService
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -368,7 +368,7 @@ paths:
             hostname: web-01
       x-osapi-method: list
     post:
-      description: 'Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent''s own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.'
+      description: 'Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent''s own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions. On a Mac, the object is the plist of the daemon, /Library/LaunchDaemons/io.osapi.app.plist for app, with the label io.osapi.app, and launchd does not load it until start.'
       operationId: PostNodeService
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -434,10 +434,15 @@ paths:
             hostname: web-01
             name: app
             object: app.service
+        - doc: Deploy a plist on a Mac
+          input:
+            hostname: web-01
+            name: app
+            object: app.plist
       x-osapi-method: create
   /api/node/{hostname}/service/{name}:
     delete:
-      description: Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change.
+      description: Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change. On a Mac, it boots the daemon out of launchd when it is loaded, and removes its plist.
       operationId: DeleteNodeService
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -503,7 +508,7 @@ paths:
             name: agent
       x-osapi-method: delete
     get:
-      description: Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
+      description: Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found. On a Mac, a daemon that osapi deployed and launchd has not loaded is dead.
       operationId: GetNodeServiceByKey
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -575,9 +580,13 @@ paths:
           input:
             hostname: web-01
             name: osapi-app
+        - doc: A daemon on a Mac, by its label
+          input:
+            hostname: web-01
+            name: com.apple.cron
       x-osapi-method: get
     put:
-      description: Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.
+      description: Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found. On a Mac, it writes the plist, and a daemon that runs keeps its old plist until restart.
       operationId: PutNodeService
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -644,6 +653,11 @@ paths:
             hostname: web-01
             name: app
             object: app-v2.service
+        - doc: A new plist on a Mac
+          input:
+            hostname: web-01
+            name: app
+            object: app-v2.plist
       x-osapi-method: update
   /api/node/{hostname}/service/{name}/disable:
     post:
@@ -965,7 +979,7 @@ paths:
             name: app
       x-osapi-method: stop
 tags:
-  - description: The systemd services of the host
+  - description: 'The services of the host: systemd on Linux, launchd on macOS'
     name: service_operations
     x-displayName: Service
     x-osapi-area: services

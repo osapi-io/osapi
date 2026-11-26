@@ -112,6 +112,90 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"app","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"Deploy a plist on a Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/service",
+				Body:   `{"name":"app","object":"app.plist"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"service.create",
+				service.CreateInput{
+					Name:   "app",
+					Object: "app.plist",
+				},
+				servertest.Completed("server1", `{"name":"app","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Deploy a plist on a Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/service",
+				Body:   `{"name":"app","object":"app.plist"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"service.create",
+				service.CreateInput{
+					Name:   "app",
+					Object: "app.plist",
+				},
+				servertest.Completed("server1", `{"name":"app","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A plist that has the content\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/service",
+				Body:   `{"name":"app","object":"app.plist"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"service.create",
+				service.CreateInput{
+					Name:   "app",
+					Object: "app.plist",
+				},
+				servertest.Completed("server1", `{"name":"app","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"app","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A plist that has the content\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/service",
+				Body:   `{"name":"app","object":"app.plist"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"service.create",
+				service.CreateInput{
+					Name:   "app",
+					Object: "app.plist",
+				},
+				servertest.Completed("server1", `{"name":"app","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"app","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,

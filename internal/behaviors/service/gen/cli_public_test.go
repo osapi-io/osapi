@@ -42,6 +42,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"A Mac, with a daemon that osapi deployed\" is run",
+			args: []string{"node", "service", "list", "--target", "server1"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/service",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"A running service\" is run",
 			args: []string{"node", "service", "get", "--target", "server1", "--name", "ssh"},
 			want: commandtest.Request{
@@ -78,6 +87,24 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"A daemon on a Mac, by its label\" is run",
+			args: []string{"node", "service", "get", "--target", "server1", "--name", "com.apple.cron"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/service/com.apple.cron",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"A daemon that osapi deployed and launchd has not loaded\" is run",
+			args: []string{"node", "service", "get", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/service/app",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"Deploy a unit file\" is run",
 			args: []string{"node", "service", "create", "--target", "server1", "--name", "app", "--object", "app.service"},
 			want: commandtest.Request{
@@ -96,12 +123,39 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"Deploy a plist on a Mac\" is run",
+			args: []string{"node", "service", "create", "--target", "server1", "--name", "app", "--object", "app.plist"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service",
+				Body:   "{\"name\":\"app\",\"object\":\"app.plist\"}",
+			},
+		},
+		{
+			name: "when the example \"A plist that has the content\" is run",
+			args: []string{"node", "service", "create", "--target", "server1", "--name", "app", "--object", "app.plist"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service",
+				Body:   "{\"name\":\"app\",\"object\":\"app.plist\"}",
+			},
+		},
+		{
 			name: "when the example \"A new unit file\" is run",
 			args: []string{"node", "service", "update", "--target", "server1", "--name", "app", "--object", "app-v2.service"},
 			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/node/server1/service/app",
 				Body:   "{\"object\":\"app-v2.service\"}",
+			},
+		},
+		{
+			name: "when the example \"A new plist on a Mac\" is run",
+			args: []string{"node", "service", "update", "--target", "server1", "--name", "app", "--object", "app-v2.plist"},
+			want: commandtest.Request{
+				Method: "PUT",
+				Path:   "/api/node/server1/service/app",
+				Body:   "{\"object\":\"app-v2.plist\"}",
 			},
 		},
 		{
@@ -132,7 +186,34 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"Remove a daemon that runs, on a Mac\" is run",
+			args: []string{"node", "service", "delete", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "DELETE",
+				Path:   "/api/node/server1/service/app",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"A plist that osapi did not deploy\" is run",
+			args: []string{"node", "service", "delete", "--target", "server1", "--name", "agent"},
+			want: commandtest.Request{
+				Method: "DELETE",
+				Path:   "/api/node/server1/service/agent",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"Start the service\" is run",
+			args: []string{"node", "service", "start", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service/app/start",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"Start the daemon on a Mac\" is run",
 			args: []string{"node", "service", "start", "--target", "server1", "--name", "app"},
 			want: commandtest.Request{
 				Method: "POST",
@@ -150,6 +231,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"Stop the daemon on a Mac\" is run",
+			args: []string{"node", "service", "stop", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service/app/stop",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"Restart the service\" is run",
 			args: []string{"node", "service", "restart", "--target", "server1", "--name", "app"},
 			want: commandtest.Request{
@@ -159,7 +249,25 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"Restart the daemon on a Mac\" is run",
+			args: []string{"node", "service", "restart", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service/app/restart",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"Enable the service\" is run",
+			args: []string{"node", "service", "enable", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service/app/enable",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"Enable the daemon on a Mac\" is run",
 			args: []string{"node", "service", "enable", "--target", "server1", "--name", "app"},
 			want: commandtest.Request{
 				Method: "POST",
@@ -178,6 +286,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"Disable the service\" is run",
+			args: []string{"node", "service", "disable", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/service/app/disable",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"Disable the daemon on a Mac\" is run",
 			args: []string{"node", "service", "disable", "--target", "server1", "--name", "app"},
 			want: commandtest.Request{
 				Method: "POST",
