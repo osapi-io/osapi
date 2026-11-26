@@ -84,8 +84,9 @@ var both = []behavior.HostOption{
 		"1234     1 alice    S      5.0  1.0  20480   0:25.00\n"),
 }
 
-// The integration test cannot give a live host a process to signal, since
-// no method of this behavior starts one, so the signal example runs on the
+// Behavior is the process behavior: the processes of the host. The
+// integration test cannot give a live host a process to signal, since no
+// method of this behavior starts one, so the signal example runs on the
 // fake host only. The lab tests it by hand: start sleep 300 over ssh, then
 // signal it.
 var Behavior = behavior.Register(behavior.Define(

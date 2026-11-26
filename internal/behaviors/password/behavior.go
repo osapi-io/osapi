@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // Package password is the password behavior: the password of a user, under
 // the user. It sets the password on the Debian family. The controller
 // hashes the password, so the job data and NATS have only its hash.

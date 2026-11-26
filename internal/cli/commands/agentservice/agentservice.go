@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // Package agentservice installs the agent of this host as a service that
 // starts at boot: a systemd unit on Linux, a launch daemon on macOS, with a
 // config that has the join string.

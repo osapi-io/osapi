@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // Package initsys is how osapi runs a program as a service under the service
 // manager of a host: systemd on Linux and launchd on macOS. It makes the file
 // of the service and the commands that load, start, stop and remove it. The

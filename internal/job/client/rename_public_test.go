@@ -123,7 +123,7 @@ func (s *RenamePublicTestSuite) TestFollowRename() {
 			s.Require().NoError(err)
 			c.SetAgentKeyStore(store)
 
-			client.ExportFollowRename(c, context.Background(), tt.req, tt.resp)
+			client.ExportFollowRename(context.Background(), c, tt.req, tt.resp)
 		})
 	}
 }

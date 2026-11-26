@@ -26,10 +26,10 @@ package commanddsl
 
 import "github.com/osapi-io/osapi/internal/cli/command"
 
-// Group is the command group's definition.
 // notAParent is a word that no group goes under, for the Fails of create.
 const notAParent = "client"
 
+// Group is the command group's definition.
 var Group = command.Register(command.Define(
 	"command",
 	"List, describe and validate the local commands, and print their DSL",

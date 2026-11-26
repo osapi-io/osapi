@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package object is the object behavior: the objects of the Object Store of
+// the fleet, which other behaviors read, such as the content of a file.
 package object
 
 import (

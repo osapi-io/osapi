@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package sshkey is the sshkey behavior: the authorized SSH keys of a user.
 package sshkey
 
 import (

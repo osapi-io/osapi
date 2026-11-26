@@ -20,4 +20,6 @@
 
 //go:generate go tool go.uber.org/mock/mockgen -source=../filestate.go -destination=filestate.gen.go -package=mocks
 
+// Package mocks holds the generated doubles of the interfaces of package
+// provider, for its tests.
 package mocks

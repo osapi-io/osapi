@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package schedule is the schedule behavior: the cron entries that osapi
+// deploys.
 package schedule
 
 import (

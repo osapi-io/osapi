@@ -31,6 +31,8 @@ import (
 	"github.com/dave/jennifer/jen"
 )
 
+// StructFields are the fields of t that a schema has: each exported one
+// whose json name is not "-". A type that is not a struct has none.
 func StructFields(
 	t reflect.Type,
 ) []reflect.StructField {
@@ -47,6 +49,8 @@ func StructFields(
 	return out
 }
 
+// JSONName is the name of f in JSON: the name of its json tag, or its Go
+// name.
 func JSONName(
 	f reflect.StructField,
 ) string {
@@ -58,7 +62,7 @@ func JSONName(
 	return name
 }
 
-// multi lays out a group one item to a line, as the house style writes
+// Multi lays out a group one item to a line, as the house style writes
 // parameter lists and literals.
 func Multi(
 	open string,
@@ -70,6 +74,7 @@ func Multi(
 		items...)
 }
 
+// Params is a parameter list, one parameter to a line.
 func Params(
 	items ...jen.Code,
 ) *jen.Statement {

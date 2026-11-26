@@ -97,9 +97,9 @@ func withHost(
 	return append(append([]behavior.HostOption{}, etcFiles...), opts...)
 }
 
-// The integration test runs the write examples as root on CI's runner, each
-// from its user removed first. osapitest is a name nothing on the runner
-// has.
+// Behavior is the user behavior: the users of the host. The integration test
+// runs the write examples as root on CI's runner, each from its user removed
+// first. osapitest is a name nothing on the runner has.
 var Behavior = behavior.Register(behavior.Define(
 	"user", "The users of the host",
 	behavior.Node,

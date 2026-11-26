@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package updatepackages is the updates behavior: the updates that the
+// package index has for the host.
 package updatepackages
 
 import (

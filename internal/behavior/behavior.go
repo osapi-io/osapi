@@ -37,8 +37,8 @@ import (
 // Placement says where a behavior's work happens.
 type Placement string
 
-// Node is the only placement: the work runs on a host, through the job
-// system. What the controller answers itself is not a behavior.
+// NodePlacement is the only placement: the work runs on a host, through the
+// job system. What the controller answers itself is not a behavior.
 const NodePlacement Placement = "node"
 
 // Behavior is one area of a host that osapi manages, such as kernel

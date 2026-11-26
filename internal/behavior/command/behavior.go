@@ -18,10 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package behavior holds what the generated behavior commands share:
-// flags derived from an input type's tags, and the one table layout every
+// Package command holds what the generated behavior commands share: flags
+// derived from an input type's tags, and the one table layout every
 // behavior's output renders in, driven by its output type's tags. The
-// commands themselves are generated into cmd/next_<behavior>.go.
+// commands themselves are generated into internal/behaviors/<name>/gen/cli.go.
 package command
 
 import (

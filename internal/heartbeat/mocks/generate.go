@@ -20,4 +20,6 @@
 
 //go:generate go tool go.uber.org/mock/mockgen -source=../heartbeat.go -destination=heartbeat.gen.go -package=mocks
 
+// Package mocks holds the generated doubles of the interfaces of package
+// heartbeat, for its tests.
 package mocks

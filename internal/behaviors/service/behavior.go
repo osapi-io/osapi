@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package service is the service behavior: the services of the host,
+// systemd on Linux and launchd on macOS.
 package service
 
 import (

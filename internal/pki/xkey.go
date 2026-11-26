@@ -40,7 +40,7 @@ import (
 
 // curveRand is the entropy that a new X25519 key comes from. Overridable in
 // tests via export_test.go.
-var curveRand io.Reader = rand.Reader
+var curveRand = io.Reader(rand.Reader)
 
 // fromCurveSeedFn parses an nkeys curve seed. Overridable in tests via
 // export_test.go.

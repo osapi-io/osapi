@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // Package natscallout is osapi's NATS auth callout service. A NATS server
 // with an auth_callout block sends each new connection to it, and it decides
 // who the connection is: a host with a join token, or an admitted agent with

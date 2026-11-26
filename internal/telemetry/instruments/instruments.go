@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // Package instruments is each metric that osapi records: its name, kind,
 // unit, labels, the component that records it, and its doc. The code that
 // makes an instrument takes its name and doc from here, and the docs site's
