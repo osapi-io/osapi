@@ -67,6 +67,8 @@ func (s *EnumsPublicTestSuite) TestValid() {
 			name:  "when an admission state is not listed",
 			valid: types.AdmissionState("accepted").Valid,
 		},
+		{name: "when a log level is listed", valid: types.LogWarn.Valid, want: true},
+		{name: "when a log level is not listed", valid: types.LogLevel("verbose").Valid},
 		{name: "when a Signal is listed", valid: types.SignalTerm.Valid, want: true},
 		{name: "when a Signal is not listed", valid: types.Signal("nope").Valid},
 		{name: "when a ContainerState is listed", valid: types.ContainerRunning.Valid, want: true},

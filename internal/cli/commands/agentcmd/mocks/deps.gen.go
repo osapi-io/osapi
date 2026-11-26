@@ -11,6 +11,7 @@ package mocks
 
 import (
 	context "context"
+	slog "log/slog"
 	reflect "reflect"
 	time "time"
 
@@ -69,6 +70,18 @@ func (m *MockAgent) LastHeartbeatTime() time.Time {
 func (mr *MockAgentMockRecorder) LastHeartbeatTime() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastHeartbeatTime", reflect.TypeOf((*MockAgent)(nil).LastHeartbeatTime))
+}
+
+// SetLogLevel mocks base method.
+func (m *MockAgent) SetLogLevel(level *slog.LevelVar) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLogLevel", level)
+}
+
+// SetLogLevel indicates an expected call of SetLogLevel.
+func (mr *MockAgentMockRecorder) SetLogLevel(level any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogLevel", reflect.TypeOf((*MockAgent)(nil).SetLogLevel), level)
 }
 
 // SetMeterProvider mocks base method.

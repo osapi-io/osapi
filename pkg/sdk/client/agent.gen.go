@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // AgentService calls the API's Agent group: operations related to agent
@@ -46,6 +48,9 @@ type AgentSetconfigInput struct {
 	// agent's config file with the same keys. Empty removes each.
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// LogLevel is the level that a process logs at, one of its Values.
+	LogLevel types.LogLevel `json:"log_level,omitzero"`
+
 	// The most jobs that the agent runs at the same time. It replaces max_jobs of
 	// the agent's config file; empty keeps the file's.
 	MaxJobs int `json:"max_jobs,omitempty"`
@@ -53,9 +58,10 @@ type AgentSetconfigInput struct {
 
 // Setconfig is the operation PutAgentConfig: set the config of an agent.
 //
-// Sets the labels and the max jobs of the agent as the next version of its
-// config. The agent applies them at once: it takes the jobs of the new labels,
-// runs at most max jobs at the same time, and no restart is necessary.
+// Sets the labels, the max jobs and the log level of the agent as the next
+// version of its config. The agent applies them at once: it takes the jobs of
+// the new labels, runs at most max jobs at the same time, logs at the level,
+// and no restart is necessary.
 //
 // It sends PUT /api/agent/config/{hostname}, and needs the permission
 // agent:write.

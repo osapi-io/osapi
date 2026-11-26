@@ -33,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type AgentConfigPublicTestSuite struct {
@@ -134,12 +135,13 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 				s.Equal(3, cfg.Version)
 				s.Equal(labels, cfg.Labels)
 				s.Equal(4, cfg.MaxJobs)
+				s.Equal(types.LogDebug, cfg.LogLevel)
 				s.False(cfg.UpdatedAt.IsZero())
 
 				return 1, nil
 			})
 		got, err := s.client("state").SetAgentConfig(ctx, "m-1",
-			job.AgentConfig{Labels: labels, MaxJobs: 4, Version: 9})
+			job.AgentConfig{Labels: labels, MaxJobs: 4, LogLevel: types.LogDebug, Version: 9})
 		s.Require().NoError(err)
 		s.Equal(3, got.Version)
 	})

@@ -32,7 +32,8 @@ import (
 // applyConfig reads the config that the controller holds for the agent,
 // and applies a new version: its labels replace the labels of the agent's
 // config file with the same keys, and its max jobs replaces the file's
-// when it is set. A change of labels or of max jobs restarts the job
+// when it is set, as its log level replaces the level of the file. A
+// change of labels or of max jobs restarts the job
 // consumers, on the subjects of the labels and with max jobs in flight,
 // under lifecycleMu, as a drain does. The heartbeat calls it, so a change applies within one heartbeat.
 func (a *Agent) applyConfig(
@@ -56,12 +57,23 @@ func (a *Agent) applyConfig(
 	if cfg.MaxJobs > 0 {
 		maxJobs = cfg.MaxJobs
 	}
+	level := a.fileLogLevel
+	if cfg.LogLevel != "" {
+		// The controller refuses any other text, so a level that does not
+		// parse keeps the file's.
+		_ = level.UnmarshalText([]byte(string(cfg.LogLevel)))
+	}
 
 	a.lifecycleMu.Lock()
 	a.configVersion = cfg.Version
-	changed := !maps.Equal(labels, a.appConfig.Agent.Labels) ||
+	relevel := a.logLevel != nil && a.logLevel.Level() != level
+	if relevel {
+		a.logLevel.Set(level)
+	}
+	restart := !maps.Equal(labels, a.appConfig.Agent.Labels) ||
 		maxJobs != a.appConfig.Agent.MaxJobs
-	if changed {
+	changed := restart || relevel
+	if restart {
 		running := a.consumerCancel != nil
 		if running {
 			a.cancelConsumersLocked()
@@ -76,11 +88,11 @@ func (a *Agent) applyConfig(
 
 	a.logger.Info("applied the agent's config",
 		slog.Int("version", cfg.Version), slog.Any("labels", labels),
-		slog.Int("max_jobs", maxJobs))
+		slog.Int("max_jobs", maxJobs), slog.String("log_level", level.String()))
 	if changed {
 		a.lifecycle(ctx, "config_applied",
-			fmt.Sprintf("config version %d, labels %s, max jobs %d",
-				cfg.Version, labelString(labels), maxJobs))
+			fmt.Sprintf("config version %d, labels %s, max jobs %d, log level %s",
+				cfg.Version, labelString(labels), maxJobs, strings.ToLower(level.String())))
 	}
 }
 

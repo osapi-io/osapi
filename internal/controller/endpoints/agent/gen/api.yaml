@@ -17,6 +17,8 @@ components:
           type: object
           x-oapi-codegen-extra-tags:
             validate: omitempty
+        log_level:
+          $ref: '#/components/schemas/LogLevel'
         max_jobs:
           description: The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's.
           maximum: 1000
@@ -32,6 +34,8 @@ components:
             type: string
           description: The labels that the controller gives the agent.
           type: object
+        log_level:
+          $ref: '#/components/schemas/LogLevel'
         max_jobs:
           description: The most jobs that the agent runs at the same time; empty keeps the agent's config file.
           type: integer
@@ -330,6 +334,14 @@ components:
         - 5min
         - 15min
       type: object
+    LogLevel:
+      description: LogLevel is the level that a process logs at, one of its Values.
+      enum:
+        - debug
+        - info
+        - warn
+        - error
+      type: string
     MemoryResponse:
       description: Memory usage information.
       properties:
@@ -757,7 +769,7 @@ paths:
             hostname: web-01
       x-osapi-method: getconfig
     put:
-      description: 'Sets the labels and the max jobs of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, runs at most max jobs at the same time, and no restart is necessary.'
+      description: 'Sets the labels, the max jobs and the log level of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, runs at most max jobs at the same time, logs at the level, and no restart is necessary.'
       operationId: PutAgentConfig
       parameters:
         - description: The hostname of the agent.
@@ -827,6 +839,7 @@ paths:
             labels:
               dc: east
               group: web
+            log_level: debug
             max_jobs: 4
       x-osapi-method: setconfig
   /api/agent/facts:

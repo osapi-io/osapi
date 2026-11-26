@@ -53,6 +53,7 @@ func (fake) CheckHealth(context.Context) error              { return nil }
 func (fake) SubComponents() map[string]job.SubComponentInfo { return nil }
 func (fake) LastHeartbeatTime() time.Time                   { return time.Time{} }
 func (fake) SetVersion(string)                              {}
+func (fake) SetLogLevel(*slog.LevelVar)                     {}
 func (fake) SetMeterProvider(*sdkmetric.MeterProvider)      {}
 func (fake) StartHeartbeat(context.Context, string, config.ProcessConditions) {
 }

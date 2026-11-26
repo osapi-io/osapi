@@ -164,10 +164,15 @@ func initConfig() {
 	}
 }
 
+// logLevel is the level that the process logs at: debug with --debug, else
+// info. The agent changes it when the controller's config of the agent
+// sets a log level.
+var logLevel = new(slog.LevelVar)
+
 func initLogger() {
-	logLevel := slog.LevelInfo
+	logLevel.Set(slog.LevelInfo)
 	if viper.GetBool("debug") {
-		logLevel = slog.LevelDebug
+		logLevel.Set(slog.LevelDebug)
 	}
 
 	handler := tracing.NewTraceHandler(cli.LogHandler(

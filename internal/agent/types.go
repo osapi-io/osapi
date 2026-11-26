@@ -114,6 +114,12 @@ type Agent struct {
 	// fileMaxJobs is the max_jobs of the agent's config file, which the
 	// controller's config replaces when it sets one.
 	fileMaxJobs int
+	// logLevel is the level of the process's logger, from SetLogLevel, and
+	// fileLogLevel the level it had then: the one of --debug or debug in the
+	// config file, which the controller's config replaces when it sets one.
+	// A nil logLevel is a logger whose level the agent does not change.
+	logLevel     *slog.LevelVar
+	fileLogLevel slog.Level
 	// configVersion is the version of the controller's config that the
 	// agent applied, 0 for none.
 	configVersion int

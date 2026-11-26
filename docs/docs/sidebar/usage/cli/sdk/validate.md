@@ -37,7 +37,7 @@ The command prints:
 ```ansi
 $ osapi sdk validate
 [1;38;2;0;213;255mValidation:[0m
-  [38;2;10;143;176mTypes:[0m     21
+  [38;2;10;143;176mTypes:[0m     22
   [38;2;10;143;176mServices:[0m  1
   [38;2;10;143;176mValid:[0m     yes
 ```
@@ -46,7 +46,7 @@ With `--json`, the command prints:
 
 ```json
 {
-  "types": 21,
+  "types": 22,
   "services": 1,
   "valid": true
 }

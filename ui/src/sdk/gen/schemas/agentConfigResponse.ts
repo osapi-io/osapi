@@ -5,10 +5,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { AgentConfigResponseLabels } from './agentConfigResponseLabels';
+import type { LogLevel } from './logLevel';
 
 export interface AgentConfigResponse {
   /** The labels that the controller gives the agent. */
   labels?: AgentConfigResponseLabels;
+  log_level?: LogLevel;
   /** The most jobs that the agent runs at the same time; empty keeps the agent's config file. */
   max_jobs?: number;
   /** When the config last changed. */

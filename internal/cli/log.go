@@ -49,17 +49,18 @@ func SetJSONOutput(
 
 // LogHandler is the handler that a process logs through, to w. With --json,
 // each line is a JSON object. Else each line is the time, the level, the
-// message and the attributes, with the level in color when color is true,
-// at level or above. The root gives it stderr; the docs generator gives it
+// message and the attributes, with the level in color when color is true.
+// Either way it logs at level or above; a *slog.LevelVar changes that while
+// the process runs. The root gives it stderr; the docs generator gives it
 // a buffer with color on, so a page shows the lines that a terminal shows.
 func LogHandler(
 	w io.Writer,
-	level slog.Level,
+	level slog.Leveler,
 	asJSON bool,
 	color bool,
 ) slog.Handler {
 	if asJSON {
-		return slog.NewJSONHandler(w, nil)
+		return slog.NewJSONHandler(w, &slog.HandlerOptions{Level: level})
 	}
 
 	return tint.NewTextHandler(w, &tint.Options{

@@ -400,7 +400,7 @@ export const getPutAgentConfigUrl = (hostname: string,) => {
 }
 
 /**
- * Sets the labels and the max jobs of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, runs at most max jobs at the same time, and no restart is necessary.
+ * Sets the labels, the max jobs and the log level of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, runs at most max jobs at the same time, logs at the level, and no restart is necessary.
  * @summary Set the config of an agent
  */
 export const putAgentConfig = async (hostname: string,

@@ -90,6 +90,9 @@ func Components(
 		return command.Running{}, fmt.Errorf("start the agent: %w", err)
 	}
 	a.SetVersion(d.Version)
+	if d.LogLevel != nil {
+		a.SetLogLevel(d.LogLevel)
+	}
 
 	components := []command.Component{a}
 	if ms != nil {

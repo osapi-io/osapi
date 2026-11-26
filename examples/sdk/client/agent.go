@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -73,7 +74,8 @@ func runSetconfig(
 			"dc":    "east",
 			"group": "web",
 		},
-		MaxJobs: 4,
+		LogLevel: types.LogLevel("debug"),
+		MaxJobs:  4,
 	})
 	if err != nil {
 		return err

@@ -9,6 +9,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var agentFactsCmd = &cobra.Command{
@@ -81,7 +82,7 @@ var agentGetconfigCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey:    "config",
 		reference.Permission: "agent:read",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config get --hostname web-01\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m   2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m    dc:east, group:web\n  \x1b[38;2;10;143;176mMax jobs:\x1b[0m  4\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m   2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"max_jobs\": 4,\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config get --hostname web-01\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m    2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m     dc:east, group:web\n  \x1b[38;2;10;143;176mMax jobs:\x1b[0m   4\n  \x1b[38;2;10;143;176mLog level:\x1b[0m  debug\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m    2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"max_jobs\": 4,\n  \"log_level\": \"debug\",\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client agent config get --hostname web-01",
@@ -99,19 +100,20 @@ var agentSetconfigCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey:    "config",
 		reference.Permission: "agent:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m   2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m    dc:east, group:web\n  \x1b[38;2;10;143;176mMax jobs:\x1b[0m  4\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m   2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"max_jobs\": 4,\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m    2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m     dc:east, group:web\n  \x1b[38;2;10;143;176mMax jobs:\x1b[0m   4\n  \x1b[38;2;10;143;176mLog level:\x1b[0m  debug\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m    2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"max_jobs\": 4,\n  \"log_level\": \"debug\",\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4",
-	Long:    "The labels replace the labels of the agent's config file with the same\nkeys, and max jobs replaces its max_jobs; with no max jobs, the agent\nkeeps the file's. The agent applies them at once, with no restart. A host\nthat joins with a join token gets the labels of the token.",
+	Example: "  osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug",
+	Long:    "The labels replace the labels of the agent's config file with the same\nkeys. Max jobs replaces its max_jobs, and the log level replaces the level\nof its debug setting; with neither, the agent keeps the file's. The agent\napplies them at once, with no restart. A host that joins with a join\ntoken gets the labels of the token.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 		labels, _ := cmd.Flags().GetStringToString("labels")
 		maxJobs, _ := cmd.Flags().GetInt("max-jobs")
+		logLevel, _ := cmd.Flags().GetString("log-level")
 
-		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.ConfigRequest{Labels: labels, MaxJobs: maxJobs}})
+		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.ConfigRequest{Labels: labels, MaxJobs: maxJobs, LogLevel: types.LogLevel(logLevel)}})
 	},
-	Short: "Set the labels and the max jobs of an agent",
+	Short: "Set the labels, the max jobs and the log level of an agent",
 	Use:   "update",
 }
 
@@ -143,6 +145,7 @@ func init() {
 	_ = agentSetconfigCmd.MarkFlagRequired("hostname")
 	agentSetconfigCmd.Flags().StringToString("labels", nil, "The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each")
 	agentSetconfigCmd.Flags().Int("max-jobs", 0, "The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's")
+	agentSetconfigCmd.Flags().String("log-level", "", "The level that the agent logs at: debug, info, warn or error. Empty keeps the level of the agent's config file (debug, info, warn, error)")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
 	clicommand.AddCommands(agent.Group, agentFactsCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentGetconfigCmd, agentSetconfigCmd, agentUndrainCmd)
