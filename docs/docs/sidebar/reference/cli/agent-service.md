@@ -16,7 +16,7 @@ Run the agent of this host as a service that starts at boot.
 | Name        | agent service                                               |
 | Description | Run the agent of this host as a service that starts at boot |
 
-## [osapi agent service install](../../usage/cli/agent/agent.mdx)
+## [osapi agent service install](../../usage/cli/agent/service/install.md)
 
 |             |                                                                  |
 | ----------- | ---------------------------------------------------------------- |
@@ -32,7 +32,7 @@ Run the agent of this host as a service that starts at boot.
 | --labels | map\[string]string | omitempty         | Labels of the host, as key=value, beside the labels of the join token. |
 | --force  | bool               | omitempty         | Replace a config file that exists.                                     |
 
-## [osapi agent service uninstall](../../usage/cli/agent/agent.mdx)
+## [osapi agent service uninstall](../../usage/cli/agent/service/uninstall.md)
 
 |             |                                        |
 | ----------- | -------------------------------------- |
