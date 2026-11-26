@@ -128,7 +128,7 @@ jobs:
           ui: "true"
       - name: This workflow runs each slow check
         run: |
-          ran="go-vet behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check sdk-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check examples-check spec-client-check"
+          ran="go-vet behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check sdk-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check examples-check spec-client-check go-dead-check"
           want=$(just --evaluate go_slow_checks | tr ' ' '\n' | sort)
           have=$(echo "$ran" | tr ' ' '\n' | sort)
           if [ "$want" != "$have" ]; then
@@ -154,6 +154,7 @@ jobs:
           - go-fmt-check
           - examples-check
           - spec-client-check
+          - go-dead-check
     name: ${{ matrix.check }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
