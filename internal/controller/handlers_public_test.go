@@ -64,6 +64,23 @@ func (s *HandlersPublicTestSuite) TestSecretDeps() {
 	s.Equal(set, controller.ExportSecretDeps(set).Vaults)
 }
 
+func (s *HandlersPublicTestSuite) TestPKIDeps() {
+	var cfg config.Config
+	cfg.Controller.PKI.KeyDir = s.T().TempDir()
+	cfg.NATS.Server.KeyDir = s.T().TempDir()
+	d := controller.ExportPKIDeps(cfg)
+
+	s.NotEmpty(d.Hostname)
+	got := d.Local()
+	names := make([]string, 0, len(got))
+	for _, c := range got {
+		names = append(names, c.Name)
+		s.Equal("not made", c.State, "a key directory with no certificate in it")
+	}
+	s.Equal([]string{"api", "controller-metrics", "nats", "nats-metrics"}, names,
+		"the controller's certificates and the NATS server's, not the agent's")
+}
+
 func (s *HandlersPublicTestSuite) TestTraceReader() {
 	var buf bytes.Buffer
 	log := slog.New(slog.NewTextHandler(&buf, nil))

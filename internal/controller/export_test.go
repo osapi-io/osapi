@@ -35,6 +35,7 @@ import (
 
 	"github.com/avfs/avfs"
 
+	pkiEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/pki"
 	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 
@@ -125,6 +126,13 @@ func ExportSecretDeps(
 	vaults *vault.Set,
 ) secretEndpoint.Deps {
 	return secretDeps(handlerDeps{vaults: vaults})
+}
+
+// ExportPKIDeps calls pkiDeps with cfg.
+func ExportPKIDeps(
+	cfg config.Config,
+) pkiEndpoint.Deps {
+	return pkiDeps(handlerDeps{cfg: cfg})
 }
 
 // ExportMakeVaultKeys calls makeVaultKeys.
