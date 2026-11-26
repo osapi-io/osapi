@@ -40,6 +40,7 @@ import (
 
 // result is what Start made, and what its cleanup did.
 type result struct {
+	leveled bool
 	n       int
 	version string
 	metered bool
@@ -57,6 +58,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 	tests := []struct {
 		name         string
 		metrics      bool
+		level        bool
 		hostErr      error
 		tracerErr    error
 		agentErr     error
@@ -72,6 +74,15 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				got.cleanup()
 				s.True(*got.closed)
 				s.True(*got.stopped)
+			},
+		},
+		{
+			name:  "when it has the logger's level, the agent takes it",
+			level: true,
+			validateFunc: func(got result) {
+				s.Require().NoError(got.err)
+				s.True(got.leveled)
+				got.cleanup()
 			},
 		},
 		{
@@ -109,10 +120,12 @@ func (s *MethodsPublicTestSuite) TestStart() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			var version string
-			var metered bool
+			var metered, leveled bool
 			a := mocks.NewMockAgent(gomock.NewController(s.T()))
 			a.EXPECT().SetVersion(gomock.Any()).Do(func(v string) { version = v }).AnyTimes()
 			a.EXPECT().SubComponents().Return(nil).AnyTimes()
+			a.EXPECT().SetLogLevel(gomock.Any()).
+				Do(func(*slog.LevelVar) { leveled = true }).AnyTimes()
 			a.EXPECT().IsReady().Return(nil).AnyTimes()
 			a.EXPECT().LastHeartbeatTime().Return(time.Time{}).AnyTimes()
 			a.EXPECT().SetMeterProvider(gomock.Any()).
@@ -139,11 +152,15 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				},
 			}
 
+			if tc.level {
+				d.LogLevel = new(slog.LevelVar)
+			}
 			r, err := agentcmd.Start(context.Background(), d)
 			tc.validateFunc(result{
 				n:       len(r.Components),
 				version: version,
 				metered: metered,
+				leveled: leveled,
 				err:     err,
 				cleanup: func() { r.Cleanup(context.Background()) },
 				closed:  &closed,

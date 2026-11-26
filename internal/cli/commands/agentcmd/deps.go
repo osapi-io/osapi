@@ -41,6 +41,7 @@ type Agent interface {
 	SubComponents() map[string]job.SubComponentInfo
 	LastHeartbeatTime() time.Time
 	SetVersion(version string)
+	SetLogLevel(level *slog.LevelVar)
 }
 
 // Deps is what start uses: the config, the log, the version of the binary,
@@ -50,8 +51,11 @@ type Deps struct {
 	Config     config.Config
 	ConfigFile string
 	Logger     *slog.Logger
-	Version    string
-	FS         avfs.VFS
+	// LogLevel is the level of Logger, which the agent changes when the
+	// controller's config of the agent sets a log level. Nil leaves it.
+	LogLevel *slog.LevelVar
+	Version  string
+	FS       avfs.VFS
 	// CheckHost is an error when the agent does not support the host.
 	CheckHost func() error
 	// Tracer starts the tracer of the service name, and returns what

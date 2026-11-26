@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"go.uber.org/mock/gomock"
 
@@ -103,14 +104,19 @@ func (s *MethodsPublicTestSuite) TestConfig() {
 		labels := map[string]string{"group": "web"}
 		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
 		s.jobs.EXPECT().
-			SetAgentConfig(gomock.Any(), "m-1", job.AgentConfig{Labels: labels, MaxJobs: 4}).
-			Return(job.AgentConfig{Version: 3, Labels: labels, MaxJobs: 4, UpdatedAt: at}, nil)
+			SetAgentConfig(gomock.Any(), "m-1",
+				job.AgentConfig{Labels: labels, MaxJobs: 4, LogLevel: types.LogWarn}).
+			Return(job.AgentConfig{
+				Version: 3, Labels: labels, MaxJobs: 4, LogLevel: types.LogWarn, UpdatedAt: at,
+			}, nil)
 		got, err := agent.SetConfig(ctx, s.deps(), agent.ConfigSetInput{
-			Hostname: "server1", Body: agent.ConfigRequest{Labels: labels, MaxJobs: 4},
+			Hostname: "server1",
+			Body:     agent.ConfigRequest{Labels: labels, MaxJobs: 4, LogLevel: types.LogWarn},
 		})
 		s.Require().NoError(err)
 		s.Equal(3, got.Version)
 		s.Equal(4, got.MaxJobs)
+		s.Equal(types.LogWarn, got.LogLevel)
 	})
 	s.Run("update: an agent that is not there", func() {
 		// A mock with no default read of the config.

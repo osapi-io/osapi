@@ -191,16 +191,18 @@ var Group = endpoint.Register(endpoint.Define(
 		ID("PutAgentConfig").
 		AdminOnly().
 		Describe("Set the config of an agent").
-		Explain("Sets the labels and the max jobs of the agent as the next version of its "+
-			"config. The agent applies them at once: it takes the jobs of the new labels, "+
-			"runs at most max jobs at the same time, and no restart is necessary.").
+		Explain("Sets the labels, the max jobs and the log level of the agent as the next "+
+			"version of its config. The agent applies them at once: it takes the jobs of the "+
+			"new labels, runs at most max jobs at the same time, logs at the level, and no "+
+			"restart is necessary.").
 		Returns("The config of the agent after the change.").
-		Command("Set the labels and the max jobs of an agent",
+		Command("Set the labels, the max jobs and the log level of an agent",
 			"The labels replace the labels of the agent's config file with the same\n"+
-				"keys, and max jobs replaces its max_jobs; with no max jobs, the agent\n"+
-				"keeps the file's. The agent applies them at once, with no restart. A host\n"+
-				"that joins with a join token gets the labels of the token.").
-		Example("--hostname web-01 --labels group=web --labels dc=east --max-jobs 4").
+				"keys. Max jobs replaces its max_jobs, and the log level replaces the level\n"+
+				"of its debug setting; with neither, the agent keeps the file's. The agent\n"+
+				"applies them at once, with no restart. A host that joins with a join\n"+
+				"token gets the labels of the token.").
+		Example("--hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug").
 		Prints(sampleConfig).
 		Fails("a hostname over 255 characters", ConfigSetInput{Hostname: long}).
 		Fails("max jobs below 1", ConfigSetInput{
@@ -208,6 +210,9 @@ var Group = endpoint.Register(endpoint.Define(
 		}).
 		Fails("max jobs over 1000", ConfigSetInput{
 			Hostname: "web-01", Body: ConfigRequest{MaxJobs: 1001},
+		}).
+		Fails("a log level that is not one", ConfigSetInput{
+			Hostname: "web-01", Body: ConfigRequest{LogLevel: types.LogLevel("verbose")},
 		}).
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found.")),
 	endpoint.Post[UndrainInput, struct{}]("undrain").

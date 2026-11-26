@@ -22,11 +22,13 @@ package agent_test
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 func (s *AgentPublicTestSuite) TestApplyConfig() {
@@ -57,7 +59,7 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 2, labels dc=east,group=web, max jobs 10").
+				"config version 2, labels dc=east,group=web, max jobs 10, log level info").
 			Return(nil)
 		labels, version := agent.ExportApplyConfig(a, "m-1")
 		s.Equal(map[string]string{"group": "web", "dc": "east"}, labels)
@@ -72,7 +74,7 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 			Return(job.AgentConfig{Version: 1, Labels: map[string]string{"group": "web"}, MaxJobs: 2}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 1, labels group=web, max jobs 2").
+				"config version 1, labels group=web, max jobs 2, log level info").
 			Return(nil)
 		agent.ExportApplyConfig(a, "m-1")
 		s.Equal(2, agent.ExportMaxJobs(a))
@@ -81,11 +83,39 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 2, labels group=web, max jobs 10").
+				"config version 2, labels group=web, max jobs 10, log level info").
 			Return(nil)
 		agent.ExportApplyConfig(a, "m-1")
 		s.Equal(10, agent.ExportMaxJobs(a))
 	})
+
+	s.Run(
+		"a log level replaces the file's at once, and a version without it gives it back",
+		func() {
+			s.appConfig.Agent.MaxJobs = 10
+			s.appConfig.Agent.Labels = map[string]string{"group": "web"}
+			a := s.buildAgent()
+			level := new(slog.LevelVar)
+			a.SetLogLevel(level)
+			s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+				Return(job.AgentConfig{Version: 1, Labels: map[string]string{"group": "web"}, LogLevel: types.LogDebug}, nil)
+			s.mockJobClient.EXPECT().
+				WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
+					"config version 1, labels group=web, max jobs 10, log level debug").
+				Return(nil)
+			agent.ExportApplyConfig(a, "m-1")
+			s.Equal(slog.LevelDebug, level.Level())
+
+			s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+				Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
+			s.mockJobClient.EXPECT().
+				WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
+					"config version 2, labels group=web, max jobs 10, log level info").
+				Return(nil)
+			agent.ExportApplyConfig(a, "m-1")
+			s.Equal(slog.LevelInfo, level.Level())
+		},
+	)
 
 	s.Run("a new version with the same labels writes no event", func() {
 		s.appConfig.Agent.Labels = map[string]string{"group": "web"}

@@ -13,6 +13,9 @@ type AgentConfigResponse struct {
 	// The labels that the controller gives the agent.
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// LogLevel is the level that a process logs at, one of its Values.
+	LogLevel types.LogLevel `json:"log_level,omitzero"`
+
 	// The most jobs that the agent runs at the same time; empty keeps the agent's
 	// config file.
 	MaxJobs int `json:"max_jobs,omitempty"`

@@ -80,9 +80,10 @@ func (s *AgentService) Setconfig(
 
 Set the config of an agent.
 
-Sets the labels and the max jobs of the agent as the next version of its config.
-The agent applies them at once: it takes the jobs of the new labels, runs at
-most max jobs at the same time, and no restart is necessary.
+Sets the labels, the max jobs and the log level of the agent as the next version
+of its config. The agent applies them at once: it takes the jobs of the new
+labels, runs at most max jobs at the same time, logs at the level, and no
+restart is necessary.
 
 It sends `PUT /api/agent/config/{hostname}`, and needs the permission
 `agent:write`.
@@ -97,7 +98,8 @@ resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{
 		"dc":    "east",
 		"group": "web",
 	},
-	MaxJobs: 4,
+	LogLevel: types.LogLevel("debug"),
+	MaxJobs:  4,
 })
 ```
 
@@ -230,6 +232,7 @@ A `string`, one of `inet`, `inet6`, `dual`.
 | Field       | Type                | Description                                                                              |
 | ----------- | ------------------- | ---------------------------------------------------------------------------------------- |
 | `Labels`    | `map[string]string` | The labels that the controller gives the agent.                                          |
+| `LogLevel`  | `LogLevel`          | LogLevel is the level that a process logs at, one of its Values.                         |
 | `MaxJobs`   | `int`               | The most jobs that the agent runs at the same time; empty keeps the agent's config file. |
 | `UpdatedAt` | `time.Time`         | When the config last changed.                                                            |
 | `Version`   | `int`               | One more at each change; 0 when nothing was set.                                         |
@@ -282,10 +285,11 @@ A `string`, one of `inet`, `inet6`, `dual`.
 
 ### AgentSetconfigInput
 
-| Field     | Type                | Description                                                                                                                       |
-| --------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `Labels`  | `map[string]string` | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. |
-| `MaxJobs` | `int`               | The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's.      |
+| Field      | Type                | Description                                                                                                                       |
+| ---------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `Labels`   | `map[string]string` | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. |
+| `LogLevel` | `LogLevel`          | LogLevel is the level that a process logs at, one of its Values.                                                                  |
+| `MaxJobs`  | `int`               | The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's.      |
 
 ### AgentState
 
@@ -339,6 +343,12 @@ The system load averages for 1, 5, and 15 minutes.
 | `Min15` | `float64` | Load average for the last 15 minutes. |
 | `Min1`  | `float64` | Load average for the last 1 minute.   |
 | `Min5`  | `float64` | Load average for the last 5 minutes.  |
+
+### LogLevel
+
+LogLevel is the level that a process logs at, one of its Values.
+
+A `string`, one of `debug`, `info`, `warn`, `error`.
 
 ### MemoryResponse
 

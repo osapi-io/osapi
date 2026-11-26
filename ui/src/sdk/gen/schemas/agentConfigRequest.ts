@@ -5,10 +5,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { AgentConfigRequestLabels } from './agentConfigRequestLabels';
+import type { LogLevel } from './logLevel';
 
 export interface AgentConfigRequest {
   /** The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. */
   labels?: AgentConfigRequestLabels;
+  log_level?: LogLevel;
   /**
      * The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's.
      * @minimum 1

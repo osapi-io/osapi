@@ -947,6 +947,15 @@ Use: A field that takes one of these values: types.Lock with validate:"enum". A
 closed set that pkg/sdk/types does not have is a named type with Values and
 Valid in the package's types.go; validate refuses oneof.
 
+### `types.LogLevel`
+
+LogLevel is the level that a process logs at, one of its Values. Values: debug,
+info, warn, error.
+
+Use: A field that takes one of these values: types.LogLevel with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
 ### `types.MethodKind`
 
 MethodKind is what a method of a behavior does to a host, by the verb of its

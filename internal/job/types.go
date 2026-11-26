@@ -463,6 +463,9 @@ type AgentConfig struct {
 	// MaxJobs replaces the max_jobs of the agent's config file, and 0 keeps
 	// it.
 	MaxJobs int `json:"max_jobs,omitempty"`
+	// LogLevel is the level that the agent logs at, debug, info, warn or
+	// error, and empty keeps the level of its config file.
+	LogLevel types.LogLevel `json:"log_level,omitempty"`
 	// UpdatedAt is when the config last changed.
 	UpdatedAt time.Time `json:"updated_at,omitzero"`
 }

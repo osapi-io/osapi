@@ -335,6 +335,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindDeps,
+			Name: "*slog.LevelVar",
+			Does: "The level of the logger of the process, which the process can change while it runs. The root gives the one that its logger logs at; a test gives new(slog.LevelVar), or nil.",
+			When: "For a process whose level can change at run time, such as osapi agent start, which takes the log level of the controller's config of the agent.",
+		},
+		{
+			Kind: KindDeps,
 			Name: "func(...)",
 			Does: "A function that the CLI gives, such as Behaviors, Validate or NewAgent: it reads the registry of this binary, or makes a part of the process. A test gives a function that returns what the case needs.",
 			When: "For one call, or a constructor. When a test must check the calls that a part gets, make the part an interface, as Agent is, and return it from the function.",

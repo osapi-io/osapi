@@ -65,6 +65,7 @@ func agentDeps() agentcmd.Deps {
 		Config:     appConfig,
 		ConfigFile: viper.ConfigFileUsed(),
 		Logger:     logger,
+		LogLevel:   logLevel,
 		Version:    appVersion(),
 		FS:         appFs,
 		CheckHost:  func() error { return cli.ValidateDistribution(logger) },

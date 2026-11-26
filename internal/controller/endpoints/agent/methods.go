@@ -383,7 +383,7 @@ func GetConfig(
 	return toConfig(cfg), nil
 }
 
-// SetConfig sets the labels and the max jobs of the agent, as the next
+// SetConfig sets the labels, the max jobs and the log level of the agent, as the next
 // version of its config. The agent applies them at once, and writes it to
 // its timeline.
 func SetConfig(
@@ -396,7 +396,7 @@ func SetConfig(
 		return ConfigResponse{}, err
 	}
 	cfg, err := d.Jobs.SetAgentConfig(ctx, info.MachineID, job.AgentConfig{
-		Labels: in.Body.Labels, MaxJobs: in.Body.MaxJobs,
+		Labels: in.Body.Labels, MaxJobs: in.Body.MaxJobs, LogLevel: in.Body.LogLevel,
 	})
 	if err != nil {
 		return ConfigResponse{}, err
@@ -409,7 +409,10 @@ func SetConfig(
 func toConfig(
 	cfg job.AgentConfig,
 ) ConfigResponse {
-	out := ConfigResponse{Version: cfg.Version, Labels: cfg.Labels, MaxJobs: cfg.MaxJobs}
+	out := ConfigResponse{
+		Version: cfg.Version, Labels: cfg.Labels, MaxJobs: cfg.MaxJobs,
+		LogLevel: cfg.LogLevel,
+	}
 	if !cfg.UpdatedAt.IsZero() {
 		t := cfg.UpdatedAt
 		out.UpdatedAt = &t

@@ -77,6 +77,11 @@ func (Lock) Doc() string {
 	return "Lock is whether a user account refuses logins with its password."
 }
 
+// Doc is what LogLevel is, from its doc comment.
+func (LogLevel) Doc() string {
+	return "LogLevel is the level that a process logs at, one of its Values."
+}
+
 // Doc is what MethodKind is, from its doc comment.
 func (MethodKind) Doc() string {
 	return "MethodKind is what a method of a behavior does to a host, by the verb of its permission. It is a separate set from Verb: execute, shell and exec are each an action."
@@ -169,6 +174,10 @@ func All() []TypeSpec {
 		Doc:    Lock("").Doc(),
 		Name:   "Lock",
 		Values: names(Lock("").Values()),
+	}, {
+		Doc:    LogLevel("").Doc(),
+		Name:   "LogLevel",
+		Values: names(LogLevel("").Values()),
 	}, {
 		Doc:    MethodKind("").Doc(),
 		Name:   "MethodKind",

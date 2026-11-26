@@ -138,6 +138,16 @@ func (a *Agent) SetSubComponents(
 	a.subComponents = scs
 }
 
+// SetLogLevel gives the agent the level of the process's logger, so that
+// the log level of the controller's config of the agent changes it. Its
+// level now is the level of the agent's config file.
+func (a *Agent) SetLogLevel(
+	level *slog.LevelVar,
+) {
+	a.logLevel = level
+	a.fileLogLevel = level.Level()
+}
+
 // SetVersion sets the build version of the agent binary, such as v1.4.0.
 // osapi agent start calls it with the version the binary was built with;
 // the agent writes it in the started event of each job and in its

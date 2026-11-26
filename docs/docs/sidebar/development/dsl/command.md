@@ -440,6 +440,15 @@ The logger of the process. A test gives slog.New(slog.DiscardHandler).
 Use: For a process, such as osapi agent start, that logs while it runs. A
 command that prints its result returns it as its output instead.
 
+### `*slog.LevelVar`
+
+The level of the logger of the process, which the process can change while it
+runs. The root gives the one that its logger logs at; a test gives
+new(slog.LevelVar), or nil.
+
+Use: For a process whose level can change at run time, such as osapi agent
+start, which takes the log level of the controller's config of the agent.
+
 ### `func(...)`
 
 A function that the CLI gives, such as Behaviors, Validate or NewAgent: it reads
@@ -772,6 +781,15 @@ unlocked.
 Use: A field that takes one of these values: types.Lock with validate:"enum". A
 closed set that pkg/sdk/types does not have is a named type with Values and
 Valid in the package's types.go; validate refuses oneof.
+
+### `types.LogLevel`
+
+LogLevel is the level that a process logs at, one of its Values. Values: debug,
+info, warn, error.
+
+Use: A field that takes one of these values: types.LogLevel with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
 
 ### `types.MethodKind`
 

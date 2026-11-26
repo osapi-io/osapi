@@ -180,6 +180,7 @@ export * from './loadGetResponse';
 export * from './lock';
 export * from './logCollectionResponse';
 export * from './logEntry';
+export * from './logLevel';
 export * from './logSourceCollectionResponse';
 export * from './logSourceSource';
 export * from './memoryEntry';
