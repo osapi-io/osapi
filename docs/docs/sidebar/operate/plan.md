@@ -14,6 +14,12 @@ decision about where each process runs, and which NATS server they share.
 | Controller | `osapi controller start` | 8080 for the API and the UI, 9090  | NATS           |
 | Agent      | `osapi agent start`      | 9091 for metrics only              | NATS           |
 
+Each port serves TLS by default, with a self-signed certificate that the process
+makes at its first start in its key directory, `/etc/osapi/pki`. A certificate
+of your own, as `cert_file`, replaces it. A metrics server serves HTTPS too:
+give your Prometheus the certificate, `controller-metrics.crt`,
+`agent-metrics.crt` or `nats-metrics.crt`, as its CA.
+
 An agent listens on no port for work. It connects out to NATS, and takes its
 jobs there. Thus a managed host needs to reach NATS, and nothing else.
 

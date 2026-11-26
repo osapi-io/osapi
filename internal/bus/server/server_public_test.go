@@ -127,13 +127,25 @@ func (s *ServerPublicTestSuite) TestNew() {
 			wantErr: "NATS server: user x: no such role",
 		},
 		{
-			name: "when TLS is on with no certificate returns the error",
+			name: "when TLS is on with no certificate, it makes nats.crt in key_dir and serves it",
 			cfg: func() config.NATS {
 				c := serverNATS(s.T())
 				c.Server.TLS = config.ServerTLS{Enabled: true}
+				c.Server.KeyDir = s.T().TempDir()
 				return c
 			},
-			wantErr: "tls.enabled needs cert_file and key_file",
+		},
+		{
+			name: "when TLS is on and key_dir cannot hold a certificate returns the error",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				blocked := filepath.Join(s.T().TempDir(), "file")
+				s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+				c.Server.TLS = config.ServerTLS{Enabled: true}
+				c.Server.KeyDir = filepath.Join(blocked, "pki")
+				return c
+			},
+			wantErr: "make the key directory",
 		},
 		{
 			name: "when TLS is on with a certificate, it sets itself up over TLS",

@@ -31,6 +31,7 @@ var Defaults = config.AgentConfig{
 		ClientName: "osapi-agent",
 		Namespace:  "osapi",
 		Auth:       config.NATSAuth{Type: "none"},
+		TLS:        config.ClientTLS{Enabled: true},
 	},
 	Consumer: config.AgentConsumer{
 		Name:              "jobs-agent",
@@ -49,6 +50,8 @@ var Defaults = config.AgentConfig{
 		HighLoadMultiplier:      2.0,
 		DiskPressureThreshold:   90,
 	},
-	Metrics: config.MetricsServer{Enabled: true, Host: "0.0.0.0", Port: 9091},
-	PKI:     config.AgentPKI{KeyDir: "/etc/osapi/pki"},
+	Metrics: config.MetricsServer{
+		Enabled: true, Host: "0.0.0.0", Port: 9091, TLS: config.ServerTLS{Enabled: true},
+	},
+	PKI: config.AgentPKI{KeyDir: "/etc/osapi/pki"},
 }

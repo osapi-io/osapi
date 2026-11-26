@@ -278,6 +278,7 @@ func (suite *BusPublicTestSuite) TestBuildNATSServerOptions() {
 				"/var/lib/nats",
 				tc.auth,
 				config.ServerTLS{},
+				"",
 			)
 
 			if tc.wantErr != "" {
@@ -930,13 +931,30 @@ func (suite *BusPublicTestSuite) TestServerOptionsTLS() {
 	cert, key := writeCert(suite.T())
 	got, err := bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
 		config.NATSServerAuth{Type: "none"},
-		config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key})
+		config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}, suite.T().TempDir())
 	suite.Require().NoError(err)
 	suite.NotNil(got.TLSConfig)
 
+	// With no cert_file, the server makes its self-signed nats.crt.
+	dir := suite.T().TempDir()
+	got, err = bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
+		config.NATSServerAuth{Type: "none"}, config.ServerTLS{Enabled: true}, dir)
+	suite.Require().NoError(err)
+	suite.NotNil(got.TLSConfig)
+	suite.FileExists(filepath.Join(dir, "nats.crt"))
+
+	blocked := filepath.Join(suite.T().TempDir(), "file")
+	suite.Require().NoError(os.WriteFile(blocked, nil, 0o600))
 	_, err = bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
-		config.NATSServerAuth{Type: "none"}, config.ServerTLS{Enabled: true})
-	suite.ErrorContains(err, "tls: tls.enabled needs cert_file and key_file")
+		config.NATSServerAuth{Type: "none"}, config.ServerTLS{Enabled: true},
+		filepath.Join(blocked, "pki"))
+	suite.ErrorContains(err, "tls: make the key directory")
+
+	// A cert_file that does not load is the error.
+	_, err = bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
+		config.NATSServerAuth{Type: "none"},
+		config.ServerTLS{Enabled: true, CertFile: "/no/such.crt", KeyFile: "/no/such.key"}, "")
+	suite.ErrorContains(err, "tls: load the server certificate")
 }
 
 func (suite *BusPublicTestSuite) TestConnectionOptions() {

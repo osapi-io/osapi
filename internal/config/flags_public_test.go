@@ -104,7 +104,7 @@ func (s *FlagsPublicTestSuite) TestBindFlagAs() {
 
 	f := fs.Lookup("url")
 	s.Require().NotNil(f)
-	s.Equal("http://localhost:8080", f.DefValue, "the default of the owner, not a copy")
+	s.Equal("https://localhost:8080", f.DefValue, "the default of the owner, not a copy")
 	s.Panics(func() { config.BindFlagAs(fs, "no.such.key", "nope") })
 }
 

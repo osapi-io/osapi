@@ -77,6 +77,7 @@ func startSpecProxy(
 	p := &specProxy{router: router}
 	forward := httputil.NewSingleHostReverseProxy(target)
 	forward.ModifyResponse = p.checkResponse
+	forward.Transport = apiClient().Transport
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

@@ -24,6 +24,8 @@ package integration_test
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -129,7 +131,9 @@ func TestMain(
 		os.Exit(1)
 	}
 
-	controllerURL = fmt.Sprintf("http://127.0.0.1:%d", apiPort)
+	// The API serves TLS by default, with its self-signed api.crt in the
+	// controller's key directory (osapi-io/osapi#1413).
+	controllerURL = fmt.Sprintf("https://127.0.0.1:%d", apiPort)
 	fmt.Fprintf(os.Stderr, "integration: api=%d nats=%d dir=%s\n", apiPort, natsPort, tempDir)
 
 	serverCmd = exec.Command(binaryPath, "start", "-f", configPath)
@@ -210,6 +214,7 @@ func serverEnv() []string {
 		os.Environ(),
 		fmt.Sprintf("OSAPI_NATS_SERVER_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_NATS_SERVER_STORE_DIR=%s", storeDir),
+		fmt.Sprintf("OSAPI_NATS_SERVER_KEY_DIR=%s", filepath.Join(tempDir, "pki", "nats")),
 		fmt.Sprintf("OSAPI_CONTROLLER_API_PORT=%d", apiPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_NATS_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_AGENT_NATS_PORT=%d", natsPort),
@@ -229,6 +234,23 @@ func clientEnv() []string {
 	)
 }
 
+// apiClient is an HTTP client that trusts the API of the suite: its
+// self-signed api.crt, once the controller made it, besides the system's
+// roots.
+func apiClient() *http.Client {
+	pool, _ := x509.SystemCertPool()
+	if pool == nil {
+		pool = x509.NewCertPool()
+	}
+	if pem, err := os.ReadFile(filepath.Join(tempDir, "pki", "controller", "api.crt")); err == nil {
+		pool.AppendCertsFromPEM(pem)
+	}
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.TLSClientConfig = &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}
+
+	return &http.Client{Transport: t, Timeout: 10 * time.Second}
+}
+
 func waitForReady(
 	timeout time.Duration,
 ) error {
@@ -236,7 +258,7 @@ func waitForReady(
 	url := controllerURL + "/api/health/ready"
 
 	for time.Now().Before(deadline) {
-		resp, err := http.Get(url) //nolint:gosec
+		resp, err := apiClient().Get(url)
 		if err == nil {
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {

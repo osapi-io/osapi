@@ -78,7 +78,9 @@ func Components(
 	d Deps,
 ) (command.Running, error) {
 	log := d.Logger.With("component", "controller")
-	ms := metrics.FromConfig(d.Config.Controller.Metrics, log)
+	ms := metrics.FromConfig(
+		d.Config.Controller.Metrics, d.Config.Controller.PKI.KeyDir, "controller-metrics", log,
+	)
 	opts := []controller.Option{controller.WithVersion(d.Version)}
 	if ms != nil {
 		opts = append(opts, controller.WithMeterProvider(ms.MeterProvider()))

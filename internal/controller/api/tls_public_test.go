@@ -143,7 +143,7 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 				return config.ServerTLS{}
 			},
 			validateFunc: func(_ string, err error) {
-				s.ErrorContains(err, "write the API's key")
+				s.ErrorContains(err, "write the key of")
 			},
 		},
 		{
@@ -160,7 +160,7 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 				return config.ServerTLS{}
 			},
 			validateFunc: func(_ string, err error) {
-				s.ErrorContains(err, "write the API's certificate")
+				s.ErrorContains(err, "api.crt")
 			},
 		},
 		{

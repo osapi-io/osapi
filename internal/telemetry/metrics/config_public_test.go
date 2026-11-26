@@ -22,6 +22,8 @@ package metrics_test
 
 import (
 	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -32,6 +34,24 @@ import (
 
 type ConfigPublicTestSuite struct {
 	suite.Suite
+}
+
+// TestFromConfigNoCertificate: a metrics server whose self-signed
+// certificate cannot be made does not start, and does not fall back to plain
+// HTTP.
+func (s *ConfigPublicTestSuite) TestFromConfigNoCertificate() {
+	blocked := filepath.Join(s.T().TempDir(), "file")
+	s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+	got := metrics.FromConfig(config.MetricsServer{
+		Enabled: true, Host: "127.0.0.1", TLS: config.ServerTLS{Enabled: true},
+	}, filepath.Join(blocked, "pki"), "metrics", slog.New(slog.DiscardHandler))
+	s.Nil(got, "no fall back to plain HTTP")
+
+	got = metrics.FromConfig(config.MetricsServer{
+		Enabled: true, Host: "127.0.0.1",
+		TLS: config.ServerTLS{Enabled: true, CertFile: "/no/such.crt", KeyFile: "/no/such.key"},
+	}, "", "metrics", slog.New(slog.DiscardHandler))
+	s.Nil(got, "a certificate that does not load does not start it")
 }
 
 func (s *ConfigPublicTestSuite) TestFromConfig() {
@@ -49,13 +69,13 @@ func (s *ConfigPublicTestSuite) TestFromConfig() {
 			},
 		},
 		{
-			name: "when TLS is on with no certificate, it does not start",
+			name: "when TLS is on with no certificate, it makes and serves a self-signed one",
 			cfg: config.MetricsServer{
 				Enabled: true, Host: "127.0.0.1",
 				TLS: config.ServerTLS{Enabled: true},
 			},
 			validateFunc: func(got *metrics.Server) {
-				s.Nil(got, "no fall back to plain HTTP")
+				s.NotNil(got)
 			},
 		},
 		{
@@ -84,7 +104,14 @@ func (s *ConfigPublicTestSuite) TestFromConfig() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.validateFunc(metrics.FromConfig(tc.cfg, slog.New(slog.DiscardHandler)))
+			tc.validateFunc(
+				metrics.FromConfig(
+					tc.cfg,
+					s.T().TempDir(),
+					"metrics",
+					slog.New(slog.DiscardHandler),
+				),
+			)
 		})
 	}
 }

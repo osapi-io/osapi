@@ -12,7 +12,7 @@ client with `New()` and use domain-specific services to interact with the API.
 ```go
 import "github.com/osapi-io/osapi/pkg/sdk/client"
 
-c := client.New("http://localhost:8080", "your-jwt-token")
+c := client.New("https://localhost:8080", "your-jwt-token")
 
 resp, err := c.Hostname.Get(ctx, "_any")
 ```

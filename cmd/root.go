@@ -150,6 +150,9 @@ func initConfig() {
 	if err := config.Load(viper.GetViper(), viper.GetString("osapiFile"), &appConfig); err != nil {
 		cli.LogFatal(logger, "invalid config", err, "osapiFile", viper.GetString("osapiFile"))
 	}
+	// A client on this host trusts the self-signed certificate of a server
+	// of osapi on it, with TLS on by default (osapi-io/osapi#1413).
+	appConfig = config.TrustLocal(appConfig)
 
 	// Auto-enable tracing in debug mode so trace_id appears in log lines.
 	// No exporter is set — just log correlation, no span dumps.

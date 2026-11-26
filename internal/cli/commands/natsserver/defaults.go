@@ -30,9 +30,15 @@ var Defaults = config.NATS{
 		Host:      "localhost",
 		Port:      4222,
 		StoreDir:  "/var/lib/osapi/jetstream",
+		KeyDir:    "/etc/osapi/pki",
 		Namespace: "osapi",
 		Auth:      config.NATSServerAuth{Type: "none"},
-		Metrics:   config.MetricsServer{Enabled: true, Host: "0.0.0.0", Port: 9092},
+		Metrics: config.MetricsServer{
+			Enabled: true, Host: "0.0.0.0", Port: 9092, TLS: config.ServerTLS{Enabled: true},
+		},
+		// TLS on, with a self-signed certificate made at the first start
+		// (osapi-io/osapi#1413).
+		TLS: config.ServerTLS{Enabled: true},
 	},
 	Stream: config.NATSStream{
 		Name: "JOBS", Subjects: "jobs.>", MaxAge: "24h", MaxMsgs: 10000,

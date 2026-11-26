@@ -27,9 +27,12 @@ import (
 )
 
 // FromConfig makes the metrics server that cfg turns on, and does not start
-// it. It is nil when cfg turns it off.
+// it. It is nil when cfg turns it off. With TLS on and no cert_file, it
+// serves the self-signed certificate name in keyDir, which it makes.
 func FromConfig(
 	cfg config.MetricsServer,
+	keyDir string,
+	name string,
 	log *slog.Logger,
 ) *Server {
 	if !cfg.Enabled {
@@ -37,7 +40,13 @@ func FromConfig(
 	}
 	// A metrics server whose certificate does not load does not start: it
 	// does not fall back to plain HTTP.
-	tlsConfig, err := cfg.TLS.Config()
+	t, err := cfg.TLS.WithSelfSigned(keyDir, name)
+	if err != nil {
+		log.Error("metrics server: tls", slog.String("error", err.Error()))
+
+		return nil
+	}
+	tlsConfig, err := t.Config()
 	if err != nil {
 		log.Error("metrics server: tls", slog.String("error", err.Error()))
 

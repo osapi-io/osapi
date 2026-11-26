@@ -27,20 +27,23 @@ have its `id`. Thus you change the key with no break: add the new key first, and
 remove the old key after each old token expires
 ([Authentication](secure/authentication.md#change-the-signing-key)).
 
-## 2. Turn on TLS for the API
+## 2. TLS for the API
 
-The API carries the tokens. Serve it over HTTPS when the network is not yours:
+The API serves HTTPS by default. With no `cert_file`, the controller makes a
+self-signed certificate, `api.crt`, in `controller.pki.key_dir` at its first
+start. To serve a certificate of your own, such as one from your CA:
 
 ```yaml
 controller:
   api:
     tls:
-      enabled: true
       cert_file: /etc/osapi/tls/api.crt
       key_file: /etc/osapi/tls/api.key
 ```
 
-A join over HTTPS needs it, because its join string pins this certificate.
+The CLI on the controller's host trusts the self-signed `api.crt` with no
+setting. A CLI on another host needs it as `controller.client.tls.ca_file`, or a
+certificate of a CA that it trusts. A join over HTTPS pins the certificate.
 
 ## 3. Start the controller
 

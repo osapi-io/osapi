@@ -237,6 +237,9 @@ type NATSServer struct {
 	URL string `mapstructure:"url" doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://" choice:"where a person reaches it; empty shows the bind address"`
 	// StoreDir the directory for JetStream file storage.
 	StoreDir string `mapstructure:"store_dir" doc:"Directory for JetStream file storage."`
+	// KeyDir is where the server keeps its self-signed certificates, of NATS
+	// and of its metrics, when TLS is on with no cert_file.
+	KeyDir string `mapstructure:"key_dir" doc:"Directory of the server's self-signed certificates, nats.crt and nats-metrics.crt, which it makes at its first start when its TLS is on with no cert_file."`
 	// JetStream holds the encryption of the JetStream store.
 	JetStream NATSServerJetStream `mapstructure:"jetstream"`
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
