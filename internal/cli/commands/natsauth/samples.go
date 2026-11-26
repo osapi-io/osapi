@@ -34,6 +34,8 @@ var (
 		{Role: "osapi", Path: "/etc/osapi/nats/osapi-nats.yaml"},
 		{Role: "server", Path: "/etc/osapi/nats/resolver.conf"},
 		{Role: "setup", Path: "/etc/osapi/nats/setup.creds"},
-		{Role: "controller", Path: "/etc/osapi/nats/signing.nk"},
+		{Role: "controller", Path: "/etc/osapi/nats/agent-signing.nk"},
+		{Role: "controller", Path: "/etc/osapi/nats/join-signing.nk"},
+		{Role: "operator", Path: "/etc/osapi/nats/account.nk"},
 	}}
 )

@@ -292,6 +292,31 @@ func (s *MethodsPublicTestSuite) TestCreateNATS() {
 		s.NoError(err, "the bootstrap user's seed is in the string")
 	})
 
+	s.Run(
+		"operator mode with scoped keys: the join key signs, and the JWT has no permissions",
+		func() {
+			d := natsDeps("nats://hub:4222")
+			agentFile, acct := signingKey(s.T())
+			joinFile, _ := signingKey(s.T())
+			d.Config.Controller.Join.SigningKeyFile = agentFile
+			d.Config.Controller.Join.JoinSigningKeyFile = joinFile
+			d.Config.Controller.Join.Account = acct
+			d.Config.Controller.Join.Scoped = true
+			got, err := join.Create(ctx, d, in)
+			s.Require().NoError(err)
+			u, _ := url.Parse(got.Join)
+			creds, _ := base64.RawURLEncoding.DecodeString(u.Query().Get("creds"))
+			userJWT, _ := jwt.ParseDecoratedJWT(creds)
+			uc, err := jwt.DecodeUserClaims(userJWT)
+			s.Require().NoError(err)
+			s.True(uc.HasEmptyPermissions(), "the scoped key's template sets them")
+			seed, _ := os.ReadFile(joinFile)
+			kp, _ := nkeys.FromSeed(seed)
+			joinPub, _ := kp.PublicKey()
+			s.Equal(joinPub, uc.Issuer, "the join's own key signs the bootstrap user")
+		},
+	)
+
 	s.Run("operator mode with a signing key that does not load makes no token", func() {
 		d := natsDeps("nats://hub:4222")
 		d.Config.Controller.Join.SigningKeyFile = "/no/such/key"

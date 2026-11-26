@@ -91,6 +91,10 @@ func (s *NatsJWTPublicTestSuite) TestMint() {
 	uc, _ = jwt.DecodeUserClaims(forever)
 	s.Zero(uc.Expires)
 	s.Nil(uc.Resp)
+	s.True(uc.HasEmptyPermissions(), "a user of a scoped key has no permission or limit")
+	scope := jwt.NewUserScope()
+	scope.Key = uc.Issuer
+	s.NoError(scope.ValidateScopedSigner(uc), "a scoped key may sign it")
 
 	_, err = signer.Mint("not-a-key", "m-1", bus.Permissions{}, time.Time{})
 	s.ErrorContains(err, "is not a user public key")

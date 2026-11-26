@@ -88,9 +88,10 @@ Each writes `osapi-nats.yaml`, the part of osapi.yaml that uses the files, to
 merge into your config. `password create` also writes `nats-server.conf`, the
 `authorization` block of a NATS server that osapi does not run.
 `operator create` writes the resolver file of the server, a credentials file for
-the setup, controller and agent roles, and `signing.nk`, the account signing key
-that the controller mints the users of a join with. Keep `operator.nk`, the
-operator's seed, offline. `--print` also prints the server's part.
+the setup, controller and agent roles, and `agent-signing.nk` and
+`join-signing.nk`, the scoped signing keys that the controller mints the users
+of a join with. Keep `operator.nk` and `account.nk` offline. `--print` also
+prints the server's part.
 
 In operator mode, a NATS server that osapi does not run needs
 `max_control_line: 32KB`: a user JWT has the subjects of its role, and the
@@ -180,12 +181,12 @@ or a firewall that lets only NATS through.
 
 What you provision depends on your server:
 
-| Your NATS server   | What you give osapi                                                                                         | Built                                    |
-| ------------------ | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| osapi's own server | Users with the roles `join` and `agent` in `nats.server.auth.users`                                         | yes                                      |
-| Static users       | A join user that can send only the join request, and an agent user, in `controller.join.user` and `.agent`  | yes                                      |
-| Operator mode      | An account signing key, in `controller.join.signing_key_file` and `.account` (`operator create` makes them) | yes; a scoped key is osapi-io/osapi#1432 |
-| Auth callout       | An `auth_callout` block that names osapi's issuer key (NATS 2.10 or later)                                  | planned (osapi-io/osapi#1416)            |
+| Your NATS server   | What you give osapi                                                                                        | Built                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| osapi's own server | Users with the roles `join` and `agent` in `nats.server.auth.users`                                        | yes                           |
+| Static users       | A join user that can send only the join request, and an agent user, in `controller.join.user` and `.agent` | yes                           |
+| Operator mode      | Two scoped signing keys, the agent role's and the join role's (`operator create` makes them)               | yes                           |
+| Auth callout       | An `auth_callout` block that names osapi's issuer key (NATS 2.10 or later)                                 | planned (osapi-io/osapi#1416) |
 
 `osapi nats permissions get --role join` and `--role agent` print the subjects
 of the two users.

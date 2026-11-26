@@ -200,15 +200,14 @@ func Operator(
 	namespace string,
 	cfg config.NATS,
 ) (Result, error) {
-	keys, err := newKeys(4)
+	keys, err := newKeys(5)
 	if err != nil {
 		return Result{}, err
 	}
-	operator, system, account, signing := keys[0], keys[1], keys[2], keys[3]
+	operator, system, account, agentKey, joinKey := keys[0], keys[1], keys[2], keys[3], keys[4]
 	opPub, _ := operator.PublicKey()
 	sysPub, _ := system.PublicKey()
 	acctPub, _ := account.PublicKey()
-	signPub, _ := signing.PublicKey()
 
 	oc := jwt.NewOperatorClaims(opPub)
 	oc.Name = "osapi"
@@ -225,7 +224,21 @@ func Operator(
 		MemoryStorage: jwt.NoLimit, DiskStorage: jwt.NoLimit,
 		Streams: jwt.NoLimit, Consumer: jwt.NoLimit,
 	}
-	ac.SigningKeys.Add(signPub)
+	// The controller keeps only two scoped signing keys: the template of
+	// each is the permissions of its role, so the controller cannot mint a
+	// user with more than an agent or a join user has.
+	for _, k := range []struct {
+		key  nkeys.KeyPair
+		role bus.Role
+	}{{agentKey, bus.RoleAgent}, {joinKey, bus.RoleJoin}} {
+		p, _ := bus.RolePermissions(k.role, namespace, cfg)
+		scope := jwt.NewUserScope()
+		scope.Key, _ = k.key.PublicKey()
+		scope.Role = string(k.role)
+		scope.Template.Pub.Allow = p.Publish
+		scope.Template.Sub.Allow = p.Subscribe
+		ac.SigningKeys.AddScopedSigner(scope)
+	}
 	acctJWT, _ := ac.Encode(operator)
 
 	resolver := fmt.Sprintf(
@@ -235,7 +248,9 @@ func Operator(
 	)
 
 	var r Result
-	signer := natsjwt.NewSigner(signing, acctPub)
+	// The static users are signed with the account's own key, which the
+	// controller does not get.
+	signer := natsjwt.NewSigner(account, acctPub)
 	for _, role := range staticRoles {
 		p, _ := bus.RolePermissions(role, namespace, cfg)
 		creds, err := newCreds(signer, "osapi-"+string(role), p, time0)
@@ -247,14 +262,18 @@ func Operator(
 		}
 	}
 	opSeed, _ := operator.Seed()
-	signSeed, _ := signing.Seed()
+	acctSeed, _ := account.Seed()
+	agentSeed, _ := agentKey.Seed()
+	joinSeed, _ := joinKey.Seed()
 	for _, f := range []struct {
 		role, name string
 		data       []byte
 	}{
 		{"server", "resolver.conf", []byte(resolver)},
 		{"operator", "operator.nk", opSeed},
-		{"controller", "signing.nk", signSeed},
+		{"operator", "account.nk", acctSeed},
+		{"controller", "agent-signing.nk", agentSeed},
+		{"controller", "join-signing.nk", joinSeed},
 	} {
 		if err := r.write(ctx, fs, dir, f.role, f.name, f.data); err != nil {
 			return Result{}, err
@@ -265,10 +284,11 @@ func Operator(
 		"# The NATS auth of osapi in operator mode. Merge it into osapi.yaml.\n"+
 			"nats:\n  server:\n    auth:\n      type: operator\n      resolver_file: %s\n      creds_file: %s\n"+
 			"controller:\n  nats:\n    auth:\n      type: creds\n      creds_file: %s\n"+
-			"  join:\n    signing_key_file: %s\n    account: %s\n"+
+			"  join:\n    scoped: true\n    signing_key_file: %s\n    join_signing_key_file: %s\n    account: %s\n"+
 			"agent:\n  nats:\n    auth:\n      type: creds\n      creds_file: %s\n",
 		filepath.Join(dir, "resolver.conf"), filepath.Join(dir, "setup.creds"),
-		filepath.Join(dir, "controller.creds"), filepath.Join(dir, "signing.nk"), acctPub,
+		filepath.Join(dir, "controller.creds"), filepath.Join(dir, "agent-signing.nk"),
+		filepath.Join(dir, "join-signing.nk"), acctPub,
 		filepath.Join(dir, "agent.creds"),
 	)
 	if err := r.write(ctx, fs, dir, "osapi", OsapiConfig, []byte(y)); err != nil {

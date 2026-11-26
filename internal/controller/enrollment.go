@@ -169,7 +169,12 @@ func joinAgentUser(
 	if err != nil {
 		return nil, nil, err
 	}
-	perms, _ := bus.RolePermissions(bus.RoleAgent, namespace, cfg.NATS)
+	// A scoped key's template sets the permissions, and a JWT that it signs
+	// carries none.
+	var perms bus.Permissions
+	if !j.Scoped {
+		perms, _ = bus.RolePermissions(bus.RoleAgent, namespace, cfg.NATS)
+	}
 	// The config's check refuses an agent_ttl that is not a duration; an
 	// empty one is no expiry.
 	ttl, _ := time.ParseDuration(j.AgentTTL)

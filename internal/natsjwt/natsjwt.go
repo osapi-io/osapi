@@ -99,6 +99,12 @@ func (s *Signer) Mint(
 	if p.Responses {
 		uc.Resp = &jwt.ResponsePermission{MaxMsgs: 1, Expires: time.Minute}
 	}
+	// A user with no permissions of its own is one of a scoped key, whose
+	// template sets them: the server refuses such a user with any
+	// permission or limit, also the default limits of NewUserClaims.
+	if len(p.Publish) == 0 && len(p.Subscribe) == 0 && !p.Responses {
+		uc.UserPermissionLimits = jwt.UserPermissionLimits{}
+	}
 	if !expires.IsZero() {
 		uc.Expires = expires.Unix()
 	}
