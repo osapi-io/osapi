@@ -50,6 +50,9 @@ func usesOut(
 			return true
 		}
 		for _, f := range rb.Fields {
+			if outRef.MatchString(f.Path) {
+				return true
+			}
 			if s, ok := f.Want.(string); ok && outRef.MatchString(s) {
 				return true
 			}
@@ -350,6 +353,9 @@ func (s *ReadBackTestSuite) TestUsesOut() {
 	s.True(usesOut(command.Example{Checks: []command.ReadBack{{Flags: "--id {out.id}"}}}))
 	s.True(usesOut(command.Example{Checks: []command.ReadBack{
 		{Fields: []command.Field{{Path: "id", Want: "{out.id}"}}},
+	}}))
+	s.True(usesOut(command.Example{Checks: []command.ReadBack{
+		{Fields: []command.Field{{Path: "items.[id={out.id}].uses_left", Want: 1}}},
 	}}))
 	s.False(usesOut(command.Example{Checks: []command.ReadBack{{Flags: "--id x"}}}))
 }
