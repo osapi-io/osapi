@@ -40,9 +40,12 @@ holds while the fingerprint of the keys that the agent reports is not the
 fingerprint that the controller admitted for its machine, for example after the
 agent made new keys in a different key directory. The controller refuses each
 result that the agent signs, so each job to the agent fails. The agent then
-shows `Refused`, not `Ready`. The reason gives both fingerprints. Remove the
-machine's admission and let it join again, or give the agent back its admitted
-keys.
+shows `Refused`, not `Ready`. The reason gives both fingerprints. The first
+result that the controller refuses from a machine is a `refused` event on the
+timeline of the agent and an `agent.refuse` entry in the audit log, one time for
+each controller process. A `--target` with the hostname of the agent says why no
+work goes to it, not that the agent is not found. Remove the machine's admission
+and let it join again, or give the agent back its admitted keys.
 
 The API and the CLI show only the conditions that hold now. A condition that
 does not hold is not in the answer. The notifier uses the full list of the

@@ -41,6 +41,7 @@ function tone(ev: TimelineEvent): string {
       return "bg-primary";
     case "revoked":
     case "rejected":
+    case "refused":
     case "deleted":
       return "bg-status-error";
     default:

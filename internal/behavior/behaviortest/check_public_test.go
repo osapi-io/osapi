@@ -514,6 +514,18 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 		},
 		{
+			name:     "when a refusal runs only on its platform",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("get", getNote).
+					Fails("An unmanaged note", getIn{Strict: true}, "not managed",
+						behavior.OnPlatform("debian")).
+					Fails("A refusal for a Mac, not run here", getIn{}, "not managed",
+						behavior.OnPlatform(behavior.PlatformDarwin),
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+		},
+		{
 			name:     "when a refusal succeeds, fails differently, or cannot be set up",
 			platform: onDebian(nil),
 			methods: []behavior.Option{

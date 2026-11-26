@@ -27,8 +27,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
@@ -123,10 +125,37 @@ func (c *Client) refused(
 		c.logger.WarnContext(ctx, "failed to record a refused result",
 			slog.String("job_id", jobID), slog.String("error", err.Error()))
 	}
+	if _, seen := c.refusedSeen.LoadOrStore(r.MachineID, struct{}{}); !seen {
+		c.firstRefusal(ctx, r, msg)
+	}
 
 	return &job.Response{
 		JobID: jobID, Status: types.AgentJobStatusRefused, Hostname: r.Hostname, Error: msg,
 	}, true
+}
+
+// firstRefusal records the first result of a machine that this client
+// refused: an event on the agent's timeline, and an entry of the controller
+// in the audit log. No request made it, and the job shows it only as refused.
+func (c *Client) firstRefusal(
+	ctx context.Context,
+	r *RefusedError,
+	msg string,
+) {
+	if err := c.WriteAgentTimelineEvent(ctx, r.MachineID, r.Hostname, "refused", msg); err != nil {
+		c.logger.WarnContext(ctx, "failed to write a timeline event",
+			slog.String("event", "refused"), slog.String("error", err.Error()))
+	}
+	if c.auditLog == nil {
+		return
+	}
+	if err := c.auditLog.Write(context.WithoutCancel(ctx), audit.Change(
+		ctx, audit.ActorSystem, "controller", "agent.refuse", r.MachineID,
+		http.StatusForbidden, msg,
+	)); err != nil {
+		c.logger.WarnContext(ctx, "failed to write an audit entry",
+			slog.String("action", "agent.refuse"), slog.String("error", err.Error()))
+	}
 }
 
 // verifyAgentResponse checks a response against the key stored for the agent

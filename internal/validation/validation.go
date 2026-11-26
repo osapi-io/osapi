@@ -367,6 +367,15 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 			)
 		}
 
+		if t, ok := UnverifiedTarget(ctx, target); ok {
+			return fmt.Sprintf(
+				"agent %q is registered, but its registration is not signed by the key that "+
+					"the controller admitted, so no work goes to it; its condition KeyMismatch "+
+					"says why: osapi client agent get --hostname %s",
+				t, t,
+			)
+		}
+
 		return fmt.Sprintf("target agent %q not found", fe.Value())
 	},
 	"go_duration": func(_ context.Context, fe validator.FieldError) string {
