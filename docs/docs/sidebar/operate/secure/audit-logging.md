@@ -76,9 +76,10 @@ no job has no `job_id`.
 
 ### The chain of the job
 
-`steps` and `chain` record the [behavior chain](behavior-chains.md) of the job:
-the calls of other behaviors that the method made on each host. `steps` is the
-tree of each host. `chain` is the same tree on one line for each host, as
+`steps` and `chain` record the
+[behavior chain](../../features/platform/behavior-chains.md) of the job: the
+calls of other behaviors that the method made on each host. `steps` is the tree
+of each host. `chain` is the same tree on one line for each host, as
 `osapi client job get` prints it:
 
 ```text
@@ -171,8 +172,7 @@ then answers 503, with a message that names `nats.audit.stream`.
 When distributed tracing is enabled, each audit entry has a `trace_id` field.
 Use it to find the OpenTelemetry trace of the entry.
 
-Refer to [Configuration](../../usage/configuration.md#every-setting) for the
-full reference.
+Refer to [Configuration](../plan.md#the-config-file) for the full reference.
 
 ## Permissions
 
@@ -184,4 +184,4 @@ permission of each method.
 - [CLI Reference](../../usage/cli/client/audit/audit.mdx): audit commands (list,
   get, export)
 - [API Reference](/gen/api/audit-log-api-audit): REST API documentation
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../plan.md#the-config-file): full configuration reference

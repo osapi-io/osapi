@@ -63,7 +63,7 @@ The generated page of each behavior gives the permission, the platforms and the
 route of each method:
 [sysctl](../../reference/behaviors/config/sysctl/sysctl.md). The pages come from
 the definitions, so they stay true when a method changes, and this page does not
-copy them. [Authentication](../platform/authentication.md) tells which
+copy them. [Authentication](../../operate/secure/authentication.md) tells which
 permissions each role has.
 
 ## CLI usage
@@ -136,4 +136,5 @@ the key and the value before they apply a change.
 - [File Management](file-management.md): file-state KV tracking
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

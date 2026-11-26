@@ -70,4 +70,5 @@ gives the permission of each method.
 - [SDK Reference](../../sdk/node/process.md): Process service
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

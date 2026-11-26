@@ -85,10 +85,10 @@ that made it, with `changed`, or `failed:` and the error, and its duration.
 
 ### The trace
 
-When [tracing](distributed-tracing.md) is on, each call of a chain is a span of
-its own, with the name `behavior.<name>.<method>`. The span of a call is under
-the span of the call that made it. The commands and the file changes of a call
-are under its span:
+When [tracing](../../operate/observe/distributed-tracing.md) is on, each call of
+a chain is a span of its own, with the name `behavior.<name>.<method>`. The span
+of a call is under the span of the call that made it. The commands and the file
+changes of a call are under its span:
 
 ```text
 job.process
@@ -110,12 +110,12 @@ span of a step that failed has the error status.
 
 ### The audit log
 
-The [audit entry](audit-logging.md) of the request records the chain. `steps`
-has the tree of each host, and `chain` has one line for each host.
-`osapi client audit get` prints the `Chain:` line, and the audit view of the UI
-shows the tree. The entry has the steps of each host that answered before the
-request returned, also when a step failed. The job has the steps of a host that
-answered after the request returned.
+The [audit entry](../../operate/secure/audit-logging.md) of the request records
+the chain. `steps` has the tree of each host, and `chain` has one line for each
+host. `osapi client audit get` prints the `Chain:` line, and the audit view of
+the UI shows the tree. The entry has the steps of each host that answered before
+the request returned, also when a step failed. The job has the steps of a host
+that answered after the request returned.
 
 ## When a step fails
 

@@ -220,7 +220,11 @@ func WriteReference(
 }
 
 // tableDirs are where pages that a person wrote have generated tables.
-var tableDirs = []string{"docs/docs/sidebar/features", "docs/docs/sidebar/usage"}
+var tableDirs = []string{
+	"docs/docs/sidebar/features",
+	"docs/docs/sidebar/operate",
+	"docs/docs/sidebar/architecture",
+}
 
 // writeTables writes each generated table of the pages in tableDirs again,
 // and keeps the rest of each page as it is.

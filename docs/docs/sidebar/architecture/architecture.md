@@ -47,11 +47,13 @@ to behaviors one at a time. A behavior and a domain look the same to a client.
 | [Security](security.md)               | Tokens and roles, agent identity, signing, privileges, audit            |
 | [Secrets](secrets.md)                 | Where osapi keeps a secret now, and what is in progress                 |
 | [Observability](observability.md)     | Traces, metrics, logs, health, heartbeats and conditions                |
-| [Deployment](deployment.md)           | One host, many hosts, an external NATS cluster, namespaces              |
+| [NATS subjects and roles](nats.md)    | What each process can use on NATS, and why the join has its own user    |
+| [Agent identity](agent-identity.md)   | Machine IDs, keys, enrollment, job and registration signing             |
+| [Agent lifecycle](agent-lifecycle.md) | Conditions, drain and the timeline of an agent                          |
 | [UI](ui.md)                           | The embedded management dashboard                                       |
 
-These pages tell how an operator runs the system. The design of each part, and
-the reason for it, is in the
+These pages tell how osapi works. [Operate](../operate/operate.mdx) tells what
+to run. The design of each part, and the reason for it, is in the
 [osapi specifications](https://github.com/osapi-io/specs/tree/main/components/osapi).
 Each page links to the parts that it summarizes.
 [Features](../features/features.mdx) tells what each operation does. Each

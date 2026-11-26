@@ -160,4 +160,4 @@ The [MIT] License.
 [usage]: https://osapi-io.github.io/osapi/sidebar/usage
 [webmin]: https://webmin.com/
 [why]: https://osapi-io.github.io/osapi/#why-osapi
-[working with an agent]: https://osapi-io.github.io/osapi/sidebar/usage/agents
+[working with an agent]: https://osapi-io.github.io/osapi/sidebar/agents

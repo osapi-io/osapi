@@ -160,11 +160,11 @@ You can enable or disable the metrics server of each component separately:
 <!-- /osapi:config -->
 
 Set `enabled: false` to disable the metrics endpoint for a component. See the
-[Configuration](../../usage/configuration.md) reference for the full list of
+[Configuration](../plan.md#the-config-file) reference for the full list of
 settings and environment variable overrides.
 
 ## Related
 
 - [Health Checks](health-checks.md): liveness, readiness, and status probes
 - [Distributed Tracing](distributed-tracing.md): OpenTelemetry tracing
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../plan.md#the-config-file): full configuration reference

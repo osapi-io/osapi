@@ -178,7 +178,7 @@ gets the spans a few seconds after the request, so a trace that ran a moment ago
 can be not found. Run the command again after a few seconds. The command needs
 `trace:read`, which each built-in role has. A token with a target scope gets a
 trace only when each target that the trace records is in its scope. Refer to
-[Target scope](authentication.md#target-scope).
+[Target scope](../secure/authentication.md#target-scope).
 
 ## Read a trace in Jaeger
 
@@ -267,11 +267,11 @@ authentication. This works for local and internal backends. It does not work for
 cloud services that need TLS and API keys, for example Grafana Cloud, Honeycomb
 and Datadog. Authenticated OTLP is planned. :::
 
-Refer to [Configuration](../../usage/configuration.md#every-setting) for the
-full reference.
+Refer to [Configuration](../plan.md#the-config-file) for the full reference.
 
 ## Related
 
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../plan.md#the-config-file): full configuration reference
 - [Architecture](../../architecture/architecture.md): system design overview
-- [Job System](job-system.md): how async job processing works
+- [Job System](../../features/platform/job-system.md): how async job processing
+  works

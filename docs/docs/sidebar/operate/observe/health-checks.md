@@ -122,7 +122,7 @@ authentication. They must work before clients have tokens. The
 permission.
 
 Health checks need only the standard server and authentication settings. Refer
-to [Configuration](../../usage/configuration.md) for the full reference,
+to [Configuration](../plan.md#the-config-file) for the full reference,
 [CLI Reference](../../usage/cli/client/health/health.mdx) for usage and
 examples, or the [API Reference](/gen/api/health-check-api-health) for the REST
 endpoints.

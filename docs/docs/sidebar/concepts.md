@@ -79,7 +79,7 @@ host and does the work. `osapi start` runs the queue, the controller and an
 agent in one process, for a test.
 
 Each agent has an identity. The controller signs each job, and an agent signs
-each answer. Refer to [Agent identity](features/platform/agent-identity.md).
+each answer. Refer to [Agent identity](architecture/agent-identity.md).
 
 ## Skill
 
@@ -90,7 +90,7 @@ skills:
 - `osapi-operations`, which runs osapi itself
 
 The skills tell the agent to ask the binary what exists. They do not keep a copy
-of the docs. Refer to [Working with an agent](usage/agents.md).
+of the docs. Refer to [Working with an agent](agents.md).
 
 ## Least privilege
 

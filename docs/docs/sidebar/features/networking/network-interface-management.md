@@ -101,8 +101,9 @@ route of each method: [dns](../../reference/behaviors/networking/dns/dns.md),
 [interface](../../reference/behaviors/networking/interface/interface.md),
 [route](../../reference/behaviors/networking/interface/route/route.md). The
 pages come from the definitions, so they stay true when a method changes, and
-this page does not copy them. [Authentication](../platform/authentication.md)
-tells which permissions each role has.
+this page does not copy them.
+[Authentication](../../operate/secure/authentication.md) tells which permissions
+each role has.
 
 ## CLI usage
 
@@ -206,4 +207,5 @@ access and is not available in standard container environments.
 - [Network Management](network-management.md): DNS and ping
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

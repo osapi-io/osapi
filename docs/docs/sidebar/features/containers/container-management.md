@@ -78,4 +78,5 @@ give the permission of each method.
 - CLI reference: the [docker](../../usage/cli/client/node/docker/docker.mdx) and
   [image](../../usage/cli/client/node/image/image.mdx) commands
 - [Job System](../platform/job-system.md): how asynchronous jobs work
-- [Authentication & RBAC](../platform/authentication.md): permissions and roles
+- [Authentication & RBAC](../../operate/secure/authentication.md): permissions
+  and roles

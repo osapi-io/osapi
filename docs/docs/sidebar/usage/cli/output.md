@@ -29,8 +29,8 @@ $ osapi client node hostname get --target web-01
 `osapi client job get --id <job>` shows the job. Put the trace ID in the search
 box of your tracing backend, for example Jaeger, to see the request on the
 controller and on each agent.
-[Distributed tracing](../../features/platform/distributed-tracing.md) tells how
-to read it. The trace ID is not there when the controller does not trace.
+[Distributed tracing](../../operate/observe/distributed-tracing.md) tells how to
+read it. The trace ID is not there when the controller does not trace.
 
 ## More than one host
 

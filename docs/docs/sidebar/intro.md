@@ -52,7 +52,7 @@ export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=<token from above>
 ```
 
 `osapi config list` shows every setting and where its value came from, and
-[Configuration](usage/configuration.md) is the full reference.
+[Configuration](operate/plan.md#the-config-file) is the full reference.
 
 ### 2. Give your agent osapi
 
@@ -65,7 +65,7 @@ osapi skill install --tool codex     # Codex
 
 It installs two skills: `osapi`, which operates hosts, and `osapi-operations`,
 which runs osapi itself. Run it again after you upgrade osapi.
-[Working with an agent](usage/agents.md) tells what each skill does.
+[Working with an agent](agents.md) tells what each skill does.
 
 ### 3. Ask for what you want
 
@@ -139,8 +139,12 @@ what each behavior declares it runs with sudo.
 Every host answers for itself: `ok`, `failed`, or `skipped` where the behavior
 does not run on its platform.
 
-For more than one host, see [A fleet on osapi's NATS](fleet.md), and for a NATS
-server that you run already, [A fleet on your NATS](your-nats.md).
+## Run a fleet
+
+The steps above run osapi on one host. For more hosts, read
+[Operate](operate/operate.mdx). It has the setup in order: NATS, its auth and
+TLS, the controller, and how each host joins and starts at boot. Then it tells
+how to see the fleet, change it, and find a problem.
 
 ## Explore the Docs
 
@@ -148,15 +152,16 @@ server that you run already, [A fleet on your NATS](your-nats.md).
   skills, and what comes next
 - [Behaviors](reference/behaviors/behaviors.mdx): every behavior, generated from
   its definition
-- [Working with an agent](usage/agents.md): `osapi skill install`, the skills,
-  and the prompts
+- [Working with an agent](agents.md): `osapi skill install`, the skills, and the
+  prompts
 - [Features](features/features.mdx): what OSAPI can manage and how each feature
   works
+- [Operate](operate/operate.mdx): set up NATS, the controller and the hosts, and
+  run the fleet
 - [Architecture](architecture/architecture.md): how the three processes (NATS,
   API server, agent) work together
-- [Configuration](usage/configuration.md): full `osapi.yaml` reference
 - [API](/category/api): OpenAPI documentation for all endpoints
-- [CLI Usage](usage/usage.mdx): command reference with examples
+- [CLI](usage/usage.mdx): each command, with examples
 
 ## Alternatives
 

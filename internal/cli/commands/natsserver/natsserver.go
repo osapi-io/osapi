@@ -38,7 +38,7 @@ var Group = command.Register(command.Define(
 			"needs. `osapi start` runs the same server, together with the controller and\n"+
 			"an agent, in one process. Use this command to run the bus as its own\n"+
 			"process. The `nats.server` section of the config sets the host, the port and\n"+
-			"the authentication. Refer to [Configuration](../../configuration.md).").
+			"the authentication. Refer to [2. NATS](../../../operate/nats.md).").
 		Example("").
 		Logs(StartLogs...).
 		Setup(Start),

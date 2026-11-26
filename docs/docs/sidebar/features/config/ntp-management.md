@@ -125,4 +125,5 @@ permission of each method.
 - [File Management](file-management.md): file-state KV tracking
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

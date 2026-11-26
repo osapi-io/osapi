@@ -142,10 +142,10 @@ const config: Config = {
         {
           // A link, not a doc item: a doc item is active on each page of
           // its sidebar, which is every page.
-          label: 'Usage',
+          label: 'Operate',
           position: 'left',
-          to: '/osapi/sidebar/usage/',
-          activeBaseRegex: '/sidebar/usage/'
+          to: '/osapi/sidebar/operate/',
+          activeBaseRegex: '/sidebar/operate/'
         },
         {
           type: 'dropdown',

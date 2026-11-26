@@ -53,8 +53,8 @@ route of each method:
 [package updates](../../reference/behaviors/software/package/updates/updates.md).
 The pages come from the definitions, so they stay true when a method changes,
 and this page does not copy them.
-[Authentication](../platform/authentication.md) tells which permissions each
-role has.
+[Authentication](../../operate/secure/authentication.md) tells which permissions
+each role has.
 
 ## CLI usage
 
@@ -107,4 +107,5 @@ Skipped and failed hosts appear with their error in the output.
   commands
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

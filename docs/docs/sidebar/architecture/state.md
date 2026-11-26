@@ -74,7 +74,8 @@ about thirty-six consumers for each agent.
 
 Use an external NATS cluster for a fleet of hundreds of hosts, or when the
 stores must continue to operate when a host stops. Set file storage and replicas
-in the section of each store. [Deployment](deployment.md) gives the layouts.
+in the section of each store. [Deployment](../operate/plan.md) gives the
+layouts.
 
 ## Design details
 

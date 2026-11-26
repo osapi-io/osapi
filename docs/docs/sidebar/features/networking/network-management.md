@@ -59,8 +59,8 @@ agent runs as root. The kernel permits this only for the groups in
 `net.ipv4.ping_group_range`. If the group of the agent is not in the range, the
 ping fails. On Debian, Ubuntu and Fedora, systemd permits each group; the
 default of the kernel permits none.
-[Agent hardening](../platform/agent-hardening.md#kernel-settings) tells more. To
-permit each group:
+[Agent hardening](../../operate/secure/agent-hardening.md#kernel-settings) tells
+more. To permit each group:
 
 ```bash
 sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
@@ -85,8 +85,8 @@ endpoints.
 ## Configuration
 
 Network management uses the general job system. It needs no configuration of its
-own. Refer to [Configuration](../../usage/configuration.md) for NATS, agent, and
-authentication settings.
+own. Refer to [Configuration](../../operate/plan.md#the-config-file) for NATS,
+agent, and authentication settings.
 
 ## Permissions and platforms
 
@@ -97,8 +97,8 @@ route of each method: [dns](../../reference/behaviors/networking/dns/dns.md),
 [connectivity](../../reference/behaviors/networking/connectivity/connectivity.md).
 The pages come from the definitions, so they stay true when a method changes,
 and this page does not copy them.
-[Authentication](../platform/authentication.md) tells which permissions each
-role has.
+[Authentication](../../operate/secure/authentication.md) tells which permissions
+each role has.
 
 ## Related
 

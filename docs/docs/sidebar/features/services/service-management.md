@@ -102,8 +102,8 @@ route of each method:
 [service](../../reference/behaviors/services/service/service.md),
 [object](../../reference/behaviors/internal/object/object.md). The pages come
 from the definitions, so they stay true when a method changes, and this page
-does not copy them. [Authentication](../platform/authentication.md) tells which
-permissions each role has.
+does not copy them. [Authentication](../../operate/secure/authentication.md)
+tells which permissions each role has.
 
 ## Related
 
