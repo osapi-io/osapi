@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">A fleet on your NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/your-nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="A fleet on your NATS | OSAPI"><meta data-rh="true" name="description" content="This page is for the administrator of a NATS server that osapi does not run."><meta data-rh="true" property="og:description" content="This page is for the administrator of a NATS server that osapi does not run."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/your-nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/your-nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/your-nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"A fleet on your NATS","item":"https://osapi-io.github.io/osapi/sidebar/your-nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.277b6ecc.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e311f8f0.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.bc42c39b.js" defer="defer"></script>
 </head>
 <body>
@@ -55,9 +55,10 @@ subjects of its role, and the controller&#x27;s is about 7 KB.</p>
 </li>
 <li class="">
 <p>Merge <code>osapi-nats.yaml</code> into the controller&#x27;s config, without its
-<code>nats.server</code> part. It sets the controller&#x27;s credentials and
-<code>controller.join.signing_key_file</code>, which the controller mints the users of a
-join with.</p>
+<code>nats.server</code> part. It sets the controller&#x27;s credentials and the two scoped
+signing keys that the controller mints the users of a join with. The template
+of each key is the permissions of its role, so the controller cannot give
+more. Keep <code>operator.nk</code> and <code>account.nk</code> offline.</p>
 </li>
 <li class="">
 <p>Make the streams and buckets:</p>
@@ -68,8 +69,11 @@ join with.</p>
 (<a class="" href="/osapi/sidebar/fleet#3-make-a-join-token">A fleet on osapi&#x27;s NATS</a>).</p>
 </li>
 </ol>
-<p>A scoped signing key, whose template limits what osapi can give, is
-osapi-io/osapi#1432.</p>
+<p>To use an account that you have already, add two scoped signing keys to it with
+<code>nsc edit signing-key</code>, with the subjects that
+<code>osapi nats permissions get --role agent</code> and <code>--role join</code> print, and set
+<code>controller.join.scoped: true</code>, <code>signing_key_file</code> (the agent&#x27;s key) and
+<code>join_signing_key_file</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="static-users">Static users<a href="#static-users" class="hash-link" aria-label="Direct link to Static users" title="Direct link to Static users" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi nats auth password create </span><span class="token parameter variable" style="color:#6b5cff">--out</span><span class="token plain"> /etc/osapi/nats </span><span class="token parameter variable" style="color:#6b5cff">--print</span><br></div></code></pre></div></div>
 <ol>

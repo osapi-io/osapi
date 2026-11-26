@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Running osapi on your NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Running osapi on your NATS | OSAPI"><meta data-rh="true" name="description" content="This page is for the NATS administrator: the person who runs the NATS"><meta data-rh="true" property="og:description" content="This page is for the NATS administrator: the person who runs the NATS"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Running osapi on your NATS","item":"https://osapi-io.github.io/osapi/sidebar/architecture/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.277b6ecc.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e311f8f0.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.bc42c39b.js" defer="defer"></script>
 </head>
 <body>
@@ -95,9 +95,10 @@ the command line:</p>
 merge into your config. <code>password create</code> also writes <code>nats-server.conf</code>, the
 <code>authorization</code> block of a NATS server that osapi does not run.
 <code>operator create</code> writes the resolver file of the server, a credentials file for
-the setup, controller and agent roles, and <code>signing.nk</code>, the account signing key
-that the controller mints the users of a join with. Keep <code>operator.nk</code>, the
-operator&#x27;s seed, offline. <code>--print</code> also prints the server&#x27;s part.</p>
+the setup, controller and agent roles, and <code>agent-signing.nk</code> and
+<code>join-signing.nk</code>, the scoped signing keys that the controller mints the users
+of a join with. Keep <code>operator.nk</code> and <code>account.nk</code> offline. <code>--print</code> also
+prints the server&#x27;s part.</p>
 <p>In operator mode, a NATS server that osapi does not run needs
 <code>max_control_line: 32KB</code>: a user JWT has the subjects of its role, and the
 controller&#x27;s is about 7 KB.</p>
@@ -208,7 +209,7 @@ or a firewall that lets only NATS through.</p>
 
 
 
-<table><thead><tr><th>Your NATS server</th><th>What you give osapi</th><th>Built</th></tr></thead><tbody><tr><td>osapi&#x27;s own server</td><td>Users with the roles <code>join</code> and <code>agent</code> in <code>nats.server.auth.users</code></td><td>yes</td></tr><tr><td>Static users</td><td>A join user that can send only the join request, and an agent user, in <code>controller.join.user</code> and <code>.agent</code></td><td>yes</td></tr><tr><td>Operator mode</td><td>An account signing key, in <code>controller.join.signing_key_file</code> and <code>.account</code> (<code>operator create</code> makes them)</td><td>yes; a scoped key is osapi-io/osapi#1432</td></tr><tr><td>Auth callout</td><td>An <code>auth_callout</code> block that names osapi&#x27;s issuer key (NATS 2.10 or later)</td><td>planned (osapi-io/osapi#1416)</td></tr></tbody></table>
+<table><thead><tr><th>Your NATS server</th><th>What you give osapi</th><th>Built</th></tr></thead><tbody><tr><td>osapi&#x27;s own server</td><td>Users with the roles <code>join</code> and <code>agent</code> in <code>nats.server.auth.users</code></td><td>yes</td></tr><tr><td>Static users</td><td>A join user that can send only the join request, and an agent user, in <code>controller.join.user</code> and <code>.agent</code></td><td>yes</td></tr><tr><td>Operator mode</td><td>Two scoped signing keys, the agent role&#x27;s and the join role&#x27;s (<code>operator create</code> makes them)</td><td>yes</td></tr><tr><td>Auth callout</td><td>An <code>auth_callout</code> block that names osapi&#x27;s issuer key (NATS 2.10 or later)</td><td>planned (osapi-io/osapi#1416)</td></tr></tbody></table>
 <p><code>osapi nats permissions get --role join</code> and <code>--role agent</code> print the subjects
 of the two users.</p>
 <p>With a scoped signing key, the operator&#x27;s key stays with you: the template sets
