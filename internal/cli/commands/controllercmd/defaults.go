@@ -29,10 +29,13 @@ import (
 // controller start owns: a key that the config file and the environment do
 // not set takes its value from here. osapi config default get prints them.
 var Defaults = config.Controller{
-	Client: config.Client{URL: "http://localhost:8080"},
+	Client: config.Client{URL: "https://localhost:8080"},
 	API: config.APIServer{
 		Port:       8080,
 		JobTimeout: "30s",
+		// TLS on, with a self-signed certificate made at the first start
+		// (osapi-io/osapi#1413).
+		TLS: config.ServerTLS{Enabled: true},
 	},
 	NATS: config.NATSConnection{
 		Host:       "localhost",
@@ -40,8 +43,11 @@ var Defaults = config.Controller{
 		ClientName: "osapi-controller",
 		Namespace:  "osapi",
 		Auth:       config.NATSAuth{Type: "none"},
+		TLS:        config.ClientTLS{Enabled: true},
 	},
-	Metrics: config.MetricsServer{Enabled: true, Host: "0.0.0.0", Port: 9090},
+	Metrics: config.MetricsServer{
+		Enabled: true, Host: "0.0.0.0", Port: 9090, TLS: config.ServerTLS{Enabled: true},
+	},
 	Notifications: config.NotificationsConfig{
 		Enabled:          true,
 		Notifier:         "log",

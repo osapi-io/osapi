@@ -57,20 +57,22 @@ Do these steps on the host of NATS and the controller.
 1. Merge `osapi-nats.yaml` into `/etc/osapi/osapi.yaml`. It sets the auth of the
    server, of the controller and of the join.
 
-1. Turn on TLS when the network is not yours. Without TLS, a job, the output of
-   a command and the facts cross the network as plain text:
+1. NATS serves TLS by default. With no `cert_file`, the server makes a
+   self-signed certificate, `nats.crt`, in `nats.server.key_dir` at its first
+   start. The controller and an agent on the same host trust it with no setting.
+   To serve a certificate of your own:
 
    ```yaml
    nats:
      server:
        tls:
-         enabled: true
          cert_file: /etc/osapi/tls/nats.crt
          key_file: /etc/osapi/tls/nats.key
    ```
 
-   Then the join string starts with `tls://`, and it has the fingerprint of the
-   certificate. An agent refuses a server with a different certificate.
+   Set `controller.join.url` to `tls://`. Then the join string has the
+   fingerprint of the certificate, and an agent refuses a server with a
+   different certificate.
 
 1. As an option, encrypt the store on the disk:
 

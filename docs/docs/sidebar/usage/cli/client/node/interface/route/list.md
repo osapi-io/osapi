@@ -198,12 +198,12 @@ It needs the `interface:read` permission.
 
 ## Global flags
 
-| Flag               | Description                                                                      | Default                 |
-| ------------------ | -------------------------------------------------------------------------------- | ----------------------- |
-| `-d, --debug`      | Enable or disable debug mode                                                     |                         |
-| `-j, --json`       | Enable JSON output                                                               |                         |
-| `-f, --osapi-file` | Path to config file; without one at the default path, osapi runs on the defaults | `/etc/osapi/osapi.yaml` |
-| `--url`            | Base URL the CLI client connects to (controller.client.url)                      | `http://localhost:8080` |
+| Flag               | Description                                                                      | Default                  |
+| ------------------ | -------------------------------------------------------------------------------- | ------------------------ |
+| `-d, --debug`      | Enable or disable debug mode                                                     |                          |
+| `-j, --json`       | Enable JSON output                                                               |                          |
+| `-f, --osapi-file` | Path to config file; without one at the default path, osapi runs on the defaults | `/etc/osapi/osapi.yaml`  |
+| `--url`            | Base URL the CLI client connects to (controller.client.url)                      | `https://localhost:8080` |
 
 [Output](../../../../output.md) tells how the result is printed, and what
 `--json` gives.

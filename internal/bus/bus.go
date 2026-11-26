@@ -126,7 +126,14 @@ func ServerOptions(
 	storeDir string,
 	serverAuth config.NATSServerAuth,
 	serverTLS config.ServerTLS,
+	keyDir string,
 ) (*natsserver.Options, error) {
+	// With TLS on and no cert_file, the server serves its self-signed
+	// nats.crt in keyDir, which it makes at its first start.
+	serverTLS, err := serverTLS.WithSelfSigned(keyDir, "nats")
+	if err != nil {
+		return nil, fmt.Errorf("tls: %w", err)
+	}
 	tlsConfig, err := serverTLS.Config()
 	if err != nil {
 		return nil, fmt.Errorf("tls: %w", err)

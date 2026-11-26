@@ -24,6 +24,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/config"
+
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/audit"
@@ -59,18 +61,18 @@ var ExportTraceResponse = traceResponse
 func SetHostnameFn(
 	fn func() (string, error),
 ) {
-	hostnameFn = fn
+	config.SelfSignedHostname = fn
 }
 
 // SetWriteFileFn replaces how a self-signed certificate is written.
 func SetWriteFileFn(
 	fn func(string, []byte, os.FileMode) error,
 ) {
-	writeFileFn = fn
+	config.SelfSignedWrite = fn
 }
 
 // ResetTLSFns restores hostnameFn and writeFileFn.
 func ResetTLSFns() {
-	hostnameFn = os.Hostname
-	writeFileFn = os.WriteFile
+	config.SelfSignedHostname = os.Hostname
+	config.SelfSignedWrite = os.WriteFile
 }

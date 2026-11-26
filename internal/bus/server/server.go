@@ -63,7 +63,7 @@ func New(
 ) (*Server, error) {
 	sc := cfg.Server
 
-	opts, err := bus.ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth, sc.TLS)
+	opts, err := bus.ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth, sc.TLS, sc.KeyDir)
 	if err != nil {
 		return nil, fmt.Errorf("NATS server: %w", err)
 	}

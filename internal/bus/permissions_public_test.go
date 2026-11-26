@@ -210,7 +210,7 @@ func (s *PermissionsPublicTestSuite) TestControllerAnswersRequests() {
 	auth := config.NATSServerAuth{Type: "user_pass", Users: []config.NATSServerUser{
 		{Username: "c", Password: "p", Role: "controller"},
 	}}
-	opts, err := bus.ServerOptions("127.0.0.1", 4222, "", auth, config.ServerTLS{})
+	opts, err := bus.ServerOptions("127.0.0.1", 4222, "", auth, config.ServerTLS{}, "")
 	s.Require().NoError(err)
 	s.Require().NoError(bus.ApplyRoles(opts, auth, "osapi", s.cfg))
 	s.Require().NotNil(opts.Users[0].Permissions.Response)
@@ -305,7 +305,7 @@ func (s *PermissionsPublicTestSuite) TestApplyRoles() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			opts, err := bus.ServerOptions("127.0.0.1", 4222, "", tt.auth, config.ServerTLS{})
+			opts, err := bus.ServerOptions("127.0.0.1", 4222, "", tt.auth, config.ServerTLS{}, "")
 			s.Require().NoError(err)
 			err = bus.ApplyRoles(opts, tt.auth, "osapi", s.cfg)
 			if tt.wantErr != "" {
