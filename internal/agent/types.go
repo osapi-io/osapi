@@ -111,6 +111,9 @@ type Agent struct {
 	// fileLabels are the labels of the agent's config file, which the
 	// labels of the controller's config are laid over.
 	fileLabels map[string]string
+	// fileMaxJobs is the max_jobs of the agent's config file, which the
+	// controller's config replaces when it sets one.
+	fileMaxJobs int
 	// configVersion is the version of the controller's config that the
 	// agent applied, 0 for none.
 	configVersion int

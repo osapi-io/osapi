@@ -74,6 +74,7 @@ var (
 var sampleConfig = AgentConfigResponse{
 	Version: 2,
 	Labels:  map[string]string{"group": "web", "dc": "east"},
+	MaxJobs: 4,
 	UpdatedAt: func() *time.Time {
 		t := time.Date(2026, 11, 25, 12, 0, 0, 0, time.UTC)
 

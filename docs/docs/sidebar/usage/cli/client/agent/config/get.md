@@ -24,9 +24,10 @@ $ osapi client agent config get --hostname web-01
 [1;38;2;0;213;255mAgent config:[0m
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
-  [38;2;10;143;176mVersion:[0m  2
-  [38;2;10;143;176mLabels:[0m   dc:east, group:web
-  [38;2;10;143;176mUpdated:[0m  2026-11-25 12:00:00
+  [38;2;10;143;176mVersion:[0m   2
+  [38;2;10;143;176mLabels:[0m    dc:east, group:web
+  [38;2;10;143;176mMax jobs:[0m  4
+  [38;2;10;143;176mUpdated:[0m   2026-11-25 12:00:00
 ```
 
 With `--json`, the API's response:
@@ -38,6 +39,7 @@ With `--json`, the API's response:
     "dc": "east",
     "group": "web"
   },
+  "max_jobs": 4,
   "updated_at": "2026-11-25T12:00:00Z"
 }
 ```

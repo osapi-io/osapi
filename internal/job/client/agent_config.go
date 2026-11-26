@@ -71,17 +71,18 @@ func (c *Client) agentConfig(
 	return cfg, nil
 }
 
-// SetAgentConfig sets the labels of the agent with machineID, as the next
-// version of its config, in an agent.config.set span.
+// SetAgentConfig sets the labels and the max jobs of set as the config of
+// the agent with machineID, as its next version, in an agent.config.set
+// span.
 func (c *Client) SetAgentConfig(
 	ctx context.Context,
 	machineID string,
-	labels map[string]string,
+	set job.AgentConfig,
 ) (job.AgentConfig, error) {
 	ctx, span := opspan.Start(ctx, tracerName, "agent.config.set",
 		attribute.String("osapi.agent.machine_id", machineID),
 	)
-	cfg, err := c.setAgentConfig(ctx, machineID, labels)
+	cfg, err := c.setAgentConfig(ctx, machineID, set)
 	span.SetAttributes(attribute.Int("osapi.agent.config_version", cfg.Version))
 
 	return cfg, opspan.End(span, err)
@@ -91,14 +92,15 @@ func (c *Client) SetAgentConfig(
 func (c *Client) setAgentConfig(
 	ctx context.Context,
 	machineID string,
-	labels map[string]string,
+	set job.AgentConfig,
 ) (job.AgentConfig, error) {
 	cfg, err := c.agentConfig(ctx, machineID)
 	if err != nil {
 		return job.AgentConfig{}, err
 	}
 	cfg.Version++
-	cfg.Labels = labels
+	cfg.Labels = set.Labels
+	cfg.MaxJobs = set.MaxJobs
 	cfg.UpdatedAt = time.Now().UTC()
 	data, err := c.JSONMarshalFn(cfg)
 	if err != nil {

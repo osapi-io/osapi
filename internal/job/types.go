@@ -460,6 +460,9 @@ type AgentConfig struct {
 	// Labels replace the labels of the agent's config file with the same
 	// keys.
 	Labels map[string]string `json:"labels,omitempty"`
+	// MaxJobs replaces the max_jobs of the agent's config file, and 0 keeps
+	// it.
+	MaxJobs int `json:"max_jobs,omitempty"`
 	// UpdatedAt is when the config last changed.
 	UpdatedAt time.Time `json:"updated_at,omitzero"`
 }

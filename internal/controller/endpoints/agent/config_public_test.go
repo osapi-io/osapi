@@ -102,13 +102,15 @@ func (s *MethodsPublicTestSuite) TestConfig() {
 		s.jobs = mocks.NewMockJobs(s.ctrl)
 		labels := map[string]string{"group": "web"}
 		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
-		s.jobs.EXPECT().SetAgentConfig(gomock.Any(), "m-1", labels).
-			Return(job.AgentConfig{Version: 3, Labels: labels, UpdatedAt: at}, nil)
+		s.jobs.EXPECT().
+			SetAgentConfig(gomock.Any(), "m-1", job.AgentConfig{Labels: labels, MaxJobs: 4}).
+			Return(job.AgentConfig{Version: 3, Labels: labels, MaxJobs: 4, UpdatedAt: at}, nil)
 		got, err := agent.SetConfig(ctx, s.deps(), agent.ConfigSetInput{
-			Hostname: "server1", Body: agent.AgentConfigRequest{Labels: labels},
+			Hostname: "server1", Body: agent.AgentConfigRequest{Labels: labels, MaxJobs: 4},
 		})
 		s.Require().NoError(err)
 		s.Equal(3, got.Version)
+		s.Equal(4, got.MaxJobs)
 	})
 	s.Run("update: an agent that is not there", func() {
 		// A mock with no default read of the config.

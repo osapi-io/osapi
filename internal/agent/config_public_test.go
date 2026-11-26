@@ -50,17 +50,41 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 	})
 
 	s.Run("new labels lie over the file's, and the timeline says so", func() {
+		s.appConfig.Agent.MaxJobs = 10
 		s.appConfig.Agent.Labels = map[string]string{"group": "db", "dc": "east"}
 		a := s.buildAgent()
 		s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
 			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 2, labels dc=east,group=web").
+				"config version 2, labels dc=east,group=web, max jobs 10").
 			Return(nil)
 		labels, version := agent.ExportApplyConfig(a, "m-1")
 		s.Equal(map[string]string{"group": "web", "dc": "east"}, labels)
 		s.Equal(2, version)
+	})
+
+	s.Run("max jobs replaces the file's, and a version without it gives the file's back", func() {
+		s.appConfig.Agent.MaxJobs = 10
+		s.appConfig.Agent.Labels = map[string]string{"group": "web"}
+		a := s.buildAgent()
+		s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+			Return(job.AgentConfig{Version: 1, Labels: map[string]string{"group": "web"}, MaxJobs: 2}, nil)
+		s.mockJobClient.EXPECT().
+			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
+				"config version 1, labels group=web, max jobs 2").
+			Return(nil)
+		agent.ExportApplyConfig(a, "m-1")
+		s.Equal(2, agent.ExportMaxJobs(a))
+
+		s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
+		s.mockJobClient.EXPECT().
+			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
+				"config version 2, labels group=web, max jobs 10").
+			Return(nil)
+		agent.ExportApplyConfig(a, "m-1")
+		s.Equal(10, agent.ExportMaxJobs(a))
 	})
 
 	s.Run("a new version with the same labels writes no event", func() {

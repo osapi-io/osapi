@@ -9,6 +9,8 @@ import type { AgentConfigResponseLabels } from './agentConfigResponseLabels';
 export interface AgentConfigResponse {
   /** The labels that the controller gives the agent. */
   labels?: AgentConfigResponseLabels;
+  /** The most jobs that the agent runs at the same time; empty keeps the agent's config file. */
+  max_jobs?: number;
   /** When the config last changed. */
   updated_at?: string;
   /** One more at each change; 0 when nothing was set. */

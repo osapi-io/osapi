@@ -347,18 +347,18 @@ func (mr *MockJobClientMockRecorder) RetryJob(ctx, jobID, targetHostname any) *g
 }
 
 // SetAgentConfig mocks base method.
-func (m *MockJobClient) SetAgentConfig(ctx context.Context, machineID string, labels map[string]string) (job.AgentConfig, error) {
+func (m *MockJobClient) SetAgentConfig(ctx context.Context, machineID string, set job.AgentConfig) (job.AgentConfig, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetAgentConfig", ctx, machineID, labels)
+	ret := m.ctrl.Call(m, "SetAgentConfig", ctx, machineID, set)
 	ret0, _ := ret[0].(job.AgentConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SetAgentConfig indicates an expected call of SetAgentConfig.
-func (mr *MockJobClientMockRecorder) SetAgentConfig(ctx, machineID, labels any) *gomock.Call {
+func (mr *MockJobClientMockRecorder) SetAgentConfig(ctx, machineID, set any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentConfig", reflect.TypeOf((*MockJobClient)(nil).SetAgentConfig), ctx, machineID, labels)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentConfig", reflect.TypeOf((*MockJobClient)(nil).SetAgentConfig), ctx, machineID, set)
 }
 
 // SetAgentKeyStore mocks base method.

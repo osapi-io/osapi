@@ -64,6 +64,6 @@ type Jobs interface {
 	SetAgentConfig(
 		ctx context.Context,
 		machineID string,
-		labels map[string]string,
+		set job.AgentConfig,
 	) (job.AgentConfig, error)
 }

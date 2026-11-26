@@ -67,6 +67,7 @@ func New(
 		logger:          logger.With(slog.String("subsystem", "agent")),
 		appConfig:       appConfig,
 		fileLabels:      maps.Clone(appConfig.Agent.Labels),
+		fileMaxJobs:     appConfig.Agent.MaxJobs,
 		appFs:           appFs,
 		jobClient:       jobClient,
 		streamName:      streamName,
