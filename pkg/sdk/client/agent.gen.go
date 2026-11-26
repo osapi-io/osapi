@@ -45,13 +45,17 @@ type AgentSetconfigInput struct {
 	// The labels of the agent, as key=value. They replace the labels of the
 	// agent's config file with the same keys. Empty removes each.
 	Labels map[string]string `json:"labels,omitempty"`
+
+	// The most jobs that the agent runs at the same time. It replaces max_jobs of
+	// the agent's config file; empty keeps the file's.
+	MaxJobs int `json:"max_jobs,omitempty"`
 }
 
 // Setconfig is the operation PutAgentConfig: set the config of an agent.
 //
-// Sets the labels of the agent as the next version of its config. The agent
-// applies them at once: it takes the jobs of the new labels, and no restart is
-// necessary.
+// Sets the labels and the max jobs of the agent as the next version of its
+// config. The agent applies them at once: it takes the jobs of the new labels,
+// runs at most max jobs at the same time, and no restart is necessary.
 //
 // It sends PUT /api/agent/config/{hostname}, and needs the permission
 // agent:write.

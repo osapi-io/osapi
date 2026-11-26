@@ -184,7 +184,8 @@ type ConfigSetInput struct {
 
 // AgentConfigRequest is the config that the controller gives an agent.
 type AgentConfigRequest struct { //nolint:revive // the schema name is part of the API
-	Labels map[string]string `json:"labels,omitempty" validate:"omitempty" doc:"The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each."`
+	Labels  map[string]string `json:"labels,omitempty"   validate:"omitempty"                doc:"The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each."`
+	MaxJobs int               `json:"max_jobs,omitempty" validate:"omitempty,min=1,max=1000" doc:"The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's."`
 }
 
 // AgentConfigResponse is the config that the controller holds for an
@@ -193,5 +194,6 @@ type AgentConfigResponse struct { //nolint:revive // the schema name is part of 
 	_         struct{}          `title:"Agent config"`
 	Version   int               `                     json:"version"              doc:"One more at each change; 0 when nothing was set."`
 	Labels    map[string]string `                     json:"labels,omitempty"     doc:"The labels that the controller gives the agent."`
-	UpdatedAt *time.Time        `                     json:"updated_at,omitempty" doc:"When the config last changed."                    render:"time" label:"Updated"`
+	MaxJobs   int               `                     json:"max_jobs,omitempty"   doc:"The most jobs that the agent runs at the same time; empty keeps the agent's config file." label:"Max jobs"`
+	UpdatedAt *time.Time        `                     json:"updated_at,omitempty" doc:"When the config last changed."                                                            label:"Updated"  render:"time"`
 }

@@ -133,11 +133,13 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 				s.Require().NoError(json.Unmarshal(data, &cfg))
 				s.Equal(3, cfg.Version)
 				s.Equal(labels, cfg.Labels)
+				s.Equal(4, cfg.MaxJobs)
 				s.False(cfg.UpdatedAt.IsZero())
 
 				return 1, nil
 			})
-		got, err := s.client("state").SetAgentConfig(ctx, "m-1", labels)
+		got, err := s.client("state").SetAgentConfig(ctx, "m-1",
+			job.AgentConfig{Labels: labels, MaxJobs: 4, Version: 9})
 		s.Require().NoError(err)
 		s.Equal(3, got.Version)
 	})
@@ -145,7 +147,7 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 		s.nc.EXPECT().
 			KVGet(gomock.Any(), "state", "config.m-1").
 			Return(nil, errors.New("nats down"))
-		_, err := s.client("state").SetAgentConfig(ctx, "m-1", labels)
+		_, err := s.client("state").SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
 		s.ErrorContains(err, "nats down")
 	})
 	s.Run("a config that cannot be written", func() {
@@ -155,7 +157,7 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 		s.nc.EXPECT().
 			KVPut(gomock.Any(), "state", "config.m-1", gomock.Any()).
 			Return(uint64(0), errors.New("full"))
-		_, err := s.client("state").SetAgentConfig(ctx, "m-1", labels)
+		_, err := s.client("state").SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
 		s.ErrorContains(err, "write the config of m-1: full")
 	})
 	s.Run("a config that cannot be marshaled", func() {
@@ -164,7 +166,7 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 			Return(nil, jetstream.ErrKeyNotFound)
 		c := s.client("state")
 		c.JSONMarshalFn = func(any) ([]byte, error) { return nil, errors.New("no json") }
-		_, err := c.SetAgentConfig(ctx, "m-1", labels)
+		_, err := c.SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
 		s.ErrorContains(err, "marshal the config of m-1")
 	})
 }

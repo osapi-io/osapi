@@ -80,9 +80,9 @@ func (s *AgentService) Setconfig(
 
 Set the config of an agent.
 
-Sets the labels of the agent as the next version of its config. The agent
-applies them at once: it takes the jobs of the new labels, and no restart is
-necessary.
+Sets the labels and the max jobs of the agent as the next version of its config.
+The agent applies them at once: it takes the jobs of the new labels, runs at
+most max jobs at the same time, and no restart is necessary.
 
 It sends `PUT /api/agent/config/{hostname}`, and needs the permission
 `agent:write`.
@@ -92,10 +92,13 @@ The examples of the method's definition:
 Set the config of an agent, `go run agent.go setconfig`:
 
 ```go
-resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{Labels: map[string]string{
-	"dc":    "east",
-	"group": "web",
-}})
+resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{
+	Labels: map[string]string{
+		"dc":    "east",
+		"group": "web",
+	},
+	MaxJobs: 4,
+})
 ```
 
 ### Facts
@@ -224,11 +227,12 @@ A `string`, one of `inet`, `inet6`, `dual`.
 
 ### AgentConfigResponse
 
-| Field       | Type                | Description                                      |
-| ----------- | ------------------- | ------------------------------------------------ |
-| `Labels`    | `map[string]string` | The labels that the controller gives the agent.  |
-| `UpdatedAt` | `time.Time`         | When the config last changed.                    |
-| `Version`   | `int`               | One more at each change; 0 when nothing was set. |
+| Field       | Type                | Description                                                                              |
+| ----------- | ------------------- | ---------------------------------------------------------------------------------------- |
+| `Labels`    | `map[string]string` | The labels that the controller gives the agent.                                          |
+| `MaxJobs`   | `int`               | The most jobs that the agent runs at the same time; empty keeps the agent's config file. |
+| `UpdatedAt` | `time.Time`         | When the config last changed.                                                            |
+| `Version`   | `int`               | One more at each change; 0 when nothing was set.                                         |
 
 ### AgentInfo
 
@@ -278,9 +282,10 @@ A `string`, one of `inet`, `inet6`, `dual`.
 
 ### AgentSetconfigInput
 
-| Field    | Type                | Description                                                                                                                       |
-| -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `Labels` | `map[string]string` | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. |
+| Field     | Type                | Description                                                                                                                       |
+| --------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `Labels`  | `map[string]string` | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. |
+| `MaxJobs` | `int`               | The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's.      |
 
 ### AgentState
 

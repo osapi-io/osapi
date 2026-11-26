@@ -68,10 +68,13 @@ func runSetconfig(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{Labels: map[string]string{
-		"dc":    "east",
-		"group": "web",
-	}})
+	resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{
+		Labels: map[string]string{
+			"dc":    "east",
+			"group": "web",
+		},
+		MaxJobs: 4,
+	})
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,11 @@
 # Update
 
-Set the labels of an agent.
+Set the labels and the max jobs of an agent.
 
-The labels replace the labels of the agent's config file with the same keys. The
-agent applies them at once, with no restart. A host that joins with a join token
-gets the labels of the token.
+The labels replace the labels of the agent's config file with the same keys, and
+max jobs replaces its max_jobs; with no max jobs, the agent keeps the file's.
+The agent applies them at once, with no restart. A host that joins with a join
+token gets the labels of the token.
 
 ```bash
 osapi client agent config update [flags]
@@ -13,7 +14,7 @@ osapi client agent config update [flags]
 ## Examples
 
 ```bash
-osapi client agent config update --hostname web-01 --labels group=web --labels dc=east
+osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4
 ```
 
 ## Result
@@ -21,13 +22,14 @@ osapi client agent config update --hostname web-01 --labels group=web --labels d
 The command prints:
 
 ```ansi
-$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east
+$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4
 [1;38;2;0;213;255mAgent config:[0m
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
-  [38;2;10;143;176mVersion:[0m  2
-  [38;2;10;143;176mLabels:[0m   dc:east, group:web
-  [38;2;10;143;176mUpdated:[0m  2026-11-25 12:00:00
+  [38;2;10;143;176mVersion:[0m   2
+  [38;2;10;143;176mLabels:[0m    dc:east, group:web
+  [38;2;10;143;176mMax jobs:[0m  4
+  [38;2;10;143;176mUpdated:[0m   2026-11-25 12:00:00
 ```
 
 With `--json`, the API's response:
@@ -39,6 +41,7 @@ With `--json`, the API's response:
     "dc": "east",
     "group": "web"
   },
+  "max_jobs": 4,
   "updated_at": "2026-11-25T12:00:00Z"
 }
 ```
@@ -54,6 +57,7 @@ shows what a role grants.
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `--hostname` | The hostname of the agent (required)                                                                                             |         |
 | `--labels`   | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each |         |
+| `--max-jobs` | The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's      |         |
 
 ## Global flags
 

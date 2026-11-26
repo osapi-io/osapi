@@ -182,18 +182,18 @@ func (mr *MockJobsMockRecorder) ListAgents(ctx any) *gomock.Call {
 }
 
 // SetAgentConfig mocks base method.
-func (m *MockJobs) SetAgentConfig(ctx context.Context, machineID string, labels map[string]string) (job.AgentConfig, error) {
+func (m *MockJobs) SetAgentConfig(ctx context.Context, machineID string, set job.AgentConfig) (job.AgentConfig, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetAgentConfig", ctx, machineID, labels)
+	ret := m.ctrl.Call(m, "SetAgentConfig", ctx, machineID, set)
 	ret0, _ := ret[0].(job.AgentConfig)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SetAgentConfig indicates an expected call of SetAgentConfig.
-func (mr *MockJobsMockRecorder) SetAgentConfig(ctx, machineID, labels any) *gomock.Call {
+func (mr *MockJobsMockRecorder) SetAgentConfig(ctx, machineID, set any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentConfig", reflect.TypeOf((*MockJobs)(nil).SetAgentConfig), ctx, machineID, labels)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentConfig", reflect.TypeOf((*MockJobs)(nil).SetAgentConfig), ctx, machineID, set)
 }
 
 // SetDrainFlag mocks base method.

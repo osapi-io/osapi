@@ -224,7 +224,7 @@ type JobClient interface {
 	SetAgentConfig(
 		ctx context.Context,
 		machineID string,
-		labels map[string]string,
+		set job.AgentConfig,
 	) (job.AgentConfig, error)
 
 	// Agent timeline

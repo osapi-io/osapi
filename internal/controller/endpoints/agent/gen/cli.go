@@ -81,7 +81,7 @@ var agentGetconfigCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey:    "config",
 		reference.Permission: "agent:read",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config get --hostname web-01\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m  2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m   dc:east, group:web\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m  2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config get --hostname web-01\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m   2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m    dc:east, group:web\n  \x1b[38;2;10;143;176mMax jobs:\x1b[0m  4\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m   2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"max_jobs\": 4,\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client agent config get --hostname web-01",
@@ -99,18 +99,19 @@ var agentSetconfigCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey:    "config",
 		reference.Permission: "agent:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m  2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m   dc:east, group:web\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m  2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m   2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m    dc:east, group:web\n  \x1b[38;2;10;143;176mMax jobs:\x1b[0m  4\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m   2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"max_jobs\": 4,\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi client agent config update --hostname web-01 --labels group=web --labels dc=east",
-	Long:    "The labels replace the labels of the agent's config file with the same\nkeys. The agent applies them at once, with no restart. A host that joins\nwith a join token gets the labels of the token.",
+	Example: "  osapi client agent config update --hostname web-01 --labels group=web --labels dc=east --max-jobs 4",
+	Long:    "The labels replace the labels of the agent's config file with the same\nkeys, and max jobs replaces its max_jobs; with no max jobs, the agent\nkeeps the file's. The agent applies them at once, with no restart. A host\nthat joins with a join token gets the labels of the token.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 		labels, _ := cmd.Flags().GetStringToString("labels")
+		maxJobs, _ := cmd.Flags().GetInt("max-jobs")
 
-		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.AgentConfigRequest{Labels: labels}})
+		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.AgentConfigRequest{Labels: labels, MaxJobs: maxJobs}})
 	},
-	Short: "Set the labels of an agent",
+	Short: "Set the labels and the max jobs of an agent",
 	Use:   "update",
 }
 
@@ -141,6 +142,7 @@ func init() {
 	agentSetconfigCmd.Flags().String("hostname", "", "The hostname of the agent")
 	_ = agentSetconfigCmd.MarkFlagRequired("hostname")
 	agentSetconfigCmd.Flags().StringToString("labels", nil, "The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each")
+	agentSetconfigCmd.Flags().Int("max-jobs", 0, "The most jobs that the agent runs at the same time. It replaces max_jobs of the agent's config file; empty keeps the file's")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
 	clicommand.AddCommands(agent.Group, agentFactsCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentGetconfigCmd, agentSetconfigCmd, agentUndrainCmd)

@@ -1076,6 +1076,13 @@ func ExportStartRenewal(
 	a.wg.Wait()
 }
 
+// ExportMaxJobs is the max jobs that the agent runs with now.
+func ExportMaxJobs(
+	a *Agent,
+) int {
+	return a.appConfig.Agent.MaxJobs
+}
+
 // ExportApplyConfig calls applyConfig as the agent with machineID, and
 // returns its labels and the config version that it applied.
 func ExportApplyConfig(

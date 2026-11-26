@@ -13,6 +13,10 @@ type AgentConfigResponse struct {
 	// The labels that the controller gives the agent.
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// The most jobs that the agent runs at the same time; empty keeps the agent's
+	// config file.
+	MaxJobs int `json:"max_jobs,omitempty"`
+
 	// When the config last changed.
 	UpdatedAt time.Time `json:"updated_at,omitzero"`
 
