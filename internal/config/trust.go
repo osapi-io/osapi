@@ -30,7 +30,8 @@ import (
 // certificate in its key directory: the CLI the API's api.crt, and the
 // controller and the agent the NATS server's nats.crt. A server with its own
 // cert_file, or one on another host, needs ca_file, or the pin of a join
-// string.
+// string. An agent with agent.join is left as it is: its join gives it its
+// NATS server, its user and what it trusts (osapi#1491).
 func TrustLocal(
 	c Config,
 ) Config {
@@ -45,8 +46,9 @@ func TrustLocal(
 	auth := c.NATS.Server.Auth
 	if auth.Type == "operator" && auth.ResolverFile == "" {
 		dir := NATSAuthDir(c.NATS.Server.KeyDir)
-		creds := map[*NATSConnection]string{
-			&c.Controller.NATS: "controller.creds", &c.Agent.NATS: "agent.creds",
+		creds := map[*NATSConnection]string{&c.Controller.NATS: "controller.creds"}
+		if c.Agent.Join == "" {
+			creds[&c.Agent.NATS] = "agent.creds"
 		}
 		for n, file := range creds {
 			if isLocal(n.Host) && (n.Auth.Type == "" || n.Auth.Type == "none") {
@@ -60,7 +62,11 @@ func TrustLocal(
 		}
 	}
 	natsCA, _ := SelfSignedFiles(c.NATS.Server.KeyDir, "nats")
-	for _, n := range []*NATSConnection{&c.Controller.NATS, &c.Agent.NATS} {
+	clients := []*NATSConnection{&c.Controller.NATS}
+	if c.Agent.Join == "" {
+		clients = append(clients, &c.Agent.NATS)
+	}
+	for _, n := range clients {
 		if n.TLS.Enabled && n.TLS.CAFile == "" && isLocal(n.Host) &&
 			c.NATS.Server.TLS.CertFile == "" {
 			n.TLS.CAFile = natsCA

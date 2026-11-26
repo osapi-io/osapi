@@ -164,6 +164,15 @@ func (s *SelfSignedPublicTestSuite) TestTrustLocalOperator() {
 		s.Empty(got.Agent.NATS.Auth.Type)
 		s.Empty(got.Controller.Join.SigningKeyFile)
 	})
+	s.Run("an agent with a join string is left to its join", func() {
+		c := base()
+		c.Agent.Join = "tls://nats.example.com:4222?token=t&fp=SHA256:aa"
+		c.Agent.NATS.TLS.Enabled = true
+		got := config.TrustLocal(c)
+		s.Empty(got.Agent.NATS.Auth.Type, "no credentials of this host")
+		s.Empty(got.Agent.NATS.TLS.CAFile, "no nats.crt of this host: the join says what it trusts")
+		s.Equal("/etc/osapi/pki/nats-auth/controller.creds", got.Controller.NATS.Auth.CredsFile)
+	})
 	s.Run("a server with its own resolver_file is not self-made", func() {
 		c := base()
 		c.NATS.Server.Auth.ResolverFile = "/etc/nsc/resolver.conf"
