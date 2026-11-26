@@ -101,7 +101,8 @@ type services struct {
 	// index has for the host.
 	PackageUpdates *PackageUpdatesService
 
-	// Pki calls the API's Pki group: the certificates of the fleet.
+	// Pki calls the API's Pki group: the certificates of the fleet, and the
+	// rotation of the controller's key.
 	Pki *PkiService
 
 	// Power calls the API's Power group: reboot or shut down the host.

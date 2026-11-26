@@ -6,27 +6,31 @@ title: Pki
 
 # Pki
 
-The certificates of the fleet. `osapi dsl endpoint get --name pki` shows the
-same.
+The certificates of the fleet, and the rotation of the controller's key.
+`osapi dsl endpoint get --name pki` shows the same.
 
 ## Endpoint group
 
-|             |                               |
-| ----------- | ----------------------------- |
-| Name        | pki                           |
-| Description | The certificates of the fleet |
-| Area        | fleet                         |
+|             |                                                                         |
+| ----------- | ----------------------------------------------------------------------- |
+| Name        | pki                                                                     |
+| Description | The certificates of the fleet, and the rotation of the controller's key |
+| Area        | fleet                                                                   |
 
-### Methods (2)
+### Methods (4)
 
-| NAME | VERB | PATH                           | PERMISSION | OPERATION ID |
-| ---- | ---- | ------------------------------ | ---------- | ------------ |
-| list | GET  | /api/pki/cert                  | pki:read   | ListPKICerts |
-| get  | GET  | /api/pki/cert/&#123;name&#125; | pki:read   | GetPKICert   |
+| NAME     | VERB | PATH                           | PERMISSION | OPERATION ID      |
+| -------- | ---- | ------------------------------ | ---------- | ----------------- |
+| list     | GET  | /api/pki/cert                  | pki:read   | ListPKICerts      |
+| get      | GET  | /api/pki/cert/&#123;name&#125; | pki:read   | GetPKICert        |
+| rotation | GET  | /api/pki/key                   | pki:read   | GetPKIKeyRotation |
+| rotate   | POST | /api/pki/key                   | pki:write  | RotatePKIKey      |
 
-### Types (2)
+### Types (4)
 
-| NAME | INPUT                                   | OUTPUT                                                                                                                                   |
-| ---- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| list | ListInput &#123; hostname &#125;        | CertList &#123; items, total_items &#125;                                                                                                |
-| get  | GetInput &#123; name\*, hostname &#125; | Cert &#123; hostname, name, state, component, source, file, names, expires, days_left, fingerprint, key, signature, fips_approved &#125; |
+| NAME     | INPUT                                   | OUTPUT                                                                                                                                   |
+| -------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| list     | ListInput &#123; hostname &#125;        | CertList &#123; items, total_items &#125;                                                                                                |
+| get      | GetInput &#123; name\*, hostname &#125; | Cert &#123; hostname, name, state, component, source, file, names, expires, days_left, fingerprint, key, signature, fips_approved &#125; |
+| rotation | RotationInput                           | Rotation &#123; current, next, started_at, switch_by, agents &#125;                                                                      |
+| rotate   | RotateInput                             | Rotation &#123; current, next, started_at, switch_by, agents &#125;                                                                      |

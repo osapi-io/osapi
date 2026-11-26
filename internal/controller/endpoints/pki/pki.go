@@ -33,11 +33,17 @@ import (
 // Group is the pki group's definition. The routes, the spec, the CLI
 // commands and their pages come from it.
 var Group = endpoint.Register(endpoint.Define(
-	"pki", "The certificates of the fleet",
+	"pki",
+	"The certificates of the fleet, and the rotation of the controller's key",
 	endpoint.Area(area.Fleet),
 	endpoint.SubDoc("cert", "Read the certificates of the controller and of each agent"),
+	endpoint.SubDoc("key", "Rotate the controller's key with no new admission of the agents"),
 	endpoint.Title("PKI API"),
-	endpoint.Tag("pki_operations", "PKI", "The certificates of the fleet."),
+	endpoint.Tag(
+		"pki_operations",
+		"PKI",
+		"The certificates of the fleet, and the rotation of the controller's key.",
+	),
 	endpoint.Uses[Deps](),
 	endpoint.Get[ListInput, CertList]("list").
 		Handle(List).
@@ -79,4 +85,44 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a name over 64 characters", GetInput{Name: strings.Repeat("a", 65)}).
 		Fails("a hostname over 255 characters",
 			GetInput{Name: "api", Hostname: strings.Repeat("a", 256)}),
+	endpoint.Get[RotationInput, Rotation]("rotation").
+		Handle(KeyRotation).
+		Sub("key").
+		Use("get").
+		ID("GetPKIKeyRotation").
+		Describe("Show the rotation of the controller's key").
+		Explain("Shows the key that the controller signs jobs with, and during a "+
+			"rotation the key that it switches to, when it switches at the latest, and "+
+			"each admitted agent that the switch waits for, with whether it has the "+
+			"next key.").
+		Returns("The rotation of the controller's key.").
+		Command("Show the rotation of the controller's key",
+			"Shows the controller's key, and during a rotation, each agent that the\n"+
+				"switch waits for. The controller switches when each one has the next key,\n"+
+				"or when controller.pki.rotation_grace_period ends.").
+		Example("").
+		Prints(sampleRotation),
+	endpoint.Post[RotateInput, Rotation]("rotate").
+		AdminOnly().
+		Handle(RotateKey).
+		Sub("key").
+		Use("rotate").
+		ID("RotatePKIKey").
+		Describe("Rotate the controller's key").
+		Explain("Starts the rotation of the controller's key, with no new admission "+
+			"of the agents. The controller makes the next key, and signs a record "+
+			"that gives it to the agents with its current key. Each agent takes it at "+
+			"its next heartbeat. The controller switches to the next key when each "+
+			"admitted agent that reported within controller.pki.rotation_grace_period "+
+			"has it, or when the grace period ends. An agent that does not have it "+
+			"then needs a new admission. A rotation in progress is not started again.").
+		Returns("The rotation that started, or the one in progress.").
+		Command("Rotate the controller's key",
+			"Starts the rotation of the controller's key. The agents take the next key\n"+
+				"at their next heartbeat, and the controller switches when each one has it.\n"+
+				"osapi client pki key get shows the progress. An agent that is away\n"+
+				"for the whole grace period needs a new admission.").
+		Example("").
+		Check("client pki key get", "", "next", "{out.next}").
+		Prints(sampleRotationStarted),
 ))

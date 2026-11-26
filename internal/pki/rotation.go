@@ -22,21 +22,21 @@ package pki
 
 import "crypto/ed25519"
 
-// VerifyWithGrace checks the signature against both the current and
-// previous controller public keys. Returns true if either key
-// validates the signature, supporting graceful key rotation.
+// VerifyWithGrace checks the signature against each controller key that the
+// manager accepts: the current one, the previous one, which signed the jobs
+// that a rotation of the controller's key left in the queue, and the next
+// one, which the controller signs with once it switches.
 func (m *Manager) VerifyWithGrace(
 	data []byte,
 	signature []byte,
 ) bool {
-	if m.controllerPubKey != nil {
-		if ed25519.Verify(m.controllerPubKey, data, signature) {
-			return true
-		}
-	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 
-	if m.previousControllerPubKey != nil {
-		if ed25519.Verify(m.previousControllerPubKey, data, signature) {
+	for _, key := range []ed25519.PublicKey{
+		m.controllerPubKey, m.previousControllerPubKey, m.nextControllerPubKey,
+	} {
+		if len(key) == ed25519.PublicKeySize && ed25519.Verify(key, data, signature) {
 			return true
 		}
 	}
@@ -44,19 +44,54 @@ func (m *Manager) VerifyWithGrace(
 	return false
 }
 
-// RotateControllerKey stores the new controller key and moves the
-// current one to previous, enabling a grace period where both keys
-// are accepted.
+// RotateControllerKey makes newKey the controller key: the current one
+// becomes the previous one, which still verifies, and the next one is
+// cleared.
 func (m *Manager) RotateControllerKey(
 	newKey ed25519.PublicKey,
 ) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.previousControllerPubKey = m.controllerPubKey
 	m.controllerPubKey = newKey
+	m.nextControllerPubKey = nil
 }
 
 // PreviousControllerPublicKey returns the previous controller public
 // key, if any. This is the key that was current before the last
 // rotation.
 func (m *Manager) PreviousControllerPublicKey() ed25519.PublicKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.previousControllerPubKey
+}
+
+// SetPreviousControllerPublicKey sets the previous controller key, such as
+// the one that a controller read from its rotation record at its start.
+func (m *Manager) SetPreviousControllerPublicKey(
+	key ed25519.PublicKey,
+) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.previousControllerPubKey = key
+}
+
+// NextControllerPublicKey is the key that the controller switches to, as
+// its rotation record gave it, or nil.
+func (m *Manager) NextControllerPublicKey() ed25519.PublicKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return m.nextControllerPubKey
+}
+
+// SetNextControllerPublicKey sets the key that the controller switches to.
+// Nil clears it.
+func (m *Manager) SetNextControllerPublicKey(
+	key ed25519.PublicKey,
+) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.nextControllerPubKey = key
 }

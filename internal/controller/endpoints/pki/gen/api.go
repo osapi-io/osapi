@@ -26,6 +26,18 @@ func Routes(
 			Permission: "pki:read",
 			Handler:    server.Serve(s, pki.Group, "get", pki.Get, decodeGet),
 		},
+		{
+			Method:     http.MethodGet,
+			Path:       "/api/pki/key",
+			Permission: "pki:read",
+			Handler:    server.Serve(s, pki.Group, "rotation", pki.KeyRotation, decodeRotation),
+		},
+		{
+			Method:     http.MethodPost,
+			Path:       "/api/pki/key",
+			Permission: "pki:write",
+			Handler:    server.Serve(s, pki.Group, "rotate", pki.RotateKey, decodeRotate),
+		},
 	}
 }
 

@@ -18,45 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package admission
+package keyrotation
 
-import (
-	"context"
-	"fmt"
-	"log/slog"
+import "time"
 
-	"github.com/osapi-io/osapi/internal/pki"
-)
+// SetInterval sets how often Run steps, and returns the one before.
+func SetInterval(
+	d time.Duration,
+) time.Duration {
+	old := interval
+	interval = d
 
-// KeyRotationMessage is published to agents when the controller
-// rotates its keypair.
-type KeyRotationMessage struct {
-	NewPublicKey []byte `json:"new_public_key"`
-}
-
-// RotateControllerKey publishes the controller's current public key
-// to all agents via the pki.rotate subject. Agents receiving this
-// message move their current controller key to previous and store
-// the new key, enabling a grace period where both keys are accepted.
-func (w *Watcher) RotateControllerKey() error {
-	msg := KeyRotationMessage{
-		NewPublicKey: w.pkiProvider.PublicKey(),
-	}
-
-	data, err := marshalFn(msg)
-	if err != nil {
-		return fmt.Errorf("marshal rotation message: %w", err)
-	}
-
-	subject := enrollSubject(w.namespace, pki.PKIRotateSuffix)
-	if err := w.nc.PublishCore(context.Background(), subject, data); err != nil {
-		return fmt.Errorf("publish key rotation: %w", err)
-	}
-
-	w.logger.Info(
-		"published controller key rotation",
-		slog.String("subject", subject),
-	)
-
-	return nil
+	return old
 }

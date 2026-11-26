@@ -1558,6 +1558,20 @@ const sidebar: SidebarsConfig = {
               className: "api-method get",
               key: "fleet-pki-api-pki-operations-gen-api-get-pki-cert",
             },
+            {
+              type: "doc",
+              id: "gen/api/get-pki-key-rotation",
+              label: "Show the rotation of the controller's key",
+              className: "api-method get",
+              key: "fleet-pki-api-pki-operations-gen-api-get-pki-key-rotation",
+            },
+            {
+              type: "doc",
+              id: "gen/api/rotate-pki-key",
+              label: "Rotate the controller's key",
+              className: "api-method post",
+              key: "fleet-pki-api-pki-operations-gen-api-rotate-pki-key",
+            },
           ],
         },
         {

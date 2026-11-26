@@ -53,13 +53,6 @@ func (suite *TypesPublicTestSuite) TestSubjectConstants() {
 				assert.Equal(suite.T(), "enroll.response", got)
 			},
 		},
-		{
-			name:     "PKIRotateSuffix has correct value",
-			constant: pki.PKIRotateSuffix,
-			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "pki.rotate", got)
-			},
-		},
 	}
 
 	for _, tc := range tests {

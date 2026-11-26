@@ -139,11 +139,33 @@ the same keys. The audit log records each rotation as `agent.key.rotate`.
 
 ## Rotate the controller's key
 
-1. Put a new key pair in `controller.pki.key_dir`.
-1. Restart the controller. It signs with the new key.
-1. During `controller.pki.rotation_grace_period` (`24h`), each agent accepts the
-   old key and the new key, and gets the new key.
-1. After the grace period, only the new key is accepted.
+The controller's key rotates with no restart and no new admission of the agents:
+
+```bash
+osapi client pki key rotate
+```
+
+1. The controller makes the next key, and gives it to the agents in a record
+   that its current key signs.
+1. Each agent takes the next key at its next heartbeat.
+1. The controller switches to the next key when each admitted agent has it, or
+   when `controller.pki.rotation_grace_period` (`24h`) ends. Normally that takes
+   one or two heartbeats.
+1. Each agent then takes the new key at its next heartbeat. The old key still
+   verifies the jobs that it signed before the switch.
+
+Watch the progress:
+
+```bash
+osapi client pki key get
+```
+
+It shows the next key, and each agent that the switch waits for, with whether it
+has the next key. On the controller's host,
+`osapi pki key rotate --name controller` does the same as
+`client pki key rotate`. A rotation in progress is not started again. An agent
+that is away for the whole grace period needs a new admission. Refer to
+[Key rotation](../architecture/agent-identity.md#the-controllers-key).
 
 To change the key that signs the API tokens, see
 [3. Controller](controller.md#1-make-a-signing-key).

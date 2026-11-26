@@ -23,6 +23,7 @@ package pki
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 )
@@ -36,6 +37,15 @@ type Deps struct {
 	Local func() []pki.Cert
 	// Hostname is the hostname of the controller's host.
 	Hostname string
+	// Rotation starts and shows the rotation of the controller's key.
+	Rotation Rotator
+}
+
+// Rotator starts and shows the rotation of the controller's key. A
+// *keyrotation.Rotation is one.
+type Rotator interface {
+	Start(ctx context.Context) (keyrotation.Status, error)
+	Status(ctx context.Context) (keyrotation.Status, error)
 }
 
 // Agents lists the agents, each with the certificates of its registration.

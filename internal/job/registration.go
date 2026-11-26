@@ -41,6 +41,9 @@ import (
 //     lift that
 //   - labels, because a label target routes on them, so an unsigned label is a
 //     way to attract another host's jobs
+//   - the controller keys, because the controller switches its key when each
+//     agent reports the next one. Each is in the bytes only when it is set,
+//     so a registration without them has the bytes that it had before.
 //
 // The signature itself is excluded: it is carried beside these bytes, never
 // inside them. Everything else in a registration — uptime, load, memory,
@@ -67,6 +70,12 @@ func RegistrationSigningBytes(
 	b.WriteString("\nstate=")
 	b.WriteString(string(reg.State))
 	b.WriteString("\n")
+	if reg.ControllerKey != "" {
+		b.WriteString("controller_key=" + reg.ControllerKey + "\n")
+	}
+	if reg.ControllerKeyNext != "" {
+		b.WriteString("controller_key_next=" + reg.ControllerKeyNext + "\n")
+	}
 
 	keys := make([]string, 0, len(reg.Labels))
 	for k := range reg.Labels {

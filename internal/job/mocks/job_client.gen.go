@@ -19,6 +19,7 @@ import (
 	audit "github.com/osapi-io/osapi/internal/audit"
 	job "github.com/osapi-io/osapi/internal/job"
 	client0 "github.com/osapi-io/osapi/internal/job/client"
+	pki "github.com/osapi-io/osapi/internal/pki"
 	types "github.com/osapi-io/osapi/pkg/sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -88,6 +89,22 @@ func (m *MockJobClient) ConsumeJobs(ctx context.Context, streamName, consumerNam
 func (mr *MockJobClientMockRecorder) ConsumeJobs(ctx, streamName, consumerName, handler, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumeJobs", reflect.TypeOf((*MockJobClient)(nil).ConsumeJobs), ctx, streamName, consumerName, handler, opts)
+}
+
+// ControllerKey mocks base method.
+func (m *MockJobClient) ControllerKey(ctx context.Context) (pki.ControllerKeyRecord, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ControllerKey", ctx)
+	ret0, _ := ret[0].(pki.ControllerKeyRecord)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ControllerKey indicates an expected call of ControllerKey.
+func (mr *MockJobClientMockRecorder) ControllerKey(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerKey", reflect.TypeOf((*MockJobClient)(nil).ControllerKey), ctx)
 }
 
 // CreateOrUpdateConsumer mocks base method.

@@ -25,6 +25,7 @@ import (
 	"errors"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
@@ -114,4 +115,47 @@ func of(
 		DaysLeft: c.DaysLeft, Fingerprint: c.Fingerprint, Key: c.Key,
 		Signature: c.Signature, FIPS: c.FIPS,
 	}
+}
+
+// RotateKey starts the rotation of the controller's key, or shows the one
+// in progress.
+func RotateKey(
+	ctx context.Context,
+	d Deps,
+	_ RotateInput,
+) (Rotation, error) {
+	s, err := d.Rotation.Start(ctx)
+	if err != nil {
+		return Rotation{}, err
+	}
+
+	return rotationOf(s), nil
+}
+
+// KeyRotation is the rotation of the controller's key now.
+func KeyRotation(
+	ctx context.Context,
+	d Deps,
+	_ RotationInput,
+) (Rotation, error) {
+	s, err := d.Rotation.Status(ctx)
+	if err != nil {
+		return Rotation{}, err
+	}
+
+	return rotationOf(s), nil
+}
+
+// rotationOf is s in the API's shape.
+func rotationOf(
+	s keyrotation.Status,
+) Rotation {
+	out := Rotation{Current: s.Current, Next: s.Next, StartedAt: s.StartedAt, SwitchBy: s.SwitchBy}
+	for _, a := range s.Agents {
+		out.Agents = append(out.Agents, RotationAgent{
+			Hostname: a.Hostname, MachineID: a.MachineID, HasNext: a.HasNext,
+		})
+	}
+
+	return out
 }

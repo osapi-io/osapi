@@ -1,6 +1,6 @@
 # Rotate
 
-Rotate the agent's keys or the key of a vault.
+Rotate the agent's keys, the controller's key or the key of a vault.
 
 For the agent, it makes two new keys beside the old ones and sends them to the
 controller over NATS, as the agent connects, signed with the old signing key and
@@ -17,8 +17,15 @@ controller does. A running controller reads the new key at its next call. A
 rotation that stops leaves the old key in the file, and a second rotation
 completes it.
 
-It refuses each other key, with what to do instead: a new JetStream key makes
-the store unreadable, and a new controller key needs each agent admitted again.
+For the controller, on the controller's host, it makes the next key beside the
+current one, and writes a record that the current key signs to the state bucket.
+Each agent takes the next key at its next heartbeat. The controller switches to
+it when each admitted agent has it, or when controller.pki.rotation_grace_period
+ends, with no new admission. osapi client pki key rotate does the same from any
+host, through the API.
+
+It refuses the JetStream key, with what to do instead: a new JetStream key makes
+the store unreadable.
 
 ```bash
 osapi pki key rotate [flags]
@@ -70,9 +77,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag     | Description                                                                                   | Default |
-| -------- | --------------------------------------------------------------------------------------------- | ------- |
-| `--name` | The name of the key, as list shows it: agent, or a vault key such as vault:default (required) |         |
+| Flag     | Description                                                                                               | Default |
+| -------- | --------------------------------------------------------------------------------------------------------- | ------- |
+| `--name` | The name of the key, as list shows it: agent, controller, or a vault key such as vault:default (required) |         |
 
 ## Global flags
 

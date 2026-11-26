@@ -36,13 +36,17 @@ type Manager struct {
 	// It is a pointer, so a copy of a Manager shares it.
 	mu *sync.RWMutex
 
-	fs                       avfs.VFS
-	keyDir                   string
-	keyPrefix                string // "agent" or "controller"
-	publicKey                ed25519.PublicKey
-	privateKey               ed25519.PrivateKey
+	fs         avfs.VFS
+	keyDir     string
+	keyPrefix  string // "agent" or "controller"
+	publicKey  ed25519.PublicKey
+	privateKey ed25519.PrivateKey
+	// controllerPubKey, previousControllerPubKey and nextControllerPubKey are
+	// the keys of the controller that the manager accepts, which a rotation
+	// of the controller's key changes while the process runs: mu guards them.
 	controllerPubKey         ed25519.PublicKey
 	previousControllerPubKey ed25519.PublicKey
+	nextControllerPubKey     ed25519.PublicKey
 
 	// withEncryption makes LoadOrGenerate also load or generate the P-256
 	// ECDH key that opens values the controller seals for this agent.
@@ -73,9 +77,6 @@ const (
 	// EnrollResponsePrefix is the NATS subject prefix for enrollment responses.
 	// Append ".<machineID>" to form the full subject.
 	EnrollResponsePrefix = "enroll.response"
-
-	// PKIRotateSuffix is the NATS subject suffix for key rotation notifications.
-	PKIRotateSuffix = "pki.rotate"
 
 	// JoinRequestSuffix is the NATS subject suffix of a join over NATS: a
 	// request that the controller replies to with a JoinReply.

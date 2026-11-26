@@ -9,7 +9,8 @@ import type {
   GetPKICertParams,
   ListPKICertsParams,
   PKICert,
-  PKICertList
+  PKICertList,
+  PKIKeyRotation
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
@@ -145,6 +146,112 @@ export const getPKICert = async (name: string,
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+export type getPKIKeyRotationResponse200 = {
+  data: PKIKeyRotation
+  status: 200
+}
+
+export type getPKIKeyRotationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getPKIKeyRotationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getPKIKeyRotationResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getPKIKeyRotationResponseSuccess = (getPKIKeyRotationResponse200) & {
+  headers: Headers;
+};
+export type getPKIKeyRotationResponseError = (getPKIKeyRotationResponse401 | getPKIKeyRotationResponse403 | getPKIKeyRotationResponse500) & {
+  headers: Headers;
+};
+
+export type getPKIKeyRotationResponse = (getPKIKeyRotationResponseSuccess | getPKIKeyRotationResponseError)
+
+export const getGetPKIKeyRotationUrl = () => {
+
+
+
+
+  return `/api/pki/key`
+}
+
+/**
+ * Shows the key that the controller signs jobs with, and during a rotation the key that it switches to, when it switches at the latest, and each admitted agent that the switch waits for, with whether it has the next key.
+ * @summary Show the rotation of the controller's key
+ */
+export const getPKIKeyRotation = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getPKIKeyRotationResponse> => {
+
+  return apiFetch<getPKIKeyRotationResponse>(getGetPKIKeyRotationUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+export type rotatePKIKeyResponse200 = {
+  data: PKIKeyRotation
+  status: 200
+}
+
+export type rotatePKIKeyResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type rotatePKIKeyResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type rotatePKIKeyResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type rotatePKIKeyResponseSuccess = (rotatePKIKeyResponse200) & {
+  headers: Headers;
+};
+export type rotatePKIKeyResponseError = (rotatePKIKeyResponse401 | rotatePKIKeyResponse403 | rotatePKIKeyResponse500) & {
+  headers: Headers;
+};
+
+export type rotatePKIKeyResponse = (rotatePKIKeyResponseSuccess | rotatePKIKeyResponseError)
+
+export const getRotatePKIKeyUrl = () => {
+
+
+
+
+  return `/api/pki/key`
+}
+
+/**
+ * Starts the rotation of the controller's key, with no new admission of the agents. The controller makes the next key, and signs a record that gives it to the agents with its current key. Each agent takes it at its next heartbeat. The controller switches to the next key when each admitted agent that reported within controller.pki.rotation_grace_period has it, or when the grace period ends. An agent that does not have it then needs a new admission. A rotation in progress is not started again.
+ * @summary Rotate the controller's key
+ */
+export const rotatePKIKey = async ( options?: Parameters<typeof apiFetch>[1]): Promise<rotatePKIKeyResponse> => {
+
+  return apiFetch<rotatePKIKeyResponse>(getRotatePKIKeyUrl(),
+  {
+    ...options,
+    method: 'POST'
 
 
   }

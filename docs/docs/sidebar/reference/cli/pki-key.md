@@ -53,14 +53,14 @@ List, make and rotate the keys of osapi on this host.
 
 ## [osapi pki key rotate](../../usage/cli/pki/key/rotate.md)
 
-|             |                                               |
-| ----------- | --------------------------------------------- |
-| Method      | rotate                                        |
-| Description | Rotate the agent's keys or the key of a vault |
-| Refuses     | no name, a name of more than 64 characters    |
+|             |                                                                     |
+| ----------- | ------------------------------------------------------------------- |
+| Method      | rotate                                                              |
+| Description | Rotate the agent's keys, the controller's key or the key of a vault |
+| Refuses     | no name, a name of more than 64 characters                          |
 
 ### Flags (1)
 
-| FLAG   | TYPE   | VALIDATE        | HELP                                                                                |
-| ------ | ------ | --------------- | ----------------------------------------------------------------------------------- |
-| --name | string | required,max=64 | The name of the key, as list shows it: agent, or a vault key such as vault:default. |
+| FLAG   | TYPE   | VALIDATE        | HELP                                                                                            |
+| ------ | ------ | --------------- | ----------------------------------------------------------------------------------------------- |
+| --name | string | required,max=64 | The name of the key, as list shows it: agent, controller, or a vault key such as vault:default. |

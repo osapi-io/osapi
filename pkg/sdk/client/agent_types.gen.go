@@ -52,6 +52,14 @@ type AgentInfo struct {
 	// when it holds none.
 	ConfigWanted int `json:"config_wanted,omitempty"`
 
+	// The fingerprint of the controller key that the agent verifies jobs with.
+	ControllerKey string `json:"controller_key,omitempty"`
+
+	// The fingerprint of the key that the controller switches to, which the agent
+	// has: empty when no rotation of the controller's key is in progress, or the
+	// agent has not taken it yet.
+	ControllerKeyNext string `json:"controller_key_next,omitempty"`
+
 	// Number of logical CPUs.
 	CPUCount int `json:"cpu_count,omitempty"`
 

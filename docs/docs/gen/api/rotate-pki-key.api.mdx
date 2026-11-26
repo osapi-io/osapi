@@ -1,0 +1,59 @@
+---
+id: rotate-pki-key
+title: "Rotate the controller's key"
+description: "Starts the rotation of the controller's key, with no new admission of the agents. The controller makes the next key, and signs a record that gives it to the agents with its current key. Each agent takes it at its next heartbeat. The controller switches to the next key when each admitted agent that reported within controller.pki.rotation_grace_period has it, or when the grace period ends. An agent that does not have it then needs a new admission. A rotation in progress is not started again."
+sidebar_label: "Rotate the controller's key"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Rotate the controller's key"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/pki/key"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Starts the rotation of the controller's key, with no new admission of the agents. The controller makes the next key, and signs a record that gives it to the agents with its current key. Each agent takes it at its next heartbeat. The controller switches to the next key when each admitted agent that reported within controller.pki.rotation_grace_period has it, or when the grace period ends. An agent that does not have it then needs a new admission. A rotation in progress is not started again.
+
+<ParamsDetails>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./rotate-pki-key.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./rotate-pki-key.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

@@ -34,6 +34,7 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // PKISigner signs and verifies payloads. Nil until the controller, or the
@@ -226,6 +227,10 @@ type JobClient interface {
 		machineID string,
 		set job.AgentConfig,
 	) (job.AgentConfig, error)
+
+	// ControllerKey is the record of the rotation of the controller's key,
+	// which each agent follows at its heartbeat.
+	ControllerKey(ctx context.Context) (pki.ControllerKeyRecord, bool, error)
 
 	// Agent timeline
 	WriteAgentTimelineEvent(

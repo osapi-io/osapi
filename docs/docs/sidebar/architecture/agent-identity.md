@@ -258,8 +258,9 @@ apart:
 - **Missing or malformed signature.** The job data is not in a signed envelope,
   or the envelope has no value in a required field.
 - **Invalid signature.** The signature of the envelope does not verify with the
-  controller key of the agent, or with the previous key during a rotation grace
-  period. Refer to [Key rotation](#key-rotation).
+  controller key of the agent, with the next key during a rotation of the
+  controller's key, or with the previous key after it. Refer to
+  [Key rotation](#key-rotation).
 
 The controller also verifies the signature on the job response of an agent
 before it uses it as a result. A response that fails verification is a failed or
@@ -381,22 +382,47 @@ longer matches the admission.
 
 ### The controller's key
 
-The controller can change its Ed25519 key pair. During a grace period (`24h` by
-default), agents accept signatures from the old key and from the new key of the
-controller. You can configure the grace period.
+The controller's Ed25519 key signs each job, and each admitted agent verifies
+the job with it. The controller rotates this key with no new admission of the
+agents. The state bucket holds a record of the rotation at the key
+`pki.controller`. Each agent reads the record at each heartbeat.
 
-To rotate the key:
+1. `osapi client pki key rotate` (`POST /api/pki/key`), or
+   `osapi pki key rotate --name controller` on the controller's host, starts the
+   rotation. The controller makes the next key, `controller.next.key` and
+   `controller.next.pub` in `controller.pki.key_dir`. It then writes a record
+   with the current key and the next key. The current key signs the record.
+1. At its next heartbeat, each agent reads the record. When the controller key
+   that the agent has signed it, the agent keeps the next key in
+   `enrolled-controller.next.pub`. From then on, it also accepts a job that the
+   next key signs. Its signed registration reports the fingerprint of the next
+   key, as `controller_key_next`.
+1. The controller switches when each admitted agent that reported within
+   `controller.pki.rotation_grace_period` (`24h`) has the next key, or when that
+   period ends. It moves the next key in place of its key and signs with it. It
+   then writes a record with the new key as the current key and the old key as
+   the previous key. The new key signs this record.
+1. At its next heartbeat, each agent reads the record. The key that signed it is
+   the next key that the agent has. Thus the agent makes the next key its
+   controller key, in `enrolled-controller.pub`, and keeps the old key as the
+   previous key. The previous key still verifies the jobs that the old key
+   signed before the switch.
 
-1. Make a new controller key pair. Replace the files in
-   `controller.pki.key_dir`.
-1. Restart the controller. It loads the new key and starts to sign with it.
-1. The enrolled agents still have the old public key of the controller. The
-   `VerifyWithGrace` method checks the signature with the current key and with
-   the previous key of the controller.
-1. During the grace period (`controller.pki.rotation_grace_period`), the agents
-   get the new public key of the controller in an updated enrollment response.
-   Then they change to the new key.
-1. After the grace period, osapi accepts only the new key.
+`osapi client pki key get` (`GET /api/pki/key`) shows the rotation: the current
+key, the next key, when the controller switches at the latest, and each agent
+that the switch waits for, with `has_next`. `agent get` shows the
+`controller_key` and the `controller_key_next` of each agent.
+
+An agent that is away for the whole grace period does not get the next key. It
+does not trust the record of the switch, and the log of the agent says so. Admit
+the machine again. A join after the switch gives the new key.
+
+The controller takes a record only when its own key signed it, because an agent
+can write the state bucket. A record from an agent cannot start a rotation or
+cause a switch. But an agent can remove the record, and that stops the rotation
+until the next `rotate`. The controller does a rotation only in the controller
+that has the key files. Two controllers that share a store must not rotate
+together.
 
 ## Upgrade a fleet
 

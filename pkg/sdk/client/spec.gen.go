@@ -806,7 +806,7 @@ func Services() []ServiceSpec {
 		Node: true,
 	}, {
 		Area: "fleet",
-		Doc:  "The certificates of the fleet.",
+		Doc:  "The certificates of the fleet, and the rotation of the controller's key.",
 		Methods: []MethodSpec{{
 			Doc:        "List the certificates of the fleet",
 			Examples:   2,
@@ -821,6 +821,20 @@ func Services() []ServiceSpec {
 			Name:       "Get",
 			Permission: "pki:read",
 			Result:     "PKICert",
+		}, {
+			Doc:        "Show the rotation of the controller's key",
+			Examples:   1,
+			HTTP:       "GET /api/pki/key",
+			Name:       "Rotation",
+			Permission: "pki:read",
+			Result:     "PKIKeyRotation",
+		}, {
+			Doc:        "Rotate the controller's key",
+			Examples:   1,
+			HTTP:       "POST /api/pki/key",
+			Name:       "Rotate",
+			Permission: "pki:write",
+			Result:     "PKIKeyRotation",
 		}},
 		Name: "Pki",
 		Node: false,

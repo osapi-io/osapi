@@ -24,7 +24,6 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -35,8 +34,6 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/pki"
-
-	"github.com/osapi-io/osapi/internal/atomicfile"
 )
 
 // EnrolledControllerKey is the file in agent.pki.key_dir of the controller's
@@ -114,7 +111,9 @@ func (a *Agent) handlePKIEnrollment(
 		m.SetControllerPublicKey(pubKey)
 		a.pkiLogger.Info("controller public key loaded, agent enrolled")
 
-		return nil
+		// A rotation of the controller's key that started before this run
+		// left its next key.
+		return a.loadNextControllerKey(keyDir)
 	}
 
 	// Not enrolled. With a join string, join over HTTPS, which admits at
@@ -323,10 +322,6 @@ func (a *Agent) keepControllerKey(
 ) error {
 	a.pkiManager.SetControllerPublicKey(key)
 	path := filepath.Join(a.appConfig.Agent.PKI.KeyDir, EnrolledControllerKey)
-	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "ED25519 PUBLIC KEY", Bytes: key})
-	if err := atomicfile.Write(context.Background(), a.appFs, path, pubPEM, 0o644); err != nil {
-		return fmt.Errorf("write %s: %w", path, err)
-	}
 
-	return nil
+	return writeControllerKey(context.Background(), a.appFs, path, key)
 }

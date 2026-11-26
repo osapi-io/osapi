@@ -1212,3 +1212,26 @@ func ExportKeepAliveInterval(
 ) time.Duration {
 	return keepAliveInterval(c)
 }
+
+// ExportFollowControllerKey exposes followControllerKey for testing.
+func ExportFollowControllerKey(
+	ctx context.Context,
+	a *Agent,
+) {
+	a.followControllerKey(ctx)
+}
+
+// ExportLoadNextControllerKey exposes loadNextControllerKey for testing.
+func ExportLoadNextControllerKey(
+	a *Agent,
+	keyDir string,
+) error {
+	return a.loadNextControllerKey(keyDir)
+}
+
+// ExportControllerKeys exposes controllerKeys for testing.
+func ExportControllerKeys(
+	a *Agent,
+) (string, string) {
+	return a.controllerKeys()
+}

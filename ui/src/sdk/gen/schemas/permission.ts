@@ -72,6 +72,7 @@ export const Permission = {
   'job:read': 'job:read',
   'job:write': 'job:write',
   'pki:read': 'pki:read',
+  'pki:write': 'pki:write',
   'secret:read': 'secret:read',
   'secret:write': 'secret:write',
 } as const;

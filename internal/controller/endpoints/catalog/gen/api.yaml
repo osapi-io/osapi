@@ -525,6 +525,7 @@ components:
         - GetNodeUserByKey
         - GetNodeUserSshkey
         - GetPKICert
+        - GetPKIKeyRotation
         - GetSecret
         - GetSecretValue
         - GetSecretVaults
@@ -581,6 +582,7 @@ components:
         - RejectMachine
         - RetryJobByID
         - RevokeMachine
+        - RotatePKIKey
         - UndrainAgent
       type: string
     Permission:
@@ -646,6 +648,7 @@ components:
         - job:read
         - job:write
         - pki:read
+        - pki:write
         - secret:read
         - secret:write
       type: string

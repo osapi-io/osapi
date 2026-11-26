@@ -33,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -178,4 +179,55 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 		_, err := c.SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
 		s.ErrorContains(err, "marshal the config of m-1")
 	})
+}
+
+func (s *AgentConfigPublicTestSuite) TestControllerKey() {
+	ctx := context.Background()
+	rec := pki.ControllerKeyRecord{Serial: 3, Current: []byte{1}, Next: []byte{2}}
+	stored, _ := json.Marshal(rec)
+	tests := []struct {
+		name    string
+		state   string
+		setup   func()
+		want    pki.ControllerKeyRecord
+		wantOK  bool
+		wantErr string
+	}{
+		{name: "no state bucket", state: "", wantErr: "agent state bucket not configured"},
+		{name: "no record: the controller has not rotated its key", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.ControllerKeyStateKey).
+				Return(nil, jetstream.ErrKeyNotFound)
+		}},
+		{name: "the record", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.ControllerKeyStateKey).
+				Return(s.entry(stored), nil)
+		}, want: rec, wantOK: true},
+		{name: "a bucket that cannot be read", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.ControllerKeyStateKey).
+				Return(nil, errors.New("nats down"))
+		}, wantErr: "read the controller key record: nats down"},
+		{name: "a record that is not JSON", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.ControllerKeyStateKey).
+				Return(s.entry([]byte("{")), nil)
+		}, wantErr: "the controller key record"},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.setup != nil {
+				tt.setup()
+			}
+			got, ok, err := s.client(tt.state).ControllerKey(ctx)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tt.wantOK, ok)
+			s.Equal(tt.want, got)
+		})
+	}
 }

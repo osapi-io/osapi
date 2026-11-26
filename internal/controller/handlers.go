@@ -46,6 +46,7 @@ import (
 	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/health"
+	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/secret/vault"
@@ -68,6 +69,7 @@ type handlerDeps struct {
 	objBucket       string
 	fileStateBucket string
 	admission       *admission.Watcher
+	keyRotation     *keyrotation.Rotation
 	vaults          *vault.Set
 	// version is the build version of the binary.
 	version string
@@ -188,6 +190,7 @@ func pkiDeps(
 		Agents:   d.jobs,
 		Hostname: host,
 		Local:    func() []pki.Cert { return pki.ReadCerts(fsys, srcs, time.Now()) },
+		Rotation: d.keyRotation,
 	}
 }
 

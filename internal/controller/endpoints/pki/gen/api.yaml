@@ -96,6 +96,50 @@ components:
         - items
         - total_items
       type: object
+    PKIKeyRotation:
+      properties:
+        agents:
+          description: 'The admitted agents that the switch waits for: each one that reported within the grace period.'
+          items:
+            $ref: '#/components/schemas/PKIKeyRotationAgent'
+          type: array
+        current:
+          description: The fingerprint of the key that the controller signs jobs with.
+          example: SHA256:1f53dea6
+          type: string
+        next:
+          description: The fingerprint of the key that the controller switches to. Empty when no rotation is in progress.
+          example: SHA256:9c2e41b0
+          type: string
+        started_at:
+          description: When the rotation started.
+          format: date-time
+          type: string
+        switch_by:
+          description: 'When the controller switches at the latest: the start and controller.pki.rotation_grace_period. It switches before, once each agent has the next key.'
+          format: date-time
+          type: string
+      required:
+        - current
+      type: object
+    PKIKeyRotationAgent:
+      properties:
+        has_next:
+          description: Whether the agent reports that it has the next key.
+          type: boolean
+        hostname:
+          description: The hostname of the agent.
+          example: web-01
+          type: string
+        machine_id:
+          description: The machine ID of the agent.
+          example: d530664edc1c431eb5ef1e9dfd6617a5
+          type: string
+      required:
+        - hostname
+        - machine_id
+        - has_next
+      type: object
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT
@@ -242,8 +286,87 @@ paths:
             hostname: web-01
             name: agent-metrics
       x-osapi-method: get
+  /api/pki/key:
+    get:
+      description: Shows the key that the controller signs jobs with, and during a rotation the key that it switches to, when it switches at the latest, and each admitted agent that the switch waits for, with whether it has the next key.
+      operationId: GetPKIKeyRotation
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKIKeyRotation'
+          description: The rotation of the controller's key.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:read
+      summary: Show the rotation of the controller's key
+      tags:
+        - pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Show the rotation of the controller's key
+          input: {}
+      x-osapi-method: rotation
+    post:
+      description: Starts the rotation of the controller's key, with no new admission of the agents. The controller makes the next key, and signs a record that gives it to the agents with its current key. Each agent takes it at its next heartbeat. The controller switches to the next key when each admitted agent that reported within controller.pki.rotation_grace_period has it, or when the grace period ends. An agent that does not have it then needs a new admission. A rotation in progress is not started again.
+      operationId: RotatePKIKey
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKIKeyRotation'
+          description: The rotation that started, or the one in progress.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:write
+      summary: Rotate the controller's key
+      tags:
+        - pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Rotate the controller's key
+          input: {}
+      x-osapi-method: rotate
 tags:
-  - description: The certificates of the fleet.
+  - description: The certificates of the fleet, and the rotation of the controller's key.
     name: pki_operations
     x-displayName: PKI
     x-osapi-area: fleet

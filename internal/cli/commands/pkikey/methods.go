@@ -33,6 +33,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/bus"
+	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
@@ -172,6 +174,9 @@ func Rotate(
 	if s.name == agentName || s.typ == typeAgentEKey {
 		return rotateAgent(ctx, d)
 	}
+	if s.name == controllerName {
+		return rotateController(ctx, d, s)
+	}
 	if s.typ != typeVault {
 		return RotateOutput{}, fmt.Errorf("%s: %w: %s", s.name, ErrNoRotate, rotateHint(s))
 	}
@@ -228,6 +233,38 @@ func rotateAgent(
 	return RotateOutput{Key: k}, nil
 }
 
+// rotateController starts the rotation of the controller's key, on the
+// controller's host: it makes the next key beside the current one, and
+// writes the record that gives it to the agents, over NATS as the
+// controller connects. The running controller switches to it when each
+// agent has it.
+func rotateController(
+	ctx context.Context,
+	d Deps,
+	s source,
+) (RotateOutput, error) {
+	keys := pki.New(d.FS, s.dir, s.prefix)
+	if err := keys.Load(); err != nil {
+		return RotateOutput{}, fmt.Errorf("%s: osapi rotates the controller's key on the "+
+			"controller's host, or with osapi client pki key rotate: %w", s.name, err)
+	}
+	kv, closeKV, err := d.Dial(ctx)
+	if err != nil {
+		return RotateOutput{}, err
+	}
+	defer closeKV()
+	bucket := bus.StateKV(d.Config.Controller.NATS.Namespace, d.Config.NATS.State).Bucket
+	status, err := keyrotation.New(keyrotation.Config{KV: kv, Bucket: bucket, Keys: keys}).
+		Start(ctx)
+	if err != nil {
+		return RotateOutput{}, err
+	}
+	k := read(d, s)
+	audit.RecordLocal(ctx, d.Audit, "key.rotate", s.name, summary(k)+" next="+status.Next)
+
+	return RotateOutput{Key: k, Next: status.Next}, nil
+}
+
 // find is the key named name.
 func find(
 	d Deps,
@@ -254,11 +291,6 @@ func rotateHint(
 		return "a new key makes each stream and bucket of nats.server.store_dir " +
 			"unreadable; keep this key, and a copy of it apart from the store"
 	default:
-		if s.name == controllerName {
-			return "each admitted agent verifies the jobs of the controller with the " +
-				"key it got at its admission; a new key needs each agent admitted again"
-		}
-
 		return "osapi pki key rotate --name agent makes new keys, which the " +
 			"controller takes in place of the admitted ones"
 	}

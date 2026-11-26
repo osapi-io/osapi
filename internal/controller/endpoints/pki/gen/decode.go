@@ -41,3 +41,21 @@ func decodeGet(
 
 	return in, "", true
 }
+
+// decodeRotation reads the rotation method's input from the request.
+func decodeRotation(
+	c *echo.Context,
+) (pki.RotationInput, string, bool) {
+	var in pki.RotationInput
+
+	return in, "", true
+}
+
+// decodeRotate reads the rotate method's input from the request.
+func decodeRotate(
+	c *echo.Context,
+) (pki.RotateInput, string, bool) {
+	var in pki.RotateInput
+
+	return in, "", true
+}

@@ -13,9 +13,64 @@ import (
 	context "context"
 	reflect "reflect"
 
+	keyrotation "github.com/osapi-io/osapi/internal/controller/keyrotation"
 	job "github.com/osapi-io/osapi/internal/job"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockRotator is a mock of Rotator interface.
+type MockRotator struct {
+	ctrl     *gomock.Controller
+	recorder *MockRotatorMockRecorder
+	isgomock struct{}
+}
+
+// MockRotatorMockRecorder is the mock recorder for MockRotator.
+type MockRotatorMockRecorder struct {
+	mock *MockRotator
+}
+
+// NewMockRotator creates a new mock instance.
+func NewMockRotator(ctrl *gomock.Controller) *MockRotator {
+	mock := &MockRotator{ctrl: ctrl}
+	mock.recorder = &MockRotatorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockRotator) EXPECT() *MockRotatorMockRecorder {
+	return m.recorder
+}
+
+// Start mocks base method.
+func (m *MockRotator) Start(ctx context.Context) (keyrotation.Status, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Start", ctx)
+	ret0, _ := ret[0].(keyrotation.Status)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockRotatorMockRecorder) Start(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockRotator)(nil).Start), ctx)
+}
+
+// Status mocks base method.
+func (m *MockRotator) Status(ctx context.Context) (keyrotation.Status, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Status", ctx)
+	ret0, _ := ret[0].(keyrotation.Status)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Status indicates an expected call of Status.
+func (mr *MockRotatorMockRecorder) Status(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockRotator)(nil).Status), ctx)
+}
 
 // MockAgents is a mock of Agents interface.
 type MockAgents struct {

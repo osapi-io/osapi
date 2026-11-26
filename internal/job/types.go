@@ -368,6 +368,13 @@ type AgentRegistration struct {
 	// Certificates are the certificates that the agent serves, such as the
 	// one of its metrics server, read at each heartbeat.
 	Certificates []pki.Cert `json:"certificates,omitempty"`
+	// ControllerKey is the fingerprint of the controller key that the agent
+	// verifies jobs with.
+	ControllerKey string `json:"controller_key,omitempty"`
+	// ControllerKeyNext is the fingerprint of the key that the controller
+	// switches to, which the agent has from the rotation record: empty when
+	// no rotation is in progress, or the agent has not read it yet.
+	ControllerKeyNext string `json:"controller_key_next,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 	// Signature is the agent's Ed25519 signature over the routing fields of
@@ -401,6 +408,12 @@ type AgentInfo struct {
 	// ConfigVersion is the version of the controller's config of the agent
 	// that the agent applied, 0 for none.
 	ConfigVersion int `json:"config_version,omitempty"`
+	// ControllerKey is the fingerprint of the controller key that the agent
+	// verifies jobs with.
+	ControllerKey string `json:"controller_key,omitempty"`
+	// ControllerKeyNext is the fingerprint of the key that the controller
+	// switches to, as the agent reports it during a rotation.
+	ControllerKeyNext string `json:"controller_key_next,omitempty"`
 	// MissingPrograms are the programs that the agent's behaviors declare
 	// and that the host lacks.
 	MissingPrograms []string `json:"missing_programs,omitempty"`
