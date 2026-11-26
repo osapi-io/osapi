@@ -68,7 +68,7 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	s.Run("operator: no server part without --print", func() {
 		got, err := natsauth.Operator(ctx, s.deps(), natsauth.CreateInput{Out: s.T().TempDir()})
 		s.Require().NoError(err)
-		s.Len(got.Files, 7)
+		s.Len(got.Files, 9)
 		s.Empty(got.Server)
 	})
 

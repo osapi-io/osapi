@@ -280,11 +280,23 @@ func bootstrapCreds(
 	expires time.Time,
 ) ([]byte, error) {
 	j := d.Config.Controller.Join
-	signer, err := natsjwt.Load(j.SigningKeyFile, j.Account)
+	file := j.SigningKeyFile
+	if j.JoinSigningKeyFile != "" {
+		file = j.JoinSigningKeyFile
+	}
+	signer, err := natsjwt.Load(file, j.Account)
 	if err != nil {
 		return nil, err
 	}
-	perms, _ := bus.RolePermissions(bus.RoleJoin, d.Config.Controller.NATS.Namespace, d.Config.NATS)
+	// A scoped key's template sets the permissions of the join role.
+	var perms bus.Permissions
+	if !j.Scoped {
+		perms, _ = bus.RolePermissions(
+			bus.RoleJoin,
+			d.Config.Controller.NATS.Namespace,
+			d.Config.NATS,
+		)
+	}
 
 	return signer.NewCreds("osapi-join", perms, expires)
 }

@@ -3,13 +3,17 @@
 Make an operator, an account, and a credentials file for each osapi role.
 
 It makes an operator, its system account, and an account for osapi with
-JetStream and a signing key. It writes the server's resolver file
-(`resolver.conf`), a credentials file for the setup, controller and agent roles,
-each with the least permissions of its role, the signing key that the controller
-mints the users of a join with (`signing.nk`), the operator's seed
-(`operator.nk`), and `osapi-nats.yaml`, the part of osapi.yaml that uses them.
-Each file is mode 0600. Keep `operator.nk` offline: it signs the accounts.
-`--print` also prints the resolver file.
+JetStream. It writes the server's resolver file (`resolver.conf`), a credentials
+file for the setup, controller and agent roles, each with the least permissions
+of its role, and `osapi-nats.yaml`, the part of osapi.yaml that uses them. Each
+file is mode 0600.
+
+The controller mints the users of a join with two scoped signing keys:
+`agent-signing.nk`, whose template is the agent role's permissions, and
+`join-signing.nk`, the join role's. Thus the controller cannot mint a user with
+more than an agent or a join user has. Keep `operator.nk` and `account.nk`
+offline: they sign the accounts and the static users. `--print` also prints the
+resolver file.
 
 ```bash
 osapi nats auth operator create [flags]
@@ -29,7 +33,7 @@ The command prints:
 $ osapi nats auth operator create --out /etc/osapi/nats
 [1;38;2;0;213;255mNATS auth:[0m
 
-[1;38;2;255;0;255mFiles (7):[0m
+[1;38;2;255;0;255mFiles (9):[0m
   [38;2;176;48;176mROLE        [0m[38;2;176;48;176mPATH[0m
   agent       /etc/osapi/nats/agent.creds
   controller  /etc/osapi/nats/controller.creds
@@ -37,7 +41,9 @@ $ osapi nats auth operator create --out /etc/osapi/nats
   osapi       /etc/osapi/nats/osapi-nats.yaml
   server      /etc/osapi/nats/resolver.conf
   setup       /etc/osapi/nats/setup.creds
-  controller  /etc/osapi/nats/signing.nk
+  controller  /etc/osapi/nats/agent-signing.nk
+  controller  /etc/osapi/nats/join-signing.nk
+  operator    /etc/osapi/nats/account.nk
 ```
 
 With `--json`, the command prints:
@@ -71,7 +77,15 @@ With `--json`, the command prints:
     },
     {
       "role": "controller",
-      "path": "/etc/osapi/nats/signing.nk"
+      "path": "/etc/osapi/nats/agent-signing.nk"
+    },
+    {
+      "role": "controller",
+      "path": "/etc/osapi/nats/join-signing.nk"
+    },
+    {
+      "role": "operator",
+      "path": "/etc/osapi/nats/account.nk"
     }
   ]
 }

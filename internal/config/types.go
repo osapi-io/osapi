@@ -358,6 +358,12 @@ type ControllerJoin struct {
 	// AgentTTL is how long the JWT of an agent's NATS user lasts, in
 	// operator mode. The agent renews it before then.
 	AgentTTL string `mapstructure:"agent_ttl" doc:"For operator mode: how long the JWT of an agent's NATS user lasts, as a Go duration such as 24h. The agent renews it when a third is left, and the controller renews only an admitted machine: a revoked agent is cut from NATS when its JWT expires. Empty never expires." validate:"omitempty,go_duration" choice:"empty: the JWT never expires"`
+	// JoinSigningKeyFile is the signing key of the join's bootstrap users,
+	// when it is not SigningKeyFile.
+	JoinSigningKeyFile string `mapstructure:"join_signing_key_file" doc:"For operator mode: a signing key seed (SA...) of osapi's account for the join's bootstrap users. Empty uses signing_key_file. With scoped, its template is the permissions of the join role." choice:"empty uses signing_key_file"`
+	// Scoped is whether the signing keys are scoped: the template of each
+	// sets the permissions, and the JWTs that they sign carry none.
+	Scoped bool `mapstructure:"scoped" doc:"For operator mode: the signing keys are scoped, so the template of each key sets the permissions of the users that it signs: signing_key_file the agent role's, join_signing_key_file the join role's. osapi nats auth operator create makes them so." choice:"false: the JWTs carry the permissions of their role"`
 	// Account is the public key of the account of SigningKeyFile.
 	Account string `mapstructure:"account" doc:"For operator mode: the public key (A...) of osapi's account, which signing_key_file signs for." choice:"set for operator mode"`
 	// Agent is the NATS user that the join gives the agent.

@@ -55,13 +55,16 @@ var Group = command.Register(command.Define(
 		Sub("operator").
 		Short("Make an operator, an account, and a credentials file for each osapi role").
 		Long("It makes an operator, its system account, and an account for osapi with\n"+
-			"JetStream and a signing key. It writes the server's resolver file\n"+
-			"(`resolver.conf`), a credentials file for the setup, controller and agent\n"+
-			"roles, each with the least permissions of its role, the signing key that the\n"+
-			"controller mints the users of a join with (`signing.nk`), the operator's\n"+
-			"seed (`operator.nk`), and `osapi-nats.yaml`, the part of osapi.yaml that uses\n"+
-			"them. Each file is mode 0600. Keep `operator.nk` offline: it signs the\n"+
-			"accounts. `--print` also prints the resolver file.").
+			"JetStream. It writes the server's resolver file (`resolver.conf`), a\n"+
+			"credentials file for the setup, controller and agent roles, each with the\n"+
+			"least permissions of its role, and `osapi-nats.yaml`, the part of osapi.yaml\n"+
+			"that uses them. Each file is mode 0600.\n\n"+
+			"The controller mints the users of a join with two scoped signing keys:\n"+
+			"`agent-signing.nk`, whose template is the agent role's permissions, and\n"+
+			"`join-signing.nk`, the join role's. Thus the controller cannot mint a user\n"+
+			"with more than an agent or a join user has. Keep `operator.nk` and\n"+
+			"`account.nk` offline: they sign the accounts and the static users.\n"+
+			"`--print` also prints the resolver file.").
 		Example("--out /etc/osapi/nats").
 		Prints(sampleOperator).
 		Fails("no directory", CreateInput{}).

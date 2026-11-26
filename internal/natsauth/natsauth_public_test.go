@@ -99,7 +99,7 @@ func (s *NatsAuthPublicTestSuite) TestOperator() {
 	}
 	s.ElementsMatch([]string{
 		"agent.creds", "controller.creds", "setup.creds", "resolver.conf",
-		"operator.nk", "signing.nk", natsauth.OsapiConfig,
+		"operator.nk", "account.nk", "agent-signing.nk", "join-signing.nk", natsauth.OsapiConfig,
 	}, names)
 
 	opts, err := natsserver.ProcessConfigFile(filepath.Join(s.dir, "resolver.conf"))
@@ -115,7 +115,36 @@ func (s *NatsAuthPublicTestSuite) TestOperator() {
 	s.Zero(uc.Expires)
 
 	y, _ := os.ReadFile(filepath.Join(s.dir, natsauth.OsapiConfig))
-	s.Contains(string(y), "signing_key_file: "+filepath.Join(s.dir, "signing.nk"))
+	s.Contains(string(y), "signing_key_file: "+filepath.Join(s.dir, "agent-signing.nk"))
+	s.Contains(string(y), "join_signing_key_file: "+filepath.Join(s.dir, "join-signing.nk"))
+	s.Contains(string(y), "scoped: true")
+
+	// Each signing key that the controller gets is scoped to its role.
+	acctJWT := ""
+	for _, line := range strings.Split(r.Server, "\n") {
+		if f := strings.Fields(
+			line,
+		); len(f) == 2 && strings.HasPrefix(f[0], "A") &&
+			strings.HasSuffix(f[0], ":") {
+			acctJWT = f[1]
+		}
+	}
+	ac, err := jwt.DecodeAccountClaims(acctJWT)
+	s.Require().NoError(err)
+	s.Equal("osapi", ac.Name)
+	roles := map[string]jwt.StringList{}
+	for _, file := range []string{"agent-signing.nk", "join-signing.nk"} {
+		seed, _ := os.ReadFile(filepath.Join(s.dir, file))
+		kp, err := nkeys.FromSeed(seed)
+		s.Require().NoError(err)
+		pub, _ := kp.PublicKey()
+		scope, ok := ac.SigningKeys.GetScope(pub)
+		s.Require().True(ok, file)
+		us := scope.(*jwt.UserScope)
+		roles[us.Role] = us.Template.Pub.Allow
+	}
+	s.Contains(roles["agent"], "osapi.enroll.request")
+	s.Equal(jwt.StringList{"osapi.join.request"}, roles["join"])
 	s.True(strings.Contains(r.Server, "resolver_preload"))
 }
 

@@ -29,9 +29,10 @@ osapi nats auth operator create --out /etc/osapi/nats --print
 2. Set `max_control_line: 32KB` in the config of your server: a user JWT has the
    subjects of its role, and the controller's is about 7 KB.
 3. Merge `osapi-nats.yaml` into the controller's config, without its
-   `nats.server` part. It sets the controller's credentials and
-   `controller.join.signing_key_file`, which the controller mints the users of a
-   join with.
+   `nats.server` part. It sets the controller's credentials and the two scoped
+   signing keys that the controller mints the users of a join with. The template
+   of each key is the permissions of its role, so the controller cannot give
+   more. Keep `operator.nk` and `account.nk` offline.
 4. Make the streams and buckets:
 
    ```bash
@@ -41,8 +42,11 @@ osapi nats auth operator create --out /etc/osapi/nats --print
 5. Make a join token, and start the agents with the join string
    ([A fleet on osapi's NATS](fleet.md#3-make-a-join-token)).
 
-A scoped signing key, whose template limits what osapi can give, is
-osapi-io/osapi#1432.
+To use an account that you have already, add two scoped signing keys to it with
+`nsc edit signing-key`, with the subjects that
+`osapi nats permissions get --role agent` and `--role join` print, and set
+`controller.join.scoped: true`, `signing_key_file` (the agent's key) and
+`join_signing_key_file`.
 
 ## Static users
 
