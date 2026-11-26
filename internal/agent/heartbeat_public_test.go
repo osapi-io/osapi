@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
@@ -76,6 +78,10 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 	// The last-seen write is checked in TestWriteSeen; the rest allow it.
 	s.mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
+	// The agent reads its previous registration and facts once, for
+	// the timeline; there is none.
+	s.mockKV.EXPECT().KVGet(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil, jetstream.ErrKeyNotFound).AnyTimes()
 	s.appFs = memfs.New()
 	s.logger = slog.Default()
 
@@ -262,6 +268,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 	// The last-seen write is checked in TestWriteSeen; the rest allow it.
 	s.mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
+	// The agent reads its previous registration and facts once, for
+	// the timeline; there is none.
+	s.mockKV.EXPECT().KVGet(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil, jetstream.ErrKeyNotFound).AnyTimes()
 
 	appConfig := config.Config{
 		Agent: config.AgentConfig{
@@ -662,6 +672,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 			defer ctrl.Finish()
 
 			mockKV := agentMocks.NewMockNATSClient(ctrl)
+			// The agent reads its previous registration and facts once, for
+			// the timeline; there is none.
+			mockKV.EXPECT().KVGet(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil, jetstream.ErrKeyNotFound).AnyTimes()
 			mockJobClient := mocks.NewMockJobClient(ctrl)
 			mockJobClient.EXPECT().
 				GetAgentConfig(gomock.Any(), gomock.Any()).
@@ -743,6 +757,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRenamed() {
 	defer ctrl.Finish()
 
 	mockKV := agentMocks.NewMockNATSClient(ctrl)
+	// The agent reads its previous registration and facts once, for
+	// the timeline; there is none.
+	mockKV.EXPECT().KVGet(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil, jetstream.ErrKeyNotFound).AnyTimes()
 	mockJobClient := mocks.NewMockJobClient(ctrl)
 	mockJobClient.EXPECT().
 		GetAgentConfig(gomock.Any(), gomock.Any()).

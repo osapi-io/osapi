@@ -160,6 +160,18 @@ decision of admission, and the agent writes its own start and stop:
 | `hostname_changed`     | controller | the old and the new hostname                                             |
 | `started`, `stopped`   | agent      | its version, at a start                                                  |
 | `config_applied`       | agent      | the version of its config and its labels, when the labels changed        |
+| `labels_changed`       | agent      | the old and the new labels, from `agent.labels` at a start               |
+| `os_changed`           | agent      | the old and the new OS and version, such as after an upgrade             |
+| `address_changed`      | agent      | the old and the new IPv4 address of the interface of the default route   |
+| `condition_started`    | agent      | the condition and its reason, such as `MemoryPressure: 92% used`         |
+| `condition_cleared`    | agent      | the condition                                                            |
+
+The agent compares each heartbeat and each facts report with the one before.
+After a start, the one before is the registration and the facts that the buckets
+still hold, so a change while the agent was down, such as an OS upgrade, is an
+event. An agent with no report before has no change events: its first heartbeat
+is where the comparison starts. A change of the labels that the controller's
+config makes is in `config_applied`, so it has no `labels_changed` of its own.
 
 The state of the agent comes from the latest drain event (`drain`, `cordoned`,
 `undrain`). A lifecycle event after a drain does not end the drain.

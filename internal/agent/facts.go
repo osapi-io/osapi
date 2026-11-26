@@ -109,6 +109,8 @@ func (a *Agent) writeFacts(
 	}
 
 	a.cachedFacts.Store(&reg)
+	// A change of the primary address is an event of the timeline.
+	a.noteFacts(ctx, machineID, reg)
 
 	data, err := marshalJSON(reg)
 	if err != nil {
