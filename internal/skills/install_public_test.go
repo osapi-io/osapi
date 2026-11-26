@@ -107,10 +107,6 @@ func statuses(
 	return out
 }
 
-func (s *InstallPublicTestSuite) TestToolNames() {
-	assert.Equal(s.T(), []string{"claude", "codex"}, skills.ToolNames())
-}
-
 func (s *InstallPublicTestSuite) TestInstall() {
 	claude := skills.Tools["claude"]
 	codex := skills.Tools["codex"]

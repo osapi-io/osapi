@@ -32,6 +32,8 @@ import (
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
+	"github.com/osapi-io/osapi/internal/behavior"
+
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/cpu"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/hostname"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/initd"
@@ -1135,4 +1137,18 @@ func SetJoinRoots(
 	joinRoots = roots
 
 	return func() { joinRoots = old }
+}
+
+// ExportBuiltProviders is every provider built, in the order of the registry.
+func ExportBuiltProviders(
+	bp *BehaviorProviders,
+) []any {
+	all := make([]any, 0, len(bp.built))
+	for _, b := range behavior.All() {
+		if p, ok := bp.built[b.Name]; ok {
+			all = append(all, p)
+		}
+	}
+
+	return all
 }

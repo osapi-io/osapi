@@ -360,7 +360,7 @@ func (suite *KeypairPublicTestSuite) TestSignAndVerify() {
 				verifyData = []byte("tampered data")
 			}
 
-			got := pki.Verify(m.PublicKey(), verifyData, sig)
+			got := ed25519.Verify(m.PublicKey(), verifyData, sig)
 			tc.validateFunc(got)
 		})
 	}

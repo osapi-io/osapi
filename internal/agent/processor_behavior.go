@@ -83,19 +83,6 @@ func BuildBehaviorProviders(
 	return bp
 }
 
-// All is every provider built, for the registry, which wires the agent's
-// facts into each.
-func (bp *BehaviorProviders) All() []any {
-	all := make([]any, 0, len(bp.built))
-	for _, b := range behavior.All() {
-		if p, ok := bp.built[b.Name]; ok {
-			all = append(all, p)
-		}
-	}
-
-	return all
-}
-
 // NewBehaviorProcessor returns a ProcessorFunc that runs any registered
 // behavior's method with the provider built for it, so a behavior needs no
 // wiring in the agent.

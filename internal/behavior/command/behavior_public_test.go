@@ -73,7 +73,6 @@ type result struct {
 }
 
 func read(_ context.Context, _ provider, _ input) ([]entry, error)     { return nil, nil }
-func readOne(_ context.Context, _ provider, _ input) (*entry, error)   { return nil, nil }
 func write(_ context.Context, _ provider, _ input) (result, error)     { return result{}, nil }
 func writeEntry(_ context.Context, _ provider, _ input) (entry, error) { return entry{}, nil }
 func readText(_ context.Context, _ provider, _ input) (string, error)  { return "", nil }
@@ -317,11 +316,6 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 			Fails("A key on two lines", input{Key: "a\nb"}, "line breaks"),
 	)
 
-	s.Equal(
-		"  # Every key\n  osapi client node kv list --target web-01 --key k --force --count 2\n\n"+
-			"  # No keys\n  osapi client node kv list --target web-01 --key none",
-		command.Example(b, b.Method("list")),
-	)
 	list := command.Annotations(b, b.Method("list"))
 	s.Equal("kv:read", list[reference.Permission])
 	out := list[reference.Result]
@@ -373,11 +367,6 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	text := behavior.Read("text", readText).Example("Some text", nil, "hello")
 	s.Empty(command.Output(b, text))
 	b.API = true
-	s.Equal(
-		"  # Apply all\n  osapi client node kv apply --target web-01",
-		command.Example(b, bare),
-	)
-	s.Empty(command.Example(b, behavior.Read("get", readOne)), "no examples")
 
 	s.Equal(
 		map[string]string{

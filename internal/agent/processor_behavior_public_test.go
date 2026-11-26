@@ -126,7 +126,7 @@ func (s *ProcessorBehaviorPublicTestSuite) TearDownTest() {
 func (s *ProcessorBehaviorPublicTestSuite) TestBuildBehaviorProviders() {
 	providers := agent.BuildBehaviorProviders(host.Host{Platform: "test"}, slog.Default())
 
-	s.Equal([]any{english{}}, providers.All())
+	s.Equal([]any{english{}}, agent.ExportBuiltProviders(providers))
 }
 
 func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {

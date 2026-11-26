@@ -51,17 +51,6 @@ var Tools = map[string]Tool{
 	"codex":  {Name: "codex", SkillsDir: ".agents/skills", Instructions: "AGENTS.md"},
 }
 
-// ToolNames lists the supported tools, sorted.
-func ToolNames() []string {
-	names := make([]string, 0, len(Tools))
-	for n := range Tools {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-
-	return names
-}
-
 // Status says what Install did to one file.
 type Status string
 
