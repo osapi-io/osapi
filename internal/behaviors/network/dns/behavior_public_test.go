@@ -41,6 +41,16 @@ func (s *BehaviorPublicTestSuite) TestBehavior() {
 
 // TestExamples runs every example and refusal on a fake host with each
 // platform's provider, through the methods, and checks what each changes.
+// TestPrograms holds that a Linux host without systemd-resolved, such as
+// openSUSE with NetworkManager, has every program that dns needs: get reads
+// resolv.conf there (osapi-io/osapi#1496).
+func (s *BehaviorPublicTestSuite) TestPrograms() {
+	for _, p := range dns.Behavior.PlatformRuns {
+		s.NotContains(p.Programs, "resolvectl", "resolvectl is required on %s", p.Platform)
+	}
+	s.Contains(dns.Behavior.RunsIfPresent, "resolvectl")
+}
+
 func (s *BehaviorPublicTestSuite) TestExamples() {
 	behaviortest.Run(s.T(), dns.Behavior)
 }
