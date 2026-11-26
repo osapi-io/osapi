@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.5bffd742.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.89ee1f1a.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.d15a3f60.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.cc640aa3.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -128,7 +128,7 @@ record has no encryption key. Enroll it again:</p>
 <li class="">On the machine, delete <code>enrolled-controller.pub</code> in <code>agent.pki.key_dir</code>
 (<code>controller.pub</code> on an agent admitted before osapi-io/osapi#1398), and
 restart the agent. It sends a new request with the two keys.</li>
-<li class="">On the machine, run <code>osapi agent key fingerprint</code>.</li>
+<li class="">On the machine, run <code>osapi pki key get --name agent</code>.</li>
 <li class="">Admit the machine with that fingerprint. The pending record shows the old
 fingerprint as <code>previous_fingerprint</code>.</li>
 </ol>
@@ -323,7 +323,7 @@ its first start, and signs each job from then on.</li>
 <code>agent.pki.key_dir</code> (<code>/etc/osapi/pki/agent</code> by default), and asks to join. It
 takes no job until the controller admits it.</li>
 <li class="">Admit each agent: read <code>osapi client admission list --state pending</code>, and
-admit each machine with the fingerprint that <code>osapi agent key fingerprint</code>
+admit each machine with the fingerprint that <code>osapi pki key get --name agent</code>
 prints on it. Set <code>controller.pki.auto_admit</code> only on a test fleet.</li>
 </ol>
 <p>By default the agent and the controller use one key directory, <code>/etc/osapi/pki</code>.
