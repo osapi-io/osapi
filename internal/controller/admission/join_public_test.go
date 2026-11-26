@@ -78,7 +78,7 @@ func joinRequest(
 		MachineID:     "m-1",
 		Hostname:      "web-01",
 		PublicKey:     pub,
-		EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		EncryptionKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 	}
 	r.Sign(priv)
 
@@ -145,6 +145,24 @@ func (s *StorePublicTestSuite) TestJoin() {
 		_, err := s.watcher.Join(context.Background(), req)
 
 		s.ErrorIs(err, admission.ErrJoinSignature)
+		s.NotContains(s.kv.data, admission.AcceptedKVPrefix()+"m-1")
+	})
+
+	s.Run("when the encryption key is not a P-256 key, nothing is admitted", func() {
+		s.watcher.SetJoinTokens(fakeTokens{})
+		pub, priv, _ := ed25519.GenerateKey(rand.Reader)
+		req := pki.JoinRequest{
+			Token:         "osapi_jt_t1.secret",
+			MachineID:     "m-1",
+			Hostname:      "web-01",
+			PublicKey:     pub,
+			EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		}
+		req.Sign(priv)
+
+		_, err := s.watcher.Join(context.Background(), req)
+
+		s.ErrorIs(err, admission.ErrJoinEncryptionKey)
 		s.NotContains(s.kv.data, admission.AcceptedKVPrefix()+"m-1")
 	})
 

@@ -80,7 +80,7 @@ in `agent.pki.key_dir`:
 | File                      | What it is                                                           |
 | ------------------------- | -------------------------------------------------------------------- |
 | `agent.key`, `agent.pub`  | The signing key of the agent. The controller admitted it.            |
-| `agent.xkey`              | The encryption key. Secrets sealed for this host open with it.       |
+| `agent.ekey`              | The encryption key. Secrets sealed for this host open with it.       |
 | `enrolled-controller.pub` | The controller's key. The agent checks each job with it.             |
 | `nats.creds`              | Its NATS user, in operator mode. It renews it before it expires.     |
 | `nats-join.json`          | Its NATS server and user, for static users.                          |

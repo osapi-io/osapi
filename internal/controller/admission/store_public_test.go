@@ -139,7 +139,10 @@ func (s *StorePublicTestSuite) SetupSubTest() {
 		"osapi",
 	)
 	s.key, _, _ = ed25519.GenerateKey(nil)
-	s.fp = pki.FingerprintOfKeys(s.key, "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM")
+	s.fp = pki.FingerprintOfKeys(
+		s.key,
+		"BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
+	)
 	s.at = time.Date(2026, 11, 19, 1, 0, 0, 0, time.UTC)
 	admission.SetNowFn(func() time.Time { return s.at })
 }
@@ -167,7 +170,7 @@ func (s *StorePublicTestSuite) pending(
 		MachineID:     machineID,
 		Hostname:      hostname,
 		PublicKey:     s.key,
-		EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		EncryptionKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 		Fingerprint:   "SHA256:self-reported",
 		RequestedAt:   s.at,
 	})
@@ -216,7 +219,7 @@ func (s *StorePublicTestSuite) TestList() {
 			s.Equal(types.AdmissionPending, got[2].State)
 			s.Equal(s.fp, got[2].Fingerprint, "the fingerprint of the keys the request carries")
 			s.Equal(
-				"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+				"BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 				got[2].EncryptionKey,
 			)
 			s.Empty(got[2].Previous)

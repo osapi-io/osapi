@@ -52,8 +52,8 @@ var (
 		sampleController, sampleAgent,
 		{
 			Name: "agent-encryption", Kind: KindEncryption, Component: "agent", State: StateOK,
-			File: "/etc/osapi/pki/agent/agent.xkey", Algorithm: "X25519",
-			PublicKey: "XA3NQJ6DPZ2Y7C4ULM5WRSVBKTEHGOIF63QXN4J2PDLW7YKZSMBUCRVE",
+			File: "/etc/osapi/pki/agent/agent.ekey", Algorithm: "ECDH P-256",
+			PublicKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 		},
 		sampleJetStream, sampleVault,
 	}}

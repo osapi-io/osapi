@@ -147,6 +147,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Forbidden(jointoken.ErrExpired, "The token has expired."),
 			endpoint.Forbidden(jointoken.ErrUsed, "The token has no use left."),
 			endpoint.Forbidden(admission.ErrJoinSignature, "The request is not signed by the key that it asks to admit."),
+			endpoint.Invalid(admission.ErrJoinEncryptionKey, "The encryption key is not a public P-256 key. An agent with an older key makes a new one and joins again."),
 			endpoint.Unavailable(admission.ErrNoJoinTokens, "This controller takes no join."),
 		),
 	endpoint.Post[DrainInput, struct{}]("drain").
@@ -252,7 +253,7 @@ func joinWith(
 		MachineID:     "d530664edc1c431eb5ef1e9dfd6617a5",
 		Hostname:      "web-01",
 		PublicKey:     "MCowBQYDK2VwAyEA",
-		EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		EncryptionKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 		Signature:     "c2lnbmF0dXJl",
 	}
 	change(&r)

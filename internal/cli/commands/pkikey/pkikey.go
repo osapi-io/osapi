@@ -38,7 +38,7 @@ var Group = command.Register(command.Define(
 		Short("List the keys, with their state, algorithm and fingerprint or ID").
 		Long("Run this on the host. It reads each key of osapi that the config names:\n"+
 			"the controller's Ed25519 signing key in controller.pki.key_dir, the agent's\n"+
-			"Ed25519 signing key and X25519 encryption key in agent.pki.key_dir, the key\n"+
+			"Ed25519 signing key and P-256 encryption key in agent.pki.key_dir, the key\n"+
 			"of the JetStream store in nats.server.jetstream.key_file, and the key of each\n"+
 			"vault of type nats. A public key shows its fingerprint, and a secret key\n"+
 			"shows its ID: never the key. A component that has not started on this host\n"+

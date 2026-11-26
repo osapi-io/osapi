@@ -23,10 +23,10 @@
 package pki
 
 import (
+	"crypto/ecdh"
 	"crypto/ed25519"
 
 	"github.com/avfs/avfs"
-	"github.com/nats-io/nkeys"
 )
 
 // Manager handles Ed25519 keypair lifecycle.
@@ -39,18 +39,18 @@ type Manager struct {
 	controllerPubKey         ed25519.PublicKey
 	previousControllerPubKey ed25519.PublicKey
 
-	// withEncryption makes LoadOrGenerate also load or generate the X25519
-	// key that opens values the controller seals for this agent.
+	// withEncryption makes LoadOrGenerate also load or generate the P-256
+	// ECDH key that opens values the controller seals for this agent.
 	withEncryption      bool
-	encryptionKey       nkeys.KeyPair
+	encryptionKey       *ecdh.PrivateKey
 	encryptionPublicKey string
 }
 
 // Option configures a Manager.
 type Option func(*Manager)
 
-// WithEncryptionKey gives the manager an X25519 encryption key next to its
-// Ed25519 signing key, in {prefix}.xkey. The agent has one; the controller
+// WithEncryptionKey gives the manager a P-256 ECDH encryption key next to
+// its Ed25519 signing key, in {prefix}.ekey. The agent has one; the controller
 // does not.
 func WithEncryptionKey() Option {
 	return func(m *Manager) {
@@ -75,8 +75,8 @@ const (
 )
 
 // EnrollmentRequest is sent by the agent to the controller. It carries both
-// public keys: the Ed25519 signing key and the X25519 encryption key, in the
-// nkeys form that starts with "X".
+// public keys: the Ed25519 signing key and the P-256 encryption key, in
+// EncryptionKeyEncoding.
 type EnrollmentRequest struct {
 	MachineID     string `json:"machine_id"`
 	Hostname      string `json:"hostname"`

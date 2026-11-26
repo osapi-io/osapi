@@ -174,6 +174,18 @@ behavior-cover-check:
         exit 1
     fi
 
+# Run the tests of the packages that pass in FIPS 140-3 only mode
+#
+# GODEBUG=fips140=only refuses each algorithm that FIPS 140-3 does not
+# approve, so these tests show that the seal of job secrets and the agent's
+# encryption key use only approved ones. The other packages do not pass yet:
+# NATS JWTs sign with nkeys, which nkeys v0.4.17 refuses in this mode. Add a
+# package here when it passes.
+go_fips_packages := "./internal/secret/seal/ ./internal/pki/ ./internal/job/... ./internal/controller/endpoints/agent/ ./internal/controller/endpoints/admission/"
+
+go-fips-test:
+    GODEBUG=fips140=only go test {{ go_fips_packages }}
+
 # Fail when anything under pkg/ reaches internal/
 #
 # pkg/ is what osapi promises to code outside it, the SDK, and internal/ looks

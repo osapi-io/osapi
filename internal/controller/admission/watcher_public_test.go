@@ -869,8 +869,8 @@ func (s *WatcherPublicTestSuite) TestKVPrefix() {
 	s.Equal("accepted.", admission.AcceptedKVPrefix())
 }
 
-// testEncryptionKey is a public X25519 key in the nkeys form.
-const testEncryptionKey = "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM"
+// testEncryptionKey is a public P-256 key in pki.EncryptionKeyEncoding.
+const testEncryptionKey = "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs"
 
 // makeEnrollmentMsg creates a *nats.Msg with a serialized EnrollmentRequest.
 func (s *WatcherPublicTestSuite) makeEnrollmentMsg(

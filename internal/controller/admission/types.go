@@ -44,7 +44,8 @@ type PendingAgent struct {
 	MachineID   string `json:"machine_id"`
 	Hostname    string `json:"hostname"`
 	PublicKey   []byte `json:"public_key"`
-	// EncryptionKey is the agent's public X25519 key, in the nkeys form.
+	// EncryptionKey is the agent's public P-256 key, in
+	// pki.EncryptionKeyEncoding.
 	EncryptionKey string    `json:"encryption_key"`
 	Fingerprint   string    `json:"fingerprint"`
 	RequestedAt   time.Time `json:"requested_at"`
@@ -61,7 +62,8 @@ type AcceptedAgent struct {
 	MachineID string            `json:"machine_id"`
 	Hostname  string            `json:"hostname"`
 	PublicKey ed25519.PublicKey `json:"public_key"`
-	// EncryptionKey is the agent's public X25519 key, in the nkeys form. The
+	// EncryptionKey is the agent's public P-256 key, in
+	// pki.EncryptionKeyEncoding. The
 	// fingerprint covers it and PublicKey. A record admitted before agents
 	// had one has none: that agent enrolls again.
 	EncryptionKey string    `json:"encryption_key,omitempty"`

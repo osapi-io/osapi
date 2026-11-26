@@ -250,7 +250,7 @@ components:
     JoinRequest:
       properties:
         encryption_key:
-          description: The agent's X25519 encryption key, in the nkeys form.
+          description: 'The agent''s public P-256 encryption key: base64url, with no padding, of the 65-byte uncompressed point.'
           maxLength: 128
           type: string
           x-oapi-codegen-extra-tags:
@@ -913,7 +913,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
+          description: The encryption key is not a public P-256 key. An agent with an older key makes a new one and joins again.
         "403":
           content:
             application/json:

@@ -129,10 +129,14 @@ the job, and that has an encryption key:
 - An agent that joins after that has no key in the job. It fails the job with
   the reason `the job was not sealed to this agent`, and does not run it. Run
   the job again.
-- An agent that was admitted before agents had an encryption key has no key in
-  the job either. Enroll it again, as
-  [Agent identity](../../architecture/agent-identity.md#an-agent-admitted-before-the-encryption-key)
+- An agent that was admitted with an X25519 key, before osapi-io/osapi#1382, has
+  no P-256 key in its admitted record. The controller cannot seal the job to it,
+  and the job fails with `seal the job key`. Admit the agent again, as
+  [Agent identity](../../architecture/agent-identity.md#an-agent-admitted-with-an-x25519-key)
   tells.
+
+The seal uses only FIPS 140-3 approved algorithms. [FIPS 140-3 mode](fips.md)
+tells which algorithms, and the FIPS build.
 
 A password is not sealed: the controller hashes it, and the job has only the
 hash.

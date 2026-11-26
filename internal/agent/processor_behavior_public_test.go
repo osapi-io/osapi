@@ -22,18 +22,20 @@ package agent_test
 
 import (
 	"context"
+	"crypto/ecdh"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"testing"
 
-	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/seal"
@@ -227,9 +229,9 @@ func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
 // TestSealedSecrets: the dispatch opens each sealed secret of the job with
 // the Opener of the job, before the provider runs.
 func (s *ProcessorBehaviorPublicTestSuite) TestSealedSecrets() {
-	own, err := nkeys.CreateCurveKeys()
+	own, err := ecdh.P256().GenerateKey(rand.Reader)
 	s.Require().NoError(err)
-	pub, _ := own.PublicKey()
+	pub := pki.EncodeEncryptionKey(own.PublicKey())
 	sealer, err := seal.New("job-1")
 	s.Require().NoError(err)
 	key, err := sealer.KeyFor(pub)

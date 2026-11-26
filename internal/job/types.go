@@ -86,7 +86,7 @@ type Request struct {
 	// SealedKeys is the job key, sealed to each target agent, by machine
 	// ID, when Data has sealed secrets. Empty when it has none.
 	SealedKeys map[string]string `json:"sealed_keys,omitempty"`
-	// SealedFrom is the public X25519 key that sealed each job key, which
+	// SealedFrom is the public P-256 key that sealed each job key, which
 	// an agent needs to open its own.
 	SealedFrom string `json:"sealed_from,omitempty"`
 	// Timestamp indicates when the request was created.

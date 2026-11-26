@@ -48,7 +48,7 @@ var sensitiveLooking = regexp.MustCompile(
 var reviewedNonSensitive = map[string]string{
 	"public_key": "agent/join's is the agent's Ed25519 public key, which the " +
 		"admission record keeps and shows; not a secret",
-	"encryption_key": "agent/join's is the agent's X25519 public key; not a secret",
+	"encryption_key": "agent/join's is the agent's P-256 public key; not a secret",
 	"signature": "agent/join's is the agent's signature over its own request, " +
 		"which proves it holds its key; it is no credential and cannot be replayed " +
 		"as one",

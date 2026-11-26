@@ -47,7 +47,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			return []pkikey.Key{
 				{Name: "controller", State: "ok", Algorithm: "Ed25519", Fingerprint: "SHA256:aa"},
 				{Name: "jetstream", State: "ok", Algorithm: "ChaCha20-Poly1305", KeyID: "7f3a"},
-				{Name: "agent-encryption", State: "ok", Algorithm: "X25519", PublicKey: "XA"},
+				{Name: "agent-encryption", State: "ok", Algorithm: "ECDH P-256", PublicKey: "BA"},
 				{Name: "vault:default", State: "not made"},
 			}
 		},
@@ -72,7 +72,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 	s.Equal(pkilist.KindKey, got.Items[0].Kind)
 	s.Equal("SHA256:aa", got.Items[0].Fingerprint)
 	s.Equal("7f3a", got.Items[1].Fingerprint, "a secret key shows its ID")
-	s.Equal("XA", got.Items[2].Fingerprint, "an X25519 key shows its public key")
+	s.Equal("BA", got.Items[2].Fingerprint, "an encryption key shows its public key")
 	s.Empty(got.Items[3].Fingerprint)
 	s.Equal(pkilist.KindCert, got.Items[4].Kind)
 	s.Equal("ECDSA P-256", got.Items[4].Algorithm)

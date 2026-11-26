@@ -181,7 +181,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		s.Require().NoError(s.fs.WriteFile("/ctl/controller.pub", []byte("x"), 0o644))
 		s.Require().NoError(s.fs.MkdirAll("/agt", 0o700))
 		s.Require().NoError(s.fs.WriteFile("/agt/agent.key", []byte("x"), 0o600))
-		s.Require().NoError(s.fs.WriteFile("/agt/agent.xkey", []byte("not a seed"), 0o600))
+		s.Require().NoError(s.fs.WriteFile("/agt/agent.ekey", []byte("not a key"), 0o600))
 		s.Require().NoError(s.fs.MkdirAll("/nats", 0o700))
 		s.Require().NoError(s.fs.WriteFile("/nats/js.key", []byte("  \n"), 0o600))
 		s.Require().NoError(s.fs.MkdirAll("/v", 0o700))
@@ -194,7 +194,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			keys["controller"].State,
 		)
 		s.Equal("unreadable: half a key pair: /agt/agent.pub is not there", keys["agent"].State)
-		s.Contains(keys["agent-encryption"].State, "unreadable: /agt/agent.xkey: ")
+		s.Contains(keys["agent-encryption"].State, "unreadable: /agt/agent.ekey: ")
 		s.Equal("unreadable: /nats/js.key is empty", keys["jetstream"].State)
 		s.Contains(keys["vault:default"].State, "unreadable: line 1")
 		s.Equal(pkikey.StateNotMade, keys["vault:env"].State)

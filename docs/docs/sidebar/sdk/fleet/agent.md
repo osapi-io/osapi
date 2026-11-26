@@ -278,7 +278,7 @@ A `string`, one of `inet`, `inet6`, `dual`.
 
 | Field           | Type     | Description                                                                                                                                   |
 | --------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EncryptionKey` | `string` | The agent's X25519 encryption key, in the nkeys form.                                                                                         |
+| `EncryptionKey` | `string` | The agent's public P-256 encryption key: base64url, with no padding, of the 65-byte uncompressed point.                                       |
 | `Hostname`      | `string` | The hostname of the host.                                                                                                                     |
 | `MachineID`     | `string` | The machine ID of the host.                                                                                                                   |
 | `PublicKey`     | `string` | The agent's Ed25519 signing key, in base64.                                                                                                   |

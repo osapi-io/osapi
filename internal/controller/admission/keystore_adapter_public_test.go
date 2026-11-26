@@ -114,7 +114,7 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 					MachineID:     "machine-001",
 					Hostname:      "web-01",
 					PublicKey:     s.pubKey,
-					EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+					EncryptionKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 					Fingerprint:   pki.FingerprintOf(s.pubKey),
 					AcceptedAt:    s.fixedTime,
 				}
@@ -133,7 +133,7 @@ func (s *KeyStoreAdapterPublicTestSuite) TestLookupAgentKey() {
 				s.Equal("web-01", key.Hostname)
 				s.Equal(ed25519.PublicKey(s.pubKey), key.PublicKey)
 				s.Equal(
-					"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+					"BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 					key.EncryptionKey,
 				)
 			},
