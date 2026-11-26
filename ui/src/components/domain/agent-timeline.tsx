@@ -30,6 +30,8 @@ function tone(ev: TimelineEvent): string {
     case "drain":
     case "cordoned":
       return "bg-status-pending";
+    case "hostname_changed":
+      return "bg-status-applied";
     case "revoked":
     case "rejected":
     case "deleted":
@@ -39,9 +41,45 @@ function tone(ev: TimelineEvent): string {
   }
 }
 
+// Row is one line of the rail: an event, or a stop and the start after it,
+// folded into one restart.
+interface Row {
+  ev: TimelineEvent;
+  label: string;
+}
+
+// rename is the old and new hostname of a hostname_changed message.
+const rename = /^hostname changed from (\S+) to (\S+)$/;
+
+// rows folds each stop that a start follows within a minute into one
+// "restarted" row, and names each event for a person.
+function rows(events: TimelineEvent[]): Row[] {
+  const out: Row[] = [];
+  for (let i = 0; i < events.length; i++) {
+    const ev = events[i];
+    const next = events[i + 1];
+    if (
+      ev.event === "started" &&
+      next?.event === "stopped" &&
+      Date.parse(ev.timestamp) - Date.parse(next.timestamp) < 60_000
+    ) {
+      out.push({ ev, label: "restarted" });
+      i++;
+      continue;
+    }
+    out.push({
+      ev,
+      label: ev.event === "hostname_changed" ? "renamed" : ev.event,
+    });
+  }
+  return out;
+}
+
 // detail is the message without the event's own name at its start, as in
-// "started, version v1": the event already says it.
+// "started, version v1": the event already says it. A rename is old → new.
 function detail(ev: TimelineEvent): string {
+  const m = ev.message?.match(rename);
+  if (m && !ev.error) return `${m[1]} → ${m[2]}`;
   const text = ev.error || ev.message || "";
   const rest = text.startsWith(ev.event)
     ? text.slice(ev.event.length).replace(/^[,:\s]+/, "")
@@ -80,7 +118,8 @@ export function AgentTimeline({
       .catch((err: Error) => setError(err.message));
   };
 
-  const visible = events && (all ? events : events.slice(0, shown));
+  const folded = events && rows(events);
+  const visible = folded && (all ? folded : folded.slice(0, shown));
 
   return (
     <details className="mt-2 min-w-0 text-xs" onToggle={onToggle}>
@@ -95,7 +134,7 @@ export function AgentTimeline({
         {events?.length === 0 && <p className="text-text-muted">No events</p>}
         {visible && visible.length > 0 && (
           <ol className="relative ml-1 border-l border-border/60">
-            {visible.map((ev, i) => (
+            {visible.map(({ ev, label }, i) => (
               <li
                 key={`${ev.timestamp}-${ev.event}-${i}`}
                 className="relative min-w-0 pb-1.5 pl-3 last:pb-0"
@@ -110,7 +149,7 @@ export function AgentTimeline({
                   <span
                     className={ev.error ? "text-status-error" : "text-text"}
                   >
-                    {ev.event}
+                    {label}
                   </span>
                   <span
                     className="ml-auto shrink-0 text-text-muted tabular-nums"
@@ -131,13 +170,13 @@ export function AgentTimeline({
             ))}
           </ol>
         )}
-        {events && events.length > shown && (
+        {folded && folded.length > shown && (
           <button
             type="button"
             className="mt-1 text-text-muted underline-offset-2 hover:text-text hover:underline"
             onClick={() => setAll(!all)}
           >
-            {all ? "Show fewer" : `Show all ${events.length}`}
+            {all ? "Show fewer" : `Show all ${folded.length}`}
           </button>
         )}
       </div>

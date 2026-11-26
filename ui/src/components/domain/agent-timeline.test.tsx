@@ -97,6 +97,37 @@ describe("AgentTimeline", () => {
     expect(container.querySelectorAll("li").length).toBe(12);
   });
 
+  test("folds a stop and its start into a restart, and shows a rename as old → new", async () => {
+    const { container } = render(
+      <AgentTimeline
+        hostname="web-01"
+        load={async () => [
+          {
+            timestamp: "2026-11-25T10:00:05Z",
+            event: "started",
+            message: "started, version v2",
+          },
+          {
+            timestamp: "2026-11-25T10:00:00Z",
+            event: "stopped",
+            message: "stopped",
+          },
+          {
+            timestamp: "2026-11-25T09:00:00Z",
+            event: "hostname_changed",
+            message: "hostname changed from ubuntu-1 to web-01",
+          },
+        ]}
+      />,
+    );
+    open(container);
+    await waitFor(() => expect(screen.getByText("restarted")).toBeTruthy());
+    expect(container.querySelectorAll("li").length).toBe(2);
+    expect(screen.getByText("version v2")).toBeTruthy();
+    expect(screen.getByText("renamed")).toBeTruthy();
+    expect(screen.getByText("ubuntu-1 → web-01")).toBeTruthy();
+  });
+
   test("an agent with no events says so", async () => {
     const { container } = render(
       <AgentTimeline hostname="web-01" load={async () => []} />,
