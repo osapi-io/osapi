@@ -25,6 +25,7 @@ package integration_test
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -117,6 +118,13 @@ type cliPolicy struct {
 	// skip is why the suite does not run the examples, which the gate
 	// requires of a process and of each command that the suite cannot run.
 	skip string
+	// issue is the open issue that makes a skipped command run, such as
+	// osapi-io/osapi#1536 for the commands that need a second agent, and
+	// elsewhere is the check that runs it in place of the suite, such as a
+	// recipe of the justfile. The gate requires one of them of each skip, so
+	// a new skip is a choice with a record (osapi-io/osapi#1535).
+	issue     string
+	elsewhere string
 	// host is a command that reads or writes the files of a component on
 	// its host: it runs against the suite's own server, not a deployment
 	// such as the lab, whose files are not where the suite runs.
@@ -130,40 +138,52 @@ type cliPolicy struct {
 }
 
 const (
-	skipProcess   = "a process that runs until it stops: TestMain starts the suite's server with osapi start"
+	skipProcess = "a process that runs until it stops; the suite starts its server with " +
+		"osapi start, and a second server of its own would run this one"
 	skipAdmission = "changes the admission of a machine, and the suite has no machine to spend: " +
-		"each other test needs its agent; the admission endpoints' unit tests and the lab's join run it"
+		"each other test needs its agent, and a second agent of its own would run it"
 	skipScaffold = "writes the source of a definition into a checkout: the scaffold checks of the " +
-		"justfile (behavior-, endpoint- and command-scaffold-check) run it in a copy"
-	skipService = "installs or removes a system service on the host: osapi-lab's join of a VM runs " +
-		"it (osapi-io/osapi-lab#73)"
+		"justfile run it in a copy"
+	skipService = "installs or removes a system service on the host, which the suite's own agent " +
+		"runs as: a lab VM or a second agent would run it"
+	// issueSecondServer is the issue of the commands that need a second
+	// server or a second agent of the suite's own.
+	issueSecondServer = "osapi-io/osapi#1536"
+	// scaffoldChecks are the recipes that run a scaffold in a copy.
+	scaffoldChecks = "just behavior-scaffold-check, endpoint-scaffold-check and command-scaffold-check"
 )
 
 // cliPolicies are the commands whose examples do not run as their kind.
 var cliPolicies = map[string]cliPolicy{
-	"start":                   {skip: skipProcess},
-	"agent start":             {skip: skipProcess},
-	"controller start":        {skip: skipProcess},
-	"nats start":              {skip: skipProcess},
-	"client admission admit":  {skip: skipAdmission},
-	"client admission reject": {skip: skipAdmission},
-	"client admission revoke": {skip: skipAdmission},
-	"client admission delete": {skip: skipAdmission},
-	"agent service install":   {skip: skipService},
-	"agent service uninstall": {skip: skipService},
-	"dsl behavior create":     {skip: skipScaffold},
-	"dsl endpoint create":     {skip: skipScaffold},
-	"dsl command create":      {skip: skipScaffold},
+	"start": {
+		skip:      "a process that runs until it stops: TestMain starts the suite's server with it",
+		elsewhere: "TestMain in integration_test.go",
+	},
+	"agent start":             {skip: skipProcess, issue: issueSecondServer},
+	"controller start":        {skip: skipProcess, issue: issueSecondServer},
+	"nats start":              {skip: skipProcess, issue: issueSecondServer},
+	"client admission admit":  {skip: skipAdmission, issue: issueSecondServer},
+	"client admission reject": {skip: skipAdmission, issue: issueSecondServer},
+	"client admission revoke": {skip: skipAdmission, issue: issueSecondServer},
+	"client admission delete": {skip: skipAdmission, issue: issueSecondServer},
+	"agent service install":   {skip: skipService, issue: issueSecondServer},
+	"agent service uninstall": {skip: skipService, issue: issueSecondServer},
+	"dsl behavior create":     {skip: skipScaffold, elsewhere: scaffoldChecks},
+	"dsl endpoint create":     {skip: skipScaffold, elsewhere: scaffoldChecks},
+	"dsl command create":      {skip: skipScaffold, elsewhere: scaffoldChecks},
 	"dsl docs generate": {
-		skip: "writes the docs of a checkout: docs-gen-check and cli-docs-gen-check run it",
+		skip:      "writes the docs of a checkout: a copy of the checkout runs it",
+		elsewhere: "just docs-gen-check and cli-docs-gen-check",
 	},
 	"pki key create": {
 		skip: "makes a key on the host, and refuses one that is there: the suite's server made " +
 			"each key that it uses, and sets no JetStream key_file; its unit tests make each kind",
+		issue: "osapi-io/osapi#1537",
 	},
 	"pki cert rotate": {
 		skip: "the running server keeps serving the old certificate, so each later call of the " +
 			"suite, which trusts the new file, would fail TLS; its unit tests rotate one",
+		issue: "osapi-io/osapi#1533",
 	},
 	"controller join token create": {host: true, write: true},
 	"controller join token list":   {host: true},
@@ -203,6 +223,9 @@ var undoes = map[string]undo{
 	"client agent config update": {args: []string{"client", "agent", "config", "update"}},
 }
 
+// issueRef is an issue as a skip names it, such as osapi-io/osapi#1536.
+var issueRef = regexp.MustCompile(`^osapi-io/[a-z0-9.-]+#[0-9]+$`)
+
 // CLICasesTestSuite is the gate: each command has a case that the
 // integration suite runs, or a reason that it does not.
 type CLICasesTestSuite struct {
@@ -232,6 +255,9 @@ func (s *CLICasesTestSuite) TestEachCommandHasACase() {
 		s.True(seen[path], "cliPolicies names %s, which no definition has", path)
 		if p.skip != "" {
 			s.GreaterOrEqual(len(p.skip), 40, "%s: say why the suite cannot run it", path)
+			s.True(issueRef.MatchString(p.issue) || p.elsewhere != "",
+				"%s: a skip names the open issue that makes it run, as osapi-io/<repo>#<n>, "+
+					"or the check that runs it elsewhere", path)
 		}
 	}
 }

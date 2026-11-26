@@ -648,7 +648,10 @@ the unit tests. It fails for a command with no example and no refusal, for a
 process with no skip, for a policy that names no command, and for an example of
 a write with no `.Check`, `.CheckFails` or `.NoCheck`. To make it pass, add an
 `Example` or a `Fails` to the definition. If the suite cannot run the command,
-add a skip with the reason.
+add a skip with the reason, and with the open issue that makes it run (`issue`,
+such as `osapi-io/osapi#1536`) or the check that runs it in place of the suite
+(`elsewhere`, such as a recipe of the justfile). The gate fails a skip with
+neither.
 
 A value of an example that the suite does not know, such as a new kind of ID, is
 used as it is, and the example fails. Add the thing that it names to
