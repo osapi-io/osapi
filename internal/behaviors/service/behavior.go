@@ -72,6 +72,97 @@ var (
 // agent's own.
 var agentUnit = behavior.Exists("/etc/systemd/system/osapi-agent.service", unitText)
 
+// Which hosts an example runs on: systemd, or launchd on a Mac.
+var (
+	linuxOnly  = behavior.OnPlatform(behavior.PlatformDebian, behavior.PlatformLinux)
+	debianOnly = behavior.OnPlatform(behavior.PlatformDebian)
+	macOnly    = behavior.OnPlatform(behavior.PlatformDarwin)
+)
+
+const (
+	lcSystem  = "launchctl print system"
+	lcPrint   = "launchctl print system/io.osapi.app"
+	lcLoaded  = "system/io.osapi.app = {\n\tstate = running\n}\n"
+	lcCron    = "\t\t     412      - \tcom.apple.cron\n"
+	lcAppUp   = "\t\t     612      - \tio.osapi.app\n"
+	lcAppOff  = "\tdisabled services = {\n\t\t\"io.osapi.app\" => disabled\n\t}\n"
+	lcAppOn   = "\tdisabled services = {\n\t\t\"io.osapi.app\" => enabled\n\t}\n"
+	plistApp  = "/Library/LaunchDaemons/io.osapi.app.plist"
+	plistText = `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>Label</key><string>io.osapi.app</string>
+<key>ProgramArguments</key><array><string>/bin/sleep</string><string>86400</string></array>
+</dict></plist>
+`
+	plistV2 = `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>Label</key><string>io.osapi.app</string>
+<key>ProgramArguments</key><array><string>/bin/sleep</string><string>86400</string></array>
+<key>KeepAlive</key><true/></dict></plist>
+`
+)
+
+var (
+	cron          = Entry{Name: "com.apple.cron", State: "running", Enabled: true}
+	appMac        = Entry{Name: "app", State: "running", Enabled: true, Managed: true}
+	storedPlist   = behavior.Stored("app.plist", plistText, types.ContentRaw)
+	deployedPlist = behavior.After(CreateInput{Name: "app", Object: "app.plist"})
+	agentPlist    = behavior.Exists("/Library/LaunchDaemons/io.osapi.agent.plist", plistText)
+)
+
+// lcOut is what launchctl print system prints: the services block with rows,
+// and the disabled services block, disabled.
+func lcOut(
+	rows string,
+	disabled string,
+) string {
+	return "system = {\n\tservices = {\n" + rows + "\t}\n" + disabled + "}\n"
+}
+
+// macAction is what launchd prints, and runs, for each action on a Mac. A
+// live Mac starts from a plist that create deployed: not loaded, and enabled.
+var macAction = map[string][]behavior.HostOption{
+	"start": {
+		behavior.Prints(lcSystem, lcOut(lcCron, "")),
+		behavior.PrintsAfter(
+			"launchctl kickstart system/io.osapi.app",
+			lcSystem,
+			lcOut(lcCron+lcAppUp, ""),
+		),
+		behavior.Ran("launchctl", "bootstrap", "system", plistApp),
+		behavior.Ran("launchctl", "kickstart", "system/io.osapi.app"),
+	},
+	"stop": {
+		behavior.After(StartInput{Name: "app"}),
+		behavior.Prints(lcSystem, lcOut(lcCron+lcAppUp, "")),
+		behavior.PrintsAfter("launchctl bootout system/io.osapi.app", lcSystem, lcOut(lcCron, "")),
+		behavior.Ran("launchctl", "bootout", "system/io.osapi.app"),
+	},
+	"restart": {
+		behavior.After(StartInput{Name: "app"}),
+		behavior.Prints(lcSystem, lcOut(lcCron+lcAppUp, "")),
+		behavior.Prints(lcPrint, lcLoaded),
+		behavior.Ran("launchctl", "kickstart", "-k", "system/io.osapi.app"),
+	},
+	"enable": {
+		behavior.After(DisableInput{Name: "app"}),
+		behavior.Prints(lcSystem, lcOut(lcCron, lcAppOff)),
+		behavior.PrintsAfter(
+			"launchctl enable system/io.osapi.app",
+			lcSystem,
+			lcOut(lcCron, lcAppOn),
+		),
+		behavior.Ran("launchctl", "enable", "system/io.osapi.app"),
+	},
+	"disable": {
+		behavior.Prints(lcSystem, lcOut(lcCron, "")),
+		behavior.PrintsAfter(
+			"launchctl disable system/io.osapi.app",
+			lcSystem,
+			lcOut(lcCron, lcAppOff),
+		),
+		behavior.Ran("launchctl", "disable", "system/io.osapi.app"),
+	},
+}
+
 // Behavior is the systemd services of the host. gohai reads every service.
 // osapi writes and acts on the services it deploys only: each has a unit file
 // /etc/systemd/system/osapi-<name>.service that managedfile has a record of,
@@ -79,7 +170,7 @@ var agentUnit = behavior.Exists("/etc/systemd/system/osapi-agent.service", unitT
 // file upload. A unit file with the prefix that osapi did not write, such as
 // the agent's own osapi-agent.service, is not osapi's to change.
 var Behavior = behavior.Register(behavior.Define(
-	"service", "The systemd services of the host",
+	"service", "The services of the host: systemd on Linux, launchd on macOS",
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Services),
@@ -88,14 +179,21 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),
+	behavior.Platform(behavior.PlatformDarwin, newDarwin),
 	behavior.Writes("/etc/systemd/system/osapi-*.service"),
-	behavior.Runs("systemctl"),
+	behavior.Writes("/Library/LaunchDaemons/io.osapi.*.plist"),
+	behavior.RunsOnPlatform(behavior.PlatformLinux, "systemctl"),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "launchctl"),
+	behavior.SudoOnPlatform(behavior.PlatformDebian, "systemctl"),
+	behavior.SudoOnPlatform(behavior.PlatformDarwin, "launchctl"),
 	behavior.Read("list", List).
 		Describe("List the services of the host").
 		Explain("Lists each service that systemd has loaded, with its state, whether it "+
 			"starts at boot and its description, through gohai. A service that osapi "+
 			"deployed shows by the name it was deployed with, not its unit's osapi- "+
-			"name, and is managed. A Mac has no systemd, and reports skipped.").
+			"name, and is managed. On a Mac, it lists each daemon that launchd has loaded "+
+			"in the system domain, by its label. A daemon that osapi deployed reads by the "+
+			"name it was deployed with, app for io.osapi.app.").
 		Example("A service that osapi deployed reads by its name", ListInput{},
 			[]Entry{ssh, appEntry},
 			// Only the Debian writer deploys a service.
@@ -106,20 +204,29 @@ var Behavior = behavior.Register(behavior.Define(
 		).
 		Example("A host with two services", ListInput{},
 			[]Entry{ssh, {Name: "osapi-app", State: "dead", Description: "Example app"}},
+			linuxOnly,
 			behavior.Prints(units, sshUnit+appDead),
 			behavior.Prints(files, sshFile+appOff),
+		).
+		Example("A Mac, with a daemon that osapi deployed", ListInput{},
+			[]Entry{cron, appMac},
+			macOnly, storedPlist, deployedPlist,
+			behavior.Prints(lcSystem, lcOut(lcCron+lcAppUp, "")),
 		),
 	behavior.Read("get", Get).Key("name").
 		Describe("Get one service").
 		Explain("Reads one service from the same list, by its name with .service or "+
 			"without it. A service that osapi deployed reads by the name it was deployed "+
 			"with, such as app, as its writes take it, or by its unit's name, osapi-app. "+
-			"A service that systemd has not loaded is not found.").
+			"A service that systemd has not loaded is not found. On a Mac, a daemon that osapi "+
+			"deployed and launchd has not loaded is dead.").
 		Example("A running service", GetInput{Name: "ssh"}, ssh,
+			linuxOnly,
 			behavior.Prints(units, sshUnit),
 			behavior.Prints(files, sshFile),
 		).
 		Example("A name with .service", GetInput{Name: "ssh.service"}, ssh,
+			linuxOnly,
 			behavior.Prints(units, sshUnit),
 			behavior.Prints(files, sshFile),
 		).
@@ -139,32 +246,54 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Prints(units, appDead),
 			behavior.Prints(files, appOff),
 		).
+		Example("A daemon on a Mac, by its label", GetInput{Name: "com.apple.cron"}, cron,
+			macOnly,
+			behavior.Prints(lcSystem, lcOut(lcCron, "")),
+		).
+		Example("A daemon that osapi deployed and launchd has not loaded",
+			GetInput{Name: "app"}, Entry{Name: "app", State: "dead", Enabled: true, Managed: true},
+			macOnly, storedPlist, deployedPlist,
+			behavior.Prints(lcSystem, lcOut(lcCron, "")),
+		).
 		Fails("A service that systemd has not loaded", GetInput{Name: "nosuch"}, "not found").
 		Fails("A name with a space", GetInput{Name: "a b"}, "Name"),
 	behavior.Write("create", Create).
-		On(behavior.PlatformDebian).
-		Sudo("systemctl").
+		On(behavior.PlatformDebian, behavior.PlatformDarwin).
 		Describe("Deploy a service").
 		Explain("Gets the object from the object store and writes it as the unit file "+
 			"of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. "+
 			"A unit file at that path that osapi did not write, such as the agent's own "+
 			"osapi-agent.service, is refused. A unit file "+
 			"that already has the content does not change. The service does not start: "+
-			"start and enable are their own actions.").
+			"start and enable are their own actions. On a Mac, the object is the plist "+
+			"of the daemon, /Library/LaunchDaemons/io.osapi.app.plist for app, with the label "+
+			"io.osapi.app, and launchd does not load it until start.").
 		Example("Deploy a unit file", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app", Changed: true},
+			debianOnly,
 			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.Wrote(appPath, unitText),
 			behavior.Ran("systemctl", "daemon-reload"),
 		).
 		Example("A unit file that has the content", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app"},
+			debianOnly,
 			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
 		).
+		Example("Deploy a plist on a Mac", CreateInput{Name: "app", Object: "app.plist"},
+			Result{Name: "app", Changed: true},
+			macOnly, storedPlist,
+			behavior.Wrote(plistApp, plistText),
+		).
+		Example("A plist that has the content", CreateInput{Name: "app", Object: "app.plist"},
+			Result{Name: "app"},
+			macOnly, storedPlist, deployedPlist,
+		).
 		Fails("An object the store does not have", CreateInput{Name: "app", Object: "nosuch"}, "not found").
-		Fails("A unit file that osapi did not deploy", CreateInput{Name: "agent", Object: "app.service"},
-			"osapi did not deploy it", stored, agentUnit).
+		Fails("A unit file or a plist that osapi did not deploy",
+			CreateInput{Name: "agent", Object: "app.service"},
+			"osapi did not deploy it", stored, agentUnit, agentPlist).
 		Fails("No object", CreateInput{Name: "app"}, "Object").
 		Fails("An object name over 255 characters",
 			CreateInput{Name: "app", Object: strings.Repeat("a", 256)}, "Object").
@@ -172,14 +301,15 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name that is an option", CreateInput{Name: "--now", Object: "app.service"},
 			"not a valid service name"),
 	behavior.Write("update", Update).Key("name").
-		On(behavior.PlatformDebian).
-		Sudo("systemctl").
+		On(behavior.PlatformDebian, behavior.PlatformDarwin).
 		Describe("Deploy a new unit file for a service").
 		Explain("Writes the object as the unit file of a service that osapi deployed, "+
 			"then reloads systemd when the file changed. A service that osapi did not "+
-			"deploy is not found.").
+			"deploy is not found. On a Mac, it writes the plist, and a daemon that runs keeps "+
+			"its old plist until restart.").
 		Example("A new unit file", UpdateInput{Name: "app", Object: "app-v2.service"},
 			Result{Name: "app", Changed: true},
+			debianOnly,
 			stored,
 			deployed,
 			behavior.Stored("app-v2.service", unitText+"Restart=always\n", types.ContentRaw),
@@ -187,8 +317,15 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Ran("systemctl", "daemon-reload"),
 		).
 		Fails("A service that osapi did not deploy", UpdateInput{Name: "ssh", Object: "app.service"}, "not found").
-		Fails("A unit file that osapi did not deploy", UpdateInput{Name: "agent", Object: "app.service"},
-			"not found", stored, agentUnit).
+		Example("A new plist on a Mac", UpdateInput{Name: "app", Object: "app-v2.plist"},
+			Result{Name: "app", Changed: true},
+			macOnly, storedPlist, deployedPlist,
+			behavior.Stored("app-v2.plist", plistV2, types.ContentRaw),
+			behavior.Wrote(plistApp, plistV2),
+		).
+		Fails("A unit file or a plist that osapi did not deploy",
+			UpdateInput{Name: "agent", Object: "app.service"},
+			"not found", stored, agentUnit, agentPlist).
 		Fails("No object", UpdateInput{Name: "app"}, "Object").
 		Fails("An object name over 255 characters",
 			UpdateInput{Name: "app", Object: strings.Repeat("a", 256)}, "Object").
@@ -196,13 +333,14 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name that is an option", UpdateInput{Name: "--now", Object: "app.service"},
 			"not a valid service name"),
 	behavior.Write("delete", Delete).Key("name").
-		On(behavior.PlatformDebian).
-		Sudo("systemctl").
+		On(behavior.PlatformDebian, behavior.PlatformDarwin).
 		Describe("Remove a service that osapi deployed").
 		Explain("Stops and disables the service, removes its unit file and reloads "+
-			"systemd. A service with no unit file does not change.").
+			"systemd. A service with no unit file does not change. On a Mac, it boots the "+
+			"daemon out of launchd when it is loaded, and removes its plist.").
 		Example("Remove a service", DeleteInput{Name: "app"},
 			Result{Name: "app", Changed: true},
+			debianOnly,
 			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
 			behavior.Removed(appPath),
@@ -214,7 +352,20 @@ var Behavior = behavior.Register(behavior.Define(
 		).
 		Example("A unit file that osapi did not deploy", DeleteInput{Name: "agent"},
 			Result{Name: "agent"},
-			agentUnit,
+			debianOnly, agentUnit,
+		).
+		Example("Remove a daemon that runs, on a Mac", DeleteInput{Name: "app"},
+			Result{Name: "app", Changed: true},
+			macOnly, storedPlist, deployedPlist,
+			behavior.After(StartInput{Name: "app"}),
+			behavior.Prints(lcSystem, lcOut(lcCron+lcAppUp, "")),
+			behavior.Prints(lcPrint, lcLoaded),
+			behavior.Ran("launchctl", "bootout", "system/io.osapi.app"),
+			behavior.Removed(plistApp),
+		).
+		Example("A plist that osapi did not deploy", DeleteInput{Name: "agent"},
+			Result{Name: "agent"},
+			macOnly, agentPlist,
 		).
 		Fails("A name with a space", DeleteInput{Name: "a b"}, "Name").
 		Fails("A name that is an option", DeleteInput{Name: "--now"}, "not a valid service name"),
@@ -289,6 +440,7 @@ var Behavior = behavior.Register(behavior.Define(
 	).
 		Example("A unit with no [Install] section", EnableInput{Name: "static"},
 			Result{Name: "static"},
+			debianOnly,
 			behavior.Stored("static.service", staticText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "static", Object: "static.service"}),
 			behavior.Prints(units, "osapi-static.service loaded inactive dead Example static\n"),
@@ -335,7 +487,7 @@ func action[In any](
 	ran := "systemctl " + name + " osapi-app.service"
 	// A live host starts each example from a unit that create deployed: dead
 	// and disabled. stop and disable need it running or enabled first.
-	host := []behavior.HostOption{stored, deployed}
+	host := []behavior.HostOption{debianOnly, stored, deployed}
 	switch name {
 	case "stop":
 		host = append(host, behavior.After(StartInput{Name: "app"}))
@@ -349,17 +501,22 @@ func action[In any](
 		behavior.PrintsAfter(ran, files, fileAfter),
 		behavior.Ran("systemctl", name, "osapi-app.service"),
 	)
+	mac := append([]behavior.HostOption{macOnly, storedPlist, deployedPlist}, macAction[name]...)
 	m := behavior.Action(name, fn).Key("name").
-		On(behavior.PlatformDebian).
-		Sudo("systemctl").
+		On(behavior.PlatformDebian, behavior.PlatformDarwin).
 		Describe(describe).
 		Explain(explain+" A service that osapi did not deploy is not found.").
 		Example(strings.ToUpper(name[:1])+name[1:]+" the service", in,
 			Result{Name: "app", Changed: true},
 			host...,
 		).
+		Example(strings.ToUpper(name[:1])+name[1:]+" the daemon on a Mac", in,
+			Result{Name: "app", Changed: true},
+			mac...,
+		).
 		Fails("A service that osapi did not deploy", missing, "not found").
-		Fails("A unit file that osapi did not deploy", agent, "not found", agentUnit).
+		Fails("A unit file or a plist that osapi did not deploy", agent, "not found",
+			agentUnit, agentPlist).
 		Fails("A name with a space", slash, "Name").
 		Fails("A name that is an option", option, "not a valid service name")
 	if name == "restart" {

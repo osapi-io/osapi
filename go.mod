@@ -23,7 +23,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.15.3
 	github.com/nats-io/nats.go v1.56.0
 	github.com/nats-io/nkeys v0.4.17
-	github.com/osapi-io/gohai v1.14.0
+	github.com/osapi-io/gohai v1.15.1
 	github.com/osapi-io/nats-client v1.4.0
 	github.com/osapi-io/nats-server v1.1.0
 	github.com/prometheus/client_golang v1.25.0

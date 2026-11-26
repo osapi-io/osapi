@@ -6,7 +6,8 @@ title: Service
 
 # Service
 
-`c.Service` calls the API's Service group. The systemd services of the host.
+`c.Service` calls the API's Service group. The services of the host: systemd on
+Linux, launchd on macOS.
 
 ## Methods
 
@@ -36,8 +37,10 @@ List the services of the host.
 
 Lists each service that systemd has loaded, with its state, whether it starts at
 boot and its description, through gohai. A service that osapi deployed shows by
-the name it was deployed with, not its unit's osapi- name, and is managed. A Mac
-has no systemd, and reports skipped.
+the name it was deployed with, not its unit's osapi- name, and is managed. On a
+Mac, it lists each daemon that launchd has loaded in the system domain, by its
+label. A daemon that osapi deployed reads by the name it was deployed with, app
+for io.osapi.app.
 
 It sends `GET /api/node/{hostname}/service`, and needs the permission
 `service:read`.
@@ -67,7 +70,9 @@ service, such as /etc/systemd/system/osapi-app.service for app, then reloads
 systemd. A unit file at that path that osapi did not write, such as the agent's
 own osapi-agent.service, is refused. A unit file that already has the content
 does not change. The service does not start: start and enable are their own
-actions.
+actions. On a Mac, the object is the plist of the daemon,
+/Library/LaunchDaemons/io.osapi.app.plist for app, with the label io.osapi.app,
+and launchd does not load it until start.
 
 It sends `POST /api/node/{hostname}/service`, and needs the permission
 `service:write`.
@@ -80,6 +85,15 @@ Deploy a unit file, `go run service.go create`:
 resp, err := c.Service.Create(ctx, target, client.ServiceCreateInput{
 	Name:   "app",
 	Object: "app.service",
+})
+```
+
+Deploy a plist on a Mac, `go run service.go create-2`:
+
+```go
+resp, err := c.Service.Create(ctx, target, client.ServiceCreateInput{
+	Name:   "app",
+	Object: "app.plist",
 })
 ```
 
@@ -98,7 +112,8 @@ Get one service.
 Reads one service from the same list, by its name with .service or without it. A
 service that osapi deployed reads by the name it was deployed with, such as app,
 as its writes take it, or by its unit's name, osapi-app. A service that systemd
-has not loaded is not found.
+has not loaded is not found. On a Mac, a daemon that osapi deployed and launchd
+has not loaded is dead.
 
 It sends `GET /api/node/{hostname}/service/{name}`, and needs the permission
 `service:read`.
@@ -130,6 +145,12 @@ A service that osapi deployed, by its unit's name, `go run service.go get-4`:
 resp, err := c.Service.Get(ctx, target, "osapi-app")
 ```
 
+A daemon on a Mac, by its label, `go run service.go get-5`:
+
+```go
+resp, err := c.Service.Get(ctx, target, "com.apple.cron")
+```
+
 ### Update
 
 ```go
@@ -144,7 +165,8 @@ Deploy a new unit file for a service.
 
 Writes the object as the unit file of a service that osapi deployed, then
 reloads systemd when the file changed. A service that osapi did not deploy is
-not found.
+not found. On a Mac, it writes the plist, and a daemon that runs keeps its old
+plist until restart.
 
 It sends `PUT /api/node/{hostname}/service/{name}`, and needs the permission
 `service:write`.
@@ -157,6 +179,15 @@ A new unit file, `go run service.go update`:
 resp, err := c.Service.Update(ctx, target, client.ServiceUpdateInput{
 	Name:   "app",
 	Object: "app-v2.service",
+})
+```
+
+A new plist on a Mac, `go run service.go update-2`:
+
+```go
+resp, err := c.Service.Update(ctx, target, client.ServiceUpdateInput{
+	Name:   "app",
+	Object: "app-v2.plist",
 })
 ```
 
@@ -173,7 +204,8 @@ func (s *ServiceService) Delete(
 Remove a service that osapi deployed.
 
 Stops and disables the service, removes its unit file and reloads systemd. A
-service with no unit file does not change.
+service with no unit file does not change. On a Mac, it boots the daemon out of
+launchd when it is loaded, and removes its plist.
 
 It sends `DELETE /api/node/{hostname}/service/{name}`, and needs the permission
 `service:write`.

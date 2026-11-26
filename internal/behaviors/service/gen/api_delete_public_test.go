@@ -136,6 +136,78 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"agent","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"Remove a daemon that runs, on a Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/service/app",
+				Body:   `{"name":"app"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"service.delete",
+				service.DeleteInput{Name: "app"},
+				servertest.Completed("server1", `{"name":"app","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a daemon that runs, on a Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/service/app",
+				Body:   `{"name":"app"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"service.delete",
+				service.DeleteInput{Name: "app"},
+				servertest.Completed("server1", `{"name":"app","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"app","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A plist that osapi did not deploy\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/service/agent",
+				Body:   `{"name":"agent"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"service.delete",
+				service.DeleteInput{Name: "agent"},
+				servertest.Completed("server1", `{"name":"agent","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"agent","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A plist that osapi did not deploy\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/service/agent",
+				Body:   `{"name":"agent"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"service.delete",
+				service.DeleteInput{Name: "agent"},
+				servertest.Completed("server1", `{"name":"agent","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"agent","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodDelete,

@@ -16,6 +16,9 @@ osapi client node service enable [flags]
 # Enable the service
 osapi client node service enable --target web-01 --name app
 
+# Enable the daemon on a Mac
+osapi client node service enable --target web-01 --name app
+
 # A unit with no [Install] section
 osapi client node service enable --target web-01 --name static
 ```
@@ -23,6 +26,48 @@ osapi client node service enable --target web-01 --name static
 ## Result
 
 Enable the service, on one host:
+
+```ansi
+$ osapi client node service enable --target web-01 --name app
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mapp[0m
+
+  1 host: [38;2;103;234;147m1 changed[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+On each host, where one cannot run it:
+
+```ansi
+$ osapi client node service enable --target _all --name app
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mapp[0m
+  [1mweb-02[0m    [38;2;103;234;147mchanged[0m  [1mapp[0m
+
+  3 hosts: [38;2;103;234;147m2 changed[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": true,
+      "hostname": "web-01",
+      "name": "app",
+      "status": "ok"
+    }
+  ]
+}
+```
+
+Enable the daemon on a Mac, on one host:
 
 ```ansi
 $ osapi client node service enable --target web-01 --name app
@@ -111,16 +156,17 @@ With the default settings, each example does this on the host:
 | Example                           | On the host                                  |
 | --------------------------------- | -------------------------------------------- |
 | Enable the service                | runs `systemctl enable osapi-app.service`    |
+| Enable the daemon on a Mac        | runs `launchctl enable system/io.osapi.app`  |
 | A unit with no \[Install] section | runs `systemctl enable osapi-static.service` |
 
 The command fails in these cases:
 
-| Call                                  | Flags          | Fails with               |
-| ------------------------------------- | -------------- | ------------------------ |
-| A service that osapi did not deploy   | `--name ssh`   | not found                |
-| A unit file that osapi did not deploy | `--name agent` | not found                |
-| A name with a space                   | `--name "a b"` | Name                     |
-| A name that is an option              | `--name --now` | not a valid service name |
+| Call                                             | Flags          | Fails with               |
+| ------------------------------------------------ | -------------- | ------------------------ |
+| A service that osapi did not deploy              | `--name ssh`   | not found                |
+| A unit file or a plist that osapi did not deploy | `--name agent` | not found                |
+| A name with a space                              | `--name "a b"` | Name                     |
+| A name that is an option                         | `--name --now` | not a valid service name |
 
 ## Permission
 

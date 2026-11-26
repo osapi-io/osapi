@@ -6,27 +6,27 @@ title: Service
 
 # Service
 
-The systemd services of the host. `osapi dsl behavior get --name service` and
-`osapi dsl behavior method get` show the same.
-[Its chain](../../../chains/services/service.md) shows each call that its
-examples make.
+The services of the host: systemd on Linux, launchd on macOS.
+`osapi dsl behavior get --name service` and `osapi dsl behavior method get` show
+the same. [Its chain](../../../chains/services/service.md) shows each call that
+its examples make.
 
 ## Behavior
 
 |             |                                                                                                     |
 | ----------- | --------------------------------------------------------------------------------------------------- |
 | Name        | service                                                                                             |
-| Description | The systemd services of the host                                                                    |
+| Description | The services of the host: systemd on Linux, launchd on macOS                                        |
 | Placement   | node                                                                                                |
 | Area        | services                                                                                            |
 | Internal    | no                                                                                                  |
 | API         | yes                                                                                                 |
 | CLI         | yes                                                                                                 |
 | Next        | no                                                                                                  |
-| Platforms   | debian, linux                                                                                       |
-| Sudo        | none                                                                                                |
-| Runs        | systemctl                                                                                           |
-| Writes      | /etc/systemd/system/osapi-\*.service                                                                |
+| Platforms   | debian, linux, darwin                                                                               |
+| Sudo        | systemctl, launchctl                                                                                |
+| Runs        | none                                                                                                |
+| Writes      | /etc/systemd/system/osapi-\*.service, /Library/LaunchDaemons/io.osapi.\*.plist                      |
 | Keeps state | no                                                                                                  |
 | Uses        | [object](../../internal/object/object.md), [managedfile](../../internal/managedfile/managedfile.md) |
 | Used by     | none                                                                                                |
@@ -67,28 +67,28 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-|                 |                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Span            | behavior.service.&lt;method&gt;                                                                                                                                 |
-| Child spans     | behavior.object.&lt;method&gt;, behavior.managedfile.&lt;method&gt;, exec systemctl, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
-| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                       |
-| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                                 |
-| Recorded inputs | name (get, create, update, delete, start, stop, restart, enable, disable)                                                                                       |
+|                 |                                                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.service.&lt;method&gt;                                                                                                                                                 |
+| Child spans     | behavior.object.&lt;method&gt;, behavior.managedfile.&lt;method&gt;, exec systemctl, exec launchctl, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                                       |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                                                 |
+| Recorded inputs | name (get, create, update, delete, start, stop, restart, enable, disable)                                                                                                       |
 
 ## Method list
 
-|             |                                                                                                                                                                                                                                                                                        |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | list                                                                                                                                                                                                                                                                                   |
-| Verb        | read                                                                                                                                                                                                                                                                                   |
-| Description | List the services of the host                                                                                                                                                                                                                                                          |
-| Detail      | Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped. |
-| HTTP        | GET                                                                                                                                                                                                                                                                                    |
-| Route       | /api/node/&#123;hostname&#125;/service                                                                                                                                                                                                                                                 |
-| Permission  | service:read                                                                                                                                                                                                                                                                           |
-| Command     | [osapi client node service list](../../../../usage/cli/client/node/service/list.md)                                                                                                                                                                                                    |
-| Input type  | ListInput                                                                                                                                                                                                                                                                              |
-| Output type | \[]Entry                                                                                                                                                                                                                                                                               |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | list                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Verb        | read                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Description | List the services of the host                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Detail      | Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. On a Mac, it lists each daemon that launchd has loaded in the system domain, by its label. A daemon that osapi deployed reads by the name it was deployed with, app for io.osapi.app. |
+| HTTP        | GET                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Route       | /api/node/&#123;hostname&#125;/service                                                                                                                                                                                                                                                                                                                                                                                            |
+| Permission  | service:read                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Command     | [osapi client node service list](../../../../usage/cli/client/node/service/list.md)                                                                                                                                                                                                                                                                                                                                               |
+| Input type  | ListInput                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Output type | \[]Entry                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ### Input (0)
 
@@ -104,27 +104,28 @@ None. The method takes no input; its command needs only --target.
 | description | string  | The Description= of its unit                                   |
 | managed     | boolean | Whether osapi deployed it, so its writes and actions act on it |
 
-### Examples (2)
+### Examples (3)
 
 | EXAMPLE                                         | INPUT  | OUTPUT                                                                                                                                                                                |
 | ----------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A service that osapi deployed reads by its name | (none) | \[description=OpenBSD Secure Shell server, enabled=true, managed=false, name=ssh, state=running] \[description=Example app, enabled=false, managed=true, name=app, state=dead]        |
 | A host with two services                        | (none) | \[description=OpenBSD Secure Shell server, enabled=true, managed=false, name=ssh, state=running] \[description=Example app, enabled=false, managed=false, name=osapi-app, state=dead] |
+| A Mac, with a daemon that osapi deployed        | (none) | \[description=, enabled=true, managed=false, name=com.apple.cron, state=running] \[description=, enabled=true, managed=true, name=app, state=running]                                 |
 
 ## Method get
 
-|             |                                                                                                                                                                                                                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Name        | get                                                                                                                                                                                                                                                                            |
-| Verb        | read                                                                                                                                                                                                                                                                           |
-| Description | Get one service                                                                                                                                                                                                                                                                |
-| Detail      | Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found. |
-| HTTP        | GET                                                                                                                                                                                                                                                                            |
-| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                                                                                                                                                                        |
-| Permission  | service:read                                                                                                                                                                                                                                                                   |
-| Command     | [osapi client node service get](../../../../usage/cli/client/node/service/get.md)                                                                                                                                                                                              |
-| Input type  | GetInput                                                                                                                                                                                                                                                                       |
-| Output type | Entry                                                                                                                                                                                                                                                                          |
+|             |                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | get                                                                                                                                                                                                                                                                                                                                                       |
+| Verb        | read                                                                                                                                                                                                                                                                                                                                                      |
+| Description | Get one service                                                                                                                                                                                                                                                                                                                                           |
+| Detail      | Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found. On a Mac, a daemon that osapi deployed and launchd has not loaded is dead. |
+| HTTP        | GET                                                                                                                                                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                                                                                                                                                                                                                                                   |
+| Permission  | service:read                                                                                                                                                                                                                                                                                                                                              |
+| Command     | [osapi client node service get](../../../../usage/cli/client/node/service/get.md)                                                                                                                                                                                                                                                                         |
+| Input type  | GetInput                                                                                                                                                                                                                                                                                                                                                  |
+| Output type | Entry                                                                                                                                                                                                                                                                                                                                                     |
 
 ### Input (1)
 
@@ -142,29 +143,69 @@ None. The method takes no input; its command needs only --target.
 | description | string  | The Description= of its unit                                   |
 | managed     | boolean | Whether osapi deployed it, so its writes and actions act on it |
 
-### Examples (4)
+### Examples (6)
 
-| EXAMPLE                                                         | INPUT            | OUTPUT                                                                                        |
-| --------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
-| A running service                                               | name=ssh         | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false |
-| A name with .service                                            | name=ssh.service | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false |
-| A service that osapi deployed, by the name it was deployed with | name=app         | name=app, state=dead, enabled=false, description=Example app, managed=true                    |
-| A service that osapi deployed, by its unit's name               | name=osapi-app   | name=app, state=dead, enabled=false, description=Example app, managed=true                    |
+| EXAMPLE                                                         | INPUT               | OUTPUT                                                                                        |
+| --------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| A running service                                               | name=ssh            | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false |
+| A name with .service                                            | name=ssh.service    | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false |
+| A service that osapi deployed, by the name it was deployed with | name=app            | name=app, state=dead, enabled=false, description=Example app, managed=true                    |
+| A service that osapi deployed, by its unit's name               | name=osapi-app      | name=app, state=dead, enabled=false, description=Example app, managed=true                    |
+| A daemon on a Mac, by its label                                 | name=com.apple.cron | name=com.apple.cron, state=running, enabled=true, description=, managed=false                 |
+| A daemon that osapi deployed and launchd has not loaded         | name=app            | name=app, state=dead, enabled=true, description=, managed=true                                |
 
 ## Method create
 
-|             |                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | create                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Verb        | write                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Description | Deploy a service                                                                                                                                                                                                                                                                                                                                                                                            |
-| Detail      | Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent's own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions. |
-| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Route       | /api/node/&#123;hostname&#125;/service                                                                                                                                                                                                                                                                                                                                                                      |
-| Permission  | service:write                                                                                                                                                                                                                                                                                                                                                                                               |
-| Command     | [osapi client node service create](../../../../usage/cli/client/node/service/create.md)                                                                                                                                                                                                                                                                                                                     |
-| Input type  | CreateInput                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                      |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | create                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Description | Deploy a service                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Detail      | Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent's own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions. On a Mac, the object is the plist of the daemon, /Library/LaunchDaemons/io.osapi.app.plist for app, with the label io.osapi.app, and launchd does not load it until start. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Route       | /api/node/&#123;hostname&#125;/service                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Permission  | service:write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Command     | [osapi client node service create](../../../../usage/cli/client/node/service/create.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Input type  | CreateInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+### Input (2)
+
+| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                  | DESCRIPTION                                                        |
+| ------ | ------ | -------- | ---------------------------- | ------------------------------------------------------------------ |
+| name   | string | yes      | pattern ^\[a-zA-Z0-9_@.-]+$  | The service, such as app for osapi-app.service                     |
+| object | string | yes      | min length 1, max length 255 | The object that holds the unit file, from osapi client file upload |
+
+### Output (2)
+
+| FIELD   | TYPE    | DESCRIPTION              |
+| ------- | ------- | ------------------------ |
+| name    | string  | The service              |
+| changed | boolean | Whether the host changed |
+
+### Examples (4)
+
+| EXAMPLE                          | INPUT                        | OUTPUT                  |
+| -------------------------------- | ---------------------------- | ----------------------- |
+| Deploy a unit file               | name=app, object=app.service | name=app, changed=true  |
+| A unit file that has the content | name=app, object=app.service | name=app, changed=false |
+| Deploy a plist on a Mac          | name=app, object=app.plist   | name=app, changed=true  |
+| A plist that has the content     | name=app, object=app.plist   | name=app, changed=false |
+
+## Method update
+
+|             |                                                                                                                                                                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | update                                                                                                                                                                                                                                                      |
+| Verb        | write                                                                                                                                                                                                                                                       |
+| Description | Deploy a new unit file for a service                                                                                                                                                                                                                        |
+| Detail      | Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found. On a Mac, it writes the plist, and a daemon that runs keeps its old plist until restart. |
+| HTTP        | PUT                                                                                                                                                                                                                                                         |
+| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                                                                                                                                                     |
+| Permission  | service:write                                                                                                                                                                                                                                               |
+| Command     | [osapi client node service update](../../../../usage/cli/client/node/service/update.md)                                                                                                                                                                     |
+| Input type  | UpdateInput                                                                                                                                                                                                                                                 |
+| Output type | Result                                                                                                                                                                                                                                                      |
 
 ### Input (2)
 
@@ -182,60 +223,25 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE                          | INPUT                        | OUTPUT                  |
-| -------------------------------- | ---------------------------- | ----------------------- |
-| Deploy a unit file               | name=app, object=app.service | name=app, changed=true  |
-| A unit file that has the content | name=app, object=app.service | name=app, changed=false |
-
-## Method update
-
-|             |                                                                                                                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Name        | update                                                                                                                                                             |
-| Verb        | write                                                                                                                                                              |
-| Description | Deploy a new unit file for a service                                                                                                                               |
-| Detail      | Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found. |
-| HTTP        | PUT                                                                                                                                                                |
-| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                                                            |
-| Permission  | service:write                                                                                                                                                      |
-| Command     | [osapi client node service update](../../../../usage/cli/client/node/service/update.md)                                                                            |
-| Input type  | UpdateInput                                                                                                                                                        |
-| Output type | Result                                                                                                                                                             |
-
-### Input (2)
-
-| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                  | DESCRIPTION                                                        |
-| ------ | ------ | -------- | ---------------------------- | ------------------------------------------------------------------ |
-| name   | string | yes      | pattern ^\[a-zA-Z0-9_@.-]+$  | The service, such as app for osapi-app.service                     |
-| object | string | yes      | min length 1, max length 255 | The object that holds the unit file, from osapi client file upload |
-
-### Output (2)
-
-| FIELD   | TYPE    | DESCRIPTION              |
-| ------- | ------- | ------------------------ |
-| name    | string  | The service              |
-| changed | boolean | Whether the host changed |
-
-### Examples (1)
-
-| EXAMPLE         | INPUT                           | OUTPUT                 |
-| --------------- | ------------------------------- | ---------------------- |
-| A new unit file | name=app, object=app-v2.service | name=app, changed=true |
+| EXAMPLE              | INPUT                           | OUTPUT                 |
+| -------------------- | ------------------------------- | ---------------------- |
+| A new unit file      | name=app, object=app-v2.service | name=app, changed=true |
+| A new plist on a Mac | name=app, object=app-v2.plist   | name=app, changed=true |
 
 ## Method delete
 
-|             |                                                                                                                         |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Name        | delete                                                                                                                  |
-| Verb        | write                                                                                                                   |
-| Description | Remove a service that osapi deployed                                                                                    |
-| Detail      | Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change. |
-| HTTP        | DELETE                                                                                                                  |
-| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                 |
-| Permission  | service:write                                                                                                           |
-| Command     | [osapi client node service delete](../../../../usage/cli/client/node/service/delete.md)                                 |
-| Input type  | DeleteInput                                                                                                             |
-| Output type | Result                                                                                                                  |
+|             |                                                                                                                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | delete                                                                                                                                                                                                         |
+| Verb        | write                                                                                                                                                                                                          |
+| Description | Remove a service that osapi deployed                                                                                                                                                                           |
+| Detail      | Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change. On a Mac, it boots the daemon out of launchd when it is loaded, and removes its plist. |
+| HTTP        | DELETE                                                                                                                                                                                                         |
+| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                                                                                                        |
+| Permission  | service:write                                                                                                                                                                                                  |
+| Command     | [osapi client node service delete](../../../../usage/cli/client/node/service/delete.md)                                                                                                                        |
+| Input type  | DeleteInput                                                                                                                                                                                                    |
+| Output type | Result                                                                                                                                                                                                         |
 
 ### Input (1)
 
@@ -250,13 +256,15 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The service              |
 | changed | boolean | Whether the host changed |
 
-### Examples (3)
+### Examples (5)
 
 | EXAMPLE                               | INPUT      | OUTPUT                    |
 | ------------------------------------- | ---------- | ------------------------- |
 | Remove a service                      | name=app   | name=app, changed=true    |
 | A service that osapi did not deploy   | name=app   | name=app, changed=false   |
 | A unit file that osapi did not deploy | name=agent | name=agent, changed=false |
+| Remove a daemon that runs, on a Mac   | name=app   | name=app, changed=true    |
+| A plist that osapi did not deploy     | name=agent | name=agent, changed=false |
 
 ## Method start
 
@@ -286,11 +294,12 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The service              |
 | changed | boolean | Whether the host changed |
 
-### Examples (1)
+### Examples (2)
 
-| EXAMPLE           | INPUT    | OUTPUT                 |
-| ----------------- | -------- | ---------------------- |
-| Start the service | name=app | name=app, changed=true |
+| EXAMPLE                   | INPUT    | OUTPUT                 |
+| ------------------------- | -------- | ---------------------- |
+| Start the service         | name=app | name=app, changed=true |
+| Start the daemon on a Mac | name=app | name=app, changed=true |
 
 ## Method stop
 
@@ -320,11 +329,12 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The service              |
 | changed | boolean | Whether the host changed |
 
-### Examples (1)
+### Examples (2)
 
-| EXAMPLE          | INPUT    | OUTPUT                 |
-| ---------------- | -------- | ---------------------- |
-| Stop the service | name=app | name=app, changed=true |
+| EXAMPLE                  | INPUT    | OUTPUT                 |
+| ------------------------ | -------- | ---------------------- |
+| Stop the service         | name=app | name=app, changed=true |
+| Stop the daemon on a Mac | name=app | name=app, changed=true |
 
 ## Method restart
 
@@ -354,11 +364,12 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The service              |
 | changed | boolean | Whether the host changed |
 
-### Examples (1)
+### Examples (2)
 
-| EXAMPLE             | INPUT    | OUTPUT                 |
-| ------------------- | -------- | ---------------------- |
-| Restart the service | name=app | name=app, changed=true |
+| EXAMPLE                     | INPUT    | OUTPUT                 |
+| --------------------------- | -------- | ---------------------- |
+| Restart the service         | name=app | name=app, changed=true |
+| Restart the daemon on a Mac | name=app | name=app, changed=true |
 
 ## Method enable
 
@@ -388,11 +399,12 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The service              |
 | changed | boolean | Whether the host changed |
 
-### Examples (2)
+### Examples (3)
 
 | EXAMPLE                           | INPUT       | OUTPUT                     |
 | --------------------------------- | ----------- | -------------------------- |
 | Enable the service                | name=app    | name=app, changed=true     |
+| Enable the daemon on a Mac        | name=app    | name=app, changed=true     |
 | A unit with no \[Install] section | name=static | name=static, changed=false |
 
 ## Method disable
@@ -423,8 +435,9 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The service              |
 | changed | boolean | Whether the host changed |
 
-### Examples (1)
+### Examples (2)
 
-| EXAMPLE             | INPUT    | OUTPUT                 |
-| ------------------- | -------- | ---------------------- |
-| Disable the service | name=app | name=app, changed=true |
+| EXAMPLE                     | INPUT    | OUTPUT                 |
+| --------------------------- | -------- | ---------------------- |
+| Disable the service         | name=app | name=app, changed=true |
+| Disable the daemon on a Mac | name=app | name=app, changed=true |

@@ -32,6 +32,13 @@ The behaviors that service calls, and each call that its examples make.
 | service list       |                                            | \[&#123;"name":"ssh","state":"running","enabled":true,"description":"OpenBS… |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | error: /etc/systemd/system/osapi-app.service: not managed                    |
 
+## A Mac, with a daemon that osapi deployed (list)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service list       |                                                | \[&#123;"name":"com.apple.cron","state":"running","enabled":true,"descripti…     |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+
 ## A running service (get)
 
 | CALL               | SENDS                                      | GETS                                                                   |
@@ -60,6 +67,20 @@ The behaviors that service calls, and each call that its examples make.
 | service get        | name=osapi-app                             | description="Example app" enabled=false managed=true name=app state=d…           |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
 
+## A daemon on a Mac, by its label (get)
+
+| CALL               | SENDS                                                     | GETS                                                                     |
+| ------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------ |
+| service get        | name=com.apple.cron                                       | enabled=true managed=false name=com.apple.cron state=running             |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.com.apple.cron.plist | error: /Library/LaunchDaemons/io.osapi.com.apple.cron.plist: not managed |
+
+## A daemon that osapi deployed and launchd has not loaded (get)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service get        | name=app                                       | enabled=true managed=true name=app state=dead                                    |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+
 ## Deploy a unit file (create)
 
 | CALL                  | SENDS                                                                                  | GETS                                                                         |
@@ -78,6 +99,24 @@ The behaviors that service calls, and each call that its examples make.
 | └─ object get         | name=app.service                                                                       | content=&lt;8 lines&gt; content_type=raw name=app.service sha256=f1f13ddd26…     |
 | └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"object":"app.service"&#125; mode=0644 object=… | changed=false path=/etc/systemd/system/osapi-app.service                         |
 
+## Deploy a plist on a Mac (create)
+
+| CALL                  | SENDS                                                                                  | GETS                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| service create        | name=app object=app.plist                                                              | changed=true name=app                                                        |
+| └─ managedfile get    | path=/Library/LaunchDaemons/io.osapi.app.plist                                         | error: /Library/LaunchDaemons/io.osapi.app.plist: not managed                |
+| └─ object get         | name=app.plist                                                                         | content=&lt;4 lines&gt; content_type=raw name=app.plist sha256=7e6da4ccfbf2… |
+| └─ managedfile update | content=&lt;4 lines&gt; metadata=&#123;"object":"app.plist"&#125; mode=0644 object=ap… | changed=true path=/Library/LaunchDaemons/io.osapi.app.plist                  |
+
+## A plist that has the content (create)
+
+| CALL                  | SENDS                                                                                  | GETS                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| service create        | name=app object=app.plist                                                              | changed=false name=app                                                           |
+| └─ managedfile get    | path=/Library/LaunchDaemons/io.osapi.app.plist                                         | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ object get         | name=app.plist                                                                         | content=&lt;4 lines&gt; content_type=raw name=app.plist sha256=7e6da4ccfbf2…     |
+| └─ managedfile update | content=&lt;4 lines&gt; metadata=&#123;"object":"app.plist"&#125; mode=0644 object=ap… | changed=false path=/Library/LaunchDaemons/io.osapi.app.plist                     |
+
 ## A new unit file (update)
 
 | CALL                  | SENDS                                                                                  | GETS                                                                             |
@@ -86,6 +125,15 @@ The behaviors that service calls, and each call that its examples make.
 | └─ managedfile get    | path=/etc/systemd/system/osapi-app.service                                             | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
 | └─ object get         | name=app-v2.service                                                                    | content=&lt;9 lines&gt; content_type=raw name=app-v2.service sha256=a67ff5f…     |
 | └─ managedfile update | content=&lt;9 lines&gt; metadata=&#123;"object":"app-v2.service"&#125; mode=0644 obje… | changed=true path=/etc/systemd/system/osapi-app.service                          |
+
+## A new plist on a Mac (update)
+
+| CALL                  | SENDS                                                                                  | GETS                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| service update        | name=app object=app-v2.plist                                                           | changed=true name=app                                                            |
+| └─ managedfile get    | path=/Library/LaunchDaemons/io.osapi.app.plist                                         | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ object get         | name=app-v2.plist                                                                      | content=&lt;4 lines&gt; content_type=raw name=app-v2.plist sha256=0e9deb91e…     |
+| └─ managedfile update | content=&lt;4 lines&gt; metadata=&#123;"object":"app-v2.plist"&#125; mode=0644 object… | changed=true path=/Library/LaunchDaemons/io.osapi.app.plist                      |
 
 ## Remove a service (delete)
 
@@ -109,12 +157,36 @@ The behaviors that service calls, and each call that its examples make.
 | service delete     | name=agent                                   | changed=false name=agent                                    |
 | └─ managedfile get | path=/etc/systemd/system/osapi-agent.service | error: /etc/systemd/system/osapi-agent.service: not managed |
 
+## Remove a daemon that runs, on a Mac (delete)
+
+| CALL                  | SENDS                                          | GETS                                                                             |
+| --------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service delete        | name=app                                       | changed=true name=app                                                            |
+| └─ managedfile get    | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile delete | path=/Library/LaunchDaemons/io.osapi.app.plist | changed=true path=/Library/LaunchDaemons/io.osapi.app.plist                      |
+
+## A plist that osapi did not deploy (delete)
+
+| CALL               | SENDS                                            | GETS                                                            |
+| ------------------ | ------------------------------------------------ | --------------------------------------------------------------- |
+| service delete     | name=agent                                       | changed=false name=agent                                        |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.agent.plist | error: /Library/LaunchDaemons/io.osapi.agent.plist: not managed |
+
 ## Start the service (start)
 
 | CALL               | SENDS                                      | GETS                                                                             |
 | ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
 | service start      | name=app                                   | changed=true name=app                                                            |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
+
+## Start the daemon on a Mac (start)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service start      | name=app                                       | changed=true name=app                                                            |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
 
 ## Stop the service (stop)
 
@@ -123,6 +195,15 @@ The behaviors that service calls, and each call that its examples make.
 | service stop       | name=app                                   | changed=true name=app                                                            |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
 
+## Stop the daemon on a Mac (stop)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service stop       | name=app                                       | changed=true name=app                                                            |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+
 ## Restart the service (restart)
 
 | CALL               | SENDS                                      | GETS                                                                             |
@@ -130,12 +211,30 @@ The behaviors that service calls, and each call that its examples make.
 | service restart    | name=app                                   | changed=true name=app                                                            |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
 
+## Restart the daemon on a Mac (restart)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service restart    | name=app                                       | changed=true name=app                                                            |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+
 ## Enable the service (enable)
 
 | CALL               | SENDS                                      | GETS                                                                             |
 | ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
 | service enable     | name=app                                   | changed=true name=app                                                            |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
+
+## Enable the daemon on a Mac (enable)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service enable     | name=app                                       | changed=true name=app                                                            |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
 
 ## A unit with no \[Install] section (enable)
 
@@ -150,3 +249,12 @@ The behaviors that service calls, and each call that its examples make.
 | ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
 | service disable    | name=app                                   | changed=true name=app                                                            |
 | └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; object_sha256=f1f13ddd26ea6233bbcc7… |
+
+## Disable the daemon on a Mac (disable)
+
+| CALL               | SENDS                                          | GETS                                                                             |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| service disable    | name=app                                       | changed=true name=app                                                            |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
+| └─ managedfile get | path=/Library/LaunchDaemons/io.osapi.app.plist | metadata=&#123;"object":"app.plist"&#125; object_sha256=7e6da4ccfbf2f5f6960ad5a… |
