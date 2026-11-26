@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Job | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/job"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Job | OSAPI"><meta data-rh="true" name="description" content="c.Job calls the API&#x27;s Job group. Operations related to the job queue."><meta data-rh="true" property="og:description" content="c.Job calls the API&#x27;s Job group. Operations related to the job queue."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/job"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/job" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/job" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SDK","item":"https://osapi-io.github.io/osapi/sidebar/sdk/"},{"@type":"ListItem","position":2,"name":"Job","item":"https://osapi-io.github.io/osapi/sidebar/sdk/fleet/job"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.78f3b8ee.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.63a33585.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.5bffd742.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.89ee1f1a.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -49,7 +49,13 @@
 
 
 
-<table><thead><tr><th>Method</th><th>Returns</th><th>Permission</th><th>Description</th></tr></thead><tbody><tr><td><a href="#list" class=""><code>List(ctx, params)</code></a></td><td><code>*Response[ListJobsResponse]</code></td><td><code>job:read</code></td><td>List jobs.</td></tr><tr><td><a href="#get" class=""><code>Get(ctx, id)</code></a></td><td><code>*Response[JobDetailResponse]</code></td><td><code>job:read</code></td><td>Get job detail.</td></tr><tr><td><a href="#delete" class=""><code>Delete(ctx, id)</code></a></td><td><code>error</code></td><td><code>job:write</code></td><td>Delete a job.</td></tr><tr><td><a href="#retry" class=""><code>Retry(ctx, input)</code></a></td><td><code>*Response[CreateJobResponse]</code></td><td><code>job:write</code></td><td>Retry a job.</td></tr></tbody></table>
+
+
+
+
+
+
+<table><thead><tr><th>Method</th><th>Returns</th><th>Permission</th><th>Description</th></tr></thead><tbody><tr><td><a href="#list" class=""><code>List(ctx, params)</code></a></td><td><code>*Response[ListJobsResponse]</code></td><td><code>job:read</code></td><td>List jobs.</td></tr><tr><td><a href="#deadletters" class=""><code>Deadletters(ctx, params)</code></a></td><td><code>*Response[DeadLetterList]</code></td><td><code>job:read</code></td><td>List the dead letters.</td></tr><tr><td><a href="#get" class=""><code>Get(ctx, id)</code></a></td><td><code>*Response[JobDetailResponse]</code></td><td><code>job:read</code></td><td>Get job detail.</td></tr><tr><td><a href="#delete" class=""><code>Delete(ctx, id)</code></a></td><td><code>error</code></td><td><code>job:write</code></td><td>Delete a job.</td></tr><tr><td><a href="#retry" class=""><code>Retry(ctx, input)</code></a></td><td><code>*Response[CreateJobResponse]</code></td><td><code>job:write</code></td><td>Retry a job.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="list">List<a href="#list" class="hash-link" aria-label="Direct link to List" title="Direct link to List" translate="no">​</a></h3>
 <div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token keyword" style="color:#ff00ff">func</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">s </span><span class="token operator" style="color:#8a8a8a">*</span><span class="token plain">JobService</span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">List</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	ctx context</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Context</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	params JobListParams</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token operator" style="color:#8a8a8a">*</span><span class="token plain">Response</span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token plain">ListJobsResponse</span><span class="token punctuation" style="color:#8a8a8a">]</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> </span><span class="token builtin" style="color:#ff00ff">error</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
 <p>List jobs.</p>
@@ -62,6 +68,19 @@ jobs.</p>
 <div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">resp</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> err </span><span class="token operator" style="color:#8a8a8a">:=</span><span class="token plain"> c</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Job</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token function" style="color:#00d5ff">List</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">ctx</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> client</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">JobListParams</span><span class="token punctuation" style="color:#8a8a8a">{</span><span class="token punctuation" style="color:#8a8a8a">}</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
 <p>List jobs, with --status completed --limit 3, <code>go run job.go list-2</code>:</p>
 <div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">resp</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> err </span><span class="token operator" style="color:#8a8a8a">:=</span><span class="token plain"> c</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Job</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token function" style="color:#00d5ff">List</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">ctx</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> client</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">JobListParams</span><span class="token punctuation" style="color:#8a8a8a">{</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	Limit</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain">  </span><span class="token number" style="color:#6b5cff">3</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	Status</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> types</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token function" style="color:#00d5ff">JobStatus</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token string" style="color:#ffd100">&quot;completed&quot;</span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token punctuation" style="color:#8a8a8a">}</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="deadletters">Deadletters<a href="#deadletters" class="hash-link" aria-label="Direct link to Deadletters" title="Direct link to Deadletters" translate="no">​</a></h3>
+<div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token keyword" style="color:#ff00ff">func</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">s </span><span class="token operator" style="color:#8a8a8a">*</span><span class="token plain">JobService</span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">Deadletters</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	ctx context</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Context</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	params JobDeadlettersParams</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token operator" style="color:#8a8a8a">*</span><span class="token plain">Response</span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token plain">DeadLetterList</span><span class="token punctuation" style="color:#8a8a8a">]</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> </span><span class="token builtin" style="color:#ff00ff">error</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
+<p>List the dead letters.</p>
+<p>Lists the newest jobs whose delivery to an agent used up its retries, from the
+dead letter stream, each with its job&#x27;s operation, target and error. A job goes
+back to the queue with retry. A token with a target scope gets only the dead
+letters of the jobs whose target is in its scope.</p>
+<p>It sends <code>GET /api/job/deadletter</code>, and needs the permission <code>job:read</code>.</p>
+<p>The examples of the method&#x27;s definition:</p>
+<p>List the dead letters, <code>go run job.go deadletters</code>:</p>
+<div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">resp</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> err </span><span class="token operator" style="color:#8a8a8a">:=</span><span class="token plain"> c</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Job</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token function" style="color:#00d5ff">Deadletters</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">ctx</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> client</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">JobDeadlettersParams</span><span class="token punctuation" style="color:#8a8a8a">{</span><span class="token punctuation" style="color:#8a8a8a">}</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
+<p>List the dead letters, with --limit 5, <code>go run job.go deadletters-2</code>:</p>
+<div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">resp</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> err </span><span class="token operator" style="color:#8a8a8a">:=</span><span class="token plain"> c</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Job</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token function" style="color:#00d5ff">Deadletters</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">ctx</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> client</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">JobDeadlettersParams</span><span class="token punctuation" style="color:#8a8a8a">{</span><span class="token plain">Limit</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token number" style="color:#6b5cff">5</span><span class="token punctuation" style="color:#8a8a8a">}</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="get">Get<a href="#get" class="hash-link" aria-label="Direct link to Get" title="Direct link to Get" translate="no">​</a></h3>
 <div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token keyword" style="color:#ff00ff">func</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain">s </span><span class="token operator" style="color:#8a8a8a">*</span><span class="token plain">JobService</span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">Get</span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	ctx context</span><span class="token punctuation" style="color:#8a8a8a">.</span><span class="token plain">Context</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">	id </span><span class="token builtin" style="color:#ff00ff">string</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token punctuation" style="color:#8a8a8a">)</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">(</span><span class="token operator" style="color:#8a8a8a">*</span><span class="token plain">Response</span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token plain">JobDetailResponse</span><span class="token punctuation" style="color:#8a8a8a">]</span><span class="token punctuation" style="color:#8a8a8a">,</span><span class="token plain"> </span><span class="token builtin" style="color:#ff00ff">error</span><span class="token punctuation" style="color:#8a8a8a">)</span><br></div></code></pre></div></div>
 <p>Get job detail.</p>
@@ -129,6 +148,103 @@ timeout is a host whose agent did not answer in time.</p>
 
 
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>JobID</code></td><td><code>string</code></td><td>Unique identifier for the created job.</td></tr><tr><td><code>Revision</code></td><td><code>int64</code></td><td>The KV revision number.</td></tr><tr><td><code>Status</code></td><td><code>JobStatus</code></td><td>The status of a job, which the controller computes from what each agent did: submitted, processing, completed, failed, partial_failure (completed on some agents and failed on others) or skipped (each agent skipped it).</td></tr><tr><td><code>Timestamp</code></td><td><code>string</code></td><td>Creation timestamp.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="deadletter">DeadLetter<a href="#deadletter" class="hash-link" aria-label="Direct link to DeadLetter" title="Direct link to DeadLetter" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Consumer</code></td><td><code>string</code></td><td>The consumer of the agents that the delivery was for.</td></tr><tr><td><code>Deliveries</code></td><td><code>int</code></td><td>How often NATS delivered the job before it gave up.</td></tr><tr><td><code>Error</code></td><td><code>string</code></td><td>The error of the job, when it has one.</td></tr><tr><td><code>JobID</code></td><td><code>string</code></td><td>The job that the delivery carried, or empty when the job stream no longer has it.</td></tr><tr><td><code>Operation</code></td><td><code>DeadLetterOperation</code></td><td>What the job asked for, with each secret masked.</td></tr><tr><td><code>Seq</code></td><td><code>int</code></td><td>The dead letter&#x27;s sequence in the dead letter stream.</td></tr><tr><td><code>Target</code></td><td><code>string</code></td><td>The target of the job.</td></tr><tr><td><code>Time</code></td><td><code>time.Time</code></td><td>When NATS gave up on the delivery.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="deadletterlist">DeadLetterList<a href="#deadletterlist" class="hash-link" aria-label="Direct link to DeadLetterList" title="Direct link to DeadLetterList" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Items</code></td><td><code>[]DeadLetter</code></td><td></td></tr><tr><td><code>TotalItems</code></td><td><code>int</code></td><td>The number of dead letters that the stream holds.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="deadletteroperation">DeadLetterOperation<a href="#deadletteroperation" class="hash-link" aria-label="Direct link to DeadLetterOperation" title="Direct link to DeadLetterOperation" translate="no">​</a></h3>
+<p>What the job asked for, with each secret masked.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Data</code></td><td><code>any</code></td><td>The data of the operation, with each secret masked.</td></tr><tr><td><code>Type</code></td><td><code>string</code></td><td>The operation, such as node.hostname.get.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="jobdetailresponse">JobDetailResponse<a href="#jobdetailresponse" class="hash-link" aria-label="Direct link to JobDetailResponse" title="Direct link to JobDetailResponse" translate="no">​</a></h3>
 
 
@@ -444,6 +560,6 @@ agents and failed on others) or skipped (each agent skipped it).</p>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Behavior</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Changed</code></td><td><code>bool</code></td><td></td></tr><tr><td><code>DurationMS</code></td><td><code>int64</code></td><td></td></tr><tr><td><code>Error</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Method</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Steps</code></td><td><code>[]Step</code></td><td></td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="example">Example<a href="#example" class="hash-link" aria-label="Direct link to Example" title="Direct link to Example" translate="no">​</a></h2>
 <p><a href="https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/job.go" target="_blank" rel="noopener noreferrer" class=""><code>examples/sdk/client/job.go</code></a>
-runs each example of this page. With no argument, it lists them.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/sdk/fleet/health"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Health</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/sdk/fleet/pki"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Pki</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#methods" class="table-of-contents__link toc-highlight">Methods</a><ul><li><a href="#list" class="table-of-contents__link toc-highlight">List</a></li><li><a href="#get" class="table-of-contents__link toc-highlight">Get</a></li><li><a href="#delete" class="table-of-contents__link toc-highlight">Delete</a></li><li><a href="#retry" class="table-of-contents__link toc-highlight">Retry</a></li></ul></li><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#agentjobstatus" class="table-of-contents__link toc-highlight">AgentJobStatus</a></li><li><a href="#createjobresponse" class="table-of-contents__link toc-highlight">CreateJobResponse</a></li><li><a href="#jobdetailresponse" class="table-of-contents__link toc-highlight">JobDetailResponse</a></li><li><a href="#jobdetailresponseagentstatesitem" class="table-of-contents__link toc-highlight">JobDetailResponseAgentStatesItem</a></li><li><a href="#jobdetailresponseoperation" class="table-of-contents__link toc-highlight">JobDetailResponseOperation</a></li><li><a href="#jobdetailresponseresponsesitem" class="table-of-contents__link toc-highlight">JobDetailResponseResponsesItem</a></li><li><a href="#jobdetailresponsetimelineitem" class="table-of-contents__link toc-highlight">JobDetailResponseTimelineItem</a></li><li><a href="#jobretryinput" class="table-of-contents__link toc-highlight">JobRetryInput</a></li><li><a href="#jobstatus" class="table-of-contents__link toc-highlight">JobStatus</a></li><li><a href="#listjobsresponse" class="table-of-contents__link toc-highlight">ListJobsResponse</a></li><li><a href="#step" class="table-of-contents__link toc-highlight">Step</a></li></ul></li><li><a href="#example" class="table-of-contents__link toc-highlight">Example</a></li></ul></div></div></div></div></main></div></div></div></div>
+runs each example of this page. With no argument, it lists them.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/sdk/fleet/health"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Health</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/sdk/fleet/pki"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Pki</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#methods" class="table-of-contents__link toc-highlight">Methods</a><ul><li><a href="#list" class="table-of-contents__link toc-highlight">List</a></li><li><a href="#deadletters" class="table-of-contents__link toc-highlight">Deadletters</a></li><li><a href="#get" class="table-of-contents__link toc-highlight">Get</a></li><li><a href="#delete" class="table-of-contents__link toc-highlight">Delete</a></li><li><a href="#retry" class="table-of-contents__link toc-highlight">Retry</a></li></ul></li><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#agentjobstatus" class="table-of-contents__link toc-highlight">AgentJobStatus</a></li><li><a href="#createjobresponse" class="table-of-contents__link toc-highlight">CreateJobResponse</a></li><li><a href="#deadletter" class="table-of-contents__link toc-highlight">DeadLetter</a></li><li><a href="#deadletterlist" class="table-of-contents__link toc-highlight">DeadLetterList</a></li><li><a href="#deadletteroperation" class="table-of-contents__link toc-highlight">DeadLetterOperation</a></li><li><a href="#jobdetailresponse" class="table-of-contents__link toc-highlight">JobDetailResponse</a></li><li><a href="#jobdetailresponseagentstatesitem" class="table-of-contents__link toc-highlight">JobDetailResponseAgentStatesItem</a></li><li><a href="#jobdetailresponseoperation" class="table-of-contents__link toc-highlight">JobDetailResponseOperation</a></li><li><a href="#jobdetailresponseresponsesitem" class="table-of-contents__link toc-highlight">JobDetailResponseResponsesItem</a></li><li><a href="#jobdetailresponsetimelineitem" class="table-of-contents__link toc-highlight">JobDetailResponseTimelineItem</a></li><li><a href="#jobretryinput" class="table-of-contents__link toc-highlight">JobRetryInput</a></li><li><a href="#jobstatus" class="table-of-contents__link toc-highlight">JobStatus</a></li><li><a href="#listjobsresponse" class="table-of-contents__link toc-highlight">ListJobsResponse</a></li><li><a href="#step" class="table-of-contents__link toc-highlight">Step</a></li></ul></li><li><a href="#example" class="table-of-contents__link toc-highlight">Example</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
