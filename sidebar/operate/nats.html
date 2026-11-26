@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">2. NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="2. NATS | OSAPI"><meta data-rh="true" name="description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><meta data-rh="true" property="og:description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"2. NATS","item":"https://osapi-io.github.io/osapi/sidebar/operate/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.9b448fde.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e410289c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.be18b3a4.js" defer="defer"></script>
 </head>
 <body>
@@ -126,9 +126,15 @@ different certificate.</p>
 <li class="">
 <p>As an option, encrypt the store on the disk:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi pki key create </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> jetstream </span><span class="token parameter variable" style="color:#6b5cff">-f</span><span class="token plain"> /etc/osapi/osapi.yaml</span><br></div></code></pre></div></div>
-<p>It writes the key to <code>nats.server.jetstream.key_file</code>. Keep a copy of the key
-apart from the backup of <code>nats.server.store_dir</code>: without it, the server
-cannot read the store and does not start. osapi does not rotate this key.</p>
+<p>It writes the key to <code>nats.server.jetstream.key_file</code>. The server encrypts
+the store with AES-256-GCM. Keep a copy of the key apart from the backup of
+<code>nats.server.store_dir</code>: without it, the server cannot read the store and
+does not start. osapi does not rotate this key.</p>
+<p>A store that an osapi before osapi-io/osapi#1528 encrypted uses
+ChaCha20-Poly1305, and the server does not open it with AES-256-GCM. Stop
+NATS and the controller, remove <code>nats.server.store_dir</code>, and start them
+again. The store holds the admissions, the vault, the jobs and the audit log,
+so each agent joins again and each vault value is written again.</p>
 </li>
 <li class="">
 <p>Start NATS. It makes osapi&#x27;s streams and buckets when it starts:</p>
