@@ -291,6 +291,7 @@ func (suite *BusPublicTestSuite) TestBuildNATSServerOptions() {
 			suite.Equal(4222, got.Port)
 			suite.True(got.JetStream)
 			suite.Equal("/var/lib/nats", got.StoreDir)
+			suite.Equal(natsserver.AES, got.JetStreamCipher)
 			tc.validateFunc(got)
 		})
 	}

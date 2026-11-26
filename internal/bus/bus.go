@@ -157,6 +157,11 @@ func ServerOptions(
 	opts.Port = port
 	opts.JetStream = true
 	opts.StoreDir = storeDir
+	// With a JetStream key, the store is encrypted with AES-256-GCM, which
+	// FIPS 140-3 approves. The server's default is ChaCha20-Poly1305, which
+	// it does not. The server does not open a stream with no messages that
+	// ChaCha20 encrypted, so a store from before this is removed.
+	opts.JetStreamCipher = natsserver.AES
 	opts.NoSigs = true
 	opts.NoLog = false
 	// A user JWT carries the subjects of its role, and the controller's is

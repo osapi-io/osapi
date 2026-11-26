@@ -163,6 +163,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		)
 		s.Equal(agt.EncryptionPublicKey(), keys["agent-encryption"].PublicKey)
 		s.Len(keys["jetstream"].KeyID, 16)
+		s.Equal("AES-256-GCM", keys["jetstream"].Algorithm, "the cipher that bus sets")
 		s.Equal(1, keys["vault:default"].Keys)
 		data, _ := s.fs.ReadFile("/nats/js.key")
 		s.NotContains(keys["jetstream"].KeyID, strings.TrimSpace(string(data))[:16])

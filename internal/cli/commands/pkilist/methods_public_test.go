@@ -46,7 +46,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		Keys: func() []pkikey.Key {
 			return []pkikey.Key{
 				{Name: "controller", State: "ok", Algorithm: "Ed25519", Fingerprint: "SHA256:aa"},
-				{Name: "jetstream", State: "ok", Algorithm: "ChaCha20-Poly1305", KeyID: "7f3a"},
+				{Name: "jetstream", State: "ok", Algorithm: "AES-256-GCM", KeyID: "7f3a"},
 				{Name: "agent-encryption", State: "ok", Algorithm: "ECDH P-256", PublicKey: "BA"},
 				{Name: "vault:default", State: "not made"},
 			}

@@ -33,7 +33,7 @@ $ osapi pki key create --name jetstream
   [38;2;10;143;176mComponent:[0m  nats
   [38;2;10;143;176mState:[0m      ok
   [38;2;10;143;176mFile:[0m       /etc/osapi/nats/jetstream.key
-  [38;2;10;143;176mAlgorithm:[0m  ChaCha20-Poly1305
+  [38;2;10;143;176mAlgorithm:[0m  AES-256-GCM
   [38;2;10;143;176mKey ID:[0m     7f3a9c1e5b2d8f40
 ```
 
@@ -46,7 +46,7 @@ With `--json`, the command prints:
   "component": "nats",
   "state": "ok",
   "file": "/etc/osapi/nats/jetstream.key",
-  "algorithm": "ChaCha20-Poly1305",
+  "algorithm": "AES-256-GCM",
   "key_id": "7f3a9c1e5b2d8f40"
 }
 ```

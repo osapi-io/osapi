@@ -27,12 +27,12 @@ The command prints:
 ```ansi
 $ osapi pki key list
 [1;38;2;0;213;255mKeys (5):[0m
-  [38;2;10;143;176mNAME              [0m[38;2;10;143;176mKIND        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM          [0m[38;2;10;143;176mKEY ID[0m
-  [1mcontroller[0m        signing     controller  ok     Ed25519            [38;2;138;138;138m[0m
-  [1magent[0m             signing     agent       ok     Ed25519            [38;2;138;138;138m[0m
-  [1magent-encryption[0m  encryption  agent       ok     ECDH P-256         [38;2;138;138;138m[0m
-  [1mjetstream[0m         encryption  nats        ok     ChaCha20-Poly1305  [38;2;138;138;138m7f3a9c1e5b2d8f40[0m
-  [1mvault:default[0m     encryption  vault       ok     AES-256-GCM        [38;2;138;138;138mb8e14a2c9d3f6071[0m
+  [38;2;10;143;176mNAME              [0m[38;2;10;143;176mKIND        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM    [0m[38;2;10;143;176mKEY ID[0m
+  [1mcontroller[0m        signing     controller  ok     Ed25519      [38;2;138;138;138m[0m
+  [1magent[0m             signing     agent       ok     Ed25519      [38;2;138;138;138m[0m
+  [1magent-encryption[0m  encryption  agent       ok     ECDH P-256   [38;2;138;138;138m[0m
+  [1mjetstream[0m         encryption  nats        ok     AES-256-GCM  [38;2;138;138;138m7f3a9c1e5b2d8f40[0m
+  [1mvault:default[0m     encryption  vault       ok     AES-256-GCM  [38;2;138;138;138mb8e14a2c9d3f6071[0m
 ```
 
 With `--json`, the command prints:
@@ -74,7 +74,7 @@ With `--json`, the command prints:
       "component": "nats",
       "state": "ok",
       "file": "/etc/osapi/nats/jetstream.key",
-      "algorithm": "ChaCha20-Poly1305",
+      "algorithm": "AES-256-GCM",
       "key_id": "7f3a9c1e5b2d8f40"
     },
     {
