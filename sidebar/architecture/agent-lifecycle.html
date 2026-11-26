@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent lifecycle | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/agent-lifecycle"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent lifecycle | OSAPI"><meta data-rh="true" name="description" content="osapi agents report node conditions that compare values with limits. You can"><meta data-rh="true" property="og:description" content="osapi agents report node conditions that compare values with limits. You can"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-lifecycle"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-lifecycle" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-lifecycle" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Agent lifecycle","item":"https://osapi-io.github.io/osapi/sidebar/architecture/agent-lifecycle"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.e79a4bbf.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.b8a83e0e.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.dc461e4b.js" defer="defer"></script>
 </head>
 <body>
@@ -212,7 +212,38 @@ decision of admission, and the agent writes its own start and stop:</p>
 
 
 
-<table><thead><tr><th>Event</th><th>Written by</th><th>Message</th></tr></thead><tbody><tr><td><code>enrollment_requested</code></td><td>controller</td><td>the fingerprint of the request: the first request, or one with a new key</td></tr><tr><td><code>admitted</code></td><td>controller</td><td>by an operator, by <code>auto_admit</code>, or by join token <code>&lt;id&gt;</code></td></tr><tr><td><code>rejected</code></td><td>controller</td><td>by an operator, with the reason</td></tr><tr><td><code>revoked</code>, <code>deleted</code></td><td>controller</td><td>by an operator, or for <code>deleted</code> by <code>delete_after</code> with when it was seen</td></tr><tr><td><code>hostname_changed</code></td><td>controller</td><td>the old and the new hostname</td></tr><tr><td><code>started</code>, <code>stopped</code></td><td>agent</td><td>its version, at a start</td></tr><tr><td><code>config_applied</code></td><td>agent</td><td>the version of its config and its labels, when the labels changed</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Event</th><th>Written by</th><th>Message</th></tr></thead><tbody><tr><td><code>enrollment_requested</code></td><td>controller</td><td>the fingerprint of the request: the first request, or one with a new key</td></tr><tr><td><code>admitted</code></td><td>controller</td><td>by an operator, by <code>auto_admit</code>, or by join token <code>&lt;id&gt;</code></td></tr><tr><td><code>rejected</code></td><td>controller</td><td>by an operator, with the reason</td></tr><tr><td><code>revoked</code>, <code>deleted</code></td><td>controller</td><td>by an operator, or for <code>deleted</code> by <code>delete_after</code> with when it was seen</td></tr><tr><td><code>hostname_changed</code></td><td>controller</td><td>the old and the new hostname</td></tr><tr><td><code>started</code>, <code>stopped</code></td><td>agent</td><td>its version, at a start</td></tr><tr><td><code>config_applied</code></td><td>agent</td><td>the version of its config and its labels, when the labels changed</td></tr><tr><td><code>labels_changed</code></td><td>agent</td><td>the old and the new labels, from <code>agent.labels</code> at a start</td></tr><tr><td><code>os_changed</code></td><td>agent</td><td>the old and the new OS and version, such as after an upgrade</td></tr><tr><td><code>address_changed</code></td><td>agent</td><td>the old and the new IPv4 address of the interface of the default route</td></tr><tr><td><code>condition_started</code></td><td>agent</td><td>the condition and its reason, such as <code>MemoryPressure: 92% used</code></td></tr><tr><td><code>condition_cleared</code></td><td>agent</td><td>the condition</td></tr></tbody></table>
+<p>The agent compares each heartbeat and each facts report with the one before.
+After a start, the one before is the registration and the facts that the buckets
+still hold, so a change while the agent was down, such as an OS upgrade, is an
+event. An agent with no report before has no change events: its first heartbeat
+is where the comparison starts. A change of the labels that the controller&#x27;s
+config makes is in <code>config_applied</code>, so it has no <code>labels_changed</code> of its own.</p>
 <p>The state of the agent comes from the latest drain event (<code>drain</code>, <code>cordoned</code>,
 <code>undrain</code>). A lifecycle event after a drain does not end the drain.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cli-commands">CLI commands<a href="#cli-commands" class="hash-link" aria-label="Direct link to CLI commands" title="Direct link to CLI commands" translate="no">​</a></h3>
