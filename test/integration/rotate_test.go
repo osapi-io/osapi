@@ -46,7 +46,8 @@ type KeyRotationSuite struct {
 
 func (s *KeyRotationSuite) SetupSuite() {
 	if deployment() {
-		s.T().Skip("rotates the keys of the agent on this host: runs against the suite's own server")
+		s.T().
+			Skip("rotates the keys of the agent on this host: runs against the suite's own server")
 	}
 	skipWriteOp(s.T(), "KEY_ROTATE")
 }
