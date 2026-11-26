@@ -59,9 +59,10 @@ jobs:
         run: |
           just go-deps
           mkdir -p ui/dist && touch ui/dist/.keep
-      # As root, with the behavior write examples on: the runner is thrown
-      # away after the job, so they may change its kernel parameters and /etc.
+      # As root, with each write test on, as the lab runs them: the runner is
+      # thrown away after the job, so they may change its kernel parameters,
+      # /etc and its hostname.
       # The suite prepares the runner through osapi, as it prepares a lab VM
       # (test/integration/prepare_test.go), so the job has no host setup.
       - name: Integration
-        run: sudo -E env "PATH=$PATH" "HOME=$HOME" OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
+        run: sudo -E env "PATH=$PATH" "HOME=$HOME" OSAPI_INTEGRATION_WRITES=1 OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
