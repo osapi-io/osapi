@@ -747,6 +747,34 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 	}
 }
 
+// TestJobOutlivesItsConsumerSet checks that a job that started runs on a
+// context that a cancel of its consumer set does not reach: a config apply
+// or a drain cancels the set, and a job in flight still reads its data and
+// sends its result (osapi-io/osapi#1487).
+func (s *ConsumerPublicTestSuite) TestJobOutlivesItsConsumerSet() {
+	set, cancel := context.WithCancel(context.Background())
+	cancel()
+	s.mockJobClient.EXPECT().
+		HasJobResponse(gomock.Any(), "job-1", gomock.Any()).
+		DoAndReturn(func(ctx context.Context, _, _ string) (bool, error) {
+			s.NoError(ctx.Err(), "the job's context is not the set's")
+			return false, nil
+		})
+	s.mockJobClient.EXPECT().
+		GetJobData(gomock.Any(), "jobs.job-1").
+		DoAndReturn(func(ctx context.Context, _ string) ([]byte, error) {
+			s.NoError(ctx.Err(), "the job's context is not the set's")
+			return nil, errors.New("stop here")
+		})
+	msg := agentmocks.NewMockMsg(s.mockCtrl)
+	msg.EXPECT().Subject().Return("jobs.query.host.test").AnyTimes()
+	msg.EXPECT().Data().Return([]byte("job-1")).AnyTimes()
+	msg.EXPECT().Headers().Return(nil).AnyTimes()
+	msg.EXPECT().InProgress().Return(nil).AnyTimes()
+
+	s.Error(agent.ExportHandleJobMessageJSWith(set, s.testAgent, msg))
+}
+
 // TestConsumersCondition checks that an agent whose job consumers cannot be
 // created or bound reports the ConsumersUnavailable condition, tries again,
 // and clears the condition once each consumer runs.

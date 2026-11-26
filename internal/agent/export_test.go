@@ -1172,3 +1172,13 @@ func ExportNoteFacts(
 	a.factsBucket = bucket
 	a.noteFacts(context.Background(), machineID, f)
 }
+
+// ExportHandleJobMessageJSWith is ExportHandleJobMessageJS with ctx as the
+// context of the consumer set.
+func ExportHandleJobMessageJSWith(
+	ctx context.Context,
+	a *Agent,
+	msg jetstream.Msg,
+) error {
+	return a.handleJobMessageJS(ctx, msg)
+}

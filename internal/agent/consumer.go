@@ -367,12 +367,16 @@ func (a *Agent) cancelConsumersLocked() *sync.WaitGroup {
 	return set
 }
 
-// handleJobMessageJS is the JetStream handler of a job message.
+// handleJobMessageJS is the JetStream handler of a job message. ctx is the
+// consumer set's: a config apply and a drain cancel the set so that it takes
+// no new job. A job that started runs on, with the set's trace and values
+// but not its cancel, and sends its result (osapi-io/osapi#1487). Stop waits
+// for it, up to the deadline that it has.
 func (a *Agent) handleJobMessageJS(
 	ctx context.Context,
 	msg jetstream.Msg,
 ) error {
-	return a.handleJobMessage(ctx, msg)
+	return a.handleJobMessage(context.WithoutCancel(ctx), msg)
 }
 
 // consumerNamePrefix returns the configured consumer name followed by an
