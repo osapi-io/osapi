@@ -124,7 +124,7 @@ var connectionError = regexp.MustCompile(
 	`(?i)connection refused|no such host|x509: |tls: (handshake|bad|failed)|remote error: tls`,
 )
 
-// runDirect is runCLIIn with the controller's URL in place of the spec
+// runDirect is runCLIWith with the controller's URL in place of the spec
 // proxy's.
 func runDirect(
 	dir string,
@@ -149,7 +149,7 @@ func runDirect(
 	}
 }
 
-// runRetried is runCLIIn, again for up to 30 seconds while the command says
+// runRetried is runCLIWith, again for up to 30 seconds while the command says
 // to try again, as a trace does until its spans reach the backend.
 func runRetried(
 	dir string,
@@ -205,17 +205,8 @@ func weight(
 	}
 }
 
-// runCLIIn is runCLIStdin with dir as the command's working directory, so
+// runCLIWith is runCLIEnv with dir as the command's working directory, so
 // a command that writes where it runs, such as skill install, writes there.
-func runCLIIn(
-	dir string,
-	stdin string,
-	args ...string,
-) (string, string, int) {
-	return runCLIWith(dir, stdin, nil, args...)
-}
-
-// runCLIWith is runCLIIn with env added to the client's environment.
 func runCLIWith(
 	dir string,
 	stdin string,
