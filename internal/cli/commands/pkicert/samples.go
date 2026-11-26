@@ -32,11 +32,11 @@ var (
 		File:        "/etc/osapi/pki/api.crt",
 		Names:       []string{"localhost", "controller.example.com", "127.0.0.1"},
 		Expires:     time.Date(2031, 11, 25, 12, 0, 0, 0, time.UTC),
-		DaysLeft:    1825,
+		DaysLeft:    new(1825),
 		Fingerprint: "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
 		Key:         "ECDSA P-256",
 		Signature:   "ECDSA-SHA256",
-		FIPS:        true,
+		FIPS:        new(true),
 	}
 	SampleList = ListOutput{Items: []CertInfo{SampleCert, {
 		Name: "agent-metrics", State: "not made", Component: "agent", Source: "self-signed",

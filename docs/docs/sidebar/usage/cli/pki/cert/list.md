@@ -26,9 +26,9 @@ The command prints:
 ```ansi
 $ osapi pki cert list
 [1;38;2;0;213;255mCerts (2):[0m
-  [38;2;10;143;176mNAME           [0m[38;2;10;143;176mSTATE     [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSOURCE       [0m[38;2;10;143;176mEXPIRES              [0m[38;2;10;143;176mDAYS LEFT  [0m[38;2;10;143;176mKEY          [0m[38;2;10;143;176mFIPS[0m
+  [38;2;10;143;176mNAME           [0m[38;2;10;143;176mSTATE     [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSOURCE       [0m[38;2;10;143;176mEXPIRES              [0m[38;2;10;143;176mDAYS LEFT  [0m[38;2;10;143;176mKEY          [0m[38;2;10;143;176mFIPS APPROVED[0m
   [1mapi[0m            ok        controller  self-signed  2031-11-25 12:00:00  1825       ECDSA P-256  yes
-  [1magent-metrics[0m  not made  agent       self-signed                       0                       no
+  [1magent-metrics[0m  not made  agent       self-signed
 ```
 
 With `--json`, the command prints:
@@ -48,7 +48,7 @@ With `--json`, the command prints:
       "fingerprint": "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
       "key": "ECDSA P-256",
       "signature": "ECDSA-SHA256",
-      "fips": true
+      "fips_approved": true
     },
     {
       "name": "agent-metrics",
@@ -58,11 +58,9 @@ With `--json`, the command prints:
       "file": "/etc/osapi/pki/agent/agent-metrics.crt",
       "names": null,
       "expires": "0001-01-01T00:00:00Z",
-      "days_left": 0,
       "fingerprint": "",
       "key": "",
-      "signature": "",
-      "fips": false
+      "signature": ""
     }
   ]
 }

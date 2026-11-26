@@ -14,10 +14,16 @@ osapi pki cert rotate --name api --json    # a new self-signed certificate
 osapi pki cert rotate --name nats --force  # cuts off each joined agent
 ```
 
-`fips` is true when FIPS 186-5 approves the key (RSA of 2048 bits or more, ECDSA
-P-256, P-384 or P-521, Ed25519) and the signature (no MD5, no SHA-1).
-`fips_mode` in the list is true when the binary runs its crypto in FIPS 140-3
-mode, with `GODEBUG=fips140=on`.
+Each of the five is in the list, with a `state`: `ok`; `not made`, when that
+component has not started on this host; or `unreadable`, with the reason, such
+as a file that only root can read. A client config, such as one that points at a
+controller on another host, reads no certificate: run the command on the host of
+the server.
+
+`fips_approved` is true when FIPS 186-5 approves the key (RSA of 2048 bits or
+more, ECDSA P-256, P-384 or P-521, Ed25519) and the signature (no MD5, no
+SHA-1). It is about the certificate only. FIPS 140-3 mode is a setting of each
+running process, not of a certificate, so this command does not show it.
 
 Rotate refuses a `cert_file` of the operator: replace that file. The server
 serves a new certificate at its next start. Each join string pins the NATS

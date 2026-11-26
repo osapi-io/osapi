@@ -92,7 +92,9 @@ func (s *MethodsPublicTestSuite) TestList() {
 		s.Equal("ok", got.Items[0].State)
 		s.Equal("api", got.Items[0].Name)
 		s.Equal("self-signed", got.Items[0].Source)
-		s.Greater(got.Items[0].DaysLeft, 1800)
+		s.Greater(*got.Items[0].DaysLeft, 1800)
+		s.Nil(got.Items[3].DaysLeft, "no days left without a certificate")
+		s.Nil(got.Items[3].FIPS)
 		s.Contains(got.Items[0].Names, "localhost")
 	})
 }
@@ -173,7 +175,7 @@ func (s *MethodsPublicTestSuite) TestAlgorithms() {
 			got, err := pkicert.Get(context.Background(), s.deps(), pkicert.GetInput{Name: "api"})
 			s.Require().NoError(err)
 			s.Equal(tt.want, got.Key)
-			s.Equal(tt.fips, got.FIPS)
+			s.Equal(tt.fips, *got.FIPS)
 			s.NotEmpty(got.Signature)
 		})
 	}

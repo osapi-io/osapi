@@ -19,18 +19,18 @@ The command prints:
 ```ansi
 $ osapi pki cert get --name api
 [1;38;2;0;213;255mCert:[0m
-  [38;2;10;143;176mName:[0m         api
-  [38;2;10;143;176mState:[0m        ok
-  [38;2;10;143;176mComponent:[0m    controller
-  [38;2;10;143;176mSource:[0m       self-signed
-  [38;2;10;143;176mFile:[0m         /etc/osapi/pki/api.crt
-  [38;2;10;143;176mNames:[0m        localhost, controller.example.com, 127.0.0.1
-  [38;2;10;143;176mExpires:[0m      2031-11-25 12:00:00
-  [38;2;10;143;176mDays left:[0m    1825
-  [38;2;10;143;176mFingerprint:[0m  SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a
-  [38;2;10;143;176mKey:[0m          ECDSA P-256
-  [38;2;10;143;176mSignature:[0m    ECDSA-SHA256
-  [38;2;10;143;176mFIPS:[0m         yes
+  [38;2;10;143;176mName:[0m           api
+  [38;2;10;143;176mState:[0m          ok
+  [38;2;10;143;176mComponent:[0m      controller
+  [38;2;10;143;176mSource:[0m         self-signed
+  [38;2;10;143;176mFile:[0m           /etc/osapi/pki/api.crt
+  [38;2;10;143;176mNames:[0m          localhost, controller.example.com, 127.0.0.1
+  [38;2;10;143;176mExpires:[0m        2031-11-25 12:00:00
+  [38;2;10;143;176mDays left:[0m      1825
+  [38;2;10;143;176mFingerprint:[0m    SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a
+  [38;2;10;143;176mKey:[0m            ECDSA P-256
+  [38;2;10;143;176mSignature:[0m      ECDSA-SHA256
+  [38;2;10;143;176mFIPS approved:[0m  yes
 ```
 
 With `--json`, the command prints:
@@ -48,7 +48,7 @@ With `--json`, the command prints:
   "fingerprint": "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
   "key": "ECDSA P-256",
   "signature": "ECDSA-SHA256",
-  "fips": true
+  "fips_approved": true
 }
 ```
 

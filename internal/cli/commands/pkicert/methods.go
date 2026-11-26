@@ -159,12 +159,14 @@ func read(
 	sum := sha256.Sum256(block.Bytes)
 
 	key, approved := keyAlgorithm(c)
+	days := int(c.NotAfter.Sub(d.Now()).Hours() / 24)
+	fips := approved && fipsSignature[c.SignatureAlgorithm]
 
 	return CertInfo{
 		Name: src.Name, State: "ok", Component: src.Component, Source: source(src),
 		Key: key, Signature: c.SignatureAlgorithm.String(),
-		FIPS: approved && fipsSignature[c.SignatureAlgorithm], File: src.CertFile, Names: names,
-		Expires: c.NotAfter, DaysLeft: int(c.NotAfter.Sub(d.Now()).Hours() / 24),
+		FIPS: &fips, File: src.CertFile, Names: names,
+		Expires: c.NotAfter, DaysLeft: &days,
 		Fingerprint: "SHA256:" + hex.EncodeToString(sum[:]),
 	}, nil
 }
