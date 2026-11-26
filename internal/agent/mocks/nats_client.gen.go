@@ -57,6 +57,21 @@ func (mr *MockNATSClientMockRecorder) KVDelete(ctx, bucket, key any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVDelete", reflect.TypeOf((*MockNATSClient)(nil).KVDelete), ctx, bucket, key)
 }
 
+// KVGet mocks base method.
+func (m *MockNATSClient) KVGet(ctx context.Context, bucket, key string) (jetstream.KeyValueEntry, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVGet", ctx, bucket, key)
+	ret0, _ := ret[0].(jetstream.KeyValueEntry)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVGet indicates an expected call of KVGet.
+func (mr *MockNATSClientMockRecorder) KVGet(ctx, bucket, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVGet", reflect.TypeOf((*MockNATSClient)(nil).KVGet), ctx, bucket, key)
+}
+
 // KVPut mocks base method.
 func (m *MockNATSClient) KVPut(ctx context.Context, bucket, key string, value []byte) (uint64, error) {
 	m.ctrl.T.Helper()

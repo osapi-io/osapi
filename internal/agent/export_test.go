@@ -1142,3 +1142,33 @@ func ExportApplyConfig(
 
 	return a.appConfig.Agent.Labels, a.configVersion
 }
+
+// ExportNoteRegistration calls noteRegistration on a with nc and the
+// registry bucket, at config version.
+func ExportNoteRegistration(
+	a *Agent,
+	nc NATSClient,
+	bucket string,
+	version int,
+	reg job.AgentRegistration,
+) {
+	a.machineID = reg.MachineID
+	a.natsClient = nc
+	a.registryBucket = bucket
+	a.configVersion = version
+	a.noteRegistration(context.Background(), reg)
+}
+
+// ExportNoteFacts calls noteFacts on a with nc and the facts bucket.
+func ExportNoteFacts(
+	a *Agent,
+	nc NATSClient,
+	bucket string,
+	machineID string,
+	f job.FactsRegistration,
+) {
+	a.machineID = machineID
+	a.natsClient = nc
+	a.factsBucket = bucket
+	a.noteFacts(context.Background(), machineID, f)
+}

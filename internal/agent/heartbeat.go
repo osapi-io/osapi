@@ -222,6 +222,9 @@ func (a *Agent) writeRegistration(
 	}
 
 	reg.Conditions = conditions
+	// A change of the OS, the labels or a condition is an event of the
+	// agent's timeline.
+	a.noteRegistration(ctx, reg)
 
 	// Sign the routing fields. Without this the controller cannot tell this
 	// registration from one written by anything else that can reach the

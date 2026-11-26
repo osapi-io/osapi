@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
+
 	"github.com/osapi-io/gohai/pkg/gohai"
 
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
@@ -60,6 +62,10 @@ func (s *FactsPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 	s.mockFactsKV = agentMocks.NewMockNATSClient(s.mockCtrl)
+	// The agent reads its previous registration and facts once, for
+	// the timeline; there is none.
+	s.mockFactsKV.EXPECT().KVGet(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil, jetstream.ErrKeyNotFound).AnyTimes()
 	s.mockHostProvider = hostMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	appConfig := config.Config{

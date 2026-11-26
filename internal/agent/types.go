@@ -27,6 +27,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -59,6 +61,7 @@ type NATSClient interface {
 	) (*nats.Subscription, error)
 	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
 	KVDelete(ctx context.Context, bucket string, key string) error
+	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
 }
 
 // Agent implements job processing with clean lifecycle management.
@@ -91,6 +94,10 @@ type Agent struct {
 
 	// registryBucket is the KV bucket of the heartbeat registration, or "".
 	registryBucket string
+
+	// seen is what the agent last reported, which the timeline compares
+	// each heartbeat and each facts write with (osapi-io/osapi#1454).
+	seen seenState
 
 	// factsBucket is the KV bucket of the system facts, or "".
 	factsBucket string

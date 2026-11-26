@@ -31,7 +31,14 @@ function tone(ev: TimelineEvent): string {
     case "cordoned":
       return "bg-status-pending";
     case "hostname_changed":
+    case "os_changed":
+    case "address_changed":
+    case "labels_changed":
       return "bg-heading-1";
+    case "condition_started":
+      return "bg-status-pending";
+    case "condition_cleared":
+      return "bg-primary";
     case "revoked":
     case "rejected":
     case "deleted":
@@ -51,6 +58,16 @@ interface Row {
 // rename is the old and new hostname of a hostname_changed message.
 const rename = /^hostname changed from (\S+) to (\S+)$/;
 
+// labels are the names of the events that are not their own name.
+const labels: Record<string, string> = {
+  hostname_changed: "renamed",
+  os_changed: "OS changed",
+  address_changed: "address changed",
+  labels_changed: "labels changed",
+  condition_started: "condition",
+  condition_cleared: "condition cleared",
+};
+
 // rows folds each stop that a start follows within a minute into one
 // "restarted" row, and names each event for a person.
 function rows(events: TimelineEvent[]): Row[] {
@@ -69,7 +86,7 @@ function rows(events: TimelineEvent[]): Row[] {
     }
     out.push({
       ev,
-      label: ev.event === "hostname_changed" ? "renamed" : ev.event,
+      label: labels[ev.event] ?? ev.event,
     });
   }
   return out;
@@ -150,7 +167,7 @@ export function AgentTimeline({
                     className={
                       ev.error
                         ? "text-status-error"
-                        : ev.event === "hostname_changed"
+                        : tone(ev) === "bg-heading-1"
                           ? "text-heading-1"
                           : "text-text"
                     }
