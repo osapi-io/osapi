@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Service | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/services/service"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Service | OSAPI"><meta data-rh="true" name="description" content="The behaviors that service calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that service calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/services/service"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/services/service" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/services/service" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"Service","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/services/service"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.1b2be5bb.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e89d5a43.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.5aeb188f.js" defer="defer"></script>
 </head>
 <body>
@@ -85,6 +85,28 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service list</td><td></td><td>[{&quot;name&quot;:&quot;ssh&quot;,&quot;state&quot;:&quot;running&quot;,&quot;enabled&quot;:true,&quot;description&quot;:&quot;OpenBS…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>error: /etc/systemd/system/osapi-app.service: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-mac-with-a-daemon-that-osapi-deployed-list">A Mac, with a daemon that osapi deployed (list)<a href="#a-mac-with-a-daemon-that-osapi-deployed-list" class="hash-link" aria-label="Direct link to A Mac, with a daemon that osapi deployed (list)" title="Direct link to A Mac, with a daemon that osapi deployed (list)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service list</td><td></td><td>[{&quot;name&quot;:&quot;com.apple.cron&quot;,&quot;state&quot;:&quot;running&quot;,&quot;enabled&quot;:true,&quot;descripti…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-running-service-get">A running service (get)<a href="#a-running-service-get" class="hash-link" aria-label="Direct link to A running service (get)" title="Direct link to A running service (get)" translate="no">​</a></h2>
 
 
@@ -173,6 +195,50 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=osapi-app</td><td>description=&quot;Example app&quot; enabled=false managed=true name=app state=d…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-daemon-on-a-mac-by-its-label-get">A daemon on a Mac, by its label (get)<a href="#a-daemon-on-a-mac-by-its-label-get" class="hash-link" aria-label="Direct link to A daemon on a Mac, by its label (get)" title="Direct link to A daemon on a Mac, by its label (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=com.apple.cron</td><td>enabled=true managed=false name=com.apple.cron state=running</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.com.apple.cron.plist</td><td>error: /Library/LaunchDaemons/io.osapi.com.apple.cron.plist: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-daemon-that-osapi-deployed-and-launchd-has-not-loaded-get">A daemon that osapi deployed and launchd has not loaded (get)<a href="#a-daemon-that-osapi-deployed-and-launchd-has-not-loaded-get" class="hash-link" aria-label="Direct link to A daemon that osapi deployed and launchd has not loaded (get)" title="Direct link to A daemon that osapi deployed and launchd has not loaded (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=app</td><td>enabled=true managed=true name=app state=dead</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="deploy-a-unit-file-create">Deploy a unit file (create)<a href="#deploy-a-unit-file-create" class="hash-link" aria-label="Direct link to Deploy a unit file (create)" title="Direct link to Deploy a unit file (create)" translate="no">​</a></h2>
 
 
@@ -237,6 +303,70 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service create</td><td>name=app object=app.service</td><td>changed=false name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr><tr><td>└─ object get</td><td>name=app.service</td><td>content=&lt;8 lines&gt; content_type=raw name=app.service sha256=f1f13ddd26…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;8 lines&gt; metadata={&quot;object&quot;:&quot;app.service&quot;} mode=0644 object=…</td><td>changed=false path=/etc/systemd/system/osapi-app.service</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="deploy-a-plist-on-a-mac-create">Deploy a plist on a Mac (create)<a href="#deploy-a-plist-on-a-mac-create" class="hash-link" aria-label="Direct link to Deploy a plist on a Mac (create)" title="Direct link to Deploy a plist on a Mac (create)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service create</td><td>name=app object=app.plist</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>error: /Library/LaunchDaemons/io.osapi.app.plist: not managed</td></tr><tr><td>└─ object get</td><td>name=app.plist</td><td>content=&lt;4 lines&gt; content_type=raw name=app.plist sha256=7e6da4ccfbf2…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;4 lines&gt; metadata={&quot;object&quot;:&quot;app.plist&quot;} mode=0644 object=ap…</td><td>changed=true path=/Library/LaunchDaemons/io.osapi.app.plist</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-plist-that-has-the-content-create">A plist that has the content (create)<a href="#a-plist-that-has-the-content-create" class="hash-link" aria-label="Direct link to A plist that has the content (create)" title="Direct link to A plist that has the content (create)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service create</td><td>name=app object=app.plist</td><td>changed=false name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ object get</td><td>name=app.plist</td><td>content=&lt;4 lines&gt; content_type=raw name=app.plist sha256=7e6da4ccfbf2…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;4 lines&gt; metadata={&quot;object&quot;:&quot;app.plist&quot;} mode=0644 object=ap…</td><td>changed=false path=/Library/LaunchDaemons/io.osapi.app.plist</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-new-unit-file-update">A new unit file (update)<a href="#a-new-unit-file-update" class="hash-link" aria-label="Direct link to A new unit file (update)" title="Direct link to A new unit file (update)" translate="no">​</a></h2>
 
 
@@ -269,6 +399,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service update</td><td>name=app object=app-v2.service</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr><tr><td>└─ object get</td><td>name=app-v2.service</td><td>content=&lt;9 lines&gt; content_type=raw name=app-v2.service sha256=a67ff5f…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;9 lines&gt; metadata={&quot;object&quot;:&quot;app-v2.service&quot;} mode=0644 obje…</td><td>changed=true path=/etc/systemd/system/osapi-app.service</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-new-plist-on-a-mac-update">A new plist on a Mac (update)<a href="#a-new-plist-on-a-mac-update" class="hash-link" aria-label="Direct link to A new plist on a Mac (update)" title="Direct link to A new plist on a Mac (update)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service update</td><td>name=app object=app-v2.plist</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ object get</td><td>name=app-v2.plist</td><td>content=&lt;4 lines&gt; content_type=raw name=app-v2.plist sha256=0e9deb91e…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;4 lines&gt; metadata={&quot;object&quot;:&quot;app-v2.plist&quot;} mode=0644 object…</td><td>changed=true path=/Library/LaunchDaemons/io.osapi.app.plist</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="remove-a-service-delete">Remove a service (delete)<a href="#remove-a-service-delete" class="hash-link" aria-label="Direct link to Remove a service (delete)" title="Direct link to Remove a service (delete)" translate="no">​</a></h2>
 
 
@@ -340,6 +502,55 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service delete</td><td>name=agent</td><td>changed=false name=agent</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-agent.service</td><td>error: /etc/systemd/system/osapi-agent.service: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="remove-a-daemon-that-runs-on-a-mac-delete">Remove a daemon that runs, on a Mac (delete)<a href="#remove-a-daemon-that-runs-on-a-mac-delete" class="hash-link" aria-label="Direct link to Remove a daemon that runs, on a Mac (delete)" title="Direct link to Remove a daemon that runs, on a Mac (delete)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service delete</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile delete</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>changed=true path=/Library/LaunchDaemons/io.osapi.app.plist</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-plist-that-osapi-did-not-deploy-delete">A plist that osapi did not deploy (delete)<a href="#a-plist-that-osapi-did-not-deploy-delete" class="hash-link" aria-label="Direct link to A plist that osapi did not deploy (delete)" title="Direct link to A plist that osapi did not deploy (delete)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service delete</td><td>name=agent</td><td>changed=false name=agent</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.agent.plist</td><td>error: /Library/LaunchDaemons/io.osapi.agent.plist: not managed</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="start-the-service-start">Start the service (start)<a href="#start-the-service-start" class="hash-link" aria-label="Direct link to Start the service (start)" title="Direct link to Start the service (start)" translate="no">​</a></h2>
 
 
@@ -362,6 +573,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service start</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="start-the-daemon-on-a-mac-start">Start the daemon on a Mac (start)<a href="#start-the-daemon-on-a-mac-start" class="hash-link" aria-label="Direct link to Start the daemon on a Mac (start)" title="Direct link to Start the daemon on a Mac (start)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service start</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="stop-the-service-stop">Stop the service (stop)<a href="#stop-the-service-stop" class="hash-link" aria-label="Direct link to Stop the service (stop)" title="Direct link to Stop the service (stop)" translate="no">​</a></h2>
 
 
@@ -384,6 +627,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service stop</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="stop-the-daemon-on-a-mac-stop">Stop the daemon on a Mac (stop)<a href="#stop-the-daemon-on-a-mac-stop" class="hash-link" aria-label="Direct link to Stop the daemon on a Mac (stop)" title="Direct link to Stop the daemon on a Mac (stop)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service stop</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="restart-the-service-restart">Restart the service (restart)<a href="#restart-the-service-restart" class="hash-link" aria-label="Direct link to Restart the service (restart)" title="Direct link to Restart the service (restart)" translate="no">​</a></h2>
 
 
@@ -406,6 +681,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service restart</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="restart-the-daemon-on-a-mac-restart">Restart the daemon on a Mac (restart)<a href="#restart-the-daemon-on-a-mac-restart" class="hash-link" aria-label="Direct link to Restart the daemon on a Mac (restart)" title="Direct link to Restart the daemon on a Mac (restart)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service restart</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="enable-the-service-enable">Enable the service (enable)<a href="#enable-the-service-enable" class="hash-link" aria-label="Direct link to Enable the service (enable)" title="Direct link to Enable the service (enable)" translate="no">​</a></h2>
 
 
@@ -428,6 +735,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service enable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="enable-the-daemon-on-a-mac-enable">Enable the daemon on a Mac (enable)<a href="#enable-the-daemon-on-a-mac-enable" class="hash-link" aria-label="Direct link to Enable the daemon on a Mac (enable)" title="Direct link to Enable the daemon on a Mac (enable)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service enable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-unit-with-no-install-section-enable">A unit with no [Install] section (enable)<a href="#a-unit-with-no-install-section-enable" class="hash-link" aria-label="Direct link to A unit with no [Install] section (enable)" title="Direct link to A unit with no [Install] section (enable)" translate="no">​</a></h2>
 
 
@@ -471,6 +810,38 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service disable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Chains</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/config/file"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">File</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-service-that-osapi-deployed-reads-by-its-name-list" class="table-of-contents__link toc-highlight">A service that osapi deployed reads by its name (list)</a></li><li><a href="#a-host-with-two-services-list" class="table-of-contents__link toc-highlight">A host with two services (list)</a></li><li><a href="#a-running-service-get" class="table-of-contents__link toc-highlight">A running service (get)</a></li><li><a href="#a-name-with-service-get" class="table-of-contents__link toc-highlight">A name with .service (get)</a></li><li><a href="#a-service-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="table-of-contents__link toc-highlight">A service that osapi deployed, by the name it was deployed with (get)</a></li><li><a href="#a-service-that-osapi-deployed-by-its-units-name-get" class="table-of-contents__link toc-highlight">A service that osapi deployed, by its unit&#39;s name (get)</a></li><li><a href="#deploy-a-unit-file-create" class="table-of-contents__link toc-highlight">Deploy a unit file (create)</a></li><li><a href="#a-unit-file-that-has-the-content-create" class="table-of-contents__link toc-highlight">A unit file that has the content (create)</a></li><li><a href="#a-new-unit-file-update" class="table-of-contents__link toc-highlight">A new unit file (update)</a></li><li><a href="#remove-a-service-delete" class="table-of-contents__link toc-highlight">Remove a service (delete)</a></li><li><a href="#a-service-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A service that osapi did not deploy (delete)</a></li><li><a href="#a-unit-file-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A unit file that osapi did not deploy (delete)</a></li><li><a href="#start-the-service-start" class="table-of-contents__link toc-highlight">Start the service (start)</a></li><li><a href="#stop-the-service-stop" class="table-of-contents__link toc-highlight">Stop the service (stop)</a></li><li><a href="#restart-the-service-restart" class="table-of-contents__link toc-highlight">Restart the service (restart)</a></li><li><a href="#enable-the-service-enable" class="table-of-contents__link toc-highlight">Enable the service (enable)</a></li><li><a href="#a-unit-with-no-install-section-enable" class="table-of-contents__link toc-highlight">A unit with no [Install] section (enable)</a></li><li><a href="#disable-the-service-disable" class="table-of-contents__link toc-highlight">Disable the service (disable)</a></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service disable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} object_sha256=f1f13ddd26ea6233bbcc7…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="disable-the-daemon-on-a-mac-disable">Disable the daemon on a Mac (disable)<a href="#disable-the-daemon-on-a-mac-disable" class="hash-link" aria-label="Direct link to Disable the daemon on a Mac (disable)" title="Direct link to Disable the daemon on a Mac (disable)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service disable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr><tr><td>└─ managedfile get</td><td>path=/Library/LaunchDaemons/io.osapi.app.plist</td><td>metadata={&quot;object&quot;:&quot;app.plist&quot;} object_sha256=7e6da4ccfbf2f5f6960ad5a…</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Chains</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/config/file"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">File</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-service-that-osapi-deployed-reads-by-its-name-list" class="table-of-contents__link toc-highlight">A service that osapi deployed reads by its name (list)</a></li><li><a href="#a-host-with-two-services-list" class="table-of-contents__link toc-highlight">A host with two services (list)</a></li><li><a href="#a-mac-with-a-daemon-that-osapi-deployed-list" class="table-of-contents__link toc-highlight">A Mac, with a daemon that osapi deployed (list)</a></li><li><a href="#a-running-service-get" class="table-of-contents__link toc-highlight">A running service (get)</a></li><li><a href="#a-name-with-service-get" class="table-of-contents__link toc-highlight">A name with .service (get)</a></li><li><a href="#a-service-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="table-of-contents__link toc-highlight">A service that osapi deployed, by the name it was deployed with (get)</a></li><li><a href="#a-service-that-osapi-deployed-by-its-units-name-get" class="table-of-contents__link toc-highlight">A service that osapi deployed, by its unit&#39;s name (get)</a></li><li><a href="#a-daemon-on-a-mac-by-its-label-get" class="table-of-contents__link toc-highlight">A daemon on a Mac, by its label (get)</a></li><li><a href="#a-daemon-that-osapi-deployed-and-launchd-has-not-loaded-get" class="table-of-contents__link toc-highlight">A daemon that osapi deployed and launchd has not loaded (get)</a></li><li><a href="#deploy-a-unit-file-create" class="table-of-contents__link toc-highlight">Deploy a unit file (create)</a></li><li><a href="#a-unit-file-that-has-the-content-create" class="table-of-contents__link toc-highlight">A unit file that has the content (create)</a></li><li><a href="#deploy-a-plist-on-a-mac-create" class="table-of-contents__link toc-highlight">Deploy a plist on a Mac (create)</a></li><li><a href="#a-plist-that-has-the-content-create" class="table-of-contents__link toc-highlight">A plist that has the content (create)</a></li><li><a href="#a-new-unit-file-update" class="table-of-contents__link toc-highlight">A new unit file (update)</a></li><li><a href="#a-new-plist-on-a-mac-update" class="table-of-contents__link toc-highlight">A new plist on a Mac (update)</a></li><li><a href="#remove-a-service-delete" class="table-of-contents__link toc-highlight">Remove a service (delete)</a></li><li><a href="#a-service-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A service that osapi did not deploy (delete)</a></li><li><a href="#a-unit-file-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A unit file that osapi did not deploy (delete)</a></li><li><a href="#remove-a-daemon-that-runs-on-a-mac-delete" class="table-of-contents__link toc-highlight">Remove a daemon that runs, on a Mac (delete)</a></li><li><a href="#a-plist-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A plist that osapi did not deploy (delete)</a></li><li><a href="#start-the-service-start" class="table-of-contents__link toc-highlight">Start the service (start)</a></li><li><a href="#start-the-daemon-on-a-mac-start" class="table-of-contents__link toc-highlight">Start the daemon on a Mac (start)</a></li><li><a href="#stop-the-service-stop" class="table-of-contents__link toc-highlight">Stop the service (stop)</a></li><li><a href="#stop-the-daemon-on-a-mac-stop" class="table-of-contents__link toc-highlight">Stop the daemon on a Mac (stop)</a></li><li><a href="#restart-the-service-restart" class="table-of-contents__link toc-highlight">Restart the service (restart)</a></li><li><a href="#restart-the-daemon-on-a-mac-restart" class="table-of-contents__link toc-highlight">Restart the daemon on a Mac (restart)</a></li><li><a href="#enable-the-service-enable" class="table-of-contents__link toc-highlight">Enable the service (enable)</a></li><li><a href="#enable-the-daemon-on-a-mac-enable" class="table-of-contents__link toc-highlight">Enable the daemon on a Mac (enable)</a></li><li><a href="#a-unit-with-no-install-section-enable" class="table-of-contents__link toc-highlight">A unit with no [Install] section (enable)</a></li><li><a href="#disable-the-service-disable" class="table-of-contents__link toc-highlight">Disable the service (disable)</a></li><li><a href="#disable-the-daemon-on-a-mac-disable" class="table-of-contents__link toc-highlight">Disable the daemon on a Mac (disable)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
