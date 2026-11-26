@@ -61,6 +61,10 @@ type Result struct {
 	Server string
 }
 
+// AccountPubFile is the file of the account's public key (A...), beside
+// the signing keys, that Operator writes.
+const AccountPubFile = "account.pub"
+
 // staticRoles are the roles of a user or a credential that osapi keeps:
 // the join's bootstrap user is static only with passwords.
 var staticRoles = []bus.Role{bus.RoleSetup, bus.RoleController, bus.RoleAgent}
@@ -272,6 +276,9 @@ func Operator(
 		{"server", "resolver.conf", []byte(resolver)},
 		{"operator", "operator.nk", opSeed},
 		{"operator", "account.nk", acctSeed},
+		// The account's public key, which the controller reads when
+		// controller.join.account is empty: it is not secret.
+		{"controller", AccountPubFile, []byte(acctPub)},
 		{"controller", "agent-signing.nk", agentSeed},
 		{"controller", "join-signing.nk", joinSeed},
 	} {

@@ -44,18 +44,18 @@ admits each agent by its own key, and checks the signature of each answer
 
 Do these steps on the host of NATS and the controller.
 
-1. Make the credentials:
+1. Nothing to make for the auth. osapi's NATS server runs in operator mode by
+   default. At its first start it makes an operator, an account for osapi, a
+   credentials file for each role and two scoped signing keys for the join, in
+   `nats-auth` of `nats.server.key_dir`. The controller and an agent on the same
+   host connect with their role's credentials from there, with no setting, and
+   the controller mints the users of a join with the signing keys. Keep a copy
+   of `operator.nk` and `account.nk` offline: they sign the accounts.
 
-   ```bash
-   osapi nats auth operator create --out /etc/osapi/nats
-   ```
-
-   It writes an operator, an account for osapi, a credentials file for each
-   role, two scoped signing keys for the join, and `osapi-nats.yaml`. Keep
-   `operator.nk` and `account.nk` offline: they sign the accounts.
-
-1. Merge `osapi-nats.yaml` into `/etc/osapi/osapi.yaml`. It sets the auth of the
-   server, of the controller and of the join.
+   To make the credentials yourself, such as for a controller on another host,
+   run `osapi nats auth operator create --out /etc/osapi/nats` and merge its
+   `osapi-nats.yaml` into `/etc/osapi/osapi.yaml`. A server with
+   `nats.server.auth.resolver_file` uses those, and makes nothing.
 
 1. NATS serves TLS by default. With no `cert_file`, the server makes a
    self-signed certificate, `nats.crt`, in `nats.server.key_dir` at its first

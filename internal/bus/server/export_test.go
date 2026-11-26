@@ -21,8 +21,13 @@
 package server
 
 import (
+	"context"
 	"log/slog"
 	"os"
+
+	"github.com/avfs/avfs"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/natsauth"
 
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -51,4 +56,14 @@ func SetDialFn(
 // ResetDialFn puts back the function that connects to NATS.
 func ResetDialFn() {
 	dialFn = bus.Dial
+}
+
+// SetNatsauthOperator swaps how the server makes its operator.
+func SetNatsauthOperator(
+	fn func(context.Context, avfs.VFS, string, string, config.NATS) (natsauth.Result, error),
+) func() {
+	was := natsauthOperator
+	natsauthOperator = fn
+
+	return func() { natsauthOperator = was }
 }

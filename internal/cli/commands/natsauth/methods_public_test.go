@@ -71,7 +71,7 @@ func (s *MethodsPublicTestSuite) TestCreateAudited() {
 	s.Equal(audit.ActorLocal, entries[0].Actor)
 	s.Equal("natsauth.create", entries[0].Action)
 	s.Equal(out, entries[0].Target)
-	s.Equal("type=operator files=9", entries[0].RequestSummary)
+	s.Equal("type=operator files=10", entries[0].RequestSummary)
 }
 
 func (s *MethodsPublicTestSuite) TestCreate() {
@@ -91,7 +91,7 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	s.Run("operator: no server part without --print", func() {
 		got, err := natsauth.Operator(ctx, s.deps(), natsauth.CreateInput{Out: s.T().TempDir()})
 		s.Require().NoError(err)
-		s.Len(got.Files, 9)
+		s.Len(got.Files, 10)
 		s.Empty(got.Server)
 	})
 

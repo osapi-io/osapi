@@ -26,7 +26,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/osapi-io/osapi/internal/natsauth"
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
@@ -62,6 +67,16 @@ func New(
 	mp *sdkmetric.MeterProvider,
 ) (*Server, error) {
 	sc := cfg.Server
+	// In operator mode with no resolver_file, the server makes the
+	// operator, the account and a credential for each role at its first
+	// start, as osapi nats auth operator create does (osapi-io/osapi#1413).
+	if sc.Auth.Type == "operator" && sc.Auth.ResolverFile == "" {
+		auth, err := selfMadeOperator(ctx, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("NATS server: %w", err)
+		}
+		sc.Auth = auth
+	}
 
 	opts, err := bus.ServerOptions(sc.Host, sc.Port, sc.StoreDir, sc.Auth, sc.TLS, sc.KeyDir)
 	if err != nil {
@@ -147,3 +162,36 @@ func registryBucket(
 
 	return bus.RegistryKV(namespace, cfg.Registry).Bucket
 }
+
+// selfMadeOperator is the operator auth of the credentials in
+// config.NATSAuthDir, which it makes when they do not exist.
+func selfMadeOperator(
+	ctx context.Context,
+	cfg config.NATS,
+) (config.NATSServerAuth, error) {
+	dir := config.NATSAuthDir(cfg.Server.KeyDir)
+	resolver := filepath.Join(dir, "resolver.conf")
+	if _, err := os.Stat(resolver); err != nil {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return config.NATSServerAuth{}, fmt.Errorf("make %s: %w", dir, err)
+		}
+		if _, err := natsauthOperator(
+			ctx,
+			osfs.NewWithNoIdm(),
+			dir,
+			cfg.Server.Namespace,
+			cfg,
+		); err != nil {
+			return config.NATSServerAuth{}, fmt.Errorf("make the operator: %w", err)
+		}
+	}
+
+	return config.NATSServerAuth{
+		Type:         "operator",
+		ResolverFile: resolver,
+		CredsFile:    filepath.Join(dir, "setup.creds"),
+	}, nil
+}
+
+// natsauthOperator makes the operator credentials. Tests swap it.
+var natsauthOperator = natsauth.Operator

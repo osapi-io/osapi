@@ -1,0 +1,22 @@
+# The NATS auth of osapi in operator mode. Merge it into osapi.yaml.
+nats:
+  server:
+    auth:
+      type: operator
+      resolver_file: nats-auth/resolver.conf
+      creds_file: nats-auth/setup.creds
+controller:
+  nats:
+    auth:
+      type: creds
+      creds_file: nats-auth/controller.creds
+  join:
+    scoped: true
+    signing_key_file: nats-auth/agent-signing.nk
+    join_signing_key_file: nats-auth/join-signing.nk
+    account: AA3ZHKAGWGWKEI7UCWA3RDR44R4QIGJMMWUJ56KWP2UPYHKS4RSSJR37
+agent:
+  nats:
+    auth:
+      type: creds
+      creds_file: nats-auth/agent.creds

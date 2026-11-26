@@ -20,6 +20,12 @@ of your own, as `cert_file`, replaces it. A metrics server serves HTTPS too:
 give your Prometheus the certificate, `controller-metrics.crt`,
 `agent-metrics.crt` or `nats-metrics.crt`, as its CA.
 
+osapi's NATS server runs in operator mode by default, with credentials that it
+makes at its first start ([2. NATS](nats.md#osapis-nats)). Before
+osapi-io/osapi#1413 it had no auth by default: a server that relied on that,
+with a controller or an agent on another host, needs `nats.server.auth` set to
+what those use.
+
 An agent listens on no port for work. It connects out to NATS, and takes its
 jobs there. Thus a managed host needs to reach NATS, and nothing else.
 

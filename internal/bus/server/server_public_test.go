@@ -31,6 +31,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/osapi-io/osapi/internal/natsauth"
+
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -44,6 +47,21 @@ import (
 
 type ServerPublicTestSuite struct {
 	suite.Suite
+}
+
+// TestNewOperatorFails: a server whose operator cannot be made does not
+// start.
+func (s *ServerPublicTestSuite) TestNewOperatorFails() {
+	defer server.SetNatsauthOperator(func(
+		context.Context, avfs.VFS, string, string, config.NATS,
+	) (natsauth.Result, error) {
+		return natsauth.Result{}, errors.New("no entropy")
+	})()
+	c := serverNATS(s.T())
+	c.Server.Auth = config.NATSServerAuth{Type: "operator"}
+	c.Server.KeyDir = s.T().TempDir()
+	_, err := server.New(context.Background(), slog.Default(), c, nil)
+	s.ErrorContains(err, "make the operator: no entropy")
 }
 
 func TestServerPublicTestSuite(
@@ -109,10 +127,33 @@ func (s *ServerPublicTestSuite) TestNew() {
 			name: "when the auth is not valid returns the error",
 			cfg: func() config.NATS {
 				c := serverNATS(s.T())
-				c.Server.Auth = config.NATSServerAuth{Type: "operator"}
+				c.Server.Auth = config.NATSServerAuth{
+					Type: "operator", ResolverFile: "/no/such/resolver.conf",
+				}
 				return c
 			},
 			wantErr: "NATS server: ",
+		},
+		{
+			name: "when operator mode has no resolver_file, it makes the operator at its first start",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				c.Server.Auth = config.NATSServerAuth{Type: "operator"}
+				c.Server.KeyDir = s.T().TempDir()
+				return c
+			},
+		},
+		{
+			name: "when the operator cannot be made returns the error",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				blocked := filepath.Join(s.T().TempDir(), "file")
+				s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+				c.Server.Auth = config.NATSServerAuth{Type: "operator"}
+				c.Server.KeyDir = blocked
+				return c
+			},
+			wantErr: "NATS server: make",
 		},
 		{
 			name: "when a user has a role that osapi does not have returns the error",

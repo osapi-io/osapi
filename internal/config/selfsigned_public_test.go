@@ -126,6 +126,52 @@ func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 	})
 }
 
+// TestTrustLocalOperator: with osapi's NATS server in operator mode and no
+// resolver_file, a client on this host with no auth of its own takes its
+// role's credentials, and the controller the join's signing keys.
+func (s *SelfSignedPublicTestSuite) TestTrustLocalOperator() {
+	base := func() config.Config {
+		var c config.Config
+		c.NATS.Server.KeyDir = "/etc/osapi/pki"
+		c.NATS.Server.Auth = config.NATSServerAuth{Type: "operator"}
+		c.Controller.NATS = config.NATSConnection{
+			Host: "localhost",
+			Auth: config.NATSAuth{Type: "none"},
+		}
+		c.Agent.NATS = config.NATSConnection{Host: "127.0.0.1"}
+
+		return c
+	}
+	s.Run("each local client takes its role's credentials", func() {
+		got := config.TrustLocal(base())
+		s.Equal(
+			config.NATSAuth{Type: "creds", CredsFile: "/etc/osapi/pki/nats-auth/controller.creds"},
+			got.Controller.NATS.Auth,
+		)
+		s.Equal(config.NATSAuth{Type: "creds", CredsFile: "/etc/osapi/pki/nats-auth/agent.creds"},
+			got.Agent.NATS.Auth)
+		s.True(got.Controller.Join.Scoped)
+		s.Equal("/etc/osapi/pki/nats-auth/agent-signing.nk", got.Controller.Join.SigningKeyFile)
+		s.Equal("/etc/osapi/pki/nats-auth/join-signing.nk", got.Controller.Join.JoinSigningKeyFile)
+	})
+	s.Run("an auth, a host elsewhere, signing keys or a callout of the config are kept", func() {
+		c := base()
+		c.Controller.NATS.Auth = config.NATSAuth{Type: "user_pass", Username: "ctl"}
+		c.Agent.NATS.Host = "nats.example.com"
+		c.Controller.Join.Callout.IssuerKeyFile = "/etc/osapi/issuer.nk"
+		got := config.TrustLocal(c)
+		s.Equal("user_pass", got.Controller.NATS.Auth.Type)
+		s.Empty(got.Agent.NATS.Auth.Type)
+		s.Empty(got.Controller.Join.SigningKeyFile)
+	})
+	s.Run("a server with its own resolver_file is not self-made", func() {
+		c := base()
+		c.NATS.Server.Auth.ResolverFile = "/etc/nsc/resolver.conf"
+		got := config.TrustLocal(c)
+		s.Equal("none", got.Controller.NATS.Auth.Type)
+	})
+}
+
 func (s *SelfSignedPublicTestSuite) TestTrustLocal() {
 	base := func() config.Config {
 		var c config.Config
