@@ -175,6 +175,70 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		s.Equal("/pki/nats-join-ca.pem", got.Agent.NATS.TLS.CAFile)
 	})
 
+	// joinTLS joins over tls with a server that shows chain, and returns the
+	// agent's config after.
+	joinTLS := func(chain []*x509.Certificate) config.Config {
+		sum := sha256.Sum256(chain[0].Raw)
+		s.cfg.Agent.Join = "tls://10.0.0.1:4222?token=t&fp=SHA256:" + hex.EncodeToString(sum[:])
+		defer agent.SetJoinNATSFns(
+			id,
+			func(_ string, opts []nats.Option, _ string, _ []byte) ([]byte, error) {
+				o := nats.GetDefaultOptions()
+				for _, opt := range opts {
+					s.Require().NoError(opt(&o))
+				}
+				s.Require().
+					NoError(o.TLSConfig.VerifyConnection(tls.ConnectionState{PeerCertificates: chain}))
+
+				return json.Marshal(pki.JoinReply{ControllerPublicKey: make([]byte, 32)})
+			},
+		)()
+		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+		s.Require().NoError(err)
+
+		return got
+	}
+
+	s.Run("a certificate that a trusted CA issued: the system's roots and its name", func() {
+		ca, leaf := issued(s.T(), "hub.example.ts.net")
+		roots := x509.NewCertPool()
+		roots.AddCert(ca)
+		defer agent.SetJoinRoots(roots)()
+
+		// A server sends its chain: the leaf and the certificates above it.
+		got := joinTLS([]*x509.Certificate{leaf, ca})
+
+		s.True(got.Agent.NATS.TLS.Enabled)
+		s.Empty(got.Agent.NATS.TLS.CAFile, "a renewal of the leaf changes nothing")
+		s.Equal("hub.example.ts.net", got.Agent.NATS.TLS.ServerName,
+			"the agent dials 10.0.0.1, and checks the name of the certificate")
+		_, err := s.fs.Stat("/pki/nats-join-ca.pem")
+		s.Error(err, "no CA is kept")
+	})
+
+	s.Run("a certificate that no trusted CA issued: the leaf it pinned", func() {
+		defer agent.SetJoinRoots(x509.NewCertPool())()
+		_, leaf := issued(s.T(), "hub.example.ts.net")
+
+		got := joinTLS([]*x509.Certificate{leaf})
+
+		s.Equal("/pki/nats-join-ca.pem", got.Agent.NATS.TLS.CAFile)
+		s.Empty(got.Agent.NATS.TLS.ServerName)
+	})
+
+	s.Run("the agent's own server_name and ca_file win", func() {
+		ca, leaf := issued(s.T(), "hub.example.ts.net")
+		roots := x509.NewCertPool()
+		roots.AddCert(ca)
+		defer agent.SetJoinRoots(roots)()
+		s.cfg.Agent.NATS.TLS = config.ClientTLS{ServerName: "nats.lab", CAFile: "/etc/osapi/ca.pem"}
+
+		got := joinTLS([]*x509.Certificate{leaf})
+
+		s.Equal("nats.lab", got.Agent.NATS.TLS.ServerName)
+		s.Equal("/etc/osapi/ca.pem", got.Agent.NATS.TLS.CAFile)
+	})
+
 	failures := []struct {
 		name    string
 		join    string
@@ -460,6 +524,53 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 }
 
 // selfSigned is a self-signed certificate.
+// issued is a CA and a leaf for name that it signed.
+func issued(
+	t *testing.T,
+	name string,
+) (*x509.Certificate, *x509.Certificate) {
+	t.Helper()
+	caPub, caPriv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	caTmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(
+			2,
+		),
+		NotBefore:             time.Now().Add(-time.Hour),
+		NotAfter:              time.Now().Add(time.Hour),
+		IsCA:                  true,
+		BasicConstraintsValid: true,
+		KeyUsage:              x509.KeyUsageCertSign,
+	}
+	caDER, err := x509.CreateCertificate(rand.Reader, caTmpl, caTmpl, caPub, caPriv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ca, _ := x509.ParseCertificate(caDER)
+	pub, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(
+			3,
+		),
+		NotBefore:   time.Now().Add(-time.Hour),
+		NotAfter:    time.Now().Add(time.Hour),
+		DNSNames:    []string{name},
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, ca, pub, caPriv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	leaf, _ := x509.ParseCertificate(der)
+
+	return ca, leaf
+}
+
 func selfSigned(
 	t *testing.T,
 ) *x509.Certificate {

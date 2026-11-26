@@ -77,14 +77,28 @@ agent with the reason.
 The join string is used one time. After the join, the agent keeps what it needs
 in `agent.pki.key_dir`:
 
-| File                      | What it is                                                       |
-| ------------------------- | ---------------------------------------------------------------- |
-| `agent.key`, `agent.pub`  | The signing key of the agent. The controller admitted it.        |
-| `agent.xkey`              | The encryption key. Secrets sealed for this host open with it.   |
-| `enrolled-controller.pub` | The controller's key. The agent checks each job with it.         |
-| `nats.creds`              | Its NATS user, in operator mode. It renews it before it expires. |
-| `nats-join.json`          | Its NATS server and user, for static users.                      |
-| `nats-join-ca.pem`        | The certificate that the server showed at the join.              |
+| File                      | What it is                                                           |
+| ------------------------- | -------------------------------------------------------------------- |
+| `agent.key`, `agent.pub`  | The signing key of the agent. The controller admitted it.            |
+| `agent.xkey`              | The encryption key. Secrets sealed for this host open with it.       |
+| `enrolled-controller.pub` | The controller's key. The agent checks each job with it.             |
+| `nats.creds`              | Its NATS user, in operator mode. It renews it before it expires.     |
+| `nats-join.json`          | Its NATS server and user, for static users.                          |
+| `nats-join-ca.pem`        | The certificate that the server showed, when no public CA issued it. |
+
+After the join, the agent checks the NATS server's certificate in one of two
+ways:
+
+- A CA that the host trusts, such as Let's Encrypt, issued it. The agent keeps
+  the name of the certificate as `agent.nats.tls.server_name`, and checks the
+  certificate against the host's roots. Thus a renewal of the certificate
+  changes nothing. The agent can dial an address that the certificate does not
+  name, such as a private address of the server.
+- No such CA issued it, as for osapi's self-signed certificate. The agent trusts
+  `nats-join-ca.pem`, the certificate that the join string pinned. A new
+  certificate needs a join again of each agent.
+
+A `server_name` or a `ca_file` in the agent's own config wins over both.
 
 Each file with a secret has mode 0600. At each later start, the agent reads
 these files and connects. It does not join again, and it uses no token. Thus a

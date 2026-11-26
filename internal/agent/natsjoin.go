@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -98,7 +99,46 @@ type savedJoin struct {
 	NKeyFile string `json:"nkey_file,omitempty"`
 	// Labels are the labels of the join token.
 	Labels map[string]string `json:"labels,omitempty"`
-	CA     string            `json:"ca,omitempty"`
+	// CA is the certificate that the agent trusts for NATS after the join:
+	// the leaf that it pinned, when no root of the system issued it.
+	CA string `json:"ca,omitempty"`
+	// ServerName is the name of the server's certificate, which a root of
+	// the system issued. The agent checks that name and those roots, so a
+	// renewal of the certificate changes nothing, also when the agent dials
+	// an address that the certificate does not name.
+	ServerName string `json:"server_name,omitempty"`
+}
+
+// joinRoots are the roots that joinTrust checks the server's chain against:
+// nil is the system's. Tests swap it.
+var joinRoots *x509.CertPool
+
+// joinTrust is how the agent verifies the NATS server after the join, from the
+// chain that it showed at the join, whose leaf the join string pinned. When a
+// root of the system issued the leaf for one of its DNS names, it is that name
+// and no CA: a renewal of the leaf by its CA changes nothing (osapi#1491).
+// Else it is the leaf, which the agent trusts alone, as for osapi's own
+// self-signed certificate.
+func joinTrust(
+	chain []*x509.Certificate,
+) (string, string) {
+	if len(chain) == 0 {
+		return "", ""
+	}
+	leaf := chain[0]
+	intermediates := x509.NewCertPool()
+	for _, c := range chain[1:] {
+		intermediates.AddCert(c)
+	}
+	for _, name := range leaf.DNSNames {
+		if _, err := leaf.Verify(x509.VerifyOptions{
+			DNSName: name, Roots: joinRoots, Intermediates: intermediates,
+		}); err == nil {
+			return "", name
+		}
+	}
+
+	return string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: leaf.Raw})), ""
 }
 
 // isNATSJoin reports whether s is a join string for NATS.
@@ -335,11 +375,7 @@ func joinNow(
 			return savedJoin{}, err
 		}
 	}
-	if len(seen) > 0 {
-		s.CA = string(
-			pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: seen[len(seen)-1].Raw}),
-		)
-	}
+	s.CA, s.ServerName = joinTrust(seen)
 	out, _ := json.Marshal(s)
 	if err := atomicfile.Write(
 		ctx,
@@ -372,10 +408,15 @@ func applyJoin(
 	case s.Username != "":
 		n.Auth = config.NATSAuth{Type: "user_pass", Username: s.Username, Password: s.Password}
 	}
+	// A server_name or a ca_file of the agent's own config wins over what
+	// the join saved.
+	own := n.TLS
 	n.TLS = config.ClientTLS{}
 	if s.Scheme == "tls" {
 		n.TLS.Enabled = true
-		if s.CA != "" {
+		n.TLS.ServerName = cmp.Or(own.ServerName, s.ServerName)
+		n.TLS.CAFile = own.CAFile
+		if n.TLS.CAFile == "" && s.CA != "" {
 			ca := filepath.Join(cfg.Agent.PKI.KeyDir, natsJoinCA)
 			if err := atomicfile.Write(
 				context.Background(),

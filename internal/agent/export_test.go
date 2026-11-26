@@ -1182,3 +1182,14 @@ func ExportHandleJobMessageJSWith(
 ) error {
 	return a.handleJobMessageJS(ctx, msg)
 }
+
+// SetJoinRoots sets the roots that a join checks the NATS server's chain
+// against, in place of the system's, and returns a func that puts them back.
+func SetJoinRoots(
+	roots *x509.CertPool,
+) func() {
+	old := joinRoots
+	joinRoots = roots
+
+	return func() { joinRoots = old }
+}
