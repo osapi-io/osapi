@@ -343,6 +343,13 @@ func Validate(
 				"Prints comes before any Example; it gives the last Example its output.",
 			)
 		}
+		if m.unchecked {
+			add(
+				m.Name,
+				RulePrints,
+				"Check comes before any Example; it gives the last Example its read.",
+			)
+		}
 		for _, ex := range m.examples {
 			if ex.Output == nil {
 				continue

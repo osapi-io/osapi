@@ -44,5 +44,7 @@ var Group = command.Register(command.Define(
 			"NATS server of osapi does not need this command.").
 		Example("-f /etc/osapi/osapi.yaml").
 		Prints(sampleSetup).
+		NoCheck("it makes the streams and buckets of osapi, which no osapi command lists: "+
+			"the suite's controller and agent use each of them, and a second run changes nothing").
 		Handle(Setup),
 ))

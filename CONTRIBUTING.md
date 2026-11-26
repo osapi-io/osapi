@@ -631,6 +631,10 @@ group:
   for `web-01`, a job that it runs for a job ID, a file or a secret with a name
   of its own. It removes each one at the end, and undoes a drain and a config
   update of the agent.
+- Each `.Check` after an example is a read that shows what the example changed.
+  The suite runs it with `--json` after the example and compares each field that
+  it names, again for up to 30 seconds, because an agent applies a config at its
+  next heartbeat. A `.CheckFails` read must fail with its text.
 
 `cliPolicies` in `test/integration/clicases_test.go` has the commands that do
 not run as their kind: a process, a command that changes an admission or writes
@@ -641,9 +645,10 @@ write, runs with `OSAPI_INTEGRATION_WRITES=1`.
 
 `TestEachCommandHasACase`, in the same file, has no build tag, so it runs with
 the unit tests. It fails for a command with no example and no refusal, for a
-process with no skip, and for a policy that names no command. To make it pass,
-add an `Example` or a `Fails` to the definition. If the suite cannot run the
-command, add a skip with the reason.
+process with no skip, for a policy that names no command, and for an example of
+a write with no `.Check`, `.CheckFails` or `.NoCheck`. To make it pass, add an
+`Example` or a `Fails` to the definition. If the suite cannot run the command,
+add a skip with the reason.
 
 A value of an example that the suite does not know, such as a new kind of ID, is
 used as it is, and the example fails. Add the thing that it names to

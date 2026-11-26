@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 
 	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/cli/command"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -157,6 +158,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Drain an agent",
 			"The agent changes from `Ready` to `Draining`. When all its running jobs are\ncomplete, the state is `Cordoned`. The agent continues to run and to send\nheartbeats. It only stops the intake of new work from the job queue. Use\n`agent undrain` to accept jobs again. The jobs that it runs now continue\nuntil they are complete.").
 		Example("--hostname web-01").
+		Check("client agent get", "--hostname web-01",
+			"state", command.OneOf(types.AgentDraining, types.AgentCordoned)).
 		Handle(Drain).
 		Action("drain").
 		Says("draining").
@@ -206,6 +209,11 @@ var Group = endpoint.Register(endpoint.Define(
 				"token gets the labels of the token.").
 		Example("--hostname web-01 --labels group=web --labels dc=east --max-jobs 4 --log-level debug --facts-interval 5m").
 		Prints(sampleConfig).
+		Check("client agent config get", "--hostname web-01",
+			"labels.group", "web", "labels.dc", "east", "max_jobs", 4,
+			"log_level", "debug", "facts_interval", "5m").
+		Check("client agent get", "--hostname web-01",
+			"labels.group", "web", "labels.dc", "east", "config_behind", false).
 		Fails("a hostname over 255 characters", ConfigSetInput{Hostname: long}).
 		Fails("max jobs below 1", ConfigSetInput{
 			Hostname: "web-01", Body: ConfigRequest{MaxJobs: -1},
@@ -227,6 +235,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Undrain an agent",
 			"The agent subscribes to the NATS JetStream consumers again and changes back\nto `Ready`.").
 		Example("--hostname web-01").
+		Check("client agent get", "--hostname web-01", "state", types.AgentReady).
 		Handle(Undrain).
 		Action("undrain").
 		Says("ready").

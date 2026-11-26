@@ -31,6 +31,7 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -147,6 +148,9 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--vault default --key registry-token --value -",
 			"Read the value from standard input").
 		Prints(sampleUpdate).
+		Check("client secret get", "--vault default --key registry-token",
+			"vault", "default", "key", "registry-token", "version", "{out.version}", "value", command.Absent).
+		Check("client secret reveal", "--vault default --key registry-token", "value", "int-cli-value").
 		Fails("no value", UpdateInput{Vault: "default", Key: "k"}).
 		Fails("a value over 64 KiB", UpdateInput{Vault: "default", Key: "k", Body: body(65537)}).
 		Fails("a vault name that is not letters, digits, - or _", UpdateInput{Vault: "a.b", Key: "k", Body: body(1)}).
@@ -165,6 +169,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Status(http.StatusNoContent).
 		Command("Delete a key from a vault", "").
 		Example("--vault default --key registry-token").
+		CheckFails("client secret get", "--vault default --key registry-token", "not found").
 		Fails("a vault name that is not letters, digits, - or _", DeleteInput{Vault: "a.b", Key: "k"}).
 		Fails("a vault name over 64 characters", DeleteInput{Vault: long(65), Key: "k"}).
 		Fails("a key that is not letters, digits, - or _", DeleteInput{Vault: "default", Key: "a.b"}).

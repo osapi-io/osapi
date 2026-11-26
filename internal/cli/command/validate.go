@@ -437,6 +437,9 @@ func printsProblems(
 	if m.unlogged {
 		out = append(out, "Logs comes before any Example; it gives the last Example its log.")
 	}
+	if m.unchecked {
+		out = append(out, "Check comes before any Example; it gives the last Example its read.")
+	}
 	logged := false
 	for _, ex := range m.examples {
 		if len(ex.Logs) > 0 {

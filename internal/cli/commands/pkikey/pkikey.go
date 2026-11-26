@@ -84,6 +84,8 @@ var Group = command.Register(command.Define(
 			"key needs each agent, or this machine, admitted again.").
 		Example("--name vault:default").
 		Prints(sampleRotate).
+		Check("pki key get", "--name vault:default",
+			"state", "ok", "key_id", "{out.key.key_id}", "keys", "{out.key.keys}").
 		Fails("no name", RotateInput{}).
 		Fails("a name of more than 64 characters", RotateInput{Name: strings.Repeat("a", 65)}).
 		Handle(Rotate),

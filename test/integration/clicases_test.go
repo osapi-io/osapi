@@ -47,8 +47,17 @@ type cliCase struct {
 	// verb is the HTTP method of an API command, such as GET.
 	verb     string
 	process  bool
-	examples []string
+	examples []clicommand.Example
 	refusals []any
+	// noCheck is why no read shows the result of the examples, as NoCheck
+	// says it.
+	noCheck string
+}
+
+// writes reports whether the command changes what a later read shows: an
+// API call other than GET, or a local command whose policy is write.
+func (c cliCase) writes() bool {
+	return c.api && c.verb != "GET" || cliPolicies[c.path].write
 }
 
 // cliCases is each command that an endpoint group or a local group defines,
@@ -72,17 +81,17 @@ func cliCases() []cliCase {
 				path: strings.Join(words, " "), group: strings.Join(prefix, " "),
 				name: c.CommandName(), api: api,
 			}
-			for _, e := range c.Examples() {
-				cc.examples = append(cc.examples, e.Flags)
-			}
+			cc.examples = c.Examples()
 			switch m := c.(type) {
 			case *endpoint.Method:
 				cc.verb = m.HTTPMethod()
+				cc.noCheck = m.Unchecked()
 				for _, r := range m.Refusals() {
 					cc.refusals = append(cc.refusals, r.Input)
 				}
 			case *clicommand.LocalMethod:
 				cc.process = m.IsProcess()
+				cc.noCheck = m.Unchecked()
 				for _, r := range m.Refusals() {
 					cc.refusals = append(cc.refusals, r.Input)
 				}
@@ -215,6 +224,7 @@ func (s *CLICasesTestSuite) TestEachCommandHasACase() {
 				c.path)
 		}
 	}
+	s.eachWriteIsChecked(seen)
 	for path := range undoes {
 		s.True(seen[path], "undoes names %s, which no definition has", path)
 	}
@@ -222,6 +232,48 @@ func (s *CLICasesTestSuite) TestEachCommandHasACase() {
 		s.True(seen[path], "cliPolicies names %s, which no definition has", path)
 		if p.skip != "" {
 			s.GreaterOrEqual(len(p.skip), 40, "%s: say why the suite cannot run it", path)
+		}
+	}
+}
+
+// eachWriteIsChecked is the gate of osapi-io/osapi#1540: each example of a
+// write that the suite runs has a read that shows its result, or its
+// method says why none can, and each read is a command that reads.
+func (s *CLICasesTestSuite) eachWriteIsChecked(
+	seen map[string]bool,
+) {
+	reads := map[string]bool{}
+	for _, c := range cliCases() {
+		reads[c.path] = !c.writes()
+	}
+	for _, c := range cliCases() {
+		if cliPolicies[c.path].skip != "" {
+			continue
+		}
+		for _, e := range c.examples {
+			if c.writes() && c.noCheck == "" {
+				s.NotEmpty(e.Checks, "%s %s: a write with no read of its result: add a Check "+
+					"or a CheckFails after the Example, or a NoCheck with the reason", c.path, e.Flags)
+			}
+			for _, rb := range e.Checks {
+				s.True(
+					seen[rb.Command],
+					"%s: its Check runs %s, which no definition has",
+					c.path,
+					rb.Command,
+				)
+				s.True(
+					reads[rb.Command],
+					"%s: its Check runs %s, which is not a read",
+					c.path,
+					rb.Command,
+				)
+				s.True(len(rb.Fields) > 0 || rb.Fails != "",
+					"%s: its Check of %s asserts nothing", c.path, rb.Command)
+			}
+		}
+		if c.noCheck != "" {
+			s.GreaterOrEqual(len(c.noCheck), 40, "%s: say why no read shows its result", c.path)
 		}
 	}
 }

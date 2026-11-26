@@ -366,6 +366,8 @@ type LocalMethod struct {
 	process          bool
 	unprinted        bool
 	unlogged         bool
+	unchecked        bool
+	noCheck          string
 	keys             []string
 	examples         []Example
 	refusals         []Refusal
@@ -455,6 +457,57 @@ func (m *LocalMethod) Example(
 	m.examples = append(m.examples, Example{Flags: flags, Doc: strings.Join(doc, " ")})
 
 	return m
+}
+
+// Check gives the last Example a read that shows its result: the command
+// words after the binary, such as pki key get, its flags, and the paths and
+// wants of the fields of its --json output, as command.Fields pairs them.
+// The integration suite runs it after the example. validate refuses a Check
+// before an Example.
+func (m *LocalMethod) Check(
+	command string,
+	flags string,
+	pathsAndWants ...any,
+) *LocalMethod {
+	if !WithCheck(
+		m.examples,
+		ReadBack{Command: command, Flags: flags, Fields: Fields(pathsAndWants...)},
+	) {
+		m.unchecked = true
+	}
+
+	return m
+}
+
+// CheckFails gives the last Example a read that fails with errorText,
+// such as not found: the example removed the thing that the read names.
+func (m *LocalMethod) CheckFails(
+	command string,
+	flags string,
+	errorText string,
+) *LocalMethod {
+	if !WithCheck(m.examples, ReadBack{Command: command, Flags: flags, Fails: errorText}) {
+		m.unchecked = true
+	}
+
+	return m
+}
+
+// NoCheck says why no read shows the result of the method's examples, for
+// a write whose result no command reads back. The integration gate requires
+// a Check of each example of a write, or this.
+func (m *LocalMethod) NoCheck(
+	why string,
+) *LocalMethod {
+	m.noCheck = why
+
+	return m
+}
+
+// Unchecked is why no read shows the result of the method's examples, as
+// NoCheck says it, or "".
+func (m *LocalMethod) Unchecked() string {
+	return m.noCheck
 }
 
 // Prints gives the last Example its output: what the command prints, a

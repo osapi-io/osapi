@@ -43,6 +43,10 @@ type SpecPublicTestSuite struct {
 // write: what reads a definition, and what the registry and the commands
 // use.
 var notDSL = map[string]bool{
+	"Unchecked":                    true,
+	"WithCheck":                    true,
+	"Fields":                       true,
+	"OneOf":                        true,
 	"Attach":                       true,
 	"AttachLocal":                  true,
 	"GroupByArea":                  true,

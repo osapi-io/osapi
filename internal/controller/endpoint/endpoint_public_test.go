@@ -36,6 +36,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/apicontract"
 	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret"
 )
@@ -571,6 +572,22 @@ type Sample struct {
 	Counts map[string]int `json:"counts" example:"{\"ok\":5}"`
 	Tags   []string       `json:"tags"   example:"[\"web\"]"`
 	Odd    map[string]int `json:"odd"    example:"not json"`
+}
+
+func (s *EndpointPublicTestSuite) TestReadBack() {
+	m := endpoint.Post[noInput, Node]("make").
+		Example("--name web-01").
+		Check("client node get", "--name web-01", "name", "web-01").
+		CheckFails("client node get", "--name web-02", "not found").
+		NoCheck("a reason that is long enough to say why no read shows it")
+	s.Equal([]command.ReadBack{
+		{
+			Command: "client node get", Flags: "--name web-01",
+			Fields: []command.Field{{Path: "name", Want: "web-01"}},
+		},
+		{Command: "client node get", Flags: "--name web-02", Fails: "not found"},
+	}, m.Examples()[0].Checks)
+	s.Equal("a reason that is long enough to say why no read shows it", m.Unchecked())
 }
 
 func (s *EndpointPublicTestSuite) TestLocation() {
@@ -1114,6 +1131,18 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				"Prints comes before any Example; it gives the last Example its output.",
 				`Prints gives the example "" a string, not a endpoint_test.Node.`,
 			},
+		},
+		{
+			name: "when Check or CheckFails comes before any Example",
+			group: endpoint.Define(
+				"node",
+				"The nodes",
+				endpoint.Get[noInput, Node]("list").
+					Check("client node list", "", "name", "x").
+					CheckFails("client node list", "", "not found").
+					Example("").Prints(Node{}),
+			),
+			want: []string{"Check comes before any Example; it gives the last Example its read."},
 		},
 		{
 			name: "when a method has a handler and the group Uses no type",

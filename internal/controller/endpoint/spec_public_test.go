@@ -46,6 +46,7 @@ type SpecPublicTestSuite struct {
 // write: what reads a definition, and what the registry and the commands
 // use.
 var notDSL = map[string]bool{
+	"Unchecked":         true,
 	"OpenAPI":           true,
 	"ErrorSchema":       true,
 	"Validate":          true,
