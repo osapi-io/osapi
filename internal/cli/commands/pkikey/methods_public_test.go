@@ -346,6 +346,15 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 			wantErr: "jetstream: the key exists: a new key makes each stream and bucket",
 		},
 		{
+			name: "the agent's keys that are there name rotate",
+			in:   "agent",
+			setup: func(*pkikey.Deps) {
+				s.Require().
+					NoError(pki.New(s.fs, "/agt", "agent", pki.WithEncryptionKey()).LoadOrGenerate())
+			},
+			wantErr: "agent: the key exists: osapi pki key rotate --name agent makes new keys",
+		},
+		{
 			name: "a vault key that is there names rotate",
 			in:   "vault:default",
 			setup: func(*pkikey.Deps) {
@@ -430,6 +439,8 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		in      string
 		setup   func(d *pkikey.Deps)
 		wantErr string
+		// agent is a rotation of the agent's keys, which has no values.
+		agent bool
 	}{
 		{
 			name: "a vault key, and each value again with it",
@@ -488,9 +499,49 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 			wantErr: "controller: osapi does not rotate this key: each admitted agent verifies",
 		},
 		{
-			name:    "the agent's keys are refused",
-			in:      "agent-encryption",
-			wantErr: "agent-encryption: osapi does not rotate this key: the controller admitted",
+			name: "the agent's keys, with the controller",
+			in:   "agent",
+			setup: func(d *pkikey.Deps) {
+				s.Require().
+					NoError(pki.New(s.fs, "/agt", "agent", pki.WithEncryptionKey()).LoadOrGenerate())
+				d.RotateAgent = func(context.Context) (string, error) {
+					s.Require().NoError(s.fs.Remove("/agt/agent.pub"))
+					s.Require().NoError(s.fs.Remove("/agt/agent.key"))
+					s.Require().NoError(s.fs.Remove("/agt/agent.ekey"))
+					s.Require().
+						NoError(pki.New(s.fs, "/agt", "agent", pki.WithEncryptionKey()).LoadOrGenerate())
+
+					return "", nil
+				}
+			},
+			agent: true,
+		},
+		{
+			name: "the agent's encryption key rotates with its signing key",
+			in:   "agent-encryption",
+			setup: func(d *pkikey.Deps) {
+				s.Require().
+					NoError(pki.New(s.fs, "/agt", "agent", pki.WithEncryptionKey()).LoadOrGenerate())
+				d.RotateAgent = func(context.Context) (string, error) { return "", nil }
+			},
+			agent: true,
+		},
+		{
+			name: "the controller refuses the agent's keys",
+			in:   "agent",
+			setup: func(d *pkikey.Deps) {
+				s.Require().
+					NoError(pki.New(s.fs, "/agt", "agent", pki.WithEncryptionKey()).LoadOrGenerate())
+				d.RotateAgent = func(context.Context) (string, error) {
+					return "", errors.New("the controller refused the rotation")
+				}
+			},
+			wantErr: "the controller refused the rotation",
+		},
+		{
+			name:    "the keys of an agent that is not made",
+			in:      "agent",
+			wantErr: "agent is not made: osapi rotates only the keys of an admitted agent",
 		},
 		{name: "a name that no key has", in: "nope", wantErr: "nope: no key with this name"},
 	}
@@ -509,10 +560,16 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 				return
 			}
 			s.Require().NoError(err)
-			s.Equal(1, got.Key.Keys)
 			s.Equal(0, got.Values)
 			s.Require().Len(s.audits, 1)
 			s.Equal("key.rotate", s.audits[0].Action)
+			if tc.agent {
+				s.Equal("agent", got.Key.Name)
+				s.Equal(pkikey.StateOK, got.Key.State)
+
+				return
+			}
+			s.Equal(1, got.Key.Keys)
 		})
 	}
 }

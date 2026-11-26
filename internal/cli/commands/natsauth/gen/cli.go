@@ -46,6 +46,24 @@ var authOperatorCreateCmd = &cobra.Command{
 	Use:   "create",
 }
 
+var authOperatorUpdateCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey: "operator",
+		reference.Result:  "The command prints:\n\n```ansi\n$ osapi nats auth operator update --out /etc/osapi/nats\n\x1b[1;38;2;0;213;255mNATS auth:\x1b[0m\n\n\x1b[1;38;2;255;0;255mFiles (9):\x1b[0m\n  \x1b[38;2;176;48;176mROLE        \x1b[0m\x1b[38;2;176;48;176mPATH\x1b[0m\n  agent       /etc/osapi/nats/agent.creds\n  controller  /etc/osapi/nats/controller.creds\n  operator    /etc/osapi/nats/operator.nk\n  osapi       /etc/osapi/nats/osapi-nats.yaml\n  server      /etc/osapi/nats/resolver.conf\n  setup       /etc/osapi/nats/setup.creds\n  controller  /etc/osapi/nats/agent-signing.nk\n  controller  /etc/osapi/nats/join-signing.nk\n  operator    /etc/osapi/nats/account.nk\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"files\": [\n    {\n      \"role\": \"agent\",\n      \"path\": \"/etc/osapi/nats/agent.creds\"\n    },\n    {\n      \"role\": \"controller\",\n      \"path\": \"/etc/osapi/nats/controller.creds\"\n    },\n    {\n      \"role\": \"operator\",\n      \"path\": \"/etc/osapi/nats/operator.nk\"\n    },\n    {\n      \"role\": \"osapi\",\n      \"path\": \"/etc/osapi/nats/osapi-nats.yaml\"\n    },\n    {\n      \"role\": \"server\",\n      \"path\": \"/etc/osapi/nats/resolver.conf\"\n    },\n    {\n      \"role\": \"setup\",\n      \"path\": \"/etc/osapi/nats/setup.creds\"\n    },\n    {\n      \"role\": \"controller\",\n      \"path\": \"/etc/osapi/nats/agent-signing.nk\"\n    },\n    {\n      \"role\": \"controller\",\n      \"path\": \"/etc/osapi/nats/join-signing.nk\"\n    },\n    {\n      \"role\": \"operator\",\n      \"path\": \"/etc/osapi/nats/account.nk\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi nats auth operator update --out /etc/osapi/nats",
+	Long:    "It reads the keys that `operator create` wrote to the directory, and writes\n`resolver.conf` and the credentials file of each osapi role again, with the\npermissions that each role has in this version of osapi. Run it after an\nupgrade that adds a permission to a role, such as the rotation of an agent's\nkeys. The account's JWT holds the agent's permissions as the template of its\nscoped signing key, and each credentials file holds the permissions of its\nrole, so an upgrade does not change them. The keys stay, so each agent keeps\nits user and no agent joins again. Restart the NATS server, which reads the\nresolver file at its start, then the controller, for its new credentials.\nIt needs `operator.nk` and `account.nk`.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		out, _ := cmd.Flags().GetString("out")
+		print, _ := cmd.Flags().GetBool("print")
+
+		return clicommand.Run(cmd, natsauth.Group, "operator update", natsauth.UpdateInput{Out: out, Print: print})
+	},
+	Short: "Sign the account and each role's credentials again, with the same keys",
+	Use:   "update",
+}
+
 var authNkeyCreateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey: "nkey",
@@ -71,8 +89,11 @@ func init() {
 	authOperatorCreateCmd.Flags().String("out", "", "The directory that the files go to. It is made, mode 0700, when it is not there")
 	_ = authOperatorCreateCmd.MarkFlagRequired("out")
 	authOperatorCreateCmd.Flags().Bool("print", false, "Also print the server's part: its authorization block, or its resolver file")
+	authOperatorUpdateCmd.Flags().String("out", "", "The directory that operator create wrote: update reads its keys there, and writes the files again")
+	_ = authOperatorUpdateCmd.MarkFlagRequired("out")
+	authOperatorUpdateCmd.Flags().Bool("print", false, "Also print the server's resolver file")
 	authNkeyCreateCmd.Flags().String("out", "", "The directory that the files go to. It is made, mode 0700, when it is not there")
 	_ = authNkeyCreateCmd.MarkFlagRequired("out")
 	authNkeyCreateCmd.Flags().Bool("print", false, "Also print the server's part: its authorization block, or its resolver file")
-	clicommand.AddCommands(natsauth.Group, authPasswordCreateCmd, authOperatorCreateCmd, authNkeyCreateCmd)
+	clicommand.AddCommands(natsauth.Group, authPasswordCreateCmd, authOperatorCreateCmd, authOperatorUpdateCmd, authNkeyCreateCmd)
 }

@@ -33,14 +33,15 @@ import (
 
 // Deps is what the key commands use: the file system, the config that names
 // each key, the identity of this machine for the admission of its agent,
-// what connects to NATS for a rotation of a vault key, how an environment
-// variable is read for a vault with key_env, and the record of a change in
-// the audit log, or nil.
+// what connects to NATS for a rotation of a vault key, what rotates the
+// agent's keys with the controller, how an environment variable is read for
+// a vault with key_env, and the record of a change in the audit log, or nil.
 type Deps struct {
-	FS        avfs.VFS
-	Config    config.Config
-	Identity  func() (*identity.Identity, error)
-	Dial      func(ctx context.Context) (natsvault.KV, func(), error)
-	LookupEnv func(key string) (string, bool)
-	Audit     func(ctx context.Context, e audit.Entry) error
+	FS          avfs.VFS
+	Config      config.Config
+	Identity    func() (*identity.Identity, error)
+	Dial        func(ctx context.Context) (natsvault.KV, func(), error)
+	RotateAgent func(ctx context.Context) (string, error)
+	LookupEnv   func(key string) (string, bool)
+	Audit       func(ctx context.Context, e audit.Entry) error
 }

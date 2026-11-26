@@ -26,6 +26,12 @@ type CreateInput struct {
 	Print bool   `json:"print" validate:"omitempty" doc:"Also print the server's part: its authorization block, or its resolver file"`
 }
 
+// UpdateInput is the input of an update.
+type UpdateInput struct {
+	Out   string `json:"out"   validate:"required"  doc:"The directory that operator create wrote: update reads its keys there, and writes the files again"`
+	Print bool   `json:"print" validate:"omitempty" doc:"Also print the server's resolver file"`
+}
+
 // Written is a file that a create wrote.
 type Written struct {
 	Role string `json:"role"`

@@ -55,7 +55,7 @@ type CreateInput struct {
 
 // RotateInput names the key to rotate.
 type RotateInput struct {
-	Name string `json:"name" validate:"required,max=64" doc:"The name of the key, as list shows it. Only a vault key rotates, such as vault:default."`
+	Name string `json:"name" validate:"required,max=64" doc:"The name of the key, as list shows it: agent, or a vault key such as vault:default."`
 }
 
 // ListOutput is each key.
@@ -63,12 +63,12 @@ type ListOutput struct {
 	Items []Key `json:"items"`
 }
 
-// RotateOutput is the key after a rotation, and how many values of the
-// vault the new key encrypted again.
+// RotateOutput is the key after a rotation, and, for a vault, how many
+// values the new key encrypted again.
 type RotateOutput struct {
 	_      struct{} `title:"Rotated"`
 	Key    Key      `                json:"key"`
-	Values int      `                json:"values"`
+	Values int      `                json:"values,omitempty"`
 }
 
 // Key is a key of osapi on this host as list and get show it. It never

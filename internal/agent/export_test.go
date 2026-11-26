@@ -30,6 +30,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/secret/seal"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -1187,4 +1189,19 @@ func SendFactsReset(
 	d time.Duration,
 ) {
 	a.factsReset <- d
+}
+
+// ExportNATSDialOptions calls natsDialOptions.
+func ExportNATSDialOptions(
+	conn config.NATSConnection,
+) (string, []nats.Option, error) {
+	return natsDialOptions(conn)
+}
+
+// ExportOpenJob calls openJob.
+func ExportOpenJob(
+	a *Agent,
+	req job.Request,
+) (*seal.Opener, error) {
+	return a.openJob(req)
 }

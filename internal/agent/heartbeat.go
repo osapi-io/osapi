@@ -136,6 +136,7 @@ func (a *Agent) writeRegistration(
 	hostname string,
 ) {
 	a.handleDrainDetection(ctx, machineID, hostname)
+	a.reloadKeys()
 	a.applyConfig(ctx)
 	a.writeSeen(ctx, machineID)
 	a.refreshPrograms()

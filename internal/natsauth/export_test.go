@@ -73,3 +73,15 @@ func SetCreateUser(
 
 	return func() { createUser = old }
 }
+
+// ExportSystemAccount is the system account that a resolver file names.
+func ExportSystemAccount(
+	resolver string,
+) string {
+	m := systemAccount.FindStringSubmatch(resolver)
+	if m == nil {
+		return ""
+	}
+
+	return m[1]
+}

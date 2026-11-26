@@ -109,6 +109,7 @@ func (a *Agent) renewIfDue(
 	seed, _ := kp.Seed()
 	userKey, _ := kp.PublicKey()
 
+	a.reloadKeys()
 	req := pki.RenewRequest{MachineID: a.machineID, NATSUserKey: userKey, At: now}
 	req.Sign(a.pkiManager.PrivateKey())
 	data, _ := json.Marshal(req)

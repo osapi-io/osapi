@@ -54,13 +54,13 @@ var keyRotateCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi pki key rotate --name vault:default\n\x1b[1;38;2;0;213;255mRotated:\x1b[0m\n  \x1b[38;2;176;48;176mValues:\x1b[0m  12\n\n\x1b[1;38;2;255;0;255mKey:\x1b[0m\n  \x1b[38;2;176;48;176mName:\x1b[0m       vault:default\n  \x1b[38;2;176;48;176mKind:\x1b[0m       encryption\n  \x1b[38;2;176;48;176mComponent:\x1b[0m  vault\n  \x1b[38;2;176;48;176mState:\x1b[0m      ok\n  \x1b[38;2;176;48;176mFile:\x1b[0m       /etc/osapi/secrets.key\n  \x1b[38;2;176;48;176mAlgorithm:\x1b[0m  AES-256-GCM\n  \x1b[38;2;176;48;176mKey ID:\x1b[0m     b8e14a2c9d3f6071\n  \x1b[38;2;176;48;176mKeys:\x1b[0m       1\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"key\": {\n    \"name\": \"vault:default\",\n    \"kind\": \"encryption\",\n    \"component\": \"vault\",\n    \"state\": \"ok\",\n    \"file\": \"/etc/osapi/secrets.key\",\n    \"algorithm\": \"AES-256-GCM\",\n    \"key_id\": \"b8e14a2c9d3f6071\",\n    \"keys\": 1\n  },\n  \"values\": 12\n}\n```"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi pki key rotate --name vault:default",
-	Long:        "It adds a new key to the key_file of a vault of type nats, encrypts each\nvalue of the vault again with it, then drops the old key. It connects to\nNATS as the controller does. A running controller reads the new key at its\nnext call. A rotation that stops leaves the old key in the file, and a\nsecond rotation completes it. It refuses each other key, with what to do\ninstead: a new JetStream key makes the store unreadable, and a new signing\nkey needs each agent, or this machine, admitted again.",
+	Long:        "For the agent, it makes two new keys beside the old ones and sends them to\nthe controller over NATS, as the agent connects, signed with the old\nsigning key and the new one. The controller takes them in place of the\nadmitted keys, with no new admission, and keeps the old signing key valid\nfor controller.pki.rotation_grace_period. Then it moves the new keys in\nplace, and a running agent reads them at its next heartbeat. A refusal\nremoves the new keys. When the controller does not answer, the new keys\nstay, and a second rotation sends them again.\n\nFor a vault of type nats, it adds a new key to its key_file, encrypts each\nvalue of the vault again with it, then drops the old key. It connects to\nNATS as the controller does. A running controller reads the new key at its\nnext call. A rotation that stops leaves the old key in the file, and a\nsecond rotation completes it.\n\nIt refuses each other key, with what to do instead: a new JetStream key\nmakes the store unreadable, and a new controller key needs each agent\nadmitted again.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")
 
 		return clicommand.Run(cmd, pkikey.Group, "rotate", pkikey.RotateInput{Name: name})
 	},
-	Short: "Rotate the key of a vault, and encrypt each value again with it",
+	Short: "Rotate the agent's keys or the key of a vault",
 	Use:   "rotate",
 }
 
@@ -69,7 +69,7 @@ func init() {
 	_ = keyGetCmd.MarkFlagRequired("name")
 	keyCreateCmd.Flags().String("name", "", "The name of the key, as list shows it, such as jetstream or vault:default")
 	_ = keyCreateCmd.MarkFlagRequired("name")
-	keyRotateCmd.Flags().String("name", "", "The name of the key, as list shows it. Only a vault key rotates, such as vault:default")
+	keyRotateCmd.Flags().String("name", "", "The name of the key, as list shows it: agent, or a vault key such as vault:default")
 	_ = keyRotateCmd.MarkFlagRequired("name")
 	clicommand.AddCommands(pkikey.Group, keyListCmd, keyGetCmd, keyCreateCmd, keyRotateCmd)
 }

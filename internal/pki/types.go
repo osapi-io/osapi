@@ -25,12 +25,17 @@ package pki
 import (
 	"crypto/ecdh"
 	"crypto/ed25519"
+	"sync"
 
 	"github.com/avfs/avfs"
 )
 
 // Manager handles Ed25519 keypair lifecycle.
 type Manager struct {
+	// mu guards the two keys, which Reload replaces while the agent runs.
+	// It is a pointer, so a copy of a Manager shares it.
+	mu *sync.RWMutex
+
 	fs                       avfs.VFS
 	keyDir                   string
 	keyPrefix                string // "agent" or "controller"
@@ -44,6 +49,9 @@ type Manager struct {
 	withEncryption      bool
 	encryptionKey       *ecdh.PrivateKey
 	encryptionPublicKey string
+	// previousEncryptionKey is the encryption key that the last Reload
+	// replaced: a value sealed to it just before a rotation still opens.
+	previousEncryptionKey *ecdh.PrivateKey
 }
 
 // Option configures a Manager.

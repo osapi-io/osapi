@@ -155,8 +155,10 @@ func Create(
 	return k, nil
 }
 
-// Rotate makes a new key of a vault, encrypts each value of the vault again
-// with it, and drops the old key. Any other key is refused, with what to do
+// Rotate makes a new key in place of the one with the name. The agent's two
+// keys go to the controller, which takes them in place of the admitted ones.
+// A vault gets a new key, each value of the vault is encrypted again with
+// it, and the old key is dropped. Any other key is refused, with what to do
 // instead.
 func Rotate(
 	ctx context.Context,
@@ -166,6 +168,9 @@ func Rotate(
 	s, err := find(d, in.Name)
 	if err != nil {
 		return RotateOutput{}, err
+	}
+	if s.name == agentName || s.typ == typeAgentEKey {
+		return rotateAgent(ctx, d)
 	}
 	if s.typ != typeVault {
 		return RotateOutput{}, fmt.Errorf("%s: %w: %s", s.name, ErrNoRotate, rotateHint(s))
@@ -204,6 +209,25 @@ func Rotate(
 	return RotateOutput{Key: k, Values: n}, nil
 }
 
+// rotateAgent rotates the agent's two keys with the controller.
+func rotateAgent(
+	ctx context.Context,
+	d Deps,
+) (RotateOutput, error) {
+	s, _ := find(d, agentName)
+	if k := read(d, s); k.State != StateOK {
+		return RotateOutput{}, fmt.Errorf("%s is %s: osapi rotates only the keys of an "+
+			"admitted agent, which makes them at its first start", s.name, k.State)
+	}
+	if _, err := d.RotateAgent(ctx); err != nil {
+		return RotateOutput{}, err
+	}
+	k := read(d, s)
+	audit.RecordLocal(ctx, d.Audit, "key.rotate", s.name, summary(k))
+
+	return RotateOutput{Key: k}, nil
+}
+
 // find is the key named name.
 func find(
 	d Deps,
@@ -235,9 +259,8 @@ func rotateHint(
 				"key it got at its admission; a new key needs each agent admitted again"
 		}
 
-		return "the controller admitted the fingerprint of these keys; a new key is " +
-			"refused until the machine is admitted again: remove its admission, then " +
-			"let the agent join again"
+		return "osapi pki key rotate --name agent makes new keys, which the " +
+			"controller takes in place of the admitted ones"
 	}
 }
 

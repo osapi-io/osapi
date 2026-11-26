@@ -51,6 +51,7 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -393,6 +394,9 @@ func pkiKeyDeps() pkikey.Deps {
 		LookupEnv: os.LookupEnv,
 		Identity: func() (*identity.Identity, error) {
 			return identity.GetIdentity(fs, appConfig.Agent.Hostname)
+		},
+		RotateAgent: func(ctx context.Context) (string, error) {
+			return agent.RotateKey(ctx, logger, fs, appConfig)
 		},
 		Dial: func(context.Context) (natsvault.KV, func(), error) {
 			n := appConfig.Controller.NATS

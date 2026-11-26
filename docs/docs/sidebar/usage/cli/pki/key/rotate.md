@@ -1,14 +1,24 @@
 # Rotate
 
-Rotate the key of a vault, and encrypt each value again with it.
+Rotate the agent's keys or the key of a vault.
 
-It adds a new key to the key_file of a vault of type nats, encrypts each value
+For the agent, it makes two new keys beside the old ones and sends them to the
+controller over NATS, as the agent connects, signed with the old signing key and
+the new one. The controller takes them in place of the admitted keys, with no
+new admission, and keeps the old signing key valid for
+controller.pki.rotation_grace_period. Then it moves the new keys in place, and a
+running agent reads them at its next heartbeat. A refusal removes the new keys.
+When the controller does not answer, the new keys stay, and a second rotation
+sends them again.
+
+For a vault of type nats, it adds a new key to its key_file, encrypts each value
 of the vault again with it, then drops the old key. It connects to NATS as the
 controller does. A running controller reads the new key at its next call. A
 rotation that stops leaves the old key in the file, and a second rotation
-completes it. It refuses each other key, with what to do instead: a new
-JetStream key makes the store unreadable, and a new signing key needs each
-agent, or this machine, admitted again.
+completes it.
+
+It refuses each other key, with what to do instead: a new JetStream key makes
+the store unreadable, and a new controller key needs each agent admitted again.
 
 ```bash
 osapi pki key rotate [flags]
@@ -60,9 +70,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag     | Description                                                                                       | Default |
-| -------- | ------------------------------------------------------------------------------------------------- | ------- |
-| `--name` | The name of the key, as list shows it. Only a vault key rotates, such as vault:default (required) |         |
+| Flag     | Description                                                                                   | Default |
+| -------- | --------------------------------------------------------------------------------------------- | ------- |
+| `--name` | The name of the key, as list shows it: agent, or a vault key such as vault:default (required) |         |
 
 ## Global flags
 
