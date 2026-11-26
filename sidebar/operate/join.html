@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">4. Join hosts | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/join"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="4. Join hosts | OSAPI"><meta data-rh="true" name="description" content="Each managed host runs an agent. An agent gets no job until the controller"><meta data-rh="true" property="og:description" content="Each managed host runs an agent. An agent gets no job until the controller"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/join"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/join" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/join" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"4. Join hosts","item":"https://osapi-io.github.io/osapi/sidebar/operate/join"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.53868d7b.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.a403502e.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.5aeb188f.js" defer="defer"></script>
 </head>
 <body>
@@ -90,7 +90,20 @@ in <code>agent.pki.key_dir</code>:</p>
 
 
 
-<table><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody><tr><td><code>agent.key</code>, <code>agent.pub</code></td><td>The signing key of the agent. The controller admitted it.</td></tr><tr><td><code>agent.xkey</code></td><td>The encryption key. Secrets sealed for this host open with it.</td></tr><tr><td><code>enrolled-controller.pub</code></td><td>The controller&#x27;s key. The agent checks each job with it.</td></tr><tr><td><code>nats.creds</code></td><td>Its NATS user, in operator mode. It renews it before it expires.</td></tr><tr><td><code>nats-join.json</code></td><td>Its NATS server and user, for static users.</td></tr><tr><td><code>nats-join-ca.pem</code></td><td>The certificate that the server showed at the join.</td></tr></tbody></table>
+<table><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody><tr><td><code>agent.key</code>, <code>agent.pub</code></td><td>The signing key of the agent. The controller admitted it.</td></tr><tr><td><code>agent.xkey</code></td><td>The encryption key. Secrets sealed for this host open with it.</td></tr><tr><td><code>enrolled-controller.pub</code></td><td>The controller&#x27;s key. The agent checks each job with it.</td></tr><tr><td><code>nats.creds</code></td><td>Its NATS user, in operator mode. It renews it before it expires.</td></tr><tr><td><code>nats-join.json</code></td><td>Its NATS server and user, for static users.</td></tr><tr><td><code>nats-join-ca.pem</code></td><td>The certificate that the server showed, when no public CA issued it.</td></tr></tbody></table>
+<p>After the join, the agent checks the NATS server&#x27;s certificate in one of two
+ways:</p>
+<ul>
+<li class="">A CA that the host trusts, such as Let&#x27;s Encrypt, issued it. The agent keeps
+the name of the certificate as <code>agent.nats.tls.server_name</code>, and checks the
+certificate against the host&#x27;s roots. Thus a renewal of the certificate
+changes nothing. The agent can dial an address that the certificate does not
+name, such as a private address of the server.</li>
+<li class="">No such CA issued it, as for osapi&#x27;s self-signed certificate. The agent trusts
+<code>nats-join-ca.pem</code>, the certificate that the join string pinned. A new
+certificate needs a join again of each agent.</li>
+</ul>
+<p>A <code>server_name</code> or a <code>ca_file</code> in the agent&#x27;s own config wins over both.</p>
 <p>Each file with a secret has mode 0600. At each later start, the agent reads
 these files and connects. It does not join again, and it uses no token. Thus a
 reboot needs nothing from you, when the agent runs as a service. Do not delete
