@@ -107,15 +107,24 @@ has an `actor`, the kind of who made the change, an `action` and a `target`. Its
 | `system`     | `auto_admit`                                  | `agent.admit`                                                                                  | the machine ID                                    |
 | `system`     | `delete_after`                                | `agent.delete`                                                                                 | the machine ID                                    |
 | `join-token` | the token's ID                                | `agent.join` (200, or 403 when refused)                                                        | the machine ID                                    |
+| `agent`      | the machine ID                                | `agent.enroll.request` (202), the first request of a machine or one with a new key             | the machine ID                                    |
+| `agent`      | the machine ID                                | `agent.nats.renew` (200, or 400, 403, 500 when refused)                                        | the machine ID                                    |
+| `agent`      | the machine ID                                | `agent.rename`: a hostname that the agent reported, such as after a rename by hand             | the machine ID                                    |
 | `local`      | the user of the operating system of a command | `jointoken.create`, `jointoken.revoke`, `token.generate`, `vaultkey.create`, `vaultkey.rotate` | the token's ID, the token's subject, or the vault |
+| `local`      | the user of the operating system of a command | `natsauth.create`, `natskey.create`, `nats.setup`                                              | the directory, the key file, or the server        |
 
 A local command connects to NATS as the controller does, and writes its entry to
 the audit stream. An entry never has the token or a secret: only its ID. An
 entry of a request through the API has no `actor`.
 
-`osapi nats key create`, `nats auth ... create` and `nats setup` write no entry:
-they run before the NATS server or its audit stream exists, or as a user that
-cannot write to it.
+A pending agent asks again at each heartbeat. Only its first request, or one
+with a new key, is an entry, so the log does not fill with repeats. A rename
+through the API has the entry of its request, so `agent.rename` is only a rename
+that no request made.
+
+`osapi nats auth ... create` and `nats key create` often run before NATS starts.
+Then the change is made, and the command warns that the audit log does not have
+it: `the change is not in the audit log: NATS could not be reached`.
 
 ## Viewing audit logs
 

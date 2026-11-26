@@ -153,7 +153,7 @@ decision of admission, and the agent writes its own start and stop:
 
 | Event                  | Written by | Message                                                                  |
 | ---------------------- | ---------- | ------------------------------------------------------------------------ |
-| `enrollment_requested` | controller | the fingerprint of the request                                           |
+| `enrollment_requested` | controller | the fingerprint of the request: the first request, or one with a new key |
 | `admitted`             | controller | by an operator, by `auto_admit`, or by join token `<id>`                 |
 | `rejected`             | controller | by an operator, with the reason                                          |
 | `revoked`, `deleted`   | controller | by an operator, or for `deleted` by `delete_after` with when it was seen |

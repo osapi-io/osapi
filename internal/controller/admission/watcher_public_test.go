@@ -98,6 +98,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 		{
 			name: "stores pending agent in KV",
 			setupMock: func() {
+				// A new request: no pending record yet.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
 					DoAndReturn(func(
@@ -168,6 +172,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 		{
 			name: "logs warning on KV put failure",
 			setupMock: func() {
+				// A new request: no pending record yet.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
 					Return(uint64(0), errors.New("kv error"))
@@ -205,6 +213,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 				pendingData := s.makePendingJSON("machine-001", "web-01", "SHA256:abc123")
 
 				// Store in KV.
+				// A new request: no pending record yet.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
 					Return(uint64(1), nil)
@@ -254,6 +266,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 			name: "logs warning when auto-admit fails",
 			setupMock: func() {
 				// Store in KV.
+				// A new request: no pending record yet.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-002").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "enrollment", "enrollment.machine-002", gomock.Any()).
 					Return(uint64(1), nil)
@@ -274,12 +290,66 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 			autoWatcher.SetAudit(log)
 			admission.ExportHandleEnrollmentRequest(s.ctx, autoWatcher, tc.msg)
 			if tc.name == "auto-admits on successful store" {
-				s.Require().Len(log.entries, 1, "an admission by auto_admit is audited")
-				e := log.entries[0]
+				s.Require().Len(log.entries, 2, "the request and the admission are audited")
+				s.Equal(audit.ActorAgent, log.entries[0].Actor)
+				s.Equal("agent.enroll.request", log.entries[0].Action)
+				e := log.entries[1]
 				s.Equal(audit.ActorSystem, e.Actor)
 				s.Equal("auto_admit", e.User)
 				s.Equal("agent.admit", e.Action)
 				s.Equal("machine-001", e.Target)
+			}
+		})
+	}
+}
+
+// TestEnrollmentRequestRepeats: a pending agent asks again at each
+// heartbeat. Only a new request, or one with a new key, is audited
+// (osapi-io/osapi#1453).
+func (s *WatcherPublicTestSuite) TestEnrollmentRequestRepeats() {
+	stored := func(fp string) jetstream.KeyValueEntry {
+		e := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+		e.EXPECT().Value().Return(s.makePendingJSON("machine-001", "web-01", fp))
+
+		return e
+	}
+	tests := []struct {
+		name    string
+		entry   func() jetstream.KeyValueEntry
+		audited bool
+	}{
+		{name: "the same key again is not audited", entry: func() jetstream.KeyValueEntry {
+			return stored("SHA256:abc123")
+		}, audited: false},
+		{name: "a new key is audited", entry: func() jetstream.KeyValueEntry {
+			return stored("SHA256:old")
+		}, audited: true},
+		{name: "a record that is not JSON is a new request", entry: func() jetstream.KeyValueEntry {
+			e := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+			e.EXPECT().Value().Return([]byte("{"))
+
+			return e
+		}, audited: true},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			log := &joinLog{}
+			s.watcher.SetAudit(log)
+			defer s.watcher.SetAudit(nil)
+			s.mockKV.EXPECT().
+				KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
+				Return(tc.entry(), nil)
+			s.mockKV.EXPECT().
+				KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
+				Return(uint64(1), nil)
+			admission.ExportHandleEnrollmentRequest(
+				s.ctx, s.watcher, s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"))
+			if tc.audited {
+				s.Require().Len(log.entries, 1)
+				s.Equal("agent.enroll.request", log.entries[0].Action)
+				s.Equal("machine-001", log.entries[0].User)
+			} else {
+				s.Empty(log.entries)
 			}
 		})
 	}

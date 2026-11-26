@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 
@@ -98,8 +100,23 @@ func (s *MethodsPublicTestSuite) TestSetup() {
 				},
 			}
 
+			var entries []audit.Entry
+			d.Audit = func(_ context.Context, e audit.Entry) error {
+				entries = append(entries, e)
+
+				return nil
+			}
 			got, err := natssetup.Setup(context.Background(), d, natssetup.Input{})
 			tc.validateFunc(got, opts, err)
+			// A setup that ran is a local change in the audit log; one that
+			// failed changed nothing (osapi-io/osapi#1453).
+			if err == nil {
+				s.Require().Len(entries, 1)
+				s.Equal("nats.setup", entries[0].Action)
+				s.Equal("namespace=osapi", entries[0].RequestSummary)
+			} else {
+				s.Empty(entries)
+			}
 		})
 	}
 }

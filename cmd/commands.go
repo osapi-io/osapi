@@ -23,6 +23,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -112,7 +113,7 @@ func init() {
 		return controllerkey.Deps{FS: osfs.NewWithNoIdm(), KeyDir: appConfig.Controller.PKI.KeyDir}
 	})
 	command.Provide(natsauthcmd.Group, func() natsauthcmd.Deps {
-		return natsauthcmd.Deps{FS: appFs, Config: appConfig}
+		return natsauthcmd.Deps{FS: appFs, Config: appConfig, Audit: localAudit}
 	})
 	command.Provide(natsperms.Group, func() natsperms.Deps {
 		return natsperms.Deps{Config: appConfig}
@@ -121,11 +122,17 @@ func init() {
 		return natskey.Deps{
 			FS:      osfs.NewWithNoIdm(),
 			KeyFile: appConfig.NATS.Server.JetStream.KeyFile,
+			Audit:   localAudit,
 		}
 	})
 	command.Provide(vaultkey.Group, vaultKeyDeps)
 	command.Provide(natssetup.Group, func() natssetup.Deps {
-		return natssetup.Deps{Config: appConfig, Logger: logger, Prepare: bus.Prepare}
+		return natssetup.Deps{
+			Config:  appConfig,
+			Logger:  logger,
+			Prepare: bus.Prepare,
+			Audit:   localAudit,
+		}
 	})
 	command.Provide(agentkey.Group, func() agentkey.Deps {
 		fs := osfs.NewWithNoIdm()
@@ -317,6 +324,24 @@ func joinDeps() join.Deps {
 // to NATS as the controller makes it. The controller keeps no audit log when
 // nats.audit.stream is empty.
 func localAudit(
+	ctx context.Context,
+	e audit.Entry,
+) error {
+	err := writeLocalAudit(ctx, e)
+	if err != nil {
+		// The change was made. Say that the audit log does not have it,
+		// such as for nats auth create before NATS starts.
+		logger.Warn("the change is not in the audit log: NATS could not be reached",
+			slog.String("action", e.Action),
+			slog.String("error", err.Error()),
+		)
+	}
+
+	return err
+}
+
+// writeLocalAudit is localAudit without the warning.
+func writeLocalAudit(
 	ctx context.Context,
 	e audit.Entry,
 ) error {

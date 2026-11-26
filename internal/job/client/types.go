@@ -26,6 +26,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -327,6 +329,13 @@ type JobClient interface {
 	// client refuses each response of an agent.
 	SetAgentKeyStore(
 		store AgentKeyStore,
+	)
+
+	// SetAudit wires the audit log, where the client records a change that
+	// no request made, such as a hostname that an agent reported. With nil,
+	// it records none.
+	SetAudit(
+		w audit.Writer,
 	)
 
 	// SetMachineID records the identity stamped on payloads this client

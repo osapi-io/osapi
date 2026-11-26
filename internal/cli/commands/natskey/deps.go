@@ -20,11 +20,19 @@
 
 package natskey
 
-import "github.com/avfs/avfs"
+import (
+	"context"
+
+	"github.com/avfs/avfs"
+	"github.com/osapi-io/osapi/internal/audit"
+)
 
 // Deps is what create uses: the file system, and the file of the key,
 // nats.server.jetstream.key_file.
 type Deps struct {
 	FS      avfs.VFS
 	KeyFile string
+	// Audit writes an entry to the audit log of the controller, or is nil.
+	// It fails when NATS cannot be reached, such as before NATS starts.
+	Audit func(ctx context.Context, e audit.Entry) error
 }

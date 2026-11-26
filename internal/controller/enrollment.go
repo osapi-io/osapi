@@ -92,6 +92,9 @@ func startEnrollment(
 	// was accepted. The watcher owns those records, so verification reads
 	// what acceptance wrote and shares its cache.
 	conn.Jobs.SetAgentKeyStore(watcher.KeyStore())
+	if auditLog != nil {
+		conn.Jobs.SetAudit(auditLog)
+	}
 
 	// Unverified registrations stop deciding where work goes. Both sides of
 	// this turn on together: the store makes verification possible.

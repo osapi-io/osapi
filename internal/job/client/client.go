@@ -69,6 +69,8 @@ type Client struct {
 	// which case responses are handled exactly as they were before
 	// verification existed.
 	agentKeyStore AgentKeyStore
+	// auditLog is where a change that no request made is recorded, or nil.
+	auditLog audit.Writer
 	// machineID identifies this client's host on payloads it signs, so the
 	// verifier knows which stored key to check them against. Empty on the
 	// controller.
@@ -147,6 +149,13 @@ func (c *Client) SetAgentKeyStore(
 	store AgentKeyStore,
 ) {
 	c.agentKeyStore = store
+}
+
+// SetAudit wires the audit log. See the JobClient interface.
+func (c *Client) SetAudit(
+	w audit.Writer,
+) {
+	c.auditLog = w
 }
 
 // SetMachineID records the identity stamped on payloads this client signs.

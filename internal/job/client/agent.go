@@ -25,9 +25,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/audit"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
@@ -504,6 +507,19 @@ func (c *Client) followHostname(
 	)
 	_ = c.WriteAgentTimelineEvent(ctx, reg.MachineID, reg.Hostname, "hostname_changed",
 		fmt.Sprintf("hostname changed from %s to %s", was, reg.Hostname))
+	// No request made this rename: the agent reported it, such as after a
+	// rename by hand. A rename through the API has the request's entry.
+	if c.auditLog != nil {
+		if err := c.auditLog.Write(context.WithoutCancel(ctx), audit.Change(
+			ctx, audit.ActorAgent, reg.MachineID, "agent.rename", reg.MachineID,
+			http.StatusOK, fmt.Sprintf("hostname changed from %s to %s", was, reg.Hostname),
+		)); err != nil {
+			c.logger.WarnContext(ctx, "failed to write an audit entry",
+				slog.String("action", "agent.rename"),
+				slog.String("error", err.Error()),
+			)
+		}
+	}
 
 	return true
 }

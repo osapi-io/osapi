@@ -24,6 +24,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -51,6 +53,9 @@ func Setup(
 	); err != nil {
 		return Output{}, fmt.Errorf("set up JetStream on %s:%d: %w", n.Host, n.Port, err)
 	}
+
+	audit.RecordLocal(ctx, d.Audit, "nats.setup", fmt.Sprintf("%s:%d", n.Host, n.Port),
+		"namespace="+n.Namespace)
 
 	return Output{Host: n.Host, Port: n.Port, Namespace: n.Namespace, Auth: n.Auth.Type}, nil
 }

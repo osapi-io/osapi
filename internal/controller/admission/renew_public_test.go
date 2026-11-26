@@ -27,6 +27,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/controller/admission"
@@ -140,11 +142,26 @@ func (s *StorePublicTestSuite) TestRenew() {
 			wantErr: "the controller could not renew: no key",
 		},
 	}
+	log := &joinLog{}
+	s.watcher.SetAudit(log)
+	defer s.watcher.SetAudit(nil)
 	for _, tt := range tests {
 		reply := s.renew(tt.data, tt.mint)
 		s.Equal(tt.wantJWT, reply.NATS.JWT, tt.name)
 		s.Contains(reply.Error, tt.wantErr, tt.name)
 	}
+
+	// Each renewal that names a machine is audited, as the machine, with its
+	// outcome: a refusal too. A request that is not JSON names none.
+	codes := make([]int, 0, len(log.entries))
+	for _, e := range log.entries {
+		s.Equal(audit.ActorAgent, e.Actor)
+		s.Equal("agent.nats.renew", e.Action)
+		codes = append(codes, e.ResponseCode)
+	}
+	s.Equal([]int{200, 400, 400, 403, 403, 500}, codes)
+	s.Equal("m-1", log.entries[0].Target)
+	s.Equal("renewed its NATS user", log.entries[0].RequestSummary)
 
 	err := s.watcher.ServeRenew(
 		context.Background(),

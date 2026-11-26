@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/osapi-io/osapi/internal/audit"
 )
 
 // keyBytes is the length of a key before it is hex encoded.
@@ -39,7 +41,7 @@ var randRead = rand.Read
 // Create writes a new random key to the key file of the config. It refuses
 // a file that exists, because a different key makes the store unreadable.
 func Create(
-	_ context.Context,
+	ctx context.Context,
 	d Deps,
 	_ CreateInput,
 ) (CreateOutput, error) {
@@ -73,6 +75,8 @@ func Create(
 	if err := f.Close(); err != nil {
 		return CreateOutput{}, fmt.Errorf("write %s: %w", d.KeyFile, err)
 	}
+
+	audit.RecordLocal(ctx, d.Audit, "natskey.create", d.KeyFile, "")
 
 	return CreateOutput{KeyFile: d.KeyFile}, nil
 }

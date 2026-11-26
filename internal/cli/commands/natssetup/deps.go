@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -41,4 +43,7 @@ type Deps struct {
 		namespace string,
 		cfg config.NATS,
 	) error
+	// Audit writes an entry to the audit log of the controller, or is nil.
+	// It fails when NATS cannot be reached, such as before NATS starts.
+	Audit func(ctx context.Context, e audit.Entry) error
 }

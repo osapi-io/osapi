@@ -26,9 +26,12 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/audit"
 
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -335,6 +338,59 @@ func (s *RegistrationTrustPublicTestSuite) TestHostnameFollows() {
 
 			s.Require().NoError(err)
 			s.Equal(tc.wantVerified, agents[0].Verified)
+		})
+	}
+}
+
+// auditLog keeps each audit entry that the client writes.
+type auditLog struct {
+	entries []audit.Entry
+	err     error
+}
+
+func (l *auditLog) Write(
+	_ context.Context,
+	e audit.Entry,
+) error {
+	l.entries = append(l.entries, e)
+
+	return l.err
+}
+
+// TestHostnameRenameAudited: a rename that an agent reported, with no
+// request, is an audit entry as the machine (osapi-io/osapi#1453). An audit
+// log that fails does not undo the rename.
+func (s *RegistrationTrustPublicTestSuite) TestHostnameRenameAudited() {
+	for _, fail := range []bool{false, true} {
+		s.Run(fmt.Sprintf("the audit log fails: %v", fail), func() {
+			s.mockCtrl = gomock.NewController(s.T())
+			s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
+			reg := s.base()
+			reg.Hostname = "web-02"
+			s.registryOf(s.signed(reg))
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			store.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+				Return(&client.AgentKey{
+					MachineID: "machine-001", Hostname: "web-01", PublicKey: s.pub,
+				}, nil).AnyTimes()
+			store.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").Return(nil)
+			c := s.newClient(store)
+			log := &auditLog{}
+			if fail {
+				log.err = errors.New("stream down")
+			}
+			c.SetAudit(log)
+
+			agents, err := c.ListAgents(s.ctx)
+
+			s.Require().NoError(err)
+			s.True(agents[0].Verified)
+			s.Require().Len(log.entries, 1)
+			e := log.entries[0]
+			s.Equal(audit.ActorAgent, e.Actor)
+			s.Equal("machine-001", e.User)
+			s.Equal("agent.rename", e.Action)
+			s.Equal("hostname changed from web-01 to web-02", e.RequestSummary)
 		})
 	}
 }
