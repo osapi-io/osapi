@@ -27,6 +27,8 @@ import (
 	"io/fs"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/initsys"
+
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -35,14 +37,11 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/object"
 )
 
-// unitDir is where systemd reads the units of the administrator, and prefix
+// initsys.SystemdDir is where systemd reads the units of the administrator, and prefix
 // starts the name of each unit that osapi deploys. A service that osapi did
 // not deploy has no unit file with the prefix, so osapi writes and acts on
 // its own services only.
-const (
-	unitDir = "/etc/systemd/system"
-	prefix  = "osapi-"
-)
+const prefix = "osapi-"
 
 // check refuses a name that systemctl would read as an option.
 func check(
@@ -59,7 +58,7 @@ func check(
 func unitPath(
 	name string,
 ) string {
-	return unitDir + "/" + prefix + name + ".service"
+	return initsys.SystemdPath(prefix + name)
 }
 
 // debian reads through gohai, gets each unit file from the object store with
@@ -180,7 +179,7 @@ func (d *debian) Deploy(
 	if err != nil || !result.Changed {
 		return false, err
 	}
-	if err := d.systemctl(ctx, "daemon-reload"); err != nil {
+	if err := d.run(ctx, initsys.SystemdReload()); err != nil {
 		// The unit file stays as it was asked, and its record is marked: a
 		// retry with the same input then changes and reloads again.
 		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
@@ -219,7 +218,8 @@ func (d *debian) Remove(
 		return false, err
 	}
 	unit := prefix + name + ".service"
-	if err := d.systemctl(ctx, "disable", "--now", unit); err != nil {
+	disable := initsys.SystemdDisable(unit)
+	if err := d.run(ctx, disable[0]); err != nil {
 		return false, err
 	}
 	previous, readErr := d.fs.ReadFile(path)
@@ -227,7 +227,7 @@ func (d *debian) Remove(
 		managedfile.DeleteInput{Path: path}); err != nil {
 		return false, err
 	}
-	if err := d.systemctl(ctx, "daemon-reload"); err != nil {
+	if err := d.run(ctx, initsys.SystemdReload()); err != nil {
 		if readErr != nil {
 			return false, err
 		}
@@ -272,7 +272,7 @@ func (d *debian) Act(
 	if done(action, d.state(ctx, unit)) {
 		return false, nil
 	}
-	if err := d.systemctl(ctx, action, unit+".service"); err != nil {
+	if err := d.run(ctx, initsys.SystemdAct(action, unit)); err != nil {
 		return false, err
 	}
 
@@ -324,12 +324,13 @@ func (d *debian) record(
 }
 
 // systemctl runs systemctl with args, as root.
-func (d *debian) systemctl(
+// run runs argv, a command of initsys, with sudo.
+func (d *debian) run(
 	ctx context.Context,
-	args ...string,
+	argv []string,
 ) error {
-	if _, err := d.exec.RunPrivilegedCmd(ctx, "systemctl", args); err != nil {
-		return fmt.Errorf("systemctl %s: %w", args[0], err)
+	if _, err := d.exec.RunPrivilegedCmd(ctx, argv[0], argv[1:]); err != nil {
+		return fmt.Errorf("%s %s: %w", argv[0], argv[1], err)
 	}
 
 	return nil

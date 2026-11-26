@@ -27,13 +27,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/initsys"
+
 	"gopkg.in/yaml.v3"
 )
 
 // The files of the service on each platform, and the name of the service.
 const (
-	systemdUnit  = "/etc/systemd/system/osapi-agent.service"
-	launchdPlist = "/Library/LaunchDaemons/io.osapi.agent.plist"
 	launchdLabel = "io.osapi.agent"
 	serviceName  = "osapi-agent"
 )
@@ -166,55 +166,45 @@ func configYAML(
 		"# used one time: after the join the agent reads agent.pki.key_dir.\n"), out...)
 }
 
-// service is the unit file of the platform, its body, and the commands that
-// start it.
+// agentService is the agent run with configFile, as the service manager runs
+// it.
+func agentService(
+	bin string,
+	configFile string,
+) initsys.Service {
+	return initsys.Service{
+		Name: serviceName, Label: launchdLabel, Description: "osapi agent",
+		Args:   []string{bin, "-f", configFile, "agent", "start"},
+		Log:    "/var/log/osapi-agent.log",
+		Header: []string{"Written by osapi agent service install."},
+	}
+}
+
+// service is the file of the service on the platform, its body, and the
+// commands that start it.
 func service(
 	goos string,
 	bin string,
 	configFile string,
 ) (string, []byte, [][]string, error) {
+	s := agentService(bin, configFile)
 	switch goos {
 	case "linux":
-		body := fmt.Sprintf("# Written by osapi agent service install.\n[Unit]\n"+
-			"Description=osapi agent\nAfter=network-online.target\nWants=network-online.target\n\n"+
-			"[Service]\nExecStart=%s -f %s agent start\nRestart=always\nRestartSec=5\n\n"+
-			"[Install]\nWantedBy=multi-user.target\n", bin, configFile)
-
-		return systemdUnit, []byte(body), [][]string{
-			{"systemctl", "daemon-reload"},
-			{"systemctl", "enable", "--now", serviceName},
-		}, nil
+		return initsys.SystemdPath(
+				serviceName,
+			), initsys.SystemdUnit(
+				s,
+			), initsys.SystemdEnable(
+				serviceName,
+			), nil
 	case "darwin":
-		body := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Written by osapi agent service install. -->
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>%s</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>%s</string>
-    <string>-f</string>
-    <string>%s</string>
-    <string>agent</string>
-    <string>start</string>
-  </array>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>KeepAlive</key>
-  <true/>
-  <key>StandardOutPath</key>
-  <string>/var/log/osapi-agent.log</string>
-  <key>StandardErrorPath</key>
-  <string>/var/log/osapi-agent.log</string>
-</dict>
-</plist>
-`, launchdLabel, bin, configFile)
-
-		return launchdPlist, []byte(body), [][]string{
-			{"launchctl", "bootstrap", "system", launchdPlist},
-		}, nil
+		return initsys.LaunchdPath(
+				launchdLabel,
+			), initsys.LaunchdPlist(
+				s,
+			), initsys.LaunchdLoad(
+				launchdLabel,
+			), nil
 	}
 
 	return "", nil, nil, fmt.Errorf("%s: %w", goos, ErrPlatform)
@@ -225,13 +215,10 @@ func stop(
 	goos string,
 ) [][]string {
 	if goos == "darwin" {
-		return [][]string{{"launchctl", "bootout", "system/" + launchdLabel}}
+		return initsys.LaunchdUnload(launchdLabel)
 	}
 
-	return [][]string{
-		{"systemctl", "disable", "--now", serviceName},
-		{"systemctl", "daemon-reload"},
-	}
+	return initsys.SystemdDisable(serviceName)
 }
 
 // writeFile writes data to file with perm, and makes its directory.
