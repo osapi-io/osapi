@@ -31,7 +31,6 @@ import (
 	"path/filepath"
 	"strings"
 
-
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/job"

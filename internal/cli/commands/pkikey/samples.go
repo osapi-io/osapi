@@ -49,13 +49,19 @@ var (
 		Keys:      1,
 	}
 	sampleList = ListOutput{Items: []Key{
-		sampleController, sampleAgent,
+		sampleController,
+		sampleAgent,
 		{
-			Name: "agent-encryption", Kind: KindEncryption, Component: "agent", State: StateOK,
-			File: "/etc/osapi/pki/agent/agent.ekey", Algorithm: "ECDH P-256",
+			Name:      "agent-encryption",
+			Kind:      KindEncryption,
+			Component: "agent",
+			State:     StateOK,
+			File:      "/etc/osapi/pki/agent/agent.ekey",
+			Algorithm: "ECDH P-256",
 			PublicKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 		},
-		sampleJetStream, sampleVault,
+		sampleJetStream,
+		sampleVault,
 	}}
 	sampleRotate = RotateOutput{Key: sampleVault, Values: 12}
 )

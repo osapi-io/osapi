@@ -12,7 +12,7 @@ osapi pki list --json                             # each key and each certificat
 ```
 
 The keys are `controller` (Ed25519, signs jobs), `agent` (Ed25519) and
-`agent-encryption` (X25519) of the agent, `jetstream` (the key of the NATS
+`agent-encryption` (ECDH P-256) of the agent, `jetstream` (the key of the NATS
 store, ChaCha20-Poly1305), and `vault:<name>` (AES-256-GCM) for each vault of
 type nats. A public key shows its fingerprint; a secret key shows its ID, the
 first 16 hex digits of its SHA-256, never the key. The agent's fingerprint
