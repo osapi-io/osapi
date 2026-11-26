@@ -25,7 +25,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
+	"strings"
 	"time"
+
+	"github.com/nats-io/nkeys"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+	"github.com/osapi-io/osapi/internal/natscallout"
 
 	"github.com/osapi-io/osapi/internal/audit"
 
@@ -109,9 +115,8 @@ func startEnrollment(
 
 	// A join takes a use of a token in the same bucket that join token
 	// create writes.
-	watcher.SetJoinTokens(
-		jointoken.Store{KV: conn.NATS, Bucket: enrollmentCfg.Bucket, Now: time.Now},
-	)
+	tokens := jointoken.Store{KV: conn.NATS, Bucket: enrollmentCfg.Bucket, Now: time.Now}
+	watcher.SetJoinTokens(tokens)
 
 	// Each admission decision is an event of the machine's timeline.
 	watcher.SetTimeline(conn.Jobs)
@@ -130,6 +135,23 @@ func startEnrollment(
 	background(ctx, log, "join over NATS", func(ctx context.Context) error {
 		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, agentUser)
 	})
+	// With a NATS server's auth callout, the controller decides each
+	// connection of a join or an agent.
+	if cfg.Controller.Join.Callout.IssuerKeyFile != "" {
+		svc, err := calloutService(cfg, namespace, watcher, tokens, log)
+		if err != nil {
+			return nil, fmt.Errorf("auth callout: %w", err)
+		}
+		background(ctx, log, "auth callout", func(ctx context.Context) error {
+			c, err := calloutConnect(log, cfg)
+			if err != nil {
+				return err
+			}
+			defer bus.Close(c.NC)
+
+			return svc.Serve(ctx, c.NC.Subscribe)
+		})
+	}
 	// In operator mode an agent renews the JWT of its NATS user; only an
 	// admitted machine gets a new one.
 	if mint != nil {
@@ -161,6 +183,17 @@ func joinAgentUser(
 	namespace string,
 ) (admission.AgentUser, admission.Mint, error) {
 	j := cfg.Controller.Join
+	// With auth callout, the agent connects with its own user key, which
+	// the callout admits as the machine: the join gives it no user.
+	if j.Callout.IssuerKeyFile != "" {
+		return func(req pki.JoinRequest) (pki.JoinNATS, error) {
+			if req.NATSUserKey == "" {
+				return pki.JoinNATS{}, errNoUserKey
+			}
+
+			return pki.JoinNATS{Callout: true}, nil
+		}, nil, nil
+	}
 	if j.SigningKeyFile == "" {
 		_, user := cfg.JoinUsers()
 
@@ -201,4 +234,57 @@ func joinAgentUser(
 
 		return pki.JoinNATS{JWT: token}, nil
 	}, mint, nil
+}
+
+// calloutService is osapi's auth callout: the issuer key of
+// controller.join.callout, and the decisions of the watcher, with the join
+// and agent roles of the config.
+func calloutService(
+	cfg config.Config,
+	namespace string,
+	watcher *admission.Watcher,
+	tokens admission.TokenChecker,
+	log *slog.Logger,
+) (natscallout.Service, error) {
+	c := cfg.Controller.Join.Callout
+	data, err := os.ReadFile(c.IssuerKeyFile)
+	if err != nil {
+		return natscallout.Service{}, fmt.Errorf("read the issuer key: %w", err)
+	}
+	issuer, err := nkeys.FromSeed([]byte(strings.TrimSpace(string(data))))
+	if err != nil {
+		return natscallout.Service{}, fmt.Errorf("the issuer key: %w", err)
+	}
+	if pub, _ := issuer.PublicKey(); !nkeys.IsValidPublicAccountKey(pub) {
+		return natscallout.Service{}, errors.New("the issuer key is not an account key (SA...)")
+	}
+	join, _ := bus.RolePermissions(bus.RoleJoin, namespace, cfg.NATS)
+	agent, _ := bus.RolePermissions(bus.RoleAgent, namespace, cfg.NATS)
+	// The config's check refuses an agent_ttl that is not a duration.
+	ttl, _ := time.ParseDuration(cfg.Controller.Join.AgentTTL)
+
+	return natscallout.Service{
+		Issuer:  issuer,
+		Account: c.Account,
+		Logger:  log,
+		Decide: watcher.Callout(admission.CalloutRoles{
+			Join: join, Agent: agent, AgentTTL: ttl, Tokens: tokens,
+		}),
+	}, nil
+}
+
+// calloutConnect connects to the controller's NATS as the callout user,
+// one of the server's auth_users, which the callout does not decide.
+var calloutConnect = func(
+	log *slog.Logger,
+	cfg config.Config,
+) (*natsclient.Client, error) {
+	n := cfg.Controller.NATS
+	n.Auth = cfg.Controller.Join.Callout.Auth
+	opts, err := bus.ConnectionOptions(n, "osapi-auth-callout")
+	if err != nil {
+		return nil, err
+	}
+
+	return bus.Dial(log, opts)
 }

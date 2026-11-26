@@ -38,9 +38,12 @@ type PendingAgent struct {
 	// JoinLabels are, for a join, the labels of its token. They are not
 	// stored with a pending request.
 	JoinLabels map[string]string `json:"-"`
-	MachineID  string            `json:"machine_id"`
-	Hostname   string            `json:"hostname"`
-	PublicKey  []byte            `json:"public_key"`
+	// NATSUserKey is, for a join, the agent's own NATS user key. It is not
+	// stored with a pending request.
+	NATSUserKey string `json:"-"`
+	MachineID   string `json:"machine_id"`
+	Hostname    string `json:"hostname"`
+	PublicKey   []byte `json:"public_key"`
 	// EncryptionKey is the agent's public X25519 key, in the nkeys form.
 	EncryptionKey string    `json:"encryption_key"`
 	Fingerprint   string    `json:"fingerprint"`
@@ -69,6 +72,10 @@ type AcceptedAgent struct {
 	JoinToken string `json:"join_token,omitempty"`
 	// JoinLabels are the labels of that join token, which the agent took.
 	JoinLabels map[string]string `json:"join_labels,omitempty"`
+	// NATSUserKey is the public key (U...) of the agent's own NATS user,
+	// which it sent at its join. A NATS server's auth callout admits a
+	// connection with this key, and no other, as this agent.
+	NATSUserKey string `json:"nats_user_key,omitempty"`
 
 	// SupersededKey is the key replaced by the most recent rotation. It is
 	// absent unless a rotation is inside its grace period.

@@ -258,6 +258,57 @@ func (s *MethodsPublicTestSuite) TestCreateNATS() {
 		s.Equal("SHA256:ab", u.Query().Get("fp"))
 	})
 
+	s.Run(
+		"with auth callout: no user in the string, and the callout user reads the server",
+		func() {
+			defer join.SetNATSFingerprint(func(_ string, auth []nats.Option) (string, error) {
+				s.Len(auth, 1, "it connects as the callout user")
+
+				return "SHA256:ab", nil
+			})()
+			d := natsDeps("tls://hub:4222")
+			d.Config.NATS.Server.Auth.Users = nil
+			d.Config.Controller.Join.Callout = config.JoinCallout{
+				IssuerKeyFile: "/etc/osapi/nats/issuer.nk",
+				Auth: config.NATSAuth{
+					Type:     "user_pass",
+					Username: "callout",
+					Password: "cp",
+				},
+			}
+			got, err := join.Create(ctx, d, in)
+			s.Require().NoError(err)
+			u, _ := url.Parse(got.Join)
+			s.Empty(u.Query().Get("user"), "the agent connects with its token")
+			s.Empty(u.Query().Get("pass"))
+			s.Equal(got.Token, u.Query().Get("token"))
+		},
+	)
+
+	s.Run("with auth callout: the callout user's nkey reads the server", func() {
+		seed := filepath.Join(s.T().TempDir(), "callout.nk")
+		u, _ := nkeys.CreateUser()
+		raw, _ := u.Seed()
+		s.Require().NoError(os.WriteFile(seed, raw, 0o600))
+		defer join.SetNATSFingerprint(func(_ string, auth []nats.Option) (string, error) {
+			s.Len(auth, 1)
+
+			return "SHA256:ab", nil
+		})()
+		d := natsDeps("tls://hub:4222")
+		d.Config.NATS.Server.Auth.Users = nil
+		d.Config.Controller.Join.Callout = config.JoinCallout{
+			IssuerKeyFile: "/etc/osapi/nats/issuer.nk",
+			Auth:          config.NATSAuth{Type: "nkey", NKeyFile: seed},
+		}
+		_, err := join.Create(ctx, d, in)
+		s.Require().NoError(err)
+
+		d.Config.Controller.Join.Callout.Auth.NKeyFile = "/no/such/seed"
+		_, err = join.Create(ctx, d, in)
+		s.ErrorContains(err, "the callout user's nkey")
+	})
+
 	s.Run("a tls:// server that cannot be read makes no token", func() {
 		defer join.SetNATSFingerprint(func(string, []nats.Option) (string, error) {
 			return "", errors.New("refused")

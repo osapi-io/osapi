@@ -341,6 +341,38 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		s.NotContains(err.Error(), "the JWT of the join")
 	})
 
+	s.Run("with auth callout the agent keeps its own user key and connects with it", func() {
+		defer agent.SetJoinNATSFns(id, func(string, []nats.Option, string, []byte) ([]byte, error) {
+			return json.Marshal(pki.JoinReply{
+				ControllerPublicKey: make([]byte, 32),
+				NATS:                pki.JoinNATS{Callout: true},
+			})
+		})()
+
+		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.Require().NoError(err)
+		s.Equal("nkey", got.Agent.NATS.Auth.Type)
+		s.Equal("/pki/nats-user.nk", got.Agent.NATS.Auth.NKeyFile)
+		info, err := s.fs.Stat("/pki/nats-user.nk")
+		s.Require().NoError(err)
+		s.Equal("-rw-------", info.Mode().Perm().String(), "the seed is 0600")
+	})
+
+	s.Run("with auth callout a user key that cannot be kept is the error", func() {
+		s.Require().NoError(s.fs.MkdirAll("/pki/nats-user.nk/x", 0o700))
+		defer agent.SetJoinNATSFns(id, func(string, []nats.Option, string, []byte) ([]byte, error) {
+			return json.Marshal(pki.JoinReply{
+				ControllerPublicKey: make([]byte, 32),
+				NATS:                pki.JoinNATS{Callout: true},
+			})
+		})()
+
+		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.Error(err)
+	})
+
 	s.Run("a user nkey that cannot be made is the error", func() {
 		defer agent.SetNewNATSUser(func() ([]byte, string, error) {
 			return nil, "", errors.New("no entropy")

@@ -169,6 +169,28 @@ func (s *JoinTokenPublicTestSuite) TestCreate() {
 	}
 }
 
+// TestCheck: the auth callout checks a token at each connection of its
+// join, and takes no use of it.
+func (s *JoinTokenPublicTestSuite) TestCheck() {
+	ctx := context.Background()
+	token, made, err := s.store.Create(ctx, time.Hour, 1, nil)
+	s.Require().NoError(err)
+
+	for range 3 {
+		t, err := s.store.Check(ctx, token)
+		s.Require().NoError(err)
+		s.Equal(made.ID, t.ID)
+		s.Equal(1, t.UsesLeft, "a check takes no use")
+	}
+	_, err = s.store.Check(ctx, "nope")
+	s.ErrorIs(err, jointoken.ErrInvalid)
+
+	_, err = s.store.Consume(ctx, token)
+	s.Require().NoError(err)
+	_, err = s.store.Check(ctx, token)
+	s.ErrorIs(err, jointoken.ErrUsed, "a token with no use left does not admit")
+}
+
 func (s *JoinTokenPublicTestSuite) TestConsume() {
 	ctx := context.Background()
 	token, _, err := s.store.Create(ctx, time.Hour, 1, nil)

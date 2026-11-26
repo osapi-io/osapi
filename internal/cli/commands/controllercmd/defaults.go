@@ -48,6 +48,11 @@ var Defaults = config.Controller{
 		RenotifyInterval: "5m",
 	},
 	UI: config.UIConfig{Enabled: true},
+	// The callout's own connection, which only a server with auth callout
+	// uses.
+	Join: config.ControllerJoin{
+		Callout: config.JoinCallout{Auth: config.NATSAuth{Type: "none"}},
+	},
 	PKI: config.ControllerPKI{
 		KeyDir:              "/etc/osapi/pki",
 		RotationGracePeriod: "24h",

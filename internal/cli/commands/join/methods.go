@@ -31,6 +31,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/config"
+
 	"github.com/osapi-io/osapi/internal/audit"
 
 	"github.com/nats-io/nats.go"
@@ -138,6 +140,15 @@ func natsJoin(
 		q.Set("user", user.Username)
 		q.Set("pass", user.Password)
 		auth = append(auth, nats.UserInfo(user.Username, user.Password))
+	} else if c := d.Config.Controller.Join.Callout; c.IssuerKeyFile != "" {
+		// With auth callout the string carries no user: the agent connects
+		// with its token. This command reads the server's certificate as
+		// the callout user, which the callout does not decide.
+		opt, err := calloutAuth(c.Auth)
+		if err != nil {
+			return nil, err
+		}
+		auth = append(auth, opt)
 	}
 	if ns := d.Config.Controller.NATS.Namespace; ns != "" {
 		q.Set("ns", ns)
@@ -299,4 +310,21 @@ func bootstrapCreds(
 	}
 
 	return signer.NewCreds("osapi-join", perms, expires)
+}
+
+// calloutAuth is the NATS option of the callout user: an nkey, or a user
+// and a password.
+func calloutAuth(
+	a config.NATSAuth,
+) (nats.Option, error) {
+	if a.Type == "nkey" {
+		opt, err := nats.NkeyOptionFromSeed(a.NKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("the callout user's nkey: %w", err)
+		}
+
+		return opt, nil
+	}
+
+	return nats.UserInfo(a.Username, a.Password), nil
 }

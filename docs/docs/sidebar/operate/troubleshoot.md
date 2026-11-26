@@ -22,12 +22,14 @@ Find the symptom. Then run the command that shows the cause.
 
 ## NATS
 
-| Symptom                                                | Cause                                                                          | Do this                                                                                     |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `no responders` at a join                              | No controller answers the join, or the bootstrap user cannot send the request. | Start the controller. Make the NATS credentials again after an upgrade.                     |
-| `Authorization Violation`                              | The NATS user of a process does not have a subject that the process uses.      | `osapi nats permissions get --role <role>`. Make the credentials again, or add the subject. |
-| `maximum control line exceeded`                        | Your NATS server refuses a long user JWT.                                      | Set `max_control_line: 32KB` in the config of your server.                                  |
-| `osapi client health status` shows a stream as missing | The streams and buckets were not made on your server.                          | `osapi nats setup`.                                                                         |
+| Symptom                                                 | Cause                                                                                           | Do this                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `no responders` at a join                               | No controller answers the join, or the bootstrap user cannot send the request.                  | Start the controller. Make the NATS credentials again after an upgrade.                     |
+| `Authorization Violation`                               | The NATS user of a process does not have a subject that the process uses.                       | `osapi nats permissions get --role <role>`. Make the credentials again, or add the subject. |
+| `authentication error` for an agent, with auth callout  | The callout refused it: the host is revoked or not admitted, or it joined again with a new key. | `osapi client audit list` has the `nats.connect` entry with the reason.                     |
+| `nkeys not supported by the server` at an agent's start | The server offers no nonce: it has no nkey user.                                                | Make the callout user an nkey ([2. NATS](nats.md#auth-callout)).                            |
+| `maximum control line exceeded`                         | Your NATS server refuses a long user JWT.                                                       | Set `max_control_line: 32KB` in the config of your server.                                  |
+| `osapi client health status` shows a stream as missing  | The streams and buckets were not made on your server.                                           | `osapi nats setup`.                                                                         |
 
 ## The controller and the CLI
 

@@ -119,10 +119,12 @@ func (w *Watcher) join(
 		Fingerprint:   pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey),
 		RequestedAt:   nowFn(),
 		JoinLabels:    t.Labels,
+		NATSUserKey:   req.NATSUserKey,
 	}
 	if err := w.recordAgentKey(ctx, pending, t.ID); err != nil {
 		return nil, nil, fmt.Errorf("admit %s: %w", req.MachineID, err)
 	}
+	w.indexNATSUserKey(ctx, req.NATSUserKey, req.MachineID)
 	// A join decides as admit does: an earlier request, rejection or
 	// revocation of the machine is cleared.
 	for _, prefix := range []string{kvPrefix, rejectedKVPrefix, revokedKVPrefix} {

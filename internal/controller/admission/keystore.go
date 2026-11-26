@@ -81,6 +81,7 @@ func (w *Watcher) recordAgentKey(
 	record := AcceptedAgent{
 		JoinToken:     joinToken,
 		JoinLabels:    pending.JoinLabels,
+		NATSUserKey:   pending.NATSUserKey,
 		MachineID:     pending.MachineID,
 		Hostname:      pending.Hostname,
 		PublicKey:     pending.PublicKey,

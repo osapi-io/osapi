@@ -102,4 +102,7 @@ type JoinNATS struct {
 	Password string `json:"password,omitempty"`
 	// JWT is, in operator mode, the user JWT of the agent's NATS user key.
 	JWT string `json:"jwt,omitempty"`
+	// Callout is, with a NATS server's auth callout, that the agent
+	// connects with its own NATS user key, which the callout admits.
+	Callout bool `json:"callout,omitempty"`
 }

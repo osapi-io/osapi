@@ -51,6 +51,10 @@ NATS user:
   controller cannot give an agent more than that role, also when the controller
   is not trusted.
 
+- **Auth callout:** no user. The server asks the controller about each
+  connection. The controller admits the agent's own NATS user key, which the
+  agent sent at its join, and only while the machine is admitted.
+
 A shared user does not let one agent answer for another. The controller admits
 each agent by its own key, and checks the signature of each answer
 ([Agent identity](agent-identity.md)).

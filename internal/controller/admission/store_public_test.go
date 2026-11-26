@@ -27,6 +27,7 @@ import (
 	"errors"
 	"log/slog"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -48,10 +49,21 @@ type fakeKV struct {
 	ctrl    *gomock.Controller
 	data    map[string][]byte
 	keysErr error
+	// failGet and failPut fail a read or a write of a key with this prefix.
+	failGet string
+	failPut string
+	// beforeGet runs at the start of each read, with the key.
+	beforeGet func(key string)
 }
 
 func (f *fakeKV) KVGet(_ context.Context, _ string, key string) (jetstream.KeyValueEntry, error) {
 	v, ok := f.data[key]
+	if f.beforeGet != nil {
+		f.beforeGet(key)
+	}
+	if f.failGet != "" && strings.HasPrefix(key, f.failGet) {
+		return nil, errors.New("kv: down")
+	}
 	if !ok {
 		return nil, jetstream.ErrKeyNotFound
 	}
@@ -62,6 +74,9 @@ func (f *fakeKV) KVGet(_ context.Context, _ string, key string) (jetstream.KeyVa
 }
 
 func (f *fakeKV) KVPut(_ context.Context, _ string, key string, value []byte) (uint64, error) {
+	if f.failPut != "" && strings.HasPrefix(key, f.failPut) {
+		return 0, errors.New("kv: full")
+	}
 	f.data[key] = value
 
 	return 1, nil

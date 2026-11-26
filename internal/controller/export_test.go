@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+
 	"github.com/osapi-io/osapi/internal/controller/admission"
 
 	"github.com/osapi-io/osapi/internal/templates"
@@ -245,4 +247,35 @@ func ExportJoinAgentUser(
 	namespace string,
 ) (admission.AgentUser, admission.Mint, error) {
 	return joinAgentUser(cfg, namespace)
+}
+
+// ExportCalloutService calls calloutService, with no watcher decisions.
+func ExportCalloutService(
+	cfg config.Config,
+) error {
+	_, err := calloutService(cfg, "osapi", nil, nil, slog.Default())
+
+	return err
+}
+
+// ExportCalloutConnect calls calloutConnect.
+func ExportCalloutConnect(
+	cfg config.Config,
+) error {
+	c, err := calloutConnect(slog.Default(), cfg)
+	if err == nil {
+		c.NC.Close()
+	}
+
+	return err
+}
+
+// SetCalloutConnect swaps the connection of the auth callout.
+func SetCalloutConnect(
+	fn func(*slog.Logger, config.Config) (*natsclient.Client, error),
+) func() {
+	was := calloutConnect
+	calloutConnect = fn
+
+	return func() { calloutConnect = was }
 }
