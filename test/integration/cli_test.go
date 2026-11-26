@@ -29,6 +29,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -76,7 +77,7 @@ func (s *CommandSmokeSuite) TestRefusals() {
 		for i, r := range c.refusals {
 			count++
 			s.Run(fmt.Sprintf("%s %d", c.path, i+1), func() {
-				args := append(strings.Fields(c.path), command.Args(r)...)
+				args := append(strings.Fields(c.path), refusalArgs(r)...)
 				stdout, stderr, code := runDirect(s.fx.dir, command.Stdin(r), args...)
 				s.NotZero(code, "%s: a refusal succeeded: %s", strings.Join(args, " "), stdout)
 				s.NotRegexp(connectionError, stderr,
@@ -106,7 +107,7 @@ func (s *CommandSmokeSuite) TestExamples() {
 				words, stdin := s.fx.example(c, flags)
 				args := append(strings.Fields(c.path), words...)
 				s.fx.before(c, i, args)
-				stdout, stderr, code := runRetried(s.fx.dir, stdin, args...)
+				stdout, stderr, code := runRetried(s.fx.dir, stdin, p.env, args...)
 				s.Require().Zero(code, "%s: %s%s", strings.Join(args, " "), stderr, stdout)
 				if slices.Contains(args, "--json") {
 					s.True(json.Valid([]byte(strings.TrimSpace(stdout))),
@@ -118,13 +119,37 @@ func (s *CommandSmokeSuite) TestExamples() {
 	}
 }
 
+// refusalArgs are the flags of r, a refusal's input. A field that r leaves
+// zero and whose flag has a default, such as join token create's
+// --expires, is given as its zero value: left out, the flag's default
+// fills it, and the refusal is a valid call.
+func refusalArgs(
+	r any,
+) []string {
+	args := command.Args(r)
+	v := reflect.ValueOf(r)
+	for _, f := range command.Flags(v.Type()) {
+		if v.Type().Field(f.Index).Tag.Get("default") == "" || !v.Field(f.Index).IsZero() {
+			continue
+		}
+		switch f.Kind {
+		case reflect.String:
+			args = append(args, "--"+f.Name+"=")
+		case reflect.Int, reflect.Int64:
+			args = append(args, "--"+f.Name, "0")
+		}
+	}
+
+	return args
+}
+
 // connectionError is an error of the connection, not of the input. It does
 // not match a URL in the help, such as tls://nats.example.com:4222.
 var connectionError = regexp.MustCompile(
 	`(?i)connection refused|no such host|x509: |tls: (handshake|bad|failed)|remote error: tls`,
 )
 
-// runDirect is runCLIIn with the controller's URL in place of the spec
+// runDirect is runCLIWith with the controller's URL in place of the spec
 // proxy's.
 func runDirect(
 	dir string,
@@ -149,16 +174,17 @@ func runDirect(
 	}
 }
 
-// runRetried is runCLIIn, again for up to 30 seconds while the command says
+// runRetried is runCLIWith, again for up to 30 seconds while the command says
 // to try again, as a trace does until its spans reach the backend.
 func runRetried(
 	dir string,
 	stdin string,
+	env []string,
 	args ...string,
 ) (string, string, int) {
 	deadline := time.Now().Add(30 * time.Second)
 	for {
-		stdout, stderr, code := runCLIIn(dir, stdin, args...)
+		stdout, stderr, code := runCLIWith(dir, stdin, env, args...)
 		if code == 0 || !strings.Contains(stderr, "try again") || time.Now().After(deadline) {
 			return stdout, stderr, code
 		}
@@ -204,11 +230,12 @@ func weight(
 	}
 }
 
-// runCLIIn is runCLIStdin with dir as the command's working directory, so
+// runCLIWith is runCLIEnv with dir as the command's working directory, so
 // a command that writes where it runs, such as skill install, writes there.
-func runCLIIn(
+func runCLIWith(
 	dir string,
 	stdin string,
+	env []string,
 	args ...string,
 ) (string, string, int) {
 	prev, err := os.Getwd()
@@ -220,7 +247,7 @@ func runCLIIn(
 	}
 	defer func() { _ = os.Chdir(prev) }()
 
-	return runCLIStdin(stdin, args...)
+	return runCLIEnv(stdin, env, args...)
 }
 
 // fixtures are the things that the examples name, which the suite makes:
@@ -343,6 +370,12 @@ func (f *fixtures) value(
 		return f.once("trace", func() string {
 			stdout, stderr, _ := runCLI("client", "agent", "list")
 			m := traceID.FindStringSubmatch(stdout + stderr)
+			// The CLI prints a trace only when tracing is on, as in the
+			// lab, which runs Jaeger. The suite's own server has no backend.
+			if m == nil && !deployment() {
+				f.s.T().
+					Skip("the suite's server has no tracing backend: just int in the lab runs trace get")
+			}
 			f.s.Require().NotNil(m, "the CLI printed no trace: %s%s", stdout, stderr)
 
 			return m[1]

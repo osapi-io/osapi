@@ -227,11 +227,33 @@ func serverEnv() []string {
 }
 
 func clientEnv() []string {
-	return append(
+	env := append(
 		os.Environ(),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=http://127.0.0.1:%d", proxyPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
 	)
+	if os.Getenv("OSAPI_INTEGRATION_OSAPIFILE") != "" {
+		return env
+	}
+
+	return append(env, hostEnv()...)
+}
+
+// hostEnv is what a command that runs on the host of the suite's server
+// reads besides the client's settings, such as join token create and nats
+// setup: the key directories of the server, its NATS port, and the addresses
+// that a join string names. Without them such a command reads
+// /etc/osapi/pki, which the runner does not have.
+func hostEnv() []string {
+	return []string{
+		fmt.Sprintf("OSAPI_NATS_SERVER_PORT=%d", natsPort),
+		fmt.Sprintf("OSAPI_NATS_SERVER_KEY_DIR=%s", filepath.Join(tempDir, "pki", "nats")),
+		fmt.Sprintf("OSAPI_NATS_SERVER_URL=tls://localhost:%d", natsPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_NATS_PORT=%d", natsPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_API_URL=https://127.0.0.1:%d", apiPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_PKI_KEY_DIR=%s", filepath.Join(tempDir, "pki", "controller")),
+		fmt.Sprintf("OSAPI_AGENT_PKI_KEY_DIR=%s", filepath.Join(tempDir, "pki", "agent")),
+	}
 }
 
 // apiClient is an HTTP client that trusts the API of the suite: its
@@ -319,9 +341,19 @@ func runCLIStdin(
 	stdin string,
 	args ...string,
 ) (string, string, int) {
+	return runCLIEnv(stdin, nil, args...)
+}
+
+// runCLIEnv is runCLIStdin with env added to the client's environment,
+// such as the NATS user that a command connects as.
+func runCLIEnv(
+	stdin string,
+	env []string,
+	args ...string,
+) (string, string, int) {
 	fullArgs := append([]string{"-f", configPath}, args...)
 	cmd := exec.Command(binaryPath, fullArgs...)
-	cmd.Env = clientEnv()
+	cmd.Env = append(clientEnv(), env...)
 	cmd.Stdin = strings.NewReader(stdin)
 
 	var stdout, stderr bytes.Buffer

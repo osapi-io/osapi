@@ -51,6 +51,8 @@ import (
 // and run again must report changed: false.
 type BehaviorSmokeSuite struct {
 	suite.Suite
+	// family is the platform of the target, which platform reads once.
+	family behavior.PlatformName
 }
 
 // call is a command line and what it reads from standard input.
@@ -209,6 +211,14 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 					if ex.NotLive != "" {
 						s.T().Skip("runs on the fake host only: " + ex.NotLive)
 					}
+					// An example of another platform, such as a plist on a
+					// Mac, sets up a host that this one is not: on Linux its
+					// After deploys a plist as a unit, which breaks the
+					// systemd examples after it (osapi-io/osapi#1545).
+					if platform := s.platform(); !runsOn(ex, platform) {
+						s.T().
+							Skipf("an example of %v, and the target is %s", ex.Platforms, platform)
+					}
 					// An interface example deletes dummy, which the
 					// examples after it need. This runs last, after the
 					// example's own remove.
@@ -270,6 +280,46 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 // weeks old, and an install of a version that the mirror no longer serves
 // fails with exit status 100. The refresh's own example can run after the
 // package examples, so the suite runs it first.
+// platform is the platform of the target, as gohai's family.Detect names
+// it, such as debian or darwin: the os_info.family of the agent that the
+// suite targets.
+func (s *BehaviorSmokeSuite) platform() behavior.PlatformName {
+	if s.family != "" {
+		return s.family
+	}
+	out, stderr, code := runCLI("client", "agent", "list", "--json")
+	s.Require().Zero(code, stderr)
+	var resp struct {
+		Items []struct {
+			Hostname string `json:"hostname"`
+			OSInfo   struct {
+				Family string `json:"family"`
+			} `json:"os_info"`
+		} `json:"items"`
+	}
+	s.Require().NoError(parseJSON(out, &resp))
+	for _, a := range resp.Items {
+		if target == "_any" || a.Hostname == target {
+			s.family = behavior.PlatformName(a.OSInfo.Family)
+
+			return s.family
+		}
+	}
+	s.FailNow("no agent matches the target " + target)
+
+	return ""
+}
+
+// runsOn reports whether ex runs on a host of platform: an example of no
+// platform runs on each, and one of PlatformLinux on each but macOS.
+func runsOn(
+	ex behavior.Example,
+	platform behavior.PlatformName,
+) bool {
+	return ex.RunsOn(platform) ||
+		platform != behavior.PlatformDarwin && ex.RunsOn(behavior.PlatformLinux)
+}
+
 func (s *BehaviorSmokeSuite) refreshIndex() {
 	b := behavior.Lookup("updates")
 	if b == nil || b.Method("update") == nil {
