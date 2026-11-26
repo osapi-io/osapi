@@ -92,7 +92,7 @@ func resolvable(
 	return a.Verified || !enforceVerified
 }
 
-// labelSegmentRe matches NATS subject-safe segments (same as job.labelSegmentRegex).
+// labelSegmentRe matches a NATS subject-safe segment of a label key or value.
 var labelSegmentRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 var (

@@ -29,8 +29,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -133,30 +131,6 @@ func (c *Client) agentTimeline(
 	})
 
 	return events, nil
-}
-
-// ComputeAgentState returns the current state from timeline events.
-func ComputeAgentState(
-	events []job.TimelineEvent,
-) types.AgentState {
-	if len(events) == 0 {
-		return types.AgentReady
-	}
-
-	// The latest event that schedules decides: the timeline also has
-	// lifecycle events, such as admitted or hostname_changed, which do not.
-	for i := len(events) - 1; i >= 0; i-- {
-		switch events[i].Event {
-		case "drain":
-			return types.AgentDraining
-		case "cordoned":
-			return types.AgentCordoned
-		case "undrain", "ready":
-			return types.AgentReady
-		}
-	}
-
-	return types.AgentReady
 }
 
 // GetAgentTimeline returns the timeline of an agent, in an agent.timeline
