@@ -60,7 +60,11 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
 	behavior.Requires(netplan.Behavior),
-	behavior.RunsOnPlatform(behavior.PlatformLinux, "resolvectl", "ip"),
+	behavior.RunsOnPlatform(behavior.PlatformLinux, "ip"),
+	// A host with no systemd-resolved, such as openSUSE with NetworkManager
+	// or a container, has no resolvectl: get reads resolv.conf there
+	// (osapi-io/osapi#1496).
+	behavior.RunsIfPresent("resolvectl"),
 	behavior.RunsIfPresent("ethtool"),
 	behavior.RunsOnPlatform(behavior.PlatformDarwin, "scutil"),
 	behavior.Writes(netplan.Dir+"/osapi-dns-*.yaml"),
