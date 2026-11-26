@@ -10,8 +10,8 @@ The dashboard provides a visual interface for fleet management:
 
 - **Dashboard**: an overview of the fleet health, with agent cards (machine ID,
   fingerprint, version, scheduling state, and the timeline of the agent, newest
-  first, which the card reads when you open it), the component status,
-  JetStream metrics and node conditions
+  first, which the card reads when you open it), the component status, JetStream
+  metrics and node conditions
 - **Behaviors**: what osapi manages on a host, by area. The page of each
   behavior shows its methods, their permissions, platforms and chains, and their
   examples.
