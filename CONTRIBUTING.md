@@ -665,8 +665,9 @@ OSAPI_INTEGRATION_TARGET=ubuntu-1 \
 just go-unit-int
 ```
 
-Against the lab, the agents keep their own config. A command test skips when the
-agent has `agent.command.enabled` off, as the lab's agents do.
+Against the lab, the agents keep their own config. The lab's agents have
+`agent.command.enabled` on, so the command tests run there. A command test skips
+on an agent that has it off.
 
 ### Test helpers
 
