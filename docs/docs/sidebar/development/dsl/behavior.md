@@ -1459,9 +1459,9 @@ Use: An example's fake host gives, on debian: Prints for systemctl
 list-unit-files --type=service --no-legend --no-pager; systemctl list-units
 --type=service --all --no-pager --plain. On rhel: Prints for systemctl
 list-unit-files --type=service --no-legend --no-pager; systemctl list-units
---type=service --all --no-pager --plain. On darwin: nothing. With content, it
-reads more under those paths. gohai collector get --name services shows it in
-full; services is its package.
+--type=service --all --no-pager --plain. On darwin: Prints for launchctl list;
+launchctl print-disabled system. With content, it reads more under those paths.
+gohai collector get --name services shows it in full; services is its package.
 
 ### `ssh`
 
