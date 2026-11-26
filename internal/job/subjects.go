@@ -108,34 +108,6 @@ const (
 	NetworkOperationPing = "ping"
 )
 
-// BuildQuerySubject creates a subject for query operations.
-// Example: jobs.query.hostname
-func BuildQuerySubject(
-	hostname string,
-) string {
-	return fmt.Sprintf("%s.%s", JobsQueryPrefix, hostname)
-}
-
-// BuildModifySubject creates a subject for modify operations.
-// Example: jobs.modify.hostname
-func BuildModifySubject(
-	hostname string,
-) string {
-	return fmt.Sprintf("%s.%s", JobsModifyPrefix, hostname)
-}
-
-// BuildQuerySubjectForAllHosts creates a query subject targeting all hosts.
-// Example: jobs.query.*
-func BuildQuerySubjectForAllHosts() string {
-	return BuildQuerySubject(AllHosts)
-}
-
-// BuildModifySubjectForAllHosts creates a modify subject targeting all hosts.
-// Example: jobs.modify.*
-func BuildModifySubjectForAllHosts() string {
-	return BuildModifySubject(AllHosts)
-}
-
 // ParseSubject extracts the prefix and routing target from a job subject.
 // Supported formats (with optional namespace prefix):
 //   - [ns.]jobs.{type}._any
@@ -184,55 +156,6 @@ func ParseSubject(
 	return prefix, hostname, nil
 }
 
-// BuildAgentSubscriptionPattern creates subscription patterns for agents.
-// Agents typically subscribe to their own hostname and special routing patterns.
-// If labels are provided, hierarchical prefix subscriptions are included for
-// each label. For example, a label "group: web.dev.us-east" generates subscriptions
-// at every prefix level (group:web, group:web.dev, group:web.dev.us-east).
-func BuildAgentSubscriptionPattern(
-	hostname string,
-	labels map[string]string,
-) []string {
-	labelCount := 0
-	for _, value := range labels {
-		labelCount += len(strings.Split(value, "."))
-	}
-
-	patterns := make([]string, 0, 3+labelCount)
-	patterns = append(
-		patterns,
-		fmt.Sprintf(
-			"%s.*.host.%s",
-			jobsBase,
-			SanitizeHostname(hostname),
-		), // Direct messages to this host
-		fmt.Sprintf("%s.*.%s", jobsBase, AnyHost),       // Load-balanced messages
-		fmt.Sprintf("%s.*.%s", jobsBase, BroadcastHost), // Broadcast messages
-	)
-
-	for key, value := range labels {
-		patterns = append(patterns, BuildLabelSubjects(key, value)...)
-	}
-
-	return patterns
-}
-
-// BuildAgentQueueGroup returns the queue group name for load-balanced subscriptions.
-// This ensures only one agent processes each "_any" message.
-func BuildAgentQueueGroup(
-	category string,
-) string {
-	return fmt.Sprintf("agents.%s", category)
-}
-
-// IsSpecialHostname checks if a hostname is a special routing directive.
-func IsSpecialHostname(
-	hostname string,
-) bool {
-	return hostname == AllHosts || hostname == AnyHost ||
-		hostname == LocalHost || hostname == BroadcastHost
-}
-
 // SanitizeHostname converts a hostname to a valid NATS consumer/routing name.
 // NATS consumer names and routing must be alphanumeric with underscores only.
 func SanitizeHostname(
@@ -241,30 +164,6 @@ func SanitizeHostname(
 	// Replace any non-alphanumeric characters (except underscores) with underscores
 	reg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
 	return reg.ReplaceAllString(hostname, "_")
-}
-
-// labelSegmentRegex validates that each segment of a label key or value is NATS subject-safe.
-var labelSegmentRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-
-// ValidateLabel checks that a label key and value are valid for use in NATS subjects.
-// Keys must be a single segment matching [a-zA-Z0-9_-]+.
-// Values may be hierarchical (dot-separated), where each segment matches [a-zA-Z0-9_-]+.
-func ValidateLabel(
-	key, value string,
-) error {
-	if !labelSegmentRegex.MatchString(key) {
-		return fmt.Errorf("invalid label key %q: must match [a-zA-Z0-9_-]+", key)
-	}
-	for _, segment := range strings.Split(value, ".") {
-		if !labelSegmentRegex.MatchString(segment) {
-			return fmt.Errorf(
-				"invalid label value segment %q in %q: each segment must match [a-zA-Z0-9_-]+",
-				segment,
-				value,
-			)
-		}
-	}
-	return nil
 }
 
 // ParseTarget parses a --target value into routing components.
@@ -312,28 +211,6 @@ func IsBroadcastTarget(
 	return strings.Contains(target, ":")
 }
 
-// BuildLabelSubjects builds subscription subjects for a label with hierarchical
-// prefix matching. For a label "group: web.dev.us-east", it returns subjects
-// for every prefix level:
-//
-//	jobs.*.label.group.web
-//	jobs.*.label.group.web.dev
-//	jobs.*.label.group.web.dev.us-east
-//
-// This enables targeting at any level of the hierarchy: --target group:web
-// matches all agents whose group label starts with "web".
-func BuildLabelSubjects(
-	key, value string,
-) []string {
-	segments := strings.Split(value, ".")
-	subjects := make([]string, 0, len(segments))
-	for i := range segments {
-		prefix := strings.Join(segments[:i+1], ".")
-		subjects = append(subjects, fmt.Sprintf("%s.*.label.%s.%s", jobsBase, key, prefix))
-	}
-	return subjects
-}
-
 // agentCanReceiveJobs returns true if the agent is in a state where it has
 // active NATS consumers and can process jobs. Agents that are cordoned,
 // draining, or pending PKI enrollment are excluded from broadcast expectations.
@@ -345,44 +222,6 @@ func agentCanReceiveJobs(
 		return false
 	default:
 		return true
-	}
-}
-
-// CountExpectedAgents returns the number of agents expected to respond to a
-// broadcast target. For _all it returns len(agents). For label targets it
-// filters to agents whose label value equals or is a prefix of the target value
-// (mirroring hierarchical NATS subject matching).
-func CountExpectedAgents(
-	agents []AgentInfo,
-	target string,
-) int {
-	routingType, key, value := ParseTarget(target)
-
-	switch routingType {
-	case BroadcastHost:
-		count := 0
-		for i := range agents {
-			if !agentCanReceiveJobs(agents[i].State) {
-				continue
-			}
-			count++
-		}
-		return count
-	case "label":
-		count := 0
-		for i := range agents {
-			if !agentCanReceiveJobs(agents[i].State) {
-				continue
-			}
-			if agentVal, ok := agents[i].Labels[key]; ok {
-				if agentVal == value || strings.HasPrefix(agentVal, value+".") {
-					count++
-				}
-			}
-		}
-		return count
-	default:
-		return 0
 	}
 }
 
