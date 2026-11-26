@@ -39,6 +39,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsperms"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natssetup"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/pkicert"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/role"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/sdk"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill"

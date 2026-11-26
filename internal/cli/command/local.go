@@ -157,6 +157,7 @@ const (
 	ParentController Parent = "controller"
 	ParentDSL        Parent = "dsl"
 	ParentNATS       Parent = "nats"
+	ParentPKI        Parent = "pki"
 )
 
 // Values are the commands that a group can be Under, for the enum rule.
@@ -172,7 +173,7 @@ func (p Parent) Valid() bool {
 // KnownParents are the commands that a group can be Under. Add a constant
 // here to make a new one.
 func KnownParents() []Parent {
-	return []Parent{ParentAgent, ParentController, ParentDSL, ParentNATS}
+	return []Parent{ParentAgent, ParentController, ParentDSL, ParentNATS, ParentPKI}
 }
 
 // Under puts the group's command under the command of words, such as

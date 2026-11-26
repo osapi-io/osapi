@@ -41,6 +41,7 @@ var parentIdents = map[Parent]string{
 	ParentController: "ParentController",
 	ParentDSL:        "ParentDSL",
 	ParentNATS:       "ParentNATS",
+	ParentPKI:        "ParentPKI",
 }
 
 // parentWords are the words of KnownParents, for a message.

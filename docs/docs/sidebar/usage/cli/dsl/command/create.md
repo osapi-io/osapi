@@ -91,11 +91,11 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag            | Description                                                                                                                             | Default |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `--description` | What the group is, in one line (required)                                                                                               |         |
-| `--name`        | The group's name: its command under osapi (required)                                                                                    |         |
-| `--under`       | The word of the root that the group goes under, where it runs: agent, controller, dsl or nats (agent, controller, dsl, nats) (required) |         |
+| Flag            | Description                                                                                                                                  | Default |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--description` | What the group is, in one line (required)                                                                                                    |         |
+| `--name`        | The group's name: its command under osapi (required)                                                                                         |         |
+| `--under`       | The word of the root that the group goes under, where it runs: agent, controller, dsl or nats (agent, controller, dsl, nats, pki) (required) |         |
 
 ## Global flags
 
