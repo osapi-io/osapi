@@ -15,6 +15,8 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
+import { useCerts } from "@/hooks/use-certs";
+import { CERT_WARN_DAYS, certSummary } from "@/lib/certs";
 import { Activity } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Count } from "@/components/ui/count";
@@ -37,6 +39,8 @@ export function Dashboard() {
     loading: agentLoading,
     refresh: refreshAgents,
   } = useAgents();
+  const certs = useCerts();
+  const expiry = certSummary(certs.certs);
 
   // Filter out pending agents — they're managed in Admin > Admission.
   const activeAgents = useMemo(
@@ -97,7 +101,7 @@ export function Dashboard() {
         <>
           {/* Row 1: what needs attention. The NATS version is in the NATS
               card and the consumer count is on the stream's line. */}
-          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
             {health.agents && (
               <StatCard
                 label="Agents"
@@ -134,6 +138,32 @@ export function Dashboard() {
                 label="Dead letters"
                 value={<Count n={health.jobs.dlq} kind="dlq" bare />}
                 detail="jobs that used up their retries"
+              />
+            )}
+            {canCall("ListPKICerts") && certs.certs.length > 0 && (
+              <StatCard
+                label="Certificates"
+                value={
+                  expiry.soonest ? (
+                    <span
+                      className={
+                        (expiry.soonest?.days_left ?? 0) < CERT_WARN_DAYS
+                          ? "text-status-error"
+                          : undefined
+                      }
+                    >
+                      {expiry.soonest?.days_left} days
+                    </span>
+                  ) : (
+                    "none read"
+                  )
+                }
+                detail={
+                  expiry.soonest
+                    ? `${expiry.soonest?.name} on ${expiry.soonest?.hostname} expires first; ${expiry.ok} of ${expiry.total} read`
+                    : `${expiry.total} not made`
+                }
+                truncateDetail
               />
             )}
             <StatCard
