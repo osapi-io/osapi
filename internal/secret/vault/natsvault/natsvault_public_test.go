@@ -184,7 +184,7 @@ func (s *NATSVaultPublicTestSuite) TestOpen() {
 			keys: func() natsvault.Keys {
 				return natsvault.Keys{FS: memfs.New(), File: "/etc/osapi/secrets.key"}
 			},
-			wantErr: "make it with osapi controller secret key create",
+			wantErr: "make it with osapi pki key create --name vault:<name>",
 		},
 	}
 

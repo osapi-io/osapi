@@ -27,7 +27,7 @@ start reads them: the join string is used one time.
 A host with no join string asks to be admitted, and waits as `pending`:
 
 ```sh
-osapi agent key fingerprint --json                       # on the host
+osapi pki key get --name agent --json                    # on the host
 osapi client admission list --state pending --json
 osapi client admission admit --machine-id <id> --fingerprint <fp>
 ```

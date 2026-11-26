@@ -32,6 +32,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli/commands/agentservice"
 	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
+	"github.com/osapi-io/osapi/internal/cli/commands/pkikey"
+	"github.com/osapi-io/osapi/internal/cli/commands/pkilist"
 
 	"github.com/osapi-io/osapi/internal/audit"
 
@@ -57,7 +59,6 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
-	"github.com/osapi-io/osapi/internal/cli/commands/agentkey"
 
 	// The generated command groups register themselves in their init.
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
@@ -66,11 +67,9 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
-	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/join"
 	natsauthcmd "github.com/osapi-io/osapi/internal/cli/commands/natsauth"
-	"github.com/osapi-io/osapi/internal/cli/commands/natskey"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsperms"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
@@ -79,7 +78,6 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
-	"github.com/osapi-io/osapi/internal/cli/commands/vaultkey"
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -118,23 +116,12 @@ func init() {
 	command.Provide(natsserver.Group, natsDeps)
 	command.Provide(agentcmd.Group, agentDeps)
 	command.Provide(controllercmd.Group, controllerDeps)
-	command.Provide(controllerkey.Group, func() controllerkey.Deps {
-		return controllerkey.Deps{FS: osfs.NewWithNoIdm(), KeyDir: appConfig.Controller.PKI.KeyDir}
-	})
 	command.Provide(natsauthcmd.Group, func() natsauthcmd.Deps {
 		return natsauthcmd.Deps{FS: appFs, Config: appConfig, Audit: localAudit}
 	})
 	command.Provide(natsperms.Group, func() natsperms.Deps {
 		return natsperms.Deps{Config: appConfig}
 	})
-	command.Provide(natskey.Group, func() natskey.Deps {
-		return natskey.Deps{
-			FS:      osfs.NewWithNoIdm(),
-			KeyFile: appConfig.NATS.Server.JetStream.KeyFile,
-			Audit:   localAudit,
-		}
-	})
-	command.Provide(vaultkey.Group, vaultKeyDeps)
 	command.Provide(natssetup.Group, func() natssetup.Deps {
 		return natssetup.Deps{
 			Config:  appConfig,
@@ -143,23 +130,21 @@ func init() {
 			Audit:   localAudit,
 		}
 	})
+	command.Provide(pkikey.Group, pkiKeyDeps)
+	command.Provide(pkilist.Group, func() pkilist.Deps {
+		return pkilist.Deps{
+			Keys: func() []pkikey.Key { return pkikey.Keys(pkiKeyDeps()) },
+			Certs: func() []pki.Cert {
+				return pki.ReadCerts(osfs.NewWithNoIdm(), config.CertSources(appConfig), time.Now())
+			},
+		}
+	})
 	command.Provide(pkicert.Group, func() pkicert.Deps {
 		return pkicert.Deps{
 			FS:    osfs.NewWithNoIdm(),
 			Certs: func() []pki.CertSource { return config.CertSources(appConfig) },
 			Now:   time.Now,
 			Audit: localAudit,
-		}
-	})
-	command.Provide(agentkey.Group, func() agentkey.Deps {
-		fs := osfs.NewWithNoIdm()
-
-		return agentkey.Deps{
-			FS:     fs,
-			KeyDir: appConfig.Agent.PKI.KeyDir,
-			Identity: func() (*identity.Identity, error) {
-				return identity.GetIdentity(fs, appConfig.Agent.Hostname)
-			},
 		}
 	})
 	command.Provide(agentservice.Group, func() agentservice.Deps {
@@ -395,13 +380,20 @@ func writeLocalAudit(
 	return store.Write(ctx, e)
 }
 
-// vaultKeyDeps is what osapi controller secret key uses: the file system, the
-// config, and a connection to NATS as the controller makes it.
-func vaultKeyDeps() vaultkey.Deps {
-	return vaultkey.Deps{
-		Audit:  localAudit,
-		FS:     osfs.NewWithNoIdm(),
-		Config: appConfig,
+// pkiKeyDeps is what osapi pki key uses: the file system, the config, the
+// identity of this machine, and a connection to NATS as the controller makes
+// it, for the rotation of a vault key.
+func pkiKeyDeps() pkikey.Deps {
+	fs := osfs.NewWithNoIdm()
+
+	return pkikey.Deps{
+		Audit:     localAudit,
+		FS:        fs,
+		Config:    appConfig,
+		LookupEnv: os.LookupEnv,
+		Identity: func() (*identity.Identity, error) {
+			return identity.GetIdentity(fs, appConfig.Agent.Hostname)
+		},
 		Dial: func(context.Context) (natsvault.KV, func(), error) {
 			n := appConfig.Controller.NATS
 			opts, err := bus.ConnectionOptions(n, "osapi-vault-key")

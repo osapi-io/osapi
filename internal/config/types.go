@@ -255,7 +255,7 @@ type NATSServer struct {
 // embedded server. With no KeyFile, the store is not encrypted.
 type NATSServerJetStream struct {
 	// KeyFile is the file of the key that encrypts the store.
-	KeyFile string `mapstructure:"key_file" doc:"File of the key that encrypts each stream and bucket in store_dir. Unset, the store is not encrypted. osapi nats key create makes it." choice:"empty leaves the store unencrypted; osapi nats key create makes one"`
+	KeyFile string `mapstructure:"key_file" doc:"File of the key that encrypts each stream and bucket in store_dir. Unset, the store is not encrypted. osapi pki key create --name jetstream makes it." choice:"empty leaves the store unencrypted; osapi pki key create --name jetstream makes one"`
 }
 
 // NATSStream configuration for JetStream stream settings.

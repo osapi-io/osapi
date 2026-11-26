@@ -406,7 +406,7 @@ paths:
       x-osapi-method: get
   /api/admission/{machine_id}/admit:
     post:
-      description: 'Admits a pending machine. The fingerprint must be the one that `osapi agent key fingerprint` prints on the machine: it proves that the request came from the machine the operator is looking at.'
+      description: 'Admits a pending machine. The fingerprint must be the one that `osapi pki key get --name agent` prints on the machine: it proves that the request came from the machine the operator is looking at.'
       operationId: AdmitMachine
       parameters:
         - description: The machine ID of the node.
@@ -9326,7 +9326,7 @@ components:
     AdmitRequest:
       properties:
         fingerprint:
-          description: The fingerprint that osapi agent key fingerprint prints on the machine.
+          description: The fingerprint that osapi pki key get --name agent prints on the machine.
           example: SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef
           maxLength: 255
           minLength: 1

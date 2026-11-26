@@ -185,7 +185,7 @@ An agent with no join string, and with its NATS settings in its config, asks to
 join at its first start. It asks again at each heartbeat until an admin decides.
 
 ```bash
-osapi agent key fingerprint                         # on the host: its machine ID and fingerprint
+osapi pki key get --name agent                      # on the host: its fingerprint, and the admit command
 osapi client admission list --state pending         # the hosts that wait
 osapi client admission admit --machine-id <id> --fingerprint SHA256:...
 osapi client admission reject --machine-id <id> --reason "unknown host"

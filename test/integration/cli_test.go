@@ -377,8 +377,6 @@ func (f *fixtures) value(
 
 			return key
 		})
-	case v == "default" && c.group == "controller secret key":
-		return f.once("vault", func() string { return "intcli" + f.stamp })
 	case v == "1a2b3c4d":
 		return f.once("join token", func() string {
 			var resp struct {

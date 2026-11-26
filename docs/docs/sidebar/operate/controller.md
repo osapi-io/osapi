@@ -104,8 +104,8 @@ start, with mode 0600. Keep a copy of the key: without it, no value in the vault
 decrypts.
 
 ```bash
-osapi controller secret key create --vault default   # make the key before the first start
-osapi controller secret key rotate --vault default   # change the key
+osapi pki key create --name vault:default   # make the key before the first start
+osapi pki key rotate --name vault:default   # change the key
 ```
 
 A secret setting of the config can be a reference to a vault, in place of the
@@ -125,7 +125,7 @@ vault. [Secrets](secure/secrets.md) tells how to write and read a secret.
 | `controller.secrets.vaults[].name`     | string | none                                                                                                             | none                              | The name that a reference gives, such as default in secret://default/registry-token.                                                       |
 | `controller.secrets.vaults[].type`     | string | none                                                                                                             | none                              | The type of the vault, such as nats.                                                                                                       |
 | `controller.secrets.vaults[].targets`  | list   | none                                                                                                             | none                              | The targets that the secrets of the vault can go to, such as group:prod. Empty is each host.                                               |
-| `controller.secrets.vaults[].key_file` | string | none                                                                                                             | none                              | For a type that encrypts, such as nats: the file of the vault key. osapi controller secret key create writes it.                           |
+| `controller.secrets.vaults[].key_file` | string | none                                                                                                             | none                              | For a type that encrypts, such as nats: the file of the vault key. osapi pki key create --name vault:<name> writes it.                     |
 | `controller.secrets.vaults[].key_env`  | string | none                                                                                                             | none                              | For a type that encrypts, such as nats: the environment variable of the vault key, in place of key_file.                                   |
 | `controller.secrets.vaults[].config`   | map    | none                                                                                                             | none                              | The settings of the type. The struct of the type gives its keys.                                                                           |
 
@@ -135,7 +135,7 @@ vault. [Secrets](secure/secrets.md) tells how to write and read a secret.
 
 ```bash
 osapi client health status         # the controller, NATS, and each stream and bucket
-osapi controller key fingerprint   # the key that each agent gets at its join
+osapi pki key get --name controller   # the key that each agent gets at its join
 ```
 
 Then open the UI and sign in.

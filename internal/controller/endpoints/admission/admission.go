@@ -92,11 +92,11 @@ var Group = endpoint.Register(endpoint.Define(
 		ID("AdmitMachine").
 		Describe("Admit a pending machine").
 		Explain("Admits a pending machine. The fingerprint must be the one that "+
-			"`osapi agent key fingerprint` prints on the machine: it proves that the request "+
+			"`osapi pki key get --name agent` prints on the machine: it proves that the request "+
 			"came from the machine the operator is looking at.").
 		Returns("The machine is admitted.").
 		Command("Admit a pending machine",
-			"Run `osapi agent key fingerprint` on the machine, and give the fingerprint that it\n"+
+			"Run `osapi pki key get --name agent` on the machine, and give the fingerprint that it\n"+
 				"prints. The controller admits the machine only when the fingerprint is the\n"+
 				"one of the key in its request.").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...").

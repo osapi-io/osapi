@@ -136,13 +136,13 @@ password to its hash. A secret that the step leaves set is sealed, not refused.
 ## The store on the disk
 
 The embedded NATS server encrypts each stream and bucket in its `store_dir` when
-`nats.server.jetstream.key_file` names a key. `osapi nats key create` makes the
-key on the NATS host. Thus a person who reads the disk or a backup of the store
-does not read the jobs, the audit log or the agent registry. The key does not
-protect a value from a NATS user, because the server decrypts each message for a
-user that can read the stream.
-[Encryption at rest](../operate/nats.md#osapis-nats) has the setting, and what
-happens when the key is lost.
+`nats.server.jetstream.key_file` names a key.
+`osapi pki key create --name jetstream` makes the key on the NATS host. Thus a
+person who reads the disk or a backup of the store does not read the jobs, the
+audit log or the agent registry. The key does not protect a value from a NATS
+user, because the server decrypts each message for a user that can read the
+stream. [Encryption at rest](../operate/nats.md#osapis-nats) has the setting,
+and what happens when the key is lost.
 
 ## The JWT signing keys
 
@@ -183,10 +183,10 @@ osapi has one type, `nats`, in `internal/secret/vault/natsvault`:
 - The vault key comes from `key_file` or `key_env`. The vault reads it at each
   call, so a rotation applies with no restart.
 
-`osapi controller secret key create` writes a key, and
-`osapi controller secret key rotate` adds a new key, encrypts each value again
-and removes the old key. A rotation does not encrypt the earlier versions in the
-history again, so they do not decrypt after it.
+`osapi pki key create --name vault:<name>` writes a key, and
+`osapi pki key rotate --name vault:<name>` adds a new key, encrypts each value
+again and removes the old key. A rotation does not encrypt the earlier versions
+in the history again, so they do not decrypt after it.
 [Configuration](../operate/controller.md#secrets-vault) has the settings.
 
 ## References in the config
