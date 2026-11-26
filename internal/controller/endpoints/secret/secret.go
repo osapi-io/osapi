@@ -169,7 +169,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Status(http.StatusNoContent).
 		Command("Delete a key from a vault", "").
 		Example("--vault default --key registry-token").
-		CheckFails("client secret get", "--vault default --key registry-token", "not found").
+		CheckFails("client secret get", "--vault default --key registry-token", "not_found").
 		Fails("a vault name that is not letters, digits, - or _", DeleteInput{Vault: "a.b", Key: "k"}).
 		Fails("a vault name over 64 characters", DeleteInput{Vault: long(65), Key: "k"}).
 		Fails("a key that is not letters, digits, - or _", DeleteInput{Vault: "default", Key: "a.b"}).

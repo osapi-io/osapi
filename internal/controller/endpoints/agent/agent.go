@@ -213,7 +213,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"labels.group", "web", "labels.dc", "east", "max_jobs", 4,
 			"log_level", "debug", "facts_interval", "5m").
 		Check("client agent get", "--hostname web-01",
-			"labels.group", "web", "labels.dc", "east", "config_behind", false).
+			"labels.group", "web", "labels.dc", "east", "config_behind", command.Absent).
 		Fails("a hostname over 255 characters", ConfigSetInput{Hostname: long}).
 		Fails("max jobs below 1", ConfigSetInput{
 			Hostname: "web-01", Body: ConfigRequest{MaxJobs: -1},
