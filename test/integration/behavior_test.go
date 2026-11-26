@@ -316,8 +316,11 @@ func (s *BehaviorSmokeSuite) readBackProblem(
 	want map[string]any,
 ) string {
 	stdout, stderr, code := runCLIStdin(c.stdin, c.args...)
-	if code != 0 {
-		return "the read failed: " + stderr
+	switch {
+	case code != 0 && rb.None && strings.Contains(stderr+stdout, "not_found"):
+		return ""
+	case code != 0:
+		return "the read failed: " + stderr + stdout
 	}
 	var body struct {
 		Results []map[string]any `json:"results"`
@@ -372,7 +375,9 @@ func readBackWant(
 }
 
 // rowHas reports whether row has each field of want, compared as JSON: a
-// field that the row leaves out matches the zero value of its want.
+// field that the row leaves out matches the zero value of its want, and a
+// list matches a list that has each of its values, as an interface's
+// addresses have its link-local address too.
 func rowHas(
 	row map[string]any,
 	want map[string]any,
@@ -382,7 +387,36 @@ func rowHas(
 		if !ok && (w == nil || w == false || w == "" || w == float64(0)) {
 			continue
 		}
+		if list, isList := w.([]any); isList {
+			if !hasEach(got, list) {
+				return false
+			}
+
+			continue
+		}
 		if !reflect.DeepEqual(got, w) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// hasEach reports whether got is a list that has each value of want.
+func hasEach(
+	got any,
+	want []any,
+) bool {
+	have, ok := got.([]any)
+	if !ok {
+		return len(want) == 0
+	}
+	for _, w := range want {
+		found := false
+		for _, h := range have {
+			found = found || reflect.DeepEqual(h, w)
+		}
+		if !found {
 			return false
 		}
 	}

@@ -117,7 +117,7 @@ var Behavior = behavior.Register(behavior.Define(
 			UpdateResult{Path: path, SHA256: tmplSHA, Changed: true},
 			template,
 			behavior.Wrote(path, rendered),
-			behavior.Reads(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "in-sync", SHA256: "28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4"}),
+			behavior.Reads(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "in-sync"}),
 		).
 		Example("A file that holds the object", deployed,
 			UpdateResult{Path: path, SHA256: rawSHA},

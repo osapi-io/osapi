@@ -285,7 +285,7 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.After(osapi0Static),
 				behavior.Wrote(osapi0File, "network:\n  version: 2\n  dummy-devices:\n    osapi0:\n"+
 					"      dhcp4: true\n      dhcp6: false\n"),
-				behavior.Reads(GetInput{Name: "osapi0"}, Entry{Name: "osapi0"}, "name", "addresses"),
+				behavior.ReadsNone(GetInput{Name: "osapi0"}, Entry{Name: "osapi0", Addresses: []string{"10.0.1.5/24"}}),
 			)...,
 		).
 		Fails("An interface osapi does not configure", UpdateInput{Name: "osapi0", DHCP4: true},

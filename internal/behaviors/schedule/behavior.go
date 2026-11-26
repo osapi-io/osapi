@@ -170,7 +170,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest"},
 			stored, deployed,
 			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
-			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Interval: "daily"}),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *"}),
 		).
 		Fails("An object the store does not have",
 			CreateInput{Name: "osapitest", Object: "nosuch", Schedule: "0 2 * * *"}, "not found").

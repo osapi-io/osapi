@@ -80,7 +80,7 @@ type ReadBack struct {
 // the read whose input type input is, run with input, answers a row with
 // the fields of want that fields names, or with none, each field of want
 // that is not its zero value. Name a field to compare its zero value, such
-// as managed for false. The read can be the parent's, as a key's read for a
+// as managed for false. A list matches a list that has each of its values. The read can be the parent's, as a key's read for a
 // user. The integration test runs it, so a write that reports changed but
 // does nothing fails.
 func Reads(

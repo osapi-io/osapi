@@ -417,7 +417,9 @@ dsl behavior validate checks that a read takes the input, that the want is its
 row type, and that each name is a field of it.
 
 Use: On each write example that runs on the live host. Name a field to compare
-its zero value, such as managed for false after a delete.
+its zero value, such as managed for false after a delete. A list matches a list
+that has each of its values, as an interface's addresses also have its
+link-local address.
 
 ### `NoReadBack("why")`
 

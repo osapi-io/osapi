@@ -223,10 +223,12 @@ such as
 The integration test runs that read on the live host after the example, so a
 write that reports a change and makes none fails. With no field names, it
 compares each field of the want that is not zero; name a field to compare a zero
-value, such as `managed` for false. After a delete, `behavior.ReadsNone` says
-that no row has the want, or that the read reports not found. A write whose
-result no read shows, such as a command's run, gets `.ReadsNothing(why)` on the
-method. `dsl behavior validate` fails a live write example with none of them.
+value, such as `managed` for false. A list matches a list that has each of its
+values, so an interface's `addresses` can have its link-local address too. After
+a delete, `behavior.ReadsNone` says that no row has the want, or that the read
+reports not found. A write whose result no read shows, such as a command's run,
+gets `.ReadsNothing(why)` on the method. `dsl behavior validate` fails a live
+write example with none of them.
 
 ## Build a new one
 

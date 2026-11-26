@@ -36,6 +36,12 @@ import (
 // not one, so a server cannot add a directive of its own to the file.
 const serverPattern = `^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$`
 
+// ntpReadBack is why no read shows what a write of the servers changed:
+// ntp get answers the sources that chrony resolved, as addresses, and not
+// the names that the write set.
+var ntpReadBack = behavior.NoReadBack("ntp get answers the sources that chrony resolved, " +
+	"as addresses, and not the names of the servers that the write set")
+
 var serverRE = regexp.MustCompile(serverPattern)
 
 // The chronyc output of a host that is synchronized to time.cloudflare.com.
@@ -100,12 +106,12 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Changed: true},
 			behavior.Wrote(sourcesFile, "server 0.pool.ntp.org iburst\nserver 1.pool.ntp.org iburst\n"),
 			behavior.Ran("chronyc", "reload", "sources"),
-			behavior.Reads(GetInput{}, Status{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}}),
+			ntpReadBack,
 		).
 		Example("The servers that the host has", CreateInput{Servers: []string{"0.pool.ntp.org"}},
 			Result{},
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
-			behavior.Reads(GetInput{}, Status{Servers: []string{"0.pool.ntp.org"}}),
+			ntpReadBack,
 		).
 		Fails("No servers", CreateInput{}, "required").
 		Fails("An empty list of servers", CreateInput{Servers: []string{}}, "min").
@@ -123,12 +129,12 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
 			behavior.Wrote(sourcesFile, "server time.cloudflare.com iburst\n"),
 			behavior.Ran("chronyc", "reload", "sources"),
-			behavior.Reads(GetInput{}, Status{Servers: []string{"time.cloudflare.com"}}),
+			ntpReadBack,
 		).
 		Example("The servers that the file has", UpdateInput{Servers: []string{"0.pool.ntp.org"}},
 			Result{},
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
-			behavior.Reads(GetInput{}, Status{Servers: []string{"0.pool.ntp.org"}}),
+			ntpReadBack,
 		).
 		Fails("When osapi set no servers", UpdateInput{Servers: []string{"0.pool.ntp.org"}},
 			"osapi manages no servers").
@@ -146,10 +152,10 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
 			behavior.Removed(sourcesFile),
 			behavior.Ran("chronyc", "reload", "sources"),
-			behavior.ReadsNone(GetInput{}, Status{Servers: []string{"time.cloudflare.com"}}, "servers"),
+			ntpReadBack,
 		).
 		Example("When osapi set no servers", DeleteInput{}, Result{},
-			behavior.ReadsNone(GetInput{}, Status{Servers: []string{"time.cloudflare.com"}}, "servers"),
+			ntpReadBack,
 		),
 ))
 
