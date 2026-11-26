@@ -134,7 +134,7 @@ an agent records acknowledged, started, completed, failed or skipped; and
 timeout is a host whose agent did not answer in time.
 
 A `string`, one of `submitted`, `acknowledged`, `started`, `completed`,
-`failed`, `skipped`, `retried`, `timeout`.
+`failed`, `skipped`, `retried`, `timeout`, `refused`.
 
 ### CreateJobResponse
 

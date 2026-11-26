@@ -49,6 +49,8 @@ var StatusPriority = map[types.AgentJobStatus]int{
 	types.AgentJobStatusSkipped:      3,
 	types.AgentJobStatusCompleted:    4,
 	types.AgentJobStatusRetried:      4,
+	// The controller's refusal of the result outranks what the agent said.
+	types.AgentJobStatusRefused: 5,
 }
 
 // SignedEnvelope wraps a job or response payload with an Ed25519 signature.

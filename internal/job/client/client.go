@@ -383,6 +383,8 @@ func (c *Client) publishAndWait(
 			// a job failure, not data.
 			response, verifyErr := c.verifyResponse(ctx, entry.Value())
 			if verifyErr != nil {
+				c.refused(ctx, jobID, verifyErr)
+
 				return "", nil, endSpan(colSpan, fmt.Errorf(
 					"response verification failed for job %s: %w",
 					jobID, verifyErr,
@@ -567,6 +569,11 @@ func (c *Client) publishAndCollect(
 					slog.String("job_id", jobID),
 					slog.String("error", verifyErr.Error()),
 				)
+				// A refusal is the host's answer: it is a row, not a
+				// timeout later.
+				if row, ok := c.refused(ctx, jobID, verifyErr); ok {
+					responses[row.Hostname] = row
+				}
 
 				continue
 			}

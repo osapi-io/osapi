@@ -2367,6 +2367,18 @@ func (s *JobsPublicTestSuite) TestComputeStatusFromKeyNames() {
 			},
 		},
 		{
+			name: "a result that the controller refused outranks the agent's completed",
+			keys: []string{
+				"jobs.job-1",
+				"status.job-1.completed.agent1.101",
+				"status.job-1.refused.agent1.102",
+			},
+			expectedOrderIDs: []string{"job-1"},
+			validateFunc: func(got map[string]string) {
+				s.Equal(map[string]string{"job-1": "failed"}, got)
+			},
+		},
+		{
 			name: "multi-agent skipped and completed shows completed",
 			keys: []string{
 				"jobs.job-1",

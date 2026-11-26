@@ -20,4 +20,5 @@ export const AgentJobStatus = {
   skipped: 'skipped',
   retried: 'retried',
   timeout: 'timeout',
+  refused: 'refused',
 } as const;

@@ -93,6 +93,11 @@ const (
 	// Distinct from failed, which means the operation ran and did not
 	// succeed: a timeout says nothing about whether it ran.
 	AgentJobStatusTimeout AgentJobStatus = "timeout"
+	// AgentJobStatusRefused is a host whose result the controller refused,
+	// because the agent's signature is not the admitted key's. Whatever the
+	// agent reported for the job, the controller did not take its result
+	// (osapi-io/osapi#1484).
+	AgentJobStatusRefused AgentJobStatus = "refused"
 )
 
 // Values are the statuses of a job on a host, in the order of their life.
@@ -106,6 +111,7 @@ func (AgentJobStatus) Values() []AgentJobStatus {
 		AgentJobStatusSkipped,
 		AgentJobStatusRetried,
 		AgentJobStatusTimeout,
+		AgentJobStatusRefused,
 	}
 }
 

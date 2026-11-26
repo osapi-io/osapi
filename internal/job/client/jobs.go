@@ -671,7 +671,7 @@ func (c *Client) computeStatusFromEvents(
 		switch state {
 		case types.AgentJobStatusCompleted:
 			completed++
-		case types.AgentJobStatusFailed:
+		case types.AgentJobStatusFailed, types.AgentJobStatusRefused:
 			failed++
 		case types.AgentJobStatusSkipped:
 			skippedCount++
@@ -865,7 +865,7 @@ func computeStatusFromKeyNames(
 			switch state {
 			case types.AgentJobStatusCompleted, types.AgentJobStatusRetried:
 				completed++
-			case types.AgentJobStatusFailed:
+			case types.AgentJobStatusFailed, types.AgentJobStatusRefused:
 				failed++
 			case types.AgentJobStatusSkipped:
 				skipped++
