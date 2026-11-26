@@ -25,8 +25,10 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/audit"
@@ -41,10 +43,12 @@ import (
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
+	pkiEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/pki"
 	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
 	uiassets "github.com/osapi-io/osapi/ui"
@@ -108,6 +112,7 @@ func handlers(
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			secretsDeps(d),
 			secretDeps(d),
+			pkiDeps(d),
 			// Each behavior's endpoint group, which the gen packages that
 			// internal/behaviors/all/gen imports register.
 			dispatch.Deps{JobClient: d.jobs},
@@ -164,6 +169,23 @@ func agentDeps(
 	}
 
 	return deps
+}
+
+// pkiDeps is what the pki group uses: the job client, whose agents
+// report their certificates, and the certificates of the controller and
+// the NATS server on this host, read from its files at each request.
+func pkiDeps(
+	d handlerDeps,
+) pkiEndpoint.Deps {
+	host, _ := os.Hostname()
+	fsys := osfs.NewWithNoIdm()
+	srcs := config.CertSourcesOf(d.cfg, "controller", "nats")
+
+	return pkiEndpoint.Deps{
+		Agents:   d.jobs,
+		Hostname: host,
+		Local:    func() []pki.Cert { return pki.ReadCerts(fsys, srcs, time.Now()) },
+	}
 }
 
 // admissionDeps is what the admission group's handlers use: the watcher of

@@ -524,11 +524,13 @@ components:
         - GetNodeUser
         - GetNodeUserByKey
         - GetNodeUserSshkey
+        - GetPKICert
         - GetSecret
         - GetSecretValue
         - GetSecretVaults
         - GetSecrets
         - GetTrace
+        - ListPKICerts
         - PostFile
         - PostNodeCertificate
         - PostNodeCommandExec
@@ -642,6 +644,7 @@ components:
         - catalog:read
         - job:read
         - job:write
+        - pki:read
         - secret:read
         - secret:write
       type: string

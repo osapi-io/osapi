@@ -11,6 +11,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/file/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/health/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/job/gen"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/pki/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/secret/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/telemetry/gen"
 )

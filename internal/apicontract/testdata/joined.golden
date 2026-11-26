@@ -72,6 +72,8 @@ op GET /api/node/{hostname}/uptime id=GetNodeUptime tags=[Uptime_API_uptime_oper
 op GET /api/node/{hostname}/user id=GetNodeUser tags=[User_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string] body= responses=[200=application/json:UserCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/user/{name} id=GetNodeUserByKey tags=[User_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:UserGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/user/{name}/sshkey id=GetNodeUserSshkey tags=[Sshkey_API_sshkey_operations] auth=BearerAuth:user:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:UserSshkeyCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/pki/cert id=ListPKICerts tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[query:hostname:string] body= responses=[200=application/json:PKICertList 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/pki/cert/{name} id=GetPKICert tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[path:name!:string query:hostname:string] body= responses=[200=application/json:PKICert 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret id=GetSecretVaults tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[] body= responses=[200=application/json:VaultListResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret/{vault} id=GetSecrets tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[path:vault!:string] body= responses=[200=application/json:SecretListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret/{vault}/{key} id=GetSecret tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[path:key!:string path:vault!:string] body= responses=[200=application/json:SecretInfo 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -772,13 +774,28 @@ schema OSInfoResponse.family = string
 schema OSInfoResponse.version! = string
 schema ObjectStoreInfo.name! = string
 schema ObjectStoreInfo.size! = integer
-schema OperationID = string(AdmitMachine|DeleteFileByName|DeleteJobByID|DeleteMachine|DeleteNodeCertificate|DeleteNodeDns|DeleteNodeDocker|DeleteNodeFile|DeleteNodeGroup|DeleteNodeImage|DeleteNodeInterface|DeleteNodeInterfaceRoute|DeleteNodeNtp|DeleteNodePackage|DeleteNodeSchedule|DeleteNodeService|DeleteNodeSysctl|DeleteNodeUser|DeleteNodeUserSshkey|DeleteSecret|DrainAgent|GetAdmission|GetAdmissions|GetAgentConfig|GetAgentDetails|GetAgentFacts|GetAgents|GetAuditExport|GetAuditLogByID|GetAuditLogs|GetCatalog|GetFileByName|GetFileStale|GetFiles|GetHealthStatus|GetJobByID|GetJobs|GetNodeCertificate|GetNodeCertificateByKey|GetNodeDisk|GetNodeDnsByKey|GetNodeDocker|GetNodeDockerByKey|GetNodeFile|GetNodeGroup|GetNodeGroupByKey|GetNodeHostname|GetNodeImage|GetNodeInterface|GetNodeInterfaceByKey|GetNodeInterfaceRoute|GetNodeLoad|GetNodeLog|GetNodeLogSource|GetNodeMemory|GetNodeNtp|GetNodeOs|GetNodePackage|GetNodePackageByKey|GetNodePackageUpdates|GetNodeProcess|GetNodeProcessByKey|GetNodeSchedule|GetNodeScheduleByKey|GetNodeService|GetNodeServiceByKey|GetNodeStatus|GetNodeSysctl|GetNodeSysctlByKey|GetNodeTimezone|GetNodeUptime|GetNodeUser|GetNodeUserByKey|GetNodeUserSshkey|GetSecret|GetSecretValue|GetSecretVaults|GetSecrets|GetTrace|PostFile|PostNodeCertificate|PostNodeCommandExec|PostNodeCommandShell|PostNodeConnectivityPing|PostNodeDocker|PostNodeDockerExec|PostNodeDockerStart|PostNodeDockerStop|PostNodeGroup|PostNodeImagePull|PostNodeInterface|PostNodeInterfaceRoute|PostNodeNtp|PostNodePackage|PostNodePowerReboot|PostNodePowerShutdown|PostNodeProcessSignal|PostNodeSchedule|PostNodeService|PostNodeServiceDisable|PostNodeServiceEnable|PostNodeServiceRestart|PostNodeServiceStart|PostNodeServiceStop|PostNodeSysctl|PostNodeUser|PostNodeUserSshkey|PutAgentConfig|PutFileByName|PutNodeCertificate|PutNodeDns|PutNodeFile|PutNodeGroup|PutNodeHostname|PutNodeInterface|PutNodeInterfaceRoute|PutNodeNtp|PutNodePackageUpdates|PutNodeSchedule|PutNodeService|PutNodeSysctl|PutNodeTimezone|PutNodeUser|PutNodeUserPassword|PutSecret|RejectMachine|RetryJobByID|RevokeMachine|UndrainAgent)
+schema OperationID = string(AdmitMachine|DeleteFileByName|DeleteJobByID|DeleteMachine|DeleteNodeCertificate|DeleteNodeDns|DeleteNodeDocker|DeleteNodeFile|DeleteNodeGroup|DeleteNodeImage|DeleteNodeInterface|DeleteNodeInterfaceRoute|DeleteNodeNtp|DeleteNodePackage|DeleteNodeSchedule|DeleteNodeService|DeleteNodeSysctl|DeleteNodeUser|DeleteNodeUserSshkey|DeleteSecret|DrainAgent|GetAdmission|GetAdmissions|GetAgentConfig|GetAgentDetails|GetAgentFacts|GetAgents|GetAuditExport|GetAuditLogByID|GetAuditLogs|GetCatalog|GetFileByName|GetFileStale|GetFiles|GetHealthStatus|GetJobByID|GetJobs|GetNodeCertificate|GetNodeCertificateByKey|GetNodeDisk|GetNodeDnsByKey|GetNodeDocker|GetNodeDockerByKey|GetNodeFile|GetNodeGroup|GetNodeGroupByKey|GetNodeHostname|GetNodeImage|GetNodeInterface|GetNodeInterfaceByKey|GetNodeInterfaceRoute|GetNodeLoad|GetNodeLog|GetNodeLogSource|GetNodeMemory|GetNodeNtp|GetNodeOs|GetNodePackage|GetNodePackageByKey|GetNodePackageUpdates|GetNodeProcess|GetNodeProcessByKey|GetNodeSchedule|GetNodeScheduleByKey|GetNodeService|GetNodeServiceByKey|GetNodeStatus|GetNodeSysctl|GetNodeSysctlByKey|GetNodeTimezone|GetNodeUptime|GetNodeUser|GetNodeUserByKey|GetNodeUserSshkey|GetPKICert|GetSecret|GetSecretValue|GetSecretVaults|GetSecrets|GetTrace|ListPKICerts|PostFile|PostNodeCertificate|PostNodeCommandExec|PostNodeCommandShell|PostNodeConnectivityPing|PostNodeDocker|PostNodeDockerExec|PostNodeDockerStart|PostNodeDockerStop|PostNodeGroup|PostNodeImagePull|PostNodeInterface|PostNodeInterfaceRoute|PostNodeNtp|PostNodePackage|PostNodePowerReboot|PostNodePowerShutdown|PostNodeProcessSignal|PostNodeSchedule|PostNodeService|PostNodeServiceDisable|PostNodeServiceEnable|PostNodeServiceRestart|PostNodeServiceStart|PostNodeServiceStop|PostNodeSysctl|PostNodeUser|PostNodeUserSshkey|PutAgentConfig|PutFileByName|PutNodeCertificate|PutNodeDns|PutNodeFile|PutNodeGroup|PutNodeHostname|PutNodeInterface|PutNodeInterfaceRoute|PutNodeNtp|PutNodePackageUpdates|PutNodeSchedule|PutNodeService|PutNodeSysctl|PutNodeTimezone|PutNodeUser|PutNodeUserPassword|PutSecret|RejectMachine|RetryJobByID|RevokeMachine|UndrainAgent)
 schema OsEntry.error = string
 schema OsEntry.hostname! = string
 schema OsEntry.os_info = Release
 schema OsEntry.status! = RowStatus
 schema OsGetResponse.job_id = string/uuid
 schema OsGetResponse.results! = [OsEntry]
+schema PKICert.component! = string
+schema PKICert.days_left = integer
+schema PKICert.expires = string/date-time
+schema PKICert.file! = string
+schema PKICert.fingerprint = string
+schema PKICert.fips_approved = boolean
+schema PKICert.hostname! = string
+schema PKICert.key = string
+schema PKICert.name! = string
+schema PKICert.names = [string]
+schema PKICert.signature = string
+schema PKICert.source! = string
+schema PKICert.state! = string
+schema PKICertList.items! = [PKICert]
+schema PKICertList.total_items! = integer
 schema PackageCollectionResponse.job_id = string/uuid
 schema PackageCollectionResponse.results! = [PackageInstalled]
 schema PackageCreateRequest.name! = string
@@ -817,7 +834,7 @@ schema PackageUpdatesResult.hostname! = string
 schema PackageUpdatesResult.status! = RowStatus
 schema PackageUpdatesUpdateResponse.job_id = string/uuid
 schema PackageUpdatesUpdateResponse.results! = [PackageUpdatesResult]
-schema Permission = string(health:read|trace:read|secret:use|secret:reveal|certificate:read|certificate:write|command:execute|command:shell|connectivity:execute|disk:read|dns:read|dns:write|docker:read|docker:write|docker:execute|docker:exec|file:read|file:write|group:read|group:write|hostname:read|hostname:write|image:read|image:execute|image:write|interface:read|interface:write|load:read|log:read|memory:read|ntp:read|ntp:write|os:read|package:read|package:write|power:execute|process:read|process:execute|schedule:read|schedule:write|service:read|service:write|service:execute|status:read|sysctl:read|sysctl:write|timezone:read|timezone:write|uptime:read|user:read|user:write|admission:read|admission:write|agent:read|agent:write|audit:read|catalog:read|job:read|job:write|secret:read|secret:write)
+schema Permission = string(health:read|trace:read|secret:use|secret:reveal|certificate:read|certificate:write|command:execute|command:shell|connectivity:execute|disk:read|dns:read|dns:write|docker:read|docker:write|docker:execute|docker:exec|file:read|file:write|group:read|group:write|hostname:read|hostname:write|image:read|image:execute|image:write|interface:read|interface:write|load:read|log:read|memory:read|ntp:read|ntp:write|os:read|package:read|package:write|power:execute|process:read|process:execute|schedule:read|schedule:write|service:read|service:write|service:execute|status:read|sysctl:read|sysctl:write|timezone:read|timezone:write|uptime:read|user:read|user:write|admission:read|admission:write|agent:read|agent:write|audit:read|catalog:read|job:read|job:write|pki:read|secret:read|secret:write)
 schema PowerRebootRequest.delay = integer
 schema PowerRebootRequest.message = string
 schema PowerRebootResponse.job_id = string/uuid
@@ -1170,6 +1187,7 @@ tag Log_API_log_operations
 tag Memory_API_memory_operations
 tag Ntp_API_ntp_operations
 tag Os_API_os_operations
+tag PKI_API_pki_operations
 tag Package_API_package_operations
 tag Password_API_password_operations
 tag Power_API_power_operations

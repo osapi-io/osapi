@@ -22,16 +22,6 @@ package pkicert
 
 import "time"
 
-// Source is a certificate that a server serves: its name, its files, and
-// whether osapi made it.
-type Source struct {
-	Name       string
-	Component  string
-	CertFile   string
-	KeyFile    string
-	SelfSigned bool
-}
-
 // ListInput is the input of list, which has none.
 type ListInput struct{}
 

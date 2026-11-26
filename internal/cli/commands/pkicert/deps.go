@@ -27,6 +27,7 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // Deps is what the cert commands use: the file system, the certificates of
@@ -34,7 +35,7 @@ import (
 // the audit log, or nil.
 type Deps struct {
 	FS    avfs.VFS
-	Certs func() []Source
+	Certs func() []pki.CertSource
 	Now   func() time.Time
 	Audit func(ctx context.Context, e audit.Entry) error
 }

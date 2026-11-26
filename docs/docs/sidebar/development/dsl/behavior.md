@@ -1732,8 +1732,8 @@ package:read, package:write, power:execute, process:read, process:execute,
 schedule:read, schedule:write, service:read, service:write, service:execute,
 status:read, sysctl:read, sysctl:write, timezone:read, timezone:write,
 uptime:read, user:read, user:write, admission:read, admission:write, agent:read,
-agent:write, audit:read, catalog:read, job:read, job:write, secret:read,
-secret:write.
+agent:write, audit:read, catalog:read, job:read, job:write, pki:read,
+secret:read, secret:write.
 
 Use: A field that takes one of these values: types.Permission with
 validate:"enum". A closed set that pkg/sdk/types does not have is a named type

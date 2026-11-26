@@ -18,7 +18,23 @@ Each of the five is in the list, with a `state`: `ok`; `not made`, when that
 component has not started on this host; or `unreadable`, with the reason, such
 as a file that only root can read. A client config, such as one that points at a
 controller on another host, reads no certificate: run the command on the host of
-the server.
+the server, or read the fleet through the API.
+
+## The fleet, through the API
+
+`osapi client pki cert` reads the certificates of each host from any machine
+with a client config. The controller reports the certificates of its host, and
+each agent reports its own in its registration, at each heartbeat:
+
+```sh
+osapi client pki cert list --json                     # each host's certificates
+osapi client pki cert list --hostname web-01 --json   # one host's
+osapi client pki cert get --name api --json           # the controller's host
+osapi client pki cert get --name agent-metrics --hostname web-01 --json
+```
+
+Each item has the `hostname` of its host, and the fields of `osapi pki cert`.
+Rotate stays a command on the host: it writes the files there.
 
 `fips_approved` is true when FIPS 186-5 approves the key (RSA of 2048 bits or
 more, ECDSA P-256, P-384 or P-521, Ed25519) and the signature (no MD5, no

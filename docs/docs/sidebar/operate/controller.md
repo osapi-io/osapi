@@ -51,6 +51,11 @@ expires. `osapi pki cert rotate --name api` makes a new self-signed certificate;
 the controller serves it at its next start. Give the new `api.crt` to each CLI
 on another host.
 
+`osapi pki cert list` reads only the host that it runs on.
+`osapi client pki cert list` reads the fleet through the API, from any machine
+with a client config: the certificates of the controller's host, and the ones
+that each agent reports at each heartbeat, each with its host.
+
 ## 3. Start the controller
 
 ```bash

@@ -226,11 +226,11 @@ A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
 `GetNodeScheduleByKey`, `GetNodeService`, `GetNodeServiceByKey`,
 `GetNodeStatus`, `GetNodeSysctl`, `GetNodeSysctlByKey`, `GetNodeTimezone`,
 `GetNodeUptime`, `GetNodeUser`, `GetNodeUserByKey`, `GetNodeUserSshkey`,
-`GetSecret`, `GetSecretValue`, `GetSecretVaults`, `GetSecrets`, `GetTrace`,
-`PostFile`, `PostNodeCertificate`, `PostNodeCommandExec`,
-`PostNodeCommandShell`, `PostNodeConnectivityPing`, `PostNodeDocker`,
-`PostNodeDockerExec`, `PostNodeDockerStart`, `PostNodeDockerStop`,
-`PostNodeGroup`, `PostNodeImagePull`, `PostNodeInterface`,
+`GetPKICert`, `GetSecret`, `GetSecretValue`, `GetSecretVaults`, `GetSecrets`,
+`GetTrace`, `ListPKICerts`, `PostFile`, `PostNodeCertificate`,
+`PostNodeCommandExec`, `PostNodeCommandShell`, `PostNodeConnectivityPing`,
+`PostNodeDocker`, `PostNodeDockerExec`, `PostNodeDockerStart`,
+`PostNodeDockerStop`, `PostNodeGroup`, `PostNodeImagePull`, `PostNodeInterface`,
 `PostNodeInterfaceRoute`, `PostNodeNtp`, `PostNodePackage`,
 `PostNodePowerReboot`, `PostNodePowerShutdown`, `PostNodeProcessSignal`,
 `PostNodeSchedule`, `PostNodeService`, `PostNodeServiceDisable`,
@@ -259,8 +259,8 @@ A `string`, one of `health:read`, `trace:read`, `secret:use`, `secret:reveal`,
 `service:write`, `service:execute`, `status:read`, `sysctl:read`,
 `sysctl:write`, `timezone:read`, `timezone:write`, `uptime:read`, `user:read`,
 `user:write`, `admission:read`, `admission:write`, `agent:read`, `agent:write`,
-`audit:read`, `catalog:read`, `job:read`, `job:write`, `secret:read`,
-`secret:write`.
+`audit:read`, `catalog:read`, `job:read`, `job:write`, `pki:read`,
+`secret:read`, `secret:write`.
 
 ## Example
 

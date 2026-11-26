@@ -798,6 +798,26 @@ func Services() []ServiceSpec {
 		Name: "PackageUpdates",
 		Node: true,
 	}, {
+		Area: "fleet",
+		Doc:  "The certificates of the fleet.",
+		Methods: []MethodSpec{{
+			Doc:        "List the certificates of the fleet",
+			Examples:   2,
+			HTTP:       "GET /api/pki/cert",
+			Name:       "List",
+			Permission: "pki:read",
+			Result:     "PKICertList",
+		}, {
+			Doc:        "Get one certificate of a host",
+			Examples:   2,
+			HTTP:       "GET /api/pki/cert/{name}",
+			Name:       "Get",
+			Permission: "pki:read",
+			Result:     "PKICert",
+		}},
+		Name: "Pki",
+		Node: false,
+	}, {
 		Area: "node",
 		Doc:  "Reboot or shut down the host",
 		Methods: []MethodSpec{{

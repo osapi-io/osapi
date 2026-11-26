@@ -213,6 +213,11 @@ tags:
     x-displayName: Job
     x-osapi-area: fleet
     x-osapi-group: job
+  - description: The certificates of the fleet.
+    name: PKI_API_pki_operations
+    x-displayName: PKI
+    x-osapi-area: fleet
+    x-osapi-group: pki
   - description: Telemetry through the controller, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
@@ -2139,6 +2144,142 @@ paths:
           input:
             id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: retry
+  /api/pki/cert:
+    get:
+      description: Lists the certificates of the controller's host, the API's, the controller's metrics and the NATS server's, and the certificates that each agent reports in its registration, with their expiry. A certificate that a host has not made is not made.
+      operationId: ListPKICerts
+      parameters:
+        - description: 'Only the certificates of this host: the controller''s hostname, or an agent''s.'
+          in: query
+          name: hostname
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKICertList'
+          description: The certificates of each host.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:read
+      summary: List the certificates of the fleet
+      tags:
+        - PKI_API_pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: List the certificates of the fleet
+          input: {}
+        - doc: List the certificates of the fleet, with --hostname web-01
+          input:
+            hostname: web-01
+      x-osapi-method: list
+  /api/pki/cert/{name}:
+    get:
+      description: 'Reads one certificate of one host: the controller''s host when the hostname is empty, or the agent of the hostname.'
+      operationId: GetPKICert
+      parameters:
+        - description: The name of the certificate, such as api or agent-metrics.
+          in: path
+          name: name
+          required: true
+          schema:
+            maxLength: 64
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=64
+        - description: The host of the certificate. Empty is the controller's host, which has the certificates of the controller.
+          in: query
+          name: hostname
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKICert'
+          description: The certificate.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no certificate with that name.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:read
+      summary: Get one certificate of a host
+      tags:
+        - PKI_API_pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Get one certificate of a host
+          input:
+            name: api
+        - doc: Get one certificate of a host, with --name agent-metrics --hostname web-01
+          input:
+            hostname: web-01
+            name: agent-metrics
+      x-osapi-method: get
   /api/secret:
     get:
       description: List each vault of controller.secrets.vaults, with its type, its targets and whether it answers.
@@ -10230,11 +10371,13 @@ components:
         - GetNodeUser
         - GetNodeUserByKey
         - GetNodeUserSshkey
+        - GetPKICert
         - GetSecret
         - GetSecretValue
         - GetSecretVaults
         - GetSecrets
         - GetTrace
+        - ListPKICerts
         - PostFile
         - PostNodeCertificate
         - PostNodeCommandExec
@@ -10348,6 +10491,7 @@ components:
         - catalog:read
         - job:read
         - job:write
+        - pki:read
         - secret:read
         - secret:write
       type: string
@@ -10976,6 +11120,76 @@ components:
           type: string
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,valid_target
+      type: object
+    PKICert:
+      properties:
+        component:
+          description: 'The component that serves it: controller, nats or agent.'
+          example: agent
+          type: string
+        days_left:
+          description: The days that are left until it expires.
+          type: integer
+        expires:
+          description: When the certificate expires.
+          format: date-time
+          type: string
+        file:
+          description: The certificate's file on the host.
+          type: string
+        fingerprint:
+          description: The SHA-256 fingerprint of the certificate.
+          type: string
+        fips_approved:
+          description: Whether FIPS 186-5 and SP 800-131A approve the key and the signature algorithms.
+          type: boolean
+        hostname:
+          description: The host that serves the certificate.
+          example: web-01
+          type: string
+        key:
+          description: The algorithm and size of the public key, such as ECDSA P-256.
+          type: string
+        name:
+          description: The name of the certificate, such as api or agent-metrics.
+          example: agent-metrics
+          type: string
+        names:
+          description: The DNS names and the IP addresses that the certificate is for.
+          items:
+            type: string
+          type: array
+        signature:
+          description: The algorithm that signed the certificate, such as ECDSA-SHA256.
+          type: string
+        source:
+          description: self-signed, which osapi made, or cert_file, the operator's.
+          example: self-signed
+          type: string
+        state:
+          description: ok; not made, when the component has not started on the host; or unreadable, with the reason.
+          example: ok
+          type: string
+      required:
+        - hostname
+        - name
+        - state
+        - component
+        - source
+        - file
+      type: object
+    PKICertList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PKICert'
+          type: array
+        total_items:
+          description: The number of certificates.
+          type: integer
+      required:
+        - items
+        - total_items
       type: object
     SecretInfo:
       properties:
@@ -15274,6 +15488,7 @@ x-tagGroups:
       - Catalog_API_catalog
       - Health_Check_API_health
       - Job_Management_API_job_operations
+      - PKI_API_pki_operations
       - Telemetry_API_telemetry
 x-osapi-areas:
   - name: services

@@ -517,6 +517,29 @@ names, for osapi client telemetry trace get.
 
 Use: For the telemetry group.
 
+### `Agents`
+
+Lists the agents, each with what its registration reports, such as its
+certificates. The job client is one; a test gives a mockgen mock.
+
+Use: For the pki group, which lists each agent's certificates.
+
+### `Local`
+
+The certificates of the controller's host, the controller's and the NATS
+server's, which handlers.go reads from the files of the host at each call. A
+test gives a func that returns fixed ones, or nil for none.
+
+Use: For the pki group.
+
+### `Hostname`
+
+The hostname of the controller's host, from os.Hostname, which names the host of
+the controller's own certificates. A test gives a fixed name.
+
+Use: For the pki group, whose get takes a certificate of the controller's host
+when the hostname is empty.
+
 ### `Vaults`
 
 The vaults of controller.secrets.vaults, by name: each vault's spec, and the
@@ -971,8 +994,8 @@ package:read, package:write, power:execute, process:read, process:execute,
 schedule:read, schedule:write, service:read, service:write, service:execute,
 status:read, sysctl:read, sysctl:write, timezone:read, timezone:write,
 uptime:read, user:read, user:write, admission:read, admission:write, agent:read,
-agent:write, audit:read, catalog:read, job:read, job:write, secret:read,
-secret:write.
+agent:write, audit:read, catalog:read, job:read, job:write, pki:read,
+secret:read, secret:write.
 
 Use: A field that takes one of these values: types.Permission with
 validate:"enum". A closed set that pkg/sdk/types does not have is a named type

@@ -34,6 +34,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // selfSignedFor is how long a self-signed certificate is valid.
@@ -179,4 +181,60 @@ func writeSelfSigned(
 	}
 
 	return nil
+}
+
+// CertSources are the certificates that the servers of c serve on this
+// host: the API, the metrics of the controller, of NATS and of the agent,
+// and the NATS server. Each is its cert_file, or the self-signed one in
+// its component's key directory.
+func CertSources(
+	c Config,
+) []pki.CertSource {
+	ctl, n, a := c.Controller, c.NATS.Server, c.Agent
+
+	return []pki.CertSource{
+		certSource("api", "controller", ctl.API.TLS, ctl.PKI.KeyDir),
+		certSource("controller-metrics", "controller", ctl.Metrics.TLS, ctl.PKI.KeyDir),
+		certSource("nats", "nats", n.TLS, n.KeyDir),
+		certSource("nats-metrics", "nats", n.Metrics.TLS, n.KeyDir),
+		certSource("agent-metrics", "agent", a.Metrics.TLS, a.PKI.KeyDir),
+	}
+}
+
+// CertSourcesOf are the CertSources of c that component serves, such as
+// agent.
+func CertSourcesOf(
+	c Config,
+	component ...string,
+) []pki.CertSource {
+	var out []pki.CertSource
+	for _, s := range CertSources(c) {
+		for _, want := range component {
+			if s.Component == want {
+				out = append(out, s)
+			}
+		}
+	}
+
+	return out
+}
+
+// certSource is the certificate that a server with t serves: its cert_file,
+// or the self-signed name in keyDir.
+func certSource(
+	name string,
+	component string,
+	t ServerTLS,
+	keyDir string,
+) pki.CertSource {
+	if t.CertFile != "" {
+		return pki.CertSource{
+			Name: name, Component: component, CertFile: t.CertFile, KeyFile: t.KeyFile,
+		}
+	}
+	cert, key := SelfSignedFiles(keyDir, name)
+
+	return pki.CertSource{
+		Name: name, Component: component, CertFile: cert, KeyFile: key, SelfSigned: true,
+	}
 }

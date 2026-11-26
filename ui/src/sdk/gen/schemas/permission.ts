@@ -71,6 +71,7 @@ export const Permission = {
   'catalog:read': 'catalog:read',
   'job:read': 'job:read',
   'job:write': 'job:write',
+  'pki:read': 'pki:read',
   'secret:read': 'secret:read',
   'secret:write': 'secret:write',
 } as const;

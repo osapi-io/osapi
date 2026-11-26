@@ -66,6 +66,7 @@ const (
 	PermCatalogRead         Permission = "catalog:read"
 	PermJobRead             Permission = "job:read"
 	PermJobWrite            Permission = "job:write"
+	PermPkiRead             Permission = "pki:read"
 	PermSecretRead          Permission = "secret:read"
 	PermSecretWrite         Permission = "secret:write"
 )
@@ -132,6 +133,7 @@ func (Permission) Values() []Permission {
 		PermCatalogRead,
 		PermJobRead,
 		PermJobWrite,
+		PermPkiRead,
 		PermSecretRead,
 		PermSecretWrite,
 	}

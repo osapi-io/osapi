@@ -22,23 +22,15 @@ package pkicert
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
-	"encoding/hex"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
 
-	"github.com/avfs/avfs"
-
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // Errors of get and rotate.
@@ -57,15 +49,8 @@ func List(
 	_ ListInput,
 ) (ListOutput, error) {
 	out := ListOutput{Items: []CertInfo{}}
-	for _, src := range d.Certs() {
-		info, err := read(d, src)
-		if err != nil {
-			info = CertInfo{
-				Name: src.Name, Component: src.Component, Source: source(src),
-				File: src.CertFile, State: state(err),
-			}
-		}
-		out.Items = append(out.Items, info)
+	for _, c := range pki.ReadCerts(d.FS, d.Certs(), d.Now()) {
+		out.Items = append(out.Items, CertInfo(c))
 	}
 
 	return out, nil
@@ -84,8 +69,9 @@ func Get(
 	info, err := read(d, src)
 	if errors.Is(err, fs.ErrNotExist) {
 		return CertInfo{}, fmt.Errorf("%s is not on this host: the %s makes it at its first "+
-			"start; run this on the host of the %s: %w",
-			src.Name, src.Component, src.Component, ErrNotMade)
+			"start; run this on the host of the %s, or read it through the API with "+
+			"osapi client pki cert get --name %s: %w",
+			src.Name, src.Component, src.Component, src.Name, ErrNotMade)
 	}
 
 	return info, err
@@ -133,101 +119,25 @@ func Rotate(
 func find(
 	d Deps,
 	name string,
-) (Source, error) {
+) (pki.CertSource, error) {
 	for _, src := range d.Certs() {
 		if src.Name == name {
 			return src, nil
 		}
 	}
 
-	return Source{}, fmt.Errorf("%s: %w", name, ErrNoCert)
+	return pki.CertSource{}, fmt.Errorf("%s: %w", name, ErrNoCert)
 }
 
 // read is the certificate of src as list shows it.
 func read(
 	d Deps,
-	src Source,
+	src pki.CertSource,
 ) (CertInfo, error) {
-	data, err := avfs.ReadFile(d.FS, src.CertFile)
+	c, err := pki.ReadCert(d.FS, src, d.Now())
 	if err != nil {
-		return CertInfo{}, fmt.Errorf("read %s: %w", src.CertFile, err)
-	}
-	block, _ := pem.Decode(data)
-	if block == nil {
-		return CertInfo{}, fmt.Errorf("%s: no PEM certificate", src.CertFile)
-	}
-	c, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return CertInfo{}, fmt.Errorf("%s: %w", src.CertFile, err)
-	}
-	names := append([]string{}, c.DNSNames...)
-	for _, ip := range c.IPAddresses {
-		names = append(names, ip.String())
-	}
-	sum := sha256.Sum256(block.Bytes)
-
-	key, approved := keyAlgorithm(c)
-	days := int(c.NotAfter.Sub(d.Now()).Hours() / 24)
-	fips := approved && fipsSignature[c.SignatureAlgorithm]
-
-	return CertInfo{
-		Name: src.Name, State: "ok", Component: src.Component, Source: source(src),
-		Key: key, Signature: c.SignatureAlgorithm.String(),
-		FIPS: &fips, File: src.CertFile, Names: names,
-		Expires: c.NotAfter, DaysLeft: &days,
-		Fingerprint: "SHA256:" + hex.EncodeToString(sum[:]),
-	}, nil
-}
-
-// fipsSignature are the signature algorithms that FIPS 186-5 approves: no
-// MD5 and no SHA-1.
-var fipsSignature = map[x509.SignatureAlgorithm]bool{
-	x509.SHA256WithRSA: true, x509.SHA384WithRSA: true, x509.SHA512WithRSA: true,
-	x509.SHA256WithRSAPSS: true, x509.SHA384WithRSAPSS: true, x509.SHA512WithRSAPSS: true,
-	x509.ECDSAWithSHA256: true, x509.ECDSAWithSHA384: true, x509.ECDSAWithSHA512: true,
-	x509.PureEd25519: true,
-}
-
-// keyAlgorithm is the algorithm and size of c's public key, and whether
-// FIPS approves it: RSA of 2048 bits or more, ECDSA on P-256, P-384 or
-// P-521, and Ed25519.
-func keyAlgorithm(
-	c *x509.Certificate,
-) (string, bool) {
-	switch k := c.PublicKey.(type) {
-	case *rsa.PublicKey:
-		return fmt.Sprintf("RSA %d", k.N.BitLen()), k.N.BitLen() >= 2048
-	case *ecdsa.PublicKey:
-		name := k.Curve.Params().Name
-		return "ECDSA " + name, name == "P-256" || name == "P-384" || name == "P-521"
-	case ed25519.PublicKey:
-		return "Ed25519", true
-	default:
-		return c.PublicKeyAlgorithm.String(), false
-	}
-}
-
-// source is where src comes from: self-signed, which osapi made, or the
-// cert_file of the operator.
-func source(
-	src Source,
-) string {
-	if src.SelfSigned {
-		return "self-signed"
+		return CertInfo{}, err
 	}
 
-	return "cert_file"
-}
-
-// state is why list could not read a certificate: not made when the file is
-// not there, as on a host where that component has not started, or
-// unreadable with the reason, such as a permission that only root has.
-func state(
-	err error,
-) string {
-	if errors.Is(err, fs.ErrNotExist) {
-		return "not made"
-	}
-
-	return "unreadable: " + err.Error()
+	return CertInfo(c), nil
 }

@@ -1530,6 +1530,31 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "category",
+          label: "PKI",
+          key: "fleet-pki",
+          link: {
+            type: "doc",
+            id: "gen/api/pki-api-pki-operations",
+          },
+          items: [
+            {
+              type: "doc",
+              id: "gen/api/list-pki-certs",
+              label: "List the certificates of the fleet",
+              className: "api-method get",
+              key: "fleet-pki-api-pki-operations-gen-api-list-pki-certs",
+            },
+            {
+              type: "doc",
+              id: "gen/api/get-pki-cert",
+              label: "Get one certificate of a host",
+              className: "api-method get",
+              key: "fleet-pki-api-pki-operations-gen-api-get-pki-cert",
+            },
+          ],
+        },
+        {
+          type: "category",
           label: "Telemetry",
           key: "fleet-telemetry",
           link: {

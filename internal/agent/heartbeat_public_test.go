@@ -510,6 +510,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationFindsProgramsAga
 			return "", errors.New("not found")
 		})
 		defer agent.ResetLookPath()
+		agent.SetAppFs(s.testAgent, memfs.New())
 
 		var got []job.AgentRegistration
 		s.mockKV.EXPECT().
@@ -540,6 +541,11 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationFindsProgramsAga
 		s.Require().Len(got, 2)
 		s.Equal([]string{"chronyc"}, got[0].MissingPrograms)
 		s.Empty(got[1].MissingPrograms)
+		// The registration has the certificate of the agent's metrics
+		// server, which this agent has not made.
+		s.Require().Len(got[0].Certificates, 1)
+		s.Equal("agent-metrics", got[0].Certificates[0].Name)
+		s.Equal(pki.CertNotMade, got[0].Certificates[0].State)
 	})
 }
 

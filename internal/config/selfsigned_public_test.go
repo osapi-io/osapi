@@ -60,6 +60,28 @@ func (s *SelfSignedPublicTestSuite) cert(
 
 // TestWithCurrentSelfSigned holds that a metrics certificate follows a rename
 // of the host, and stays the same while the name does (osapi-io/osapi#1493).
+func (s *SelfSignedPublicTestSuite) TestCertSources() {
+	var c config.Config
+	c.Controller.PKI.KeyDir = "/ctl"
+	c.Controller.API.TLS = config.ServerTLS{CertFile: "/op/api.crt", KeyFile: "/op/api.key"}
+	c.NATS.Server.KeyDir = "/nats"
+	c.Agent.PKI.KeyDir = "/agent"
+
+	got := config.CertSources(c)
+	s.Require().Len(got, 5)
+	s.Equal("api", got[0].Name)
+	s.Equal("/op/api.crt", got[0].CertFile, "a cert_file is the operator's")
+	s.False(got[0].SelfSigned)
+	metricsCert, _ := config.SelfSignedFiles("/ctl", "controller-metrics")
+	s.Equal(metricsCert, got[1].CertFile, "otherwise the self-signed one in the key directory")
+	s.True(got[1].SelfSigned)
+
+	agent := config.CertSourcesOf(c, "agent")
+	s.Require().Len(agent, 1)
+	s.Equal("agent-metrics", agent[0].Name)
+	s.Len(config.CertSourcesOf(c, "controller", "nats"), 4)
+}
+
 func (s *SelfSignedPublicTestSuite) TestWithCurrentSelfSigned() {
 	s.Run("a renamed host gets a certificate for its new name", func() {
 		dir := s.T().TempDir()
