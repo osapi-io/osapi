@@ -93,8 +93,19 @@ this directory: without it, the host has no key that the controller admitted.
 
 ## Run the agent as a service
 
-osapi does not install a service yet (osapi-io/osapi#1450). Install the binary
-in `/usr/local/bin`, then add one of these.
+One command, as root, writes the config with the join string, installs the
+service and starts it, then waits up to a minute for the join:
+
+```bash
+sudo osapi agent service install --join '<the join string>' --labels group=web
+sudo osapi agent service uninstall            # stop it and remove the service
+sudo osapi agent service uninstall --purge    # also the config and the keys
+```
+
+It writes `/etc/osapi/osapi.yaml` (mode 0600) and a systemd unit on Linux, or a
+launch daemon on macOS, as below. It does not replace a config that exists,
+unless `--force`. To write them yourself, install the binary in
+`/usr/local/bin`, then add one of these.
 
 On Linux, `/etc/systemd/system/osapi-agent.service`:
 

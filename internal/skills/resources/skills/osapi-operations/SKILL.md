@@ -46,3 +46,4 @@ skill.
 | What a setting does, its value, a bad config      | [references/config.md](references/config.md)         |
 | Creating or checking a token, a refused request   | [references/tokens.md](references/tokens.md)         |
 | Is it healthy, why a host is missing, a stuck job | [references/health.md](references/health.md)         |
+| Joining a host, its service, removing a host      | [references/join.md](references/join.md)             |

@@ -25,7 +25,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/cli/commands/agentservice"
 
 	"github.com/osapi-io/osapi/internal/audit"
 
@@ -143,6 +148,18 @@ func init() {
 			Identity: func() (*identity.Identity, error) {
 				return identity.GetIdentity(fs, appConfig.Agent.Hostname)
 			},
+		}
+	})
+	command.Provide(agentservice.Group, func() agentservice.Deps {
+		return agentservice.Deps{
+			FS:         osfs.NewWithNoIdm(),
+			GOOS:       runtime.GOOS,
+			EUID:       os.Geteuid,
+			Binary:     os.Executable,
+			Run:        runCommand,
+			ConfigFile: osapiFile(),
+			KeyDir:     appConfig.Agent.PKI.KeyDir,
+			Wait:       waitForFile,
 		}
 	})
 	command.Provide(commanddsl.Group, commandDSLDeps)
@@ -386,5 +403,51 @@ func vaultKeyDeps() vaultkey.Deps {
 
 			return nc, func() { bus.Close(nc) }, nil
 		},
+	}
+}
+
+// runCommand runs name with args, and returns its output in the error when
+// it fails.
+func runCommand(
+	ctx context.Context,
+	name string,
+	args ...string,
+) error {
+	out, err := exec.CommandContext(ctx, name, args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
+	}
+
+	return nil
+}
+
+// osapiFile is the config file of this run: -f, or the default path.
+func osapiFile() string {
+	if f := viper.GetString("osapiFile"); f != "" {
+		return f
+	}
+
+	return config.DefaultFile
+}
+
+// waitForFile is whether file exists within a minute, or before ctx ends.
+func waitForFile(
+	ctx context.Context,
+	file string,
+) bool {
+	deadline := time.After(time.Minute)
+	tick := time.NewTicker(500 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		if _, err := os.Stat(file); err == nil {
+			return true
+		}
+		select {
+		case <-ctx.Done():
+			return false
+		case <-deadline:
+			return false
+		case <-tick.C:
+		}
 	}
 }
