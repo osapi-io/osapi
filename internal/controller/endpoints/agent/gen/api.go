@@ -45,6 +45,18 @@ func Routes(
 			Handler:    server.Serve(s, agent.Group, "drain", agent.Drain, decodeDrain),
 		},
 		{
+			Method:     http.MethodGet,
+			Path:       "/api/agent/config/:hostname",
+			Permission: "agent:read",
+			Handler:    server.Serve(s, agent.Group, "getconfig", agent.GetConfig, decodeGetconfig),
+		},
+		{
+			Method:     http.MethodPut,
+			Path:       "/api/agent/config/:hostname",
+			Permission: "agent:write",
+			Handler:    server.Serve(s, agent.Group, "setconfig", agent.SetConfig, decodeSetconfig),
+		},
+		{
 			Method:     http.MethodPost,
 			Path:       "/api/agent/:hostname/undrain",
 			Permission: "agent:write",

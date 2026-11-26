@@ -347,6 +347,9 @@ type AgentRegistration struct {
 	MemoryStats *memory.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// ConfigVersion is the version of the controller's config of the agent
+	// that the agent applied, 0 for none.
+	ConfigVersion int `json:"config_version,omitempty"`
 	// MissingPrograms are the programs that the agent's behaviors declare
 	// and that the host lacks.
 	MissingPrograms []string `json:"missing_programs,omitempty"`
@@ -389,6 +392,9 @@ type AgentInfo struct {
 	MemoryStats *memory.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// ConfigVersion is the version of the controller's config of the agent
+	// that the agent applied, 0 for none.
+	ConfigVersion int `json:"config_version,omitempty"`
 	// MissingPrograms are the programs that the agent's behaviors declare
 	// and that the host lacks.
 	MissingPrograms []string `json:"missing_programs,omitempty"`
@@ -441,4 +447,25 @@ type NodeDiskResponse struct {
 type NodeUptimeResponse struct {
 	UptimeSeconds float64 `json:"uptime_seconds"`
 	Uptime        string  `json:"uptime"`
+}
+
+// AgentConfig is the config of an agent that the controller holds, under
+// the agent's machine ID: what an operator set for the agent without its
+// config file. The agent watches it, and applies a change at once.
+type AgentConfig struct {
+	// Version is one more at each change, and 0 when nothing was set.
+	Version int `json:"version"`
+	// Labels replace the labels of the agent's config file with the same
+	// keys.
+	Labels map[string]string `json:"labels,omitempty"`
+	// UpdatedAt is when the config last changed.
+	UpdatedAt time.Time `json:"updated_at,omitzero"`
+}
+
+// AgentConfigKey is the key of the config of the agent with machineID in
+// the state bucket.
+func AgentConfigKey(
+	machineID string,
+) string {
+	return "config." + machineID
 }

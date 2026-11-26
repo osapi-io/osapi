@@ -59,6 +59,7 @@ var Group = endpoint.Register(endpoint.Define(
 		"Most commands read the NATS KV heartbeat registry directly, and make no job.",
 	),
 	endpoint.SubDoc("facts", "Read the keys of @fact references"),
+	endpoint.SubDoc("config", "Read and set the config that the controller gives an agent"),
 	endpoint.Title("Agent Management API"),
 	endpoint.Tag("agent_operations", "Agent",
 		"Operations related to agent discovery and details."),
@@ -166,6 +167,41 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.NotFound(ErrNotFound, "Agent not found."),
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
+	endpoint.Get[ConfigGetInput, AgentConfigResponse]("getconfig").
+		Handle(GetConfig).
+		Sub("config").
+		Use("get").
+		ID("GetAgentConfig").
+		Permission(types.PermAgentRead).
+		Describe("Read the config of an agent").
+		Explain("Returns the config that the controller holds for the agent, with its version.").
+		Returns("The config of the agent.").
+		Command("Read the config of an agent",
+			"Shows the labels that the controller gives the agent, and the version of\n"+
+				"the config. The agent applies each version at once.").
+		Example("--hostname web-01").
+		Prints(sampleConfig).
+		Fails("a hostname over 255 characters", ConfigGetInput{Hostname: long}).
+		Errors(endpoint.NotFound(ErrNotFound, "Agent not found.")),
+	endpoint.Put[ConfigSetInput, AgentConfigResponse]("setconfig").
+		Handle(SetConfig).
+		Sub("config").
+		Use("update").
+		ID("PutAgentConfig").
+		AdminOnly().
+		Describe("Set the config of an agent").
+		Explain("Sets the labels of the agent as the next version of its config. "+
+			"The agent applies them at once: it takes the jobs of the new labels, and no "+
+			"restart is necessary.").
+		Returns("The config of the agent after the change.").
+		Command("Set the labels of an agent",
+			"The labels replace the labels of the agent's config file with the same\n"+
+				"keys. The agent applies them at once, with no restart. A host that joins\n"+
+				"with a join token gets the labels of the token.").
+		Example("--hostname web-01 --labels group=web --labels dc=east").
+		Prints(sampleConfig).
+		Fails("a hostname over 255 characters", ConfigSetInput{Hostname: long}).
+		Errors(endpoint.NotFound(ErrNotFound, "Agent not found.")),
 	endpoint.Post[UndrainInput, struct{}]("undrain").
 		AdminOnly().
 		Fails("a hostname over 255 characters", UndrainInput{Hostname: long}).

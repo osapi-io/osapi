@@ -111,6 +111,21 @@ func (mr *MockJobsMockRecorder) GetAgent(ctx, hostname any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgent", reflect.TypeOf((*MockJobs)(nil).GetAgent), ctx, hostname)
 }
 
+// GetAgentConfig mocks base method.
+func (m *MockJobs) GetAgentConfig(ctx context.Context, machineID string) (job.AgentConfig, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAgentConfig", ctx, machineID)
+	ret0, _ := ret[0].(job.AgentConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAgentConfig indicates an expected call of GetAgentConfig.
+func (mr *MockJobsMockRecorder) GetAgentConfig(ctx, machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgentConfig", reflect.TypeOf((*MockJobs)(nil).GetAgentConfig), ctx, machineID)
+}
+
 // ListAgents mocks base method.
 func (m *MockJobs) ListAgents(ctx context.Context) ([]job.AgentInfo, error) {
 	m.ctrl.T.Helper()
@@ -124,6 +139,21 @@ func (m *MockJobs) ListAgents(ctx context.Context) ([]job.AgentInfo, error) {
 func (mr *MockJobsMockRecorder) ListAgents(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAgents", reflect.TypeOf((*MockJobs)(nil).ListAgents), ctx)
+}
+
+// SetAgentConfig mocks base method.
+func (m *MockJobs) SetAgentConfig(ctx context.Context, machineID string, labels map[string]string) (job.AgentConfig, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAgentConfig", ctx, machineID, labels)
+	ret0, _ := ret[0].(job.AgentConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetAgentConfig indicates an expected call of SetAgentConfig.
+func (mr *MockJobsMockRecorder) SetAgentConfig(ctx, machineID, labels any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentConfig", reflect.TypeOf((*MockJobs)(nil).SetAgentConfig), ctx, machineID, labels)
 }
 
 // SetDrainFlag mocks base method.

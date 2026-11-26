@@ -48,7 +48,7 @@ func List(
 
 	infos := make([]AgentInfo, 0, len(agents))
 	for i := range agents {
-		infos = append(infos, buildAgentInfo(&agents[i]))
+		infos = append(infos, withConfig(ctx, d, buildAgentInfo(&agents[i])))
 	}
 
 	return ListAgentsResponse{Items: infos, TotalItems: len(infos)}, nil
@@ -69,7 +69,25 @@ func Get(
 		return AgentInfo{}, err
 	}
 
-	return buildAgentInfo(info), nil
+	return withConfig(ctx, d, buildAgentInfo(info)), nil
+}
+
+// withConfig is info with the version of the config that the controller
+// holds for the agent, and whether the agent is behind it. A config that
+// cannot be read leaves both out: the agent itself is what was asked for.
+func withConfig(
+	ctx context.Context,
+	d Deps,
+	info AgentInfo,
+) AgentInfo {
+	cfg, err := d.Jobs.GetAgentConfig(ctx, info.MachineID)
+	if err != nil || cfg.Version == 0 {
+		return info
+	}
+	info.ConfigWanted = cfg.Version
+	info.ConfigBehind = cfg.Version != info.ConfigVersion
+
+	return info
 }
 
 // Drain stops an agent taking new jobs. A failure of the registry or of a
@@ -156,6 +174,7 @@ func buildAgentInfo(
 		MachineID:        a.MachineID,
 		Fingerprint:      a.Fingerprint,
 		Version:          a.AgentVersion,
+		ConfigVersion:    a.ConfigVersion,
 		Hostname:         a.Hostname,
 		RegisteredAt:     a.RegisteredAt,
 		StartedAt:        a.StartedAt,
@@ -300,4 +319,54 @@ func Join(
 	}
 
 	return JoinResponse{ControllerPublicKey: base64.StdEncoding.EncodeToString(key)}, nil
+}
+
+// GetConfig is the config that the controller holds for the agent.
+func GetConfig(
+	ctx context.Context,
+	d Deps,
+	in ConfigGetInput,
+) (AgentConfigResponse, error) {
+	info, err := lookup(ctx, d, in.Hostname)
+	if err != nil {
+		return AgentConfigResponse{}, err
+	}
+	cfg, err := d.Jobs.GetAgentConfig(ctx, info.MachineID)
+	if err != nil {
+		return AgentConfigResponse{}, err
+	}
+
+	return toConfig(cfg), nil
+}
+
+// SetConfig sets the labels of the agent, as the next version of its
+// config. The agent applies them at once, and writes it to its timeline.
+func SetConfig(
+	ctx context.Context,
+	d Deps,
+	in ConfigSetInput,
+) (AgentConfigResponse, error) {
+	info, err := lookup(ctx, d, in.Hostname)
+	if err != nil {
+		return AgentConfigResponse{}, err
+	}
+	cfg, err := d.Jobs.SetAgentConfig(ctx, info.MachineID, in.Body.Labels)
+	if err != nil {
+		return AgentConfigResponse{}, err
+	}
+
+	return toConfig(cfg), nil
+}
+
+// toConfig is cfg in the response.
+func toConfig(
+	cfg job.AgentConfig,
+) AgentConfigResponse {
+	out := AgentConfigResponse{Version: cfg.Version, Labels: cfg.Labels}
+	if !cfg.UpdatedAt.IsZero() {
+		t := cfg.UpdatedAt
+		out.UpdatedAt = &t
+	}
+
+	return out
 }

@@ -8,6 +8,18 @@ import (
 	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
+// AgentConfigResponse is the AgentConfigResponse of the spec.
+type AgentConfigResponse struct {
+	// The labels that the controller gives the agent.
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// When the config last changed.
+	UpdatedAt time.Time `json:"updated_at,omitzero"`
+
+	// One more at each change; 0 when nothing was set.
+	Version int `json:"version"`
+}
+
 // AgentInfo is the AgentInfo of the spec.
 type AgentInfo struct {
 	// CPU architecture.
@@ -16,6 +28,19 @@ type AgentInfo struct {
 	// The conditions that hold now, such as HighLoad. A condition that does not
 	// hold is not in the list.
 	Conditions []NodeCondition `json:"conditions,omitempty"`
+
+	// The agent has not applied the newest config that the controller holds for it
+	// yet: it applies it at its next heartbeat, or it cannot reach the
+	// controller's config.
+	ConfigBehind bool `json:"config_behind,omitempty"`
+
+	// The version of the controller's config of the agent that the agent applied.
+	// Absent when it applied none.
+	ConfigVersion int `json:"config_version,omitempty"`
+
+	// The version of the config that the controller holds for the agent. Absent
+	// when it holds none.
+	ConfigWanted int `json:"config_wanted,omitempty"`
 
 	// Number of logical CPUs.
 	CPUCount int `json:"cpu_count,omitempty"`

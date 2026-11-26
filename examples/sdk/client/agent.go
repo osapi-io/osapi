@@ -29,6 +29,8 @@ var examples = []struct {
 	run  func(ctx context.Context, c *client.Client) error
 }{
 	{"list", "List active agents", runList},
+	{"getconfig", "Read the config of an agent", runGetconfig},
+	{"setconfig", "Set the config of an agent", runSetconfig},
 	{"facts", "List the fact keys", runFacts},
 	{"get", "Get agent details", runGet},
 	{"drain", "Drain an agent", runDrain},
@@ -41,6 +43,35 @@ func runList(
 	c *client.Client,
 ) error {
 	resp, err := c.Agent.List(ctx)
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runGetconfig runs the example getconfig: read the config of an agent.
+func runGetconfig(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Agent.Getconfig(ctx, "web-01")
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runSetconfig runs the example setconfig: set the config of an agent.
+func runSetconfig(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{Labels: map[string]string{
+		"dc":    "east",
+		"group": "web",
+	}})
 	if err != nil {
 		return err
 	}

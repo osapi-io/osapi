@@ -68,6 +68,11 @@ type HeartbeatPublicTestSuite struct {
 func (s *HeartbeatPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	// The heartbeat reads the controller's config of the agent.
+	s.mockJobClient.EXPECT().
+		GetAgentConfig(gomock.Any(), gomock.Any()).
+		Return(job.AgentConfig{}, nil).
+		AnyTimes()
 	// The last-seen write is checked in TestWriteSeen; the rest allow it.
 	s.mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
@@ -249,6 +254,11 @@ type HeartbeatLowLevelPublicTestSuite struct {
 func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	// The heartbeat reads the controller's config of the agent.
+	s.mockJobClient.EXPECT().
+		GetAgentConfig(gomock.Any(), gomock.Any()).
+		Return(job.AgentConfig{}, nil).
+		AnyTimes()
 	// The last-seen write is checked in TestWriteSeen; the rest allow it.
 	s.mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
@@ -653,6 +663,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 
 			mockKV := agentMocks.NewMockNATSClient(ctrl)
 			mockJobClient := mocks.NewMockJobClient(ctrl)
+			mockJobClient.EXPECT().
+				GetAgentConfig(gomock.Any(), gomock.Any()).
+				Return(job.AgentConfig{}, nil).
+				AnyTimes()
 			mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 			appConfig := config.Config{
@@ -730,6 +744,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRenamed() {
 
 	mockKV := agentMocks.NewMockNATSClient(ctrl)
 	mockJobClient := mocks.NewMockJobClient(ctrl)
+	mockJobClient.EXPECT().
+		GetAgentConfig(gomock.Any(), gomock.Any()).
+		Return(job.AgentConfig{}, nil).
+		AnyTimes()
 	mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false).AnyTimes()
 	testAgent := newTestAgent(newTestAgentParams{
@@ -929,6 +947,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteSeen() {
 	s.Run("when the interval has passed writes, then not again until it passes", func() {
 		ctrl := gomock.NewController(s.T())
 		jobs := mocks.NewMockJobClient(ctrl)
+		jobs.EXPECT().
+			GetAgentConfig(gomock.Any(), gomock.Any()).
+			Return(job.AgentConfig{}, nil).
+			AnyTimes()
 		a := newTestAgent(newTestAgentParams{jobClient: jobs})
 		jobs.EXPECT().WriteAgentSeen(gomock.Any(), "m-1").Return(nil).Times(1)
 
@@ -939,6 +961,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteSeen() {
 	s.Run("when the write fails tries again at the next heartbeat", func() {
 		ctrl := gomock.NewController(s.T())
 		jobs := mocks.NewMockJobClient(ctrl)
+		jobs.EXPECT().
+			GetAgentConfig(gomock.Any(), gomock.Any()).
+			Return(job.AgentConfig{}, nil).
+			AnyTimes()
 		a := newTestAgent(newTestAgentParams{jobClient: jobs})
 		gomock.InOrder(
 			jobs.EXPECT().WriteAgentSeen(gomock.Any(), "m-1").Return(errors.New("kv down")),

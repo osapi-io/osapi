@@ -61,6 +61,21 @@ func Services() []ServiceSpec {
 			Permission: "agent:read",
 			Result:     "ListAgentsResponse",
 		}, {
+			Doc:        "Read the config of an agent",
+			Examples:   1,
+			HTTP:       "GET /api/agent/config/{hostname}",
+			Name:       "Getconfig",
+			Permission: "agent:read",
+			Result:     "AgentConfigResponse",
+		}, {
+			Doc:        "Set the config of an agent",
+			Examples:   1,
+			HTTP:       "PUT /api/agent/config/{hostname}",
+			Input:      "AgentSetconfigInput",
+			Name:       "Setconfig",
+			Permission: "agent:write",
+			Result:     "AgentConfigResponse",
+		}, {
 			Doc:        "List the fact keys",
 			Examples:   1,
 			HTTP:       "GET /api/agent/facts",

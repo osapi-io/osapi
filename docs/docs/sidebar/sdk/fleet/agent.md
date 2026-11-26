@@ -11,14 +11,16 @@ details.
 
 ## Methods
 
-| Method                               | Returns                         | Permission    | Description                      |
-| ------------------------------------ | ------------------------------- | ------------- | -------------------------------- |
-| [`List(ctx)`](#list)                 | `*Response[ListAgentsResponse]` | `agent:read`  | List active agents.              |
-| [`Facts(ctx)`](#facts)               | `*Response[FactKeysResponse]`   | `agent:read`  | List the fact keys.              |
-| [`Join(ctx, input)`](#join)          | `*Response[JoinResponse]`       |               | Join an agent with a join token. |
-| [`Get(ctx, hostname)`](#get)         | `*Response[AgentInfo]`          | `agent:read`  | Get agent details.               |
-| [`Drain(ctx, hostname)`](#drain)     | `error`                         | `agent:write` | Drain an agent.                  |
-| [`Undrain(ctx, hostname)`](#undrain) | `error`                         | `agent:write` | Undrain an agent.                |
+| Method                                          | Returns                          | Permission    | Description                      |
+| ----------------------------------------------- | -------------------------------- | ------------- | -------------------------------- |
+| [`List(ctx)`](#list)                            | `*Response[ListAgentsResponse]`  | `agent:read`  | List active agents.              |
+| [`Getconfig(ctx, hostname)`](#getconfig)        | `*Response[AgentConfigResponse]` | `agent:read`  | Read the config of an agent.     |
+| [`Setconfig(ctx, hostname, input)`](#setconfig) | `*Response[AgentConfigResponse]` | `agent:write` | Set the config of an agent.      |
+| [`Facts(ctx)`](#facts)                          | `*Response[FactKeysResponse]`    | `agent:read`  | List the fact keys.              |
+| [`Join(ctx, input)`](#join)                     | `*Response[JoinResponse]`        |               | Join an agent with a join token. |
+| [`Get(ctx, hostname)`](#get)                    | `*Response[AgentInfo]`           | `agent:read`  | Get agent details.               |
+| [`Drain(ctx, hostname)`](#drain)                | `error`                          | `agent:write` | Drain an agent.                  |
+| [`Undrain(ctx, hostname)`](#undrain)            | `error`                          | `agent:write` | Undrain an agent.                |
 
 ### List
 
@@ -40,6 +42,60 @@ List active agents, `go run agent.go list`:
 
 ```go
 resp, err := c.Agent.List(ctx)
+```
+
+### Getconfig
+
+```go
+func (s *AgentService) Getconfig(
+	ctx context.Context,
+	hostname string,
+) (*Response[AgentConfigResponse], error)
+```
+
+Read the config of an agent.
+
+Returns the config that the controller holds for the agent, with its version.
+
+It sends `GET /api/agent/config/{hostname}`, and needs the permission
+`agent:read`.
+
+The examples of the method's definition:
+
+Read the config of an agent, `go run agent.go getconfig`:
+
+```go
+resp, err := c.Agent.Getconfig(ctx, "web-01")
+```
+
+### Setconfig
+
+```go
+func (s *AgentService) Setconfig(
+	ctx context.Context,
+	hostname string,
+	input AgentSetconfigInput,
+) (*Response[AgentConfigResponse], error)
+```
+
+Set the config of an agent.
+
+Sets the labels of the agent as the next version of its config. The agent
+applies them at once: it takes the jobs of the new labels, and no restart is
+necessary.
+
+It sends `PUT /api/agent/config/{hostname}`, and needs the permission
+`agent:write`.
+
+The examples of the method's definition:
+
+Set the config of an agent, `go run agent.go setconfig`:
+
+```go
+resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{Labels: map[string]string{
+	"dc":    "east",
+	"group": "web",
+}})
 ```
 
 ### Facts
@@ -166,12 +222,23 @@ AddressFamily is the IP address family of an interface.
 
 A `string`, one of `inet`, `inet6`, `dual`.
 
+### AgentConfigResponse
+
+| Field       | Type                | Description                                      |
+| ----------- | ------------------- | ------------------------------------------------ |
+| `Labels`    | `map[string]string` | The labels that the controller gives the agent.  |
+| `UpdatedAt` | `time.Time`         | When the config last changed.                    |
+| `Version`   | `int`               | One more at each change; 0 when nothing was set. |
+
 ### AgentInfo
 
 | Field              | Type                         | Description                                                                                                                                                                                                                   |
 | ------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Architecture`     | `string`                     | CPU architecture.                                                                                                                                                                                                             |
 | `Conditions`       | `[]NodeCondition`            | The conditions that hold now, such as HighLoad. A condition that does not hold is not in the list.                                                                                                                            |
+| `ConfigBehind`     | `bool`                       | The agent has not applied the newest config that the controller holds for it yet: it applies it at its next heartbeat, or it cannot reach the controller's config.                                                            |
+| `ConfigVersion`    | `int`                        | The version of the controller's config of the agent that the agent applied. Absent when it applied none.                                                                                                                      |
+| `ConfigWanted`     | `int`                        | The version of the config that the controller holds for the agent. Absent when it holds none.                                                                                                                                 |
 | `CPUCount`         | `int`                        | Number of logical CPUs.                                                                                                                                                                                                       |
 | `Facts`            | `map[string]any`             | Extended facts from additional providers.                                                                                                                                                                                     |
 | `Fingerprint`      | `string`                     | The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys.                                                                                                                                   |
@@ -208,6 +275,12 @@ A `string`, one of `inet`, `inet6`, `dual`.
 | `PublicKey`     | `string` | The agent's Ed25519 signing key, in base64.                                                                                                   |
 | `Signature`     | `string` | The signature of the request by the signing key, in base64.                                                                                   |
 | `Token`         | `string` | The join token, osapi_jt_<id>.<secret>, from osapi controller join token create. A secret: a reference, secret://<vault>/<key>, or the value. |
+
+### AgentSetconfigInput
+
+| Field    | Type                | Description                                                                                                                       |
+| -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `Labels` | `map[string]string` | The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each. |
 
 ### AgentState
 

@@ -147,6 +147,21 @@ func (mr *MockJobClientMockRecorder) GetAgent(ctx, hostname any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgent", reflect.TypeOf((*MockJobClient)(nil).GetAgent), ctx, hostname)
 }
 
+// GetAgentConfig mocks base method.
+func (m *MockJobClient) GetAgentConfig(ctx context.Context, machineID string) (job.AgentConfig, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAgentConfig", ctx, machineID)
+	ret0, _ := ret[0].(job.AgentConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAgentConfig indicates an expected call of GetAgentConfig.
+func (mr *MockJobClientMockRecorder) GetAgentConfig(ctx, machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgentConfig", reflect.TypeOf((*MockJobClient)(nil).GetAgentConfig), ctx, machineID)
+}
+
 // GetAgentTimeline mocks base method.
 func (m *MockJobClient) GetAgentTimeline(ctx context.Context, machineID, hostname string) ([]job.TimelineEvent, error) {
 	m.ctrl.T.Helper()
@@ -329,6 +344,21 @@ func (m *MockJobClient) RetryJob(ctx context.Context, jobID, targetHostname stri
 func (mr *MockJobClientMockRecorder) RetryJob(ctx, jobID, targetHostname any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetryJob", reflect.TypeOf((*MockJobClient)(nil).RetryJob), ctx, jobID, targetHostname)
+}
+
+// SetAgentConfig mocks base method.
+func (m *MockJobClient) SetAgentConfig(ctx context.Context, machineID string, labels map[string]string) (job.AgentConfig, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAgentConfig", ctx, machineID, labels)
+	ret0, _ := ret[0].(job.AgentConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetAgentConfig indicates an expected call of SetAgentConfig.
+func (mr *MockJobClientMockRecorder) SetAgentConfig(ctx, machineID, labels any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentConfig", reflect.TypeOf((*MockJobClient)(nil).SetAgentConfig), ctx, machineID, labels)
 }
 
 // SetAgentKeyStore mocks base method.

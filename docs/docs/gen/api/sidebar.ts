@@ -1411,6 +1411,20 @@ const sidebar: SidebarsConfig = {
             },
             {
               type: "doc",
+              id: "gen/api/get-agent-config",
+              label: "Read the config of an agent",
+              className: "api-method get",
+              key: "fleet-agent-management-api-agent-operations-gen-api-get-agent-config",
+            },
+            {
+              type: "doc",
+              id: "gen/api/put-agent-config",
+              label: "Set the config of an agent",
+              className: "api-method put",
+              key: "fleet-agent-management-api-agent-operations-gen-api-put-agent-config",
+            },
+            {
+              type: "doc",
               id: "gen/api/get-agent-facts",
               label: "List the fact keys",
               className: "api-method get",

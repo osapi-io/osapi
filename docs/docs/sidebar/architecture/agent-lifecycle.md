@@ -159,6 +159,7 @@ decision of admission, and the agent writes its own start and stop:
 | `revoked`, `deleted`   | controller | by an operator, or for `deleted` by `delete_after` with when it was seen |
 | `hostname_changed`     | controller | the old and the new hostname                                             |
 | `started`, `stopped`   | agent      | its version, at a start                                                  |
+| `config_applied`       | agent      | the version of its config and its labels, when the labels changed        |
 
 The state of the agent comes from the latest drain event (`drain`, `cordoned`,
 `undrain`). A lifecycle event after a drain does not end the drain.

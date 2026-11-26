@@ -396,6 +396,7 @@ func agentInfoFromRegistration(
 		LoadAverages:    reg.LoadAverages,
 		MemoryStats:     reg.MemoryStats,
 		AgentVersion:    reg.AgentVersion,
+		ConfigVersion:   reg.ConfigVersion,
 		MissingPrograms: reg.MissingPrograms,
 		Conditions:      reg.Conditions,
 		State:           reg.State,

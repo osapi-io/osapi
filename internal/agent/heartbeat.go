@@ -134,6 +134,7 @@ func (a *Agent) writeRegistration(
 	hostname string,
 ) {
 	a.handleDrainDetection(ctx, machineID, hostname)
+	a.applyConfig(ctx)
 	a.writeSeen(ctx, machineID)
 	a.refreshPrograms()
 
@@ -147,6 +148,7 @@ func (a *Agent) writeRegistration(
 		SubComponents:   a.subComponents,
 		Fingerprint:     a.pkiFingerprint(),
 		AgentVersion:    a.version,
+		ConfigVersion:   a.configVersion,
 		MissingPrograms: a.missingPrograms,
 	}
 

@@ -23,6 +23,7 @@ package agent
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"time"
 
 	"github.com/avfs/avfs"
@@ -65,6 +66,7 @@ func New(
 		renamed:         make(chan chan struct{}, 1),
 		logger:          logger.With(slog.String("subsystem", "agent")),
 		appConfig:       appConfig,
+		fileLabels:      maps.Clone(appConfig.Agent.Labels),
 		appFs:           appFs,
 		jobClient:       jobClient,
 		streamName:      streamName,

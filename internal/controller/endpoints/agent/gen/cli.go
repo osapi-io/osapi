@@ -77,6 +77,43 @@ var agentDrainCmd = &cobra.Command{
 	Use:   "drain",
 }
 
+var agentGetconfigCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "config",
+		reference.Permission: "agent:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config get --hostname web-01\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m  2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m   dc:east, group:web\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m  2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent config get --hostname web-01",
+	Long:    "Shows the labels that the controller gives the agent, and the version of\nthe config. The agent applies each version at once.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		hostname, _ := cmd.Flags().GetString("hostname")
+
+		endpointcommand.Run(cmd, agent.Group, "getconfig", agent.ConfigGetInput{Hostname: hostname})
+	},
+	Short: "Read the config of an agent",
+	Use:   "get",
+}
+
+var agentSetconfigCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "config",
+		reference.Permission: "agent:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent config update --hostname web-01 --labels group=web --labels dc=east\n\x1b[1;38;2;0;213;255mAgent config:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m  2\n  \x1b[38;2;10;143;176mLabels:\x1b[0m   dc:east, group:web\n  \x1b[38;2;10;143;176mUpdated:\x1b[0m  2026-11-25 12:00:00\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"version\": 2,\n  \"labels\": {\n    \"dc\": \"east\",\n    \"group\": \"web\"\n  },\n  \"updated_at\": \"2026-11-25T12:00:00Z\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent config update --hostname web-01 --labels group=web --labels dc=east",
+	Long:    "The labels replace the labels of the agent's config file with the same\nkeys. The agent applies them at once, with no restart. A host that joins\nwith a join token gets the labels of the token.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		hostname, _ := cmd.Flags().GetString("hostname")
+		labels, _ := cmd.Flags().GetStringToString("labels")
+
+		endpointcommand.Run(cmd, agent.Group, "setconfig", agent.ConfigSetInput{Hostname: hostname, Body: agent.AgentConfigRequest{Labels: labels}})
+	},
+	Short: "Set the labels of an agent",
+	Use:   "update",
+}
+
 var agentUndrainCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "agent:write",
@@ -99,7 +136,12 @@ func init() {
 	_ = agentGetCmd.MarkFlagRequired("hostname")
 	agentDrainCmd.Flags().String("hostname", "", "The hostname of the agent to drain")
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
+	agentGetconfigCmd.Flags().String("hostname", "", "The hostname of the agent")
+	_ = agentGetconfigCmd.MarkFlagRequired("hostname")
+	agentSetconfigCmd.Flags().String("hostname", "", "The hostname of the agent")
+	_ = agentSetconfigCmd.MarkFlagRequired("hostname")
+	agentSetconfigCmd.Flags().StringToString("labels", nil, "The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	clicommand.AddCommands(agent.Group, agentFactsCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
+	clicommand.AddCommands(agent.Group, agentFactsCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentGetconfigCmd, agentSetconfigCmd, agentUndrainCmd)
 }

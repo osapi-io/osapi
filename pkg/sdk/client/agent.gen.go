@@ -25,6 +25,44 @@ func (s *AgentService) List(
 	return send[ListAgentsResponse](ctx, s.client, http.MethodGet, "/api/agent", nil, nil)
 }
 
+// Getconfig is the operation GetAgentConfig: read the config of an agent.
+//
+// Returns the config that the controller holds for the agent, with its
+// version.
+//
+// It sends GET /api/agent/config/{hostname}, and needs the permission
+// agent:read.
+func (s *AgentService) Getconfig(
+	ctx context.Context,
+	hostname string,
+) (*Response[AgentConfigResponse], error) {
+	return send[AgentConfigResponse](ctx, s.client, http.MethodGet, "/api/agent/config/"+url.PathEscape(hostname), nil, nil)
+}
+
+// AgentSetconfigInput is the input of AgentService.Setconfig. A field of the
+// path goes in the path, and each other field in the body.
+type AgentSetconfigInput struct {
+	// The labels of the agent, as key=value. They replace the labels of the
+	// agent's config file with the same keys. Empty removes each.
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// Setconfig is the operation PutAgentConfig: set the config of an agent.
+//
+// Sets the labels of the agent as the next version of its config. The agent
+// applies them at once: it takes the jobs of the new labels, and no restart is
+// necessary.
+//
+// It sends PUT /api/agent/config/{hostname}, and needs the permission
+// agent:write.
+func (s *AgentService) Setconfig(
+	ctx context.Context,
+	hostname string,
+	input AgentSetconfigInput,
+) (*Response[AgentConfigResponse], error) {
+	return send[AgentConfigResponse](ctx, s.client, http.MethodPut, "/api/agent/config/"+url.PathEscape(hostname), nil, input)
+}
+
 // Facts is the operation GetAgentFacts: list the fact keys.
 //
 // Returns the fact keys that an input can refer to as @fact.<key>: the

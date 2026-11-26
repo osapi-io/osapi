@@ -153,6 +153,25 @@ export function AgentCard({
                 </>
               ),
             ],
+            // The config that the controller holds for the agent, and
+            // whether the agent applied it yet.
+            ...(agent.config_wanted
+              ? [
+                  [
+                    "Config",
+                    <span
+                      key="c"
+                      className={
+                        agent.config_behind ? "text-status-pending" : undefined
+                      }
+                    >
+                      v{agent.config_version ?? 0}
+                      {agent.config_behind &&
+                        `, applying v${agent.config_wanted}`}
+                    </span>,
+                  ] as [string, ReactNode],
+                ]
+              : []),
             // The version only when it is not the controller's: a
             // mismatch is the case that matters.
             ...(agent.version &&

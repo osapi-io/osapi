@@ -473,6 +473,7 @@ components:
         - DrainAgent
         - GetAdmission
         - GetAdmissions
+        - GetAgentConfig
         - GetAgentDetails
         - GetAgentFacts
         - GetAgents
@@ -556,6 +557,7 @@ components:
         - PostNodeSysctl
         - PostNodeUser
         - PostNodeUserSshkey
+        - PutAgentConfig
         - PutFileByName
         - PutNodeCertificate
         - PutNodeDns
