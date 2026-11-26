@@ -22,6 +22,8 @@ package all_test
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -70,6 +72,47 @@ func (s *AllPublicTestSuite) TestRefusals() {
 		}
 	}
 	s.NotZero(count)
+}
+
+// TestEachPackageRegistered holds that each package of commands is in the
+// binary: all.go imports it, and gen.go imports its generated commands. A
+// package that neither imported, such as agentservice at its merge, had
+// tests that passed and no command in the binary.
+func (s *AllPublicTestSuite) TestEachPackageRegistered() {
+	all, err := os.ReadFile("all.go")
+	s.Require().NoError(err)
+	gen, err := os.ReadFile(filepath.Join("gen", "gen.go"))
+	s.Require().NoError(err)
+	dirs, err := os.ReadDir("..")
+	s.Require().NoError(err)
+	checked := 0
+	for _, d := range dirs {
+		if !d.IsDir() || d.Name() == "all" {
+			continue
+		}
+		files, _ := filepath.Glob(filepath.Join("..", d.Name(), "*.go"))
+		registers := false
+		for _, f := range files {
+			data, _ := os.ReadFile(f)
+			if !strings.HasSuffix(f, "_test.go") &&
+				strings.Contains(string(data), "command.Register(") {
+				registers = true
+			}
+		}
+		if !registers {
+			continue
+		}
+		checked++
+		pkg := "github.com/osapi-io/osapi/internal/cli/commands/" + d.Name()
+		s.Contains(string(all), `"`+pkg+`"`, "all.go does not import %s", d.Name())
+		s.Contains(
+			string(gen),
+			`"`+pkg+`/gen"`,
+			"gen/gen.go does not import %s/gen: run go generate ./internal/cli/commands/all",
+			d.Name(),
+		)
+	}
+	s.NotZero(checked)
 }
 
 func TestAllPublicTestSuite(

@@ -6,6 +6,7 @@ package gen
 import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentkey/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/agentservice/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/behaviordsl/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/chain/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/clidocs/gen"

@@ -25,6 +25,7 @@ import (
 	// Each import registers its group.
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentkey"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/agentservice"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/chain"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/clidocs"
