@@ -81,7 +81,7 @@ func sources(
 		},
 		{
 			name: jetStreamName, kind: KindEncryption, component: "nats",
-			algorithm: "ChaCha20-Poly1305", typ: typeJetStream,
+			algorithm: "AES-256-GCM", typ: typeJetStream,
 			file: c.NATS.Server.JetStream.KeyFile,
 		},
 	}

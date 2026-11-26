@@ -70,8 +70,11 @@ osapi do not operate in it:
   `crypto/rand.Reader`, and only mode refuses that. Thus the controller and the
   agents cannot authenticate to NATS (osapi-io/osapi#1527).
 - **The JetStream store encryption.** With `nats.server.jetstream.key_file`, the
-  embedded NATS server encrypts its store with ChaCha20-Poly1305, which only
-  mode refuses. The server does not make a stream (osapi-io/osapi#1528).
+  embedded NATS server encrypts its store with AES-256-GCM, an approved
+  algorithm. But the server makes the GCM with a nonce that it selects, which
+  only mode refuses. Thus the server does not make an encrypted stream in only
+  mode (osapi-io/osapi#1549). A store with no `key_file` is not encrypted, and
+  operates in only mode.
 - **Facts from gohai.** The SSH host key facts and the shard of a host use MD5
   (osapi-io/gohai#357).
 

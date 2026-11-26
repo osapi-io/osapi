@@ -23,10 +23,10 @@ The command prints:
 ```ansi
 $ osapi pki list
 [1;38;2;0;213;255mKeys and certificates (3):[0m
-  [38;2;10;143;176mKIND  [0m[38;2;10;143;176mNAME        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM          [0m[38;2;10;143;176mEXPIRES[0m
+  [38;2;10;143;176mKIND  [0m[38;2;10;143;176mNAME        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM    [0m[38;2;10;143;176mEXPIRES[0m
   key   [1mcontroller[0m  controller  ok     Ed25519
-  key   [1mjetstream[0m   nats        ok     ChaCha20-Poly1305
-  cert  [1mapi[0m         controller  ok     ECDSA P-256        2031-11-25 12:00:00
+  key   [1mjetstream[0m   nats        ok     AES-256-GCM
+  cert  [1mapi[0m         controller  ok     ECDSA P-256  2031-11-25 12:00:00
 ```
 
 With `--json`, the command prints:
@@ -49,7 +49,7 @@ With `--json`, the command prints:
       "component": "nats",
       "state": "ok",
       "file": "/etc/osapi/nats/jetstream.key",
-      "algorithm": "ChaCha20-Poly1305",
+      "algorithm": "AES-256-GCM",
       "fingerprint": "7f3a9c1e5b2d8f40"
     },
     {

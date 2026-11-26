@@ -154,8 +154,8 @@ password to its hash. A secret that the step leaves set is sealed, not refused.
 
 ## The store on the disk
 
-The embedded NATS server encrypts each stream and bucket in its `store_dir` when
-`nats.server.jetstream.key_file` names a key.
+The embedded NATS server encrypts each stream and bucket in its `store_dir` with
+AES-256-GCM when `nats.server.jetstream.key_file` names a key.
 `osapi pki key create --name jetstream` makes the key on the NATS host. Thus a
 person who reads the disk or a backup of the store does not read the jobs, the
 audit log or the agent registry. The key does not protect a value from a NATS

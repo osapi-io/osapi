@@ -83,9 +83,16 @@ Do these steps on the host of NATS and the controller.
    osapi pki key create --name jetstream -f /etc/osapi/osapi.yaml
    ```
 
-   It writes the key to `nats.server.jetstream.key_file`. Keep a copy of the key
-   apart from the backup of `nats.server.store_dir`: without it, the server
-   cannot read the store and does not start. osapi does not rotate this key.
+   It writes the key to `nats.server.jetstream.key_file`. The server encrypts
+   the store with AES-256-GCM. Keep a copy of the key apart from the backup of
+   `nats.server.store_dir`: without it, the server cannot read the store and
+   does not start. osapi does not rotate this key.
+
+   A store that an osapi before osapi-io/osapi#1528 encrypted uses
+   ChaCha20-Poly1305, and the server does not open it with AES-256-GCM. Stop
+   NATS and the controller, remove `nats.server.store_dir`, and start them
+   again. The store holds the admissions, the vault, the jobs and the audit log,
+   so each agent joins again and each vault value is written again.
 
 1. Start NATS. It makes osapi's streams and buckets when it starts:
 

@@ -32,7 +32,7 @@ var sampleList = ListOutput{Items: []Item{
 	},
 	{
 		Kind: KindKey, Name: "jetstream", Component: "nats", State: "ok",
-		File: "/etc/osapi/nats/jetstream.key", Algorithm: "ChaCha20-Poly1305",
+		File: "/etc/osapi/nats/jetstream.key", Algorithm: "AES-256-GCM",
 		Fingerprint: "7f3a9c1e5b2d8f40",
 	},
 	{

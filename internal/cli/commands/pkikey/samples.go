@@ -35,7 +35,7 @@ var (
 	}
 	sampleJetStream = Key{
 		Name: "jetstream", Kind: KindEncryption, Component: "nats", State: StateOK,
-		File: "/etc/osapi/nats/jetstream.key", Algorithm: "ChaCha20-Poly1305",
+		File: "/etc/osapi/nats/jetstream.key", Algorithm: "AES-256-GCM",
 		KeyID: "7f3a9c1e5b2d8f40",
 	}
 	sampleVault = Key{
