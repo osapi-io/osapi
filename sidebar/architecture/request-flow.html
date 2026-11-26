@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">How a request runs | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="How a request runs | OSAPI"><meta data-rh="true" name="description" content="Each change and each read of a host is a job. A client does not send a request"><meta data-rh="true" property="og:description" content="Each change and each read of a host is a job. A client does not send a request"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"How a request runs","item":"https://osapi-io.github.io/osapi/sidebar/architecture/request-flow"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.2679559a.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.5f8f9db1.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.5aeb188f.js" defer="defer"></script>
 </head>
 <body>
@@ -133,7 +133,14 @@ you read the job:</p>
 
 
 
-<table><thead><tr><th>Status</th><th>Meaning</th></tr></thead><tbody><tr><td><code>submitted</code></td><td>The controller put the job on the queue</td></tr><tr><td><code>acknowledged</code></td><td>An agent received the job</td></tr><tr><td><code>started</code></td><td>The agent runs the job</td></tr><tr><td><code>completed</code></td><td>The job ran and succeeded</td></tr><tr><td><code>failed</code></td><td>The job ran and did not succeed</td></tr><tr><td><code>skipped</code></td><td>The host cannot do the job, for example a Debian operation on macOS</td></tr><tr><td><code>timeout</code></td><td>No answer in <code>controller.api.job_timeout</code></td></tr></tbody></table>
+
+
+
+
+<table><thead><tr><th>Status</th><th>Meaning</th></tr></thead><tbody><tr><td><code>submitted</code></td><td>The controller put the job on the queue</td></tr><tr><td><code>acknowledged</code></td><td>An agent received the job</td></tr><tr><td><code>started</code></td><td>The agent runs the job</td></tr><tr><td><code>completed</code></td><td>The job ran and succeeded</td></tr><tr><td><code>failed</code></td><td>The job ran and did not succeed</td></tr><tr><td><code>skipped</code></td><td>The host cannot do the job, for example a Debian operation on macOS</td></tr><tr><td><code>timeout</code></td><td>No answer in <code>controller.api.job_timeout</code></td></tr><tr><td><code>refused</code></td><td>The controller refused the result: the admitted key did not sign it</td></tr></tbody></table>
+<p><code>refused</code> is the controller&#x27;s event, not the agent&#x27;s. It outranks what the agent
+reported, and the job counts it as failed. The agent then shows <code>Refused</code> with
+the <code>KeyMismatch</code> condition in <code>osapi client agent list</code>.</p>
 <p><code>timeout</code> is not <code>failed</code>. It does not tell if the operation ran. The agent can
 be gone, or it can still do the work and answer soon. A job sent to many agents
 also reports <code>processing</code> while some agents still run it, and <code>partial_failure</code>
