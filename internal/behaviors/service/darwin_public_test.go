@@ -82,8 +82,9 @@ func (s *DarwinPublicTestSuite) TestServiceWhenTheRecordCannotBeRead() {
 				Return("system = {\n\tservices = {\n\t\t     612      - \tio.osapi.app\n\t}\n}\n", nil).
 				AnyTimes()
 			p, err := service.Behavior.Provider(behavior.PlatformDarwin, host.Host{
-				FS:   memfs.New(),
-				Exec: exec,
+				Platform: behavior.PlatformDarwin,
+				FS:       memfs.New(),
+				Exec:     exec,
 				Required: map[string]any{
 					managedfile.Behavior.Name: files,
 					object.Behavior.Name:      objectmocks.NewMockProvider(ctrl),
@@ -115,8 +116,9 @@ func (s *DarwinPublicTestSuite) TestStartADisabledDaemon() {
 				Return("", errors.New("could not find service")).
 				AnyTimes()
 			p, err := service.Behavior.Provider(behavior.PlatformDarwin, host.Host{
-				FS:   memfs.New(),
-				Exec: exec,
+				Platform: behavior.PlatformDarwin,
+				FS:       memfs.New(),
+				Exec:     exec,
 				Required: map[string]any{
 					managedfile.Behavior.Name: files,
 					object.Behavior.Name:      objectmocks.NewMockProvider(ctrl),
@@ -164,8 +166,9 @@ func (s *DarwinPublicTestSuite) TestStartALoadedDaemon() {
 			exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "launchctl",
 				[]string{"kickstart", "system/io.osapi.app"}).Return("", tc.err)
 			p, err := service.Behavior.Provider(behavior.PlatformDarwin, host.Host{
-				FS:   memfs.New(),
-				Exec: exec,
+				Platform: behavior.PlatformDarwin,
+				FS:       memfs.New(),
+				Exec:     exec,
 				Required: map[string]any{
 					managedfile.Behavior.Name: files,
 					object.Behavior.Name:      objectmocks.NewMockProvider(ctrl),
