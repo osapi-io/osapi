@@ -116,24 +116,20 @@ func keyID(
 	return hex.EncodeToString(sum[:8])
 }
 
-// seal encrypts value with the current key, with a new nonce. aad binds
-// the result to its vault and key, so a value copied to a different key
-// does not open.
+// seal encrypts value with the current key. The GCM makes a new random
+// nonce and puts it in front of the data, as FIPS 140-3 only mode
+// requires. aad binds the result to its vault and key, so a value copied
+// to a different key does not open.
 func (k Keyring) seal(
 	value []byte,
 	aad string,
-) (keyID string, nonce []byte, data []byte) {
-	gcm := newGCM(k.keys[0])
-	nonce = make([]byte, gcm.NonceSize())
-	_, _ = rand.Read(nonce)
-
-	return k.ID(), nonce, gcm.Seal(nil, nonce, value, []byte(aad))
+) (keyID string, data []byte) {
+	return k.ID(), newGCM(k.keys[0]).Seal(nil, nil, value, []byte(aad))
 }
 
 // open decrypts data with the key id.
 func (k Keyring) open(
 	id string,
-	nonce []byte,
 	data []byte,
 	aad string,
 ) ([]byte, error) {
@@ -141,11 +137,7 @@ func (k Keyring) open(
 		if keyID(key) != id {
 			continue
 		}
-		gcm := newGCM(key)
-		if len(nonce) != gcm.NonceSize() {
-			return nil, errors.New("the value does not decrypt: its nonce has the wrong size")
-		}
-		value, err := gcm.Open(nil, nonce, data, []byte(aad))
+		value, err := newGCM(key).Open(nil, nil, data, []byte(aad))
 		if err != nil {
 			return nil, fmt.Errorf("the value does not decrypt: %w", err)
 		}
@@ -156,12 +148,13 @@ func (k Keyring) open(
 	return nil, fmt.Errorf("the value is under key %s, which the vault key does not have", id)
 }
 
-// newGCM is AES-256-GCM with key, which is keySize bytes.
+// newGCM is AES-256-GCM with key, which is keySize bytes, and a random
+// nonce that it makes for each Seal and puts in front of the data.
 func newGCM(
 	key []byte,
 ) cipher.AEAD {
 	block, _ := aes.NewCipher(key)
-	gcm, _ := cipher.NewGCM(block)
+	gcm, _ := cipher.NewGCMWithRandomNonce(block)
 
 	return gcm
 }

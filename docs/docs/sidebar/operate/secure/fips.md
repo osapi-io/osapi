@@ -72,10 +72,8 @@ osapi do not operate in it:
 - **The JetStream store encryption.** With `nats.server.jetstream.key_file`, the
   embedded NATS server encrypts its store with ChaCha20-Poly1305, which only
   mode refuses. The server does not make a stream (osapi-io/osapi#1528).
-- **The NATS vault.** It uses AES-GCM with a nonce that it selects, which only
-  mode refuses (osapi-io/osapi#1529).
 - **Facts from gohai.** The SSH host key facts and the shard of a host use MD5
   (osapi-io/gohai#357).
 
-The `go-fips-test` recipe runs the tests of the seal and of the agent keys in
-only mode. CI runs it in the `fips140=only` job.
+The `go-fips-test` recipe runs the tests of the seal, the NATS vault and the
+agent keys in only mode. CI runs it in the `fips140=only` job.

@@ -20,7 +20,8 @@
 
 // Package natsvault is the nats type of vault, the one that osapi ships.
 // NATS has no secret store, so the vault encrypts each value with
-// AES-256-GCM under the vault key, with a new nonce each time, and keeps it
+// AES-256-GCM under the vault key, with a new random nonce in front of each
+// value, and keeps it
 // in the JetStream KV bucket of nats.secrets. The KV keeps the earlier
 // versions of a key, as the history of the bucket allows.
 package natsvault
@@ -124,7 +125,7 @@ func (v *Vault) get(
 	if err != nil {
 		return nil, vault.Meta{}, err
 	}
-	value, err := ring.open(rec.KeyID, rec.Nonce, rec.Data, v.aad(key))
+	value, err := ring.open(rec.KeyID, rec.Data, v.aad(key))
 	if err != nil {
 		return nil, vault.Meta{}, fmt.Errorf("get %s/%s: %w", v.name, key, err)
 	}
@@ -153,7 +154,7 @@ func (v *Vault) put(
 		Changed: time.Now().UTC(),
 		By:      vault.Actor(ctx),
 	}
-	next.KeyID, next.Nonce, next.Data = ring.seal(value, v.aad(key))
+	next.KeyID, next.Data = ring.seal(value, v.aad(key))
 	if err := v.write(ctx, key, next, revision); err != nil {
 		return vault.Meta{}, err
 	}
@@ -246,11 +247,11 @@ func (v *Vault) rotateKey(
 		if rec.KeyID == ring.ID() {
 			return false, nil
 		}
-		value, err := ring.open(rec.KeyID, rec.Nonce, rec.Data, v.aad(key))
+		value, err := ring.open(rec.KeyID, rec.Data, v.aad(key))
 		if err != nil {
 			return false, fmt.Errorf("rotate %s/%s: %w", v.name, key, err)
 		}
-		rec.KeyID, rec.Nonce, rec.Data = ring.seal(value, v.aad(key))
+		rec.KeyID, rec.Data = ring.seal(value, v.aad(key))
 		err = v.write(ctx, key, rec, revision)
 		if err == nil {
 			return true, nil

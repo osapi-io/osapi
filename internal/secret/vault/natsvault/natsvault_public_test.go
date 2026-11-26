@@ -22,6 +22,7 @@ package natsvault_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"testing"
@@ -363,19 +364,37 @@ func (s *NATSVaultPublicTestSuite) TestGet() {
 		s.ErrorContains(err, "get default/other: the value does not decrypt: ")
 	})
 
-	s.Run("when the nonce has the wrong size does not decrypt", func() {
+	s.Run("when the data is shorter than its nonce does not decrypt", func() {
 		kv, v, _ := s.mockVault()
 		data := s.sealed(kv, v, "token", "x")
 		var rec map[string]any
 		s.Require().NoError(json.Unmarshal(data, &rec))
-		rec["nonce"] = "AAAA"
+		rec["data"] = "AAAA"
 		bad, _ := json.Marshal(rec)
 		kv.EXPECT().KVGet(gomock.Any(), testBucket, "default.token").
 			Return(s.entry(bad, 1), nil)
 
 		_, _, err := v.Get(s.ctx, "token")
 
-		s.ErrorContains(err, "its nonce has the wrong size")
+		s.ErrorContains(err, "get default/token: the value does not decrypt: ")
+	})
+
+	s.Run("when the record keeps its nonce apart, the old form, does not decrypt", func() {
+		kv, v, _ := s.mockVault()
+		data := s.sealed(kv, v, "token", "x")
+		var rec map[string]any
+		s.Require().NoError(json.Unmarshal(data, &rec))
+		raw, err := base64.StdEncoding.DecodeString(rec["data"].(string))
+		s.Require().NoError(err)
+		rec["nonce"] = base64.StdEncoding.EncodeToString(raw[:12])
+		rec["data"] = base64.StdEncoding.EncodeToString(raw[12:])
+		old, _ := json.Marshal(rec)
+		kv.EXPECT().KVGet(gomock.Any(), testBucket, "default.token").
+			Return(s.entry(old, 1), nil)
+
+		_, _, err = v.Get(s.ctx, "token")
+
+		s.ErrorContains(err, "the value does not decrypt: ")
 	})
 }
 

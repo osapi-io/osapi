@@ -191,9 +191,11 @@ settings in the config table. Thus a different store is a type that plugs in.
 
 osapi has one type, `nats`, in `internal/secret/vault/natsvault`:
 
-- It encrypts each value with AES-256-GCM under the vault key, with a new nonce
-  each time. The vault and the key of the value are the additional data, so a
-  value that somebody copies to a different key does not decrypt.
+- It encrypts each value with AES-256-GCM under the vault key. The GCM makes a
+  new random nonce each time and puts it in front of the data, because FIPS
+  140-3 only mode refuses a nonce that the caller selects. The vault and the key
+  of the value are the additional data, so a value that somebody copies to a
+  different key does not decrypt.
 - It keeps each value in the KV bucket of `nats.secrets`, `osapi-secrets` with
   the namespace `osapi`, under `<vault>.<key>`. The bucket keeps the earlier
   versions of a key, as `nats.secrets.history` sets.
