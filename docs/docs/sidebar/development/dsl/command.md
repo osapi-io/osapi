@@ -666,7 +666,7 @@ with Values and Valid in the package's types.go; validate refuses oneof.
 ### `types.AgentState`
 
 AgentState is the scheduling state of an agent, one of its Values. Values:
-Ready, Draining, Cordoned, Pending.
+Ready, Draining, Cordoned, Pending, Refused.
 
 Use: A field that takes one of these values: types.AgentState with
 validate:"enum". A closed set that pkg/sdk/types does not have is a named type
@@ -694,7 +694,7 @@ with Values and Valid in the package's types.go; validate refuses oneof.
 
 ConditionType is a node or process condition that the agent evaluates, one of
 its Values. Values: MemoryPressure, HighLoad, DiskPressure, DrainStuck,
-ConsumersUnavailable, ProcessMemoryPressure, ProcessHighCPU.
+ConsumersUnavailable, ProcessMemoryPressure, ProcessHighCPU, KeyMismatch.
 
 Use: A field that takes one of these values: types.ConditionType with
 validate:"enum". A closed set that pkg/sdk/types does not have is a named type

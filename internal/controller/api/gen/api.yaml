@@ -9300,6 +9300,7 @@ components:
         - Draining
         - Cordoned
         - Pending
+        - Refused
       type: string
     ConditionType:
       description: A condition that an agent or a component evaluates.
@@ -9311,6 +9312,7 @@ components:
         - ConsumersUnavailable
         - ProcessMemoryPressure
         - ProcessHighCPU
+        - KeyMismatch
       type: string
     FactKeyEntry:
       properties:

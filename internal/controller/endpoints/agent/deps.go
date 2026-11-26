@@ -23,6 +23,7 @@ import (
 	"context"
 	"crypto/ed25519"
 
+	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/pki"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -36,6 +37,14 @@ type Deps struct {
 	// Joiner admits an agent that joins with a token. Nil on a controller
 	// that takes no join.
 	Joiner Joiner
+	// Admissions are the admission records, which say the keys that the
+	// controller admitted for each machine. Nil checks no keys.
+	Admissions Admissions
+}
+
+// Admissions reads the admission record of a machine.
+type Admissions interface {
+	Get(ctx context.Context, machineID string) (admission.Record, error)
 }
 
 // Joiner admits the machine of a join request whose token admits, and

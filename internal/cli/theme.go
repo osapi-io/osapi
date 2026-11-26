@@ -124,6 +124,7 @@ var StatusTones = map[string]string{
 	"unhealthy":       ToneErr,
 	"rejected":        ToneErr,
 	"revoked":         ToneErr,
+	"refused":         ToneErr,
 }
 
 // toneStyles is the style of each tone.

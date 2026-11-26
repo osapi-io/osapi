@@ -130,6 +130,10 @@ const (
 	// AgentPending indicates the agent is awaiting PKI enrollment
 	// acceptance and will not process jobs until accepted.
 	AgentPending AgentState = "Pending"
+	// AgentRefused indicates the controller refuses each result that the
+	// agent signs, because its keys are not the keys that the controller
+	// admitted. The KeyMismatch condition says which.
+	AgentRefused AgentState = "Refused"
 )
 
 // ConditionType is a node or process condition that the agent evaluates,
@@ -154,11 +158,15 @@ const (
 	// ConditionProcessHighCPU is set while the CPU use of the osapi process
 	// is over its limit.
 	ConditionProcessHighCPU ConditionType = "ProcessHighCPU"
+	// ConditionKeyMismatch is set by the controller, not the agent, when the
+	// agent's keys are not the keys that it admitted: the controller refuses
+	// each result that the agent signs (osapi-io/osapi#1484).
+	ConditionKeyMismatch ConditionType = "KeyMismatch"
 )
 
 // Values are each scheduling state of an agent.
 func (AgentState) Values() []AgentState {
-	return []AgentState{AgentReady, AgentDraining, AgentCordoned, AgentPending}
+	return []AgentState{AgentReady, AgentDraining, AgentCordoned, AgentPending, AgentRefused}
 }
 
 // Valid is whether s is one of Values.
@@ -171,7 +179,7 @@ func (ConditionType) Values() []ConditionType {
 	return []ConditionType{
 		ConditionMemoryPressure, ConditionHighLoad, ConditionDiskPressure,
 		ConditionDrainStuck, ConditionConsumersUnavailable,
-		ConditionProcessMemoryPressure, ConditionProcessHighCPU,
+		ConditionProcessMemoryPressure, ConditionProcessHighCPU, ConditionKeyMismatch,
 	}
 }
 

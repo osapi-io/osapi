@@ -10,13 +10,14 @@ A condition is a boolean that compares a value with a limit. The agent
 calculates the conditions at each heartbeat (10 seconds). They show if something
 is wrong. The operator does not need to read the raw metrics.
 
-| Condition              | Default Threshold                      | Data Source      |
-| ---------------------- | -------------------------------------- | ---------------- |
-| `MemoryPressure`       | Memory used > 90%                      | Heartbeat memory |
-| `HighLoad`             | Load1 > 2x CPU count                   | Heartbeat load   |
-| `DiskPressure`         | Any disk > 90% used                    | Heartbeat disk   |
-| `DrainStuck`           | A drain waits for its consumers > 1m   | Drain            |
-| `ConsumersUnavailable` | A job consumer cannot be made or bound | Job consumers    |
+| Condition              | Default Threshold                          | Data Source      |
+| ---------------------- | ------------------------------------------ | ---------------- |
+| `MemoryPressure`       | Memory used > 90%                          | Heartbeat memory |
+| `HighLoad`             | Load1 > 2x CPU count                       | Heartbeat load   |
+| `DiskPressure`         | Any disk > 90% used                        | Heartbeat disk   |
+| `DrainStuck`           | A drain waits for its consumers > 1m       | Drain            |
+| `ConsumersUnavailable` | A job consumer cannot be made or bound     | Job consumers    |
+| `KeyMismatch`          | The agent's keys are not the admitted keys | The controller   |
 
 The agent evaluates each condition at each heartbeat, and keeps:
 
@@ -33,6 +34,15 @@ run, for example when the stream has its maximum number of consumers. The reason
 gives the number of consumers and the error of one of them. The agent logs the
 error and tries again each 10 seconds. While the condition holds, the agent can
 miss jobs, and a broadcast can show a `timeout` row for it.
+
+`KeyMismatch` is the one condition that the controller sets, not the agent. It
+holds while the fingerprint of the keys that the agent reports is not the
+fingerprint that the controller admitted for its machine, for example after the
+agent made new keys in a different key directory. The controller refuses each
+result that the agent signs, so each job to the agent fails. The agent then
+shows `Refused`, not `Ready`. The reason gives both fingerprints. Remove the
+machine's admission and let it join again, or give the agent back its admitted
+keys.
 
 The API and the CLI show only the conditions that hold now. A condition that
 does not hold is not in the answer. The notifier uses the full list of the

@@ -120,6 +120,7 @@ components:
         - ConsumersUnavailable
         - ProcessMemoryPressure
         - ProcessHighCPU
+        - KeyMismatch
       type: string
     ErrorResponse:
       properties:

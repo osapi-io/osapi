@@ -16,4 +16,5 @@ export const AgentState = {
   Draining: 'Draining',
   Cordoned: 'Cordoned',
   Pending: 'Pending',
+  Refused: 'Refused',
 } as const;
