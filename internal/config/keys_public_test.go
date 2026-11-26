@@ -29,6 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
 // kvSettings is a behavior's declared settings, for these tests.
@@ -39,6 +40,11 @@ type kvSettings struct {
 		Max int `mapstructure:"max" doc:"The most it keeps."`
 	} `mapstructure:"limit"`
 }
+
+// kvGroup is an endpoint group with settings. The endpoint registry has no
+// reset, so it is registered one time for the package's tests.
+var kvGroup = endpoint.Register(endpoint.Define("kvgroup", "Key values",
+	endpoint.Config(kvSettings{Dir: "/var/kvgroup", Level: 2})))
 
 // registerKV registers a behavior with settings and one without, and returns
 // the first.
@@ -82,6 +88,16 @@ func (s *KeysPublicTestSuite) TestKeys() {
 		validateFunc func()
 	}{
 		{
+			name: "when an endpoint group declares settings, they are under controller.endpoints",
+			validateFunc: func() {
+				k := byName["controller.endpoints.kvgroup.dir"]
+				s.Equal("kvgroup", k.Group)
+				s.Equal("/var/kvgroup", k.Default)
+				s.Equal("OSAPI_CONTROLLER_ENDPOINTS_KVGROUP_DIR", k.Env)
+				s.Empty(k.Behavior)
+			},
+		},
+		{
 			name: "when every key has a description",
 			validateFunc: func() {
 				for _, k := range keys {
@@ -93,7 +109,7 @@ func (s *KeysPublicTestSuite) TestKeys() {
 			name: "when every key has a default, or says why it is a choice",
 			validateFunc: func() {
 				for _, k := range keys {
-					if k.Behavior != "" {
+					if k.Behavior != "" || k.Group != "" {
 						continue
 					}
 					s.True(

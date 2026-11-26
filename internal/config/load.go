@@ -33,6 +33,7 @@ import (
 	// The permission rule of a custom role's permissions.
 	_ "github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -121,13 +122,13 @@ func Problems(
 			}
 		}
 	}
-	for _, b := range behavior.All() {
-		if b.SettingsType() == nil {
+	for _, o := range settingsOwners() {
+		if o.SettingsType() == nil {
 			continue
 		}
-		if err := v.Struct(behavior.Settings[any](b)); err != nil {
+		if err := v.Struct(o.CurrentSettings()); err != nil {
 			problems = append(problems,
-				valueProblems(err, RuleSetting, b.SettingsType(), b.SettingsKey())...)
+				valueProblems(err, RuleSetting, o.SettingsType(), o.SettingsKey())...)
 		}
 	}
 	problems = append(problems, vaultProblems(v, c.Controller.Secrets.Vaults)...)
@@ -179,35 +180,40 @@ func Read(
 		return found, broke(RuleParse, fmt.Errorf("parse %s: %w", path, err))
 	}
 
-	// Each behavior's settings are decoded into its own struct and handed to
-	// it, where its methods read them. UnmarshalKey would read only the
-	// file's part of the section, missing defaults and the environment, so
-	// the section is rebuilt from each key's resolved value first.
+	// Each behavior's and endpoint group's settings are decoded into its own
+	// struct and handed to it, where its methods read them. UnmarshalKey
+	// would read only the file's part of the section, missing defaults and
+	// the environment, so the section is rebuilt from each key's resolved
+	// value first.
+	owners := map[string]settingsOwner{}
+	for _, o := range settingsOwners() {
+		owners[o.SettingsKey()] = o
+	}
 	sections := map[string]*viper.Viper{}
 	for _, k := range Keys() {
-		if k.Behavior == "" {
+		o := ownerOf(owners, k)
+		if o == nil {
 			continue
 		}
-		b := behavior.Lookup(k.Behavior)
-		section, ok := sections[k.Behavior]
+		section, ok := sections[o.SettingsKey()]
 		if !ok {
 			section = viper.New()
-			sections[k.Behavior] = section
+			sections[o.SettingsKey()] = section
 		}
 		if val := v.Get(k.Name); val != nil {
-			section.Set(strings.TrimPrefix(k.Name, b.SettingsKey()+"."), val)
+			section.Set(strings.TrimPrefix(k.Name, o.SettingsKey()+"."), val)
 		}
 	}
-	for name, section := range sections {
-		b := behavior.Lookup(name)
-		settings := reflect.New(b.SettingsType())
+	for key, section := range sections {
+		o := owners[key]
+		settings := reflect.New(o.SettingsType())
 		if err := section.Unmarshal(settings.Interface()); err != nil {
 			return found, broke(
 				RuleParse,
-				fmt.Errorf("parse %s: %s: %w", path, b.SettingsKey(), err),
+				fmt.Errorf("parse %s: %s: %w", path, o.SettingsKey(), err),
 			)
 		}
-		b.SetSettings(settings.Elem().Interface())
+		o.SetSettings(settings.Elem().Interface())
 	}
 
 	return found, nil
@@ -252,5 +258,44 @@ func Value(
 		return cast.ToBool(raw)
 	default:
 		return raw
+	}
+}
+
+// settingsOwner is what declares its own settings: a behavior, or an
+// endpoint group.
+type settingsOwner interface {
+	SettingsKey() string
+	SettingsType() reflect.Type
+	SetSettings(v any)
+	CurrentSettings() any
+}
+
+// settingsOwners are each registered behavior and endpoint group.
+func settingsOwners() []settingsOwner {
+	behaviors, groups := behavior.All(), endpoint.All()
+	out := make([]settingsOwner, 0, len(behaviors)+len(groups))
+	for _, b := range behaviors {
+		out = append(out, b)
+	}
+	for _, g := range groups {
+		out = append(out, g)
+	}
+
+	return out
+}
+
+// ownerOf is the owner of the key k among owners, or nil for a key of
+// osapi's own config.
+func ownerOf(
+	owners map[string]settingsOwner,
+	k Key,
+) settingsOwner {
+	switch {
+	case k.Behavior != "":
+		return owners[behavior.SettingsPrefix+"."+k.Behavior]
+	case k.Group != "":
+		return owners[endpoint.SettingsPrefix+"."+k.Group]
+	default:
+		return nil
 	}
 }

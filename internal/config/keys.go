@@ -27,6 +27,7 @@ import (
 	"github.com/osapi-io/osapi/internal/settings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
 // EnvPrefix is the prefix of every environment variable that sets a key.
@@ -54,6 +55,9 @@ type Key struct {
 	// Behavior names the behavior that declared the key, for a behavior
 	// setting.
 	Behavior string `json:"behavior,omitempty"`
+	// Group names the endpoint group that declared the key, for a group
+	// setting.
+	Group string `json:"group,omitempty"`
 	// Flag is the agent start flag bound to a behavior setting.
 	Flag string `json:"flag,omitempty"`
 }
@@ -67,10 +71,12 @@ func EnvName(
 }
 
 // Keys lists every setting: osapi's own, in the order the config types
-// declare them, then each registered behavior's, under behaviors.<name>. A
-// struct is walked into; a list, a map or a scalar is one key.
+// declare them, with each registered endpoint group's after the last key of
+// the controller, under controller.endpoints.<name>, then each registered
+// behavior's, under behaviors.<name>. A struct is walked into; a list, a map
+// or a scalar is one key.
 func Keys() []Key {
-	keys := walk(reflect.TypeFor[Config](), "", ownedDefaults())
+	keys := withGroups(walk(reflect.TypeFor[Config](), "", ownedDefaults()))
 	for _, b := range behavior.All() {
 		t := b.SettingsType()
 		if t == nil {
@@ -85,6 +91,33 @@ func Keys() []Key {
 	}
 
 	return keys
+}
+
+// withGroups is own, osapi's own keys, with each endpoint group's settings
+// after the last key under controller, so a file that lists the keys in
+// order has one controller section.
+func withGroups(
+	own []Key,
+) []Key {
+	var groups []Key
+	for _, g := range endpoint.All() {
+		t := g.SettingsType()
+		if t == nil {
+			continue
+		}
+		for _, k := range walk(t, g.SettingsKey(), reflect.ValueOf(g.Defaults)) {
+			k.Group = g.Name
+			groups = append(groups, k)
+		}
+	}
+	at := len(own)
+	for i, k := range own {
+		if strings.HasPrefix(k.Name, "controller.") {
+			at = i + 1
+		}
+	}
+
+	return append(own[:at:at], append(groups, own[at:]...)...)
 }
 
 // ownedDefaults is a Config whose sections are the defaults that their
