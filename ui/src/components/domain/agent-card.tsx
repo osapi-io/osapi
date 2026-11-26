@@ -11,6 +11,7 @@ import { ConditionAlert } from "@/components/ui/condition-alert";
 import { CopyField } from "@/components/ui/copy-field";
 import { MetricValue } from "@/components/ui/metric-value";
 import { KVList } from "@/components/ui/kv-list";
+import { AgentTimeline } from "@/components/domain/agent-timeline";
 import { useAuth } from "@/hooks/use-auth";
 import { formatAgeSince, formatBytes } from "@/lib/format";
 import { Monitor, Clock, Cpu, Pause, Play, Loader2 } from "lucide-react";
@@ -196,6 +197,8 @@ export function AgentCard({
             </div>
           </details>
         )}
+
+        {!isPending && <AgentTimeline hostname={agent.hostname} />}
 
         <div className="mt-auto pt-2">
           {/* Drain / Undrain — hidden when pending */}
