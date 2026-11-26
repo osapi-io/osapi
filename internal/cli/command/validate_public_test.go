@@ -448,6 +448,21 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when Check or CheckFails comes before any Example",
+			group: command.Define("zzcheck", "Check",
+				command.Under(command.ParentDSL),
+				command.Uses[localDeps](),
+				command.Method[struct{}, greetOut]("get").Short("X").
+					Check("zzcheck get", "", "name", "x").
+					CheckFails("zzcheck get", "", "not found").
+					Example("").Prints(greetOut{}).
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{"Check comes before any Example; it gives the last Example its read."},
+		},
+		{
 			name: "when a method has a handler and the group Uses no type",
 			group: command.Define("zzhandler", "Handler",
 				command.Under(command.ParentDSL),

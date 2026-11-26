@@ -99,8 +99,12 @@ var Group = endpoint.Register(endpoint.Define(
 				"Conflict. `file update` replaces the file.").
 		Example("--name app.conf --file /tmp/app.conf").
 		Prints(sampleUpload).
+		Check("client file get", "--name app.conf",
+			"name", "app.conf", "sha256", "{out.sha256}", "size", "{out.size}", "content_type", "raw").
 		Example("--name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template").
-		Prints(sampleUploadTemplate),
+		Prints(sampleUploadTemplate).
+		Check("client file get", "--name app.conf.tmpl",
+			"name", "app.conf.tmpl", "sha256", "{out.sha256}", "content_type", "template"),
 	endpoint.Get[GetInput, InfoResponse]("get").
 		Fails("a name over 255 characters", GetInput{Name: long}).
 		Handle(Get).
@@ -131,6 +135,8 @@ var Group = endpoint.Register(endpoint.Define(
 				"name is new. The same content changes nothing (`Changed: false`).").
 		Example("--name app.conf --file /tmp/app.conf").
 		Prints(sampleUpload).
+		Check("client file get", "--name app.conf",
+			"name", "app.conf", "sha256", "{out.sha256}", "content_type", "raw").
 		Errors(
 			endpoint.Forbidden(ErrProtected, "The file is an osapi file, which a caller cannot write."),
 			noStore503,
@@ -150,7 +156,9 @@ var Group = endpoint.Register(endpoint.Define(
 		).
 		Command("Delete a file from the Object Store", "").
 		Example("--name app.conf").
-		Example("--name app.conf --json"),
+		CheckFails("client file get", "--name app.conf", "not found").
+		Example("--name app.conf --json").
+		CheckFails("client file get", "--name app.conf", "not found"),
 	endpoint.Get[StaleInput, StaleDeploymentsResponse]("stale").
 		Handle(Stale).
 		Sub("stale").

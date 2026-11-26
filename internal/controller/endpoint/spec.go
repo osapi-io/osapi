@@ -240,6 +240,24 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Check("words", "flags", path, want, ...)`,
+			Does: "Gives the last Example a read that shows its result: the command words after the binary, its flags, and pairs of a path in its --json output and the value that the path must have. A path is JSON names joined with a dot, and a segment [name=value] selects an element of a list. command.Absent is a field that must not be there, and command.OneOf a field that may have any of its values. {out.<path>} is a field of the example's own --json output. The integration suite runs the read after the example, again for up to 30 seconds until it matches.",
+			When: "After each Example of a write: the integration gate fails a write example with no Check, CheckFails or NoCheck.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.CheckFails("words", "flags", "text")`,
+			Does: "Gives the last Example a read that must fail with text in its error, such as not found: the example removed the thing that the read names.",
+			When: "After each Example of a delete or a revoke.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.NoCheck("why")`,
+			Does: "Says why no read shows the result of the method's examples. The integration gate takes it in place of a Check, and requires a reason of 40 characters or more.",
+			When: "Only on a write whose result no osapi command reads back, such as the streams that nats setup makes.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Use("name")`,
 			Does: "Names the CLI command apart from the method. A method whose Sub differs from its command name goes under a command of the Sub.",
 			When: "When the command's verb is a method name the group has already, such as list under pending beside the group's own list.",

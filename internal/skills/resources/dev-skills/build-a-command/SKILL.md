@@ -161,6 +161,12 @@ not list with its reason.
   writes at the info level when it starts, each a `command.LogLine`, copied from
   a real start. The CLI page shows them as the log handler writes them in a
   terminal, and as JSON for `--json`. validate fails a process with no `.Logs`.
+- Give each example of a command that changes state, a `write` in `cliPolicies`,
+  a `.Check` after it: a read command, its flags, and the fields of its `--json`
+  output with their values. `.CheckFails` is a read that must fail after a
+  delete, and `{out.<path>}` is a field of the example's own output. The
+  integration gate fails a write example with no check, unless the method gives
+  `.NoCheck(why)`.
 - A command that runs until a signal, such as `nats start`, is
   `command.Process("start").Setup(fn)`. `internal/cli/commands/controllercmd` is
   a complete one:

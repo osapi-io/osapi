@@ -211,6 +211,11 @@ endpoint.Invalid(doc string)	free text	prose for a page or a message
 endpoint.Lookup(name string)	identity	a name that the registry, the route or the command path holds
 endpoint.Method.Action(segment string)	identity	a name that the registry, the route or the command path holds
 endpoint.Method.Answers(doc string)	free text	prose for a page or a message
+endpoint.Method.Check(flags string)	fixture	what an example sets up or expects
+endpoint.Method.Check(words string)	fixture	what an example sets up or expects
+endpoint.Method.CheckFails(errorText string)	fixture	what an example sets up or expects
+endpoint.Method.CheckFails(flags string)	fixture	what an example sets up or expects
+endpoint.Method.CheckFails(words string)	fixture	what an example sets up or expects
 endpoint.Method.Command(long string)	free text	prose for a page or a message
 endpoint.Method.Command(short string)	free text	prose for a page or a message
 endpoint.Method.CommandSub(word string)	identity	a name that the registry, the route or the command path holds
@@ -223,6 +228,7 @@ endpoint.Method.ID(id string)	identity	a name that the registry, the route or th
 endpoint.Method.Key(fields []string)	checked	the path fields of the input; the key rule checks each
 endpoint.Method.Location(field string)	checked	a json field of the output; the field rule checks it
 endpoint.Method.Name string	identity	a name that the registry, the route or the command path holds
+endpoint.Method.NoCheck(why string)	free text	a reason that a person reads
 endpoint.Method.Notes(text string)	free text	prose for a page or a message
 endpoint.Method.Result(text string)	free text	prose for a page or a message
 endpoint.Method.Returns(doc string)	free text	prose for a page or a message
@@ -251,3 +257,13 @@ endpoint.Tag(doc string)	free text	prose for a page or a message
 endpoint.Tag(name string)	identity	a name that the registry, the route or the command path holds
 endpoint.Title(title string)	free text	prose for a page or a message
 endpoint.Unavailable(doc string)	free text	prose for a page or a message
+command.Field.Path string	fixture	what an example sets up or expects
+command.LocalMethod.Check(command string)	fixture	what an example sets up or expects
+command.LocalMethod.Check(flags string)	fixture	what an example sets up or expects
+command.LocalMethod.CheckFails(command string)	fixture	what an example sets up or expects
+command.LocalMethod.CheckFails(errorText string)	fixture	what an example sets up or expects
+command.LocalMethod.CheckFails(flags string)	fixture	what an example sets up or expects
+command.LocalMethod.NoCheck(why string)	free text	a reason that a person reads
+command.ReadBack.Command string	fixture	what an example sets up or expects
+command.ReadBack.Fails string	fixture	what an example sets up or expects
+command.ReadBack.Flags string	fixture	what an example sets up or expects

@@ -115,6 +115,104 @@ type Example struct {
 	// sets. The docs page of the command shows them as its log handler
 	// writes them.
 	Logs []LogLine
+	// Checks are the reads that show what the example changed, which Check
+	// and CheckFails add. The integration suite runs each after the example
+	// and asserts its fields.
+	Checks []ReadBack
+}
+
+// ReadBack is a read that shows the result of an example: a command, its
+// flags, and the fields of its --json output with the values that they
+// must have, or the text of the error that the read must fail with, for a
+// thing that the example removed.
+//
+// The integration suite fills the flags and the values of a check as it
+// fills the example's own: a name that the example uses, such as web-01 or
+// app.conf, becomes the suite's. {out.<path>} is the field at path of the
+// example's own --json output, such as {out.id} for the ID that a create
+// answers.
+type ReadBack struct {
+	// Command is the words of the read after the binary, such as client
+	// agent config get.
+	Command string
+	// Flags are the read's flags, such as --hostname web-01.
+	Flags string
+	// Fields are the fields of the read's --json output to assert.
+	Fields []Field
+	// Fails is the text that the read's error contains, in place of
+	// Fields: the example removed the thing that it reads.
+	Fails string
+}
+
+// Field is one field of a ReadBack: the path of the field in the --json
+// output, and the value that it must have.
+//
+// A path is the JSON names of the fields, joined with a dot, such as
+// labels.group. A segment [name=value] selects the first element of a list
+// whose field name has value, such as items.[id=1a2b3c4d].revoked. Want is
+// compared as JSON: 4 matches 4 and "4" does not. Absent is a field, or a
+// selected element, that is not there, and OneOf is a field that may have
+// any of its values.
+type Field struct {
+	Path string
+	Want any
+}
+
+// absent is the type of Absent.
+type absent struct{}
+
+// Absent is the Want of a Field that must not be in the output, such as
+// the value of a secret, which a read never shows.
+var Absent any = absent{}
+
+// WithCheck adds c to the last of examples, and reports false when there
+// is no example for it to check: the Check of a method came before its
+// Example, which validate refuses.
+func WithCheck(
+	examples []Example,
+	c ReadBack,
+) bool {
+	if len(examples) == 0 {
+		return false
+	}
+	last := &examples[len(examples)-1]
+	last.Checks = append(last.Checks, c)
+
+	return true
+}
+
+// Choice is the Want of a Field that may have any of its values, as OneOf
+// makes it.
+type Choice []any
+
+// OneOf is the Want of a Field that may have any of values, for a state
+// that moves on its own, such as Draining, which becomes Cordoned when the
+// agent's last job ends.
+func OneOf(
+	values ...any,
+) Choice {
+	return Choice(values)
+}
+
+// Fields pairs paths and wants, such as Fields("max_jobs", 4,
+// "log_level", "debug"). It panics on an odd count or a path that is not a
+// string: a definition is wrong, and the gate's tests catch it.
+func Fields(
+	pathsAndWants ...any,
+) []Field {
+	if len(pathsAndWants)%2 != 0 {
+		panic("command.Fields: an odd count of paths and wants")
+	}
+	out := make([]Field, 0, len(pathsAndWants)/2)
+	for i := 0; i < len(pathsAndWants); i += 2 {
+		path, ok := pathsAndWants[i].(string)
+		if !ok {
+			panic(fmt.Sprintf("command.Fields: path %v is not a string", pathsAndWants[i]))
+		}
+		out = append(out, Field{Path: path, Want: pathsAndWants[i+1]})
+	}
+
+	return out
 }
 
 // LogLine is a line that a process writes to its log: its level, its

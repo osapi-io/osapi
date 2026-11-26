@@ -473,6 +473,8 @@ type Method struct {
 	cmdLong       string
 	examples      []CommandExample
 	unprinted     bool
+	unchecked     bool
+	noCheck       string
 	prefix        []string
 	refusals      []Refusal
 	notes, result string
@@ -719,6 +721,58 @@ func (m *Method) Example(
 	m.examples = append(m.examples, CommandExample{Flags: flags, Doc: strings.Join(doc, " ")})
 
 	return m
+}
+
+// Check gives the last Example a read that shows its result: the command
+// words after the binary, such as client agent config get, its flags, and
+// the paths and wants of the fields of its --json output, as command.Fields
+// pairs them. The integration suite runs it after the example. endpoint
+// validate refuses a Check before an Example.
+func (m *Method) Check(
+	words string,
+	flags string,
+	pathsAndWants ...any,
+) *Method {
+	c := command.ReadBack{Command: words, Flags: flags, Fields: command.Fields(pathsAndWants...)}
+	if !command.WithCheck(m.examples, c) {
+		m.unchecked = true
+	}
+
+	return m
+}
+
+// CheckFails gives the last Example a read that fails with errorText,
+// such as not found: the example removed the thing that the read names.
+func (m *Method) CheckFails(
+	words string,
+	flags string,
+	errorText string,
+) *Method {
+	if !command.WithCheck(
+		m.examples,
+		command.ReadBack{Command: words, Flags: flags, Fails: errorText},
+	) {
+		m.unchecked = true
+	}
+
+	return m
+}
+
+// NoCheck says why no read shows the result of the method's examples, for
+// a write whose result no command reads back. The integration gate requires
+// a Check of each example of a write, or this.
+func (m *Method) NoCheck(
+	why string,
+) *Method {
+	m.noCheck = why
+
+	return m
+}
+
+// Unchecked is why no read shows the result of the method's examples, as
+// NoCheck says it, or "".
+func (m *Method) Unchecked() string {
+	return m.noCheck
 }
 
 // Prints gives the last Example its output: what the API answers, a value

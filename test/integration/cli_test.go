@@ -39,6 +39,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior/command"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 )
 
 // CommandSmokeSuite runs each CLI command that is not a behavior from its
@@ -93,7 +94,8 @@ func (s *CommandSmokeSuite) TestRefusals() {
 func (s *CommandSmokeSuite) TestExamples() {
 	for _, c := range byGroup(cliCases()) {
 		p := cliPolicies[c.path]
-		for i, flags := range c.examples {
+		for i, e := range c.examples {
+			flags := e.Flags
 			s.Run(fmt.Sprintf("%s %d", c.path, i+1), func() {
 				switch {
 				case p.skip != "":
@@ -106,14 +108,22 @@ func (s *CommandSmokeSuite) TestExamples() {
 				}
 				words, stdin := s.fx.example(c, flags)
 				args := append(strings.Fields(c.path), words...)
+				if usesOut(e) && !slices.Contains(args, "--json") {
+					args = append(args, "--json")
+				}
 				s.fx.before(c, i, args)
 				stdout, stderr, code := runRetried(s.fx.dir, stdin, p.env, args...)
 				s.Require().Zero(code, "%s: %s%s", strings.Join(args, " "), stderr, stdout)
+				var out any
 				if slices.Contains(args, "--json") {
 					s.True(json.Valid([]byte(strings.TrimSpace(stdout))),
 						"%s: --json printed no JSON: %s", strings.Join(args, " "), stdout)
+					_ = parseJSON(stdout, &out)
 				}
 				s.fx.after(c)
+				for _, rb := range e.Checks {
+					s.fx.readBack(c, rb, out)
+				}
 			})
 		}
 	}
@@ -520,6 +530,98 @@ func (f *fixtures) after(
 			f.s.Zero(code, "%s: %s", strings.Join(args, " "), stderr)
 		}
 	})
+}
+
+// readBack runs rb, a read that shows the result of an example of c, and
+// asserts its fields, again for up to 30 seconds while they do not match: an
+// agent applies its config at its next heartbeat. out is the example's own
+// decoded --json output, for the {out.<path>} of rb.
+func (f *fixtures) readBack(
+	c cliCase,
+	rb clicommand.ReadBack,
+	out any,
+) {
+	fill := func(v string) string {
+		filled, err := fillOut(v, out)
+		f.s.Require().NoError(err, "%s: %s", rb.Command, v)
+		if strings.Contains(filled, "[") {
+			return selectorValue.ReplaceAllStringFunc(filled, func(sel string) string {
+				m := selectorValue.FindStringSubmatch(sel)
+
+				return "[" + m[1] + "=" + f.value(c, m[2]) + "]"
+			})
+		}
+
+		return f.value(c, filled)
+	}
+	flags, err := fillOut(rb.Flags, out)
+	f.s.Require().NoError(err, "%s: %s", rb.Command, rb.Flags)
+	words, _ := f.example(c, flags)
+	args := append(append(strings.Fields(rb.Command), words...), "--json")
+	fields := make([]clicommand.Field, 0, len(rb.Fields))
+	for _, fl := range rb.Fields {
+		fields = append(fields, clicommand.Field{Path: fl.Path, Want: wholeOut(fl.Want, out)})
+	}
+
+	var problems []string
+	deadline := time.Now().Add(30 * time.Second)
+	for {
+		problems = problems[:0]
+		stdout, stderr, code := runCLIWith(f.dir, "", nil, args...)
+		switch {
+		case rb.Fails != "" && code == 0:
+			problems = append(problems, "the read succeeded: "+stdout)
+		case rb.Fails != "" && !strings.Contains(stderr+stdout, rb.Fails):
+			problems = append(
+				problems,
+				fmt.Sprintf("it failed without %q: %s%s", rb.Fails, stderr, stdout),
+			)
+		case rb.Fails == "" && code != 0:
+			problems = append(problems, "the read failed: "+stderr+stdout)
+		case rb.Fails == "":
+			var doc any
+			if err := parseJSON(stdout, &doc); err != nil {
+				problems = append(problems, "no JSON: "+stdout)
+
+				break
+			}
+			for _, fl := range fields {
+				if p := match(doc, fl, fill); p != "" {
+					problems = append(problems, p)
+				}
+			}
+		}
+		if len(problems) == 0 || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	f.s.Empty(problems, "%s: the read of the example's result: %s", c.path, strings.Join(args, " "))
+}
+
+// selectorValue is the value of a selector in a path, which the suite
+// fills as a word of the example's flags, such as [id=1a2b3c4d].
+var selectorValue = regexp.MustCompile(`\[([^=\]]+)=([^\]]*)\]`)
+
+// wholeOut is want, or the field of out that want names when want is one
+// {out.<path>} and nothing else, so a number in the output stays a number.
+func wholeOut(
+	want any,
+	out any,
+) any {
+	s, ok := want.(string)
+	if !ok {
+		return want
+	}
+	m := outRef.FindStringSubmatch(s)
+	if m == nil || m[0] != s {
+		return want
+	}
+	if v, found, err := lookup(out, m[1]); err == nil && found {
+		return v
+	}
+
+	return want
 }
 
 // splitWords splits flags into words as a shell does: quotes group words,

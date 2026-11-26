@@ -433,6 +433,38 @@ func (s *LocalPublicTestSuite) TestCheck() {
 	s.EqualError(command.Check(context.Background(), greetIn{}), "--name is required")
 }
 
+func (s *LocalPublicTestSuite) TestReadBack() {
+	m := command.Method[struct{}, greetOut]("set").
+		Example("--name ann").
+		Check("greet get", "--name ann", "name", "ann", "count", command.OneOf(1, 2)).
+		CheckFails("greet get", "--name bob", "not found").
+		Example("--name bob").
+		NoCheck("a reason that is long enough to say why no read shows it")
+	s.Equal([]command.ReadBack{
+		{Command: "greet get", Flags: "--name ann", Fields: []command.Field{
+			{Path: "name", Want: "ann"}, {Path: "count", Want: command.Choice{1, 2}},
+		}},
+		{Command: "greet get", Flags: "--name bob", Fails: "not found"},
+	}, m.Examples()[0].Checks)
+	s.Empty(m.Examples()[1].Checks)
+	s.Equal("a reason that is long enough to say why no read shows it", m.Unchecked())
+
+	odd := []any{"name"}
+	tests := []struct {
+		name string
+		call func()
+	}{
+		{name: "an odd count", call: func() { command.Fields(odd...) }},
+		{name: "a path that is not a string", call: func() { command.Fields(1, "x") }},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Panics(tt.call)
+		})
+	}
+	s.False(command.WithCheck(nil, command.ReadBack{}))
+}
+
 func (s *LocalPublicTestSuite) TestFlagName() {
 	t := reflect.TypeFor[struct {
 		SigningKey string `json:"signing_key,omitempty"`

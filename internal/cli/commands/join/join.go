@@ -49,8 +49,12 @@ var Group = command.Register(command.Define(
 			"It needs `controller.api.tls.enabled`.").
 		Example("").
 		Prints(sampleCreate).
+		Check("controller join token list", "", "items.[id={out.id}].uses_left", 1).
 		Example("--expires 24h --uses 10 --labels group=web").
+		Check("controller join token list", "",
+			"items.[id={out.id}].uses_left", 10, "items.[id={out.id}].labels.group", "web").
 		Example("--transport https").
+		Check("controller join token list", "", "items.[id={out.id}].uses_left", 1).
 		Fails("no expiry", CreateInput{Uses: 1, Transport: "nats"}).
 		Fails("a duration that is not one", CreateInput{Expires: "soon", Uses: 1, Transport: "nats"}).
 		Fails("no use", CreateInput{Expires: "1h", Uses: 0, Transport: "nats"}).
@@ -69,6 +73,7 @@ var Group = command.Register(command.Define(
 		Short("Revoke a join token, so it admits no agent").
 		Example("--id 1a2b3c4d").
 		Prints(sampleRevoke).
+		Check("controller join token list", "", "items.[id=1a2b3c4d]", command.Absent).
 		Fails("no id", RevokeInput{}).
 		Handle(Revoke),
 ))

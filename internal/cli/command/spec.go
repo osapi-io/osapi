@@ -170,6 +170,24 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Check("words", "flags", path, want, ...)`,
+			Does: "Gives the last Example a read that shows its result: the command words after the binary, its flags, and pairs of a path in its --json output and the value that the path must have. A path is JSON names joined with a dot, and a segment [name=value] selects an element of a list. command.Absent is a field that must not be there, and command.OneOf a field that may have any of its values. {out.<path>} is a field of the example's own --json output. The integration suite runs the read after the example, again for up to 30 seconds until it matches.",
+			When: "After each Example of a write: the integration gate fails a write example with no Check, CheckFails or NoCheck.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.CheckFails("words", "flags", "text")`,
+			Does: "Gives the last Example a read that must fail with text in its error, such as not found: the example removed the thing that the read names.",
+			When: "After each Example of a delete or a revoke.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.NoCheck("why")`,
+			Does: "Says why no read shows the result of the method's examples. The integration gate takes it in place of a Check, and requires a reason of 40 characters or more.",
+			When: "Only on a write whose result no osapi command reads back, such as the streams that nats setup makes.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Logs(lines...)`,
 			Does: "Gives the last Example of a process the lines that it writes when it starts, each a command.LogLine: a level, a message and its attributes. The CLI page shows them as the log handler of the CLI writes them in a terminal, in color, and as JSON for --json.",
 			When: "After the Example of each process: validate fails a process with no Logs, and Logs on a method. Put the lines in samples.go of the group, copied from a real start at the info level.",

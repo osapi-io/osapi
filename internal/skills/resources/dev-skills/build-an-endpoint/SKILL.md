@@ -217,6 +217,17 @@ endpoint, a required field needs one too, with the field empty. In a behavior it
 needs none, because the generated tests leave the field out. You write the bad
 value, because a generator cannot know one for a custom rule.
 
+Give each example of a write a `.Check` after it: a read that shows what the
+write changed. It names the read command, its flags, and the fields of its
+`--json` output with their values, such as
+`.Check("client agent config get", "--hostname web-01", "max_jobs", 4)`. After a
+delete, `.CheckFails` names a read that must fail, such as with `not found`.
+`{out.<path>}` is a field of the example's own `--json` output, such as
+`{out.id}` for the ID that a create answers. The integration suite runs each
+read after its example and fails when a field does not match. The gate
+`TestEachCommandHasACase` fails a write example with no check. A write whose
+result no command reads back gets `.NoCheck(why)` instead.
+
 The CLI:
 
 1. Give each method `.Command(short, long)` with the help of the hand-written

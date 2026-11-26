@@ -273,6 +273,35 @@ Use: After the first Example of each method that answers with a body. Times in
 the value are relative to 2026-01-15 10:00 UTC, the time that the docs generator
 fixes, so an age is the same on each run.
 
+### `.Check("words", "flags", path, want, ...)`
+
+Gives the last Example a read that shows its result: the command words after the
+binary, its flags, and pairs of a path in its --json output and the value that
+the path must have. A path is JSON names joined with a dot, and a segment
+\[name=value] selects an element of a list. command.Absent is a field that must
+not be there, and command.OneOf a field that may have any of its values.
+&#123;out.&lt;path&gt;&#125; is a field of the example's own --json output. The
+integration suite runs the read after the example, again for up to 30 seconds
+until it matches.
+
+Use: After each Example of a write: the integration gate fails a write example
+with no Check, CheckFails or NoCheck.
+
+### `.CheckFails("words", "flags", "text")`
+
+Gives the last Example a read that must fail with text in its error, such as not
+found: the example removed the thing that the read names.
+
+Use: After each Example of a delete or a revoke.
+
+### `.NoCheck("why")`
+
+Says why no read shows the result of the method's examples. The integration gate
+takes it in place of a Check, and requires a reason of 40 characters or more.
+
+Use: Only on a write whose result no osapi command reads back, such as the
+streams that nats setup makes.
+
 ### `.Use("name")`
 
 Names the CLI command apart from the method. A method whose Sub differs from its

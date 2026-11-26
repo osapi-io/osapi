@@ -118,6 +118,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Status(http.StatusNoContent).
 		Command("Delete a job", "The job goes from storage permanently.").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
+		CheckFails("client job get", "--id 550e8400-e29b-41d4-a716-446655440000", "not found").
 		Errors(endpoint.NotFound(ErrNotFound,
 			"Job not found, or its target is outside the token's target scope.")),
 	endpoint.Post[RetryInput, CreateJobResponse]("retry").
@@ -137,6 +138,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"the history. Its timeline gets a `retried` event that links to the new job.").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleRetry).
+		Check("client job get", "--id {out.job_id}", "id", "{out.job_id}").
 		Errors(
 			endpoint.NotFound(ErrNotFound,
 				"Job not found, or its target is outside the token's target scope."),
