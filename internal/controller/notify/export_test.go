@@ -117,13 +117,6 @@ func ExportResolveDisplayName(
 	return resolveDisplayName(componentType, identifier, value)
 }
 
-// ExportParseRegistryKey exposes parseRegistryKey for testing.
-func ExportParseRegistryKey(
-	key string,
-) (string, string, bool) {
-	return parseRegistryKey(key)
-}
-
 // WatcherHandleDelete exposes the private handleDelete method for testing.
 func WatcherHandleDelete(
 	ctx context.Context,

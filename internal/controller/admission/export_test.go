@@ -40,13 +40,6 @@ func ResetMarshalFn() {
 	marshalFn = json.Marshal
 }
 
-// SetUnmarshalFn overrides the unmarshalFn variable for testing.
-func SetUnmarshalFn(
-	fn func([]byte, any) error,
-) {
-	unmarshalFn = fn
-}
-
 // ResetUnmarshalFn restores the unmarshalFn variable to its default.
 func ResetUnmarshalFn() {
 	unmarshalFn = json.Unmarshal
