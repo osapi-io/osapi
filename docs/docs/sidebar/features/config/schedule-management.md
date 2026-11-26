@@ -228,4 +228,5 @@ Each will have its own routes.
   schedule commands
 - [Platform Detection](../../sdk/library/platform-detection.md): how osapi finds
   the OS family
-- [Configuration](../../usage/configuration.md): all configuration settings
+- [Configuration](../../operate/plan.md#the-config-file): all configuration
+  settings

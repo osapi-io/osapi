@@ -174,14 +174,17 @@ The two commands return the current state and a confirmation message.
 
 ## Permissions
 
-The [agent](../../reference/endpoints/fleet/agent.md) and
-[admission](../../reference/endpoints/fleet/admission.md) reference pages give
-the permission of each method.
+The [agent](../reference/endpoints/fleet/agent.md) and
+[admission](../reference/endpoints/fleet/admission.md) reference pages give the
+permission of each method.
 
 ## Related
 
-- [Agent CLI Reference](../../usage/cli/client/agent/agent.mdx): agent fleet
+- [Agent CLI Reference](../usage/cli/client/agent/agent.mdx): agent fleet
   commands
-- [Node Management](../node/node-management.md): node queries via the job system
-- [Job System](job-system.md): how async job processing works
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Node Management](../features/node/node-management.md): node queries via the
+  job system
+- [Job System](../features/platform/job-system.md): how async job processing
+  works
+- [Configuration](../operate/plan.md#the-config-file): full configuration
+  reference

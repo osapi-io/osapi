@@ -126,8 +126,9 @@ agent:
 ```
 
 When it is off, each `exec` and `shell` job fails with an error that names
-`agent.command.enabled`. Refer to [Configuration](../../usage/configuration.md)
-for NATS, agent and authentication settings.
+`agent.command.enabled`. Refer to
+[Configuration](../../operate/plan.md#the-config-file) for NATS, agent and
+authentication settings.
 
 ## Permissions
 
@@ -142,5 +143,6 @@ page gives the permission of each method.
 - [API Reference](/gen/api/command-api-command-operations): REST API
   documentation
 - [Job System](../platform/job-system.md): how async job processing works
-- [Authentication & RBAC](../platform/authentication.md): permissions and roles
+- [Authentication & RBAC](../../operate/secure/authentication.md): permissions
+  and roles
 - [Architecture](../../architecture/architecture.md): system design overview

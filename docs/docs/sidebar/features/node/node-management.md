@@ -10,14 +10,15 @@ OSAPI separates agent fleet discovery from node system queries:
 
 - **Agent** commands (`agent list`, `agent get`) read the NATS KV heartbeat
   registry directly. They show the agents that are online, their labels, a small
-  set of metrics and the [node conditions](../platform/agent-lifecycle.md) of
-  the last heartbeat. They make no jobs. Agents also have typed **system facts**
+  set of metrics and the
+  [node conditions](../../architecture/agent-lifecycle.md) of the last
+  heartbeat. They make no jobs. Agents also have typed **system facts**
   (architecture, kernel version, FQDN, CPU count, network interfaces, service
   manager, package manager). Providers collect them every 60 seconds, and the
   agent stores them in a separate `agent-facts` KV bucket with a 5-minute TTL.
   The API puts the registry data and the facts together in one `AgentInfo`
-  response. You can [drain](../platform/agent-lifecycle.md#agent-drain) an agent
-  for maintenance. The process continues to run.
+  response. You can [drain](../../architecture/agent-lifecycle.md#agent-drain)
+  an agent for maintenance. The process continues to run.
 - **Node** commands (`node hostname`, `node status`) send jobs to agents. The
   agents run system commands and return detailed results, for example the disk
   usage and all of the memory data.
@@ -79,8 +80,8 @@ registry-based fleet discovery, or the
 ## Configuration
 
 Node management uses the general job system. It needs no configuration of its
-own. Refer to [Configuration](../../usage/configuration.md) for NATS, agent, and
-authentication settings.
+own. Refer to [Configuration](../../operate/plan.md#the-config-file) for NATS,
+agent, and authentication settings.
 
 ## Permissions and platforms
 
@@ -93,7 +94,7 @@ route of each method: [status](../../reference/behaviors/node/status/status.md),
 [memory](../../reference/behaviors/hardware/memory/memory.md),
 [load](../../reference/behaviors/node/load/load.md). The pages come from the
 definitions, so they stay true when a method changes, and this page does not
-copy them. [Authentication](../platform/authentication.md) tells which
+copy them. [Authentication](../../operate/secure/authentication.md) tells which
 permissions each role has.
 
 Agent fleet discovery is not a behavior: its endpoints need `agent:read`.

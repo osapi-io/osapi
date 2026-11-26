@@ -171,7 +171,8 @@ data.
 
 <!-- /osapi:config -->
 
-Refer to [Configuration](../../usage/configuration.md) for all the settings.
+Refer to [Configuration](../../operate/plan.md#the-config-file) for all the
+settings.
 
 ## Platform support
 
@@ -206,5 +207,5 @@ still work.
 - [Network Management](../networking/network-management.md): use `@fact.*` in
   DNS queries
 - [Node Management](node-management.md): an overview of agent and node commands
-- [Configuration](../../usage/configuration.md): the facts interval and the KV
-  settings
+- [Configuration](../../operate/plan.md#the-config-file): the facts interval and
+  the KV settings

@@ -58,7 +58,7 @@ request used, on which target. It records `[redacted]` in place of a value.
 The settings that are secrets, such as the JWT signing keys and the NATS
 passwords, are in `osapi.yaml` or in the environment. `osapi config list` and
 `osapi config get` print them as `********`. Refer to
-[Configuration](../../usage/configuration.md).
+[Configuration](../plan.md#the-config-file).
 
 The controller accepts tokens from more than one signing key. Each token has the
 `id` of its key in its `kid` header. To change the key, put a new key first in
@@ -68,11 +68,11 @@ steps.
 
 The controller has vaults, which keep secrets encrypted in NATS. With no config,
 it has the vault `default`, and it makes the key of that vault at its first
-start. [Configuration](../../usage/configuration.md#vaults) tells how to add a
-vault. A signing key and the bearer token can be a reference to a key in a
-vault, such as `secret://default/jwt-signing-key`.
-[References in the config](../../usage/configuration.md#references-in-the-config)
-tells which settings take one.
+start. [Configuration](../controller.md#secrets-vault) tells how to add a vault.
+A signing key and the bearer token can be a reference to a key in a vault, such
+as `secret://default/jwt-signing-key`.
+[References in the config](../controller.md#secrets-vault) tells which settings
+take one.
 
 ## Write and read a secret
 
@@ -131,7 +131,7 @@ the job, and that has an encryption key:
   the job again.
 - An agent that was admitted before agents had an encryption key has no key in
   the job either. Enroll it again, as
-  [Agent identity](agent-identity.md#an-agent-admitted-before-the-encryption-key)
+  [Agent identity](../../architecture/agent-identity.md#an-agent-admitted-before-the-encryption-key)
   tells.
 
 A password is not sealed: the controller hashes it, and the job has only the

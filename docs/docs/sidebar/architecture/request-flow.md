@@ -86,7 +86,7 @@ warning. Thus an upgraded agent gets its consumers with no operator action.
 If the agent cannot make or bind a consumer, for example when the stream has its
 maximum number of consumers, it reports the `ConsumersUnavailable` condition and
 tries again each 10 seconds. Refer to
-[Agent lifecycle](../features/platform/agent-lifecycle.md#node-conditions).
+[Agent lifecycle](agent-lifecycle.md#node-conditions).
 
 ## The job
 

@@ -98,4 +98,5 @@ the permission of each method.
 - [CLI Reference](../../usage/cli/client/node/power/power.mdx): power commands
 - [Platform Detection](../../sdk/library/platform-detection.md): OS family
   detection
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

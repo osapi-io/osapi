@@ -29,8 +29,9 @@ The generated page of each behavior gives the permission, the platforms and the
 route of each method:
 [timezone](../../reference/behaviors/config/timezone/timezone.md). The pages
 come from the definitions, so they stay true when a method changes, and this
-page does not copy them. [Authentication](../platform/authentication.md) tells
-which permissions each role has.
+page does not copy them.
+[Authentication](../../operate/secure/authentication.md) tells which permissions
+each role has.
 
 ## CLI usage
 
@@ -76,4 +77,5 @@ system call. You can run this operation many times safely.
 ## Related
 
 - [NTP Management](ntp-management.md): NTP server configuration
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../../operate/plan.md#the-config-file): full configuration
+  reference

@@ -20,7 +20,7 @@ osapi has an embedded NATS server with JetStream, so you do not need to install
 NATS. The server listens on port 4222 by default (`nats.server.port`). It keeps
 the JetStream files in `nats.server.store_dir`. With
 `nats.server.jetstream.key_file`, it encrypts them.
-[Encryption at rest](../usage/configuration.md#encryption-at-rest) tells how.
+[Encryption at rest](../operate/nats.md#osapis-nats) tells how.
 
 Use an external NATS cluster if the hosts are in more than one site, or if NATS
 must continue to operate when a host stops. Set `controller.nats` and
@@ -96,7 +96,7 @@ changes the host then fails with a permission error. The operation does not do
 something that you do not expect. To let the agent change the host, run it as
 root, or enable `agent.privilege_escalation`. Privilege escalation runs only the
 writes through sudo, with a fixed sudoers drop-in.
-[Agent hardening](../features/platform/agent-hardening.md) gives the entries.
+[Agent hardening](../operate/secure/agent-hardening.md) gives the entries.
 
 ## What each process needs
 

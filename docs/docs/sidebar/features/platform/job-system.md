@@ -87,8 +87,8 @@ the REST endpoints.
 
 <!-- /osapi:config -->
 
-Refer to [Configuration](../../usage/configuration.md) for all the settings,
-with the NATS stream, consumer and DLQ settings.
+Refer to [Configuration](../../operate/plan.md#the-config-file) for all the
+settings, with the NATS stream, consumer and DLQ settings.
 
 ## Permissions
 

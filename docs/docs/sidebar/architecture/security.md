@@ -38,7 +38,7 @@ list of permissions:
   replaces the built-in role.
 - **Behaviors** add their own permissions, `<name>:<verb>`, such as `dns:read`
   and `dns:write`. A rule gives them to the built-in roles, as
-  [Authentication](../features/platform/authentication.md) tells.
+  [Authentication](../operate/secure/authentication.md) tells.
 
 osapi divides the permissions by what an operation can do, not by area. To run a
 command (`command:execute`) and to run a shell (`command:shell`) are two
@@ -134,8 +134,8 @@ that osapi keeps for `nats.audit.max_age`. `osapi client audit list` and
   [running commands](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
   and
   [audit](https://github.com/osapi-io/specs/blob/main/components/osapi/audit.md).
-- [Authentication](../features/platform/authentication.md),
-  [Agent identity and PKI](../features/platform/agent-identity.md),
-  [Agent hardening](../features/platform/agent-hardening.md) and
-  [Audit logging](../features/platform/audit-logging.md) tell how to configure
-  each one.
+- [Authentication](../operate/secure/authentication.md),
+  [Agent identity and PKI](agent-identity.md),
+  [Agent hardening](../operate/secure/agent-hardening.md) and
+  [Audit logging](../operate/secure/audit-logging.md) tell how to configure each
+  one.

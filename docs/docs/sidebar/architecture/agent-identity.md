@@ -92,8 +92,8 @@ with no administrator. A join token also admits at once
 
    One key does not do both jobs. The signing key signs. The encryption key
    opens the secrets that the controller seals for this agent
-   ([Secrets](secrets.md#sealed-values)). The agent makes each key only when its
-   file does not exist.
+   ([Secrets](../operate/secure/secrets.md#sealed-values)). The agent makes each
+   key only when its file does not exist.
 
    The user that runs the agent must own the directory. The agent does not
    replace a key that it cannot read, or half of a key pair, or an `agent.xkey`
@@ -217,33 +217,10 @@ For development and tests, set `controller.pki.auto_admit: true`. Then the
 controller admits each machine that asks to join, without an administrator. Do
 not use this in production.
 
-### CLI commands
+### Commands
 
-```bash
-# On the machine: show its machine ID, encryption key and key fingerprint
-osapi agent key fingerprint
-
-# List the machines that wait for a decision
-osapi client admission list --state pending
-
-# Admit a machine, with the fingerprint that the machine printed
-osapi client admission admit --machine-id <machine-id> \
-  --fingerprint SHA256:a1b2c3...
-
-# Reject a machine, with the reason
-osapi client admission reject --machine-id <machine-id> --reason "unknown host"
-
-# Revoke an admitted machine that is not trusted: its key stops verifying at
-# once, and a record shows it if it asks again
-osapi client admission revoke --machine-id <machine-id>
-
-# Delete a machine that goes away on purpose, such as before a rebuild: its key
-# and each record of it go, and it is new if it asks again
-osapi client admission delete --machine-id <machine-id>
-
-# Show the local controller key fingerprint
-osapi controller key fingerprint
-```
+[4. Join hosts](../operate/join.md) has the commands that admit, reject, revoke
+and delete a host, and that make a join token.
 
 ## Job signing
 

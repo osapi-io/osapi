@@ -38,7 +38,7 @@ with a list of role names, such as `admin`, `operator` or `read`.
 ### RBAC model
 
 The UI shows and hides each control by the permissions of the token's roles.
-[Roles and permissions](../features/platform/authentication.md#roles-and-permissions)
+[Roles and permissions](../operate/secure/authentication.md#roles-and-permissions)
 lists the built-in roles and the rule that gives each role its permissions.
 
 The Traces page in the Admin menu shows the span tree of a trace by its ID. It

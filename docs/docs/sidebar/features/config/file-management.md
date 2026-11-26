@@ -295,7 +295,8 @@ File management uses two NATS parts in addition to the general job system:
 - **File State KV** (`nats.file_state`) records the deploy state (SHA-256, path,
   times) for each host. It has no TTL. Thus the state stays until you remove it.
 
-Refer to [Configuration](../../usage/configuration.md) for all the settings.
+Refer to [Configuration](../../operate/plan.md#the-config-file) for all the
+settings.
 
 ```yaml
 nats:
@@ -322,6 +323,7 @@ the permission of each method.
 
 - [System Facts](../node/system-facts.md): the facts in the template context
 - [Job System](../platform/job-system.md): how asynchronous jobs work
-- [Authentication & RBAC](../platform/authentication.md): permissions and roles
+- [Authentication & RBAC](../../operate/secure/authentication.md): permissions
+  and roles
 - [Architecture](../../architecture/architecture.md): an overview of the system
   design

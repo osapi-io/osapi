@@ -39,7 +39,7 @@ var Group = command.Register(command.Define(
 			"The command refuses to write a file that exists, because a new key in\n"+
 			"place of the old key makes each stream unreadable. Keep a copy of the key\n"+
 			"apart from the backup of `store_dir`: without the key, the server cannot\n"+
-			"read the store. Refer to [Configuration](../../../configuration.md).").
+			"read the store. Refer to [2. NATS](../../../../operate/nats.md).").
 		Example("-f /etc/osapi/osapi.yaml").
 		Prints(sampleCreate).
 		Handle(Create),

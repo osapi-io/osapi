@@ -83,7 +83,7 @@ to `'0'` to disable re-notification.
 | `notifier`          | `OSAPI_CONTROLLER_NOTIFICATIONS_NOTIFIER`          | Backend: `"log"` (default)            |
 | `renotify_interval` | `OSAPI_CONTROLLER_NOTIFICATIONS_RENOTIFY_INTERVAL` | Re-fire interval (default: `"0"`)     |
 
-Refer to [Configuration](../../usage/configuration.md) for the full reference.
+Refer to [Configuration](../plan.md#the-config-file) for the full reference.
 
 ## Architecture
 

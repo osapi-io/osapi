@@ -141,8 +141,8 @@ key on the NATS host. Thus a person who reads the disk or a backup of the store
 does not read the jobs, the audit log or the agent registry. The key does not
 protect a value from a NATS user, because the server decrypts each message for a
 user that can read the stream.
-[Encryption at rest](../usage/configuration.md#encryption-at-rest) has the
-setting, and what happens when the key is lost.
+[Encryption at rest](../operate/nats.md#osapis-nats) has the setting, and what
+happens when the key is lost.
 
 ## The JWT signing keys
 
@@ -154,8 +154,8 @@ refuses a token with no `kid`, or with a `kid` that the list does not have.
 Thus a signing key changes with no outage. Put a new key first, and restart the
 controller. The tokens of the old key still work. Remove the old key when no
 client sends a token that it signed. A token expires after three months.
-[Authentication](../features/platform/authentication.md#change-the-signing-key)
-has the steps.
+[Authentication](../operate/secure/authentication.md#change-the-signing-key) has
+the steps.
 
 ## Vaults
 
@@ -187,7 +187,7 @@ osapi has one type, `nats`, in `internal/secret/vault/natsvault`:
 `osapi controller secret key rotate` adds a new key, encrypts each value again
 and removes the old key. A rotation does not encrypt the earlier versions in the
 history again, so they do not decrypt after it.
-[Configuration](../usage/configuration.md#vaults) has the settings.
+[Configuration](../operate/controller.md#secrets-vault) has the settings.
 
 ## References in the config
 

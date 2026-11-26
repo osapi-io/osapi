@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 2.1
 ---
 
 # Working with an agent
@@ -10,10 +10,10 @@ controller checks it before a host sees it.
 
 ## Set it up
 
-1. Run osapi and make a token, as [Get started](../intro.md#get-started) shows.
+1. Run osapi and make a token, as [Get started](intro.md#get-started) shows.
 2. In the repository the agent works in, run
-   [`osapi skill install`](cli/skill/install.md). It installs two skills and
-   points the tool's instructions file at them.
+   [`osapi skill install`](usage/cli/skill/install.md). It installs two skills
+   and points the tool's instructions file at them.
 3. Start the agent in that repository, with the token in its environment as
    `OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN`.
 
@@ -73,11 +73,11 @@ osapi controller token generate -p sysctl:read -p sysctl:write -u agent@example.
 `command:execute` and `command:shell` let a token run commands it supplies,
 through the `command` domain. Leave them out of an agent's token to keep it to
 typed operations. Every request, the agent's included, is in the
-[audit log](cli/client/audit/audit.mdx).
+[audit log](usage/cli/client/audit/audit.mdx).
 
 ## What it will not do
 
 There is no shell behind the skills. When osapi has no operation for something,
 the agent says so rather than working around it. Adding one is a behavior to
 build:
-[Building a behavior with an agent](../development/building-with-an-agent.md).
+[Building a behavior with an agent](development/building-with-an-agent.md).

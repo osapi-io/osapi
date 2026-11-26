@@ -183,7 +183,7 @@ result.
 default, only `admin` has them. A custom role or token with `command:execute`
 does **not** get shell access. If it must have shell access, add
 `command:shell`. Refer to
-[Command Execution](../command/command-execution.md#security-model).
+[Command Execution](../../features/command/command-execution.md#security-model).
 
 ### Custom roles
 
@@ -229,8 +229,8 @@ controller:
       bearer_token: '<jwt>'
 ```
 
-Refer to [Configuration](../../usage/configuration.md#authentication) for all
-the settings, with custom roles and CORS.
+Refer to [Configuration](../nats.md#select-the-type-of-auth) for all the
+settings, with custom roles and CORS.
 
 ## Agent-Level authentication (PKI)
 
@@ -246,14 +246,14 @@ with its private key. Agents verify the signature before they process a job.
 
 PKI is complementary to JWT auth: JWTs authenticate API callers, while PKI
 authenticates the agent-controller relationship over NATS. Refer to
-[Agent Identity & PKI](agent-identity.md) for full details.
+[Agent Identity & PKI](../../architecture/agent-identity.md) for full details.
 
 ## Related
 
-- [Agent Identity & PKI](agent-identity.md): machine-ID identity, PKI
-  enrollment, job signing
+- [Agent Identity & PKI](../../architecture/agent-identity.md): machine-ID
+  identity, PKI enrollment, job signing
 - [CLI Reference](../../usage/cli/controller/token/token.mdx): token generation
   and validation commands
 - [API Reference](/category/api): REST API documentation
-- [Configuration](../../usage/configuration.md): full configuration reference
+- [Configuration](../plan.md#the-config-file): full configuration reference
 - [Architecture](../../architecture/architecture.md): system design overview

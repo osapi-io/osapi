@@ -10,7 +10,7 @@ starts, and encrypts each stream and bucket in `store_dir`.
 The command refuses to write a file that exists, because a new key in place of
 the old key makes each stream unreadable. Keep a copy of the key apart from the
 backup of `store_dir`: without the key, the server cannot read the store. Refer
-to [Configuration](../../../configuration.md).
+to [2. NATS](../../../../operate/nats.md).
 
 ```bash
 osapi nats key create
