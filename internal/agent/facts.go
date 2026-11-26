@@ -50,6 +50,28 @@ func collectFacts() (*gohai.Facts, error) {
 // value is set or the configured value is unparseable.
 var defaultFactsInterval = 60 * time.Second
 
+// factsIntervalOf is the facts interval s, a Go duration, or the default
+// when s is empty, does not parse or is not above zero.
+func factsIntervalOf(
+	s string,
+) time.Duration {
+	if d, err := time.ParseDuration(s); err == nil && d > 0 {
+		return d
+	}
+
+	return defaultFactsInterval
+}
+
+// currentFactsInterval is the facts interval that the controller's config
+// set, or the file's. The caller holds lifecycleMu.
+func (a *Agent) currentFactsInterval() time.Duration {
+	if a.factsInterval > 0 {
+		return a.factsInterval
+	}
+
+	return factsIntervalOf(a.fileFactsInterval)
+}
+
 // startFacts writes the initial facts, spawns a goroutine that
 // refreshes the entry on a ticker, and stops on ctx.Done().
 func (a *Agent) startFacts(
@@ -63,12 +85,9 @@ func (a *Agent) startFacts(
 
 	a.writeFacts(ctx, machineID, hostname)
 
-	interval := defaultFactsInterval
-	if cfgInterval := a.appConfig.Agent.Facts.Interval; cfgInterval != "" {
-		if parsed, err := time.ParseDuration(cfgInterval); err == nil {
-			interval = parsed
-		}
-	}
+	a.lifecycleMu.Lock()
+	interval := a.currentFactsInterval()
+	a.lifecycleMu.Unlock()
 
 	a.wg.Add(1)
 	go func() {
@@ -81,6 +100,9 @@ func (a *Agent) startFacts(
 			select {
 			case <-ctx.Done():
 				return
+			case d := <-a.factsReset:
+				// The controller's config gave a new interval.
+				ticker.Reset(d)
 			case <-ticker.C:
 				a.writeFacts(ctx, machineID, hostname)
 			}

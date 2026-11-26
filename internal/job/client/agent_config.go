@@ -72,8 +72,8 @@ func (c *Client) agentConfig(
 	return cfg, nil
 }
 
-// SetAgentConfig sets the labels, the max jobs and the log level of set as
-// the config of
+// SetAgentConfig sets the labels, the max jobs, the log level and the facts
+// interval of set as the config of
 // the agent with machineID, as its next version, in an agent.config.set
 // span.
 func (c *Client) SetAgentConfig(
@@ -104,6 +104,7 @@ func (c *Client) setAgentConfig(
 	cfg.Labels = set.Labels
 	cfg.MaxJobs = set.MaxJobs
 	cfg.LogLevel = set.LogLevel
+	cfg.FactsInterval = set.FactsInterval
 	cfg.UpdatedAt = time.Now().UTC()
 	data, err := c.JSONMarshalFn(cfg)
 	if err != nil {

@@ -23,6 +23,8 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strconv"
+	"time"
 
 	"go.uber.org/mock/gomock"
 
@@ -59,7 +61,7 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 2, labels dc=east,group=web, max jobs 10, log level info").
+				"config version 2, labels dc=east,group=web, max jobs 10, log level info, facts interval 1m0s").
 			Return(nil)
 		labels, version := agent.ExportApplyConfig(a, "m-1")
 		s.Equal(map[string]string{"group": "web", "dc": "east"}, labels)
@@ -74,7 +76,7 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 			Return(job.AgentConfig{Version: 1, Labels: map[string]string{"group": "web"}, MaxJobs: 2}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 1, labels group=web, max jobs 2, log level info").
+				"config version 1, labels group=web, max jobs 2, log level info, facts interval 1m0s").
 			Return(nil)
 		agent.ExportApplyConfig(a, "m-1")
 		s.Equal(2, agent.ExportMaxJobs(a))
@@ -83,7 +85,7 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
 		s.mockJobClient.EXPECT().
 			WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-				"config version 2, labels group=web, max jobs 10, log level info").
+				"config version 2, labels group=web, max jobs 10, log level info, facts interval 1m0s").
 			Return(nil)
 		agent.ExportApplyConfig(a, "m-1")
 		s.Equal(10, agent.ExportMaxJobs(a))
@@ -101,7 +103,7 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 				Return(job.AgentConfig{Version: 1, Labels: map[string]string{"group": "web"}, LogLevel: types.LogDebug}, nil)
 			s.mockJobClient.EXPECT().
 				WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-					"config version 1, labels group=web, max jobs 10, log level debug").
+					"config version 1, labels group=web, max jobs 10, log level debug, facts interval 1m0s").
 				Return(nil)
 			agent.ExportApplyConfig(a, "m-1")
 			s.Equal(slog.LevelDebug, level.Level())
@@ -110,12 +112,53 @@ func (s *AgentPublicTestSuite) TestApplyConfig() {
 				Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}}, nil)
 			s.mockJobClient.EXPECT().
 				WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
-					"config version 2, labels group=web, max jobs 10, log level info").
+					"config version 2, labels group=web, max jobs 10, log level info, facts interval 1m0s").
 				Return(nil)
 			agent.ExportApplyConfig(a, "m-1")
 			s.Equal(slog.LevelInfo, level.Level())
 		},
 	)
+
+	s.Run("a facts interval reaches the facts loop, and the newest replaces one not read", func() {
+		s.appConfig.Agent.MaxJobs = 10
+		s.appConfig.Agent.Labels = map[string]string{"group": "web"}
+		a := s.buildAgent()
+		apply := func(version int, interval, want string) {
+			s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+				Return(job.AgentConfig{
+					Version: version, Labels: map[string]string{"group": "web"},
+					FactsInterval: interval,
+				}, nil)
+			s.mockJobClient.EXPECT().
+				WriteAgentTimelineEvent(gomock.Any(), "m-1", gomock.Any(), "config_applied",
+					"config version "+strconv.Itoa(version)+
+						", labels group=web, max jobs 10, log level info, facts interval "+want).
+				Return(nil)
+			agent.ExportApplyConfig(a, "m-1")
+		}
+
+		apply(1, "5m", "5m0s")
+		apply(2, "10m", "10m0s")
+		got, ok := agent.TakeFactsReset(a)
+		s.True(ok)
+		s.Equal(10*time.Minute, got, "the loop gets the newest")
+
+		apply(3, "", "1m0s")
+		got, _ = agent.TakeFactsReset(a)
+		s.Equal(time.Minute, got, "a version without one gives the file's back")
+	})
+
+	s.Run("a facts interval that is not above zero is the file's", func() {
+		s.appConfig.Agent.Labels = map[string]string{"group": "web"}
+		a := s.buildAgent()
+		s.mockJobClient.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+			Return(job.AgentConfig{
+				Version: 1, Labels: map[string]string{"group": "web"}, FactsInterval: "0s",
+			}, nil)
+		agent.ExportApplyConfig(a, "m-1")
+		_, ok := agent.TakeFactsReset(a)
+		s.False(ok, "the interval did not change")
+	})
 
 	s.Run("a new version with the same labels writes no event", func() {
 		s.appConfig.Agent.Labels = map[string]string{"group": "web"}

@@ -72,10 +72,11 @@ var (
 
 // sampleConfig is the config of an agent, as the CLI prints it.
 var sampleConfig = ConfigResponse{
-	Version:  2,
-	Labels:   map[string]string{"group": "web", "dc": "east"},
-	MaxJobs:  4,
-	LogLevel: types.LogDebug,
+	Version:       2,
+	Labels:        map[string]string{"group": "web", "dc": "east"},
+	MaxJobs:       4,
+	LogLevel:      types.LogDebug,
+	FactsInterval: "5m",
 	UpdatedAt: func() *time.Time {
 		t := time.Date(2026, 11, 25, 12, 0, 0, 0, time.UTC)
 

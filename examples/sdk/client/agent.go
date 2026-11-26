@@ -70,6 +70,7 @@ func runSetconfig(
 	c *client.Client,
 ) error {
 	resp, err := c.Agent.Setconfig(ctx, "web-01", client.AgentSetconfigInput{
+		FactsInterval: "5m",
 		Labels: map[string]string{
 			"dc":    "east",
 			"group": "web",

@@ -397,6 +397,7 @@ func SetConfig(
 	}
 	cfg, err := d.Jobs.SetAgentConfig(ctx, info.MachineID, job.AgentConfig{
 		Labels: in.Body.Labels, MaxJobs: in.Body.MaxJobs, LogLevel: in.Body.LogLevel,
+		FactsInterval: in.Body.FactsInterval,
 	})
 	if err != nil {
 		return ConfigResponse{}, err
@@ -411,7 +412,8 @@ func toConfig(
 ) ConfigResponse {
 	out := ConfigResponse{
 		Version: cfg.Version, Labels: cfg.Labels, MaxJobs: cfg.MaxJobs,
-		LogLevel: cfg.LogLevel,
+		LogLevel:      cfg.LogLevel,
+		FactsInterval: cfg.FactsInterval,
 	}
 	if !cfg.UpdatedAt.IsZero() {
 		t := cfg.UpdatedAt

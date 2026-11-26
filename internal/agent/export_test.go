@@ -1167,3 +1167,24 @@ func SetAppFs(
 ) {
 	a.appFs = fs
 }
+
+// TakeFactsReset is the interval that the facts loop has not read yet, and
+// whether there is one.
+func TakeFactsReset(
+	a *Agent,
+) (time.Duration, bool) {
+	select {
+	case d := <-a.factsReset:
+		return d, true
+	default:
+		return 0, false
+	}
+}
+
+// SendFactsReset gives the facts loop the interval d, as applyConfig does.
+func SendFactsReset(
+	a *Agent,
+	d time.Duration,
+) {
+	a.factsReset <- d
+}

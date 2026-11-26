@@ -472,6 +472,9 @@ type AgentConfig struct {
 	// LogLevel is the level that the agent logs at, debug, info, warn or
 	// error, and empty keeps the level of its config file.
 	LogLevel types.LogLevel `json:"log_level,omitempty"`
+	// FactsInterval is how often the agent collects its facts, as a Go
+	// duration, and empty keeps the interval of its config file.
+	FactsInterval string `json:"facts_interval,omitempty"`
 	// UpdatedAt is when the config last changed.
 	UpdatedAt time.Time `json:"updated_at,omitzero"`
 }

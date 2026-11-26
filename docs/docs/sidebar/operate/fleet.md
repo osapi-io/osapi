@@ -35,13 +35,14 @@ The timeline of an agent records what occurred to it: `admitted`, `started`,
 `stopped`, `drain`, `undrain`, `hostname_changed`, `revoked`. The dashboard of
 the UI shows each agent as a card.
 
-## Change the labels and the max jobs of an agent
+## Change the labels and the settings of an agent
 
 The controller holds a config for each agent, by its machine ID. Thus you change
-the labels and the max jobs of an agent with no edit on the host:
+the labels and the settings of an agent with no edit on the host:
 
 ```bash
-osapi client agent config update --hostname web-01 --labels group=db --max-jobs 4
+osapi client agent config update --hostname web-01 --labels group=db --max-jobs 4 \
+  --log-level debug --facts-interval 5m
 osapi client agent config get --hostname web-01
 ```
 
@@ -50,11 +51,14 @@ heartbeat, 10 seconds. The labels of the config replace the labels of
 `agent.labels` with the same keys. The agent then consumes jobs on the subjects
 of its new labels, and writes `config_applied` to its timeline. Max jobs, from 1
 to 1000, replaces `agent.max_jobs`: the agent then runs at most that number of
-jobs at the same time. An update with no max jobs gives the agent the value of
-its config file again. Each update sets all of the config, so give the labels
-again when you change only the max jobs. Each update increments the version of
-the config. `agent list` shows the version that each agent applied, as
-`config_version`.
+jobs at the same time. The log level, debug, info, warn or error, replaces the
+level of `--debug` or `debug`: the agent logs at it at once, with no restart.
+The facts interval, a Go duration such as `5m`, replaces `agent.facts.interval`:
+the agent collects its facts at it from then on. A setting that an update does
+not give takes the value of the agent's config file again. Each update sets all
+of the config, so give the labels again when you change only a setting. Each
+update increments the version of the config. `agent list` shows the version that
+each agent applied, as `config_version`.
 
 The config stays with the machine ID. Thus an agent that starts again, or that
 gets a new hostname, keeps it. An update needs the admin role.

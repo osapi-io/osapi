@@ -272,6 +272,23 @@ func (s *FactsPublicTestSuite) TestStartFactsRefresh() {
 	}
 }
 
+func (s *FactsPublicTestSuite) TestStartFactsReset() {
+	s.Run("a new interval from the controller's config resets the loop's ticker", func() {
+		s.mockFactsKV.EXPECT().
+			KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
+			Return(uint64(1), nil).
+			MinTimes(2)
+		agent.SetDefaultFactsInterval(time.Hour)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		agent.ExportStartFacts(ctx, s.testAgent, "test-machine-id", "test-agent")
+		agent.SendFactsReset(s.testAgent, 10*time.Millisecond)
+		time.Sleep(60 * time.Millisecond)
+		cancel()
+		agent.WaitAgentWG(s.testAgent)
+	})
+}
+
 func (s *FactsPublicTestSuite) TestStartFactsInterval() {
 	tests := []struct {
 		name         string

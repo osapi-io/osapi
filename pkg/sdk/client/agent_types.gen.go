@@ -10,6 +10,9 @@ import (
 
 // AgentConfigResponse is the AgentConfigResponse of the spec.
 type AgentConfigResponse struct {
+	// How often the agent collects its facts; empty keeps the agent's config file.
+	FactsInterval string `json:"facts_interval,omitempty"`
+
 	// The labels that the controller gives the agent.
 	Labels map[string]string `json:"labels,omitempty"`
 
