@@ -279,7 +279,7 @@ export const getAdmitMachineUrl = (machineId: string,) => {
 }
 
 /**
- * Admits a pending machine. The fingerprint must be the one that `osapi agent key fingerprint` prints on the machine: it proves that the request came from the machine the operator is looking at.
+ * Admits a pending machine. The fingerprint must be the one that `osapi pki key get --name agent` prints on the machine: it proves that the request came from the machine the operator is looking at.
  * @summary Admit a pending machine
  */
 export const admitMachine = async (machineId: string,

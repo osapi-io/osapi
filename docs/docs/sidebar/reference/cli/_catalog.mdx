@@ -8,7 +8,6 @@
 | [osapi agent collector list](../../usage/cli/agent/collector/list.md)                             | hand-written | List the collectors: category, whether it runs by default, dependencies                  |
 | [osapi agent collector spec get](../../usage/cli/agent/collector/spec/get.md)                     | hand-written | Print each part of a collector, what it does and when to use it                          |
 | [osapi agent collector validate](../../usage/cli/agent/collector/validate.md)                     | hand-written | Check every collector against the rules, and print the fix of each problem               |
-| [osapi agent key fingerprint](../../usage/cli/agent/key/fingerprint.md)                           | command      | Show the fingerprint of the agent's keys, and what admits this machine                   |
 | [osapi agent service install](../../usage/cli/agent/service/install.md)                           | command      | Install the agent as a service, with a join string, and start it                         |
 | [osapi agent service uninstall](../../usage/cli/agent/service/uninstall.md)                       | command      | Stop the agent's service and remove it                                                   |
 | [osapi agent start](../../usage/cli/agent/start.md)                                               | command      | Start the node agent                                                                     |
@@ -153,11 +152,8 @@
 | [osapi controller join token create](../../usage/cli/controller/join/token/create.md)             | command      | Make a join token, and print it with the join string                                     |
 | [osapi controller join token list](../../usage/cli/controller/join/token/list.md)                 | command      | List the join tokens, with their expiry and uses left                                    |
 | [osapi controller join token revoke](../../usage/cli/controller/join/token/revoke.md)             | command      | Revoke a join token, so it admits no agent                                               |
-| [osapi controller key fingerprint](../../usage/cli/controller/key/fingerprint.md)                 | command      | Show the fingerprint of the controller's key                                             |
 | [osapi controller role get](../../usage/cli/controller/role/get.md)                               | command      | Show a role and each permission it grants                                                |
 | [osapi controller role list](../../usage/cli/controller/role/list.md)                             | command      | List the roles and the permissions each grants                                           |
-| [osapi controller secret key create](../../usage/cli/controller/secret/key/create.md)             | command      | Make the key of a nats vault                                                             |
-| [osapi controller secret key rotate](../../usage/cli/controller/secret/key/rotate.md)             | command      | Rotate the key of a nats vault                                                           |
 | [osapi controller start](../../usage/cli/controller/start.md)                                     | command      | Start the controller                                                                     |
 | [osapi controller token generate](../../usage/cli/controller/token/generate.md)                   | command      | Generate a new token                                                                     |
 | [osapi controller token validate](../../usage/cli/controller/token/validate.md)                   | command      | Validate a token for authenticity and claims                                             |
@@ -189,13 +185,17 @@
 | [osapi nats auth nkey create](../../usage/cli/nats/auth/nkey/create.md)                           | command      | Make an nkey for each osapi role                                                         |
 | [osapi nats auth operator create](../../usage/cli/nats/auth/operator/create.md)                   | command      | Make an operator, an account, and a credentials file for each osapi role                 |
 | [osapi nats auth password create](../../usage/cli/nats/auth/password/create.md)                   | command      | Make a user and a random password for each osapi role                                    |
-| [osapi nats key create](../../usage/cli/nats/key/create.md)                                       | command      | Make the key that encrypts the JetStream store                                           |
 | [osapi nats permissions get](../../usage/cli/nats/permissions/get.md)                             | command      | Print the NATS subjects that one osapi process needs                                     |
 | [osapi nats setup](../../usage/cli/nats/setup.md)                                                 | command      | Create osapi's streams and buckets on a NATS server                                      |
 | [osapi nats start](../../usage/cli/nats/start.md)                                                 | command      | Start the embedded NATS server                                                           |
 | [osapi pki cert get](../../usage/cli/pki/cert/get.md)                                             | command      | Show one certificate in full: its names, algorithms and fingerprint                      |
 | [osapi pki cert list](../../usage/cli/pki/cert/list.md)                                           | command      | List the certificates, with their state, algorithms and expiry                           |
 | [osapi pki cert rotate](../../usage/cli/pki/cert/rotate.md)                                       | command      | Make a new self-signed certificate in place of the old one                               |
+| [osapi pki key create](../../usage/cli/pki/key/create.md)                                         | command      | Make a key that is not on this host                                                      |
+| [osapi pki key get](../../usage/cli/pki/key/get.md)                                               | command      | Show one key in full; the agent's key has the command that admits this machine           |
+| [osapi pki key list](../../usage/cli/pki/key/list.md)                                             | command      | List the keys, with their state, algorithm and fingerprint or ID                         |
+| [osapi pki key rotate](../../usage/cli/pki/key/rotate.md)                                         | command      | Rotate the key of a vault, and encrypt each value again with it                          |
+| [osapi pki list](../../usage/cli/pki/list.md)                                                     | command      | List each key and each certificate of osapi on this host                                 |
 | [osapi sdk get](../../usage/cli/sdk/get.md)                                                       | command      | Show a type with its values, or a service with its methods                               |
 | [osapi sdk list](../../usage/cli/sdk/list.md)                                                     | command      | List the types for values and the services of the client                                 |
 | [osapi sdk spec get](../../usage/cli/sdk/spec/get.md)                                             | command      | Print the Go SDK: its packages, how a call works, its types and its services             |

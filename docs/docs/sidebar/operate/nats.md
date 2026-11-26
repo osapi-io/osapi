@@ -80,7 +80,7 @@ Do these steps on the host of NATS and the controller.
 1. As an option, encrypt the store on the disk:
 
    ```bash
-   osapi nats key create -f /etc/osapi/osapi.yaml
+   osapi pki key create --name jetstream -f /etc/osapi/osapi.yaml
    ```
 
    It writes the key to `nats.server.jetstream.key_file`. Keep a copy of the key

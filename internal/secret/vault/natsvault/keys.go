@@ -32,7 +32,7 @@ func (k Keys) Load() (Keyring, error) {
 		data, err := k.FS.ReadFile(k.File)
 		if err != nil {
 			return Keyring{}, fmt.Errorf(
-				"read the vault key: %w: make it with osapi controller secret key create",
+				"read the vault key: %w: make it with osapi pki key create --name vault:<name>",
 				err,
 			)
 		}

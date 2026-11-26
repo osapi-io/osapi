@@ -56,7 +56,7 @@ PKI is always on. An agent gets no work until an administrator accepts it:
    pair and an X25519 encryption key in `agent.pki.key_dir`.
 1. It sends an enrollment request and waits. `osapi client admission list` shows
    it as pending.
-1. An administrator runs `osapi agent key fingerprint` on the machine, and
+1. An administrator runs `osapi pki key get --name agent` on the machine, and
    admits it with the fingerprint that the command prints. The controller admits
    it only when the fingerprint is the one of the two keys in the request. Or
    the controller admits each agent itself, with `controller.pki.auto_admit`.

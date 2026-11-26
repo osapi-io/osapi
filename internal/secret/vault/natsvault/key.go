@@ -48,7 +48,7 @@ func CreateKey(
 	}
 	if _, err := vfs.Stat(file); err == nil {
 		return Keyring{}, fmt.Errorf(
-			"%s exists: rotate the key with osapi controller secret key rotate", file,
+			"%s exists: rotate the key with osapi pki key rotate --name vault:<name>", file,
 		)
 	}
 	if err := vfs.MkdirAll(filepath.Dir(file), 0o700); err != nil {

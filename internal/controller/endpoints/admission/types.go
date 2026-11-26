@@ -45,7 +45,7 @@ type AdmitInput struct {
 
 // AdmitRequest is the fingerprint that proves the machine.
 type AdmitRequest struct {
-	Fingerprint string `json:"fingerprint" validate:"required,min=1,max=255" doc:"The fingerprint that osapi agent key fingerprint prints on the machine." example:"SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef" flag:"fingerprint"`
+	Fingerprint string `json:"fingerprint" validate:"required,min=1,max=255" doc:"The fingerprint that osapi pki key get --name agent prints on the machine." example:"SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef" flag:"fingerprint"`
 }
 
 // RejectInput names a pending machine, and why it is rejected.

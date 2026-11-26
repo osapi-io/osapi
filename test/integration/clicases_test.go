@@ -145,22 +145,25 @@ var cliPolicies = map[string]cliPolicy{
 	"dsl docs generate": {
 		skip: "writes the docs of a checkout: docs-gen-check and cli-docs-gen-check run it",
 	},
+	"pki key create": {
+		skip: "makes a key on the host, and refuses one that is there: the suite's server made " +
+			"each key that it uses, and sets no JetStream key_file; its unit tests make each kind",
+	},
 	"pki cert rotate": {
 		skip: "the running server keeps serving the old certificate, so each later call of the " +
 			"suite, which trusts the new file, would fail TLS; its unit tests rotate one",
 	},
-	"agent key fingerprint":        {host: true},
-	"controller key fingerprint":   {host: true},
 	"controller join token create": {host: true, write: true},
 	"controller join token list":   {host: true},
 	"controller join token revoke": {host: true, write: true},
-	"controller secret key create": {host: true, write: true},
-	"controller secret key rotate": {host: true, write: true},
 	"controller token generate":    {host: true},
 	"controller token validate":    {host: true},
 	"nats setup":                   {host: true, write: true},
-	"nats key create":              {host: true, write: true},
 	"pki cert list":                {host: true},
+	"pki key list":                 {host: true},
+	"pki key get":                  {host: true},
+	"pki key rotate":               {host: true, write: true},
+	"pki list":                     {host: true},
 	"pki cert get":                 {host: true},
 }
 

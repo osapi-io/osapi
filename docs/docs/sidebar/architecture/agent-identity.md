@@ -140,7 +140,7 @@ record has no encryption key. Enroll it again:
 1. On the machine, delete `enrolled-controller.pub` in `agent.pki.key_dir`
    (`controller.pub` on an agent admitted before osapi-io/osapi#1398), and
    restart the agent. It sends a new request with the two keys.
-1. On the machine, run `osapi agent key fingerprint`.
+1. On the machine, run `osapi pki key get --name agent`.
 1. Admit the machine with that fingerprint. The pending record shows the old
    fingerprint as `previous_fingerprint`.
 
@@ -379,7 +379,7 @@ check refuses a key that it does not know. Do these steps in this order:
    `agent.pki.key_dir` (`/etc/osapi/pki/agent` by default), and asks to join. It
    takes no job until the controller admits it.
 1. Admit each agent: read `osapi client admission list --state pending`, and
-   admit each machine with the fingerprint that `osapi agent key fingerprint`
+   admit each machine with the fingerprint that `osapi pki key get --name agent`
    prints on it. Set `controller.pki.auto_admit` only on a test fleet.
 
 By default the agent and the controller use one key directory, `/etc/osapi/pki`.

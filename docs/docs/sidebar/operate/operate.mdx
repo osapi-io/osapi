@@ -54,7 +54,7 @@ For one host only, `osapi start` does steps 2 to 4 in one process.
 | Which hosts are admitted, and are they on? | `osapi client admission list`                            |
 | Which agents run, with their labels?       | `osapi client agent list`                                |
 | What occurred to one agent?                | `osapi client agent get --hostname <host>`, its timeline |
-| What is the key of this host?              | `osapi agent key fingerprint`                            |
+| What is the key of this host?              | `osapi pki key get --name agent`                         |
 
 The UI shows the same state. The controller serves it at its API address. Sign
 in with a token from [step 3](controller.md#4-make-an-admin-token).

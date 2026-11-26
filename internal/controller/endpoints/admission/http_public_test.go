@@ -155,7 +155,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 		{
 			name: "when admit's fingerprint differs, it is a 409", method: http.MethodPost,
 			path: "/api/admission/m-1/admit", body: `{"fingerprint":"SHA256:no"}`, tok: write,
-			code: http.StatusConflict, want: "osapi agent key fingerprint",
+			code: http.StatusConflict, want: "osapi pki key get --name agent",
 			setup: func() {
 				s.store.EXPECT().
 					Admit(gomock.Any(), "m-1", "SHA256:no").

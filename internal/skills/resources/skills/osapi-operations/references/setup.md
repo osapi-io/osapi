@@ -13,7 +13,7 @@ or an agent on the same host uses them with no setting.
 osapi nats start                                  # osapi's own NATS server
 osapi nats permissions get --role agent --json    # the subjects of a role: controller, agent, setup, join
 osapi nats setup --json                           # make osapi's streams and buckets on a server osapi does not run
-osapi nats key create --json                      # the key that encrypts the store on the disk
+osapi pki key create --name jetstream --json      # the key that encrypts the store on the disk
 ```
 
 For a NATS server that osapi does not run, make the credentials of each role,
@@ -32,9 +32,9 @@ Each writes `osapi-nats.yaml`, the part of the config to merge. Keep
 
 ```sh
 osapi controller start
-osapi controller key fingerprint --json                    # the key that each agent gets at its join
-osapi controller secret key create --vault default --json  # the key of a vault, before the first start
-osapi controller secret key rotate --vault default --json
+osapi pki key get --name controller --json             # the key that each agent gets at its join
+osapi pki key create --name vault:default --json       # the key of a vault, before the first start
+osapi pki key rotate --name vault:default --json
 ```
 
 ## The config
