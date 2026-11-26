@@ -53,5 +53,7 @@ var Defaults = config.AgentConfig{
 	Metrics: config.MetricsServer{
 		Enabled: true, Host: "0.0.0.0", Port: 9091, TLS: config.ServerTLS{Enabled: true},
 	},
-	PKI: config.AgentPKI{KeyDir: "/etc/osapi/pki"},
+	// The agent keeps its keys apart from the controller's and the NATS
+	// server's, which share /etc/osapi/pki on a host that runs each.
+	PKI: config.AgentPKI{KeyDir: "/etc/osapi/pki/agent"},
 }

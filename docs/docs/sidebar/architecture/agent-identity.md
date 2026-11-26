@@ -397,9 +397,9 @@ that host and no job ran. An agent admitted before then still reads its
 
 <!-- osapi:config agent.pki -->
 
-| Key                 | Type   | Default          | Environment               | Description                        |
-| ------------------- | ------ | ---------------- | ------------------------- | ---------------------------------- |
-| `agent.pki.key_dir` | string | `/etc/osapi/pki` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory of the agent's key pair. |
+| Key                 | Type   | Default                | Environment               | Description                        |
+| ------------------- | ------ | ---------------------- | ------------------------- | ---------------------------------- |
+| `agent.pki.key_dir` | string | `/etc/osapi/pki/agent` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory of the agent's key pair. |
 
 <!-- /osapi:config -->
 
