@@ -315,3 +315,80 @@ var newKeys = func(
 
 // timeZero is the zero time.
 func timeZero() time.Time { return time.Time{} }
+
+// createUser makes an nkey of a user. Tests swap it.
+var createUser = nkeys.CreateUser
+
+// NKey makes an nkey for each osapi role that keeps a credential: setup,
+// controller and agent. It writes the seed of each, osapi-nats.yaml with the
+// nkeys of the embedded server and their roles, and the authorization block
+// of a NATS server that osapi does not run. The join's bootstrap user is not
+// an nkey: a join string carries a password or a JWT.
+func NKey(
+	ctx context.Context,
+	fs avfs.VFS,
+	dir string,
+	namespace string,
+	cfg config.NATS,
+) (Result, error) {
+	var r Result
+	pubs := map[bus.Role]string{}
+	for _, role := range staticRoles {
+		kp, err := createUser()
+		if err != nil {
+			return Result{}, fmt.Errorf("make the nkey of %s: %w", role, err)
+		}
+		seed, _ := kp.Seed()
+		pubs[role], _ = kp.PublicKey()
+		if err := r.write(ctx, fs, dir, string(role), string(role)+".nk", seed); err != nil {
+			return Result{}, err
+		}
+	}
+
+	var y strings.Builder
+	y.WriteString("# The nkeys of osapi, one for each role. Merge it into osapi.yaml.\n")
+	fmt.Fprintf(
+		&y,
+		"nats:\n  server:\n    auth:\n      type: nkey\n      nkey_file: %s\n      nkeys:\n",
+		filepath.Join(dir, "setup.nk"),
+	)
+	for _, role := range staticRoles {
+		fmt.Fprintf(&y, "        - %s\n", pubs[role])
+	}
+	y.WriteString("      nkey_roles:\n")
+	for _, role := range staticRoles {
+		fmt.Fprintf(&y, "        %s: %s\n", pubs[role], role)
+	}
+	fmt.Fprintf(&y, "controller:\n  nats:\n    auth:\n      type: nkey\n      nkey_file: %s\n",
+		filepath.Join(dir, "controller.nk"))
+	fmt.Fprintf(&y, "agent:\n  nats:\n    auth:\n      type: nkey\n      nkey_file: %s\n",
+		filepath.Join(dir, "agent.nk"))
+
+	var srv strings.Builder
+	srv.WriteString(
+		"# The nkeys of osapi, for the config of a NATS server that osapi does not run.\n",
+	)
+	srv.WriteString("authorization {\n  users = [\n")
+	for _, role := range staticRoles {
+		p, _ := bus.RolePermissions(role, namespace, cfg)
+		fmt.Fprintf(&srv, "    { nkey: %q, permissions: %s }\n", pubs[role], serverPermissions(p))
+	}
+	srv.WriteString("  ]\n}\n")
+
+	if err := r.write(ctx, fs, dir, "osapi", OsapiConfig, []byte(y.String())); err != nil {
+		return Result{}, err
+	}
+	if err := r.write(
+		ctx,
+		fs,
+		dir,
+		"server",
+		"nats-server.conf",
+		[]byte(srv.String()),
+	); err != nil {
+		return Result{}, err
+	}
+	r.Server = srv.String()
+
+	return r, nil
+}

@@ -119,6 +119,36 @@ func (s *NatsAuthPublicTestSuite) TestOperator() {
 	s.True(strings.Contains(r.Server, "resolver_preload"))
 }
 
+func (s *NatsAuthPublicTestSuite) TestNKey() {
+	r, err := natsauth.NKey(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
+	s.Require().NoError(err)
+	names := make([]string, 0, len(r.Files))
+	for _, f := range r.Files {
+		names = append(names, filepath.Base(f.Path))
+		s.Equal("-rw-------", s.mode(f.Path), f.Path)
+	}
+	s.ElementsMatch(
+		[]string{"setup.nk", "controller.nk", "agent.nk", natsauth.OsapiConfig, "nats-server.conf"},
+		names,
+	)
+	seed, _ := os.ReadFile(filepath.Join(s.dir, "agent.nk"))
+	kp, err := nkeys.FromSeed(seed)
+	s.Require().NoError(err)
+	pub, _ := kp.PublicKey()
+	y, _ := os.ReadFile(filepath.Join(s.dir, natsauth.OsapiConfig))
+	s.Contains(string(y), pub+": agent", "the nkey's role")
+	s.Contains(string(y), "type: nkey")
+	s.Contains(r.Server, pub)
+	_, err = natsserver.ProcessConfigFile(filepath.Join(s.dir, "nats-server.conf"))
+	s.NoError(err, "a NATS server reads the block")
+
+	defer natsauth.SetCreateUser(
+		func() (nkeys.KeyPair, error) { return nil, errors.New("no entropy") },
+	)()
+	_, err = natsauth.NKey(context.Background(), osfs.New(), s.T().TempDir(), "osapi", s.cfg)
+	s.ErrorContains(err, "make the nkey of setup: no entropy")
+}
+
 func (s *NatsAuthPublicTestSuite) TestFailures() {
 	ctx := context.Background()
 	boom := errors.New("boom")
@@ -229,6 +259,18 @@ func (s *NatsAuthPublicTestSuite) TestBlockedFiles() {
 		}},
 		{"agent.creds", func(dir string) error {
 			_, err := natsauth.Operator(ctx, osfs.New(), dir, "osapi", s.cfg)
+			return err
+		}},
+		{"agent.nk", func(dir string) error {
+			_, err := natsauth.NKey(ctx, osfs.New(), dir, "osapi", s.cfg)
+			return err
+		}},
+		{"nats-server.conf", func(dir string) error {
+			_, err := natsauth.NKey(ctx, osfs.New(), dir, "osapi", s.cfg)
+			return err
+		}},
+		{natsauth.OsapiConfig, func(dir string) error {
+			_, err := natsauth.NKey(ctx, osfs.New(), dir, "osapi", s.cfg)
 			return err
 		}},
 		{"resolver.conf", func(dir string) error {

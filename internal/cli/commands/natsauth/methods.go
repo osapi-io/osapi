@@ -49,6 +49,15 @@ func Operator(
 	return create(ctx, d, in, natsauth.Operator)
 }
 
+// NKey makes an nkey for each osapi role.
+func NKey(
+	ctx context.Context,
+	d Deps,
+	in CreateInput,
+) (CreateOutput, error) {
+	return create(ctx, d, in, natsauth.NKey)
+}
+
 // create makes in.Out and writes the files of write to it.
 func create(
 	ctx context.Context,

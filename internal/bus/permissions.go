@@ -317,21 +317,45 @@ func ApplyRoles(
 		if !ok {
 			continue
 		}
-		p, err := RolePermissions(Role(role), namespace, cfg)
+		perms, err := serverPermissions(Role(role), namespace, cfg)
 		if err != nil {
 			return fmt.Errorf("user %s: %w", u.Username, err)
 		}
-		u.Permissions = &natsserver.Permissions{
-			Publish:   &natsserver.SubjectPermission{Allow: p.Publish},
-			Subscribe: &natsserver.SubjectPermission{Allow: p.Subscribe},
+		u.Permissions = perms
+	}
+	for _, nk := range opts.Nkeys {
+		role, ok := serverAuth.NKeyRoles[nk.Nkey]
+		if !ok {
+			continue
 		}
-		if p.Responses {
-			u.Permissions.Response = &natsserver.ResponsePermission{
-				MaxMsgs: 1,
-				Expires: time.Minute,
-			}
+		perms, err := serverPermissions(Role(role), namespace, cfg)
+		if err != nil {
+			return fmt.Errorf("nkey %s: %w", nk.Nkey, err)
 		}
+		nk.Permissions = perms
 	}
 
 	return nil
+}
+
+// serverPermissions are the permissions of role, as the embedded server
+// takes them.
+func serverPermissions(
+	role Role,
+	namespace string,
+	cfg config.NATS,
+) (*natsserver.Permissions, error) {
+	p, err := RolePermissions(role, namespace, cfg)
+	if err != nil {
+		return nil, err
+	}
+	out := &natsserver.Permissions{
+		Publish:   &natsserver.SubjectPermission{Allow: p.Publish},
+		Subscribe: &natsserver.SubjectPermission{Allow: p.Subscribe},
+	}
+	if p.Responses {
+		out.Response = &natsserver.ResponsePermission{MaxMsgs: 1, Expires: time.Minute}
+	}
+
+	return out, nil
 }

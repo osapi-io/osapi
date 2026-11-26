@@ -82,6 +82,7 @@ the command line:
 ```bash
 osapi nats auth password create --out /etc/osapi/nats   # a user and a password per role
 osapi nats auth operator create --out /etc/osapi/nats   # an operator, an account, creds per role
+osapi nats auth nkey create --out /etc/osapi/nats       # an nkey per role
 ```
 
 Each writes `osapi-nats.yaml`, the part of osapi.yaml that uses the files, to

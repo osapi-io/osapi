@@ -243,6 +243,12 @@ func (s *PermissionsPublicTestSuite) TestUnknownRole() {
 	s.ErrorIs(err, bus.ErrRole)
 }
 
+// Two public nkeys of users.
+const (
+	agentNKey = "UDXU4RCSJNZOIQHZNWXHXORDPRTGNJAHAHFRGZNEEJCPQTT2M7NLCNF4"
+	otherNKey = "UCQC4ORR5JFIBTV44AGMNY5Q7UNSLDBQIQZ3SS3JAG4JMBZTEDZHRMYX"
+)
+
 func (s *PermissionsPublicTestSuite) TestApplyRoles() {
 	tests := []struct {
 		name    string
@@ -264,6 +270,29 @@ func (s *PermissionsPublicTestSuite) TestApplyRoles() {
 				s.Nil(opts.Users[0].Permissions.Response, "an agent answers no request")
 				s.Nil(opts.Users[1].Permissions)
 			},
+		},
+		{
+			name: "an nkey with a role gets its permissions, one without keeps each subject",
+			auth: config.NATSServerAuth{
+				Type:      "nkey",
+				NKeys:     []string{agentNKey, otherNKey},
+				NKeyRoles: map[string]string{agentNKey: "agent"},
+			},
+			check: func(opts *natsserver.Options) {
+				s.Require().Len(opts.Nkeys, 2)
+				s.Require().NotNil(opts.Nkeys[0].Permissions)
+				s.True(allows(opts.Nkeys[0].Permissions.Publish.Allow, "osapi.enroll.request"))
+				s.Nil(opts.Nkeys[1].Permissions)
+			},
+		},
+		{
+			name: "an nkey with a role that osapi does not have is an error",
+			auth: config.NATSServerAuth{
+				Type:      "nkey",
+				NKeys:     []string{agentNKey},
+				NKeyRoles: map[string]string{agentNKey: "admin"},
+			},
+			wantErr: "nkey " + agentNKey + ": no such role",
 		},
 		{
 			name: "an unknown role is an error",

@@ -33,6 +33,7 @@ var Group = command.Register(command.Define(
 	command.Under(command.ParentNATS),
 	command.Uses[Deps](),
 	command.SubDoc("password", "A user and a password for each osapi role"),
+	command.SubDoc("nkey", "An nkey for each osapi role"),
 	command.SubDoc(
 		"operator",
 		"An operator, an account and a credentials file for each osapi role",
@@ -66,4 +67,19 @@ var Group = command.Register(command.Define(
 		Prints(sampleOperator).
 		Fails("no directory", CreateInput{}).
 		Handle(Operator),
+	command.Method[CreateInput, CreateOutput]("create").
+		Sub("nkey").
+		Short("Make an nkey for each osapi role").
+		Long("It makes an nkey for the setup, controller and agent roles, and writes the\n"+
+			"seed of each (`setup.nk`, `controller.nk`, `agent.nk`), `osapi-nats.yaml`, the\n"+
+			"part of osapi.yaml with the nkeys of the embedded server and their roles\n"+
+			"(`nkey_roles`), and `nats-server.conf`, the authorization block of a NATS\n"+
+			"server that osapi does not run, with the least permissions of each role.\n"+
+			"Each file is mode 0600. A join over NATS needs a password or a JWT for its\n"+
+			"bootstrap user: use `password create` or `operator create` for it.\n"+
+			"`--print` also prints the server's block.").
+		Example("--out /etc/osapi/nats").
+		Prints(sampleNKey).
+		Fails("no directory", CreateInput{}).
+		Handle(NKey),
 ))

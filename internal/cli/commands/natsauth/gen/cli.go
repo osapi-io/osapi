@@ -46,6 +46,24 @@ var authOperatorCreateCmd = &cobra.Command{
 	Use:   "create",
 }
 
+var authNkeyCreateCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey: "nkey",
+		reference.Result:  "The command prints:\n\n```ansi\n$ osapi nats auth nkey create --out /etc/osapi/nats\n\x1b[1;38;2;0;213;255mNATS auth:\x1b[0m\n\n\x1b[1;38;2;255;0;255mFiles (5):\x1b[0m\n  \x1b[38;2;176;48;176mROLE        \x1b[0m\x1b[38;2;176;48;176mPATH\x1b[0m\n  setup       /etc/osapi/nats/setup.nk\n  controller  /etc/osapi/nats/controller.nk\n  agent       /etc/osapi/nats/agent.nk\n  osapi       /etc/osapi/nats/osapi-nats.yaml\n  server      /etc/osapi/nats/nats-server.conf\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"files\": [\n    {\n      \"role\": \"setup\",\n      \"path\": \"/etc/osapi/nats/setup.nk\"\n    },\n    {\n      \"role\": \"controller\",\n      \"path\": \"/etc/osapi/nats/controller.nk\"\n    },\n    {\n      \"role\": \"agent\",\n      \"path\": \"/etc/osapi/nats/agent.nk\"\n    },\n    {\n      \"role\": \"osapi\",\n      \"path\": \"/etc/osapi/nats/osapi-nats.yaml\"\n    },\n    {\n      \"role\": \"server\",\n      \"path\": \"/etc/osapi/nats/nats-server.conf\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi nats auth nkey create --out /etc/osapi/nats",
+	Long:    "It makes an nkey for the setup, controller and agent roles, and writes the\nseed of each (`setup.nk`, `controller.nk`, `agent.nk`), `osapi-nats.yaml`, the\npart of osapi.yaml with the nkeys of the embedded server and their roles\n(`nkey_roles`), and `nats-server.conf`, the authorization block of a NATS\nserver that osapi does not run, with the least permissions of each role.\nEach file is mode 0600. A join over NATS needs a password or a JWT for its\nbootstrap user: use `password create` or `operator create` for it.\n`--print` also prints the server's block.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		out, _ := cmd.Flags().GetString("out")
+		print, _ := cmd.Flags().GetBool("print")
+
+		return clicommand.Run(cmd, natsauth.Group, "nkey create", natsauth.CreateInput{Out: out, Print: print})
+	},
+	Short: "Make an nkey for each osapi role",
+	Use:   "create",
+}
+
 func init() {
 	authPasswordCreateCmd.Flags().String("out", "", "The directory that the files go to. It is made, mode 0700, when it is not there")
 	_ = authPasswordCreateCmd.MarkFlagRequired("out")
@@ -53,5 +71,8 @@ func init() {
 	authOperatorCreateCmd.Flags().String("out", "", "The directory that the files go to. It is made, mode 0700, when it is not there")
 	_ = authOperatorCreateCmd.MarkFlagRequired("out")
 	authOperatorCreateCmd.Flags().Bool("print", false, "Also print the server's part: its authorization block, or its resolver file")
-	clicommand.AddCommands(natsauth.Group, authPasswordCreateCmd, authOperatorCreateCmd)
+	authNkeyCreateCmd.Flags().String("out", "", "The directory that the files go to. It is made, mode 0700, when it is not there")
+	_ = authNkeyCreateCmd.MarkFlagRequired("out")
+	authNkeyCreateCmd.Flags().Bool("print", false, "Also print the server's part: its authorization block, or its resolver file")
+	clicommand.AddCommands(natsauth.Group, authPasswordCreateCmd, authOperatorCreateCmd, authNkeyCreateCmd)
 }
