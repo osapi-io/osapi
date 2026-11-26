@@ -125,6 +125,11 @@ func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
 
 				first, ok := results[0].(map[string]any)
 				s.Require().True(ok)
+				// A host whose platform has no hostname provider, such as
+				// Fedora, skips the update, as BehaviorSmokeSuite skips it.
+				if first["status"] == "skipped" {
+					s.T().Skipf("%s: %v", first["hostname"], first["error"])
+				}
 				s.Contains(first, "hostname")
 				s.Equal(currentHostname, first["name"])
 				s.Equal(false, first["changed"])
