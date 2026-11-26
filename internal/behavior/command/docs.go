@@ -42,28 +42,6 @@ const (
 	exampleTraceID = "26e448c9dbe1c4a8d216a98c675079c9"
 )
 
-// Example is a method's examples as the command lines of its cobra Example,
-// each one under a comment that tells what it does.
-func Example(
-	b *behavior.Behavior,
-	m *behavior.Method,
-) string {
-	command := b.Command(m)
-	lines := make([]string, 0, 3*len(m.Examples))
-	for i, ex := range m.Examples {
-		if i > 0 {
-			lines = append(lines, "")
-		}
-		lines = append(
-			lines,
-			"  # "+ex.Doc,
-			"  "+command+" --target "+exampleHost+exampleArgs(ex.Input),
-		)
-	}
-
-	return strings.Join(lines, "\n")
-}
-
 // Annotations are the docs annotations of a method's command: the
 // permission that it needs, and its result, which is what each example does
 // on the host and the calls that it refuses.

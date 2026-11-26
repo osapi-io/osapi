@@ -41,12 +41,8 @@ func (s *SettingsPublicTestSuite) TestOwn() {
 	s.Equal(settings.Owner{Prefix: "zza", By: "zz a start", Defaults: 1}, got)
 	_, ok = settings.Of("zznone")
 	s.False(ok)
-
-	prefixes := make([]string, 0, 2)
-	for _, o := range settings.All() {
-		prefixes = append(prefixes, o.Prefix)
-	}
-	s.Equal([]string{"zza", "zzb"}, prefixes, "by section")
+	_, ok = settings.Of("zzb")
+	s.True(ok)
 
 	s.PanicsWithValue(`settings: zz a start and zz again both own "zza"`, func() {
 		settings.Own("zza", "zz again", 3)

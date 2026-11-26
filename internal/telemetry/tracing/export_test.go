@@ -28,17 +28,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 )
-
-// ExportNewMapCarrier exposes the private mapCarrier constructor for testing.
-func ExportNewMapCarrier(
-	data map[string]interface{},
-) propagation.TextMapCarrier {
-	return mapCarrier{data: data}
-}
 
 // noopClient implements otlptrace.Client for testing.
 type noopClient struct{}

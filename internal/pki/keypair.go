@@ -187,16 +187,6 @@ func (m *Manager) Sign(
 	return ed25519.Sign(m.privateKey, data)
 }
 
-// Verify verifies the signature of the given data using the provided
-// public key.
-func Verify(
-	pubKey ed25519.PublicKey,
-	data []byte,
-	signature []byte,
-) bool {
-	return ed25519.Verify(pubKey, data, signature)
-}
-
 // SetControllerPublicKey stores the controller's public key for
 // verifying controller-signed messages.
 func (m *Manager) SetControllerPublicKey(

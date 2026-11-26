@@ -27,7 +27,6 @@ package settings
 
 import (
 	"fmt"
-	"sort"
 	"sync"
 )
 
@@ -72,17 +71,4 @@ func Of(
 	o, ok := owners[prefix]
 
 	return o, ok
-}
-
-// All is each owner, by its section.
-func All() []Owner {
-	mu.Lock()
-	defer mu.Unlock()
-	out := make([]Owner, 0, len(owners))
-	for _, o := range owners {
-		out = append(out, o)
-	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Prefix < out[j].Prefix })
-
-	return out
 }
