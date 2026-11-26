@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">A fleet on your NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/your-nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="A fleet on your NATS | OSAPI"><meta data-rh="true" name="description" content="This page is for the administrator of a NATS server that osapi does not run."><meta data-rh="true" property="og:description" content="This page is for the administrator of a NATS server that osapi does not run."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/your-nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/your-nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/your-nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"A fleet on your NATS","item":"https://osapi-io.github.io/osapi/sidebar/your-nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.e311f8f0.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.bc42c39b.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.93afa398.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.ea79c6f8.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -89,11 +89,22 @@ server. It has a user for each role, with the permissions of the role.</p>
 <p>Run <code>osapi nats setup</code> with the setup user, then make a join token.</p>
 </li>
 </ol>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="nkeys-and-auth-callout">Nkeys and auth callout<a href="#nkeys-and-auth-callout" class="hash-link" aria-label="Direct link to Nkeys and auth callout" title="Direct link to Nkeys and auth callout" translate="no">​</a></h2>
-<p><code>osapi nats auth nkey create</code> is osapi-io/osapi#1435, and the join with auth
-callout is osapi-io/osapi#1416. Until then, give each role the subjects that
-<code>osapi nats permissions get</code> prints.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="nkeys">Nkeys<a href="#nkeys" class="hash-link" aria-label="Direct link to Nkeys" title="Direct link to Nkeys" translate="no">​</a></h2>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi nats auth nkey create </span><span class="token parameter variable" style="color:#6b5cff">--out</span><span class="token plain"> /etc/osapi/nats </span><span class="token parameter variable" style="color:#6b5cff">--print</span><br></div></code></pre></div></div>
+<ol>
+<li class="">Load the <code>authorization</code> block of <code>nats-server.conf</code> into the config of your
+server. It has an nkey for the setup, controller and agent roles, with the
+permissions of each.</li>
+<li class="">Give the controller <code>controller.nk</code> and the agents <code>agent.nk</code>, as
+<code>osapi-nats.yaml</code> shows, and run <code>osapi nats setup</code> with <code>setup.nk</code>.</li>
+</ol>
+<p>A join over NATS needs a password or a JWT for its bootstrap user: use the
+static users or operator mode for it. With osapi&#x27;s own server, <code>osapi-nats.yaml</code>
+sets <code>nats.server.auth.nkey_roles</code>, which limits each nkey to its role.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="auth-callout">Auth callout<a href="#auth-callout" class="hash-link" aria-label="Direct link to Auth callout" title="Direct link to Auth callout" translate="no">​</a></h2>
+<p>The join with auth callout is osapi-io/osapi#1416. Until then, give each role
+the subjects that <code>osapi nats permissions get</code> prints.</p>
 <p><a class="" href="/osapi/sidebar/architecture/nats">Running osapi on your NATS</a> is the reference for each
-setting.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">UI architecture</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/development"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Overview</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#operator-mode" class="table-of-contents__link toc-highlight">Operator mode</a></li><li><a href="#static-users" class="table-of-contents__link toc-highlight">Static users</a></li><li><a href="#nkeys-and-auth-callout" class="table-of-contents__link toc-highlight">Nkeys and auth callout</a></li></ul></div></div></div></div></main></div></div></div></div>
+setting.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">UI architecture</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/development"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Overview</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#operator-mode" class="table-of-contents__link toc-highlight">Operator mode</a></li><li><a href="#static-users" class="table-of-contents__link toc-highlight">Static users</a></li><li><a href="#nkeys" class="table-of-contents__link toc-highlight">Nkeys</a></li><li><a href="#auth-callout" class="table-of-contents__link toc-highlight">Auth callout</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
