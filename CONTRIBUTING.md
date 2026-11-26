@@ -613,10 +613,40 @@ that it tests. The tables have `validateFunc` callbacks.
   `//go:build integration` tag guards them. The harness selects random ports,
   generates a JWT and starts the server. Thus the tests need no external setup.
 
-For a new API domain, add a `{domain}_test.go` smoke suite under
-`test/integration/`. Guard each test that makes a change with
-`skipWrite(s.T())`. Then CI runs only the read-only tests by default. To enable
-the tests that write, set `OSAPI_INTEGRATION_WRITES=1`.
+Each command runs from its definition, so a new command needs no test of its
+own. `BehaviorSmokeSuite` runs each example of each behavior.
+`CommandSmokeSuite` runs each other command, of an endpoint group or a local
+group:
+
+- Each input of a `Fails` must fail. It runs always, because it changes nothing.
+  A refusal that the CLI does not catch goes to the controller, not through the
+  spec proxy.
+- Each `Example` must succeed, and its `--json` must print JSON. The suite puts
+  its own thing in place of the value that an example names: the target agent
+  for `web-01`, a job that it runs for a job ID, a file or a secret with a name
+  of its own. It removes each one at the end, and undoes a drain and a config
+  update of the agent.
+
+`cliPolicies` in `test/integration/clicases_test.go` has the commands that do
+not run as their kind: a process, a command that changes an admission or writes
+a checkout, each with its reason, and a command that reads the files of a
+component on its host, which runs against the suite's own server only. An API
+read runs always. An API write, or a local command that the policy marks as a
+write, runs with `OSAPI_INTEGRATION_WRITES=1`.
+
+`TestEachCommandHasACase`, in the same file, has no build tag, so it runs with
+the unit tests. It fails for a command with no example and no refusal, for a
+process with no skip, and for a policy that names no command. To make it pass,
+add an `Example` or a `Fails` to the definition. If the suite cannot run the
+command, add a skip with the reason.
+
+A value of an example that the suite does not know, such as a new kind of ID, is
+used as it is, and the example fails. Add the thing that it names to
+`fixtures.value` in `test/integration/cli_test.go`.
+
+A test that a definition cannot describe, such as one that compares two calls,
+goes in a `{domain}_test.go` suite. Guard each test that makes a change with
+`skipWrite(s.T())`.
 
 `just go-unit-int` runs the suite. These variables change what it does:
 
@@ -625,7 +655,7 @@ the tests that write, set `OSAPI_INTEGRATION_WRITES=1`.
 | `OSAPI_INTEGRATION_OSAPIFILE`       | An osapi client config. The suite starts nothing, and tests the controller that the file's `controller.client` URL and bearer token name                                                                                                                                                                              |
 | `OSAPI_INTEGRATION_TARGET`          | The host that a test sends one host's job to. The default is `_any`. Against several agents, name one host, so a read and its write match                                                                                                                                                                             |
 | `OSAPI_INTEGRATION_WRITE_BEHAVIORS` | `1` runs the write examples of each behavior. Before the tests, the suite prepares the target through osapi: the ping parameter, chrony and the dummy interface `osapi0`. After them, it puts back the parameter and removes `osapi0`. CI sets it, and runs the suite as root on its runner, with no other host setup |
-| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests of the hand-written domains                                                                                                                                                                                                                                                                  |
+| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests: the API writes of `CommandSmokeSuite` and the hand-written suites                                                                                                                                                                                                                           |
 
 To test the lab from this checkout:
 

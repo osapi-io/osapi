@@ -163,6 +163,14 @@ func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 
 func (s *BehaviorcmdPublicTestSuite) TestArgs() {
 	s.Nil(command.Args(nil))
+	type tool string
+	s.Equal(
+		[]string{"--tags", "claude", "--tags", "codex"},
+		command.Args(struct {
+			Tags []tool `json:"tags"`
+		}{Tags: []tool{"claude", "codex"}}),
+		"a list of a named string type is the flag once each",
+	)
 	s.Equal(
 		[]string{"--key", "k", "--count", "2", "--tags", "a", "--tags", "b"},
 		command.Args(input{Key: "k", Count: 2, Tags: []string{"a", "b"}, Ratio: 0.5, Big: 9}),

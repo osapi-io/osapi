@@ -143,9 +143,8 @@ func Args(
 		}
 		// A list is the flag given once for each value.
 		if f.Kind == reflect.Slice {
-			values, _ := fv.Interface().([]string)
-			for _, value := range values {
-				args = append(args, "--"+f.Name, value)
+			for i := range fv.Len() {
+				args = append(args, "--"+f.Name, fmt.Sprint(fv.Index(i).Interface()))
 			}
 
 			continue
