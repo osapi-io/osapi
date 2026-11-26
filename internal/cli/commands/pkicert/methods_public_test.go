@@ -105,6 +105,11 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		s.Require().NoError(err)
 		s.Contains(got.Fingerprint, "SHA256:")
 	})
+	s.Run("a certificate that this host does not have", func() {
+		_, err := pkicert.Get(context.Background(), s.deps(), pkicert.GetInput{Name: "missing"})
+		s.ErrorIs(err, pkicert.ErrNotMade)
+		s.ErrorContains(err, "missing is not on this host")
+	})
 	s.Run("a name that is not a certificate", func() {
 		_, err := pkicert.Get(context.Background(), s.deps(), pkicert.GetInput{Name: "none"})
 		s.ErrorIs(err, pkicert.ErrNoCert)

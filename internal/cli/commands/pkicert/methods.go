@@ -43,6 +43,7 @@ import (
 // Errors of get and rotate.
 var (
 	ErrNoCert       = errors.New("no certificate with this name: list shows each")
+	ErrNotMade      = errors.New("not made")
 	ErrOperatorCert = errors.New("the certificate is the operator's cert_file: replace that file")
 	ErrPinned       = errors.New("each join string pins the NATS server's certificate, and each " +
 		"joined agent trusts it: --force rotates it, then make new join tokens and join each agent again")
@@ -79,8 +80,14 @@ func Get(
 	if err != nil {
 		return CertInfo{}, err
 	}
+	info, err := read(d, src)
+	if errors.Is(err, fs.ErrNotExist) {
+		return CertInfo{}, fmt.Errorf("%s is not on this host: the %s makes it at its first "+
+			"start; run this on the host of the %s: %w",
+			src.Name, src.Component, src.Component, ErrNotMade)
+	}
 
-	return read(d, src)
+	return info, err
 }
 
 // Rotate makes a new self-signed certificate in place of src's.
