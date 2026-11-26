@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">2. NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="2. NATS | OSAPI"><meta data-rh="true" name="description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><meta data-rh="true" property="og:description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"2. NATS","item":"https://osapi-io.github.io/osapi/sidebar/operate/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.e1c19bcc.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.b9a9ac28.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.d120b40f.js" defer="defer"></script>
 </head>
 <body>
@@ -98,15 +98,17 @@ admits each agent by its own key, and checks the signature of each answer
 <p>Do these steps on the host of NATS and the controller.</p>
 <ol>
 <li class="">
-<p>Make the credentials:</p>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi nats auth operator create </span><span class="token parameter variable" style="color:#6b5cff">--out</span><span class="token plain"> /etc/osapi/nats</span><br></div></code></pre></div></div>
-<p>It writes an operator, an account for osapi, a credentials file for each
-role, two scoped signing keys for the join, and <code>osapi-nats.yaml</code>. Keep
-<code>operator.nk</code> and <code>account.nk</code> offline: they sign the accounts.</p>
-</li>
-<li class="">
-<p>Merge <code>osapi-nats.yaml</code> into <code>/etc/osapi/osapi.yaml</code>. It sets the auth of the
-server, of the controller and of the join.</p>
+<p>Nothing to make for the auth. osapi&#x27;s NATS server runs in operator mode by
+default. At its first start it makes an operator, an account for osapi, a
+credentials file for each role and two scoped signing keys for the join, in
+<code>nats-auth</code> of <code>nats.server.key_dir</code>. The controller and an agent on the same
+host connect with their role&#x27;s credentials from there, with no setting, and
+the controller mints the users of a join with the signing keys. Keep a copy
+of <code>operator.nk</code> and <code>account.nk</code> offline: they sign the accounts.</p>
+<p>To make the credentials yourself, such as for a controller on another host,
+run <code>osapi nats auth operator create --out /etc/osapi/nats</code> and merge its
+<code>osapi-nats.yaml</code> into <code>/etc/osapi/osapi.yaml</code>. A server with
+<code>nats.server.auth.resolver_file</code> uses those, and makes nothing.</p>
 </li>
 <li class="">
 <p>NATS serves TLS by default. With no <code>cert_file</code>, the server makes a
