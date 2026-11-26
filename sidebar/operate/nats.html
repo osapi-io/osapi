@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">2. NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="2. NATS | OSAPI"><meta data-rh="true" name="description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><meta data-rh="true" property="og:description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"2. NATS","item":"https://osapi-io.github.io/osapi/sidebar/operate/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.b0c4cb52.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.95ae1802.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.d120b40f.js" defer="defer"></script>
 </head>
 <body>
@@ -84,7 +84,13 @@ mode 0600, and none is on the command line.</p>
 
 
 
-<table><thead><tr><th>Type</th><th>Command</th><th>Join over NATS</th><th>Use it when</th></tr></thead><tbody><tr><td>Operator</td><td><code>osapi nats auth operator create</code></td><td>Yes</td><td>Recommended. Each agent gets its own NATS user, which can expire and renew.</td></tr><tr><td>Password</td><td><code>osapi nats auth password create</code></td><td>Yes</td><td>Your server has static users. The agents share one user.</td></tr><tr><td>Nkey</td><td><code>osapi nats auth nkey create</code></td><td>No</td><td>Your server uses nkeys. Each agent needs its nkey in its config.</td></tr><tr><td>None</td><td>nothing</td><td>Yes</td><td>Development only.</td></tr></tbody></table>
+
+
+
+
+
+
+<table><thead><tr><th>Type</th><th>Command</th><th>Join over NATS</th><th>Use it when</th></tr></thead><tbody><tr><td>Operator</td><td><code>osapi nats auth operator create</code></td><td>Yes</td><td>Recommended. Each agent gets its own NATS user, which can expire and renew.</td></tr><tr><td>Password</td><td><code>osapi nats auth password create</code></td><td>Yes</td><td>Your server has static users. The agents share one user.</td></tr><tr><td>Nkey</td><td><code>osapi nats auth nkey create</code></td><td>No</td><td>Your server uses nkeys. Each agent needs its nkey in its config.</td></tr><tr><td>Callout</td><td>your server&#x27;s <code>auth_callout</code></td><td>Yes</td><td>Your server asks osapi about each connection. A revocation applies at the next connection.</td></tr><tr><td>None</td><td>nothing</td><td>Yes</td><td>Development only.</td></tr></tbody></table>
 <p>A shared NATS user does not let one agent answer for another. The controller
 admits each agent by its own key, and checks the signature of each answer
 (<a class="" href="/osapi/sidebar/architecture/agent-identity">Agent identity</a>).</p>
@@ -133,6 +139,35 @@ namespace, and the flags of <code>nsc add user</code>.</li>
 changes them to match the config. Run it one time, and again after an upgrade
 that changes a stream or a bucket.</li>
 </ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="when-someone-else-runs-the-server">When someone else runs the server<a href="#when-someone-else-runs-the-server" class="hash-link" aria-label="Direct link to When someone else runs the server" title="Direct link to When someone else runs the server" translate="no">​</a></h3>
+<p>osapi cannot add an operator to a server that it does not run: the operator is
+in the server&#x27;s own config. It needs an account, and a key that lets it make the
+users of that account. Ask the administrator of the server for one of these, one
+time. After it, a host that joins or leaves needs nothing from them.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ask for</th><th>Then</th></tr></thead><tbody><tr><td>An account for osapi with JetStream, and two scoped signing keys with the agent and join subjects</td><td><a href="#operator-mode" class="">Operator mode</a>: osapi makes the NATS user of each agent itself</td></tr><tr><td>An <code>auth_callout</code> block that names osapi&#x27;s issuer key, and an nkey callout user</td><td><a href="#auth-callout" class="">Auth callout</a>: osapi decides each connection to its account</td></tr><tr><td>A join user and an agent user, with the subjects of each role</td><td><a href="#static-users" class="">Static users</a>: the agents share one user</td></tr></tbody></table>
+<p><code>osapi nats permissions get --role &lt;role&gt;</code> prints the subjects to give them.
+Each way also needs the controller&#x27;s user and setup&#x27;s user in the same account.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="operator-mode">Operator mode<a href="#operator-mode" class="hash-link" aria-label="Direct link to Operator mode" title="Direct link to Operator mode" translate="no">​</a></h3>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi nats auth operator create </span><span class="token parameter variable" style="color:#6b5cff">--out</span><span class="token plain"> /etc/osapi/nats </span><span class="token parameter variable" style="color:#6b5cff">--print</span><br></div></code></pre></div></div>
 <ol>
@@ -179,7 +214,45 @@ server. It has an nkey for the setup, controller and agent roles.</li>
 give each agent <code>agent.nk</code> in its config. Then it joins over HTTPS, or an admin
 admits it (<a class="" href="/osapi/sidebar/operate/join">4. Join hosts</a>).</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="auth-callout">Auth callout<a href="#auth-callout" class="hash-link" aria-label="Direct link to Auth callout" title="Direct link to Auth callout" translate="no">​</a></h3>
-<p>Not built yet: osapi-io/osapi#1416. Until then, use one of the types above.</p>
+<p>With auth callout (NATS 2.10 or later), your server sends each new connection to
+the controller, and the controller decides it:</p>
+<ul>
+<li class="">A connection with a join token that admits now gets the join role, for 10
+minutes at most.</li>
+<li class="">A connection with the NATS user key of an admitted agent, which signs the
+server&#x27;s nonce with it, gets the agent role.</li>
+<li class="">The controller refuses each other connection. It refuses a revoked agent at
+its next connection.</li>
+</ul>
+<p>Each decision is an entry of the audit log, <code>nats.connect</code>.</p>
+<ol>
+<li class="">
+<p>Make the issuer key and the nkeys:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi nats auth operator create </span><span class="token parameter variable" style="color:#6b5cff">--out</span><span class="token plain"> /etc/osapi/nats   </span><span class="token comment" style="color:#8a8a8a;font-style:italic"># account.nk is the issuer</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi nats auth nkey create </span><span class="token parameter variable" style="color:#6b5cff">--out</span><span class="token plain"> /etc/osapi/nats-nkeys</span><br></div></code></pre></div></div>
+<p>The second command makes an nkey for setup, for the controller and for the
+agents. With auth callout each agent connects with its own key, so no agent
+uses <code>agent.nk</code>: use it as the callout user.</p>
+</li>
+<li class="">
+<p>Give your server an account for the callout user, an account for osapi with
+JetStream, and the <code>auth_callout</code> block. The callout user, the controller and
+setup are in <code>auth_users</code>, so the callout does not decide them:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">accounts {</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  AUTH  { users: [ { nkey: &quot;&lt;callout user, U...&gt;&quot; } ] }</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  OSAPI {</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    jetstream: enabled</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    users: [ { nkey: &quot;&lt;controller, U...&gt;&quot; }, { nkey: &quot;&lt;setup, U...&gt;&quot; } ]</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  }</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">}</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">authorization {</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  auth_callout {</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    issuer: &quot;&lt;public key of account.nk, A...&gt;&quot;</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    auth_users: [ &quot;&lt;callout user&gt;&quot;, &quot;&lt;controller&gt;&quot;, &quot;&lt;setup&gt;&quot; ]</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    account: AUTH</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  }</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">}</span><br></div></code></pre></div></div>
+<p>Make the callout user an nkey. A server offers each connection a nonce only
+when it has an nkey user, and an agent proves its key by signing the nonce.</p>
+</li>
+<li class="">
+<p>Give the controller the callout:</p>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">controller</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">join</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">url</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> tls</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain">//nats.example.com</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token number" style="color:#6b5cff">4222</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">agent_ttl</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> 1h</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">callout</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">issuer_key_file</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> /etc/osapi/nats/account.nk</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">account</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> OSAPI</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">auth</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">        </span><span class="token key atrule" style="color:#ff00ff">type</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> nkey</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">        </span><span class="token key atrule" style="color:#ff00ff">nkey_file</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> /etc/osapi/nats</span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain">nkeys/agent.nk</span><br></div></code></pre></div></div>
+<p><code>agent_ttl</code> is how long an agent&#x27;s connection lasts before the server asks
+the controller again. Thus it is the longest time that a revoked agent stays
+connected.</p>
+</li>
+<li class="">
+<p>Run <code>osapi nats setup</code> as the setup user, and make a join token. The join
+string has no user: the agent connects with its token.</p>
+</li>
+</ol>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="tls-to-your-server">TLS to your server<a href="#tls-to-your-server" class="hash-link" aria-label="Direct link to TLS to your server" title="Direct link to TLS to your server" translate="no">​</a></h3>
 <p>Give the controller the CA of your server:</p>
 <div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">controller</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">nats</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">tls</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">enabled</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token boolean important" style="color:#ff00ff">true</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">ca_file</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> /etc/osapi/tls/ca.crt</span><br></div></code></pre></div></div>
@@ -199,6 +272,6 @@ stream.</p>
 them. After an upgrade that adds a subject, make them again.
 <a class="" href="/osapi/sidebar/architecture/nats">NATS subjects and roles</a> tells why each role has its
 subjects.</p>
-<p>Next: <a class="" href="/osapi/sidebar/operate/controller">3. Controller</a>.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/operate/plan"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">1. Plan</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/operate/controller"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">3. Controller</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#select-the-type-of-auth" class="table-of-contents__link toc-highlight">Select the type of auth</a></li><li><a href="#osapis-nats" class="table-of-contents__link toc-highlight">osapi&#39;s NATS</a></li><li><a href="#your-nats" class="table-of-contents__link toc-highlight">Your NATS</a><ul><li><a href="#operator-mode" class="table-of-contents__link toc-highlight">Operator mode</a></li><li><a href="#static-users" class="table-of-contents__link toc-highlight">Static users</a></li><li><a href="#nkeys" class="table-of-contents__link toc-highlight">Nkeys</a></li><li><a href="#auth-callout" class="table-of-contents__link toc-highlight">Auth callout</a></li><li><a href="#tls-to-your-server" class="table-of-contents__link toc-highlight">TLS to your server</a></li></ul></li><li><a href="#namespace" class="table-of-contents__link toc-highlight">Namespace</a></li><li><a href="#check-it" class="table-of-contents__link toc-highlight">Check it</a></li></ul></div></div></div></div></main></div></div></div></div>
+<p>Next: <a class="" href="/osapi/sidebar/operate/controller">3. Controller</a>.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/operate/plan"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">1. Plan</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/operate/controller"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">3. Controller</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#select-the-type-of-auth" class="table-of-contents__link toc-highlight">Select the type of auth</a></li><li><a href="#osapis-nats" class="table-of-contents__link toc-highlight">osapi&#39;s NATS</a></li><li><a href="#your-nats" class="table-of-contents__link toc-highlight">Your NATS</a><ul><li><a href="#when-someone-else-runs-the-server" class="table-of-contents__link toc-highlight">When someone else runs the server</a></li><li><a href="#operator-mode" class="table-of-contents__link toc-highlight">Operator mode</a></li><li><a href="#static-users" class="table-of-contents__link toc-highlight">Static users</a></li><li><a href="#nkeys" class="table-of-contents__link toc-highlight">Nkeys</a></li><li><a href="#auth-callout" class="table-of-contents__link toc-highlight">Auth callout</a></li><li><a href="#tls-to-your-server" class="table-of-contents__link toc-highlight">TLS to your server</a></li></ul></li><li><a href="#namespace" class="table-of-contents__link toc-highlight">Namespace</a></li><li><a href="#check-it" class="table-of-contents__link toc-highlight">Check it</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Troubleshoot | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/troubleshoot"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Troubleshoot | OSAPI"><meta data-rh="true" name="description" content="Find the symptom. Then run the command that shows the cause."><meta data-rh="true" property="og:description" content="Find the symptom. Then run the command that shows the cause."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/troubleshoot"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/troubleshoot" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/troubleshoot" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"Troubleshoot","item":"https://osapi-io.github.io/osapi/sidebar/operate/troubleshoot"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.b0c4cb52.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.95ae1802.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.d120b40f.js" defer="defer"></script>
 </head>
 <body>
@@ -96,7 +96,17 @@
 
 
 
-<table><thead><tr><th>Symptom</th><th>Cause</th><th>Do this</th></tr></thead><tbody><tr><td><code>no responders</code> at a join</td><td>No controller answers the join, or the bootstrap user cannot send the request.</td><td>Start the controller. Make the NATS credentials again after an upgrade.</td></tr><tr><td><code>Authorization Violation</code></td><td>The NATS user of a process does not have a subject that the process uses.</td><td><code>osapi nats permissions get --role &lt;role&gt;</code>. Make the credentials again, or add the subject.</td></tr><tr><td><code>maximum control line exceeded</code></td><td>Your NATS server refuses a long user JWT.</td><td>Set <code>max_control_line: 32KB</code> in the config of your server.</td></tr><tr><td><code>osapi client health status</code> shows a stream as missing</td><td>The streams and buckets were not made on your server.</td><td><code>osapi nats setup</code>.</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Symptom</th><th>Cause</th><th>Do this</th></tr></thead><tbody><tr><td><code>no responders</code> at a join</td><td>No controller answers the join, or the bootstrap user cannot send the request.</td><td>Start the controller. Make the NATS credentials again after an upgrade.</td></tr><tr><td><code>Authorization Violation</code></td><td>The NATS user of a process does not have a subject that the process uses.</td><td><code>osapi nats permissions get --role &lt;role&gt;</code>. Make the credentials again, or add the subject.</td></tr><tr><td><code>authentication error</code> for an agent, with auth callout</td><td>The callout refused it: the host is revoked or not admitted, or it joined again with a new key.</td><td><code>osapi client audit list</code> has the <code>nats.connect</code> entry with the reason.</td></tr><tr><td><code>nkeys not supported by the server</code> at an agent&#x27;s start</td><td>The server offers no nonce: it has no nkey user.</td><td>Make the callout user an nkey (<a class="" href="/osapi/sidebar/operate/nats#auth-callout">2. NATS</a>).</td></tr><tr><td><code>maximum control line exceeded</code></td><td>Your NATS server refuses a long user JWT.</td><td>Set <code>max_control_line: 32KB</code> in the config of your server.</td></tr><tr><td><code>osapi client health status</code> shows a stream as missing</td><td>The streams and buckets were not made on your server.</td><td><code>osapi nats setup</code>.</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-controller-and-the-cli">The controller and the CLI<a href="#the-controller-and-the-cli" class="hash-link" aria-label="Direct link to The controller and the CLI" title="Direct link to The controller and the CLI" translate="no">​</a></h2>
 
 
