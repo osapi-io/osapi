@@ -188,9 +188,14 @@ func AdminOnly(
 	return false
 }
 
+// operatorWrites are the writes that are actions of the operator, not
+// changes to a host's configuration: a job that the operator ran and that
+// failed is the operator's to retry or delete (osapi-io/osapi#1409).
+var operatorWrites = []Permission{"job:write"}
+
 // RolePermissions is what a built-in role grants, and whether role is one.
 // admin grants each permission. operator grants each read and each execute
-// permission that is not admin only, and automation each read and each
+// permission that is not admin only, and operatorWrites, and automation each read and each
 // write that is not admin only. read grants each read that is not admin
 // only. auditor and observer grant their lists, of the permissions that
 // osapi knows. Thus a new behavior's permissions go to the roles of their
@@ -204,7 +209,8 @@ func RolePermissions(
 		return AllPermissions(), true
 	case types.RoleOperator:
 		grants = func(p Permission, verb string) bool {
-			return (verb == "read" || verb == "execute") && !AdminOnly(p)
+			return (verb == "read" || verb == "execute" || slices.Contains(operatorWrites, p)) &&
+				!AdminOnly(p)
 		}
 	case types.RoleAutomation:
 		// A secret goes into a write, so the role that writes uses one.

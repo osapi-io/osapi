@@ -331,6 +331,20 @@ func (s *PermissionsPublicTestSuite) TestAllPermissions() {
 	}
 }
 
+// TestOperatorRetriesJobs: an operator retries and deletes the jobs that it
+// runs, and changes no configuration (osapi-io/osapi#1409).
+func (s *PermissionsPublicTestSuite) TestOperatorRetriesJobs() {
+	perms, ok := authtoken.RolePermissions(types.RoleOperator)
+	s.Require().True(ok)
+	s.Contains(perms, authtoken.Permission("job:write"))
+	for _, p := range perms {
+		_, verb, _ := strings.Cut(string(p), ":")
+		if verb == "write" {
+			s.Equal(authtoken.Permission("job:write"), p, "the only write of operator")
+		}
+	}
+}
+
 func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 	tests := []struct {
 		name         string
