@@ -101,6 +101,9 @@ type services struct {
 	// index has for the host.
 	PackageUpdates *PackageUpdatesService
 
+	// Pki calls the API's Pki group: the certificates of the fleet.
+	Pki *PkiService
+
 	// Power calls the API's Power group: reboot or shut down the host.
 	Power *PowerService
 
@@ -176,6 +179,7 @@ func (s *services) wire(c *Client) {
 	s.OS = &OSService{client: c}
 	s.Package = &PackageService{client: c}
 	s.PackageUpdates = &PackageUpdatesService{client: c}
+	s.Pki = &PkiService{client: c}
 	s.Power = &PowerService{client: c}
 	s.Process = &ProcessService{client: c}
 	s.Schedule = &ScheduleService{client: c}

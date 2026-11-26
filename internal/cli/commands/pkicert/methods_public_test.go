@@ -41,6 +41,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 type MethodsPublicTestSuite struct {
@@ -63,15 +64,15 @@ func (s *MethodsPublicTestSuite) SetupSubTest() {
 }
 
 func (s *MethodsPublicTestSuite) deps() pkicert.Deps {
-	src := func(name string, self bool) pkicert.Source {
+	src := func(name string, self bool) pki.CertSource {
 		cert, key := config.SelfSignedFiles(s.dir, name)
-		return pkicert.Source{Name: name, CertFile: cert, KeyFile: key, SelfSigned: self}
+		return pki.CertSource{Name: name, CertFile: cert, KeyFile: key, SelfSigned: self}
 	}
 
 	return pkicert.Deps{
 		FS: osfs.NewWithNoIdm(),
-		Certs: func() []pkicert.Source {
-			return []pkicert.Source{
+		Certs: func() []pki.CertSource {
+			return []pki.CertSource{
 				src("api", true), src("nats", true), src("mine", false), src("missing", true),
 			}
 		},
@@ -235,8 +236,8 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		d := s.deps()
 		blocked := filepath.Join(s.dir, "file")
 		s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
-		d.Certs = func() []pkicert.Source {
-			return []pkicert.Source{{
+		d.Certs = func() []pki.CertSource {
+			return []pki.CertSource{{
 				Name: "x", CertFile: filepath.Join(blocked, "x.crt"),
 				KeyFile: filepath.Join(blocked, "x.key"), SelfSigned: true,
 			}}

@@ -26,7 +26,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
@@ -150,6 +152,7 @@ func (a *Agent) writeRegistration(
 		AgentVersion:    a.version,
 		ConfigVersion:   a.configVersion,
 		MissingPrograms: a.missingPrograms,
+		Certificates:    a.certificates(),
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {
@@ -319,4 +322,14 @@ func (a *Agent) writeSeen(
 		return
 	}
 	a.seenWrittenAt = time.Now()
+}
+
+// certificates are the certificates that the agent serves, as its
+// registration reports them, or none for an agent with no file system.
+func (a *Agent) certificates() []pki.Cert {
+	if a.appFs == nil {
+		return nil
+	}
+
+	return pki.ReadCerts(a.appFs, config.CertSourcesOf(a.appConfig, "agent"), time.Now())
 }

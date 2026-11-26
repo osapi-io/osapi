@@ -1,0 +1,1 @@
+{"parameters":[{"description":"Only the certificates of this host: the controller's hostname, or an agent's.","in":"query","name":"hostname","schema":{"maxLength":255,"minLength":1,"type":"string"},"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,max=255"}}]}

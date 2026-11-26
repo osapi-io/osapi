@@ -17,27 +17,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-package pkicert
+
+package pki
 
 import (
-	"crypto/x509"
-	"testing"
+	"context"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
-type MethodsTestSuite struct {
-	suite.Suite
+// Deps is what the group's handlers use: the agents, whose registrations
+// have their certificates, and the controller's own certificates.
+type Deps struct {
+	Agents Agents
+	// Local are the certificates of the controller's host, the controller's
+	// and the NATS server's, as the controller reads them now. Nil is none.
+	Local func() []pki.Cert
+	// Hostname is the hostname of the controller's host.
+	Hostname string
 }
 
-func TestMethodsTestSuite(t *testing.T) {
-	suite.Run(t, new(MethodsTestSuite))
-}
-
-func (suite *MethodsTestSuite) TestKeyAlgorithm() {
-	suite.Run("a key of an algorithm that FIPS does not approve", func() {
-		got, ok := keyAlgorithm(&x509.Certificate{PublicKeyAlgorithm: x509.DSA})
-		suite.Equal("DSA", got)
-		suite.False(ok)
-	})
+// Agents lists the agents, each with the certificates of its registration.
+type Agents interface {
+	ListAgents(ctx context.Context) ([]job.AgentInfo, error)
 }

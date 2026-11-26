@@ -1159,3 +1159,11 @@ func ExportBuiltProviders(
 
 	return all
 }
+
+// SetAppFs gives the agent the file system fs.
+func SetAppFs(
+	a *Agent,
+	fs avfs.VFS,
+) {
+	a.appFs = fs
+}

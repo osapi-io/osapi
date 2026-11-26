@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -364,6 +365,9 @@ type AgentRegistration struct {
 	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
 	// Empty until the agent loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
+	// Certificates are the certificates that the agent serves, such as the
+	// one of its metrics server, read at each heartbeat.
+	Certificates []pki.Cert `json:"certificates,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 	// Signature is the agent's Ed25519 signature over the routing fields of
@@ -427,6 +431,8 @@ type AgentInfo struct {
 	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
 	// Empty until the agent loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
+	// Certificates are the certificates that the agent serves.
+	Certificates []pki.Cert `json:"certificates,omitempty"`
 	// Timeline contains the chronological sequence of state transition events.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
 	// Verified reports whether this registration's signature checked out

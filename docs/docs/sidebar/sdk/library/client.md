@@ -167,6 +167,7 @@ the spec.
 | [Catalog](../fleet/catalog.md)     | The behaviors, the permissions and the roles that the controller serves, for the UI. |
 | [Health](../fleet/health.md)       | Health check endpoints for liveness, readiness, and detailed status.                 |
 | [Job](../fleet/job.md)             | Operations related to the job queue.                                                 |
+| [Pki](../fleet/pki.md)             | The certificates of the fleet.                                                       |
 | [Telemetry](../fleet/telemetry.md) | Telemetry through the controller, such as the spans of a trace.                      |
 
 <!-- /osapi:sdk-services -->

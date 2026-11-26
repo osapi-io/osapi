@@ -419,6 +419,24 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindDeps,
+			Name: "Agents",
+			Does: "Lists the agents, each with what its registration reports, such as its certificates. The job client is one; a test gives a mockgen mock.",
+			When: "For the pki group, which lists each agent's certificates.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Local",
+			Does: "The certificates of the controller's host, the controller's and the NATS server's, which handlers.go reads from the files of the host at each call. A test gives a func that returns fixed ones, or nil for none.",
+			When: "For the pki group.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Hostname",
+			Does: "The hostname of the controller's host, from os.Hostname, which names the host of the controller's own certificates. A test gives a fixed name.",
+			When: "For the pki group, whose get takes a certificate of the controller's host when the hostname is empty.",
+		},
+		{
+			Kind: KindDeps,
 			Name: "Vaults",
 			Does: "The vaults of controller.secrets.vaults, by name: each vault's spec, and the vault.Vault that gets, puts, deletes and lists its keys. handlers.go gives the vault.Set that the controller opens at startup.",
 			When: "For the secret group. A handler reads the metadata of a key from List, so that no method reads a value that it does not give.",
