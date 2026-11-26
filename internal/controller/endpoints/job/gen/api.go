@@ -22,6 +22,12 @@ func Routes(
 		},
 		{
 			Method:     http.MethodGet,
+			Path:       "/api/job/deadletter",
+			Permission: "job:read",
+			Handler:    server.Serve(s, job.Group, "deadletters", job.DeadLetters, decodeDeadletters),
+		},
+		{
+			Method:     http.MethodGet,
 			Path:       "/api/job/:id",
 			Permission: "job:read",
 			Handler:    server.Serve(s, job.Group, "get", job.Get, decodeGet),

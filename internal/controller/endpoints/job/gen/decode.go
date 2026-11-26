@@ -30,6 +30,21 @@ func decodeList(
 	return in, "", true
 }
 
+// decodeDeadletters reads the deadletters method's input from the request.
+func decodeDeadletters(
+	c *echo.Context,
+) (job.DeadLetterListInput, string, bool) {
+	var in job.DeadLetterListInput
+	if msg, ok := server.Query(c, "limit", &in.Limit); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
 // decodeGet reads the get method's input from the request.
 func decodeGet(
 	c *echo.Context,

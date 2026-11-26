@@ -589,6 +589,80 @@ func scopedToken(
 
 // TestRoutes runs requests through the generated routes, with the auth, the
 // decoding, the validation and the status mapping of the endpoint runtime.
+func (s *MethodsPublicTestSuite) TestDeadLetters() {
+	dls := []job.DeadLetter{
+		{Seq: 3, JobID: "job-web", Deliveries: 5, Consumer: "jobs-agent"},
+		{Seq: 2, JobID: "job-db", Deliveries: 5},
+		{Seq: 1, Deliveries: 5},
+	}
+	jobs := func() {
+		s.jobs.EXPECT().GetJobStatus(gomock.Any(), "job-web").Return(&job.QueuedJob{
+			ID: "job-web", Target: "web-01", Error: "agent did not answer",
+			Operation: map[string]interface{}{"type": "node.hostname.get"},
+		}, nil).AnyTimes()
+		s.jobs.EXPECT().GetJobStatus(gomock.Any(), "job-db").
+			Return(nil, errors.New("not found")).AnyTimes()
+	}
+	tests := []struct {
+		name         string
+		in           jobgroup.DeadLetterListInput
+		scope        []string
+		setup        func()
+		validateFunc func(jobgroup.DeadLetterList, error)
+	}{
+		{
+			name: "each dead letter, with its job when the job is there",
+			setup: func() {
+				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 20).Return(dls, 654, nil)
+				jobs()
+			},
+			validateFunc: func(got jobgroup.DeadLetterList, err error) {
+				s.Require().NoError(err)
+				s.Equal(654, got.TotalItems)
+				s.Require().Len(got.Items, 3)
+				s.Equal("web-01", got.Items[0].Target)
+				s.Equal("node.hostname.get", got.Items[0].Operation.Type)
+				s.Equal("agent did not answer", got.Items[0].Error)
+				s.Empty(got.Items[1].Target, "a job that is gone leaves its fields empty")
+				s.Empty(got.Items[2].JobID)
+			},
+		},
+		{
+			name:  "a scoped token sees only the dead letters of its targets",
+			in:    jobgroup.DeadLetterListInput{Limit: 5},
+			scope: []string{"web-01"},
+			setup: func() {
+				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 5).Return(dls, 654, nil)
+				jobs()
+			},
+			validateFunc: func(got jobgroup.DeadLetterList, err error) {
+				s.Require().NoError(err)
+				s.Equal(1, got.TotalItems, "the total counts only what the token sees")
+				s.Require().Len(got.Items, 1)
+				s.Equal("job-web", got.Items[0].JobID)
+			},
+		},
+		{
+			name: "a stream that cannot be read is a 500",
+			setup: func() {
+				s.jobs.EXPECT().
+					ListDeadLetters(gomock.Any(), 20).
+					Return(nil, 0, errors.New("nats down"))
+			},
+			validateFunc: func(_ jobgroup.DeadLetterList, err error) {
+				s.ErrorContains(err, "failed to list the dead letters")
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
+			tc.validateFunc(jobgroup.DeadLetters(ctx, s.deps(), tc.in))
+		})
+	}
+}
+
 func (s *MethodsPublicTestSuite) TestRoutes() {
 	tests := []struct {
 		name     string

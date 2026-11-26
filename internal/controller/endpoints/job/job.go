@@ -47,6 +47,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Title("Job Management API"),
 	endpoint.Tag("job_operations", "Job", "Operations related to the job queue."),
 	endpoint.Uses[Deps](),
+	endpoint.SubDoc("deadletter", "Read the jobs whose delivery to an agent used up its retries"),
 	endpoint.Doc[types.JobStatus](
 		"The status of a job, which the controller computes from what each agent did: "+
 			"submitted, processing, completed, failed, partial_failure (completed on some "+
@@ -74,6 +75,25 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("").
 		Prints(sampleList).
 		Example("--status completed --limit 3"),
+	endpoint.Get[DeadLetterListInput, DeadLetterList]("deadletters").
+		Fails("a limit below 1", DeadLetterListInput{Limit: -1}).
+		Fails("a limit over 100", DeadLetterListInput{Limit: 101}).
+		Handle(DeadLetters).
+		Sub("deadletter").
+		Use("list").
+		ID("ListDeadLetters").
+		Describe("List the dead letters").
+		Explain("Lists the newest jobs whose delivery to an agent used up its retries, from "+
+			"the dead letter stream, each with its job's operation, target and error. A job "+
+			"goes back to the queue with retry. A token with a target scope gets only the "+
+			"dead letters of the jobs whose target is in its scope.").
+		Returns("The newest dead letters.").
+		Command("List the dead letters",
+			"Lists the jobs whose delivery to an agent used up its retries, the newest\n"+
+				"first. Send one back to the queue with osapi client job retry --id.").
+		Example("").
+		Prints(sampleDeadLetters).
+		Example("--limit 5"),
 	endpoint.Get[GetInput, DetailResponse]("get").
 		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).
 		Handle(Get).

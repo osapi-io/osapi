@@ -252,6 +252,22 @@ func (mr *MockJobClientMockRecorder) ListAgents(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAgents", reflect.TypeOf((*MockJobClient)(nil).ListAgents), ctx)
 }
 
+// ListDeadLetters mocks base method.
+func (m *MockJobClient) ListDeadLetters(ctx context.Context, limit int) ([]job.DeadLetter, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDeadLetters", ctx, limit)
+	ret0, _ := ret[0].([]job.DeadLetter)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListDeadLetters indicates an expected call of ListDeadLetters.
+func (mr *MockJobClientMockRecorder) ListDeadLetters(ctx, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetters", reflect.TypeOf((*MockJobClient)(nil).ListDeadLetters), ctx, limit)
+}
+
 // ListJobs mocks base method.
 func (m *MockJobClient) ListJobs(ctx context.Context, statusFilter types.JobStatus, limit, offset int, keep func(string) bool) (*client0.ListJobsResult, error) {
 	m.ctrl.T.Helper()

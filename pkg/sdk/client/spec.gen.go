@@ -589,6 +589,13 @@ func Services() []ServiceSpec {
 			Permission: "job:read",
 			Result:     "ListJobsResponse",
 		}, {
+			Doc:        "List the dead letters",
+			Examples:   2,
+			HTTP:       "GET /api/job/deadletter",
+			Name:       "Deadletters",
+			Permission: "job:read",
+			Result:     "DeadLetterList",
+		}, {
 			Doc:        "Get job detail",
 			Examples:   1,
 			HTTP:       "GET /api/job/{id}",

@@ -10,12 +10,13 @@ title: Job
 
 ## Methods
 
-| Method                        | Returns                        | Permission  | Description     |
-| ----------------------------- | ------------------------------ | ----------- | --------------- |
-| [`List(ctx, params)`](#list)  | `*Response[ListJobsResponse]`  | `job:read`  | List jobs.      |
-| [`Get(ctx, id)`](#get)        | `*Response[JobDetailResponse]` | `job:read`  | Get job detail. |
-| [`Delete(ctx, id)`](#delete)  | `error`                        | `job:write` | Delete a job.   |
-| [`Retry(ctx, input)`](#retry) | `*Response[CreateJobResponse]` | `job:write` | Retry a job.    |
+| Method                                     | Returns                        | Permission  | Description            |
+| ------------------------------------------ | ------------------------------ | ----------- | ---------------------- |
+| [`List(ctx, params)`](#list)               | `*Response[ListJobsResponse]`  | `job:read`  | List jobs.             |
+| [`Deadletters(ctx, params)`](#deadletters) | `*Response[DeadLetterList]`    | `job:read`  | List the dead letters. |
+| [`Get(ctx, id)`](#get)                     | `*Response[JobDetailResponse]` | `job:read`  | Get job detail.        |
+| [`Delete(ctx, id)`](#delete)               | `error`                        | `job:write` | Delete a job.          |
+| [`Retry(ctx, input)`](#retry)              | `*Response[CreateJobResponse]` | `job:write` | Retry a job.           |
 
 ### List
 
@@ -49,6 +50,38 @@ resp, err := c.Job.List(ctx, client.JobListParams{
 	Limit:  3,
 	Status: types.JobStatus("completed"),
 })
+```
+
+### Deadletters
+
+```go
+func (s *JobService) Deadletters(
+	ctx context.Context,
+	params JobDeadlettersParams,
+) (*Response[DeadLetterList], error)
+```
+
+List the dead letters.
+
+Lists the newest jobs whose delivery to an agent used up its retries, from the
+dead letter stream, each with its job's operation, target and error. A job goes
+back to the queue with retry. A token with a target scope gets only the dead
+letters of the jobs whose target is in its scope.
+
+It sends `GET /api/job/deadletter`, and needs the permission `job:read`.
+
+The examples of the method's definition:
+
+List the dead letters, `go run job.go deadletters`:
+
+```go
+resp, err := c.Job.Deadletters(ctx, client.JobDeadlettersParams{})
+```
+
+List the dead letters, with --limit 5, `go run job.go deadletters-2`:
+
+```go
+resp, err := c.Job.Deadletters(ctx, client.JobDeadlettersParams{Limit: 5})
 ```
 
 ### Get
@@ -144,6 +177,35 @@ A `string`, one of `submitted`, `acknowledged`, `started`, `completed`,
 | `Revision`  | `int64`     | The KV revision number.                                                                                                                                                                                                    |
 | `Status`    | `JobStatus` | The status of a job, which the controller computes from what each agent did: submitted, processing, completed, failed, partial_failure (completed on some agents and failed on others) or skipped (each agent skipped it). |
 | `Timestamp` | `string`    | Creation timestamp.                                                                                                                                                                                                        |
+
+### DeadLetter
+
+| Field        | Type                  | Description                                                                       |
+| ------------ | --------------------- | --------------------------------------------------------------------------------- |
+| `Consumer`   | `string`              | The consumer of the agents that the delivery was for.                             |
+| `Deliveries` | `int`                 | How often NATS delivered the job before it gave up.                               |
+| `Error`      | `string`              | The error of the job, when it has one.                                            |
+| `JobID`      | `string`              | The job that the delivery carried, or empty when the job stream no longer has it. |
+| `Operation`  | `DeadLetterOperation` | What the job asked for, with each secret masked.                                  |
+| `Seq`        | `int`                 | The dead letter's sequence in the dead letter stream.                             |
+| `Target`     | `string`              | The target of the job.                                                            |
+| `Time`       | `time.Time`           | When NATS gave up on the delivery.                                                |
+
+### DeadLetterList
+
+| Field        | Type           | Description                                       |
+| ------------ | -------------- | ------------------------------------------------- |
+| `Items`      | `[]DeadLetter` |                                                   |
+| `TotalItems` | `int`          | The number of dead letters that the stream holds. |
+
+### DeadLetterOperation
+
+What the job asked for, with each secret masked.
+
+| Field  | Type     | Description                                         |
+| ------ | -------- | --------------------------------------------------- |
+| `Data` | `any`    | The data of the operation, with each secret masked. |
+| `Type` | `string` | The operation, such as node.hostname.get.           |
 
 ### JobDetailResponse
 

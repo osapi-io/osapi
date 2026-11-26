@@ -31,6 +31,24 @@ var jobListCmd = &cobra.Command{
 	Use:   "list",
 }
 
+var jobDeadlettersCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "deadletter",
+		reference.Permission: "job:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job deadletter list\n\x1b[1;38;2;0;213;255mDead letters (1 of 654):\x1b[0m\n  \x1b[38;2;10;143;176mSEQ  \x1b[0m\x1b[38;2;10;143;176mTIME                 \x1b[0m\x1b[38;2;10;143;176mJOB ID                                \x1b[0m\x1b[38;2;10;143;176mTARGET  \x1b[0m\x1b[38;2;10;143;176mERROR                 \x1b[0m\x1b[38;2;10;143;176mDELIVERIES\x1b[0m\n  654  2026-11-26 10:00:00  \x1b[38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000\x1b[0m  _all    agent did not answer  5\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 654,\n  \"items\": [\n    {\n      \"seq\": 654,\n      \"time\": \"2026-11-26T10:00:00Z\",\n      \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"operation\": {\n        \"type\": \"node.hostname.get\"\n      },\n      \"target\": \"_all\",\n      \"error\": \"agent did not answer\",\n      \"deliveries\": 5,\n      \"consumer\": \"jobs-agent\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client job deadletter list\n  osapi client job deadletter list --limit 5",
+	Long:    "Lists the jobs whose delivery to an agent used up its retries, the newest\nfirst. Send one back to the queue with osapi client job retry --id.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		limit, _ := cmd.Flags().GetInt("limit")
+
+		endpointcommand.Run(cmd, job.Group, "deadletters", job.DeadLetterListInput{Limit: limit})
+	},
+	Short: "List the dead letters",
+	Use:   "list",
+}
+
 var jobGetCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "job:read",
@@ -87,6 +105,7 @@ func init() {
 	jobListCmd.Flags().String("status", "", "Filter jobs by status (submitted, processing, completed, failed, partial_failure, skipped)")
 	jobListCmd.Flags().Int("limit", 10, "Maximum number of jobs per page (1-100)")
 	jobListCmd.Flags().Int("offset", 0, "Number of jobs to skip for pagination")
+	jobDeadlettersCmd.Flags().Int("limit", 20, "The most dead letters to list, the newest first (1-100)")
 	jobGetCmd.Flags().String("id", "", "UUID of the job to retrieve")
 	_ = jobGetCmd.MarkFlagRequired("id")
 	jobDeleteCmd.Flags().String("id", "", "UUID of the job to delete")
@@ -94,5 +113,5 @@ func init() {
 	jobRetryCmd.Flags().String("id", "", "UUID of the job to retry")
 	_ = jobRetryCmd.MarkFlagRequired("id")
 	jobRetryCmd.Flags().StringP("target", "T", "_any", "The target of the retried job: _any, _all, a hostname, or a label such as group:web.dev")
-	clicommand.AddCommands(job.Group, jobListCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
+	clicommand.AddCommands(job.Group, jobListCmd, jobDeadlettersCmd, jobGetCmd, jobDeleteCmd, jobRetryCmd)
 }

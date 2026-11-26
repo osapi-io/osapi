@@ -457,6 +457,25 @@ type NodeUptimeResponse struct {
 	Uptime        string  `json:"uptime"`
 }
 
+// DeadLetter is a job whose delivery to an agent used up its retries: the
+// advisory that NATS wrote to the dead letter stream when a consumer reached
+// its max deliveries, with the job that the delivery carried.
+type DeadLetter struct {
+	// Seq is the dead letter's sequence in the dead letter stream.
+	Seq uint64 `json:"seq"`
+	// Time is when NATS gave up on the delivery.
+	Time time.Time `json:"time"`
+	// JobID is the job that the delivery carried, or empty when the job
+	// stream no longer has its message.
+	JobID string `json:"job_id,omitempty"`
+	// Consumer is the consumer of the agents that the delivery was for.
+	Consumer string `json:"consumer"`
+	// Deliveries is how often NATS delivered it.
+	Deliveries uint64 `json:"deliveries"`
+	// StreamSeq is the sequence of the job's message in the job stream.
+	StreamSeq uint64 `json:"stream_seq"`
+}
+
 // AgentConfig is the config of an agent that the controller holds, under
 // the agent's machine ID: what an operator set for the agent without its
 // config file. The agent watches it, and applies a change at once.

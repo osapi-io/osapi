@@ -136,6 +136,11 @@ export function Dashboard() {
             {health.jobs && (
               <StatCard
                 label="Dead letters"
+                to={
+                  canCall("ListDeadLetters")
+                    ? "/admin/jobs?view=deadletters"
+                    : undefined
+                }
                 value={<Count n={health.jobs.dlq} kind="dlq" bare />}
                 detail="jobs that used up their retries"
               />

@@ -56,6 +56,33 @@ func (s *JobService) List(
 	return send[ListJobsResponse](ctx, s.client, http.MethodGet, "/api/job", q, nil)
 }
 
+// JobDeadlettersParams are the parameters of JobService.Deadletters that a
+// request can leave out.
+type JobDeadlettersParams struct {
+	// Limit is the limit of the query: the most dead letters to list, the newest
+	// first (1-100). The zero value leaves it out.
+	Limit int
+}
+
+// Deadletters is the operation ListDeadLetters: list the dead letters.
+//
+// Lists the newest jobs whose delivery to an agent used up its retries, from
+// the dead letter stream, each with its job's operation, target and error. A
+// job goes back to the queue with retry. A token with a target scope gets only
+// the dead letters of the jobs whose target is in its scope.
+//
+// It sends GET /api/job/deadletter, and needs the permission job:read.
+func (s *JobService) Deadletters(
+	ctx context.Context,
+	params JobDeadlettersParams,
+) (*Response[DeadLetterList], error) {
+	q := url.Values{}
+	if params.Limit != 0 {
+		q.Set("limit", strconv.Itoa(params.Limit))
+	}
+	return send[DeadLetterList](ctx, s.client, http.MethodGet, "/api/job/deadletter", q, nil)
+}
+
 // Get is the operation GetJobByID: get job detail.
 //
 // Retrieve details of a specific job by its ID. A job whose target is outside

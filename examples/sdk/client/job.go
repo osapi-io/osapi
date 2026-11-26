@@ -31,6 +31,8 @@ var examples = []struct {
 }{
 	{"list", "List jobs", runList},
 	{"list-2", "List jobs, with --status completed --limit 3", runList2},
+	{"deadletters", "List the dead letters", runDeadletters},
+	{"deadletters-2", "List the dead letters, with --limit 5", runDeadletters2},
 	{"get", "Get job detail", runGet},
 	{"delete", "Delete a job", runDelete},
 	{"retry", "Retry a job", runRetry},
@@ -58,6 +60,32 @@ func runList2(
 		Limit:  3,
 		Status: types.JobStatus("completed"),
 	})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runDeadletters runs the example deadletters: list the dead letters.
+func runDeadletters(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Job.Deadletters(ctx, client.JobDeadlettersParams{})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runDeadletters2 runs the example deadletters-2: list the dead letters, with --limit 5.
+func runDeadletters2(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Job.Deadletters(ctx, client.JobDeadlettersParams{Limit: 5})
 	if err != nil {
 		return err
 	}

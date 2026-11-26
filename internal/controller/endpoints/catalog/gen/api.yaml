@@ -530,6 +530,7 @@ components:
         - GetSecretVaults
         - GetSecrets
         - GetTrace
+        - ListDeadLetters
         - ListPKICerts
         - PostFile
         - PostNodeCertificate

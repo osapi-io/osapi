@@ -32,6 +32,9 @@ import { Count } from "@/components/ui/count";
 import { JobView } from "@/components/domain/job-detail";
 import { formatTime, operationType } from "@/lib/format";
 import { LinkedJob } from "@/components/domain/linked-job";
+import { DeadLetters } from "@/components/domain/dead-letters";
+import { listDeadLetters } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
+import type { DeadLetterList } from "@/sdk/gen/schemas";
 
 /** A job as the list gives it. */
 type Job = NonNullable<ListJobsResponse["items"]>[number];
@@ -59,6 +62,9 @@ export function Jobs() {
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("status") ?? "",
   );
+  // ?view=deadletters, from the dashboard's Dead letters card, shows the
+  // jobs whose delivery used up its retries instead of the job list.
+  const [view, setView] = useState(searchParams.get("view") ?? "");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -76,6 +82,15 @@ export function Jobs() {
       ),
     [offset, statusFilter],
     { enabled: canCall("GetJobs") },
+  );
+  const deadLetters = usePolling(
+    async () =>
+      unwrap<DeadLetterList>(
+        await listDeadLetters({ limit: PAGE_SIZE }),
+        "Failed to fetch the dead letters",
+      ),
+    [],
+    { enabled: view === "deadletters" && canCall("ListDeadLetters") },
   );
   const { data, loading } = jobs;
   const error = actionError ?? jobs.error;
@@ -113,6 +128,7 @@ export function Jobs() {
       if (result.status === 201) {
         setActionError(null);
         await fetchJobs();
+        await deadLetters.refresh();
       } else {
         setActionError("Failed to retry job");
       }
@@ -158,7 +174,48 @@ export function Jobs() {
 
       {error && <ErrorBanner message={error} />}
 
-      {!loading && !error && (
+      {canCall("ListDeadLetters") && (
+        <div className="mb-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setView("")}
+            className={
+              view === "" ? "font-semibold text-primary" : "text-text-muted"
+            }
+          >
+            Jobs
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("deadletters")}
+            className={
+              view === "deadletters"
+                ? "font-semibold text-primary"
+                : "text-text-muted"
+            }
+          >
+            Dead letters
+          </button>
+        </div>
+      )}
+
+      {view === "deadletters" && canCall("ListDeadLetters") && (
+        <div className="mb-4">
+          <SectionLabel>Dead letters</SectionLabel>
+          {deadLetters.error && <ErrorBanner message={deadLetters.error} />}
+          {deadLetters.loading && <Spinner />}
+          {deadLetters.data && (
+            <DeadLetters
+              items={deadLetters.data.items}
+              total={deadLetters.data.total_items}
+              busy={actionLoading}
+              onRetry={canCall("RetryJobByID") ? handleRetry : undefined}
+            />
+          )}
+        </div>
+      )}
+
+      {view !== "deadletters" && !loading && !error && (
         <>
           {/* Filters */}
           <div className="mb-4">

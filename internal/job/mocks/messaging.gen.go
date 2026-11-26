@@ -168,6 +168,21 @@ func (mr *MockNATSClientMockRecorder) Publish(ctx, subject, data any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockNATSClient)(nil).Publish), ctx, subject, data)
 }
 
+// StreamGetMsg mocks base method.
+func (m *MockNATSClient) StreamGetMsg(ctx context.Context, name string, seq uint64) (*jetstream.RawStreamMsg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StreamGetMsg", ctx, name, seq)
+	ret0, _ := ret[0].(*jetstream.RawStreamMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StreamGetMsg indicates an expected call of StreamGetMsg.
+func (mr *MockNATSClientMockRecorder) StreamGetMsg(ctx, name, seq any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StreamGetMsg", reflect.TypeOf((*MockNATSClient)(nil).StreamGetMsg), ctx, name, seq)
+}
+
 // StreamInfo mocks base method.
 func (m *MockNATSClient) StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error) {
 	m.ctrl.T.Helper()

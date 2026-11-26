@@ -1,0 +1,1 @@
+{"parameters":[{"description":"The most dead letters to list, the newest first (1-100).","in":"query","name":"limit","schema":{"default":20,"maximum":100,"minimum":1,"type":"integer"},"x-oapi-codegen-extra-tags":{"validate":"omitempty,min=1,max=100"}}]}

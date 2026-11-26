@@ -123,8 +123,11 @@ when some agents failed.
 
 If an agent receives a job and does not acknowledge it, the agent receives the
 job again, up to `agent.consumer.max_deliver` times. After that, the delivery
-advisory of the job goes to the dead-letter stream, `JOBS-DLQ`. You can examine
-it there.
+advisory of the job goes to the dead-letter stream, `JOBS-DLQ`.
+`osapi client job deadletter list` shows the newest, each with the operation,
+the target and the error of its job, and the UI shows them on the Jobs page.
+`osapi client job retry --id` sends the job back to the queue as a new job. A
+dead letter stays in the stream until `nats.dlq.max_age`.
 
 ## The result
 

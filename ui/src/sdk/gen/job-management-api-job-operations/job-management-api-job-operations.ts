@@ -6,9 +6,11 @@
  */
 import type {
   CreateJobResponse,
+  DeadLetterList,
   ErrorResponse,
   GetJobsParams,
   JobDetailResponse,
+  ListDeadLettersParams,
   ListJobsResponse,
   RetryJobRequest
 } from '../schemas';
@@ -286,6 +288,71 @@ export const retryJobByID = async (id: string,
     method: 'POST',
     headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(retryJobRequest)
+  }
+);}
+
+
+export type listDeadLettersResponse200 = {
+  data: DeadLetterList
+  status: 200
+}
+
+export type listDeadLettersResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listDeadLettersResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listDeadLettersResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listDeadLettersResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type listDeadLettersResponseSuccess = (listDeadLettersResponse200) & {
+  headers: Headers;
+};
+export type listDeadLettersResponseError = (listDeadLettersResponse400 | listDeadLettersResponse401 | listDeadLettersResponse403 | listDeadLettersResponse500) & {
+  headers: Headers;
+};
+
+export type listDeadLettersResponse = (listDeadLettersResponseSuccess | listDeadLettersResponseError)
+
+export const getListDeadLettersUrl = (params?: ListDeadLettersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/job/deadletter?${stringifiedParams}` : `/api/job/deadletter`
+}
+
+/**
+ * Lists the newest jobs whose delivery to an agent used up its retries, from the dead letter stream, each with its job's operation, target and error. A job goes back to the queue with retry. A token with a target scope gets only the dead letters of the jobs whose target is in its scope.
+ * @summary List the dead letters
+ */
+export const listDeadLetters = async (params?: ListDeadLettersParams, options?: Parameters<typeof apiFetch>[1]): Promise<listDeadLettersResponse> => {
+
+  return apiFetch<listDeadLettersResponse>(getListDeadLettersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
   }
 );}
 

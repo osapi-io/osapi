@@ -1526,6 +1526,13 @@ const sidebar: SidebarsConfig = {
               className: "api-method post",
               key: "fleet-job-management-api-job-operations-gen-api-retry-job-by-id",
             },
+            {
+              type: "doc",
+              id: "gen/api/list-dead-letters",
+              label: "List the dead letters",
+              className: "api-method get",
+              key: "fleet-job-management-api-job-operations-gen-api-list-dead-letters",
+            },
           ],
         },
         {
