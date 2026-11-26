@@ -20,6 +20,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsperms/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natssetup/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/pkicert/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/role/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/sdk/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill/gen"

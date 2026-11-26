@@ -45,6 +45,12 @@ The CLI on the controller's host trusts the self-signed `api.crt` with no
 setting. A CLI on another host needs it as `controller.client.tls.ca_file`, or a
 certificate of a CA that it trusts. A join over HTTPS pins the certificate.
 
+`osapi pki cert list` shows each certificate of osapi on the host: its source,
+its key and signature algorithms, whether FIPS approves them, and when it
+expires. `osapi pki cert rotate --name api` makes a new self-signed certificate;
+the controller serves it at its next start. Give the new `api.crt` to each CLI
+on another host.
+
 ## 3. Start the controller
 
 ```bash

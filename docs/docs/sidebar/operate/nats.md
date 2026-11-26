@@ -60,7 +60,10 @@ Do these steps on the host of NATS and the controller.
 1. NATS serves TLS by default. With no `cert_file`, the server makes a
    self-signed certificate, `nats.crt`, in `nats.server.key_dir` at its first
    start. The controller and an agent on the same host trust it with no setting.
-   To serve a certificate of your own:
+   `osapi pki cert get --name nats` shows it. Each join string pins it, so
+   `osapi pki cert rotate --name nats` needs `--force`, then new join tokens and
+   a join again of each agent on another host. To serve a certificate of your
+   own:
 
    ```yaml
    nats:

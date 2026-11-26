@@ -108,7 +108,7 @@ func init() {
 	_ = commandCreateCmd.MarkFlagRequired("name")
 	commandCreateCmd.Flags().String("description", "", "What the group is, in one line")
 	_ = commandCreateCmd.MarkFlagRequired("description")
-	commandCreateCmd.Flags().String("under", "", "The word of the root that the group goes under, where it runs: agent, controller, dsl or nats (agent, controller, dsl, nats)")
+	commandCreateCmd.Flags().String("under", "", "The word of the root that the group goes under, where it runs: agent, controller, dsl or nats (agent, controller, dsl, nats, pki)")
 	_ = commandCreateCmd.MarkFlagRequired("under")
 	clicommand.AddCommands(commanddsl.Group, commandListCmd, commandGetCmd, commandMethodGetCmd, commandCreateCmd, commandSpecGetCmd, commandValidateCmd)
 }

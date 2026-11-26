@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/agentservice"
+	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
 
 	"github.com/osapi-io/osapi/internal/audit"
 
@@ -139,6 +140,11 @@ func init() {
 			Audit:   localAudit,
 		}
 	})
+	command.Provide(pkicert.Group, func() pkicert.Deps {
+		return pkicert.Deps{
+			FS: osfs.NewWithNoIdm(), Certs: hostCerts, Now: time.Now, Audit: localAudit,
+		}
+	})
 	command.Provide(agentkey.Group, func() agentkey.Deps {
 		fs := osfs.NewWithNoIdm()
 
@@ -188,7 +194,7 @@ func init() {
 		Print:     cli.Printer{},
 		// These are written by hand, and their inits run after this one: a
 		// group goes Under them.
-	}, natsCmd, agentCmd, controllerCmd, dslCmd); err != nil {
+	}, natsCmd, agentCmd, controllerCmd, dslCmd, pkiCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -449,5 +455,46 @@ func waitForFile(
 			return false
 		case <-tick.C:
 		}
+	}
+}
+
+// hostCerts are the certificates that the servers of osapi serve on this
+// host, by the config.
+func hostCerts() []pkicert.Source {
+	c, n, a := appConfig.Controller, appConfig.NATS.Server, appConfig.Agent
+
+	return []pkicert.Source{
+		certSource("api", "controller", c.API.TLS, c.PKI.KeyDir),
+		certSource("controller-metrics", "controller", c.Metrics.TLS, c.PKI.KeyDir),
+		certSource("nats", "nats", n.TLS, n.KeyDir),
+		certSource("nats-metrics", "nats", n.Metrics.TLS, n.KeyDir),
+		certSource("agent-metrics", "agent", a.Metrics.TLS, a.PKI.KeyDir),
+	}
+}
+
+// certSource is the certificate that a server with t serves: its cert_file,
+// or the self-signed name in keyDir.
+func certSource(
+	name string,
+	component string,
+	t config.ServerTLS,
+	keyDir string,
+) pkicert.Source {
+	if t.CertFile != "" {
+		return pkicert.Source{
+			Name:      name,
+			Component: component,
+			CertFile:  t.CertFile,
+			KeyFile:   t.KeyFile,
+		}
+	}
+	cert, key := config.SelfSignedFiles(keyDir, name)
+
+	return pkicert.Source{
+		Name:       name,
+		Component:  component,
+		CertFile:   cert,
+		KeyFile:    key,
+		SelfSigned: true,
 	}
 }

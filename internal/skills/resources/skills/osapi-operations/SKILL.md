@@ -40,10 +40,11 @@ skill.
 
 ## Route
 
-| Need                                              | Read                                                 |
-| ------------------------------------------------- | ---------------------------------------------------- |
-| Starting everything, or one component             | [references/components.md](references/components.md) |
-| What a setting does, its value, a bad config      | [references/config.md](references/config.md)         |
-| Creating or checking a token, a refused request   | [references/tokens.md](references/tokens.md)         |
-| Is it healthy, why a host is missing, a stuck job | [references/health.md](references/health.md)         |
-| Joining a host, its service, removing a host      | [references/join.md](references/join.md)             |
+| Need                                               | Read                                                     |
+| -------------------------------------------------- | -------------------------------------------------------- |
+| Starting everything, or one component              | [references/components.md](references/components.md)     |
+| What a setting does, its value, a bad config       | [references/config.md](references/config.md)             |
+| Creating or checking a token, a refused request    | [references/tokens.md](references/tokens.md)             |
+| A certificate, its expiry or algorithm, a rotation | [references/certificates.md](references/certificates.md) |
+| Is it healthy, why a host is missing, a stuck job  | [references/health.md](references/health.md)             |
+| Joining a host, its service, removing a host       | [references/join.md](references/join.md)                 |

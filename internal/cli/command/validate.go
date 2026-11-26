@@ -97,6 +97,10 @@ var RootGroups = []RootGroup{
 		Name:    "nats",
 		Purpose: "Run the embedded NATS server on this host, or prepare a NATS server",
 	},
+	{
+		Name:    "pki",
+		Purpose: "List and rotate the keys and the TLS certificates of osapi on this host",
+	},
 	{Name: "config", Purpose: "List, get and validate the config that each component reads"},
 	{
 		Name:    "skill",
