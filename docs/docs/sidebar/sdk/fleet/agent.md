@@ -287,14 +287,15 @@ A `string`, one of `inet`, `inet6`, `dual`.
 The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain
 that the agent has not applied yet is Draining.
 
-A `string`, one of `Ready`, `Draining`, `Cordoned`, `Pending`.
+A `string`, one of `Ready`, `Draining`, `Cordoned`, `Pending`, `Refused`.
 
 ### ConditionType
 
 A condition that an agent or a component evaluates.
 
 A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
-`ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`.
+`ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`,
+`KeyMismatch`.
 
 ### FactKeyEntry
 

@@ -48,7 +48,7 @@ func List(
 
 	infos := make([]AgentInfo, 0, len(agents))
 	for i := range agents {
-		infos = append(infos, withConfig(ctx, d, buildAgentInfo(&agents[i])))
+		infos = append(infos, withController(ctx, d, buildAgentInfo(&agents[i])))
 	}
 
 	return ListAgentsResponse{Items: infos, TotalItems: len(infos)}, nil
@@ -69,7 +69,50 @@ func Get(
 		return AgentInfo{}, err
 	}
 
-	return withConfig(ctx, d, buildAgentInfo(info)), nil
+	return withController(ctx, d, buildAgentInfo(info)), nil
+}
+
+// withController is info with what the controller knows of the agent: its
+// config, and whether its keys are the admitted keys.
+func withController(
+	ctx context.Context,
+	d Deps,
+	info AgentInfo,
+) AgentInfo {
+	return withKeys(ctx, d, withConfig(ctx, d, info))
+}
+
+// withKeys is info with the KeyMismatch condition and the Refused state when
+// the fingerprint of the keys that the agent reports is not the fingerprint
+// that the controller admitted for its machine. The controller refuses each
+// result that the agent signs then, and before, the agent showed Ready
+// (osapi-io/osapi#1484). A record that cannot be read, or that is not
+// admitted, changes nothing.
+func withKeys(
+	ctx context.Context,
+	d Deps,
+	info AgentInfo,
+) AgentInfo {
+	if d.Admissions == nil || info.Fingerprint == "" {
+		return info
+	}
+	rec, err := d.Admissions.Get(ctx, info.MachineID)
+	if err != nil || rec.State != types.AdmissionAdmitted || rec.Fingerprint == "" ||
+		rec.Fingerprint == info.Fingerprint {
+		return info
+	}
+	info.State = types.AgentRefused
+	info.Conditions = append(info.Conditions, NodeCondition{
+		Type: types.ConditionKeyMismatch,
+		Reason: fmt.Sprintf(
+			"the agent's keys are %s, and the admitted keys are %s: the controller refuses each result",
+			info.Fingerprint,
+			rec.Fingerprint,
+		),
+		LastTransitionTime: rec.AdmittedAt,
+	})
+
+	return info
 }
 
 // withConfig is info with the version of the config that the controller

@@ -277,6 +277,90 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 	}
 }
 
+// admissions is the admission record of each machine, by its ID.
+type admissions map[string]admission.Record
+
+func (a admissions) Get(
+	_ context.Context,
+	machineID string,
+) (admission.Record, error) {
+	rec, ok := a[machineID]
+	if !ok {
+		return admission.Record{}, admission.ErrNotFound
+	}
+
+	return rec, nil
+}
+
+func (s *MethodsPublicTestSuite) TestKeyMismatch() {
+	admitted := time.Date(2026, 11, 26, 7, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name      string
+		agentFP   string
+		record    *admission.Record
+		wantState types.AgentState
+		wantCond  bool
+	}{
+		{
+			name: "keys that are the admitted keys", agentFP: "SHA256:aa",
+			record:    &admission.Record{State: types.AdmissionAdmitted, Fingerprint: "SHA256:aa"},
+			wantState: types.AgentReady,
+		},
+		{
+			name: "keys that are not the admitted keys", agentFP: "SHA256:bb",
+			record: &admission.Record{
+				State: types.AdmissionAdmitted, Fingerprint: "SHA256:aa", AdmittedAt: admitted,
+			},
+			wantState: types.AgentRefused, wantCond: true,
+		},
+		{
+			name: "a record that is not admitted", agentFP: "SHA256:bb",
+			record:    &admission.Record{State: types.AdmissionPending, Fingerprint: "SHA256:aa"},
+			wantState: types.AgentReady,
+		},
+		{name: "no record", agentFP: "SHA256:bb", wantState: types.AgentReady},
+		{
+			name:      "an agent that reports no keys",
+			record:    &admission.Record{State: types.AdmissionAdmitted, Fingerprint: "SHA256:aa"},
+			wantState: types.AgentReady,
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			recs := admissions{}
+			if tt.record != nil {
+				recs["m-1"] = *tt.record
+			}
+			s.jobs.EXPECT().ListAgents(gomock.Any()).Return([]job.AgentInfo{
+				{
+					MachineID:   "m-1",
+					Hostname:    "web-01",
+					State:       types.AgentReady,
+					Fingerprint: tt.agentFP,
+				},
+			}, nil)
+			d := s.deps()
+			d.Admissions = recs
+
+			got, err := agent.List(s.ctx, d, agent.ListInput{})
+
+			s.Require().NoError(err)
+			s.Require().Len(got.Items, 1)
+			s.Equal(tt.wantState, got.Items[0].State)
+			if !tt.wantCond {
+				s.Empty(got.Items[0].Conditions)
+				return
+			}
+			s.Require().Len(got.Items[0].Conditions, 1)
+			c := got.Items[0].Conditions[0]
+			s.Equal(types.ConditionKeyMismatch, c.Type)
+			s.Contains(c.Reason, "SHA256:bb")
+			s.Contains(c.Reason, "SHA256:aa")
+			s.Equal(admitted, c.LastTransitionTime)
+		})
+	}
+}
+
 func (s *MethodsPublicTestSuite) TestGet() {
 	tests := []struct {
 		name    string

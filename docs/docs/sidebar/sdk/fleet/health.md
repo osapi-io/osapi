@@ -147,7 +147,8 @@ A `string`, one of `controller`, `nats`, `agent`.
 A condition that an agent or a component evaluates.
 
 A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
-`ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`.
+`ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`,
+`KeyMismatch`.
 
 ### HealthResponse
 

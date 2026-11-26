@@ -395,6 +395,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindDeps,
+			Name: "Admissions",
+			Does: "The admission records, which say the keys that the controller admitted for each machine.",
+			When: "For the agent group's list and get, which show an agent whose keys are not the admitted keys as Refused, with the KeyMismatch condition.",
+		},
+		{
+			Kind: KindDeps,
 			Name: "Health",
 			Does: "The health.Reporter of the controller: the state of NATS, the controller and its parts, for the health, controller, nats and agent groups.",
 			When: "For a group that reports whether a part of osapi is up.",

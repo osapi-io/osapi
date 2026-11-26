@@ -14,10 +14,50 @@ import (
 	ed25519 "crypto/ed25519"
 	reflect "reflect"
 
+	admission "github.com/osapi-io/osapi/internal/controller/admission"
 	job "github.com/osapi-io/osapi/internal/job"
 	pki "github.com/osapi-io/osapi/internal/pki"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockAdmissions is a mock of Admissions interface.
+type MockAdmissions struct {
+	ctrl     *gomock.Controller
+	recorder *MockAdmissionsMockRecorder
+	isgomock struct{}
+}
+
+// MockAdmissionsMockRecorder is the mock recorder for MockAdmissions.
+type MockAdmissionsMockRecorder struct {
+	mock *MockAdmissions
+}
+
+// NewMockAdmissions creates a new mock instance.
+func NewMockAdmissions(ctrl *gomock.Controller) *MockAdmissions {
+	mock := &MockAdmissions{ctrl: ctrl}
+	mock.recorder = &MockAdmissionsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAdmissions) EXPECT() *MockAdmissionsMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockAdmissions) Get(ctx context.Context, machineID string) (admission.Record, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, machineID)
+	ret0, _ := ret[0].(admission.Record)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockAdmissionsMockRecorder) Get(ctx, machineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockAdmissions)(nil).Get), ctx, machineID)
+}
 
 // MockJoiner is a mock of Joiner interface.
 type MockJoiner struct {

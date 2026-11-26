@@ -160,6 +160,7 @@ func agentDeps(
 	deps := agent.Deps{Jobs: d.jobs}
 	if d.admission != nil {
 		deps.Joiner = d.admission
+		deps.Admissions = d.admission
 	}
 
 	return deps

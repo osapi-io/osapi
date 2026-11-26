@@ -19,4 +19,5 @@ export const ConditionType = {
   ConsumersUnavailable: 'ConsumersUnavailable',
   ProcessMemoryPressure: 'ProcessMemoryPressure',
   ProcessHighCPU: 'ProcessHighCPU',
+  KeyMismatch: 'KeyMismatch',
 } as const;
