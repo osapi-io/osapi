@@ -69,3 +69,14 @@ var (
 
 	sampleList = ListAgentsResponse{Items: []AgentInfo{sampleWeb01, sampleMac01}, TotalItems: 2}
 )
+
+// sampleConfig is the config of an agent, as the CLI prints it.
+var sampleConfig = AgentConfigResponse{
+	Version: 2,
+	Labels:  map[string]string{"group": "web", "dc": "east"},
+	UpdatedAt: func() *time.Time {
+		t := time.Date(2026, 11, 25, 12, 0, 0, 0, time.UTC)
+
+		return &t
+	}(),
+}

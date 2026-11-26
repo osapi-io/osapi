@@ -51,4 +51,10 @@ type Jobs interface {
 	SetDrainFlag(ctx context.Context, hostname string) error
 	DeleteDrainFlag(ctx context.Context, hostname string) error
 	WriteAgentTimelineEvent(ctx context.Context, machineID, hostname, event, message string) error
+	GetAgentConfig(ctx context.Context, machineID string) (job.AgentConfig, error)
+	SetAgentConfig(
+		ctx context.Context,
+		machineID string,
+		labels map[string]string,
+	) (job.AgentConfig, error)
 }

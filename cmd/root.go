@@ -50,14 +50,17 @@ var (
 	// skipConfigCmds lists subcommands that don't need a config file. Matched
 	// against the resolved command and its parents, so `completion bash` is
 	// covered by `completion`.
+	// skipConfigCmds are the commands, by their path, that read no config
+	// file. A path, not a name: osapi client agent config is a command of
+	// the API, which reads the config, and osapi config is not.
 	skipConfigCmds = map[string]bool{
-		"version":    true,
-		"help":       true,
-		"completion": true,
-		"config":     true,
-		"role":       true,
-		"skill":      true,
-		"sdk":        true,
+		"osapi version":         true,
+		"osapi help":            true,
+		"osapi completion":      true,
+		"osapi config":          true,
+		"osapi controller role": true,
+		"osapi skill":           true,
+		"osapi sdk":             true,
 	}
 )
 
@@ -133,7 +136,7 @@ func skipConfig() bool {
 	}
 
 	for c := cmd; c != nil; c = c.Parent() {
-		if skipConfigCmds[c.Name()] {
+		if skipConfigCmds[c.CommandPath()] {
 			return true
 		}
 	}

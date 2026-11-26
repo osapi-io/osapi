@@ -1,0 +1,69 @@
+---
+id: put-agent-config
+title: "Set the config of an agent"
+description: "Sets the labels of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, and no restart is necessary."
+sidebar_label: "Set the config of an agent"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "put api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Set the config of an agent"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/api/agent/config/{hostname}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Sets the labels of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, and no restart is necessary.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./put-agent-config.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-agent-config.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-agent-config.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

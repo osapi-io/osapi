@@ -101,6 +101,12 @@ type Agent struct {
 	// version is the build version of the agent binary, from SetVersion. It
 	// is in the started event of each job and in the registration.
 	version string
+	// fileLabels are the labels of the agent's config file, which the
+	// labels of the controller's config are laid over.
+	fileLabels map[string]string
+	// configVersion is the version of the controller's config that the
+	// agent applied, 0 for none.
+	configVersion int
 
 	// prevConditions tracks condition state between heartbeats.
 	prevConditions []job.Condition

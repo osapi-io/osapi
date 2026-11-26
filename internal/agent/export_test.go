@@ -1130,3 +1130,15 @@ func ExportStartRenewal(
 	<-ctx.Done()
 	a.wg.Wait()
 }
+
+// ExportApplyConfig calls applyConfig as the agent with machineID, and
+// returns its labels and the config version that it applied.
+func ExportApplyConfig(
+	a *Agent,
+	machineID string,
+) (map[string]string, int) {
+	a.machineID = machineID
+	a.applyConfig(context.Background())
+
+	return a.appConfig.Agent.Labels, a.configVersion
+}

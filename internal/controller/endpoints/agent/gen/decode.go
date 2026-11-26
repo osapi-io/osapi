@@ -72,6 +72,39 @@ func decodeDrain(
 	return in, "", true
 }
 
+// decodeGetconfig reads the getconfig method's input from the request.
+func decodeGetconfig(
+	c *echo.Context,
+) (agent.ConfigGetInput, string, bool) {
+	var in agent.ConfigGetInput
+	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
+// decodeSetconfig reads the setconfig method's input from the request.
+func decodeSetconfig(
+	c *echo.Context,
+) (agent.ConfigSetInput, string, bool) {
+	var in agent.ConfigSetInput
+	if msg, ok := server.Body(c, &in.Body); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
 // decodeUndrain reads the undrain method's input from the request.
 func decodeUndrain(
 	c *echo.Context,

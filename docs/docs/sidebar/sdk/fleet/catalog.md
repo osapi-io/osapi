@@ -213,8 +213,8 @@ A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
 `DeleteNodeInterfaceRoute`, `DeleteNodeNtp`, `DeleteNodePackage`,
 `DeleteNodeSchedule`, `DeleteNodeService`, `DeleteNodeSysctl`, `DeleteNodeUser`,
 `DeleteNodeUserSshkey`, `DeleteSecret`, `DrainAgent`, `GetAdmission`,
-`GetAdmissions`, `GetAgentDetails`, `GetAgentFacts`, `GetAgents`,
-`GetAuditExport`, `GetAuditLogByID`, `GetAuditLogs`, `GetCatalog`,
+`GetAdmissions`, `GetAgentConfig`, `GetAgentDetails`, `GetAgentFacts`,
+`GetAgents`, `GetAuditExport`, `GetAuditLogByID`, `GetAuditLogs`, `GetCatalog`,
 `GetFileByName`, `GetFileStale`, `GetFiles`, `GetHealthStatus`, `GetJobByID`,
 `GetJobs`, `GetNodeCertificate`, `GetNodeCertificateByKey`, `GetNodeDisk`,
 `GetNodeDnsByKey`, `GetNodeDocker`, `GetNodeDockerByKey`, `GetNodeFile`,
@@ -236,11 +236,12 @@ A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
 `PostNodeSchedule`, `PostNodeService`, `PostNodeServiceDisable`,
 `PostNodeServiceEnable`, `PostNodeServiceRestart`, `PostNodeServiceStart`,
 `PostNodeServiceStop`, `PostNodeSysctl`, `PostNodeUser`, `PostNodeUserSshkey`,
-`PutFileByName`, `PutNodeCertificate`, `PutNodeDns`, `PutNodeFile`,
-`PutNodeGroup`, `PutNodeHostname`, `PutNodeInterface`, `PutNodeInterfaceRoute`,
-`PutNodeNtp`, `PutNodePackageUpdates`, `PutNodeSchedule`, `PutNodeService`,
-`PutNodeSysctl`, `PutNodeTimezone`, `PutNodeUser`, `PutNodeUserPassword`,
-`PutSecret`, `RejectMachine`, `RetryJobByID`, `RevokeMachine`, `UndrainAgent`.
+`PutAgentConfig`, `PutFileByName`, `PutNodeCertificate`, `PutNodeDns`,
+`PutNodeFile`, `PutNodeGroup`, `PutNodeHostname`, `PutNodeInterface`,
+`PutNodeInterfaceRoute`, `PutNodeNtp`, `PutNodePackageUpdates`,
+`PutNodeSchedule`, `PutNodeService`, `PutNodeSysctl`, `PutNodeTimezone`,
+`PutNodeUser`, `PutNodeUserPassword`, `PutSecret`, `RejectMachine`,
+`RetryJobByID`, `RevokeMachine`, `UndrainAgent`.
 
 ### Permission
 

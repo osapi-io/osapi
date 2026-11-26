@@ -318,6 +318,12 @@ func (suite *TypesPublicTestSuite) TestFactKeys() {
 	}
 }
 
+// TestAgentConfigKey: the controller's config of an agent is keyed by its
+// machine ID, which does not change when the hostname does.
+func (suite *TypesPublicTestSuite) TestAgentConfigKey() {
+	suite.Equal("config.m-1", job.AgentConfigKey("m-1"))
+}
+
 func TestTypesPublicTestSuite(
 	t *testing.T,
 ) {

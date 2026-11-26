@@ -219,6 +219,14 @@ type JobClient interface {
 		hostname string,
 	) (*job.AgentInfo, error)
 
+	// Agent config, which the controller holds for each agent.
+	GetAgentConfig(ctx context.Context, machineID string) (job.AgentConfig, error)
+	SetAgentConfig(
+		ctx context.Context,
+		machineID string,
+		labels map[string]string,
+	) (job.AgentConfig, error)
+
 	// Agent timeline
 	WriteAgentTimelineEvent(
 		ctx context.Context,

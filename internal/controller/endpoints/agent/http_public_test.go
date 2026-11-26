@@ -55,6 +55,9 @@ type HTTPPublicTestSuite struct {
 func (s *HTTPPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.jobs = mocks.NewMockJobs(s.ctrl)
+	// List and Get read the controller's config of each agent.
+	s.jobs.EXPECT().GetAgentConfig(gomock.Any(), gomock.Any()).
+		Return(job.AgentConfig{}, nil).AnyTimes()
 }
 
 func (s *HTTPPublicTestSuite) TearDownSubTest() {

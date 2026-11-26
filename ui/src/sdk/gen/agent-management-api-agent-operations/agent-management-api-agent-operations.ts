@@ -5,6 +5,8 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  AgentConfigRequest,
+  AgentConfigResponse,
   AgentInfo,
   ErrorResponse,
   FactKeysResponse,
@@ -283,6 +285,133 @@ export const undrainAgent = async (hostname: string, options?: Parameters<typeof
     method: 'POST'
 
 
+  }
+);}
+
+
+export type getAgentConfigResponse200 = {
+  data: AgentConfigResponse
+  status: 200
+}
+
+export type getAgentConfigResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getAgentConfigResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getAgentConfigResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getAgentConfigResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getAgentConfigResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getAgentConfigResponseSuccess = (getAgentConfigResponse200) & {
+  headers: Headers;
+};
+export type getAgentConfigResponseError = (getAgentConfigResponse400 | getAgentConfigResponse401 | getAgentConfigResponse403 | getAgentConfigResponse404 | getAgentConfigResponse500) & {
+  headers: Headers;
+};
+
+export type getAgentConfigResponse = (getAgentConfigResponseSuccess | getAgentConfigResponseError)
+
+export const getGetAgentConfigUrl = (hostname: string,) => {
+
+
+
+
+  return `/api/agent/config/${hostname}`
+}
+
+/**
+ * Returns the config that the controller holds for the agent, with its version.
+ * @summary Read the config of an agent
+ */
+export const getAgentConfig = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAgentConfigResponse> => {
+
+  return apiFetch<getAgentConfigResponse>(getGetAgentConfigUrl(hostname),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+export type putAgentConfigResponse200 = {
+  data: AgentConfigResponse
+  status: 200
+}
+
+export type putAgentConfigResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type putAgentConfigResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type putAgentConfigResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type putAgentConfigResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type putAgentConfigResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type putAgentConfigResponseSuccess = (putAgentConfigResponse200) & {
+  headers: Headers;
+};
+export type putAgentConfigResponseError = (putAgentConfigResponse400 | putAgentConfigResponse401 | putAgentConfigResponse403 | putAgentConfigResponse404 | putAgentConfigResponse500) & {
+  headers: Headers;
+};
+
+export type putAgentConfigResponse = (putAgentConfigResponseSuccess | putAgentConfigResponseError)
+
+export const getPutAgentConfigUrl = (hostname: string,) => {
+
+
+
+
+  return `/api/agent/config/${hostname}`
+}
+
+/**
+ * Sets the labels of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, and no restart is necessary.
+ * @summary Set the config of an agent
+ */
+export const putAgentConfig = async (hostname: string,
+    agentConfigRequest: AgentConfigRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putAgentConfigResponse> => {
+
+  return apiFetch<putAgentConfigResponse>(getPutAgentConfigUrl(hostname),
+  {
+    ...options,
+    method: 'PUT',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(agentConfigRequest)
   }
 );}
 

@@ -20,6 +20,12 @@ export interface AgentInfo {
   architecture?: string;
   /** The conditions that hold now, such as HighLoad. A condition that does not hold is not in the list. */
   conditions?: NodeCondition[];
+  /** The agent has not applied the newest config that the controller holds for it yet: it applies it at its next heartbeat, or it cannot reach the controller's config. */
+  config_behind?: boolean;
+  /** The version of the controller's config of the agent that the agent applied. Absent when it applied none. */
+  config_version?: number;
+  /** The version of the config that the controller holds for the agent. Absent when it holds none. */
+  config_wanted?: number;
   /** Number of logical CPUs. */
   cpu_count?: number;
   /** Extended facts from additional providers. */

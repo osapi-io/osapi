@@ -8,6 +8,33 @@ components:
         - inet6
         - dual
       type: string
+    AgentConfigRequest:
+      properties:
+        labels:
+          additionalProperties:
+            type: string
+          description: The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each.
+          type: object
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+      type: object
+    AgentConfigResponse:
+      properties:
+        labels:
+          additionalProperties:
+            type: string
+          description: The labels that the controller gives the agent.
+          type: object
+        updated_at:
+          description: When the config last changed.
+          format: date-time
+          type: string
+        version:
+          description: One more at each change; 0 when nothing was set.
+          type: integer
+      required:
+        - version
+      type: object
     AgentInfo:
       properties:
         architecture:
@@ -19,6 +46,17 @@ components:
           items:
             $ref: '#/components/schemas/NodeCondition'
           type: array
+        config_behind:
+          description: 'The agent has not applied the newest config that the controller holds for it yet: it applies it at its next heartbeat, or it cannot reach the controller''s config.'
+          type: boolean
+        config_version:
+          description: The version of the controller's config of the agent that the agent applied. Absent when it applied none.
+          example: 2
+          type: integer
+        config_wanted:
+          description: The version of the config that the controller holds for the agent. Absent when it holds none.
+          example: 3
+          type: integer
         cpu_count:
           description: Number of logical CPUs.
           example: 4
@@ -642,6 +680,142 @@ paths:
           input:
             hostname: web-01
       x-osapi-method: undrain
+  /api/agent/config/{hostname}:
+    get:
+      description: Returns the config that the controller holds for the agent, with its version.
+      operationId: GetAgentConfig
+      parameters:
+        - description: The hostname of the agent.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfigResponse'
+          description: The config of the agent.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent not found.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:read
+      summary: Read the config of an agent
+      tags:
+        - agent_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Read the config of an agent
+          input:
+            hostname: web-01
+      x-osapi-method: getconfig
+    put:
+      description: 'Sets the labels of the agent as the next version of its config. The agent applies them at once: it takes the jobs of the new labels, and no restart is necessary.'
+      operationId: PutAgentConfig
+      parameters:
+        - description: The hostname of the agent.
+          in: path
+          name: hostname
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentConfigRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfigResponse'
+          description: The config of the agent after the change.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agent not found.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - agent:write
+      summary: Set the config of an agent
+      tags:
+        - agent_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Set the config of an agent
+          input:
+            hostname: web-01
+            labels:
+              dc: east
+              group: web
+      x-osapi-method: setconfig
   /api/agent/facts:
     get:
       description: 'Returns the fact keys that an input can refer to as @fact.<key>: the built-in keys and the custom keys that agents register.'

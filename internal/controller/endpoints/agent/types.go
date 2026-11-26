@@ -71,6 +71,9 @@ type AgentInfo struct { //nolint:revive // the schema name is part of the API
 	LoadAverage      *LoadAverageResponse       `json:"load_average,omitempty"                                                                                                                                                                                                                                                                   label:"Load"`
 	OSInfo           *OSInfoResponse            `json:"os_info,omitempty"                                                                                                                                                                                                                                                                        label:"OS"`
 	Version          string                     `json:"version,omitempty"           doc:"The build version of the agent binary. Absent for an agent that does not report it."                                                                                                                                                                                             example:"v1.4.0"`
+	ConfigVersion    int                        `json:"config_version,omitempty"    doc:"The version of the controller's config of the agent that the agent applied. Absent when it applied none."                                                                                                                                                                        example:"2"`
+	ConfigWanted     int                        `json:"config_wanted,omitempty"     doc:"The version of the config that the controller holds for the agent. Absent when it holds none."                                                                                                                                                                                   example:"3"`
+	ConfigBehind     bool                       `json:"config_behind,omitempty"     doc:"The agent has not applied the newest config that the controller holds for it yet: it applies it at its next heartbeat, or it cannot reach the controller's config."`
 	Fingerprint      string                     `json:"fingerprint,omitempty"       doc:"The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys."                                                                                                                                                                                                                  table:"-"`
 	RegisteredAt     time.Time                  `json:"registered_at,omitzero"      doc:"When the agent last refreshed its heartbeat."                                                                                                                                                                                  render:"age"             label:"Last seen"                                     table:"-"`
 	Uptime           string                     `json:"uptime,omitempty"            doc:"The system uptime."                                                                                                                                                                                                                                                                                           table:"-"`
@@ -166,4 +169,29 @@ type JoinRequest struct {
 type JoinResponse struct {
 	_                   struct{} `title:"Join"`
 	ControllerPublicKey string   `             json:"controller_public_key" doc:"The controller's Ed25519 public key, in base64, which the agent keeps and checks each job with."`
+}
+
+// ConfigGetInput names the agent whose config is read.
+type ConfigGetInput struct {
+	Hostname string `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the agent."`
+}
+
+// ConfigSetInput names the agent and the labels of its config.
+type ConfigSetInput struct {
+	Hostname string             `json:"hostname" in:"path" validate:"required,min=1,max=255" doc:"The hostname of the agent."`
+	Body     AgentConfigRequest `json:"body"     in:"body" validate:"required"`
+}
+
+// AgentConfigRequest is the config that the controller gives an agent.
+type AgentConfigRequest struct { //nolint:revive // the schema name is part of the API
+	Labels map[string]string `json:"labels,omitempty" validate:"omitempty" doc:"The labels of the agent, as key=value. They replace the labels of the agent's config file with the same keys. Empty removes each."`
+}
+
+// AgentConfigResponse is the config that the controller holds for an
+// agent.
+type AgentConfigResponse struct { //nolint:revive // the schema name is part of the API
+	_         struct{}          `title:"Agent config"`
+	Version   int               `                     json:"version"              doc:"One more at each change; 0 when nothing was set."`
+	Labels    map[string]string `                     json:"labels,omitempty"     doc:"The labels that the controller gives the agent."`
+	UpdatedAt *time.Time        `                     json:"updated_at,omitempty" doc:"When the config last changed."                    render:"time" label:"Updated"`
 }
