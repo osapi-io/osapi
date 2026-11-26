@@ -51,6 +51,17 @@ func Operator(
 	return create(ctx, d, in, "operator", natsauth.Operator)
 }
 
+// OperatorUpdate signs the account and the credentials of each osapi role
+// again, with the keys that operator create made and the permissions that
+// each role has now.
+func OperatorUpdate(
+	ctx context.Context,
+	d Deps,
+	in UpdateInput,
+) (CreateOutput, error) {
+	return write(ctx, d, in.Out, in.Print, "natsauth.update", "operator", natsauth.UpdateOperator)
+}
+
 // NKey makes an nkey for each osapi role.
 func NKey(
 	ctx context.Context,
@@ -60,18 +71,33 @@ func NKey(
 	return create(ctx, d, in, "nkey", natsauth.NKey)
 }
 
-// create makes in.Out and writes the files of write to it.
+// create makes in.Out and writes the files of fn to it.
 func create(
 	ctx context.Context,
 	d Deps,
 	in CreateInput,
 	kind string,
-	write func(context.Context, avfs.VFS, string, string, config.NATS) (natsauth.Result, error),
+	fn func(context.Context, avfs.VFS, string, string, config.NATS) (natsauth.Result, error),
 ) (CreateOutput, error) {
 	if err := d.FS.MkdirAll(in.Out, 0o700); err != nil {
 		return CreateOutput{}, fmt.Errorf("make %s: %w", in.Out, err)
 	}
-	r, err := write(ctx, d.FS, in.Out, d.Config.Controller.NATS.Namespace, d.Config.NATS)
+
+	return write(ctx, d, in.Out, in.Print, "natsauth.create", kind, fn)
+}
+
+// write writes the files of fn to dir, and records action in the audit
+// log. printServer adds the server's part to the output.
+func write(
+	ctx context.Context,
+	d Deps,
+	dir string,
+	printServer bool,
+	action string,
+	kind string,
+	fn func(context.Context, avfs.VFS, string, string, config.NATS) (natsauth.Result, error),
+) (CreateOutput, error) {
+	r, err := fn(ctx, d.FS, dir, d.Config.Controller.NATS.Namespace, d.Config.NATS)
 	if err != nil {
 		return CreateOutput{}, err
 	}
@@ -79,10 +105,10 @@ func create(
 	for _, f := range r.Files {
 		out.Files = append(out.Files, Written{Role: f.Role, Path: f.Path})
 	}
-	if in.Print {
+	if printServer {
 		out.Server = r.Server
 	}
-	audit.RecordLocal(ctx, d.Audit, "natsauth.create", in.Out,
+	audit.RecordLocal(ctx, d.Audit, action, dir,
 		fmt.Sprintf("type=%s files=%d", kind, len(out.Files)))
 
 	return out, nil

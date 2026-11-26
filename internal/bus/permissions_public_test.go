@@ -106,6 +106,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				"$JS.API.STREAM.INFO.OBJ_osapi-file-objects",
 				"osapi.enroll.request",
 				"osapi.join.renew",
+				"osapi.join.rotate",
 			},
 			notPub: []string{
 				"$JS.API.STREAM.UPDATE.KV_osapi-file-state",
@@ -146,6 +147,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				"osapi.enroll.request",
 				"osapi.join.request",
 				"osapi.join.renew",
+				"osapi.join.rotate",
 			},
 			notSub: []string{"osapi.jobs.query._all"},
 		},

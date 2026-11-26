@@ -46,6 +46,21 @@ Make the NATS authentication of osapi, a credential for each role.
 | --out   | string | required  | The directory that the files go to. It is made, mode 0700, when it is not there |
 | --print | bool   | omitempty | Also print the server's part: its authorization block, or its resolver file     |
 
+## [osapi nats auth operator update](../../usage/cli/nats/auth/operator/update.md)
+
+|             |                                                                        |
+| ----------- | ---------------------------------------------------------------------- |
+| Method      | operator update                                                        |
+| Description | Sign the account and each role's credentials again, with the same keys |
+| Refuses     | no directory                                                           |
+
+### Flags (2)
+
+| FLAG    | TYPE   | VALIDATE  | HELP                                                                                              |
+| ------- | ------ | --------- | ------------------------------------------------------------------------------------------------- |
+| --out   | string | required  | The directory that operator create wrote: update reads its keys there, and writes the files again |
+| --print | bool   | omitempty | Also print the server's resolver file                                                             |
+
 ## [osapi nats auth nkey create](../../usage/cli/nats/auth/nkey/create.md)
 
 |             |                                  |

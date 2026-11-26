@@ -70,6 +70,23 @@ var Group = command.Register(command.Define(
 		Prints(sampleOperator).
 		Fails("no directory", CreateInput{}).
 		Handle(Operator),
+	command.Method[UpdateInput, CreateOutput]("update").
+		Sub("operator").
+		Short("Sign the account and each role's credentials again, with the same keys").
+		Long("It reads the keys that `operator create` wrote to the directory, and writes\n"+
+			"`resolver.conf` and the credentials file of each osapi role again, with the\n"+
+			"permissions that each role has in this version of osapi. Run it after an\n"+
+			"upgrade that adds a permission to a role, such as the rotation of an agent's\n"+
+			"keys. The account's JWT holds the agent's permissions as the template of its\n"+
+			"scoped signing key, and each credentials file holds the permissions of its\n"+
+			"role, so an upgrade does not change them. The keys stay, so each agent keeps\n"+
+			"its user and no agent joins again. Restart the NATS server, which reads the\n"+
+			"resolver file at its start, then the controller, for its new credentials.\n"+
+			"It needs `operator.nk` and `account.nk`.").
+		Example("--out /etc/osapi/nats").
+		Prints(sampleOperator).
+		Fails("no directory", UpdateInput{}).
+		Handle(OperatorUpdate),
 	command.Method[CreateInput, CreateOutput]("create").
 		Sub("nkey").
 		Short("Make an nkey for each osapi role").

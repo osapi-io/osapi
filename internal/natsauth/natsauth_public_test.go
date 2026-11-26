@@ -149,6 +149,89 @@ func (s *NatsAuthPublicTestSuite) TestOperator() {
 	s.True(strings.Contains(r.Server, "resolver_preload"))
 }
 
+// seeds is each key file of an operator setup in dir.
+func (s *NatsAuthPublicTestSuite) seeds() map[string]string {
+	out := map[string]string{}
+	for _, f := range []string{"operator.nk", "account.nk", "agent-signing.nk", "join-signing.nk"} {
+		b, err := os.ReadFile(filepath.Join(s.dir, f))
+		s.Require().NoError(err)
+		out[f] = string(b)
+	}
+
+	return out
+}
+
+func (s *NatsAuthPublicTestSuite) TestUpdateOperator() {
+	s.Run("signs the account and each role again, with the same keys", func() {
+		created, err := natsauth.Operator(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
+		s.Require().NoError(err)
+		before := s.seeds()
+		sys := natsauth.ExportSystemAccount(created.Server)
+
+		r, err := natsauth.UpdateOperator(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
+		s.Require().NoError(err)
+		s.Equal(before, s.seeds(), "the keys stay, so no agent joins again")
+		s.Equal(sys, natsauth.ExportSystemAccount(r.Server))
+		_, err = natsserver.ProcessConfigFile(filepath.Join(s.dir, "resolver.conf"))
+		s.Require().NoError(err, "a NATS server reads the new resolver file")
+
+		creds, _ := os.ReadFile(filepath.Join(s.dir, "controller.creds"))
+		userJWT, err := jwt.ParseDecoratedJWT(creds)
+		s.Require().NoError(err)
+		uc, err := jwt.DecodeUserClaims(userJWT)
+		s.Require().NoError(err)
+		s.Contains(uc.Sub.Allow, "osapi.join.rotate", "the controller has the permissions of now")
+	})
+
+	tests := []struct {
+		name    string
+		edit    func()
+		wantErr string
+	}{
+		{
+			name:    "a key that is not there",
+			edit:    func() { s.Require().NoError(os.Remove(filepath.Join(s.dir, "operator.nk"))) },
+			wantErr: "read operator.nk",
+		},
+		{
+			name: "a key that is not a seed",
+			edit: func() {
+				s.Require().
+					NoError(os.WriteFile(filepath.Join(s.dir, "join-signing.nk"), []byte("no"), 0o600))
+			},
+			wantErr: "join-signing.nk",
+		},
+		{
+			name:    "no resolver file",
+			edit:    func() { s.Require().NoError(os.Remove(filepath.Join(s.dir, "resolver.conf"))) },
+			wantErr: "read resolver.conf",
+		},
+		{
+			name: "a resolver file with no system account",
+			edit: func() {
+				s.Require().
+					NoError(os.WriteFile(filepath.Join(s.dir, "resolver.conf"), []byte("operator: x\n"), 0o600))
+			},
+			wantErr: "resolver.conf names no system_account",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, err := natsauth.Operator(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
+			s.Require().NoError(err)
+			tt.edit()
+			_, err = natsauth.UpdateOperator(
+				context.Background(),
+				osfs.New(),
+				s.dir,
+				"osapi",
+				s.cfg,
+			)
+			s.ErrorContains(err, tt.wantErr)
+		})
+	}
+}
+
 func (s *NatsAuthPublicTestSuite) TestNKey() {
 	r, err := natsauth.NKey(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
 	s.Require().NoError(err)

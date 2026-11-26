@@ -294,7 +294,19 @@ After the controller starts, `osapi client health status` shows NATS and each
 stream.
 
 The credentials of `operator create` have the subjects of the version that made
-them. After an upgrade that adds a subject, make them again.
+them, and so has the template of the agents' signing key in `resolver.conf`.
+After an upgrade that adds a subject, such as `join.rotate` for the rotation of
+an agent's keys, sign them again with the same keys:
+
+```bash
+osapi nats auth operator update --out /etc/osapi/nats
+```
+
+Then restart the NATS server, which reads `resolver.conf` at its start, and the
+controller, for its new credentials. The keys do not change, so each agent keeps
+its NATS user and no agent joins again. Until then, the server refuses each
+subject that the old credentials do not have, and its log has a
+`Permissions Violation` for each.
 [NATS subjects and roles](../architecture/nats.md) tells why each role has its
 subjects.
 

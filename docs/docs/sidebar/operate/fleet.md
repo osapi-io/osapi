@@ -107,6 +107,10 @@ join again. An empty `agent_ttl` gives a JWT that does not expire.
 
 ## Rotate an agent's keys
 
+The agent sends the rotation on the NATS subject `join.rotate`. In operator
+mode, a setup that an older osapi made does not have that subject: run
+[`osapi nats auth operator update`](nats.md#check-it) first.
+
 Run this on the agent's host, with the agent's config:
 
 ```bash

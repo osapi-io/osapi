@@ -25,11 +25,14 @@
 package natsauth
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -208,9 +211,91 @@ func Operator(
 	if err != nil {
 		return Result{}, err
 	}
-	operator, system, account, agentKey, joinKey := keys[0], keys[1], keys[2], keys[3], keys[4]
+	sysPub, _ := keys[1].PublicKey()
+
+	return writeOperator(ctx, fs, dir, namespace, cfg, operatorKeys{
+		operator: keys[0], systemPub: sysPub, account: keys[2], agent: keys[3], join: keys[4],
+	})
+}
+
+// operatorKeys are the keys of an operator setup: the operator, the public
+// key of its system account, the account of osapi, and the two scoped
+// signing keys of a join.
+type operatorKeys struct {
+	operator  nkeys.KeyPair
+	systemPub string
+	account   nkeys.KeyPair
+	agent     nkeys.KeyPair
+	join      nkeys.KeyPair
+}
+
+// UpdateOperator signs the account of osapi and the credentials of each
+// osapi role again, in dir, with the permissions that each role has now and
+// with the keys that Operator made there. A version of osapi that adds a
+// permission to a role needs it: the account's JWT holds the agent's
+// permissions as the template of its scoped signing key, and each
+// credentials file holds the permissions of its role. The keys do not
+// change, so each agent keeps its user and no agent joins again. The NATS
+// server reads the new resolver file at its next start.
+func UpdateOperator(
+	ctx context.Context,
+	fs avfs.VFS,
+	dir string,
+	namespace string,
+	cfg config.NATS,
+) (Result, error) {
+	var k operatorKeys
+	for _, f := range []struct {
+		name string
+		to   *nkeys.KeyPair
+	}{
+		{"operator.nk", &k.operator},
+		{"account.nk", &k.account},
+		{"agent-signing.nk", &k.agent},
+		{"join-signing.nk", &k.join},
+	} {
+		seed, err := fs.ReadFile(filepath.Join(dir, f.name))
+		if err != nil {
+			return Result{}, fmt.Errorf(
+				"read %s: %w; update needs the keys that operator create made",
+				f.name,
+				err,
+			)
+		}
+		kp, err := nkeys.FromSeed(bytes.TrimSpace(seed))
+		if err != nil {
+			return Result{}, fmt.Errorf("%s: %w", f.name, err)
+		}
+		*f.to = kp
+	}
+	resolver, err := fs.ReadFile(filepath.Join(dir, "resolver.conf"))
+	if err != nil {
+		return Result{}, fmt.Errorf("read resolver.conf: %w", err)
+	}
+	m := systemAccount.FindSubmatch(resolver)
+	if m == nil {
+		return Result{}, errors.New("resolver.conf names no system_account")
+	}
+	k.systemPub = string(m[1])
+
+	return writeOperator(ctx, fs, dir, namespace, cfg, k)
+}
+
+// systemAccount is the system account's line of a resolver file.
+var systemAccount = regexp.MustCompile(`(?m)^system_account: (A[A-Z0-9]+)$`)
+
+// writeOperator writes the files of an operator setup with k to dir.
+func writeOperator(
+	ctx context.Context,
+	fs avfs.VFS,
+	dir string,
+	namespace string,
+	cfg config.NATS,
+	k operatorKeys,
+) (Result, error) {
+	operator, account, agentKey, joinKey := k.operator, k.account, k.agent, k.join
 	opPub, _ := operator.PublicKey()
-	sysPub, _ := system.PublicKey()
+	sysPub := k.systemPub
 	acctPub, _ := account.PublicKey()
 
 	oc := jwt.NewOperatorClaims(opPub)
