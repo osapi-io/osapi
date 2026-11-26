@@ -58,6 +58,58 @@ func (s *SelfSignedPublicTestSuite) cert(
 	return c
 }
 
+// TestWithCurrentSelfSigned holds that a metrics certificate follows a rename
+// of the host, and stays the same while the name does (osapi-io/osapi#1493).
+func (s *SelfSignedPublicTestSuite) TestWithCurrentSelfSigned() {
+	s.Run("a renamed host gets a certificate for its new name", func() {
+		dir := s.T().TempDir()
+		config.SelfSignedHostname = func() (string, error) { return "ubuntu-1", nil }
+		first, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
+		s.Require().NoError(err)
+		before := s.cert(first.CertFile)
+
+		again, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
+		s.Require().NoError(err)
+		s.Equal(before.Raw, s.cert(again.CertFile).Raw, "the same name keeps the certificate")
+
+		config.SelfSignedHostname = func() (string, error) { return "web-01", nil }
+		renamed, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
+		s.Require().NoError(err)
+		after := s.cert(renamed.CertFile)
+		s.NotEqual(before.Raw, after.Raw)
+		s.Contains(after.DNSNames, "web-01")
+		s.NotContains(after.DNSNames, "ubuntu-1")
+	})
+	s.Run("a file that is not a certificate is made again", func() {
+		dir := s.T().TempDir()
+		config.SelfSignedHostname = func() (string, error) { return "web-01", nil }
+		crt, _ := config.SelfSignedFiles(dir, "agent-metrics")
+		s.Require().NoError(os.WriteFile(crt, []byte("nope"), 0o644))
+		got, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
+		s.Require().NoError(err)
+		s.Contains(s.cert(got.CertFile).DNSNames, "web-01")
+	})
+	s.Run("a cert_file of the operator and TLS off are as they are", func() {
+		in := config.ServerTLS{Enabled: true, CertFile: "/etc/x.crt", KeyFile: "/etc/x.key"}
+		got, err := in.WithCurrentSelfSigned(s.T().TempDir(), "agent-metrics")
+		s.Require().NoError(err)
+		s.Equal(in, got)
+		got, err = config.ServerTLS{}.WithCurrentSelfSigned(s.T().TempDir(), "agent-metrics")
+		s.Require().NoError(err)
+		s.Equal(config.ServerTLS{}, got)
+	})
+	s.Run("PEM that is not a certificate is made again", func() {
+		dir := s.T().TempDir()
+		config.SelfSignedHostname = func() (string, error) { return "web-01", nil }
+		crt, _ := config.SelfSignedFiles(dir, "agent-metrics")
+		s.Require().NoError(os.WriteFile(crt,
+			[]byte("-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n"), 0o644))
+		got, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
+		s.Require().NoError(err)
+		s.Contains(s.cert(got.CertFile).DNSNames, "web-01")
+	})
+}
+
 func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 	s.Run("TLS off is as it is", func() {
 		got, err := config.ServerTLS{}.WithSelfSigned(s.T().TempDir(), "nats")

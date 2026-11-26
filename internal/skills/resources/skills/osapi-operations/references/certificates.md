@@ -25,6 +25,10 @@ more, ECDSA P-256, P-384 or P-521, Ed25519) and the signature (no MD5, no
 SHA-1). It is about the certificate only. FIPS 140-3 mode is a setting of each
 running process, not of a certificate, so this command does not show it.
 
+A metrics certificate follows the host's name: a server that starts on a renamed
+host makes a new one for its new name. Nothing pins it. The API's and NATS's
+certificates keep the names that they were made with.
+
 Rotate refuses a `cert_file` of the operator: replace that file. The server
 serves a new certificate at its next start. Each join string pins the NATS
 server's certificate, and each joined agent trusts it, so after
