@@ -55,11 +55,46 @@ describe("AgentTimeline", () => {
       expect(screen.getByText("config_applied")).toBeTruthy(),
     );
     expect(asked).toBe("web-01");
-    const names = [...container.querySelectorAll("details > div > div")].map(
-      (row) => row.children[1].textContent,
+    const names = [...container.querySelectorAll("li")].map(
+      (row) => row.querySelector("div > span")!.textContent,
     );
     expect(names).toEqual(["config_applied", "started", "drain"]);
     expect(screen.getByText("the agent did not stop")).toBeTruthy();
+  });
+
+  test("orders by time, also when the fractions of the timestamps differ in length", async () => {
+    const { container } = render(
+      <AgentTimeline
+        hostname="web-01"
+        load={async () => [
+          { timestamp: "2026-11-25T17:04:56.1-08:00", event: "undrain" },
+          { timestamp: "2026-11-25T12:26:40.123456-08:00", event: "started" },
+        ]}
+      />,
+    );
+    open(container);
+    await waitFor(() => expect(screen.getByText("undrain")).toBeTruthy());
+    const names = [...container.querySelectorAll("li")].map(
+      (row) => row.querySelector("div > span")!.textContent,
+    );
+    expect(names).toEqual(["undrain", "started"]);
+  });
+
+  test("shows the newest eight, and all on request", async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      timestamp: `2026-11-25T10:${String(i).padStart(2, "0")}:00Z`,
+      event: "started",
+      message: `started, version v${i}`,
+    }));
+    const { container } = render(
+      <AgentTimeline hostname="web-01" load={async () => many} />,
+    );
+    open(container);
+    await waitFor(() => expect(screen.getByText("Show all 12")).toBeTruthy());
+    expect(container.querySelectorAll("li").length).toBe(8);
+    expect(screen.getByText("version v11")).toBeTruthy();
+    fireEvent.click(screen.getByText("Show all 12"));
+    expect(container.querySelectorAll("li").length).toBe(12);
   });
 
   test("an agent with no events says so", async () => {
