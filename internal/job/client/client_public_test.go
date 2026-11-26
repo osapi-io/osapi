@@ -1802,6 +1802,57 @@ func (s *ClientPublicTestSuite) TestRefused() {
 		s.Equal(types.AgentJobStatusRefused, row.Status)
 		s.Equal("web-01", row.Hostname)
 	})
+	s.Run("the first refusal of a machine is on its timeline and in the audit log, once", func() {
+		c, err := newTrusted(s.mockNATSClient, &client.Options{
+			JobsBucket: "jobs", StateBucket: "state", StreamName: "JOBS",
+		})
+		s.Require().NoError(err)
+		log := &auditLog{}
+		c.SetAudit(log)
+		s.mockNATSClient.EXPECT().
+			KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+			Return(uint64(1), nil).Times(3)
+		s.mockNATSClient.EXPECT().
+			KVPut(gomock.Any(), "state", gomock.Cond(func(k any) bool {
+				return strings.HasPrefix(k.(string), "timeline.m_1.refused.")
+			}), gomock.Any()).
+			Return(uint64(1), nil)
+		// A timeline that cannot be written still leaves the audit entry.
+		s.mockNATSClient.EXPECT().
+			KVPut(gomock.Any(), "state", gomock.Cond(func(k any) bool {
+				return strings.HasPrefix(k.(string), "timeline.m_2.refused.")
+			}), gomock.Any()).
+			Return(uint64(0), errors.New("nats: timeout"))
+
+		for _, m := range []string{"m-1", "m-1", "m-2"} {
+			_, ok := client.ExportRefused(s.ctx, c, "j-1",
+				&client.RefusedError{MachineID: m, Hostname: "web-01"})
+			s.True(ok)
+		}
+
+		s.Require().Len(log.entries, 2)
+		s.Equal(audit.ActorSystem, log.entries[0].Actor)
+		s.Equal("agent.refuse", log.entries[0].Action)
+		s.Equal("m-1", log.entries[0].Target)
+		s.Contains(log.entries[0].RequestSummary, "not the key that the controller admitted")
+		s.Equal("m-2", log.entries[1].Target)
+	})
+	s.Run("an audit entry that cannot be written", func() {
+		c, err := newTrusted(
+			s.mockNATSClient,
+			&client.Options{JobsBucket: "jobs", StreamName: "JOBS"},
+		)
+		s.Require().NoError(err)
+		log := &auditLog{err: errors.New("stream down")}
+		c.SetAudit(log)
+		s.mockNATSClient.EXPECT().
+			KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
+			Return(uint64(1), nil)
+		_, ok := client.ExportRefused(s.ctx, c, "j-1",
+			&client.RefusedError{MachineID: "m-1", Hostname: "web-01"})
+		s.True(ok)
+		s.Len(log.entries, 1)
+	})
 	s.Run("an error that is not a refusal", func() {
 		_, ok := client.ExportRefused(s.ctx, c, "j-1", client.ErrResponseNotSigned)
 		s.False(ok)

@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,6 +72,10 @@ type Client struct {
 	agentKeyStore AgentKeyStore
 	// auditLog is where a change that no request made is recorded, or nil.
 	auditLog audit.Writer
+	// refusedSeen holds each machine ID whose result this client refused,
+	// so the first refusal of each is on its timeline and in the audit log
+	// once, not on each job.
+	refusedSeen sync.Map
 	// machineID identifies this client's host on payloads it signs, so the
 	// verifier knows which stored key to check them against. Empty on the
 	// controller.

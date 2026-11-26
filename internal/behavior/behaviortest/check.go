@@ -111,6 +111,11 @@ func Check(
 				))
 			}
 			for _, r := range m.Refusals {
+				// A refusal limited with OnPlatform runs only there, as
+				// an example does.
+				if !r.RunsOn(pp.Name) {
+					continue
+				}
 				where := fmt.Sprintf("%s %s on %s, refusal %q", b.Name, m.Name, pp.Name, r.Doc)
 				if p := checkRefusal(b, m, pp.Name, r); p != "" {
 					problems = append(problems, where+": "+p)

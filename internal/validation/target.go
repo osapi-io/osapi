@@ -345,6 +345,36 @@ func PendingTarget(
 	return "", false
 }
 
+// UnverifiedTarget reports whether target names an agent that is
+// registered, and that the controller does not route to because its
+// registration is not signed by its admitted key, so an error message can
+// say why the target is refused rather than that no such agent exists. It
+// returns the agent's hostname.
+func UnverifiedTarget(
+	ctx context.Context,
+	target string,
+) (string, bool) {
+	if agentLister == nil {
+		return "", false
+	}
+	agents, err := getAgents(ctx, spanValidate, target)
+	if err != nil {
+		return "", false
+	}
+	for _, a := range agents {
+		if (a.Hostname == target || a.MachineID == target) && resolvable(a) {
+			return "", false
+		}
+	}
+	for _, a := range agents {
+		if a.Hostname == target || a.MachineID == target {
+			return a.Hostname, true
+		}
+	}
+
+	return "", false
+}
+
 // ResolveTarget resolves a target string to a machine ID for NATS subject
 // routing. If the target matches a hostname, the corresponding machine ID
 // is returned. If it matches a machine ID directly, it is returned as-is.

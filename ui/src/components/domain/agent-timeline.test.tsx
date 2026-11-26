@@ -128,6 +128,25 @@ describe("AgentTimeline", () => {
     expect(screen.getByText("ubuntu-1 → web-01")).toBeTruthy();
   });
 
+  test("a refused result is an error on the rail", async () => {
+    const { container } = render(
+      <AgentTimeline
+        hostname="debian-lts"
+        load={async () => [
+          {
+            timestamp: "2026-11-26T10:00:00Z",
+            event: "refused",
+            message:
+              "the controller refused the result: its signature is not the key that the controller admitted for debian-lts",
+          },
+        ]}
+      />,
+    );
+    open(container);
+    await waitFor(() => expect(screen.getByText("refused")).toBeTruthy());
+    expect(container.querySelector(".bg-status-error")).toBeTruthy();
+  });
+
   test("an agent with no events says so", async () => {
     const { container } = render(
       <AgentTimeline hostname="web-01" load={async () => []} />,

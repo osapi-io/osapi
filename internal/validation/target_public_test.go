@@ -954,3 +954,92 @@ func (s *TargetPublicTestSuite) TestPendingTarget() {
 		})
 	}
 }
+
+// TestUnverifiedTarget covers the hint for a target whose agent is registered
+// and that the controller does not route to: its registration is not signed
+// by its admitted key, so "not found" would say the wrong thing
+// (osapi-io/osapi#1484).
+func (s *TargetPublicTestSuite) TestUnverifiedTarget() {
+	tests := []struct {
+		name     string
+		agents   []validation.AgentTarget
+		err      error
+		target   string
+		wantOK   bool
+		contains []string
+	}{
+		{
+			name:   "an unverified agent by hostname says why",
+			agents: []validation.AgentTarget{{MachineID: "m1", Hostname: "debian-lts"}},
+			target: "debian-lts",
+			contains: []string{
+				`agent "debian-lts" is registered`, "not signed by the key",
+				"KeyMismatch", "osapi client agent get --hostname debian-lts",
+			},
+		},
+		{
+			name:     "an unverified agent by machine ID names its hostname",
+			agents:   []validation.AgentTarget{{MachineID: "m1", Hostname: "debian-lts"}},
+			target:   "m1",
+			contains: []string{`agent "debian-lts" is registered`},
+		},
+		{
+			name: "an unverified twin of a verified agent is no reason",
+			agents: []validation.AgentTarget{
+				{MachineID: "m1", Hostname: "web-01", Verified: true},
+				{MachineID: "m2", Hostname: "web-01"},
+			},
+			target: "web-01",
+			wantOK: true,
+		},
+		{
+			name:     "an agent that does not exist is not found",
+			agents:   []validation.AgentTarget{{MachineID: "m1", Hostname: "debian-lts"}},
+			target:   "web-99",
+			contains: []string{`target agent "web-99" not found`},
+		},
+		{
+			name:     "a registry that cannot be read is not found",
+			err:      errors.New("nats: timeout"),
+			target:   "debian-lts",
+			contains: []string{`target agent "debian-lts" not found`},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			agents, lerr := tt.agents, tt.err
+			validation.RegisterTargetValidator(
+				func(_ context.Context) ([]validation.AgentTarget, error) {
+					return agents, lerr
+				},
+			)
+			validation.SetEnforceVerifiedRegistrations(true)
+			defer validation.SetEnforceVerifiedRegistrations(false)
+
+			msg, ok := validation.Struct(context.Background(), targetInput{Target: tt.target})
+			s.Equal(tt.wantOK, ok)
+			for _, c := range tt.contains {
+				s.Contains(msg, c)
+			}
+		})
+	}
+	s.Run("a verified agent with the name is no reason, called alone", func() {
+		validation.RegisterTargetValidator(
+			func(_ context.Context) ([]validation.AgentTarget, error) {
+				return []validation.AgentTarget{
+					{MachineID: "m2", Hostname: "web-01"},
+					{MachineID: "m1", Hostname: "web-01", Verified: true},
+				}, nil
+			},
+		)
+		validation.SetEnforceVerifiedRegistrations(true)
+		defer validation.SetEnforceVerifiedRegistrations(false)
+		_, ok := validation.UnverifiedTarget(context.Background(), "web-01")
+		s.False(ok)
+	})
+	s.Run("no lister", func() {
+		validation.RegisterTargetValidator(nil)
+		_, ok := validation.UnverifiedTarget(context.Background(), "web-01")
+		s.False(ok)
+	})
+}
