@@ -34,12 +34,13 @@ var Group = command.Register(command.Define(
 	command.Under(command.ParentPKI),
 	command.Uses[Deps](),
 	command.Method[ListInput, ListOutput]("list").
-		Short("List the certificates, with their algorithms, expiry and fingerprint").
+		Short("List the certificates, with their state, algorithms and expiry").
 		Long("Run this on the host. It reads each certificate that the API, the NATS\n"+
 			"server and the metrics servers serve: the self-signed one in the key\n"+
-			"directory of the component, or the cert_file of the config. A certificate\n"+
-			"that the host does not have is not in the list. FIPS mode tells whether\n"+
-			"this binary runs its crypto in FIPS 140-3 mode (GODEBUG=fips140=on).").
+			"directory of the component, or the cert_file of the config. Each of the\n"+
+			"five is in the list. A component that has not started on this host made\n"+
+			"no certificate: its state is not made. Run it on the host of the server;\n"+
+			"a client config reads no certificate.").
 		Example("").
 		Prints(SampleList).
 		Handle(List),

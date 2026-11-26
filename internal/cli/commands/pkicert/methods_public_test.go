@@ -87,7 +87,9 @@ func (s *MethodsPublicTestSuite) TestList() {
 	s.Run("each certificate that can be read, with its days left", func() {
 		got, err := pkicert.List(context.Background(), s.deps(), pkicert.ListInput{})
 		s.Require().NoError(err)
-		s.Len(got.Items, 2, "a certificate that is not there is left out")
+		s.Len(got.Items, 4, "each certificate is in the list")
+		s.Equal("not made", got.Items[3].State, "a certificate that is not there")
+		s.Equal("ok", got.Items[0].State)
 		s.Equal("api", got.Items[0].Name)
 		s.Equal("self-signed", got.Items[0].Source)
 		s.Greater(got.Items[0].DaysLeft, 1800)
@@ -104,6 +106,12 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	s.Run("a name that is not a certificate", func() {
 		_, err := pkicert.Get(context.Background(), s.deps(), pkicert.GetInput{Name: "none"})
 		s.ErrorIs(err, pkicert.ErrNoCert)
+	})
+	s.Run("a list with a certificate that cannot be read", func() {
+		s.Require().NoError(os.WriteFile(filepath.Join(s.dir, "nats.crt"), []byte("nope"), 0o644))
+		got, err := pkicert.List(context.Background(), s.deps(), pkicert.ListInput{})
+		s.Require().NoError(err)
+		s.Contains(got.Items[1].State, "unreadable: ")
 	})
 	s.Run("a file that is not a certificate", func() {
 		s.Require().NoError(os.WriteFile(filepath.Join(s.dir, "nats.crt"), []byte("nope"), 0o644))

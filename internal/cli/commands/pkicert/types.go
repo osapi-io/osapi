@@ -47,8 +47,7 @@ type RotateInput struct {
 
 // ListOutput is each certificate.
 type ListOutput struct {
-	FIPSMode bool       `json:"fips_mode" label:"FIPS mode" doc:"Whether this binary runs its crypto in FIPS 140-3 mode."`
-	Items    []CertInfo `json:"items"`
+	Items []CertInfo `json:"items"`
 }
 
 // RotateOutput is the certificate that rotate made.
@@ -61,14 +60,15 @@ type RotateOutput struct {
 // CertInfo is a certificate as list and get show it.
 type CertInfo struct {
 	Name        string    `json:"name"`
+	State       string    `json:"state"       doc:"ok; not made, when the component has not started on this host; or unreadable, with the reason."`
 	Component   string    `json:"component"`
 	Source      string    `json:"source"      doc:"self-signed, which osapi made, or cert_file, the operator's."`
-	File        string    `json:"file"                                                                                    table:"-"`
-	Names       []string  `json:"names"                                                                                   table:"-"`
+	File        string    `json:"file"                                                                                                             table:"-"`
+	Names       []string  `json:"names"                                                                                                            table:"-"`
 	Expires     time.Time `json:"expires"`
-	DaysLeft    int       `json:"days_left"                                                                                         label:"Days left"`
-	Fingerprint string    `json:"fingerprint"                                                                             table:"-"`
+	DaysLeft    int       `json:"days_left"                                                                                                                  label:"Days left"`
+	Fingerprint string    `json:"fingerprint"                                                                                                      table:"-"`
 	Key         string    `json:"key"         doc:"The algorithm and size of the public key, such as ECDSA P-256."`
-	Signature   string    `json:"signature"   doc:"The algorithm that signed the certificate, such as ECDSA-SHA256."      table:"-"`
-	FIPS        bool      `json:"fips"        doc:"Whether FIPS 186-5 and SP 800-131A approve the key and the signature."           label:"FIPS"`
+	Signature   string    `json:"signature"   doc:"The algorithm that signed the certificate, such as ECDSA-SHA256."                               table:"-"`
+	FIPS        bool      `json:"fips"        doc:"Whether FIPS 186-5 and SP 800-131A approve the key and the signature."                                    label:"FIPS"`
 }

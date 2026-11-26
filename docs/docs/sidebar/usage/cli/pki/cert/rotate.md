@@ -29,6 +29,7 @@ $ osapi pki cert rotate --name api
 
 [1;38;2;255;0;255mCert:[0m
   [38;2;176;48;176mName:[0m         api
+  [38;2;176;48;176mState:[0m        ok
   [38;2;176;48;176mComponent:[0m    controller
   [38;2;176;48;176mSource:[0m       self-signed
   [38;2;176;48;176mFile:[0m         /etc/osapi/pki/api.crt
@@ -47,6 +48,7 @@ With `--json`, the command prints:
 {
   "cert": {
     "name": "api",
+    "state": "ok",
     "component": "controller",
     "source": "self-signed",
     "file": "/etc/osapi/pki/api.crt",

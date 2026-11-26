@@ -25,7 +25,11 @@ import "time"
 // group shows.
 var (
 	SampleCert = CertInfo{
-		Name: "api", Component: "controller", Source: "self-signed", File: "/etc/osapi/pki/api.crt",
+		Name:        "api",
+		State:       "ok",
+		Component:   "controller",
+		Source:      "self-signed",
+		File:        "/etc/osapi/pki/api.crt",
 		Names:       []string{"localhost", "controller.example.com", "127.0.0.1"},
 		Expires:     time.Date(2031, 11, 25, 12, 0, 0, 0, time.UTC),
 		DaysLeft:    1825,
@@ -34,6 +38,9 @@ var (
 		Signature:   "ECDSA-SHA256",
 		FIPS:        true,
 	}
-	SampleList   = ListOutput{Items: []CertInfo{SampleCert}}
+	SampleList = ListOutput{Items: []CertInfo{SampleCert, {
+		Name: "agent-metrics", State: "not made", Component: "agent", Source: "self-signed",
+		File: "/etc/osapi/pki/agent/agent-metrics.crt",
+	}}}
 	SampleRotate = RotateOutput{Cert: SampleCert, Next: "restart the server to serve it"}
 )

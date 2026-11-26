@@ -20,6 +20,7 @@ The command prints:
 $ osapi pki cert get --name api
 [1;38;2;0;213;255mCert:[0m
   [38;2;10;143;176mName:[0m         api
+  [38;2;10;143;176mState:[0m        ok
   [38;2;10;143;176mComponent:[0m    controller
   [38;2;10;143;176mSource:[0m       self-signed
   [38;2;10;143;176mFile:[0m         /etc/osapi/pki/api.crt
@@ -37,6 +38,7 @@ With `--json`, the command prints:
 ```json
 {
   "name": "api",
+  "state": "ok",
   "component": "controller",
   "source": "self-signed",
   "file": "/etc/osapi/pki/api.crt",

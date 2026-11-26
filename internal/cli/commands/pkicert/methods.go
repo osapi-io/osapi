@@ -23,7 +23,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"crypto/fips140"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -55,11 +54,14 @@ func List(
 	d Deps,
 	_ ListInput,
 ) (ListOutput, error) {
-	out := ListOutput{FIPSMode: fips140.Enabled(), Items: []CertInfo{}}
+	out := ListOutput{Items: []CertInfo{}}
 	for _, src := range d.Certs() {
 		info, err := read(d, src)
 		if err != nil {
-			continue
+			info = CertInfo{
+				Name: src.Name, Component: src.Component, Source: source(src),
+				File: src.CertFile, State: state(err),
+			}
 		}
 		out.Items = append(out.Items, info)
 	}
@@ -155,15 +157,11 @@ func read(
 		names = append(names, ip.String())
 	}
 	sum := sha256.Sum256(block.Bytes)
-	source := "cert_file"
-	if src.SelfSigned {
-		source = "self-signed"
-	}
 
 	key, approved := keyAlgorithm(c)
 
 	return CertInfo{
-		Name: src.Name, Component: src.Component, Source: source,
+		Name: src.Name, State: "ok", Component: src.Component, Source: source(src),
 		Key: key, Signature: c.SignatureAlgorithm.String(),
 		FIPS: approved && fipsSignature[c.SignatureAlgorithm], File: src.CertFile, Names: names,
 		Expires: c.NotAfter, DaysLeft: int(c.NotAfter.Sub(d.Now()).Hours() / 24),
@@ -197,4 +195,29 @@ func keyAlgorithm(
 	default:
 		return c.PublicKeyAlgorithm.String(), false
 	}
+}
+
+// source is where src comes from: self-signed, which osapi made, or the
+// cert_file of the operator.
+func source(
+	src Source,
+) string {
+	if src.SelfSigned {
+		return "self-signed"
+	}
+
+	return "cert_file"
+}
+
+// state is why list could not read a certificate: not made when the file is
+// not there, as on a host where that component has not started, or
+// unreadable with the reason, such as a permission that only root has.
+func state(
+	err error,
+) string {
+	if errors.Is(err, fs.ErrNotExist) {
+		return "not made"
+	}
+
+	return "unreadable: " + err.Error()
 }

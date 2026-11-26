@@ -18,10 +18,10 @@ Show and rotate the TLS certificates of osapi on this host.
 
 ## [osapi pki cert list](../../usage/cli/pki/cert/list.md)
 
-|             |                                                                      |
-| ----------- | -------------------------------------------------------------------- |
-| Method      | list                                                                 |
-| Description | List the certificates, with their algorithms, expiry and fingerprint |
+|             |                                                                |
+| ----------- | -------------------------------------------------------------- |
+| Method      | list                                                           |
+| Description | List the certificates, with their state, algorithms and expiry |
 
 ## [osapi pki cert get](../../usage/cli/pki/cert/get.md)
 
