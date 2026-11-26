@@ -4,9 +4,9 @@ import { AgentState } from "@/sdk/gen/schemas";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { ContentArea } from "@/components/layout/content-area";
 import { AgentCard } from "@/components/domain/agent-card";
+import { HealthDot } from "@/components/ui/health-dot";
 import { ComponentRow } from "@/components/domain/component-row";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { StatCard } from "@/components/ui/stat-card";
@@ -16,7 +16,6 @@ import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
 import { Activity } from "lucide-react";
-import { useStatus } from "@/hooks/use-status";
 import { Spinner } from "@/components/ui/spinner";
 import { Count } from "@/components/ui/count";
 import { KVList } from "@/components/ui/kv-list";
@@ -27,7 +26,6 @@ import { type SubRow, subRows } from "@/lib/registry";
 export function Dashboard() {
   useVimScroll();
   const { canCall } = useAuth();
-  const statusColor = useStatus();
   const {
     data: health,
     error: healthErr,
@@ -76,14 +74,17 @@ export function Dashboard() {
     <ContentArea>
       <PageHeader
         title="Dashboard"
-        subtitle="Fleet health overview"
-        actions={
-          health && (
-            <>
-              <Badge variant={statusColor.variant(health.status)}>
-                {health.status}
-              </Badge>
-            </>
+        subtitle={
+          // The overall health, in words, where the reader looks first.
+          health ? (
+            <span className="flex items-center gap-1.5">
+              <HealthDot status={health.status === "ok" ? "ok" : "warn"} />
+              {health.status === "ok"
+                ? "All components healthy"
+                : "Some components are not healthy"}
+            </span>
+          ) : (
+            "Fleet health overview"
           )
         }
       />
