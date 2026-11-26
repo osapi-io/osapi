@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -63,6 +64,16 @@ func Load(
 	}
 	if pub, _ := key.PublicKey(); !nkeys.IsValidPublicAccountKey(pub) {
 		return nil, ErrSigningKey
+	}
+	// With no account, the public key in account.pub beside the key, which
+	// osapi nats auth operator create, and osapi's NATS server at its first
+	// start, write.
+	if account == "" {
+		pub, err := os.ReadFile(filepath.Join(filepath.Dir(file), "account.pub"))
+		if err != nil {
+			return nil, fmt.Errorf("no account, and no account.pub beside the signing key: %w", err)
+		}
+		account = strings.TrimSpace(string(pub))
 	}
 	if !nkeys.IsValidPublicAccountKey(account) {
 		return nil, fmt.Errorf("the account %q is not an account public key (A...)", account)

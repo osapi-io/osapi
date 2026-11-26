@@ -150,6 +150,25 @@ func (s *NatsJWTPublicTestSuite) TestNewUserFails() {
 	s.ErrorContains(err, "no entropy")
 }
 
+// TestLoadAccountPub: with no account, Load reads account.pub beside the
+// signing key, which osapi's NATS server writes at its first start.
+func (s *NatsJWTPublicTestSuite) TestLoadAccountPub() {
+	acct, _ := nkeys.CreateAccount()
+	seed, _ := acct.Seed()
+	pub, _ := acct.PublicKey()
+	dir := s.T().TempDir()
+	file := filepath.Join(dir, "agent-signing.nk")
+	s.Require().NoError(os.WriteFile(file, seed, 0o600))
+
+	_, err := natsjwt.Load(file, "")
+	s.ErrorContains(err, "no account.pub beside the signing key")
+
+	s.Require().NoError(os.WriteFile(filepath.Join(dir, "account.pub"), []byte(pub+"\n"), 0o600))
+	signer, err := natsjwt.Load(file, "")
+	s.Require().NoError(err)
+	s.NotNil(signer)
+}
+
 func (s *NatsJWTPublicTestSuite) TestLoad() {
 	user, _ := nkeys.CreateUser()
 	userSeed, _ := user.Seed()

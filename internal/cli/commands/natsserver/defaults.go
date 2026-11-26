@@ -32,7 +32,9 @@ var Defaults = config.NATS{
 		StoreDir:  "/var/lib/osapi/jetstream",
 		KeyDir:    "/etc/osapi/pki",
 		Namespace: "osapi",
-		Auth:      config.NATSServerAuth{Type: "none"},
+		// Operator mode, with the credentials that the server makes at its
+		// first start (osapi-io/osapi#1413).
+		Auth: config.NATSServerAuth{Type: "operator"},
 		Metrics: config.MetricsServer{
 			Enabled: true, Host: "0.0.0.0", Port: 9092, TLS: config.ServerTLS{Enabled: true},
 		},

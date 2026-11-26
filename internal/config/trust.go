@@ -22,6 +22,7 @@ package config
 import (
 	"net"
 	"net/url"
+	"path/filepath"
 )
 
 // TrustLocal is c where each client that connects to a server of osapi on
@@ -38,6 +39,26 @@ func TrustLocal(
 		c.Controller.Client.TLS.CAFile == "" && c.Controller.API.TLS.CertFile == "" {
 		c.Controller.Client.TLS.CAFile, _ = SelfSignedFiles(c.Controller.PKI.KeyDir, "api")
 	}
+	// osapi's NATS server in operator mode with no resolver_file makes its
+	// credentials at its first start in NATSAuthDir: a client on this host
+	// with no auth of its own connects with its role's.
+	auth := c.NATS.Server.Auth
+	if auth.Type == "operator" && auth.ResolverFile == "" {
+		dir := NATSAuthDir(c.NATS.Server.KeyDir)
+		creds := map[*NATSConnection]string{
+			&c.Controller.NATS: "controller.creds", &c.Agent.NATS: "agent.creds",
+		}
+		for n, file := range creds {
+			if isLocal(n.Host) && (n.Auth.Type == "" || n.Auth.Type == "none") {
+				n.Auth = NATSAuth{Type: "creds", CredsFile: filepath.Join(dir, file)}
+			}
+		}
+		if j := &c.Controller.Join; j.SigningKeyFile == "" && j.Callout.IssuerKeyFile == "" {
+			j.Scoped = true
+			j.SigningKeyFile = filepath.Join(dir, "agent-signing.nk")
+			j.JoinSigningKeyFile = filepath.Join(dir, "join-signing.nk")
+		}
+	}
 	natsCA, _ := SelfSignedFiles(c.NATS.Server.KeyDir, "nats")
 	for _, n := range []*NATSConnection{&c.Controller.NATS, &c.Agent.NATS} {
 		if n.TLS.Enabled && n.TLS.CAFile == "" && isLocal(n.Host) &&
@@ -47,6 +68,15 @@ func TrustLocal(
 	}
 
 	return c
+}
+
+// NATSAuthDir is where osapi's NATS server keeps the credentials that it
+// makes in operator mode with no resolver_file: nats-auth in its key
+// directory.
+func NATSAuthDir(
+	keyDir string,
+) string {
+	return filepath.Join(keyDir, "nats-auth")
 }
 
 // isLocal is whether host is this host by its loopback name or address.

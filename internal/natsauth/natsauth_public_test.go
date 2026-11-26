@@ -100,6 +100,7 @@ func (s *NatsAuthPublicTestSuite) TestOperator() {
 	s.ElementsMatch([]string{
 		"agent.creds", "controller.creds", "setup.creds", "resolver.conf",
 		"operator.nk", "account.nk", "agent-signing.nk", "join-signing.nk", natsauth.OsapiConfig,
+		natsauth.AccountPubFile,
 	}, names)
 
 	opts, err := natsserver.ProcessConfigFile(filepath.Join(s.dir, "resolver.conf"))
