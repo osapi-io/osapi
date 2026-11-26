@@ -154,6 +154,25 @@ func (w *Watcher) Start(
 	return nil
 }
 
+// newRequest is true when key holds no pending request with fingerprint:
+// the first request of a machine, or one with a new key.
+func (w *Watcher) newRequest(
+	ctx context.Context,
+	key string,
+	fingerprint string,
+) bool {
+	entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
+	if err != nil {
+		return true
+	}
+	var was PendingAgent
+	if unmarshalFn(entry.Value(), &was) != nil {
+		return true
+	}
+
+	return was.Fingerprint != fingerprint
+}
+
 // handleEnrollmentRequest processes an incoming enrollment request from
 // an agent. It stores the request in KV and optionally admits it at once.
 func (w *Watcher) handleEnrollmentRequest(
@@ -211,6 +230,9 @@ func (w *Watcher) handleEnrollmentRequest(
 	}
 
 	key := kvPrefix + req.MachineID
+	// A pending agent asks again at each heartbeat. Only a new request, or
+	// one with a different key, is an event and an audit entry.
+	first := w.newRequest(ctx, key, pending.Fingerprint)
 	if _, err := w.enrollmentKV.KVPut(ctx, w.enrollmentBucket, key, data); err != nil {
 		w.logger.Warn(
 			"failed to store pending enrollment",
@@ -227,8 +249,13 @@ func (w *Watcher) handleEnrollmentRequest(
 		slog.String("key", key),
 	)
 
-	w.event(ctx, req.MachineID, req.Hostname, "enrollment_requested",
-		"asked to be admitted, fingerprint "+pending.Fingerprint)
+	if first {
+		w.event(ctx, req.MachineID, req.Hostname, "enrollment_requested",
+			"asked to be admitted, fingerprint "+pending.Fingerprint)
+		w.record(ctx, audit.Change(ctx, audit.ActorAgent, req.MachineID,
+			"agent.enroll.request", req.MachineID, http.StatusAccepted,
+			"hostname="+req.Hostname+" fingerprint="+pending.Fingerprint))
+	}
 
 	if w.autoAdmit {
 		if err := w.AcceptAgent(ctx, req.MachineID); err != nil {

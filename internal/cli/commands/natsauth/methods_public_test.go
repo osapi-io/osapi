@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/stretchr/testify/suite"
 
@@ -49,6 +51,27 @@ func (s *MethodsPublicTestSuite) deps() natsauth.Deps {
 	cfg.NATS.Stream = config.NATSStream{Name: "JOBS", Subjects: "jobs.>"}
 
 	return natsauth.Deps{FS: osfs.New(), Config: cfg}
+}
+
+// TestCreateAudited: making credentials is a local change in the audit
+// log, with the type and the count of files, and no secret
+// (osapi-io/osapi#1453).
+func (s *MethodsPublicTestSuite) TestCreateAudited() {
+	var entries []audit.Entry
+	d := s.deps()
+	d.Audit = func(_ context.Context, e audit.Entry) error {
+		entries = append(entries, e)
+
+		return nil
+	}
+	out := s.T().TempDir()
+	_, err := natsauth.Operator(context.Background(), d, natsauth.CreateInput{Out: out})
+	s.Require().NoError(err)
+	s.Require().Len(entries, 1)
+	s.Equal(audit.ActorLocal, entries[0].Actor)
+	s.Equal("natsauth.create", entries[0].Action)
+	s.Equal(out, entries[0].Target)
+	s.Equal("type=operator files=9", entries[0].RequestSummary)
 }
 
 func (s *MethodsPublicTestSuite) TestCreate() {

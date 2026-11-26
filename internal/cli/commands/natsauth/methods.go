@@ -24,6 +24,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -36,7 +38,7 @@ func Password(
 	d Deps,
 	in CreateInput,
 ) (CreateOutput, error) {
-	return create(ctx, d, in, natsauth.Password)
+	return create(ctx, d, in, "password", natsauth.Password)
 }
 
 // Operator makes an operator, an account and a credentials file for each
@@ -46,7 +48,7 @@ func Operator(
 	d Deps,
 	in CreateInput,
 ) (CreateOutput, error) {
-	return create(ctx, d, in, natsauth.Operator)
+	return create(ctx, d, in, "operator", natsauth.Operator)
 }
 
 // NKey makes an nkey for each osapi role.
@@ -55,7 +57,7 @@ func NKey(
 	d Deps,
 	in CreateInput,
 ) (CreateOutput, error) {
-	return create(ctx, d, in, natsauth.NKey)
+	return create(ctx, d, in, "nkey", natsauth.NKey)
 }
 
 // create makes in.Out and writes the files of write to it.
@@ -63,6 +65,7 @@ func create(
 	ctx context.Context,
 	d Deps,
 	in CreateInput,
+	kind string,
 	write func(context.Context, avfs.VFS, string, string, config.NATS) (natsauth.Result, error),
 ) (CreateOutput, error) {
 	if err := d.FS.MkdirAll(in.Out, 0o700); err != nil {
@@ -79,6 +82,8 @@ func create(
 	if in.Print {
 		out.Server = r.Server
 	}
+	audit.RecordLocal(ctx, d.Audit, "natsauth.create", in.Out,
+		fmt.Sprintf("type=%s files=%d", kind, len(out.Files)))
 
 	return out, nil
 }

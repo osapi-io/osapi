@@ -21,7 +21,10 @@
 package natsauth
 
 import (
+	"context"
+
 	"github.com/avfs/avfs"
+	"github.com/osapi-io/osapi/internal/audit"
 
 	"github.com/osapi-io/osapi/internal/config"
 )
@@ -31,4 +34,7 @@ import (
 type Deps struct {
 	FS     avfs.VFS
 	Config config.Config
+	// Audit writes an entry to the audit log of the controller, or is nil.
+	// It fails when NATS cannot be reached, such as before NATS starts.
+	Audit func(ctx context.Context, e audit.Entry) error
 }

@@ -16,6 +16,7 @@ import (
 
 	jetstream "github.com/nats-io/nats.go/jetstream"
 	client "github.com/osapi-io/nats-client/pkg/client"
+	audit "github.com/osapi-io/osapi/internal/audit"
 	job "github.com/osapi-io/osapi/internal/job"
 	client0 "github.com/osapi-io/osapi/internal/job/client"
 	types "github.com/osapi-io/osapi/pkg/sdk/types"
@@ -340,6 +341,18 @@ func (m *MockJobClient) SetAgentKeyStore(store client0.AgentKeyStore) {
 func (mr *MockJobClientMockRecorder) SetAgentKeyStore(store any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAgentKeyStore", reflect.TypeOf((*MockJobClient)(nil).SetAgentKeyStore), store)
+}
+
+// SetAudit mocks base method.
+func (m *MockJobClient) SetAudit(w audit.Writer) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetAudit", w)
+}
+
+// SetAudit indicates an expected call of SetAudit.
+func (mr *MockJobClientMockRecorder) SetAudit(w any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAudit", reflect.TypeOf((*MockJobClient)(nil).SetAudit), w)
 }
 
 // SetDrainFlag mocks base method.

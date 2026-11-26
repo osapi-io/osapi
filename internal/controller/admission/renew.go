@@ -25,7 +25,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/audit"
 
 	"github.com/nats-io/nats.go"
 	"go.opentelemetry.io/otel/attribute"
@@ -83,23 +86,47 @@ func (w *Watcher) renewReply(
 	if err := json.Unmarshal(data, &req); err != nil {
 		return pki.JoinReply{Error: "the renewal is not JSON"}
 	}
+	reply, code := w.renewChecked(ctx, req, mint)
+	// Each renewal is a new NATS user for a machine, so each is audited:
+	// a refusal too, since one that a machine keeps asking for is a sign.
+	summary := "renewed its NATS user"
+	if reply.Error != "" {
+		summary = "refused: " + reply.Error
+	}
+	w.record(ctx, audit.Change(ctx, audit.ActorAgent, req.MachineID, "agent.nats.renew",
+		req.MachineID, code, summary))
+
+	return reply
+}
+
+// renewChecked is the reply to req, and its outcome as an HTTP status for
+// the audit entry.
+func (w *Watcher) renewChecked(
+	ctx context.Context,
+	req pki.RenewRequest,
+	mint Mint,
+) (pki.JoinReply, int) {
 	if d := nowFn().Sub(time.Unix(req.At, 0)); d > renewSkew || d < -renewSkew {
-		return pki.JoinReply{Error: "the time of the renewal is not now"}
+		return pki.JoinReply{Error: "the time of the renewal is not now"}, http.StatusBadRequest
 	}
 	record, err := w.LookupAgentKey(ctx, req.MachineID)
 	if err != nil {
 		w.logger.Warn("refused a renewal of a machine that is not admitted",
 			slog.String("machine_id", req.MachineID))
 
-		return pki.JoinReply{Error: "the machine is not admitted"}
+		return pki.JoinReply{Error: "the machine is not admitted"}, http.StatusForbidden
 	}
 	if !req.Verify(record.PublicKey) {
-		return pki.JoinReply{Error: "the renewal is not signed by the admitted key"}
+		return pki.JoinReply{
+			Error: "the renewal is not signed by the admitted key",
+		}, http.StatusForbidden
 	}
 	token, err := mint(req.NATSUserKey, req.MachineID)
 	if err != nil {
-		return pki.JoinReply{Error: "the controller could not renew: " + err.Error()}
+		return pki.JoinReply{
+			Error: "the controller could not renew: " + err.Error(),
+		}, http.StatusInternalServerError
 	}
 
-	return pki.JoinReply{NATS: pki.JoinNATS{JWT: token}}
+	return pki.JoinReply{NATS: pki.JoinNATS{JWT: token}}, http.StatusOK
 }

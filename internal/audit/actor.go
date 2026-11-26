@@ -45,6 +45,10 @@ const (
 	// ActorLocal is a person who ran a command on the controller's host,
 	// named by the user of the operating system.
 	ActorLocal Actor = "local"
+	// ActorAgent is a machine that asked for a change itself, named by its
+	// machine ID: an enrollment request, a renewal of its NATS user, or a
+	// hostname that it reported.
+	ActorAgent Actor = "agent"
 )
 
 // Writer is where an entry goes: the audit stream. A *StreamStore is one.

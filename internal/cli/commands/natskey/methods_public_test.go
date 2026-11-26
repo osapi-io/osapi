@@ -28,6 +28,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/audit"
+
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/avfs/avfs/vfs/rofs"
@@ -180,11 +182,27 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 			}
 			vfs := tc.fs()
 
+			var entries []audit.Entry
 			got, err := natskey.Create(
 				context.Background(),
-				natskey.Deps{FS: vfs, KeyFile: tc.keyFile},
+				natskey.Deps{FS: vfs, KeyFile: tc.keyFile, Audit: func(
+					_ context.Context, e audit.Entry,
+				) error {
+					entries = append(entries, e)
+
+					return nil
+				}},
 				natskey.CreateInput{},
 			)
+			// A key that was made is a local change in the audit log, with its
+			// file and not the key (osapi-io/osapi#1453).
+			if err == nil {
+				s.Require().Len(entries, 1)
+				s.Equal("natskey.create", entries[0].Action)
+				s.Equal(tc.keyFile, entries[0].Target)
+			} else {
+				s.Empty(entries)
+			}
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
