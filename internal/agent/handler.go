@@ -671,8 +671,37 @@ func (a *Agent) openJob(
 	if !ok || a.pkiManager == nil || a.pkiManager.EncryptionKey() == nil {
 		return nil, seal.ErrNotSealedToAgent
 	}
+	a.reloadKeys()
+	o, err := seal.Open(req.JobID, sealed, req.SealedFrom, a.pkiManager.EncryptionKey())
+	// A job that the controller sealed just before a rotation is sealed to
+	// the key that the rotation replaced.
+	if prev := a.pkiManager.PreviousEncryptionKey(); err != nil && prev != nil {
+		if o, prevErr := seal.Open(req.JobID, sealed, req.SealedFrom, prev); prevErr == nil {
+			return o, nil
+		}
+	}
 
-	return seal.Open(req.JobID, sealed, req.SealedFrom, a.pkiManager.EncryptionKey())
+	return o, err
+}
+
+// reloadKeys reads the agent's keys again, so the agent signs and opens with
+// the keys that osapi pki key rotate put in place while it ran.
+func (a *Agent) reloadKeys() {
+	if a.pkiManager == nil {
+		return
+	}
+	changed, err := a.pkiManager.Reload()
+	if err != nil {
+		a.logger.Debug("did not reload the agent's keys", slog.String("error", err.Error()))
+
+		return
+	}
+	if changed {
+		a.logger.Info(
+			"reloaded the agent's keys after a rotation",
+			slog.String("fingerprint", a.pkiManager.Fingerprint()),
+		)
+	}
 }
 
 // renameWait is how long a hostname update waits for the agent to register

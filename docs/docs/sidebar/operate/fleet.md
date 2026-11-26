@@ -105,6 +105,34 @@ expires. Select the TTL by how fast a revocation must apply, and how long a host
 can be off: a host that is off for longer than the TTL cannot renew, and must
 join again. An empty `agent_ttl` gives a JWT that does not expire.
 
+## Rotate an agent's keys
+
+Run this on the agent's host, with the agent's config:
+
+```bash
+sudo osapi pki key rotate --name agent
+```
+
+1. The command makes two new keys in `agent.pki.key_dir`, beside the old keys,
+   as `agent.next.key`, `agent.next.pub` and `agent.next.ekey`.
+1. It sends the new public keys to the controller over NATS, as the agent
+   connects. The old signing key signs the request, and the new key signs it
+   too.
+1. The controller checks the old signature against the admission, and that the
+   machine is admitted. Then it puts the new keys in the admission. No new
+   admission is necessary.
+1. The command moves the new keys in place of the old keys. The agent reads them
+   at its next heartbeat.
+1. During `controller.pki.rotation_grace_period` (`24h`), the controller also
+   accepts the old signing key, for a result that the agent signed before it
+   read the new keys. The agent also opens a job that the controller sealed to
+   its old encryption key.
+
+The controller refuses a revoked machine, and keys that it did not admit. Then
+the command removes the new keys, and the agent keeps its keys. When the
+controller does not answer, the new keys stay. Run the command again: it sends
+the same keys. The audit log records each rotation as `agent.key.rotate`.
+
 ## Rotate the controller's key
 
 1. Put a new key pair in `controller.pki.key_dir`.

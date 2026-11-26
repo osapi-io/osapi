@@ -160,6 +160,11 @@ func startEnrollment(
 		})
 	}
 
+	// An admitted agent rotates its keys over NATS, in each auth mode.
+	background(ctx, log, "key rotation over NATS", func(ctx context.Context) error {
+		return watcher.ServeRotate(ctx, conn.NATS.NC.QueueSubscribe)
+	})
+
 	// A machine that went away without a delete keeps its key until an
 	// operator removes it, unless delete_after removes it.
 	if after, err := time.ParseDuration(cfg.Controller.PKI.DeleteAfter); err == nil && after > 0 {

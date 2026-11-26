@@ -72,12 +72,27 @@ var marshalEncryptionKeyFn = x509.MarshalPKCS8PrivateKey
 // EncryptionPublicKey returns the public P-256 key in EncryptionKeyEncoding,
 // or an empty string when the manager has none.
 func (m *Manager) EncryptionPublicKey() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.encryptionPublicKey
 }
 
 // EncryptionKey returns the P-256 ECDH key, or nil when the manager has none.
 func (m *Manager) EncryptionKey() *ecdh.PrivateKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.encryptionKey
+}
+
+// PreviousEncryptionKey returns the encryption key that the last Reload
+// replaced, or nil when no Reload replaced one.
+func (m *Manager) PreviousEncryptionKey() *ecdh.PrivateKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return m.previousEncryptionKey
 }
 
 // ParseEncryptionKey is the public P-256 key that key holds in

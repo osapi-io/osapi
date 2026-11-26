@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"sync"
 
 	"github.com/avfs/avfs"
 
@@ -66,6 +67,7 @@ func New(
 	opts ...Option,
 ) *Manager {
 	m := &Manager{
+		mu:        &sync.RWMutex{},
 		fs:        fs,
 		keyDir:    keyDir,
 		keyPrefix: keyPrefix,
@@ -141,11 +143,17 @@ func (m *Manager) loadOrGenerateSigningKey() error {
 
 // PublicKey returns the Ed25519 public key.
 func (m *Manager) PublicKey() ed25519.PublicKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.publicKey
 }
 
 // PrivateKey returns the Ed25519 private key.
 func (m *Manager) PrivateKey() ed25519.PrivateKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.privateKey
 }
 
@@ -154,6 +162,9 @@ func (m *Manager) PrivateKey() ed25519.PrivateKey {
 // keys (FingerprintOfKeys); one without covers the signing key alone.
 // Returns an empty string if no public key is set.
 func (m *Manager) Fingerprint() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	if m.encryptionPublicKey != "" {
 		return FingerprintOfKeys(m.publicKey, m.encryptionPublicKey)
 	}
@@ -184,6 +195,9 @@ func FingerprintOf(
 func (m *Manager) Sign(
 	data []byte,
 ) []byte {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return ed25519.Sign(m.privateKey, data)
 }
 

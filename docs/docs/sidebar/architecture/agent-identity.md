@@ -355,6 +355,32 @@ check. Examine it. Do not wait.
 
 ## Key rotation
 
+### The agent's keys
+
+`osapi pki key rotate --name agent` replaces the two keys of an admitted agent,
+with no new admission. It makes the new keys beside the old keys, in
+`agent.next.*`, and sends a `pki.RotateRequest` to the controller on the NATS
+subject `join.rotate`, as the agent connects. The request has the machine ID,
+the new public keys and the time. The old signing key and the new signing key
+both sign it. The second signature shows that the agent has the new key.
+
+The controller checks the time, as for a renewal, and that the machine is
+admitted. It checks the old signature against the admission. Then it writes the
+new keys and their fingerprint into the admission. The old signing key stays
+valid until `superseded_until`, `controller.pki.rotation_grace_period` from
+then. The command then moves the new keys in place of the old keys. The running
+agent reads them at its next heartbeat, and before it opens a sealed job. It
+keeps the old encryption key to open a job that the controller sealed before the
+rotation.
+
+A request that the controller already took gets the same answer again: the
+admission then holds the new keys, and the new key's signature is the proof.
+Thus a rotation whose reply did not arrive completes when you run it again. A
+replay of an old request cannot move the admission back, because the old key no
+longer matches the admission.
+
+### The controller's key
+
 The controller can change its Ed25519 key pair. During a grace period (`24h` by
 default), agents accept signatures from the old key and from the new key of the
 controller. You can configure the grace period.

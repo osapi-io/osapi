@@ -56,8 +56,9 @@ type PendingAgent struct {
 // later message from that agent can be verified against the key the agent
 // enrolled with.
 //
-// Only enrollment acceptance creates or replaces a record: nothing an agent
-// sends may introduce or change one.
+// Only enrollment acceptance creates a record. Only an acceptance, or a
+// rotation that the recorded key signed (ServeRotate), replaces its keys:
+// nothing else that an agent sends may introduce or change one.
 type AcceptedAgent struct {
 	MachineID string            `json:"machine_id"`
 	Hostname  string            `json:"hostname"`

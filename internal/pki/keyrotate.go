@@ -1,0 +1,191 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package pki
+
+import (
+	"bytes"
+	"crypto/ecdh"
+	"crypto/ed25519"
+	"errors"
+	"fmt"
+	"io/fs"
+	"path/filepath"
+	"sync"
+)
+
+// nextSuffix follows the prefix of the keys that a rotation makes before
+// the controller takes them: agent.next.key, agent.next.pub and
+// agent.next.ekey.
+const nextSuffix = ".next"
+
+// ErrNoKeys is a Load of keys that are not on the host.
+var ErrNoKeys = errors.New("the keys are not on this host")
+
+// paths are the files of the manager's keys: the private and public signing
+// key, and the encryption key.
+func (m *Manager) paths() (string, string, string) {
+	base := filepath.Join(m.keyDir, m.keyPrefix)
+
+	return base + ".key", base + ".pub", base + encryptionKeySuffix
+}
+
+// Load loads the manager's keys, which must be on the host: it makes none.
+// A key that is missing is ErrNoKeys.
+func (m *Manager) Load() error {
+	pub, priv, ekey, err := m.read()
+	if err != nil {
+		return err
+	}
+	m.set(pub, priv, ekey)
+
+	return nil
+}
+
+// read is the manager's keys on the host. The private key must be the pair
+// of the public one: a rotation that is halfway through its renames is not
+// a pair, and is an error.
+func (m *Manager) read() (ed25519.PublicKey, ed25519.PrivateKey, *ecdh.PrivateKey, error) {
+	privPath, pubPath, ekeyPath := m.paths()
+	want := []string{privPath, pubPath}
+	if m.withEncryption {
+		want = append(want, ekeyPath)
+	}
+	data := make([][]byte, 0, len(want))
+	for _, p := range want {
+		b, err := m.fs.ReadFile(p)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, nil, nil, fmt.Errorf("%w: %s", ErrNoKeys, p)
+		}
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("read key %s: %w", p, err)
+		}
+		data = append(data, b)
+	}
+	keys := &Manager{}
+	if err := keys.loadKeys(data[0], data[1]); err != nil {
+		return nil, nil, nil, err
+	}
+	if !bytes.Equal(keys.privateKey.Public().(ed25519.PublicKey), keys.publicKey) {
+		return nil, nil, nil, fmt.Errorf("%s is not the pair of %s", privPath, pubPath)
+	}
+	var ekey *ecdh.PrivateKey
+	if m.withEncryption {
+		k, err := ParseEncryptionKeyFile(data[2])
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("decode encryption key %s: %w", ekeyPath, err)
+		}
+		ekey = k
+	}
+
+	return keys.publicKey, keys.privateKey, ekey, nil
+}
+
+// set makes pub, priv and ekey the manager's keys.
+func (m *Manager) set(
+	pub ed25519.PublicKey,
+	priv ed25519.PrivateKey,
+	ekey *ecdh.PrivateKey,
+) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if ekey != nil && m.encryptionKey != nil && !m.encryptionKey.Equal(ekey) {
+		m.previousEncryptionKey = m.encryptionKey
+	}
+	m.publicKey, m.privateKey = pub, priv
+	if ekey != nil {
+		m.encryptionKey = ekey
+		m.encryptionPublicKey = EncodeEncryptionKey(ekey.PublicKey())
+	}
+}
+
+// Reload reads the manager's keys again, and reports whether they changed:
+// a rotation replaced them while the process ran. The keys stay as they
+// were when the files are not a whole set, such as during the renames of a
+// rotation; a later Reload takes them.
+func (m *Manager) Reload() (bool, error) {
+	pub, priv, ekey, err := m.read()
+	if err != nil {
+		return false, err
+	}
+	m.mu.RLock()
+	same := bytes.Equal(pub, m.publicKey) &&
+		(ekey == nil || (m.encryptionKey != nil && m.encryptionKey.Equal(ekey)))
+	m.mu.RUnlock()
+	if same {
+		return false, nil
+	}
+	m.set(pub, priv, ekey)
+
+	return true, nil
+}
+
+// Next is the manager of the keys that a rotation makes, beside the
+// manager's own: the ones that an earlier rotation made and the controller
+// did not take, or new ones.
+func (m *Manager) Next() (*Manager, error) {
+	next := &Manager{
+		mu:             &sync.RWMutex{},
+		fs:             m.fs,
+		keyDir:         m.keyDir,
+		keyPrefix:      m.keyPrefix + nextSuffix,
+		withEncryption: m.withEncryption,
+	}
+	if err := next.LoadOrGenerate(); err != nil {
+		return nil, err
+	}
+
+	return next, nil
+}
+
+// Promote moves the keys of next, from Next, in place of the manager's own,
+// and loads them. The encryption key moves first and the public key last,
+// so a Reload during the renames sees the old pair or the new one.
+func (m *Manager) Promote(
+	next *Manager,
+) error {
+	fromPriv, fromPub, fromEkey := next.paths()
+	toPriv, toPub, toEkey := m.paths()
+	moves := [][2]string{{fromPriv, toPriv}, {fromPub, toPub}}
+	if m.withEncryption {
+		moves = append([][2]string{{fromEkey, toEkey}}, moves...)
+	}
+	for _, mv := range moves {
+		if err := m.fs.Rename(mv[0], mv[1]); err != nil {
+			return fmt.Errorf("move %s to %s: %w", mv[0], mv[1], err)
+		}
+	}
+	m.set(next.PublicKey(), next.PrivateKey(), next.EncryptionKey())
+
+	return nil
+}
+
+// Drop removes the manager's keys from the host: the keys of a rotation
+// that the controller refused.
+func (m *Manager) Drop() error {
+	privPath, pubPath, ekeyPath := m.paths()
+	for _, p := range []string{privPath, pubPath, ekeyPath} {
+		if err := m.fs.Remove(p); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("remove %s: %w", p, err)
+		}
+	}
+
+	return nil
+}
