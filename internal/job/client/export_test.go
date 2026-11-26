@@ -148,8 +148,8 @@ func ResetNewSealer() {
 
 // ExportFollowRename exposes the private followRename for testing.
 func ExportFollowRename(
-	c *Client,
 	ctx context.Context,
+	c *Client,
 	req *job.Request,
 	r *job.Response,
 ) {

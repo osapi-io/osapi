@@ -17,6 +17,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // Package pkicert is osapi pki cert: it shows and rotates the TLS
 // certificates that the servers of osapi serve on this host, the self-signed
 // ones that each makes at its first start and a cert_file of the operator.

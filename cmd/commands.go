@@ -58,6 +58,8 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentkey"
+
+	// The generated command groups register themselves in their init.
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/clidocs"

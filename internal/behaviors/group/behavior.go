@@ -43,9 +43,9 @@ var added = behavior.ExistsAfter(
 	etcGroup+"osapitest:x:1501:\n",
 )
 
-// The integration test runs the write examples as root on CI's runner, each
-// from its group removed first. osapitest is a name nothing on the runner
-// has.
+// Behavior is the group behavior: the groups of the host. The integration test
+// runs the write examples as root on CI's runner, each from its group removed
+// first. osapitest is a name nothing on the runner has.
 var Behavior = behavior.Register(behavior.Define(
 	"group", "The groups of the host",
 	behavior.Node,

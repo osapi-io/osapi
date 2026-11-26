@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package dns is the dns behavior: the DNS resolvers of each interface of
+// the host.
 package dns
 
 import (

@@ -53,10 +53,6 @@ const MinSigningKeyLen = 32
 // never leaves a directory in a file name.
 var interfaceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,14}$`)
 
-// TimezonePattern is an IANA timezone name, such as UTC or
-// America/Argentina/Buenos_Aires: segments of letters, digits, _, + and -
-// joined by /, never starting with - and with no dot. It becomes an
-// argument of timedatectl, so the provider checks it again.
 // PackageVersionPattern is a Debian package version, such as 8.5.0-2ubuntu10
 // or 1:2.3: a digit first, then letters, digits and . + ~ : -. It becomes
 // part of an apt-get argument, so the provider checks it again.
@@ -65,6 +61,10 @@ var PackageVersionPattern = regexp.MustCompile(`^[0-9][A-Za-z0-9.+~:-]*$`)
 // itemIndex is the index of a list item in a field's name, such as [0].
 var itemIndex = regexp.MustCompile(`\[\d+\]`)
 
+// TimezonePattern is an IANA timezone name, such as UTC or
+// America/Argentina/Buenos_Aires: segments of letters, digits, _, + and -
+// joined by /, never starting with - and with no dot. It becomes an
+// argument of timedatectl, so the provider checks it again.
 var TimezonePattern = regexp.MustCompile(`^[A-Za-z0-9_+][A-Za-z0-9_+-]*(/[A-Za-z0-9_+-]+)*$`)
 
 // accountNamePattern matches a POSIX system account name: it must start with

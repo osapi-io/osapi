@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package process collects the metrics of the osapi process, and the
+// conditions that its limits give, such as high memory.
 package process
 
 import (

@@ -614,8 +614,6 @@ func ValidateOutput() []Problem {
 	return out
 }
 
-// tagProblems says which output tags of t, and of each type in it, the
-// output does not know.
 // TagProblems is each tag of output type t, and of the types it holds,
 // that the output does not know: the check that ValidateOutput makes on a
 // registered command, for a validator that has the type before a command.

@@ -118,7 +118,6 @@ type Telemetry struct {
 	Inputs     map[string][]string `json:"inputs"                                          render:"-"`
 }
 
-// MethodInput names the behavior and its method.
 // OpenAPIOutput is a served behavior's part of the OpenAPI spec, as YAML,
 // which prints as it is.
 type OpenAPIOutput struct {

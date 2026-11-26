@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package host reads the facts of the host, such as its hostname, its OS
+// and its uptime.
 package host
 
 import (

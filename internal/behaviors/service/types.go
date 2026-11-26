@@ -50,15 +50,20 @@ type Target struct {
 // DeleteInput names the service whose unit file osapi drops.
 type DeleteInput Target
 
-// StartInput, StopInput, RestartInput, EnableInput and DisableInput name the
-// service that an action acts on.
-type (
-	StartInput   Target
-	StopInput    Target
-	RestartInput Target
-	EnableInput  Target
-	DisableInput Target
-)
+// StartInput names the service that start acts on.
+type StartInput Target
+
+// StopInput names the service that stop acts on.
+type StopInput Target
+
+// RestartInput names the service that restart acts on.
+type RestartInput Target
+
+// EnableInput names the service that enable acts on.
+type EnableInput Target
+
+// DisableInput names the service that disable acts on.
+type DisableInput Target
 
 // Entry is a service of the host.
 type Entry struct {

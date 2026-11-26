@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package chain is the chain group of commands, osapi dsl chain: the
+// behaviors that a behavior calls on the same host, in the same job.
 package chain
 
 import (

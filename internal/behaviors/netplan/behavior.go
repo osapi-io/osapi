@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package netplan is the netplan behavior: the netplan files that osapi
+// writes, validated and applied.
 package netplan
 
 import (

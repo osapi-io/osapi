@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package types holds the types that the API, the SDK and the CLI share,
+// such as the states of an agent and the roles of a token.
 package types
 
 import "slices"
