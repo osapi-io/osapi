@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 )
 
@@ -120,6 +121,25 @@ func (s *LoadPublicTestSuite) TestLoad() {
 				s.Equal(config.SourceFile, config.Source(v, "behaviors.kv.dir"))
 				s.Equal(config.SourceEnv, config.Source(v, "behaviors.kv.level"))
 			},
+		},
+		{
+			name: "when the file and the environment set an endpoint group's settings",
+			body: validConfig("  endpoints:", "    kvgroup:", "      dir: /srv/kvgroup"),
+			env:  map[string]string{"OSAPI_CONTROLLER_ENDPOINTS_KVGROUP_LEVEL": "4"},
+			validateFunc: func(v *viper.Viper, _ config.Config) {
+				got := endpoint.Settings[kvSettings](kvGroup)
+				s.Equal("/srv/kvgroup", got.Dir)
+				s.Equal(4, got.Level)
+				s.Equal(config.SourceFile, config.Source(v, "controller.endpoints.kvgroup.dir"))
+				s.Equal(config.SourceEnv, config.Source(v, "controller.endpoints.kvgroup.level"))
+			},
+		},
+		{
+			name:     "when an endpoint group's setting breaks its rule, it is a setting problem",
+			body:     validConfig(),
+			env:      map[string]string{"OSAPI_CONTROLLER_ENDPOINTS_KVGROUP_LEVEL": "9"},
+			wantErr:  "controller.endpoints.kvgroup.level",
+			wantRule: config.RuleSetting,
 		},
 		{
 			name: "when the file has signing keys, the first is the signer",

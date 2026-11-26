@@ -93,7 +93,12 @@ not list with its reason.
    has the questions.
 3. When `Deps` gets its first field, give it in
    `internal/controller/handlers.go`, as `agentDeps` does. While it is empty,
-   the controller needs no wiring.
+   the controller needs no wiring. A setting that only the group reads, such as
+   a limit of its handlers, is the group's own: declare it with
+   `endpoint.Config(Settings{...})`, and read it in a handler with
+   `endpoint.Settings[Settings](Group)`. It is under
+   `controller.endpoints.<group>` in the config. Do not add it to
+   `internal/config`.
 4. Tag the fields of each output type, so that the command prints what a person
    needs at a shell: `render`, `label`, `none`, `empty`, `prefix`, `table:"-"`,
    and a heading with

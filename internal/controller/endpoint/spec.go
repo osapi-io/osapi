@@ -82,6 +82,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: "Config(defaults)",
+			Does: "Declares the group's own settings: defaults is a struct whose fields carry mapstructure, doc and validate tags, as osapi's config does, and whose values are the defaults. They join the config under controller.endpoints.<group>: osapi config list shows them, OSAPI_CONTROLLER_ENDPOINTS_<GROUP>_<FIELD> sets them, and config validate checks them. The group's .SettingsKey(), .SettingsType(), .SetSettings(v) and .CurrentSettings() are what the config loader calls.",
+			When: "For a setting that only the group reads, such as a limit of its handlers, so the core config in internal/config does not change for it. A request's values are its input, never a setting.",
+		},
+		{
+			Kind: KindCheck,
+			Name: "Settings[T](g)",
+			Does: "The group's settings as T, the struct that Config took: the config's values once the controller loaded it, else the defaults.",
+			When: "In a handler, as endpoint.Settings[Limits](Group).",
+		},
+		{
+			Kind: KindOption,
 			Name: `Doc[T]("description")`,
 			Does: "Describes T, a named type, in its schema. Go has no tag on a type, so a group says it here.",
 			When: "For each type whose schema has a description, such as one that another group defines too: the full spec fails when two groups define one schema in different words.",

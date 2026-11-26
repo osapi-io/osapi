@@ -81,6 +81,12 @@ type Group struct {
 	Examples map[reflect.Type]map[string]string
 	// Methods are the group's endpoints, in the order they were declared.
 	Methods []*Method
+	// Defaults are the group's own settings and their defaults, which
+	// Config sets, or nil for a group with none.
+	Defaults any
+	// settings are the decoded settings, which SetSettings sets once the
+	// config is read.
+	settings any
 }
 
 // Option is a setting of a group, or one of its endpoints.

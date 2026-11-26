@@ -53,6 +53,20 @@ place of the host in a behavior.
 Use: In each group that is served. Keep it to interfaces, so a test can fake
 each one.
 
+### `Config(defaults)`
+
+Declares the group's own settings: defaults is a struct whose fields carry
+mapstructure, doc and validate tags, as osapi's config does, and whose values
+are the defaults. They join the config under controller.endpoints.&lt;group&gt;:
+osapi config list shows them,
+OSAPI_CONTROLLER_ENDPOINTS_&lt;GROUP&gt;_&lt;FIELD&gt; sets them, and config
+validate checks them. The group's .SettingsKey(), .SettingsType(),
+.SetSettings(v) and .CurrentSettings() are what the config loader calls.
+
+Use: For a setting that only the group reads, such as a limit of its handlers,
+so the core config in internal/config does not change for it. A request's values
+are its input, never a setting.
+
 ### `Doc[T]("description")`
 
 Describes T, a named type, in its schema. Go has no tag on a type, so a group
@@ -710,6 +724,13 @@ Use: Give a type the name its schema has. Use an alias of a struct with no name,
 such as Message, for a schema that the spec has in place.
 
 ## What holds a group to its spec
+
+### `Settings[T](g)`
+
+The group's settings as T, the struct that Config took: the config's values once
+the controller loaded it, else the defaults.
+
+Use: In a handler, as endpoint.Settings\[Limits](Group).
 
 ### `SchemaName(t)`
 

@@ -34,3 +34,23 @@ operationIds of a group. `go run . dsl endpoint openapi get --name <group>`
 shows the spec that the definition makes.
 
 The `build-an-endpoint` [skill](skills.md) gives the same steps to an agent.
+
+## Settings of a group
+
+A setting that only one group reads, such as a limit of its handlers, is the
+group's own. The group declares it with its default, as a behavior does:
+
+```go
+type Settings struct {
+    Limit int `mapstructure:"limit" doc:"The most items that list gives." validate:"min=1"`
+}
+
+endpoint.Define("job", ..., endpoint.Config(Settings{Limit: 20}), ...)
+```
+
+The settings are in the osapi config under `controller.endpoints.<group>`.
+`osapi config list` shows them, `OSAPI_CONTROLLER_ENDPOINTS_<GROUP>_<FIELD>`
+sets them, and `config validate` checks their `validate` tags. A handler reads
+them with `endpoint.Settings[Settings](Group)`. Thus a new group does not add
+its settings to `internal/config`. A value that changes with each request goes
+in the input of the method.
