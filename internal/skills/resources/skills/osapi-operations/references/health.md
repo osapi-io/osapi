@@ -21,5 +21,17 @@ A drained agent takes no new jobs: `client agent undrain` returns it.
 A job whose hosts all report `timeout` reached no agent in
 `controller.api.job_timeout`. Check `agent list` and the target.
 
+`health status` counts the dead letters: jobs whose delivery to an agent used up
+its retries. List them, newest first, and send one back to the queue:
+
+```sh
+osapi client job deadletter list --json          # each with its job, target and error
+osapi client job deadletter list --limit 5 --json
+osapi client job retry --id <job> --json         # a new job with the same operation
+```
+
+A dead letter stays in the stream until its max age (`nats.dlq.max_age`); retry
+makes a new job and leaves the dead letter as it was.
+
 Start any component with `--debug` for its log, and read that log before you
 change the config.

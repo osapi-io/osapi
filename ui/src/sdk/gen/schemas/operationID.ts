@@ -92,6 +92,7 @@ export const OperationID = {
   GetSecretVaults: 'GetSecretVaults',
   GetSecrets: 'GetSecrets',
   GetTrace: 'GetTrace',
+  ListDeadLetters: 'ListDeadLetters',
   ListPKICerts: 'ListPKICerts',
   PostFile: 'PostFile',
   PostNodeCertificate: 'PostNodeCertificate',

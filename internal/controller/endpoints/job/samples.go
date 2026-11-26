@@ -21,6 +21,8 @@
 package job
 
 import (
+	"time"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -84,3 +86,14 @@ var (
 		Timestamp: "2026-01-15T10:00:00Z",
 	}
 )
+
+var sampleDeadLetters = DeadLetterList{
+	TotalItems: 654,
+	Items: []DeadLetter{{
+		Seq: 654, Time: time.Date(2026, 11, 26, 10, 0, 0, 0, time.UTC),
+		JobID: "550e8400-e29b-41d4-a716-446655440000", Target: "_all",
+		Operation:  &Operation{Type: "node.hostname.get"},
+		Error:      "agent did not answer",
+		Deliveries: 5, Consumer: "jobs-agent",
+	}},
+}

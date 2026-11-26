@@ -38,6 +38,64 @@ components:
         - job_id
         - status
       type: object
+    DeadLetter:
+      properties:
+        consumer:
+          description: The consumer of the agents that the delivery was for.
+          type: string
+        deliveries:
+          description: How often NATS delivered the job before it gave up.
+          example: 5
+          type: integer
+        error:
+          description: The error of the job, when it has one.
+          type: string
+        job_id:
+          description: The job that the delivery carried, or empty when the job stream no longer has it.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        operation:
+          description: What the job asked for, with each secret masked.
+          properties:
+            data:
+              description: The data of the operation, with each secret masked.
+            type:
+              description: The operation, such as node.hostname.get.
+              type: string
+          required:
+            - type
+          type: object
+        seq:
+          description: The dead letter's sequence in the dead letter stream.
+          example: 654
+          type: integer
+        target:
+          description: The target of the job.
+          example: _all
+          type: string
+        time:
+          description: When NATS gave up on the delivery.
+          format: date-time
+          type: string
+      required:
+        - seq
+        - time
+        - deliveries
+        - consumer
+      type: object
+    DeadLetterList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DeadLetter'
+          type: array
+        total_items:
+          description: The number of dead letters that the stream holds.
+          type: integer
+      required:
+        - total_items
+        - items
+      type: object
     ErrorResponse:
       properties:
         details:
@@ -515,6 +573,66 @@ paths:
           input:
             id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: retry
+  /api/job/deadletter:
+    get:
+      description: Lists the newest jobs whose delivery to an agent used up its retries, from the dead letter stream, each with its job's operation, target and error. A job goes back to the queue with retry. A token with a target scope gets only the dead letters of the jobs whose target is in its scope.
+      operationId: ListDeadLetters
+      parameters:
+        - description: The most dead letters to list, the newest first (1-100).
+          in: query
+          name: limit
+          schema:
+            default: 20
+            maximum: 100
+            minimum: 1
+            type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=100
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeadLetterList'
+          description: The newest dead letters.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - job:read
+      summary: List the dead letters
+      tags:
+        - job_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: List the dead letters
+          input: {}
+        - doc: List the dead letters, with --limit 5
+          input:
+            limit: 5
+      x-osapi-method: deadletters
 tags:
   - description: Operations related to the job queue.
     name: job_operations

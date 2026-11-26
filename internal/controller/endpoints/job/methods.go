@@ -263,3 +263,44 @@ func decode(
 
 	return v
 }
+
+// DeadLetters is the newest dead letters, each with its job. A scoped token
+// sees only the dead letters of the jobs whose target is in its scope, and
+// the total counts only those.
+func DeadLetters(
+	ctx context.Context,
+	d Deps,
+	in DeadLetterListInput,
+) (DeadLetterList, error) {
+	limit := in.Limit
+	if limit == 0 {
+		limit = 20
+	}
+	dls, total, err := d.Jobs.ListDeadLetters(ctx, limit)
+	if err != nil {
+		return DeadLetterList{}, endpoint.Internal("failed to list the dead letters", err)
+	}
+	scoped := len(authtoken.TargetsFrom(ctx)) > 0
+	out := DeadLetterList{TotalItems: total, Items: []DeadLetter{}}
+	for _, dl := range dls {
+		item := DeadLetter{
+			Seq: dl.Seq, Time: dl.Time, JobID: dl.JobID,
+			Deliveries: dl.Deliveries, Consumer: dl.Consumer,
+		}
+		if dl.JobID != "" {
+			if qj, err := d.Jobs.GetJobStatus(ctx, dl.JobID); err == nil {
+				s := summary(qj)
+				item.Operation, item.Target, item.Error = s.Operation, s.Target, s.Error
+			}
+		}
+		if scoped && (item.Target == "" || !authtoken.Sees(ctx, item.Target)) {
+			continue
+		}
+		out.Items = append(out.Items, item)
+	}
+	if scoped {
+		out.TotalItems = len(out.Items)
+	}
+
+	return out, nil
+}

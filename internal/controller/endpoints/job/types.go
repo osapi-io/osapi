@@ -21,6 +21,8 @@
 package job
 
 import (
+	"time"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -121,4 +123,28 @@ type TimelineEvent = struct {
 	Hostname  string               `json:"hostname,omitempty"  doc:"Agent or source that generated the event."`
 	Message   string               `json:"message,omitempty"   doc:"Human-readable description of the event."`
 	Error     string               `json:"error,omitempty"     doc:"Error details if applicable."`
+}
+
+// DeadLetterListInput limits the dead letters.
+type DeadLetterListInput struct {
+	Limit int `json:"limit" in:"query" validate:"omitempty,min=1,max=100" doc:"The most dead letters to list, the newest first (1-100)." default:"20"`
+}
+
+// DeadLetterList is the newest dead letters, with the count of them all.
+type DeadLetterList struct {
+	_          struct{}     `title:"Dead letters"`
+	TotalItems int          `                     json:"total_items" doc:"The number of dead letters that the stream holds."`
+	Items      []DeadLetter `                     json:"items"`
+}
+
+// DeadLetter is a job whose delivery to an agent used up its retries.
+type DeadLetter struct {
+	Seq        uint64     `json:"seq"                 doc:"The dead letter's sequence in the dead letter stream."                             example:"654"`
+	Time       time.Time  `json:"time"                doc:"When NATS gave up on the delivery."`
+	JobID      string     `json:"job_id,omitempty"    doc:"The job that the delivery carried, or empty when the job stream no longer has it." example:"550e8400-e29b-41d4-a716-446655440000"`
+	Operation  *Operation `json:"operation,omitempty" doc:"What the job asked for, with each secret masked."                                                                                 table:"-"`
+	Target     string     `json:"target,omitempty"    doc:"The target of the job."                                                            example:"_all"`
+	Error      string     `json:"error,omitempty"     doc:"The error of the job, when it has one."`
+	Deliveries uint64     `json:"deliveries"          doc:"How often NATS delivered the job before it gave up."                               example:"5"`
+	Consumer   string     `json:"consumer"            doc:"The consumer of the agents that the delivery was for."                                                                            table:"-"`
 }

@@ -269,6 +269,7 @@ type JobClient interface {
 	) error
 
 	// Job retry
+	ListDeadLetters(ctx context.Context, limit int) ([]job.DeadLetter, int, error)
 	RetryJob(
 		ctx context.Context,
 		jobID string,

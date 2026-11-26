@@ -17,20 +17,22 @@ same.
 | Description | Manage the jobs in the queue |
 | Area        | fleet                        |
 
-### Methods (4)
+### Methods (5)
 
-| NAME   | VERB   | PATH                          | PERMISSION | OPERATION ID  |
-| ------ | ------ | ----------------------------- | ---------- | ------------- |
-| list   | GET    | /api/job                      | job:read   | GetJobs       |
-| get    | GET    | /api/job/&#123;id&#125;       | job:read   | GetJobByID    |
-| delete | DELETE | /api/job/&#123;id&#125;       | job:write  | DeleteJobByID |
-| retry  | POST   | /api/job/&#123;id&#125;/retry | job:write  | RetryJobByID  |
+| NAME        | VERB   | PATH                          | PERMISSION | OPERATION ID    |
+| ----------- | ------ | ----------------------------- | ---------- | --------------- |
+| list        | GET    | /api/job                      | job:read   | GetJobs         |
+| deadletters | GET    | /api/job/deadletter           | job:read   | ListDeadLetters |
+| get         | GET    | /api/job/&#123;id&#125;       | job:read   | GetJobByID      |
+| delete      | DELETE | /api/job/&#123;id&#125;       | job:write  | DeleteJobByID   |
+| retry       | POST   | /api/job/&#123;id&#125;/retry | job:write  | RetryJobByID    |
 
-### Types (4)
+### Types (5)
 
-| NAME   | INPUT                                         | OUTPUT                                                                                                                                                      |
-| ------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| list   | ListInput &#123; status, limit, offset &#125; | ListJobsResponse &#123; total_items, status_counts, items &#125;                                                                                            |
-| get    | GetInput &#123; id &#125;                     | DetailResponse &#123; id, status, created, target, operation, hostname, updated_at, changed, error, result, responses, chain, agent_states, timeline &#125; |
-| delete | DeleteInput &#123; id &#125;                  |                                                                                                                                                             |
-| retry  | RetryInput &#123; id &#125;                   | CreateJobResponse &#123; job_id, status, revision, timestamp &#125;                                                                                         |
+| NAME        | INPUT                                         | OUTPUT                                                                                                                                                      |
+| ----------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| list        | ListInput &#123; status, limit, offset &#125; | ListJobsResponse &#123; total_items, status_counts, items &#125;                                                                                            |
+| deadletters | DeadLetterListInput &#123; limit &#125;       | DeadLetterList &#123; total_items, items &#125;                                                                                                             |
+| get         | GetInput &#123; id &#125;                     | DetailResponse &#123; id, status, created, target, operation, hostname, updated_at, changed, error, result, responses, chain, agent_states, timeline &#125; |
+| delete      | DeleteInput &#123; id &#125;                  |                                                                                                                                                             |
+| retry       | RetryInput &#123; id &#125;                   | CreateJobResponse &#123; job_id, status, revision, timestamp &#125;                                                                                         |

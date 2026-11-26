@@ -32,6 +32,7 @@ import (
 type NATSClient interface {
 	Publish(ctx context.Context, subject string, data []byte) error
 	StreamInfo(ctx context.Context, name string) (*jetstream.StreamInfo, error)
+	StreamGetMsg(ctx context.Context, name string, seq uint64) (*jetstream.RawStreamMsg, error)
 	ConsumerCreateOrUpdate(
 		ctx context.Context,
 		stream string,

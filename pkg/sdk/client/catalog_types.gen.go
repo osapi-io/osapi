@@ -358,6 +358,7 @@ const (
 	OperationIDGetSecretVaults          OperationID = "GetSecretVaults"
 	OperationIDGetSecrets               OperationID = "GetSecrets"
 	OperationIDGetTrace                 OperationID = "GetTrace"
+	OperationIDListDeadLetters          OperationID = "ListDeadLetters"
 	OperationIDListPKICerts             OperationID = "ListPKICerts"
 	OperationIDPostFile                 OperationID = "PostFile"
 	OperationIDPostNodeCertificate      OperationID = "PostNodeCertificate"

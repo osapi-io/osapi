@@ -1,0 +1,69 @@
+---
+id: list-dead-letters
+title: "List the dead letters"
+description: "Lists the newest jobs whose delivery to an agent used up its retries, from the dead letter stream, each with its job's operation, target and error. A job goes back to the queue with retry. A token with a target scope gets only the dead letters of the jobs whose target is in its scope."
+sidebar_label: "List the dead letters"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the dead letters"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/job/deadletter"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Lists the newest jobs whose delivery to an agent used up its retries, from the dead letter stream, each with its job's operation, target and error. A job goes back to the queue with retry. A token with a target scope gets only the dead letters of the jobs whose target is in its scope.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./list-dead-letters.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./list-dead-letters.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./list-dead-letters.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

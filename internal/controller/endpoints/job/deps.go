@@ -45,6 +45,7 @@ type Jobs interface {
 	) (*client.ListJobsResult, error)
 	GetJobStatus(ctx context.Context, jobID string) (*job.QueuedJob, error)
 	DeleteJob(ctx context.Context, jobID string) error
+	ListDeadLetters(ctx context.Context, limit int) ([]job.DeadLetter, int, error)
 	RetryJob(
 		ctx context.Context,
 		jobID string,

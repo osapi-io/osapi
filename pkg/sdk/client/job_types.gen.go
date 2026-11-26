@@ -2,7 +2,11 @@
 
 package client
 
-import types "github.com/osapi-io/osapi/pkg/sdk/types"
+import (
+	"time"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // CreateJobResponse is the CreateJobResponse of the spec.
 type CreateJobResponse struct {
@@ -19,6 +23,52 @@ type CreateJobResponse struct {
 
 	// Creation timestamp.
 	Timestamp string `json:"timestamp,omitempty"`
+}
+
+// DeadLetter is the DeadLetter of the spec.
+type DeadLetter struct {
+	// The consumer of the agents that the delivery was for.
+	Consumer string `json:"consumer"`
+
+	// How often NATS delivered the job before it gave up.
+	Deliveries int `json:"deliveries"`
+
+	// The error of the job, when it has one.
+	Error string `json:"error,omitempty"`
+
+	// The job that the delivery carried, or empty when the job stream no longer
+	// has it.
+	JobID string `json:"job_id,omitempty"`
+
+	// What the job asked for, with each secret masked.
+	Operation DeadLetterOperation `json:"operation,omitzero"`
+
+	// The dead letter's sequence in the dead letter stream.
+	Seq int `json:"seq"`
+
+	// The target of the job.
+	Target string `json:"target,omitempty"`
+
+	// When NATS gave up on the delivery.
+	Time time.Time `json:"time"`
+}
+
+// DeadLetterList is the DeadLetterList of the spec.
+type DeadLetterList struct {
+	// Items is the property items.
+	Items []DeadLetter `json:"items"`
+
+	// The number of dead letters that the stream holds.
+	TotalItems int `json:"total_items"`
+}
+
+// DeadLetterOperation: What the job asked for, with each secret masked.
+type DeadLetterOperation struct {
+	// The data of the operation, with each secret masked.
+	Data any `json:"data,omitempty"`
+
+	// The operation, such as node.hostname.get.
+	Type string `json:"type"`
 }
 
 // JobDetailResponse is the JobDetailResponse of the spec.
