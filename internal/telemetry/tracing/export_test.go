@@ -23,7 +23,6 @@ package tracing
 
 import (
 	"context"
-	"errors"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -102,11 +101,4 @@ func ResetOtlptraceNewFn() {
 // for testing.
 func ExportNewNoopOTLPExporter() *otlptrace.Exporter {
 	return otlptrace.NewUnstarted(noopClient{})
-}
-
-// ExportNewResourceError returns a resourceNewFn that always errors.
-func ExportNewResourceError() func(context.Context, ...resource.Option) (*resource.Resource, error) {
-	return func(_ context.Context, _ ...resource.Option) (*resource.Resource, error) {
-		return nil, errors.New("resource creation failed")
-	}
 }

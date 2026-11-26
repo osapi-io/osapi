@@ -71,26 +71,6 @@ func ExportProcessJobOperation(
 	return a.processJobOperation(context.Background(), req)
 }
 
-// ExportProcessNodeOperation invokes the "node" processor from the agent's
-// registry directly, for testing node-specific dispatch.
-func ExportProcessNodeOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	req.Category = "node"
-	return a.registry.Dispatch(context.Background(), req)
-}
-
-// ExportProcessNetworkOperation invokes the "network" processor from the
-// agent's registry directly, for testing network-specific dispatch.
-func ExportProcessNetworkOperation(
-	a *Agent,
-	req job.Request,
-) (json.RawMessage, error) {
-	req.Category = "network"
-	return a.registry.Dispatch(context.Background(), req)
-}
-
 // ExportWriteStatusEvent exposes the private writeStatusEvent method for testing.
 func ExportWriteStatusEvent(
 	ctx context.Context,
@@ -312,13 +292,6 @@ func SetAgentMachineID(
 	a.machineID = machineID
 }
 
-// GetAgentMachineID returns the agent's machineID field for testing.
-func GetAgentMachineID(
-	a *Agent,
-) string {
-	return a.machineID
-}
-
 // ExportFindPrevCondition exposes the private findPrevCondition function for testing.
 func ExportFindPrevCondition(
 	condType types.ConditionType,
@@ -507,28 +480,6 @@ func SetAgentAppConfig(
 	}
 }
 
-// GetAgentHostProvider returns the agent's hostProvider field for testing.
-func GetAgentHostProvider(
-	a *Agent,
-) nodeHost.Provider {
-	return a.hostProvider
-}
-
-// SetAgentHostProvider sets the agent's hostProvider field for testing.
-// This also updates the corresponding processor in the registry so that
-// job processing uses the new provider.
-func SetAgentHostProvider(
-	a *Agent,
-	p nodeHost.Provider,
-) {
-	a.hostProvider = p
-	// Re-register the node processor with the new host provider so job
-	// dispatch picks up the change.
-	if a.registry != nil {
-		a.registry.processors["node"] = NewNodeProcessor(a.logger)
-	}
-}
-
 // SetAgentProcessorOnce makes the agent's next job of category return err,
 // and puts back the category's processor after it.
 func SetAgentProcessorOnce(
@@ -692,14 +643,6 @@ func SetMarshalJSONEnrollment(
 // ResetMarshalJSONEnrollment restores the default marshalJSONEnrollment function.
 func ResetMarshalJSONEnrollment() {
 	marshalJSONEnrollment = json.Marshal
-}
-
-// SetAgentNATSClient sets the agent's natsClient field for testing.
-func SetAgentNATSClient(
-	a *Agent,
-	c NATSClient,
-) {
-	a.natsClient = c
 }
 
 // ExportUnwrapJobEnvelope exposes the private unwrapJobEnvelope method for testing.
