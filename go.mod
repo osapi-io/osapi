@@ -7,7 +7,7 @@ require (
 	github.com/avfs/avfs v0.35.0
 	github.com/caarlos0/go-version v0.2.2
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/charmbracelet/x/ansi v0.11.9
+	github.com/charmbracelet/x/ansi v0.11.10
 	github.com/dave/jennifer v1.7.1
 	// https://github.com/oapi-codegen/oapi-codegen/issues/1702
 	github.com/getkin/kin-openapi v0.153.0
