@@ -164,7 +164,7 @@ type JoinRequest struct {
 	MachineID     string       `json:"machine_id"     validate:"required,min=1,max=255"                  doc:"The machine ID of the host."`
 	Hostname      string       `json:"hostname"       validate:"required,min=1,max=255"                  doc:"The hostname of the host."`
 	PublicKey     string       `json:"public_key"     validate:"required,max=128,base64"                 doc:"The agent's Ed25519 signing key, in base64."`
-	EncryptionKey string       `json:"encryption_key" validate:"required,max=128"                        doc:"The agent's X25519 encryption key, in the nkeys form."`
+	EncryptionKey string       `json:"encryption_key" validate:"required,max=128"                        doc:"The agent's public P-256 encryption key: base64url, with no padding, of the 65-byte uncompressed point."`
 	Signature     string       `json:"signature"      validate:"required,max=256,base64"                 doc:"The signature of the request by the signing key, in base64."`
 }
 

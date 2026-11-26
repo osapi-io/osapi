@@ -12,8 +12,8 @@ components:
           format: date-time
           type: string
         encryption_key:
-          description: The node's public X25519 encryption key, which the fingerprint covers.
-          example: XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM
+          description: The node's public P-256 encryption key, which the fingerprint covers.
+          example: BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs
           type: string
         fingerprint:
           description: 'The fingerprint of the node''s two public keys: signing and encryption.'

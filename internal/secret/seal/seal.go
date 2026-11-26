@@ -19,29 +19,48 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package seal keeps the secret values of a job from each reader but its
-// target agents. The controller makes a new random key for each job,
-// encrypts each value with it (XChaCha20-Poly1305), and seals the key to
-// the X25519 key of each target agent (NaCl box, as nkeys xkeys gives it).
-// The agent opens the job key with its own X25519 key, then each value.
+// target agents. The controller makes a new random 256-bit key for each job,
+// encrypts each value with it (AES-256-GCM), and seals the job key to the
+// P-256 ECDH key of each target agent. Each algorithm is FIPS 140-3
+// approved, from the Go standard library.
+//
+// A job has one ephemeral P-256 key, From, that seals its key to each agent.
+// For an agent with the public key R, the key-encryption key is
+// HKDF-SHA256 of the ECDH secret of From and R, with no salt and the info
+// "osapi-seal-v1" || From || R (each the 65 bytes of its uncompressed
+// point). The sealed key is base64url, with no padding, of the 12-byte nonce,
+// the job key encrypted with AES-256-GCM, and its 16-byte tag; the job ID is
+// the additional data. A sealed value is Prefix, then base64url of the nonce,
+// the value encrypted with the job key, and the tag, with the job ID as the
+// additional data. Thus a value or a key that somebody copies to a different
+// job does not open.
 package seal
 
 import (
 	"context"
+	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ecdh"
+	"crypto/hkdf"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/nats-io/nkeys"
-	"golang.org/x/crypto/chacha20poly1305"
-
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // Prefix starts each sealed value in the data of a job.
 const Prefix = "sealed:"
+
+// kdfInfo starts the HKDF info of each key-encryption key.
+const kdfInfo = "osapi-seal-v1"
+
+// keySize is the size of a job key and of a key-encryption key: AES-256.
+const keySize = 32
 
 // ErrNotSealedToAgent is the error of a job that has sealed values, but no
 // job key for this agent, such as an agent that joined after the
@@ -56,63 +75,85 @@ type Sealer struct {
 	jobID string
 	key   []byte
 	aead  cipher.AEAD
-	from  nkeys.KeyPair
+	from  *ecdh.PrivateKey
 }
 
 // New is a Sealer for the job jobID, with a new random job key, and a new
-// X25519 key that seals the job key to each agent. The job ID is the
-// additional data of each value, so a value that somebody copies to a
-// different job does not open.
+// P-256 key that seals the job key to each agent.
 func New(
 	jobID string,
 ) (*Sealer, error) {
-	key := make([]byte, chacha20poly1305.KeySize)
+	key := make([]byte, keySize)
 	_, _ = rand.Read(key)
-	from, err := createCurveKeys()
+	from, err := createKey()
 	if err != nil {
 		return nil, fmt.Errorf("make the key that seals the job key: %w", err)
 	}
-	// A key of KeySize bytes is a key that NewX takes.
-	aead, _ := chacha20poly1305.NewX(key)
 
-	return &Sealer{jobID: jobID, key: key, aead: aead, from: from}, nil
+	return &Sealer{jobID: jobID, key: key, aead: gcm(key), from: from}, nil
 }
 
-// createCurveKeys makes an X25519 key. A test replaces it.
-var createCurveKeys = nkeys.CreateCurveKeys
+// createKey makes a P-256 ECDH key. A test replaces it.
+var createKey = func() (*ecdh.PrivateKey, error) {
+	return ecdh.P256().GenerateKey(rand.Reader)
+}
 
-// From is the public X25519 key that seals the job key. The agent needs it
-// to open the job key.
+// gcm is AES-256-GCM with key, which makes a random 12-byte nonce for each
+// Seal and puts it in front of the ciphertext: the form of GCM that FIPS
+// 140-3 mode approves for a caller. A key of keySize bytes is always a
+// valid AES key.
+func gcm(
+	key []byte,
+) cipher.AEAD {
+	block, _ := aes.NewCipher(key)
+	aead, _ := cipher.NewGCMWithRandomNonce(block)
+
+	return aead
+}
+
+// From is the public P-256 key that seals the job key, in
+// pki.EncryptionKeyEncoding. The agent needs it to open the job key.
 func (s *Sealer) From() string {
-	// A curve key pair always has a public key.
-	pub, _ := s.from.PublicKey()
-
-	return pub
+	return pki.EncodeEncryptionKey(s.from.PublicKey())
 }
 
-// Value is v sealed with the job key: Prefix, then the nonce and the
-// ciphertext.
+// Value is v sealed with the job key: Prefix, then the nonce, the
+// ciphertext and the tag.
 func (s *Sealer) Value(
 	v secret.Value,
 ) string {
-	nonce := make([]byte, s.aead.NonceSize(), s.aead.NonceSize()+len(v)+s.aead.Overhead())
-	_, _ = rand.Read(nonce)
-
 	return Prefix + encoding.EncodeToString(
-		s.aead.Seal(nonce, nonce, []byte(v.Reveal()), []byte(s.jobID)))
+		s.aead.Seal(nil, nil, []byte(v.Reveal()), []byte(s.jobID)))
 }
 
-// KeyFor is the job key sealed to recipient, the public X25519 key of an
-// agent in the nkeys form.
+// KeyFor is the job key sealed to recipient, the public P-256 key of an
+// agent in pki.EncryptionKeyEncoding.
 func (s *Sealer) KeyFor(
 	recipient string,
 ) (string, error) {
-	sealed, err := s.from.Seal(s.key, recipient)
+	pub, err := pki.ParseEncryptionKey(recipient)
 	if err != nil {
 		return "", fmt.Errorf("seal the job key: %w", err)
 	}
+	kek := wrapKey(s.from, s.from.PublicKey(), pub, pub)
 
-	return encoding.EncodeToString(sealed), nil
+	return encoding.EncodeToString(gcm(kek).Seal(nil, nil, s.key, []byte(s.jobID))), nil
+}
+
+// wrapKey is the key-encryption key of the ECDH secret of own and peer, for
+// the key that sender sealed to recipient. ECDH of two valid P-256 keys,
+// and HKDF-SHA256 of keySize bytes, do not fail.
+func wrapKey(
+	own *ecdh.PrivateKey,
+	sender *ecdh.PublicKey,
+	recipient *ecdh.PublicKey,
+	peer *ecdh.PublicKey,
+) []byte {
+	shared, _ := own.ECDH(peer)
+	info := kdfInfo + string(sender.Bytes()) + string(recipient.Bytes())
+	kek, _ := hkdf.Key(sha256.New, shared, nil, info, keySize)
+
+	return kek
 }
 
 // Opener opens the sealed values of one job.
@@ -121,28 +162,29 @@ type Opener struct {
 	aead  cipher.AEAD
 }
 
-// Open is the Opener of the job jobID: own, the X25519 key of the agent,
+// Open is the Opener of the job jobID: own, the P-256 key of the agent,
 // opens sealedKey, the job key that from sealed to it.
 func Open(
 	jobID string,
 	sealedKey string,
 	from string,
-	own nkeys.KeyPair,
+	own *ecdh.PrivateKey,
 ) (*Opener, error) {
 	raw, err := encoding.DecodeString(sealedKey)
 	if err != nil {
 		return nil, fmt.Errorf("open the job key: %w", err)
 	}
-	key, err := own.Open(raw, from)
+	sender, err := pki.ParseEncryptionKey(from)
 	if err != nil {
 		return nil, fmt.Errorf("open the job key: %w", err)
 	}
-	aead, err := chacha20poly1305.NewX(key)
-	if err != nil {
-		return nil, fmt.Errorf("open the job key: %w", err)
+	kek := wrapKey(own, sender, own.PublicKey(), sender)
+	key, err := gcm(kek).Open(nil, nil, raw, []byte(jobID))
+	if err != nil || len(key) != keySize {
+		return nil, errors.New("open the job key: it is not sealed to this agent for this job")
 	}
 
-	return &Opener{jobID: jobID, aead: aead}, nil
+	return &Opener{jobID: jobID, aead: gcm(key)}, nil
 }
 
 // Value is the value that v, a sealed value, holds.
@@ -154,11 +196,10 @@ func (o *Opener) Value(
 		return "", errors.New("a secret of the job is not sealed")
 	}
 	raw, err := encoding.DecodeString(text)
-	if err != nil || len(raw) < o.aead.NonceSize() {
+	if err != nil {
 		return "", errors.New("a sealed secret of the job is not valid")
 	}
-	nonce, ciphertext := raw[:o.aead.NonceSize()], raw[o.aead.NonceSize():]
-	plain, err := o.aead.Open(nil, nonce, ciphertext, []byte(o.jobID))
+	plain, err := o.aead.Open(nil, nil, raw, []byte(o.jobID))
 	if err != nil {
 		return "", errors.New("a sealed secret of the job does not open")
 	}

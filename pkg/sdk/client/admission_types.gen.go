@@ -16,7 +16,7 @@ type Admission struct {
 	// When the node was rejected or revoked.
 	DecidedAt time.Time `json:"decided_at,omitzero"`
 
-	// The node's public X25519 encryption key, which the fingerprint covers.
+	// The node's public P-256 encryption key, which the fingerprint covers.
 	EncryptionKey string `json:"encryption_key,omitempty"`
 
 	// The fingerprint of the node's two public keys: signing and encryption.

@@ -62,9 +62,12 @@ func (s *StorePublicTestSuite) joinWithUserKey(
 	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
 	userPub, _ := user.PublicKey()
 	r := pki.JoinRequest{
-		Token: "osapi_jt_t1.secret", MachineID: "m-1", Hostname: "web-01",
-		PublicKey: pub, EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
-		NATSUserKey: userPub,
+		Token:         "osapi_jt_t1.secret",
+		MachineID:     "m-1",
+		Hostname:      "web-01",
+		PublicKey:     pub,
+		EncryptionKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
+		NATSUserKey:   userPub,
 	}
 	r.Sign(priv)
 	_, err := s.watcher.Join(context.Background(), r)

@@ -1308,7 +1308,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 	m := pki.New(memfs.New(), "/tmp/pki", "agent", pki.WithEncryptionKey())
 	s.Require().NoError(m.LoadOrGenerate())
 	m.SetControllerPublicKey(controllerPub)
-	// noXKey is an enrolled agent with no X25519 key.
+	// noXKey is an enrolled agent with no P-256 encryption key.
 	noXKey := pki.New(memfs.New(), "/tmp/pki", "agent")
 	s.Require().NoError(noXKey.LoadOrGenerate())
 	noXKey.SetControllerPublicKey(controllerPub)

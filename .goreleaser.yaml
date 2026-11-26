@@ -8,7 +8,8 @@ before:
     - go mod tidy
 
 builds:
-  - env:
+  - id: osapi
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -16,15 +17,36 @@ builds:
     goarch:
       - amd64
       - arm64
-    ldflags:
+    ldflags: &ldflags
       - -s -w -X {{ .ModulePath }}/cmd.date={{ .CommitDate }}
       - -X {{ .ModulePath }}/cmd.commit={{ .Commit }}
       - -X {{ .ModulePath }}/cmd.version={{ .Version }}
       - -X {{ .ModulePath }}/cmd.builtBy=goreleaser
       - -X {{ .ModulePath }}/cmd.treeState={{ .GitTreeState }}
+  # The FIPS build links the frozen Go Cryptographic Module v1.0.0 and
+  # starts in FIPS 140-3 mode (GODEBUG fips140=on). It is the same code as
+  # the osapi build.
+  - id: osapi-fips
+    binary: osapi-fips
+    env:
+      - CGO_ENABLED=0
+      - GOFIPS140=v1.0.0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags: *ldflags
 
 archives:
-  - formats:
+  - id: osapi
+    ids: [osapi]
+    formats:
+    - binary
+  - id: osapi-fips
+    ids: [osapi-fips]
+    formats:
     - binary
 checksum:
   name_template: 'checksums.txt'
@@ -63,4 +85,10 @@ changelog:
     - title: Others
       order: 999
 universal_binaries:
-  - replace: true
+  - id: osapi
+    ids: [osapi]
+    replace: true
+  - id: osapi-fips
+    ids: [osapi-fips]
+    name_template: osapi-fips
+    replace: true

@@ -21,7 +21,6 @@
 package pkikey
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -31,8 +30,6 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
-
-	"github.com/nats-io/nkeys"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/audit"
@@ -116,7 +113,7 @@ func Create(
 	if err != nil {
 		return Key{}, err
 	}
-	if s.typ == typeAgentXKey {
+	if s.typ == typeAgentEKey {
 		// The two keys of the agent are made together.
 		s, _ = find(d, agentName)
 	}
@@ -280,8 +277,8 @@ func read(
 	switch s.typ {
 	case typeSigning:
 		err = readSigning(d, s, &k)
-	case typeAgentXKey:
-		k.PublicKey, err = readXKey(d, s.files()[0])
+	case typeAgentEKey:
+		k.PublicKey, err = readEKey(d, s.files()[0])
 	case typeJetStream:
 		if s.file == "" {
 			k.State, k.File = StateOff, ""
@@ -331,7 +328,7 @@ func readSigning(
 	k.Fingerprint = pki.FingerprintOf(pub)
 	if s.name == agentName {
 		x, _ := find(d, "agent-encryption")
-		if xpub, err := readXKey(d, x.files()[0]); err == nil {
+		if xpub, err := readEKey(d, x.files()[0]); err == nil {
 			k.Fingerprint = pki.FingerprintOfKeys(pub, xpub)
 		}
 	}
@@ -339,8 +336,9 @@ func readSigning(
 	return nil
 }
 
-// readXKey is the public key of the X25519 seed in file.
-func readXKey(
+// readEKey is the public P-256 key of the encryption key in file, in
+// pki.EncryptionKeyEncoding.
+func readEKey(
 	d Deps,
 	file string,
 ) (string, error) {
@@ -348,12 +346,12 @@ func readXKey(
 	if err != nil {
 		return "", err
 	}
-	kp, err := nkeys.FromCurveSeed(bytes.TrimSpace(data))
+	key, err := pki.ParseEncryptionKeyFile(data)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", file, err)
 	}
 
-	return kp.PublicKey()
+	return pki.EncodeEncryptionKey(key.PublicKey()), nil
 }
 
 // readJetStream reads the JetStream key in file, and is its ID.

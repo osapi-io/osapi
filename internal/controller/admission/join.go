@@ -39,6 +39,11 @@ import (
 // it asks the controller to admit.
 var ErrJoinSignature = errors.New("the join request is not signed by its key")
 
+// ErrJoinEncryptionKey is a join request whose encryption key is not a
+// public P-256 key in pki.EncryptionKeyEncoding, such as the X25519 key of an
+// older agent.
+var ErrJoinEncryptionKey = errors.New("the join request has no valid P-256 encryption key")
+
 // ErrNoJoinTokens is a controller with no store of join tokens.
 var ErrNoJoinTokens = errors.New("this controller takes no join")
 
@@ -59,7 +64,8 @@ func (w *Watcher) SetJoinTokens(
 // admission.join span: the operator made the token, so the token is the
 // decision that admit records. The admitted record names the token. It
 // returns the controller's public key, which the agent keeps. A request that
-// its key did not sign is ErrJoinSignature; a token that does not admit is
+// its key did not sign is ErrJoinSignature; one with no valid encryption
+// key is ErrJoinEncryptionKey; a token that does not admit is
 // one of jointoken's errors, and admits nothing.
 func (w *Watcher) Join(
 	ctx context.Context,
@@ -94,6 +100,9 @@ func (w *Watcher) join(
 	}
 	if !req.Verify() {
 		return nil, nil, ErrJoinSignature
+	}
+	if !pki.ValidEncryptionKey(req.EncryptionKey) {
+		return nil, nil, ErrJoinEncryptionKey
 	}
 	// A join that admitted the machine, whose reply did not reach the
 	// agent, is answered again: the same machine, key and token take no

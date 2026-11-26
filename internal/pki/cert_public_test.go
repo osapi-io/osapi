@@ -25,6 +25,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/fips140"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -49,7 +50,9 @@ func TestCertPublicTestSuite(t *testing.T) {
 }
 
 // certPEM is a self-signed certificate of key, signed with alg, valid for
-// a day from now, for web-01 and 10.0.0.1.
+// a day from now, for web-01 and 10.0.0.1. FIPS 140-3 mode does not make a
+// certificate with an algorithm that it does not approve, so a test that
+// runs with GODEBUG=fips140=only makes it without the enforcement.
 func (s *CertPublicTestSuite) certPEM(
 	key crypto.Signer,
 	alg x509.SignatureAlgorithm,
@@ -59,7 +62,11 @@ func (s *CertPublicTestSuite) certPEM(
 		SignatureAlgorithm: alg, DNSNames: []string{"web-01"},
 		IPAddresses: []net.IP{net.ParseIP("10.0.0.1")},
 	}
-	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, key.Public(), key)
+	var der []byte
+	var err error
+	fips140.WithoutEnforcement(func() {
+		der, err = x509.CreateCertificate(rand.Reader, tmpl, tmpl, key.Public(), key)
+	})
 	s.Require().NoError(err)
 
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
@@ -68,7 +75,8 @@ func (s *CertPublicTestSuite) certPEM(
 func (s *CertPublicTestSuite) TestReadCert() {
 	p256, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	p224, _ := ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
-	rsa1024, _ := rsa.GenerateKey(rand.Reader, 1024)
+	var rsa1024 *rsa.PrivateKey
+	fips140.WithoutEnforcement(func() { rsa1024, _ = rsa.GenerateKey(rand.Reader, 1024) })
 	rsa2048, _ := rsa.GenerateKey(rand.Reader, 2048)
 	_, ed, _ := ed25519.GenerateKey(rand.Reader)
 	tests := []struct {

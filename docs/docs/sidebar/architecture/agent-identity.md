@@ -64,7 +64,7 @@ sequenceDiagram
     participant C as Controller
     participant O as Administrator
 
-    A->>A: make agent.key and agent.xkey in key_dir
+    A->>A: make agent.key and agent.ekey in key_dir
     A->>N: publish osapi.enroll.request (machine ID, hostname, public keys)
     N->>C: deliver the request
     C->>N: record the machine as pending in the enrollment bucket
@@ -84,11 +84,11 @@ with no administrator. A join token also admits at once
 1. **The agent makes its keys.** When the agent starts for the first time, it
    makes two keys in `agent.pki.key_dir` (`/etc/osapi/pki/agent` by default):
 
-   | File         | Mode | Key                                            |
-   | ------------ | ---- | ---------------------------------------------- |
-   | `agent.key`  | 0600 | Ed25519 signing key. It signs results.         |
-   | `agent.pub`  | 0644 | The public half of the signing key.            |
-   | `agent.xkey` | 0600 | X25519 encryption key, as an nkeys curve seed. |
+   | File         | Mode | Key                                                      |
+   | ------------ | ---- | -------------------------------------------------------- |
+   | `agent.key`  | 0600 | Ed25519 signing key. It signs results.                   |
+   | `agent.pub`  | 0644 | The public half of the signing key.                      |
+   | `agent.ekey` | 0600 | P-256 ECDH encryption key, as a PKCS #8 PEM private key. |
 
    One key does not do both jobs. The signing key signs. The encryption key
    opens the secrets that the controller seals for this agent
@@ -96,19 +96,19 @@ with no administrator. A join token also admits at once
    key only when its file does not exist.
 
    The user that runs the agent must own the directory. The agent does not
-   replace a key that it cannot read, or half of a key pair, or an `agent.xkey`
-   that is not a curve seed. It writes the error to the log and stops. A new key
+   replace a key that it cannot read, or half of a key pair, or an `agent.ekey`
+   that is not a P-256 key. It writes the error to the log and stops. A new key
    is not the key that the controller accepted. Thus a host with a replaced key
    gets no work until you enroll it again. If you change the user of the agent,
    also change the owner of the directory (`chown -R osapi /etc/osapi/pki`).
 
 1. **The agent sends an enrollment request.** It publishes a request to the
    controller through NATS. The request has its machine ID, hostname, the two
-   public keys and the fingerprint. The fingerprint is the SHA-256 of the
-   Ed25519 public key, then the X25519 public key. Thus the administrator who
-   admits the fingerprint admits the two keys. The controller does not keep a
-   request without an encryption key. An agent older than the controller sends
-   that request. Upgrade the agent.
+   public keys and the fingerprint. The public encryption key is base64url, with
+   no padding, of the 65 bytes of the uncompressed P-256 point. The fingerprint
+   is the SHA-256 of the 32 bytes of the Ed25519 public key, then those 65
+   bytes. Thus the administrator who admits the fingerprint admits the two keys.
+   The controller does not keep a request without a valid P-256 encryption key.
 
 1. **The agent waits.** The controller stores the request in a JetStream KV
    bucket. The agent goes into the pending state and waits. **It publishes its
@@ -131,15 +131,20 @@ with no administrator. A join token also admits at once
    restarts, the agent loads the controller key from disk and does not enroll
    again.
 
-### An agent admitted before the encryption key
+### An agent admitted with an X25519 key
 
-An agent that was admitted before agents had an encryption key makes
-`agent.xkey` when you upgrade it. Its fingerprint changes, and its admitted
-record has no encryption key. Enroll it again:
+Before osapi-io/osapi#1382, the encryption key of an agent was an X25519 key in
+`agent.xkey`. FIPS 140-3 does not approve X25519. When you upgrade the agent, it
+makes a new P-256 key in `agent.ekey` and removes `agent.xkey`. Its fingerprint
+changes. Its admitted record holds the old X25519 key, and the controller cannot
+seal a secret to that key. Thus a job with a secret for that agent fails at the
+controller with `seal the job key`. A job with no secret continues to operate.
+Admit the agent again with its new key:
 
-1. On the machine, delete `enrolled-controller.pub` in `agent.pki.key_dir`
-   (`controller.pub` on an agent admitted before osapi-io/osapi#1398), and
-   restart the agent. It sends a new request with the two keys.
+1. On the machine, delete `enrolled-controller.pub` in `agent.pki.key_dir`, and
+   restart the agent. It sends a new enrollment request with the two keys. An
+   agent that joined with a join string does this too: after its first join it
+   reads its NATS user from `agent.pki.key_dir`, not the join string.
 1. On the machine, run `osapi pki key get --name agent`.
 1. Admit the machine with that fingerprint. The pending record shows the old
    fingerprint as `previous_fingerprint`.

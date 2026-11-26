@@ -29,7 +29,7 @@ import (
 // The types of key, by how osapi reads its file.
 const (
 	typeSigning    = "signing"
-	typeAgentXKey  = "xkey"
+	typeAgentEKey  = "ekey"
 	typeJetStream  = "jetstream"
 	typeVault      = "vault"
 	vaultPrefix    = "vault:"
@@ -47,7 +47,7 @@ type source struct {
 	algorithm string
 	typ       string
 	// dir and prefix are the key directory and the prefix of the files of a
-	// key of package pki: prefix.key, prefix.pub and prefix.xkey.
+	// key of package pki: prefix.key, prefix.pub and prefix.ekey.
 	dir    string
 	prefix string
 	// file is the file of a secret key, and env its environment variable
@@ -76,7 +76,7 @@ func sources(
 		},
 		{
 			name: "agent-encryption", kind: KindEncryption, component: "agent",
-			algorithm: "X25519", typ: typeAgentXKey,
+			algorithm: "ECDH P-256", typ: typeAgentEKey,
 			dir: c.Agent.PKI.KeyDir, prefix: "agent",
 		},
 		{
@@ -99,15 +99,15 @@ func sources(
 }
 
 // files are the files of s: the private and the public file of a signing
-// key, the seed of an X25519 key, or the file of a secret key.
+// key, the PEM file of a P-256 encryption key, or the file of a secret key.
 func (s source) files() []string {
 	switch s.typ {
 	case typeSigning:
 		return []string{
 			filepath.Join(s.dir, s.prefix+".key"), filepath.Join(s.dir, s.prefix+".pub"),
 		}
-	case typeAgentXKey:
-		return []string{filepath.Join(s.dir, s.prefix+".xkey")}
+	case typeAgentEKey:
+		return []string{filepath.Join(s.dir, s.prefix+".ekey")}
 	default:
 		return []string{s.file}
 	}

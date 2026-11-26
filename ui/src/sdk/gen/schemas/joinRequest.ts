@@ -7,7 +7,7 @@
 
 export interface JoinRequest {
   /**
-     * The agent's X25519 encryption key, in the nkeys form.
+     * The agent's public P-256 encryption key: base64url, with no padding, of the 65-byte uncompressed point.
      * @maxLength 128
      */
   encryption_key: string;

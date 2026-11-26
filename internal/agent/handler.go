@@ -661,8 +661,8 @@ func classifyProviderError(
 }
 
 // openJob is the Opener of the sealed secrets of req: the job key that the
-// controller sealed to this agent, opened with its X25519 key. A job with
-// no key for this agent, or an agent with no X25519 key, is
+// controller sealed to this agent, opened with its P-256 key. A job with
+// no key for this agent, or an agent with no P-256 key, is
 // seal.ErrNotSealedToAgent.
 func (a *Agent) openJob(
 	req job.Request,

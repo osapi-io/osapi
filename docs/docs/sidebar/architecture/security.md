@@ -53,7 +53,7 @@ to a different host.
 PKI is always on. An agent gets no work until an administrator accepts it:
 
 1. When the agent starts for the first time, it makes an Ed25519 signing key
-   pair and an X25519 encryption key in `agent.pki.key_dir`.
+   pair and a P-256 encryption key in `agent.pki.key_dir`.
 1. It sends an enrollment request and waits. `osapi client admission list` shows
    it as pending.
 1. An administrator runs `osapi pki key get --name agent` on the machine, and

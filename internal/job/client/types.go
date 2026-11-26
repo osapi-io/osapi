@@ -64,8 +64,8 @@ type AgentKey struct {
 	SupersededKey ed25519.PublicKey
 	// SupersededUntil is the instant the superseded key stops being accepted.
 	SupersededUntil time.Time
-	// EncryptionKey is the public X25519 key of the agent, in the nkeys
-	// form, that the controller seals the secrets of a job to. Empty for an
+	// EncryptionKey is the public P-256 key of the agent, in
+	// pki.EncryptionKeyEncoding, that the controller seals the secrets of a job to. Empty for an
 	// agent that enrolled before agents had one.
 	EncryptionKey string
 }

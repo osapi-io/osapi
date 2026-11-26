@@ -36,7 +36,7 @@ var (
 		Online:        true,
 		LastSeen:      &sampleSeen,
 		Fingerprint:   "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
-		EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		EncryptionKey: "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 		RequestedAt:   &sampleRequested,
 	}
 
@@ -51,7 +51,7 @@ var (
 				Online:        true,
 				LastSeen:      &sampleSeen,
 				Fingerprint:   "SHA256:9a7c3e1b5d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c2e4b6d8f0a1c3e5b7d9f1a3c",
-				EncryptionKey: "XBYF3LNXM7EBLLEZY3ANJUQIF5G2WZ6ICP3UDHLG42RMQHM6Y4QQBN75",
+				EncryptionKey: "BMZNeoFQM2Jn2FyzAJvsHXrFT1T8vNHfsPS1c09_uxIyhom9_kn_vJIRmuDL3MYmZjkWWwSbXSjzJEZOKzQrots",
 				AdmittedAt:    &sampleRequested,
 			},
 		},

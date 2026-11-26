@@ -72,7 +72,7 @@ type Record struct {
 	MachineID   string `json:"machine_id"`
 	Hostname    string `json:"hostname"`
 	Fingerprint string `json:"fingerprint"`
-	// EncryptionKey is the machine's public X25519 key, which the
+	// EncryptionKey is the machine's public P-256 key, which the
 	// fingerprint covers.
 	EncryptionKey string               `json:"encryption_key,omitempty"`
 	State         types.AdmissionState `json:"state"`

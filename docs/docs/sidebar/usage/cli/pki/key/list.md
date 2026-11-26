@@ -4,7 +4,7 @@ List the keys, with their state, algorithm and fingerprint or ID.
 
 Run this on the host. It reads each key of osapi that the config names: the
 controller's Ed25519 signing key in controller.pki.key_dir, the agent's Ed25519
-signing key and X25519 encryption key in agent.pki.key_dir, the key of the
+signing key and P-256 encryption key in agent.pki.key_dir, the key of the
 JetStream store in nats.server.jetstream.key_file, and the key of each vault of
 type nats. A public key shows its fingerprint, and a secret key shows its ID:
 never the key. A component that has not started on this host made no key: its
@@ -30,7 +30,7 @@ $ osapi pki key list
   [38;2;10;143;176mNAME              [0m[38;2;10;143;176mKIND        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM          [0m[38;2;10;143;176mKEY ID[0m
   [1mcontroller[0m        signing     controller  ok     Ed25519            [38;2;138;138;138m[0m
   [1magent[0m             signing     agent       ok     Ed25519            [38;2;138;138;138m[0m
-  [1magent-encryption[0m  encryption  agent       ok     X25519             [38;2;138;138;138m[0m
+  [1magent-encryption[0m  encryption  agent       ok     ECDH P-256         [38;2;138;138;138m[0m
   [1mjetstream[0m         encryption  nats        ok     ChaCha20-Poly1305  [38;2;138;138;138m7f3a9c1e5b2d8f40[0m
   [1mvault:default[0m     encryption  vault       ok     AES-256-GCM        [38;2;138;138;138mb8e14a2c9d3f6071[0m
 ```
@@ -64,9 +64,9 @@ With `--json`, the command prints:
       "kind": "encryption",
       "component": "agent",
       "state": "ok",
-      "file": "/etc/osapi/pki/agent/agent.xkey",
-      "algorithm": "X25519",
-      "public_key": "XA3NQJ6DPZ2Y7C4ULM5WRSVBKTEHGOIF63QXN4J2PDLW7YKZSMBUCRVE"
+      "file": "/etc/osapi/pki/agent/agent.ekey",
+      "algorithm": "ECDH P-256",
+      "public_key": "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs"
     },
     {
       "name": "jetstream",

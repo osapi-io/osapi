@@ -29,7 +29,7 @@ $ osapi client admission get --machine-id d530664edc1c431eb5ef1e9dfd6617a5
   [38;2;10;143;176mOnline:[0m          yes
   [38;2;10;143;176mLast seen:[0m       8s
   [38;2;10;143;176mFingerprint:[0m     SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a
-  [38;2;10;143;176mEncryption key:[0m  XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM
+  [38;2;10;143;176mEncryption key:[0m  BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs
   [38;2;10;143;176mRequested at:[0m    20m
 ```
 
@@ -43,7 +43,7 @@ With `--json`, the API's response:
   "online": true,
   "last_seen": "2026-01-15T09:59:52Z",
   "fingerprint": "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
-  "encryption_key": "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+  "encryption_key": "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
   "requested_at": "2026-01-15T09:40:00Z"
 }
 ```

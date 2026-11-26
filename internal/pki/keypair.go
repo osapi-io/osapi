@@ -57,7 +57,7 @@ func defaultGenerateKeyPair() (ed25519.PublicKey, ed25519.PrivateKey, error) {
 
 // New creates a PKI Manager with the given filesystem, key directory path,
 // and key prefix (e.g., "agent" or "controller"). The prefix determines
-// the key filenames: {prefix}.key and {prefix}.pub, and {prefix}.xkey when
+// the key filenames: {prefix}.key and {prefix}.pub, and {prefix}.ekey when
 // the manager has an encryption key (WithEncryptionKey).
 func New(
 	fs avfs.VFS,
@@ -83,7 +83,7 @@ func New(
 // generate: a new key is not the one the controller accepted, so replacing it
 // drops the host out of targeting until an operator enrolls it again.
 //
-// A manager made WithEncryptionKey then loads or generates its X25519 key by
+// A manager made WithEncryptionKey then loads or generates its P-256 encryption key by
 // the same rules.
 func (m *Manager) LoadOrGenerate() error {
 	if err := m.loadOrGenerateSigningKey(); err != nil {

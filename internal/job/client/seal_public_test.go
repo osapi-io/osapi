@@ -22,6 +22,8 @@ package client_test
 
 import (
 	"context"
+	"crypto/ecdh"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -30,13 +32,13 @@ import (
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
-	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/seal"
 )
@@ -52,8 +54,8 @@ type SealPublicTestSuite struct {
 	ctx      context.Context
 	mockCtrl *gomock.Controller
 	mockNC   *jobmocks.MockNATSClient
-	web      nkeys.KeyPair
-	db       nkeys.KeyPair
+	web      *ecdh.PrivateKey
+	db       *ecdh.PrivateKey
 }
 
 func (s *SealPublicTestSuite) SetupTest() {
@@ -62,9 +64,9 @@ func (s *SealPublicTestSuite) SetupTest() {
 	s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
 
 	var err error
-	s.web, err = nkeys.CreateCurveKeys()
+	s.web, err = ecdh.P256().GenerateKey(rand.Reader)
 	s.Require().NoError(err)
-	s.db, err = nkeys.CreateCurveKeys()
+	s.db, err = ecdh.P256().GenerateKey(rand.Reader)
 	s.Require().NoError(err)
 }
 
@@ -126,19 +128,16 @@ func (s *SealPublicTestSuite) newClient(
 }
 
 func (s *SealPublicTestSuite) pub(
-	kp nkeys.KeyPair,
+	kp *ecdh.PrivateKey,
 ) string {
-	pub, err := kp.PublicKey()
-	s.Require().NoError(err)
-
-	return pub
+	return pki.EncodeEncryptionKey(kp.PublicKey())
 }
 
 // opened is the env of req's data, opened by own, the key of the agent id.
 func (s *SealPublicTestSuite) opened(
 	req *job.Request,
 	id string,
-	own nkeys.KeyPair,
+	own *ecdh.PrivateKey,
 ) map[string]secret.Value {
 	o, err := seal.Open(req.JobID, req.SealedKeys[id], req.SealedFrom, own)
 	s.Require().NoError(err)
@@ -238,7 +237,7 @@ func (s *SealPublicTestSuite) TestRequest() {
 			wantErr: "list the agents to seal the job to",
 		},
 		{
-			name: "when the key of an agent is not an X25519 key, it is an error",
+			name: "when the key of an agent is not a P-256 key, it is an error",
 			store: func() client.AgentKeyStore {
 				return s.store(map[string]string{"m-web": "not-a-key"})
 			},

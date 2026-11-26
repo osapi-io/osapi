@@ -21,11 +21,9 @@
 package pki
 
 import (
+	"crypto/ecdh"
 	"crypto/ed25519"
-	"crypto/rand"
-	"io"
-
-	"github.com/nats-io/nkeys"
+	"crypto/x509"
 )
 
 // SetGenerateKeyPairFn overrides the generateKeyPairFn function for testing.
@@ -40,30 +38,22 @@ func ResetGenerateKeyPairFn() {
 	generateKeyPairFn = defaultGenerateKeyPair
 }
 
-// SetCurveRand overrides the entropy of a new X25519 key for testing.
-func SetCurveRand(
-	r io.Reader,
+// SetGenerateEncryptionKeyFn overrides how a new encryption key is made.
+func SetGenerateEncryptionKeyFn(
+	fn func() (*ecdh.PrivateKey, error),
 ) {
-	curveRand = r
+	generateEncryptionKeyFn = fn
 }
 
-// SetGenerateCurveSeedFn overrides the generateCurveSeedFn function for testing.
-func SetGenerateCurveSeedFn(
-	fn func() ([]byte, error),
+// SetMarshalEncryptionKeyFn overrides the PKCS #8 encoding of a key.
+func SetMarshalEncryptionKeyFn(
+	fn func(any) ([]byte, error),
 ) {
-	generateCurveSeedFn = fn
+	marshalEncryptionKeyFn = fn
 }
 
-// SetFromCurveSeedFn overrides the fromCurveSeedFn function for testing.
-func SetFromCurveSeedFn(
-	fn func([]byte) (nkeys.KeyPair, error),
-) {
-	fromCurveSeedFn = fn
-}
-
-// ResetCurveFns restores the defaults of the X25519 test hooks.
-func ResetCurveFns() {
-	curveRand = rand.Reader
-	generateCurveSeedFn = generateCurveSeed
-	fromCurveSeedFn = nkeys.FromCurveSeed
+// ResetEncryptionKeyFns restores the defaults of the encryption key hooks.
+func ResetEncryptionKeyFns() {
+	generateEncryptionKeyFn = generateEncryptionKey
+	marshalEncryptionKeyFn = x509.MarshalPKCS8PrivateKey
 }

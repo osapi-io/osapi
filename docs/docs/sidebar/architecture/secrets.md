@@ -82,19 +82,18 @@ The input of a behavior is the data of its job, and JetStream and the job KV
 keep that data. Thus the job client seals each secret of the data before it
 stores the job (`request` in `internal/job/client`, and `internal/secret/seal`):
 
-1. It makes a new random job key, and encrypts each `secret.Value` that is not
-   empty with it, with XChaCha20-Poly1305 and a new nonce for each value. The
-   job ID is the additional data, so a value that somebody copies to a different
-   job does not open. `secret.PlainFunc` writes each value as `sealed:` and the
-   nonce and the ciphertext, in base64.
-2. It makes a new X25519 key for the job, and seals the job key to the X25519
-   key of each agent that the target can reach, with NaCl `box` (nkeys xkeys
-   `Seal`). `job.Recipients` gives the agents: each agent that takes jobs for
-   `_all`, `_any` or a label, and the agent of one host. The admission store
-   gives the X25519 key of each agent.
+1. It makes a new random 256-bit job key, and encrypts each `secret.Value` that
+   is not empty with it, with AES-256-GCM and a new random 12-byte nonce for
+   each value. The job ID is the additional data, so a value that somebody
+   copies to a different job does not open. `secret.PlainFunc` writes each value
+   as `sealed:` and base64url of the nonce, the ciphertext and the tag.
+2. It makes a new P-256 key for the job, and seals the job key to the P-256 key
+   of each agent that the target can reach. `job.Recipients` gives the agents:
+   each agent that takes jobs for `_all`, `_any` or a label, and the agent of
+   one host. The admission store gives the P-256 key of each agent.
 3. The operation of the job has `sealed_keys`, a map from machine ID to the
-   sealed job key, and `sealed_from`, the public X25519 key that sealed them.
-   The controller signs the job as before, so an agent knows that the controller
+   sealed job key, and `sealed_from`, the public P-256 key that sealed them. The
+   controller signs the job as before, so an agent knows that the controller
    sealed it.
 
 ```mermaid
@@ -105,17 +104,37 @@ sequenceDiagram
     participant P as Provider
 
     C->>C: make a job key, encrypt each secret of the input with it
-    C->>C: seal the job key to the X25519 key of each agent of the target
+    C->>C: seal the job key to the P-256 key of each agent of the target
     C->>C: sign the job
     C->>N: write the job: sealed values, sealed_keys, sealed_from
     N->>A: deliver the job
     A->>A: verify the controller's signature
-    A->>A: open its job key with its X25519 key, then each value
+    A->>A: open its job key with its P-256 key, then each value
     A->>P: call the method with the plain values
     Note over A,P: the plain values live only in this call
 ```
 
-The agent opens its own job key with its X25519 key when it takes the job
+### The wire format
+
+Each algorithm of the seal is a FIPS 140-3 approved algorithm, from the Go
+standard library: ECDH on P-256 (`crypto/ecdh`), HKDF-SHA256 (`crypto/hkdf`) and
+AES-256-GCM (`crypto/aes`, `crypto/cipher`). The seal has one construction, and
+no other algorithm. Each text below is base64url with no padding.
+
+| Item                 | Form                                                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A public key         | The 65 bytes of the uncompressed P-256 point.                                                                                                                                                                          |
+| `sealed_from`        | The public key of the P-256 key that the controller makes for the job.                                                                                                                                                 |
+| A key-encryption key | HKDF-SHA256 of the ECDH secret of `sealed_from` and the key of the agent. It has no salt. Its info is `osapi-seal-v1`, then the 65 bytes of `sealed_from`, then the 65 bytes of the key of the agent. It has 32 bytes. |
+| A sealed job key     | The 12-byte nonce, then the 32-byte job key that AES-256-GCM encrypts with the key-encryption key, then the 16-byte tag. The job ID is the additional data.                                                            |
+| A sealed value       | `sealed:`, then the 12-byte nonce, the value that AES-256-GCM encrypts with the job key, and the 16-byte tag. The job ID is the additional data.                                                                       |
+
+Each nonce is random, from `cipher.NewGCMWithRandomNonce`. FIPS 140-3 only mode
+refuses a GCM nonce that the caller selects. The agent refuses a sealed key or a
+sealed value that is too short, that somebody changed, that is for a different
+job, or that was sealed to a different key.
+
+The agent opens its own job key with its P-256 key when it takes the job
 (`openJob` in `internal/agent`). The dispatch of a behavior decodes the input
 into the type of the method, opens each `secret.Value` with `secret.Map`, and
 gives the provider the input. The values live only in that call.
@@ -123,9 +142,9 @@ gives the provider the input. The values live only in that call.
 An agent with no key in `sealed_keys` fails the job with
 `seal.ErrNotSealedToAgent`, "the job was not sealed to this agent", and does not
 run it. Such an agent joined after the controller queued the job, or has no
-X25519 key.
+P-256 key.
 
-The controller always has the X25519 key of each admitted agent, because PKI is
+The controller always has the P-256 key of each admitted agent, because PKI is
 always on. A job client with no agent keys, such as the one of an agent, refuses
 a job with a secret with `client.ErrNoAgentKeys`. Thus no secret goes in a job
 as plain text.

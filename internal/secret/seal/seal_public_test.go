@@ -22,14 +22,20 @@ package seal_test
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/ecdh"
+	"crypto/hkdf"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"strings"
 	"testing"
 
-	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/seal"
 )
@@ -37,35 +43,61 @@ import (
 type SealPublicTestSuite struct {
 	suite.Suite
 
-	agent nkeys.KeyPair
-	other nkeys.KeyPair
+	agent *ecdh.PrivateKey
+	other *ecdh.PrivateKey
 }
 
 func (s *SealPublicTestSuite) SetupTest() {
 	var err error
-	s.agent, err = nkeys.CreateCurveKeys()
+	s.agent, err = ecdh.P256().GenerateKey(rand.Reader)
 	s.Require().NoError(err)
-	s.other, err = nkeys.CreateCurveKeys()
+	s.other, err = ecdh.P256().GenerateKey(rand.Reader)
 	s.Require().NoError(err)
 }
 
 func (s *SealPublicTestSuite) TearDownTest() {
-	seal.ResetCreateCurveKeys()
+	seal.ResetCreateKey()
 }
 
-// sealed is a value sealed for the job jobID, and the job key sealed to
-// s.agent.
+// sealed is a value sealed for the job jobID, the job key sealed to
+// s.agent, and the key that sealed it.
 func (s *SealPublicTestSuite) sealed(
 	jobID string,
 	value secret.Value,
 ) (string, string, string) {
 	sealer, err := seal.New(jobID)
 	s.Require().NoError(err)
-	pub, _ := s.agent.PublicKey()
-	key, err := sealer.KeyFor(pub)
+	key, err := sealer.KeyFor(pki.EncodeEncryptionKey(s.agent.PublicKey()))
 	s.Require().NoError(err)
 
 	return sealer.Value(value), key, sealer.From()
+}
+
+// gcmOf is AES-256-GCM with key, as the seal uses it: the 12-byte nonce in
+// front of the ciphertext.
+func gcmOf(
+	key []byte,
+) cipher.AEAD {
+	block, _ := aes.NewCipher(key)
+	aead, _ := cipher.NewGCMWithRandomNonce(block)
+
+	return aead
+}
+
+// kek is the key-encryption key of the package documentation, for a key
+// that from sealed to the agent.
+func (s *SealPublicTestSuite) kek(
+	from string,
+) []byte {
+	fromPub, err := pki.ParseEncryptionKey(from)
+	s.Require().NoError(err)
+	shared, err := s.agent.ECDH(fromPub)
+	s.Require().NoError(err)
+	k, err := hkdf.Key(sha256.New, shared, nil,
+		"osapi-seal-v1"+string(fromPub.Bytes())+string(s.agent.PublicKey().Bytes()), 32)
+	s.Require().NoError(err)
+
+	return k
 }
 
 func (s *SealPublicTestSuite) TestRoundTrip() {
@@ -83,8 +115,30 @@ func (s *SealPublicTestSuite) TestRoundTrip() {
 	s.NotEqual(value, again, "each seal has its own nonce")
 }
 
+// TestWireFormat opens a sealed key and a sealed value with the steps that
+// the package documentation gives, and no code of the package.
+func (s *SealPublicTestSuite) TestWireFormat() {
+	value, key, from := s.sealed("job-1", "hunter2")
+
+	raw, err := base64.RawURLEncoding.DecodeString(key)
+	s.Require().NoError(err)
+	s.Len(raw, 12+32+16, "the nonce, the job key and the tag")
+	jobKey, err := gcmOf(s.kek(from)).Open(nil, nil, raw, []byte("job-1"))
+	s.Require().NoError(err)
+	s.Len(jobKey, 32)
+
+	sealedValue, err := base64.RawURLEncoding.DecodeString(strings.TrimPrefix(value, seal.Prefix))
+	s.Require().NoError(err)
+	plain, err := gcmOf(jobKey).Open(nil, nil, sealedValue, []byte("job-1"))
+	s.Require().NoError(err)
+	s.Equal("hunter2", string(plain))
+}
+
 func (s *SealPublicTestSuite) TestOpenRefuses() {
 	value, key, from := s.sealed("job-1", "hunter2")
+	otherValue, _, _ := s.sealed("job-2", "hunter2")
+	tampered := []byte(key)
+	tampered[len(tampered)-1] ^= 1
 	tests := []struct {
 		name    string
 		open    func() (*seal.Opener, error)
@@ -97,26 +151,48 @@ func (s *SealPublicTestSuite) TestOpenRefuses() {
 			wantErr: "open the job key",
 		},
 		{
+			name:    "when the key that sealed it is not a P-256 key, it does not open",
+			open:    func() (*seal.Opener, error) { return seal.Open("job-1", key, "junk!", s.agent) },
+			wantErr: "open the job key: encryption key",
+		},
+		{
 			name:    "when the key of a different agent opens it, it does not open",
 			open:    func() (*seal.Opener, error) { return seal.Open("job-1", key, from, s.other) },
+			wantErr: "it is not sealed to this agent for this job",
+		},
+		{
+			name:    "when the job key was sealed for a different job, it does not open",
+			open:    func() (*seal.Opener, error) { return seal.Open("job-2", key, from, s.agent) },
+			wantErr: "it is not sealed to this agent for this job",
+		},
+		{
+			name:    "when the sealed job key was changed, it does not open",
+			open:    func() (*seal.Opener, error) { return seal.Open("job-1", string(tampered), from, s.agent) },
 			wantErr: "open the job key",
+		},
+		{
+			name:    "when the sealed job key is shorter than a nonce, it does not open",
+			open:    func() (*seal.Opener, error) { return seal.Open("job-1", "AAAA", from, s.agent) },
+			wantErr: "it is not sealed to this agent for this job",
 		},
 		{
 			name: "when the job key has the wrong size, it does not open",
 			open: func() (*seal.Opener, error) {
-				fromKP, _ := nkeys.CreateCurveKeys()
-				fromPub, _ := fromKP.PublicKey()
-				pub, _ := s.agent.PublicKey()
-				short, _ := fromKP.Seal([]byte("short"), pub)
+				short := gcmOf(s.kek(from)).Seal(nil, nil, []byte("short"), []byte("job-1"))
 
-				return seal.Open("job-1", encode(short), fromPub, s.agent)
+				return seal.Open(
+					"job-1",
+					base64.RawURLEncoding.EncodeToString(short),
+					from,
+					s.agent,
+				)
 			},
-			wantErr: "open the job key",
+			wantErr: "it is not sealed to this agent for this job",
 		},
 		{
-			name:    "when the value was sealed for a different job, it does not open",
-			open:    func() (*seal.Opener, error) { return seal.Open("job-2", key, from, s.agent) },
-			value:   value,
+			name:    "when the value is of a different job, it does not open",
+			open:    func() (*seal.Opener, error) { return seal.Open("job-1", key, from, s.agent) },
+			value:   otherValue,
 			wantErr: "a sealed secret of the job does not open",
 		},
 		{
@@ -132,10 +208,16 @@ func (s *SealPublicTestSuite) TestOpenRefuses() {
 			wantErr: "a sealed secret of the job is not valid",
 		},
 		{
-			name:    "when the sealed value is shorter than a nonce, it is refused",
+			name:    "when the sealed value is shorter than a nonce, it does not open",
 			open:    func() (*seal.Opener, error) { return seal.Open("job-1", key, from, s.agent) },
 			value:   seal.Prefix + "AAAA",
-			wantErr: "a sealed secret of the job is not valid",
+			wantErr: "a sealed secret of the job does not open",
+		},
+		{
+			name:    "when the sealed value was changed, it does not open",
+			open:    func() (*seal.Opener, error) { return seal.Open("job-1", key, from, s.agent) },
+			value:   value[:len(value)-2] + "AA",
+			wantErr: "a sealed secret of the job does not open",
 		},
 	}
 
@@ -161,7 +243,7 @@ func (s *SealPublicTestSuite) TestNewAndKeyForFail() {
 	_, err = sealer.KeyFor("not-a-key")
 	s.ErrorContains(err, "seal the job key")
 
-	seal.SetCreateCurveKeys(func() (nkeys.KeyPair, error) { return nil, errors.New("no entropy") })
+	seal.SetCreateKey(func() (*ecdh.PrivateKey, error) { return nil, errors.New("no entropy") })
 	_, err = seal.New("job-1")
 	s.ErrorContains(err, "no entropy")
 }
@@ -178,11 +260,4 @@ func TestSealPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(SealPublicTestSuite))
-}
-
-// encode is raw in the text form of a sealed key.
-func encode(
-	raw []byte,
-) string {
-	return base64.RawURLEncoding.EncodeToString(raw)
 }
