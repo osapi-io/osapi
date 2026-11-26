@@ -29,6 +29,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -76,7 +77,7 @@ func (s *CommandSmokeSuite) TestRefusals() {
 		for i, r := range c.refusals {
 			count++
 			s.Run(fmt.Sprintf("%s %d", c.path, i+1), func() {
-				args := append(strings.Fields(c.path), command.Args(r)...)
+				args := append(strings.Fields(c.path), refusalArgs(r)...)
 				stdout, stderr, code := runDirect(s.fx.dir, command.Stdin(r), args...)
 				s.NotZero(code, "%s: a refusal succeeded: %s", strings.Join(args, " "), stdout)
 				s.NotRegexp(connectionError, stderr,
@@ -116,6 +117,30 @@ func (s *CommandSmokeSuite) TestExamples() {
 			})
 		}
 	}
+}
+
+// refusalArgs are the flags of r, a refusal's input. A field that r leaves
+// zero and whose flag has a default, such as join token create's
+// --expires, is given as its zero value: left out, the flag's default
+// fills it, and the refusal is a valid call.
+func refusalArgs(
+	r any,
+) []string {
+	args := command.Args(r)
+	v := reflect.ValueOf(r)
+	for _, f := range command.Flags(v.Type()) {
+		if v.Type().Field(f.Index).Tag.Get("default") == "" || !v.Field(f.Index).IsZero() {
+			continue
+		}
+		switch f.Kind {
+		case reflect.String:
+			args = append(args, "--"+f.Name+"=")
+		case reflect.Int, reflect.Int64:
+			args = append(args, "--"+f.Name, "0")
+		}
+	}
+
+	return args
 }
 
 // connectionError is an error of the connection, not of the input. It does
