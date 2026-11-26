@@ -343,6 +343,11 @@ func (f *fixtures) value(
 		return f.once("trace", func() string {
 			stdout, stderr, _ := runCLI("client", "agent", "list")
 			m := traceID.FindStringSubmatch(stdout + stderr)
+			// The CLI prints a trace only when tracing is on, as in the
+			// lab, which runs Jaeger. The suite's own server has no backend.
+			if m == nil && !deployment() {
+				f.s.T().Skip("the suite's server has no tracing backend: just int in the lab runs trace get")
+			}
 			f.s.Require().NotNil(m, "the CLI printed no trace: %s%s", stdout, stderr)
 
 			return m[1]
