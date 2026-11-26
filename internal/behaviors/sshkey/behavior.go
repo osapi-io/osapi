@@ -123,24 +123,37 @@ var Behavior = behavior.Register(behavior.Define(
 		Sudo("chown").
 		Example("Add a key", CreateInput{Name: "osapitest", Key: key1},
 			Result{Fingerprint: fp1, Changed: true},
-			with(behavior.Wrote(authorizedKeys, key1+"\n"), chown)...).
+			with(
+				behavior.Wrote(authorizedKeys, key1+"\n"),
+				chown,
+				behavior.Reads(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk", Comment: "osapitest@example"}),
+			)...,
+		).
 		Example("Add a second key", CreateInput{Name: "osapitest", Key: key2},
 			Result{Fingerprint: fp2, Changed: true},
 			with(
 				behavior.After(CreateInput{Name: "osapitest", Key: key1}),
 				behavior.Wrote(authorizedKeys, key1+"\n"+key2+"\n"),
 				chown,
-			)...).
+				behavior.Reads(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE", Comment: "other@example"}),
+			)...,
+		).
 		Example("A key after a last line with no line break", CreateInput{Name: "osapitest", Key: key2},
 			Result{Fingerprint: fp2, Changed: true},
 			with(
 				behavior.Exists(authorizedKeys, key1),
 				behavior.Wrote(authorizedKeys, key1+"\n"+key2+"\n"),
 				chown,
-			)...).
+				behavior.Reads(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE"}),
+			)...,
+		).
 		Example("A key the user has", CreateInput{Name: "osapitest", Key: key1},
 			Result{Fingerprint: fp1},
-			with(behavior.After(CreateInput{Name: "osapitest", Key: key1}))...).
+			with(
+				behavior.After(CreateInput{Name: "osapitest", Key: key1}),
+				behavior.Reads(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}),
+			)...,
+		).
 		Fails("A line with no public key", CreateInput{Name: "osapitest", Key: "not a key"},
 			"not an SSH public key", with()...).
 		Fails("A key that is not base64", CreateInput{Name: "osapitest", Key: "ssh-ed25519 !!!"},
@@ -166,12 +179,21 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.After(CreateInput{Name: "osapitest", Key: key1}),
 				behavior.After(CreateInput{Name: "osapitest", Key: key2}),
 				behavior.Wrote(authorizedKeys, key2+"\n"),
-			)...).
+				behavior.ReadsNone(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}, "fingerprint"),
+			)...,
+		).
 		Example("A key the user does not have", DeleteInput{Name: "osapitest", Fingerprint: fp2},
 			Result{Fingerprint: fp2},
-			with(behavior.After(CreateInput{Name: "osapitest", Key: key1}))...).
+			with(
+				behavior.After(CreateInput{Name: "osapitest", Key: key1}),
+				behavior.ReadsNone(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE"}, "fingerprint"),
+			)...,
+		).
 		Example("A user that the host does not have", DeleteInput{Name: "nobody", Fingerprint: fp1},
-			Result{Fingerprint: fp1}, with()...).
+			Result{Fingerprint: fp1}, with(
+				behavior.NoReadBack("the user nobody has no keys of osapi, and the read of a user that has no home fails"),
+			)...,
+		).
 		Fails("A fingerprint that is not SHA256", DeleteInput{Name: "osapitest", Fingerprint: "MD5:aa"},
 			"Fingerprint").
 		Fails("A fingerprint with a line break",

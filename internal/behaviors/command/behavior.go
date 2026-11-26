@@ -40,6 +40,7 @@ var Behavior = behavior.Register(behavior.Define(
 	// The program is the caller's: any one, on each platform.
 	behavior.Runs(behavior.AnyProgram),
 	behavior.Action("exec", Exec).AdminOnly().Always().
+		ReadsNothing("the output of the command is its result, which the call answers; no read of the host shows a command that ran").
 		Describe("Run a program with its arguments").
 		Explain("Runs the program with its arguments, each one word, with no shell "+
 			"between them: a ; or a | in an argument is that character. It answers "+
@@ -66,6 +67,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A timeout above 300 seconds", ExecInput{Command: "true", Timeout: 301}, "max").
 		Fails("A negative timeout", ExecInput{Command: "true", Timeout: -1}, "min"),
 	behavior.Action("shell", Shell).Shell().Always().
+		ReadsNothing("the output of the command line is its result, which the call answers; no read of the host shows a command that ran").
 		Describe("Run a command line through /bin/sh -c").
 		Explain("Runs the command line through /bin/sh -c, so pipes, redirects and "+
 			"variables work. It answers as exec does. Its permission is "+

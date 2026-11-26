@@ -125,6 +125,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "tree", Changed: true},
 			behavior.PrintsAfter("apt-get install -y -- tree", dpkg, tree),
 			behavior.Ran("apt-get", "install", "-y", "--", "tree"),
+			behavior.Reads(GetInput{Name: "tree"}, Installed{Name: "tree"}),
 		).
 		Fails("A name that is an option", CreateInput{Name: "-oAPT::Get=x"}, "not a valid package name").
 		Fails("A name longer than 255 characters",
@@ -149,9 +150,11 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.PrintsAfter("apt-get install -y -- tree", dpkg, tree),
 			behavior.PrintsAfter("apt-get remove -y -- tree", dpkg, ""),
 			behavior.Ran("apt-get", "remove", "-y", "--", "tree"),
+			behavior.ReadsNone(GetInput{Name: "tree"}, Installed{Name: "tree"}, "name"),
 		).
 		Example("A package that is not installed", DeleteInput{Name: "tree"},
 			Result{Name: "tree"},
+			behavior.ReadsNone(GetInput{Name: "tree"}, Installed{Name: "tree"}, "name"),
 		).
 		Fails("A name that is an option", DeleteInput{Name: "-oAPT::Get=x"}, "not a valid package name").
 		Fails("A name longer than 255 characters",

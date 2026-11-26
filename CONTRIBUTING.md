@@ -619,7 +619,9 @@ that it tests. The tables have `validateFunc` callbacks.
   generates a JWT and starts the server. Thus the tests need no external setup.
 
 Each command runs from its definition, so a new command needs no test of its
-own. `BehaviorSmokeSuite` runs each example of each behavior.
+own. `BehaviorSmokeSuite` runs each example of each behavior on the platform
+that the example is for. After a write example, it runs each `behavior.Reads` of
+the example and checks that a row of the read answers its want.
 `CommandSmokeSuite` runs each other command, of an endpoint group or a local
 group:
 

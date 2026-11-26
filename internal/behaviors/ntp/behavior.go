@@ -100,10 +100,12 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Changed: true},
 			behavior.Wrote(sourcesFile, "server 0.pool.ntp.org iburst\nserver 1.pool.ntp.org iburst\n"),
 			behavior.Ran("chronyc", "reload", "sources"),
+			behavior.Reads(GetInput{}, Status{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}}),
 		).
 		Example("The servers that the host has", CreateInput{Servers: []string{"0.pool.ntp.org"}},
 			Result{},
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
+			behavior.Reads(GetInput{}, Status{Servers: []string{"0.pool.ntp.org"}}),
 		).
 		Fails("No servers", CreateInput{}, "required").
 		Fails("An empty list of servers", CreateInput{Servers: []string{}}, "min").
@@ -121,10 +123,12 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
 			behavior.Wrote(sourcesFile, "server time.cloudflare.com iburst\n"),
 			behavior.Ran("chronyc", "reload", "sources"),
+			behavior.Reads(GetInput{}, Status{Servers: []string{"time.cloudflare.com"}}),
 		).
 		Example("The servers that the file has", UpdateInput{Servers: []string{"0.pool.ntp.org"}},
 			Result{},
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
+			behavior.Reads(GetInput{}, Status{Servers: []string{"0.pool.ntp.org"}}),
 		).
 		Fails("When osapi set no servers", UpdateInput{Servers: []string{"0.pool.ntp.org"}},
 			"osapi manages no servers").
@@ -142,8 +146,11 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Servers: []string{"0.pool.ntp.org"}}),
 			behavior.Removed(sourcesFile),
 			behavior.Ran("chronyc", "reload", "sources"),
+			behavior.ReadsNone(GetInput{}, Status{Servers: []string{"time.cloudflare.com"}}, "servers"),
 		).
-		Example("When osapi set no servers", DeleteInput{}, Result{}),
+		Example("When osapi set no servers", DeleteInput{}, Result{},
+			behavior.ReadsNone(GetInput{}, Status{Servers: []string{"time.cloudflare.com"}}, "servers"),
+		),
 ))
 
 // make17 is 17 servers, one more than a request may have.

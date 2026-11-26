@@ -24,6 +24,7 @@ package integration_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -253,7 +254,14 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 					}
 
 					want, _ := behavior.Changed(ex.Output)
+					ran := false
+					defer func() {
+						if ran {
+							s.readBack(b, ex)
+						}
+					}()
 					for _, r := range s.results(commandLine(b, m, ex.Input)) {
+						ran = ran || r["status"] == "ok"
 						if r["status"] == "ok" {
 							s.Equal(want, r["changed"], "the example's changed")
 							if name, ok := r["name"].(string); renames && ok && name != "" {
@@ -275,11 +283,113 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 	}
 }
 
-// refreshIndex refreshes the package index of the target, as a person does
-// before an install. The runner's lists are recent, but a lab VM's can be
-// weeks old, and an install of a version that the mirror no longer serves
-// fails with exit status 100. The refresh's own example can run after the
-// package examples, so the suite runs it first.
+// readBack runs each read back of ex on the target after ex ran there, and
+// asserts that a row answers its want, or for ReadsNone that none does. A
+// read can lag the write, as a container's state does, so it runs again
+// for up to 15 seconds.
+func (s *BehaviorSmokeSuite) readBack(
+	b *behavior.Behavior,
+	ex behavior.Example,
+) {
+	for _, rb := range ex.ReadBacks {
+		on, read := behavior.ReadMethod(b, rb.Input)
+		s.Require().NotNil(read, "no read takes %T", rb.Input)
+		c := commandLine(on, read, rb.Input)
+		want := readBackWant(rb)
+		var problem string
+		deadline := time.Now().Add(15 * time.Second)
+		for {
+			problem = s.readBackProblem(c, rb, want)
+			if problem == "" || time.Now().After(deadline) {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		s.Empty(problem, "%s: the read of the example's result", strings.Join(c.args, " "))
+	}
+}
+
+// readBackProblem is why the rows of c do not show rb, or "".
+func (s *BehaviorSmokeSuite) readBackProblem(
+	c call,
+	rb behavior.ReadBack,
+	want map[string]any,
+) string {
+	stdout, stderr, code := runCLIStdin(c.stdin, c.args...)
+	if code != 0 {
+		return "the read failed: " + stderr
+	}
+	var body struct {
+		Results []map[string]any `json:"results"`
+	}
+	if err := parseJSON(stdout, &body); err != nil {
+		return "no JSON: " + stdout
+	}
+	matched := false
+	for _, r := range body.Results {
+		switch {
+		case r["status"] == "ok" && rowHas(r, want):
+			matched = true
+		case r["status"] == "ok", r["status"] == "skipped":
+		case rb.None && strings.Contains(fmt.Sprint(r["error"]), "not found"):
+		default:
+			return fmt.Sprintf("a row failed: %v", r)
+		}
+	}
+	switch {
+	case rb.None && matched:
+		return fmt.Sprintf("a row still has %v: %s", want, stdout)
+	case !rb.None && !matched:
+		return fmt.Sprintf("no row has %v: %s", want, stdout)
+	}
+
+	return ""
+}
+
+// readBackWant is the fields of rb's want to compare, by JSON name, as
+// JSON decodes them: the fields that rb names, or each that is not zero.
+func readBackWant(
+	rb behavior.ReadBack,
+) map[string]any {
+	raw, _ := json.Marshal(rb.Want)
+	var all map[string]any
+	_ = json.Unmarshal(raw, &all)
+	names := rb.Fields
+	if len(names) == 0 {
+		v := reflect.ValueOf(rb.Want)
+		for i := range v.NumField() {
+			if !v.Field(i).IsZero() {
+				names = append(names, behavior.JSONName(v.Type().Field(i)))
+			}
+		}
+	}
+	want := make(map[string]any, len(names))
+	for _, n := range names {
+		want[n] = all[n]
+	}
+
+	return want
+}
+
+// rowHas reports whether row has each field of want, compared as JSON: a
+// field that the row leaves out matches the zero value of its want.
+func rowHas(
+	row map[string]any,
+	want map[string]any,
+) bool {
+	for name, w := range want {
+		got, ok := row[name]
+		if !ok && (w == nil || w == false || w == "" || w == float64(0)) {
+			continue
+		}
+		if !reflect.DeepEqual(got, w) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // platform is the platform of the target, as gohai's family.Detect names
 // it, such as debian or darwin: the os_info.family of the agent that the
 // suite targets.
@@ -320,6 +430,11 @@ func runsOn(
 		platform != behavior.PlatformDarwin && ex.RunsOn(behavior.PlatformLinux)
 }
 
+// refreshIndex refreshes the package index of the target, as a person does
+// before an install. The runner's lists are recent, but a lab VM's can be
+// weeks old, and an install of a version that the mirror no longer serves
+// fails with exit status 100. The refresh's own example can run after the
+// package examples, so the suite runs it first.
 func (s *BehaviorSmokeSuite) refreshIndex() {
 	b := behavior.Lookup("updates")
 	if b == nil || b.Method("update") == nil {

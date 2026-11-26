@@ -318,6 +318,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.ReadsNothing("why")`,
+			Does: "Says why no read of the behavior shows what the method's examples change: its result is its own output, as a command's run or a ping is. dsl behavior validate takes it in place of a Reads on each example.",
+			When: "On a write or an action that changes nothing that a read shows.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Disrupts("why")`,
 			Does: "Marks a method that takes the host down, such as a reboot or a shutdown, and says why. Its examples run on the fake host, but the integration test never runs them on a live host. dsl behavior validate refuses it with no reason.",
 			When: "On a method whose run would take down the host that the test runs on.",
@@ -425,6 +431,18 @@ var Spec = guide.Spec{
 			Name: `ExistsAfter("after", "path", "content")`,
 			Does: "Says what a file holds on the fake host after a command has run.",
 			When: "For a file that a program changes, such as /etc/group after groupadd. Declare its content before with Exists.",
+		},
+		{
+			Kind: KindExample,
+			Name: `Reads(GetInput{...}, Entry{...}, "field"...)`,
+			Does: "Says what a read of the behavior, or of its parent, answers on the live host after a write example: the read whose input type the first value is answers a row with each named field of the want, or with no names, each field of the want that is not zero. ReadsNone says that no row answers it, or that the read reports not found: the example removed the item. The integration test runs each one after the example, so a write that reports changed but does nothing fails. dsl behavior validate checks that a read takes the input, that the want is its row type, and that each name is a field of it.",
+			When: "On each write example that runs on the live host. Name a field to compare its zero value, such as managed for false after a delete.",
+		},
+		{
+			Kind: KindExample,
+			Name: `NoReadBack("why")`,
+			Does: "Says why no read shows what a write example changed. dsl behavior validate takes it in place of a Reads.",
+			When: "Only when the item that the example acts on is not on the live host, or no read of the behavior names it.",
 		},
 		{
 			Kind: KindExample,

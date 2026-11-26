@@ -142,7 +142,9 @@ var Behavior = behavior.Register(behavior.Define(
 			"Debian family only, and elsewhere reports skipped.").
 		Example("Add a user", CreateInput{Name: "osapitest"},
 			Result{Name: "osapitest", Changed: true},
-			withHost(newUser, behavior.Ran("useradd", "--create-home", "--", "osapitest"))...,
+			withHost(newUser, behavior.Ran("useradd", "--create-home", "--", "osapitest"),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}),
+			)...,
 		).
 		Example("Add a user with a shell, groups and a password",
 			CreateInput{
@@ -156,6 +158,7 @@ var Behavior = behavior.Register(behavior.Define(
 					etcPasswd+"osapitest:x:1001:1001::/home/osapitest:/bin/sh\n"),
 				behavior.Ran("useradd", "--create-home", "-s", "/bin/sh", "-G", "root", "--", "osapitest"),
 				behavior.Ran("chpasswd", "-e"),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", Shell: "/bin/sh"}),
 			)...,
 		).
 		Example("Add a system user with its IDs and its home",
@@ -173,11 +176,14 @@ var Behavior = behavior.Register(behavior.Define(
 					"/etc/passwd", etcPasswd+"osapitest:x:1999:100::/home/osapitest:/bin/sh\n"),
 				behavior.Ran("useradd", "--create-home", "-u", "1999", "-g", "100",
 					"-d", "/home/osapitest", "-r", "--", "osapitest"),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", UID: 1999, GID: 100, Home: "/home/osapitest"}),
 			)...,
 		).
 		Example("A user that the host has", CreateInput{Name: "osapitest"},
 			Result{Name: "osapitest"},
-			withHost(newUser, behavior.After(CreateInput{Name: "osapitest"}))...,
+			withHost(newUser, behavior.After(CreateInput{Name: "osapitest"}),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}),
+			)...,
 		).
 		Fails("A name that is an option", CreateInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",
@@ -209,20 +215,24 @@ var Behavior = behavior.Register(behavior.Define(
 			"runs on the Debian family only, and elsewhere reports skipped.").
 		Example("Set the shell", UpdateInput{Name: "osapitest", Shell: "/bin/bash"},
 			Result{Name: "osapitest", Changed: true},
-			withHost(newUser,
+			withHost(
+				newUser,
 				behavior.ExistsAfter("usermod -s /bin/bash -- osapitest", "/etc/passwd",
 					etcPasswd+"osapitest:x:1001:1001::/home/osapitest:/bin/bash\n"),
 				behavior.After(CreateInput{Name: "osapitest"}),
 				behavior.Ran("usermod", "-s", "/bin/bash", "--", "osapitest"),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", Shell: "/bin/bash"}),
 			)...,
 		).
 		Example("The shell it has", UpdateInput{Name: "osapitest", Shell: "/bin/bash"},
 			Result{Name: "osapitest"},
-			withHost(newUser,
+			withHost(
+				newUser,
 				behavior.ExistsAfter("usermod -s /bin/bash -- osapitest", "/etc/passwd",
 					etcPasswd+"osapitest:x:1001:1001::/home/osapitest:/bin/bash\n"),
 				behavior.After(CreateInput{Name: "osapitest"}),
 				behavior.After(UpdateInput{Name: "osapitest", Shell: "/bin/bash"}),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", Shell: "/bin/bash"}),
 			)...,
 		).
 		Example("Move the home, set the groups and lock it",
@@ -242,6 +252,7 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.ExistsAfter("usermod -d /home/osapitest2 -m -G root -L -- osapitest", "/etc/shadow",
 					etcShadow+shadowLocked),
 				behavior.Ran("usermod", "-d", "/home/osapitest2", "-m", "-G", "root", "-L", "--", "osapitest"),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", Home: "/home/osapitest2", Locked: true}),
 			)...)...,
 		).
 		Example("Unlock it", UpdateInput{Name: "osapitest", Lock: "unlocked"},
@@ -252,6 +263,7 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.ExistsAfter("usermod -U -- osapitest", "/etc/shadow", etcShadow+shadowSet),
 				behavior.After(UpdateInput{Name: "osapitest", Lock: "locked"}),
 				behavior.Ran("usermod", "-U", "--", "osapitest"),
+				behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}, "name", "locked"),
 			)...)...,
 		).
 		Fails("A user that the host does not have", UpdateInput{Name: "nobody"}, "not found",
@@ -283,11 +295,14 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.ExistsAfter("userdel -r -- osapitest", "/etc/passwd", etcPasswd),
 				behavior.After(CreateInput{Name: "osapitest"}),
 				behavior.Ran("userdel", "-r", "--", "osapitest"),
+				behavior.ReadsNone(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}, "name"),
 			)...,
 		).
 		Example("A user that the host does not have", DeleteInput{Name: "osapitest"},
 			Result{Name: "osapitest"},
-			withHost()...,
+			withHost(
+				behavior.ReadsNone(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}, "name"),
+			)...,
 		).
 		Fails("A name that is an option", DeleteInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",

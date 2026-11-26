@@ -191,11 +191,25 @@ var Behavior = behavior.Register(behavior.Define(
 			"takes. It runs on the Debian family, and elsewhere, and in a container, "+
 			"reports skipped.").
 		Example("A route", v4, Result{Destination: v4.Destination, Changed: true},
-			writes(behavior.Wrote(osapi0File, routesHead+v4YAML))...).
+			writes(
+				behavior.Wrote(osapi0File, routesHead+v4YAML),
+				behavior.Reads(ListInput{Name: "osapi0"}, Entry{Destination: "198.51.100.0/24", Gateway: "192.0.2.1"}),
+			)...,
+		).
 		Example("A second route, with a metric", v6, Result{Destination: v6.Destination, Changed: true},
-			writes(behavior.After(v4), behavior.Wrote(osapi0File, routesHead+v4YAML+v6YAML))...).
+			writes(
+				behavior.After(v4),
+				behavior.Wrote(osapi0File, routesHead+v4YAML+v6YAML),
+				behavior.Reads(ListInput{Name: "osapi0"}, Entry{Destination: "2001:db8:1::/48", Gateway: "2001:db8::1", Metric: 200}),
+			)...,
+		).
 		Example("A route osapi already has", v4, Result{Destination: v4.Destination},
-			append(slices.Clone(osapi0Host), behavior.After(v4))...).
+			append(
+				slices.Clone(osapi0Host),
+				behavior.After(v4),
+				behavior.Reads(ListInput{Name: "osapi0"}, Entry{Destination: "198.51.100.0/24", Gateway: "192.0.2.1"}),
+			)...,
+		).
 		Fails("A default route",
 			CreateInput{Name: "osapi0", Destination: "0.0.0.0/0", Via: "192.0.2.1"},
 			"default route", osapi0Host...).
@@ -238,8 +252,16 @@ var Behavior = behavior.Register(behavior.Define(
 				Metric:      10,
 			},
 			Result{Destination: v4.Destination, Changed: true},
-			writes(behavior.After(v4), behavior.Wrote(osapi0File, routesHead+
-				"        - to: 198.51.100.0/24\n          via: 192.0.2.2\n          metric: 10\n"))...).
+			writes(
+				behavior.After(v4),
+				behavior.Wrote(osapi0File, routesHead+
+					"        - to: 198.51.100.0/24\n          via: 192.0.2.2\n          metric: 10\n"),
+				behavior.Reads(
+					ListInput{Name: "osapi0"},
+					Entry{Destination: "198.51.100.0/24", Gateway: "192.0.2.2", Metric: 10},
+				),
+			)...,
+		).
 		Fails("A destination osapi has no route to", UpdateInput(v4), "not found", osapi0Host...),
 		func(r Route) any { return UpdateInput(r) }),
 	behavior.Write("delete", Delete).
@@ -250,14 +272,27 @@ var Behavior = behavior.Register(behavior.Define(
 			"change.").
 		Example("One of two routes", DeleteInput{Name: "osapi0", Destination: v4.Destination},
 			Result{Destination: v4.Destination, Changed: true},
-			writes(behavior.After(v4), behavior.After(v6),
-				behavior.Wrote(osapi0File, routesHead+v6YAML))...).
+			writes(
+				behavior.After(v4),
+				behavior.After(v6),
+				behavior.Wrote(osapi0File, routesHead+v6YAML),
+				behavior.ReadsNone(ListInput{Name: "osapi0"}, Entry{Destination: "198.51.100.0/24"}, "destination"),
+			)...,
+		).
 		Example("The last route", DeleteInput{Name: "osapi0", Destination: v4.Destination},
 			Result{Destination: v4.Destination, Changed: true},
-			append(slices.Clone(osapi0Host), behavior.After(v4),
-				behavior.Removed(osapi0File), behavior.Ran("netplan", "apply"))...).
+			append(
+				slices.Clone(osapi0Host),
+				behavior.After(v4),
+				behavior.Removed(osapi0File),
+				behavior.Ran("netplan", "apply"),
+				behavior.ReadsNone(ListInput{Name: "osapi0"}, Entry{Destination: "198.51.100.0/24"}, "destination"),
+			)...,
+		).
 		Example("A route osapi does not have", DeleteInput{Name: "osapi0", Destination: v4.Destination},
-			Result{Destination: v4.Destination}).
+			Result{Destination: v4.Destination},
+			behavior.ReadsNone(ListInput{Name: "osapi0"}, Entry{Destination: "198.51.100.0/24"}, "destination"),
+		).
 		Fails("A destination that is not CIDR", DeleteInput{Name: "osapi0", Destination: "10.0.0.0"},
 			"Destination").
 		Fails("A name that is not an interface name", DeleteInput{Name: "eth0;reboot", Destination: v4.Destination},

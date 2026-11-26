@@ -106,6 +106,7 @@ var Behavior = behavior.Register(behavior.Define(
 			UpdateResult{Path: path, SHA256: rawSHA, Changed: true},
 			stored,
 			behavior.Wrote(path, raw),
+			behavior.Reads(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "in-sync", SHA256: "0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60"}),
 		).
 		Example("Render a template",
 			UpdateInput{
@@ -116,11 +117,13 @@ var Behavior = behavior.Register(behavior.Define(
 			UpdateResult{Path: path, SHA256: tmplSHA, Changed: true},
 			template,
 			behavior.Wrote(path, rendered),
+			behavior.Reads(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "in-sync", SHA256: "28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4"}),
 		).
 		Example("A file that holds the object", deployed,
 			UpdateResult{Path: path, SHA256: rawSHA},
 			stored,
 			behavior.After(deployed),
+			behavior.Reads(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "in-sync", SHA256: "0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60"}),
 		).
 		Fails("A relative path", UpdateInput{ObjectName: "example.conf", Path: "etc/x"}, "startswith").
 		Fails("No object", UpdateInput{Path: path}, "required").
@@ -148,9 +151,11 @@ var Behavior = behavior.Register(behavior.Define(
 			stored,
 			behavior.After(deployed),
 			behavior.Removed(path),
+			behavior.Reads(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "unmanaged"}, "path", "state"),
 		).
 		Example("A path that osapi did not deploy", DeleteInput{Path: path},
 			DeleteResult{Path: path},
+			behavior.ReadsNone(StatusInput{Path: "/etc/osapi/file-example.conf"}, Status{Path: "/etc/osapi/file-example.conf", State: "in-sync"}, "path", "state"),
 		).
 		Fails("A relative path", DeleteInput{Path: "etc/x"}, "startswith"),
 ))

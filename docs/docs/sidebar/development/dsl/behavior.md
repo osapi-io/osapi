@@ -265,6 +265,14 @@ read.
 Use: On an action that has no state to compare, or an update of a secret that
 the host keeps only as a hash, so a second run is not unchanged.
 
+### `.ReadsNothing("why")`
+
+Says why no read of the behavior shows what the method's examples change: its
+result is its own output, as a command's run or a ping is. dsl behavior validate
+takes it in place of a Reads on each example.
+
+Use: On a write or an action that changes nothing that a read shows.
+
 ### `.Disrupts("why")`
 
 Marks a method that takes the host down, such as a reboot or a shutdown, and
@@ -396,6 +404,28 @@ Says what a file holds on the fake host after a command has run.
 
 Use: For a file that a program changes, such as /etc/group after groupadd.
 Declare its content before with Exists.
+
+### `Reads(GetInput{...}, Entry{...}, "field"...)`
+
+Says what a read of the behavior, or of its parent, answers on the live host
+after a write example: the read whose input type the first value is answers a
+row with each named field of the want, or with no names, each field of the want
+that is not zero. ReadsNone says that no row answers it, or that the read
+reports not found: the example removed the item. The integration test runs each
+one after the example, so a write that reports changed but does nothing fails.
+dsl behavior validate checks that a read takes the input, that the want is its
+row type, and that each name is a field of it.
+
+Use: On each write example that runs on the live host. Name a field to compare
+its zero value, such as managed for false after a delete.
+
+### `NoReadBack("why")`
+
+Says why no read shows what a write example changed. dsl behavior validate takes
+it in place of a Reads.
+
+Use: Only when the item that the example acts on is not on the live host, or no
+read of the behavior names it.
 
 ### `NotLive("why")`
 

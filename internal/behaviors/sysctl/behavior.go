@@ -126,6 +126,7 @@ var Behavior = behavior.Register(behavior.Define(
 			MutationResult{Key: "net.ipv4.ip_forward", Changed: true},
 			behavior.Wrote(conf("net.ipv4.ip_forward"), "net.ipv4.ip_forward = 1\n"),
 			behavior.Ran("sysctl", "-p", conf("net.ipv4.ip_forward")),
+			behavior.Reads(GetInput{Key: "net.ipv4.ip_forward"}, Entry{Key: "net.ipv4.ip_forward", Value: "1", Managed: true}),
 		).
 		Fails("No key", CreateInput{Value: "1"}, "key must not be empty").
 		Fails("A key that is not a parameter name",
@@ -148,12 +149,14 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Key: "vm.swappiness", Value: "60"}),
 			behavior.Wrote(conf("vm.swappiness"), "vm.swappiness = 10\n"),
 			behavior.Ran("sysctl", "-p", conf("vm.swappiness")),
+			behavior.Reads(GetInput{Key: "vm.swappiness"}, Entry{Key: "vm.swappiness", Value: "10", Managed: true}),
 		).
 		Example("A parameter osapi did not manage",
 			UpdateInput{Key: "vm.swappiness", Value: "10"},
 			MutationResult{Key: "vm.swappiness", Changed: true},
 			behavior.Wrote(conf("vm.swappiness"), "vm.swappiness = 10\n"),
 			behavior.Ran("sysctl", "-p", conf("vm.swappiness")),
+			behavior.Reads(GetInput{Key: "vm.swappiness"}, Entry{Key: "vm.swappiness", Value: "10", Managed: true}),
 		).
 		Fails("No key", UpdateInput{Value: "10"}, "key must not be empty").
 		Fails("A key that is not a parameter name",
@@ -174,13 +177,17 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Key: "vm.swappiness", Value: "10"}),
 			behavior.Removed(conf("vm.swappiness")),
 			behavior.Ran("sysctl", "--system"),
+			behavior.Reads(GetInput{Key: "vm.swappiness"}, Entry{Key: "vm.swappiness"}, "key", "managed"),
 		).
 		Example("A parameter osapi does not manage", DeleteInput{Key: "vm.swappiness"},
-			MutationResult{Key: "vm.swappiness"}).
+			MutationResult{Key: "vm.swappiness"},
+			behavior.Reads(GetInput{Key: "vm.swappiness"}, Entry{Key: "vm.swappiness"}, "key", "managed"),
+		).
 		Example("A parameter osapi already stopped managing", DeleteInput{Key: "vm.swappiness"},
 			MutationResult{Key: "vm.swappiness"},
 			behavior.After(CreateInput{Key: "vm.swappiness", Value: "10"}),
 			behavior.After(DeleteInput{Key: "vm.swappiness"}),
+			behavior.Reads(GetInput{Key: "vm.swappiness"}, Entry{Key: "vm.swappiness"}, "key", "managed"),
 		).
 		Fails("No key", DeleteInput{}, "key must not be empty").
 		Fails("A key that is not a parameter name", DeleteInput{Key: "vm.swappiness;reboot"},

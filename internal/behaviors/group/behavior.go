@@ -89,6 +89,7 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Exists("/etc/group", etcGroup),
 			added,
 			behavior.Ran("groupadd", "--", "osapitest"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}),
 		).
 		Example("Add a system group with its ID", CreateInput{Name: "osapitest", GID: 1999, System: true},
 			Result{Name: "osapitest", Changed: true},
@@ -96,12 +97,14 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.ExistsAfter("groupadd -g 1999 -r -- osapitest", "/etc/group",
 				etcGroup+"osapitest:x:1999:\n"),
 			behavior.Ran("groupadd", "-g", "1999", "-r", "--", "osapitest"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", GID: 1999}),
 		).
 		Example("A group that the host has", CreateInput{Name: "osapitest"},
 			Result{Name: "osapitest"},
 			behavior.Exists("/etc/group", etcGroup),
 			added,
 			behavior.After(CreateInput{Name: "osapitest"}),
+			behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}),
 		).
 		Fails("A name that is an option", CreateInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",
@@ -123,6 +126,7 @@ var Behavior = behavior.Register(behavior.Define(
 				etcGroup+"osapitest:x:1501:root\n"),
 			behavior.After(CreateInput{Name: "osapitest"}),
 			behavior.Ran("gpasswd", "-M", "root", "--", "osapitest"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", Members: []string{"root"}}),
 		).
 		Example("The members it has", UpdateInput{Name: "osapitest", Members: []string{"root"}},
 			Result{Name: "osapitest"},
@@ -132,6 +136,7 @@ var Behavior = behavior.Register(behavior.Define(
 				etcGroup+"osapitest:x:1501:root\n"),
 			behavior.After(CreateInput{Name: "osapitest"}),
 			behavior.After(UpdateInput{Name: "osapitest", Members: []string{"root"}}),
+			behavior.Reads(GetInput{Name: "osapitest"}, Account{Name: "osapitest", Members: []string{"root"}}),
 		).
 		Fails("A group that the host does not have", UpdateInput{Name: "nobody"}, "not found").
 		Fails("A name that is an option", UpdateInput{Name: "-r"}, "account_name").
@@ -155,10 +160,12 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.ExistsAfter("groupdel -- osapitest", "/etc/group", etcGroup),
 			behavior.After(CreateInput{Name: "osapitest"}),
 			behavior.Ran("groupdel", "--", "osapitest"),
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}, "name"),
 		).
 		Example("A group that the host does not have", DeleteInput{Name: "osapitest"},
 			Result{Name: "osapitest"},
 			behavior.Exists("/etc/group", etcGroup),
+			behavior.ReadsNone(GetInput{Name: "osapitest"}, Account{Name: "osapitest"}, "name"),
 		).
 		Fails("A name that is an option", DeleteInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",

@@ -70,11 +70,14 @@ var Behavior = behavior.Register(behavior.Define(
 					"web-02\n",
 				),
 				behavior.Ran("hostnamectl", "set-hostname", "web-02"),
+				behavior.Reads(GetInput{}, Entry{Name: "web-02"}),
 			)...,
 		).
 		Example("A host that already has the name", UpdateInput{Name: "web-01"},
 			Result{Name: "web-01"},
-			named("web-01")...,
+			append(named("web-01"),
+				behavior.Reads(GetInput{}, Entry{Name: "web-01"}),
+			)...,
 		).
 		Fails("A name that is not a hostname", UpdateInput{Name: "web 01;reboot"},
 			"invalid hostname").

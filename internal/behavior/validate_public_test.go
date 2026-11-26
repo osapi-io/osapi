@@ -701,6 +701,83 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			),
 		},
 		{
+			name: "when each write example reads back its result",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				behavior.API,
+				behavior.CLI,
+				behavior.Area(area.Config),
+				onDebian,
+				behavior.Read("get", get).Key("key").Describe("Get").
+					Example("A key", getIn{Key: "a"}, entry{Key: "a"}).
+					Fails("no key", getIn{}, "key"),
+				behavior.Write("create", set).Key("key").Describe("Create").
+					Example("Set it", getIn{Key: "a"}, result{Key: "a", Changed: true},
+						behavior.Reads(getIn{Key: "a"}, entry{Key: "a", Value: "1"})).
+					Example("Clear it", getIn{Key: "a"}, result{Key: "a"},
+						behavior.ReadsNone(getIn{Key: "a"}, entry{Key: "a"}, "key", "value")).
+					Example("A key it has no read of", getIn{Key: "a"}, result{Key: "a"},
+						behavior.NoReadBack("the read cannot name this key on a live host")).
+					Fails("no key", getIn{}, "key"),
+				behavior.Action("restart", set).Key("key").Describe("Restart").
+					ReadsNothing("its result is its own output").
+					Example("Restart it", getIn{Key: "a"}, result{Key: "a"}).
+					Fails("no key", getIn{}, "key"),
+			),
+		},
+		{
+			name: "when a write example of a list reads back a row of the list",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				behavior.API,
+				behavior.CLI,
+				behavior.Area(area.Config),
+				onDebian,
+				behavior.Read("list", readList).Describe("List").
+					Example("Each key", getIn{Key: "a"}, []entry{{Key: "a"}}).
+					Fails("no key", getIn{}, "key"),
+				behavior.Write("create", set).Key("key").Describe("Create").
+					Example("Set it", getIn{Key: "a"}, result{Key: "a", Changed: true},
+						behavior.Reads(getIn{Key: "a"}, entry{Key: "a"})).
+					Fails("no key", getIn{}, "key"),
+			),
+		},
+		{
+			name: "when a write example does not read back its result, or reads it wrong",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				behavior.API,
+				behavior.CLI,
+				behavior.Area(area.Config),
+				onDebian,
+				behavior.Read("get", get).Key("key").Describe("Get").
+					Example("A key", getIn{Key: "a"}, entry{Key: "a"},
+						behavior.Reads(getIn{Key: "a"}, entry{Key: "a"})).
+					Fails("no key", getIn{}, "key"),
+				behavior.Write("create", set).Key("key").Describe("Create").
+					Example("No read", getIn{Key: "a"}, result{Key: "a", Changed: true}).
+					Example("No read takes it", getIn{Key: "a"}, result{Key: "a"},
+						behavior.Reads(result{Key: "a"}, entry{Key: "a"})).
+					Example("Another type", getIn{Key: "a"}, result{Key: "a"},
+						behavior.Reads(getIn{Key: "a"}, result{Key: "a"})).
+					Example("No such field", getIn{Key: "a"}, result{Key: "a"},
+						behavior.Reads(getIn{Key: "a"}, entry{Key: "a"}, "nope")).
+					Example("Nothing to compare", getIn{Key: "a"}, result{Key: "a"},
+						behavior.Reads(getIn{Key: "a"}, entry{})).
+					Fails("no key", getIn{}, "key"),
+			),
+			wantRules: []string{
+				behavior.RuleReadBack, behavior.RuleReadBack, behavior.RuleReadBack,
+				behavior.RuleReadBack, behavior.RuleReadBack, behavior.RuleReadBack,
+			},
+		},
+		{
 			name: "when a .Before step is not func(context.Context, In) (In, error)",
 			b: behavior.Define("account", "Accounts", behavior.Node, onDebian,
 				behavior.API, behavior.Area(area.Config),

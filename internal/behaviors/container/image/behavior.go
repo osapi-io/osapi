@@ -79,6 +79,7 @@ var Behavior = behavior.Register(behavior.Define(
 			PullResult{Image: image, ImageID: id, Size: 3634816, Changed: true},
 			pulled,
 			behavior.Ran("docker", "pull", image),
+			behavior.Reads(ListInput{}, Entry{Repository: "alpine", Tag: "3.20"}),
 		).
 		Fails("An image that is an option", PullInput{Image: "--all-tags"}, "image_ref").
 		Fails("No image", PullInput{}, "required"),
@@ -90,7 +91,10 @@ var Behavior = behavior.Register(behavior.Define(
 			pulled, gone,
 			behavior.After(PullInput{Image: image}),
 			behavior.Ran("docker", "rmi", image),
+			behavior.ReadsNone(ListInput{}, Entry{Repository: "alpine", Tag: "3.20"}, "repository", "tag"),
 		).
-		Example("An image that the host does not have", DeleteInput{Image: image}, Result{Image: image}).
+		Example("An image that the host does not have", DeleteInput{Image: image}, Result{Image: image},
+			behavior.ReadsNone(ListInput{}, Entry{Repository: "alpine", Tag: "3.20"}, "repository", "tag"),
+		).
 		Fails("An image that is an option", DeleteInput{Image: "-f"}, "image_ref"),
 ))

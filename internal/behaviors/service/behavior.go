@@ -119,6 +119,18 @@ func lcOut(
 	return "system = {\n\tservices = {\n" + rows + "\t}\n" + disabled + "}\n"
 }
 
+// actionReadBack is what a read of the service answers on the live host
+// after each action: start and restart leave it running, stop leaves it not
+// running, enable and disable set whether it starts at boot.
+var actionReadBack = map[string]behavior.HostOption{
+	"start":   behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", State: "running"}),
+	"restart": behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", State: "running"}),
+	"stop": behavior.ReadsNone(GetInput{Name: "app"}, Entry{Name: "app", State: "running"},
+		"name", "state"),
+	"enable":  behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Enabled: true}),
+	"disable": behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app"}, "name", "enabled"),
+}
+
 // macAction is what launchd prints, and runs, for each action on a Mac. A
 // live Mac starts from a plist that create deployed: not loaded, and enabled.
 var macAction = map[string][]behavior.HostOption{
@@ -276,21 +288,25 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.Wrote(appPath, unitText),
 			behavior.Ran("systemctl", "daemon-reload"),
+			behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}),
 		).
 		Example("A unit file that has the content", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app"},
 			debianOnly,
 			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
+			behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}),
 		).
 		Example("Deploy a plist on a Mac", CreateInput{Name: "app", Object: "app.plist"},
 			Result{Name: "app", Changed: true},
 			macOnly, storedPlist,
 			behavior.Wrote(plistApp, plistText),
+			behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}),
 		).
 		Example("A plist that has the content", CreateInput{Name: "app", Object: "app.plist"},
 			Result{Name: "app"},
 			macOnly, storedPlist, deployedPlist,
+			behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}),
 		).
 		Fails("An object the store does not have", CreateInput{Name: "app", Object: "nosuch"}, "not found").
 		Fails("A unit file or a plist that osapi did not deploy",
@@ -317,6 +333,7 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Stored("app-v2.service", unitText+"Restart=always\n", types.ContentRaw),
 			behavior.Wrote(appPath, unitText+"Restart=always\n"),
 			behavior.Ran("systemctl", "daemon-reload"),
+			behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}),
 		).
 		Fails("A service that osapi did not deploy", UpdateInput{Name: "ssh", Object: "app.service"}, "not found").
 		Example("A new plist on a Mac", UpdateInput{Name: "app", Object: "app-v2.plist"},
@@ -324,6 +341,7 @@ var Behavior = behavior.Register(behavior.Define(
 			macOnly, storedPlist, deployedPlist,
 			behavior.Stored("app-v2.plist", plistV2, types.ContentRaw),
 			behavior.Wrote(plistApp, plistV2),
+			behavior.Reads(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}),
 		).
 		Fails("A unit file or a plist that osapi did not deploy",
 			UpdateInput{Name: "agent", Object: "app.service"},
@@ -348,13 +366,16 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Removed(appPath),
 			behavior.Ran("systemctl", "disable", "--now", "osapi-app.service"),
 			behavior.Ran("systemctl", "daemon-reload"),
+			behavior.ReadsNone(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}, "name", "managed"),
 		).
 		Example("A service that osapi did not deploy", DeleteInput{Name: "app"},
 			Result{Name: "app"},
+			behavior.ReadsNone(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}, "name", "managed"),
 		).
 		Example("A unit file that osapi did not deploy", DeleteInput{Name: "agent"},
 			Result{Name: "agent"},
 			debianOnly, agentUnit,
+			behavior.ReadsNone(GetInput{Name: "agent"}, Entry{Name: "agent", Managed: true}, "name", "managed"),
 		).
 		Example("Remove a daemon that runs, on a Mac", DeleteInput{Name: "app"},
 			Result{Name: "app", Changed: true},
@@ -364,10 +385,12 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Prints(lcPrint, lcLoaded),
 			behavior.Ran("launchctl", "bootout", "system/io.osapi.app"),
 			behavior.Removed(plistApp),
+			behavior.ReadsNone(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}, "name", "managed"),
 		).
 		Example("A plist that osapi did not deploy", DeleteInput{Name: "agent"},
 			Result{Name: "agent"},
 			macOnly, agentPlist,
+			behavior.ReadsNone(GetInput{Name: "agent"}, Entry{Name: "agent", Managed: true}, "name", "managed"),
 		).
 		Fails("A name with a space", DeleteInput{Name: "a b"}, "Name").
 		Fails("A name that is an option", DeleteInput{Name: "--now"}, "not a valid service name"),
@@ -448,6 +471,7 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Prints(units, "osapi-static.service loaded inactive dead Example static\n"),
 			behavior.Prints(files, "osapi-static.service static -\n"),
 			behavior.Ran("systemctl", "enable", "osapi-static.service"),
+			behavior.Reads(GetInput{Name: "static"}, Entry{Name: "static", Managed: true}, "name", "enabled", "managed"),
 		),
 	action(
 		"disable",
@@ -504,6 +528,9 @@ func action[In any](
 		behavior.Ran("systemctl", name, "osapi-app.service"),
 	)
 	mac := append([]behavior.HostOption{macOnly, storedPlist, deployedPlist}, macAction[name]...)
+	readBack := actionReadBack[name]
+	host = append(host, readBack)
+	mac = append(mac, readBack)
 	m := behavior.Action(name, fn).Key("name").
 		On(behavior.PlatformDebian, behavior.PlatformDarwin).
 		Describe(describe).

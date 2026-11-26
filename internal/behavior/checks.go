@@ -132,6 +132,11 @@ var Checks = guide.Checks{
 		Fix:      "Give the step the method's input type in and out, serve the behavior, give the plain secret the type secret.Value, and tag only the fields that the step fills before:\"set\".",
 	},
 	{
+		Rule:     RuleReadBack,
+		Requires: "Each write example that runs on the live host of the integration test says what a read of the behavior answers after it: behavior.Reads, or behavior.ReadsNone for an item that the example removed. A write whose result no read shows, such as a command's run, says why with behavior.NoReadBack on the example or .ReadsNothing on the method. A read back names a read of the behavior or its parent by its input, wants a value of the read's row type, and names only fields of it.",
+		Fix:      "Add behavior.Reads(GetInput{...}, Entry{...}) to the example with the fields that the write set, or name the fields to compare a zero value, such as managed for false.",
+	},
+	{
 		Rule:     RuleTag,
 		Requires: "Each struct tag of an input field has a known key (command.KnownTags), and telemetry is \"attr\". A secret is the type secret.Value: the tag secret is not a key.",
 		Fix:      "Correct the key or the value: a misspelled telemetry tag leaves the field off the span. Give a secret the type secret.Value of internal/secret in place of the tag secret:\"true\".",
