@@ -28,9 +28,9 @@ The command prints:
 ```ansi
 $ osapi client audit list
 [1;38;2;0;213;255mAudit entries (2):[0m
-  [38;2;10;143;176mID                                    [0m[38;2;10;143;176mTIMESTAMP            [0m[38;2;10;143;176mUSER             [0m[38;2;10;143;176mMETHOD  [0m[38;2;10;143;176mPATH                                         [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mDURATION  [0m[38;2;10;143;176mTRACE ID[0m
-  [38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000[0m  [38;2;138;138;138m2026-01-15 09:58:12[0m  ops@example.com  [1mPUT[0m     /api/node/web-01/sysctl/net.ipv4.ip_forward  200     184ms     [38;2;138;138;138m26e448c9dbe1c4a8...[0m
-  [38;2;138;138;138m6ba7b810-9dad-11d1-80b4-00c04fd430c8[0m  [38;2;138;138;138m2026-01-15 09:41:03[0m  ci@example.com   [1mGET[0m     /api/agent                                   200     12ms      [38;2;138;138;138m[0m
+  [38;2;10;143;176mID                                    [0m[38;2;10;143;176mTIMESTAMP            [0m[38;2;10;143;176mUSER             [0m[38;2;10;143;176mMETHOD  [0m[38;2;10;143;176mPATH                                         [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mDURATION  [0m[38;2;10;143;176mOPERATION     [0m[38;2;10;143;176mTRACE ID[0m
+  [38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000[0m  [38;2;138;138;138m2026-01-15 09:58:12[0m  ops@example.com  [1mPUT[0m     /api/node/web-01/sysctl/net.ipv4.ip_forward  200     184ms     UpdateSysctl  [38;2;138;138;138m26e448c9dbe1c4a8...[0m
+  [38;2;138;138;138m6ba7b810-9dad-11d1-80b4-00c04fd430c8[0m  [38;2;138;138;138m2026-01-15 09:41:03[0m  ci@example.com   [1mGET[0m     /api/agent                                   200     12ms      GetAgents     [38;2;138;138;138m[0m
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```

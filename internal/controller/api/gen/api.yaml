@@ -9384,7 +9384,7 @@ components:
           example: agent.admit
           type: string
         actor:
-          description: 'The kind of who made a change that did not go through the API: system, join-token or local. Absent for a request through the API.'
+          description: 'The kind of who made a change that did not go through the API: system, join-token, agent or local. Absent for a request through the API.'
           example: system
           type: string
         chain:

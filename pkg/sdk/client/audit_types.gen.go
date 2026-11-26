@@ -15,7 +15,7 @@ type AuditEntry struct {
 	Action string `json:"action,omitempty"`
 
 	// The kind of who made a change that did not go through the API: system,
-	// join-token or local. Absent for a request through the API.
+	// join-token, agent or local. Absent for a request through the API.
 	Actor string `json:"actor,omitempty"`
 
 	// The steps on one line for each host, such as web-01: managedfile update

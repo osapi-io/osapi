@@ -19,8 +19,17 @@ export function AuditDetail({ entry }: { entry: AuditEntry }) {
           ["Targets", entry.targets?.join(", ") || "each host"],
           ["Source IP", entry.source_ip],
           ["Operation", entry.operation_id || "-"],
-          ["Method", entry.method],
-          ["Path", entry.path],
+          // A change that did not go through the API has an actor, an action
+          // and a target, and no method or path.
+          ...(entry.actor
+            ? ([
+                ["Actor", entry.actor],
+                ["Target", entry.target || "-"],
+              ] as [string, string][])
+            : ([
+                ["Method", entry.method],
+                ["Path", entry.path],
+              ] as [string, string][])),
           ["Status", String(entry.response_code)],
           ["Duration", `${entry.duration_ms}ms`],
           ["Time", formatTime(entry.timestamp)],

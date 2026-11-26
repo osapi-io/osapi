@@ -239,9 +239,9 @@ export function Audit() {
                   cell: (e: AuditEntry) => <Text variant="mono">{e.user}</Text>,
                 },
                 {
-                  header: "Method",
+                  header: "Method or actor",
                   cell: (e: AuditEntry) => (
-                    <Text className="font-semibold">{e.method}</Text>
+                    <Text className="font-semibold">{e.method || e.actor}</Text>
                   ),
                 },
                 {
