@@ -267,6 +267,28 @@ func (s *CalloutPublicTestSuite) TestReply() {
 		s.Equal(1, uc.Resp.MaxMsgs)
 		s.Equal("OSAPI", uc.Audience)
 	})
+	s.Run("a refusal sends its reason to the server", func() {
+		svc := natscallout.Service{Issuer: s.issuer, Account: "OSAPI", Decide: refuse}
+		out, err := svc.Reply(context.Background(), request(s))
+		s.Require().NoError(err)
+		resp, err := jwt.DecodeAuthorizationResponseClaims(string(out))
+		s.Require().NoError(err)
+		s.Equal("refused", resp.Error)
+	})
+	s.Run("an error that is not a refusal sends Undecided, not its cause", func() {
+		svc := natscallout.Service{
+			Issuer: s.issuer, Account: "OSAPI", Logger: slog.New(slog.DiscardHandler),
+			Decide: func(context.Context, *jwt.AuthorizationRequest) (natscallout.Decision, error) {
+				return natscallout.Decision{}, errors.New("kv get ENROLLMENT/accepted.m-1: timeout")
+			},
+		}
+		out, err := svc.Reply(context.Background(), request(s))
+		s.Require().NoError(err)
+		resp, err := jwt.DecodeAuthorizationResponseClaims(string(out))
+		s.Require().NoError(err)
+		s.Equal(natscallout.Undecided, resp.Error)
+		s.NotContains(resp.Error, "ENROLLMENT")
+	})
 	s.Run("a key that cannot sign cannot sign the user", func() {
 		svc := natscallout.Service{Issuer: publicOnly, Decide: allow}
 		_, err := svc.Reply(context.Background(), request(s))
@@ -289,6 +311,80 @@ func (s *CalloutPublicTestSuite) TestServe() {
 			},
 		)
 		s.ErrorContains(err, "subscribe to $SYS.REQ.USER.AUTH: no permission")
+	})
+	s.Run("it decides a second request while the first one waits", func() {
+		// A NATS subscription calls its handler for one message at a time.
+		// Here the first decision waits until the second one has started,
+		// so a Serve that decides in its handler never gets the second.
+		started := make(chan struct{}, 2)
+		both := make(chan struct{})
+		decided := make(chan string, 2)
+		svc := natscallout.Service{
+			Issuer: s.issuer, Account: "OSAPI", Logger: slog.New(slog.DiscardHandler),
+			Decide: func(context.Context, *jwt.AuthorizationRequest) (natscallout.Decision, error) {
+				started <- struct{}{}
+				select {
+				case <-both:
+					decided <- "both"
+				case <-time.After(2 * time.Second):
+					decided <- "alone"
+				}
+
+				return natscallout.Decision{}, natscallout.ErrRefused
+			},
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		handlers := make(chan nats.MsgHandler, 1)
+		go func() {
+			_ = svc.Serve(ctx, func(_ string, h nats.MsgHandler) (*nats.Subscription, error) {
+				handlers <- h
+
+				return &nats.Subscription{}, nil
+			})
+		}()
+		handler := <-handlers
+		handler(&nats.Msg{Data: request(s)})
+		handler(&nats.Msg{Data: request(s)})
+		<-started
+		<-started
+		close(both)
+		s.Equal("both", <-decided)
+		s.Equal("both", <-decided)
+	})
+	s.Run("a request that waits for a slot when ctx ends has no answer", func() {
+		defer natscallout.SetMaxInFlight(1)()
+		release := make(chan struct{})
+		calls := make(chan struct{}, 2)
+		svc := natscallout.Service{
+			Issuer: s.issuer, Account: "OSAPI",
+			Decide: func(context.Context, *jwt.AuthorizationRequest) (natscallout.Decision, error) {
+				calls <- struct{}{}
+				<-release
+
+				return natscallout.Decision{}, errors.New("no bucket")
+			},
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		handlers := make(chan nats.MsgHandler, 1)
+		go func() {
+			_ = svc.Serve(ctx, func(_ string, h nats.MsgHandler) (*nats.Subscription, error) {
+				handlers <- h
+
+				return &nats.Subscription{}, nil
+			})
+		}()
+		handler := <-handlers
+		handler(&nats.Msg{Data: request(s)})
+		<-calls
+		cancel()
+		handler(&nats.Msg{Data: request(s)})
+		close(release)
+		select {
+		case <-calls:
+			s.Fail("the second request was decided after ctx ended")
+		case <-time.After(100 * time.Millisecond):
+		}
 	})
 	s.Run("a request that is not one is logged, and has no answer", func() {
 		svc := natscallout.Service{Issuer: s.issuer, Logger: slog.New(slog.DiscardHandler)}

@@ -23,6 +23,7 @@ package jointoken_test
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -49,6 +50,8 @@ func (e entry) Revision() uint64 { return e.rev }
 type bucket struct {
 	data                                          map[string]entry
 	getErr, createErr, updateErr, delErr, keysErr error
+	// beforeUpdate runs before each update, for a test of a race.
+	beforeUpdate func()
 }
 
 func (b *bucket) KVGet(_ context.Context, _ string, key string) (jetstream.KeyValueEntry, error) {
@@ -82,8 +85,11 @@ func (b *bucket) KVUpdate(
 	if b.updateErr != nil {
 		return 0, b.updateErr
 	}
+	if b.beforeUpdate != nil {
+		b.beforeUpdate()
+	}
 	if b.data[key].rev != rev {
-		return 0, errors.New("wrong last sequence")
+		return 0, jetstream.ErrKeyExists
 	}
 	b.data[key] = entry{value: value, rev: rev + 1}
 
@@ -153,6 +159,14 @@ func (s *JoinTokenPublicTestSuite) TestCreate() {
 	s.kv.createErr = errors.New("kv down")
 	_, _, err = s.store.Create(context.Background(), time.Hour, 1, nil)
 	s.ErrorContains(err, "store the join token")
+
+	for _, bad := range []struct {
+		expires time.Duration
+		uses    int
+	}{{time.Hour, 0}, {0, 1}, {-time.Hour, 1}} {
+		_, _, err = s.store.Create(context.Background(), bad.expires, bad.uses, nil)
+		s.ErrorIs(err, jointoken.ErrBounds, "uses %d, expires %s", bad.uses, bad.expires)
+	}
 
 	for _, fail := range []int{1, 2} {
 		n := 0
@@ -273,6 +287,66 @@ func (s *JoinTokenPublicTestSuite) TestConsume() {
 	s.kv.data["jointoken.bad"] = entry{value: []byte("not json"), rev: 1}
 	_, err = s.store.Consume(ctx, "osapi_jt_bad.c2VjcmV0")
 	s.ErrorContains(err, "read the join token")
+}
+
+// TestConsumeRace: a join that loses the swap to a different join takes the
+// next use, or gets ErrUsed when none is left.
+func (s *JoinTokenPublicTestSuite) TestConsumeRace() {
+	ctx := context.Background()
+
+	tests := []struct {
+		name     string
+		uses     int
+		races    int
+		wantErr  error
+		errText  string
+		wantLeft int
+	}{
+		{
+			name: "a join that loses the swap takes the next use",
+			uses: 2, races: 1, wantLeft: 0,
+		},
+		{
+			name: "a join that loses the swap for the last use gets ErrUsed",
+			uses: 1, races: 1, wantErr: jointoken.ErrUsed,
+		},
+		{
+			name: "a join that loses the swap each time is an error",
+			uses: 100, races: 100, errText: "changed 5 times during the join",
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			defer func() { s.kv.beforeUpdate = nil }()
+			token, made, err := s.store.Create(ctx, time.Hour, tc.uses, nil)
+			s.Require().NoError(err)
+			key := "jointoken." + made.ID
+			races := tc.races
+			s.kv.beforeUpdate = func() {
+				if races == 0 {
+					return
+				}
+				races--
+				// A different join takes a use first.
+				var t jointoken.Token
+				s.Require().NoError(json.Unmarshal(s.kv.data[key].value, &t))
+				t.UsesLeft--
+				data, _ := json.Marshal(t)
+				s.kv.data[key] = entry{value: data, rev: s.kv.data[key].rev + 1}
+			}
+
+			t, err := s.store.Consume(ctx, token)
+			switch {
+			case tc.wantErr != nil:
+				s.ErrorIs(err, tc.wantErr)
+			case tc.errText != "":
+				s.ErrorContains(err, tc.errText)
+			default:
+				s.Require().NoError(err)
+				s.Equal(tc.wantLeft, t.UsesLeft)
+			}
+		})
+	}
 }
 
 func (s *JoinTokenPublicTestSuite) TestListAndRevoke() {
