@@ -132,11 +132,15 @@ func (r *Rotation) Load(
 	}
 	pub := r.cfg.Keys.PublicKey()
 	switch {
-	case bytes.Equal(rec.Current, pub) && rec.SignedBy(pub) && len(rec.Previous) > 0:
-		r.cfg.Keys.SetPreviousControllerPublicKey(rec.Previous)
+	case bytes.Equal(rec.Current, pub) && rec.SignedBy(pub):
+		if len(rec.Previous) > 0 {
+			r.cfg.Keys.SetPreviousControllerPublicKey(rec.Previous)
+		}
+		r.cfg.Keys.SetRetiredControllerPublicKeys(publicKeys(rec.Retired))
 	case rec.Rotating() && bytes.Equal(rec.Next, pub) && rec.SignedBy(rec.Current):
 		// The keys moved, and the record of the switch was not written.
 		r.cfg.Keys.SetPreviousControllerPublicKey(rec.Current)
+		r.cfg.Keys.SetRetiredControllerPublicKeys(publicKeys(retire(rec)))
 
 		return r.writeSwitch(ctx, rec, revision)
 	}
@@ -168,6 +172,7 @@ func (r *Rotation) Start(
 			Current:    r.cfg.Keys.PublicKey(),
 			Next:       next.PublicKey(),
 			Previous:   rec.Previous,
+			Retired:    rec.Retired,
 			StartedAt:  r.cfg.Now().UTC(),
 			SwitchedAt: rec.SwitchedAt,
 		}
@@ -305,6 +310,7 @@ func (r *Rotation) Step(
 	}
 	r.cfg.Keys.RotateControllerKey(r.cfg.Keys.PublicKey())
 	r.cfg.Keys.SetPreviousControllerPublicKey(old)
+	r.cfg.Keys.SetRetiredControllerPublicKeys(publicKeys(retire(rec)))
 	if err := r.writeSwitch(ctx, rec, revision); err != nil {
 		return false, err
 	}
@@ -323,6 +329,7 @@ func (r *Rotation) writeSwitch(
 		Serial:     rec.Serial + 1,
 		Current:    rec.Next,
 		Previous:   rec.Current,
+		Retired:    retire(rec),
 		SwitchedAt: r.cfg.Now().UTC(),
 	}
 	if err := r.write(ctx, done, r.cfg.Keys.PrivateKey(), revision); err != nil {
@@ -359,4 +366,29 @@ func (r *Rotation) Run(
 			}
 		}
 	}
+}
+
+// retire is the retired keys of the record that a switch from rec writes:
+// rec's retired keys, then its previous key, which the switch replaces.
+func retire(
+	rec pki.ControllerKeyRecord,
+) [][]byte {
+	retired := append([][]byte{}, rec.Retired...)
+	if len(rec.Previous) > 0 {
+		retired = append(retired, rec.Previous)
+	}
+
+	return retired
+}
+
+// publicKeys is keys as Ed25519 public keys.
+func publicKeys(
+	keys [][]byte,
+) []ed25519.PublicKey {
+	out := make([]ed25519.PublicKey, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, ed25519.PublicKey(k))
+	}
+
+	return out
 }

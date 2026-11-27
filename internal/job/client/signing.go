@@ -90,6 +90,30 @@ func unwrapSignedEnvelope(
 	return envelope.Payload, nil
 }
 
+// unwrapStoredEnvelope is unwrapSignedEnvelope for a record that the
+// controller stored: any of keys, the controller's current key and each one
+// that a rotation replaced, may have signed it.
+func unwrapStoredEnvelope(
+	data []byte,
+	keys []ed25519.PublicKey,
+) ([]byte, error) {
+	if len(keys) == 0 {
+		return unwrapSignedEnvelope(data, nil)
+	}
+	var err error
+	for _, key := range keys {
+		var payload []byte
+		if payload, err = unwrapSignedEnvelope(data, key); err == nil {
+			return payload, nil
+		}
+		if errors.Is(err, ErrNotSigned) {
+			return nil, err
+		}
+	}
+
+	return nil, err
+}
+
 // RefusedError is a response whose signature is not the key that the
 // controller admitted for its machine. Hostname is the name recorded at the
 // admission, not the one the response claims.

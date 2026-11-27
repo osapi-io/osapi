@@ -95,3 +95,32 @@ func (m *Manager) SetNextControllerPublicKey(
 	defer m.mu.Unlock()
 	m.nextControllerPubKey = key
 }
+
+// SetRetiredControllerPublicKeys sets the keys that switches before the
+// last one replaced, from the controller's key record.
+func (m *Manager) SetRetiredControllerPublicKeys(
+	keys []ed25519.PublicKey,
+) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.retiredControllerPubKeys = keys
+}
+
+// StoredRecordKeys is each controller key that verifies a record that the
+// controller stored, such as a job in the queue: the current, the next, the
+// previous and each retired key, in that order. A message from the network
+// is verified with VerifyWithGrace, which takes no retired key.
+func (m *Manager) StoredRecordKeys() []ed25519.PublicKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	keys := make([]ed25519.PublicKey, 0, 3+len(m.retiredControllerPubKeys))
+	for _, k := range append([]ed25519.PublicKey{
+		m.controllerPubKey, m.nextControllerPubKey, m.previousControllerPubKey,
+	}, m.retiredControllerPubKeys...) {
+		if len(k) == ed25519.PublicKeySize {
+			keys = append(keys, k)
+		}
+	}
+
+	return keys
+}

@@ -101,6 +101,28 @@ func (s *ControllerKeyPublicTestSuite) TestRecord() {
 			wantRotates: true,
 		},
 		{
+			name: "a record with retired keys verifies with them",
+			record: func() pki.ControllerKeyRecord {
+				r := pki.ControllerKeyRecord{Serial: 4, Current: pub, Retired: [][]byte{otherPub}}
+				r.Sign(priv)
+
+				return r
+			},
+			key:        pub,
+			wantSigned: true,
+		},
+		{
+			name: "a retired key added after the signature does not verify",
+			record: func() pki.ControllerKeyRecord {
+				r := signed()
+				r.Retired = [][]byte{otherPub}
+
+				return r
+			},
+			key:         pub,
+			wantRotates: true,
+		},
+		{
 			name: "no signature does not verify",
 			record: func() pki.ControllerKeyRecord {
 				r := signed()
@@ -207,6 +229,20 @@ func (s *ControllerKeyPublicTestSuite) TestNextAndPreviousKeys() {
 			},
 		},
 		{
+			name: "a retired key verifies no message, only a stored record",
+			setup: func(m *pki.Manager) []byte {
+				current, _ := keyOf()
+				retired, retiredPriv := keyOf()
+				m.SetControllerPublicKey(current)
+				m.SetRetiredControllerPublicKeys([]ed25519.PublicKey{retired})
+
+				return ed25519.Sign(retiredPriv, data)
+			},
+			validateFunc: func(m *pki.Manager) {
+				s.Len(m.StoredRecordKeys(), 2)
+			},
+		},
+		{
 			name: "a cleared next key does not verify",
 			setup: func(m *pki.Manager) []byte {
 				current, _ := keyOf()
@@ -229,6 +265,57 @@ func (s *ControllerKeyPublicTestSuite) TestNextAndPreviousKeys() {
 			sig := tc.setup(m)
 			s.Equal(tc.wantVerified, m.VerifyWithGrace(data, sig))
 			tc.validateFunc(m)
+		})
+	}
+}
+
+// TestStoredRecordKeys reads the keys that verify a record the controller
+// stored: the current, the next, the previous and each retired key, in that
+// order, and no key that is not set.
+func (s *ControllerKeyPublicTestSuite) TestStoredRecordKeys() {
+	keyOf := func() ed25519.PublicKey {
+		pub, _, err := ed25519.GenerateKey(rand.Reader)
+		s.Require().NoError(err)
+
+		return pub
+	}
+	current, next, previous, retired := keyOf(), keyOf(), keyOf(), keyOf()
+
+	tests := []struct {
+		name     string
+		setup    func(m *pki.Manager)
+		wantKeys []ed25519.PublicKey
+	}{
+		{
+			name: "each key that is set, in order",
+			setup: func(m *pki.Manager) {
+				m.SetControllerPublicKey(current)
+				m.SetNextControllerPublicKey(next)
+				m.SetPreviousControllerPublicKey(previous)
+				m.SetRetiredControllerPublicKeys([]ed25519.PublicKey{retired})
+			},
+			wantKeys: []ed25519.PublicKey{current, next, previous, retired},
+		},
+		{
+			name: "a key that is not set, or of the wrong size, is left out",
+			setup: func(m *pki.Manager) {
+				m.SetControllerPublicKey(current)
+				m.SetRetiredControllerPublicKeys([]ed25519.PublicKey{{1, 2, 3}, retired})
+			},
+			wantKeys: []ed25519.PublicKey{current, retired},
+		},
+		{
+			name:     "no key",
+			setup:    func(*pki.Manager) {},
+			wantKeys: []ed25519.PublicKey{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			m := pki.New(memfs.New(), "/keys", "controller")
+			tc.setup(m)
+			s.Equal(tc.wantKeys, m.StoredRecordKeys())
 		})
 	}
 }

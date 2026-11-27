@@ -53,6 +53,10 @@ type ControllerKeyRecord struct {
 	Next []byte `json:"next,omitempty"`
 	// Previous is the public key that the last switch replaced.
 	Previous []byte `json:"previous,omitempty"`
+	// Retired is each key that a switch before the last one replaced, oldest
+	// first. The controller still verifies the records that they signed,
+	// such as the jobs in the queue.
+	Retired [][]byte `json:"retired,omitempty"`
 	// StartedAt is when the rotation in progress started.
 	StartedAt time.Time `json:"started_at,omitzero"`
 	// SwitchedAt is when the last switch was.
@@ -75,6 +79,10 @@ func (r ControllerKeyRecord) signed() []byte {
 		{"switched_at", stamp(r.SwitchedAt)},
 	} {
 		b.WriteString("\n" + f[0] + "=" + f[1])
+	}
+	// A record with no retired key signs the same bytes as before the field.
+	for _, k := range r.Retired {
+		b.WriteString("\nretired=" + base64.StdEncoding.EncodeToString(k))
 	}
 
 	return []byte(b.String())
