@@ -135,6 +135,10 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				"$O.osapi-file-objects.M.x",
 				"$JS.API.STREAM.PURGE.OBJ_osapi-file-objects",
 				"$JS.API.STREAM.MSG.GET.osapi-AUDIT",
+				// The dead letter list reads each advisory of the DLQ, and
+				// the job message that it names.
+				"$JS.API.STREAM.MSG.GET.osapi-JOBS-DLQ",
+				"$JS.API.STREAM.MSG.GET.osapi-JOBS",
 				"$JS.API.STREAM.UPDATE.OBJ_osapi-file-objects",
 			},
 			notPub: []string{
