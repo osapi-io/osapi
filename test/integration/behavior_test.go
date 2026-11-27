@@ -25,9 +25,11 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -54,6 +56,15 @@ type BehaviorSmokeSuite struct {
 	suite.Suite
 	// family is the platform of the target, which platform reads once.
 	family behavior.PlatformName
+	// tally counts, by behavior, the rows of the write examples that ran
+	// and that the host skipped, such as docker on a host with no runtime.
+	tally map[string]*rowTally
+}
+
+// rowTally is the rows of one behavior's write examples, by status.
+type rowTally struct {
+	ok      int
+	skipped int
 }
 
 // call is a command line and what it reads from standard input.
@@ -73,6 +84,42 @@ func commandLine(
 	args := append(strings.Fields(b.Command(m))[1:], "--target", target, "--json")
 
 	return call{args: append(args, command.Args(input)...), stdin: command.Stdin(input)}
+}
+
+// count adds a row of b's write example to the tally.
+func (s *BehaviorSmokeSuite) count(
+	b string,
+	r map[string]any,
+) {
+	t := s.tally[b]
+	if t == nil {
+		t = &rowTally{}
+		s.tally[b] = t
+	}
+	switch r["status"] {
+	case "ok":
+		t.ok++
+	case "skipped":
+		t.skipped++
+	}
+}
+
+// logTally says, for the target, which behaviors' write examples ran and
+// which the host skipped. A skipped row passes, so this is the record of
+// what the run covered on this host.
+func (s *BehaviorSmokeSuite) logTally() {
+	var ran, skipped []string
+	for _, name := range slices.Sorted(maps.Keys(s.tally)) {
+		t := s.tally[name]
+		if t.ok > 0 {
+			ran = append(ran, fmt.Sprintf("%s %d", name, t.ok))
+		}
+		if t.skipped > 0 {
+			skipped = append(skipped, fmt.Sprintf("%s %d", name, t.skipped))
+		}
+	}
+	s.T().Logf("on %s, write example rows that ran: %s", target, strings.Join(ran, ", "))
+	s.T().Logf("on %s, rows that the host skipped: %s", target, strings.Join(skipped, ", "))
 }
 
 // results runs one command and returns its result rows.
@@ -191,6 +238,8 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 	}
 
 	s.refreshIndex()
+	s.tally = map[string]*rowTally{}
+	defer s.logTally()
 	var examples []made
 	defer func() { s.leftNothing(examples) }()
 	// Before leftNothing, which requires that the interface examples left
@@ -261,6 +310,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 						}
 					}()
 					for _, r := range s.results(commandLine(b, m, ex.Input)) {
+						s.count(b.Name, r)
 						ran = ran || r["status"] == "ok"
 						if r["status"] == "ok" {
 							s.Equal(want, r["changed"], "the example's changed")

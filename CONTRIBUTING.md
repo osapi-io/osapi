@@ -667,9 +667,13 @@ step is data:
 `ScenarioSuite` runs each scenario as a subtest, and each step as a subtest
 under it. A step that fails stops its scenario. The scenarios are the join with
 a token and its refusals, the admission changes, the rotation of the agent's
-keys and of the controller's key, a sealed secret that a job opens, and the
-agent's service, which runs as root on Linux only. Do not write a flow as a test
-method of its own: add a scenario. `TestEachStepIsACommand`, in
+keys and of the controller's key, a sealed secret that a job opens, the agent's
+service, which runs as root on Linux only, a signal to a process that a command
+starts, a command on an agent that has commands off, and a reboot. A scenario
+with `labOnly` runs only against a deployment such as the lab, because it takes
+its target down: the reboot never runs on the CI runner. `fixtureAgent` sets
+keys of a fixture agent's config, such as `command.enabled: false`. Do not write
+a flow as a test method of its own: add a scenario. `TestEachStepIsACommand`, in
 `scenario_test.go`, has no build tag. It fails for a step whose command or flag
 does not exist, for an unknown check, and for a placeholder that no step before
 it keeps.
@@ -678,6 +682,11 @@ The fixture runs where the suite runs. Thus against a deployment such as the
 lab, the `host` commands and `SecurityDefaultsSuite` run against a fixture. Each
 agent of a fixture has the machine ID of the host, so a test starts one at a
 time.
+
+A write example's row that the host skips, such as docker on a host with no
+runtime, passes. So `TestWrites` logs, for its target, the rows of each behavior
+that ran and the rows that the host skipped: read the log to see what a run
+covered.
 
 `AuthorizationSuite` sends each route of the API contract
 (`internal/apicontract/testdata/joined.golden`) with no token, which must be

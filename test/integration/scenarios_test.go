@@ -40,7 +40,9 @@ func scenarios() []scenario {
 
 	out = append(out, natsCertScenarios()...)
 
-	return append(out, deadLetterScenarios()...)
+	out = append(out, deadLetterScenarios()...)
+
+	return append(out, liveWriteScenarios()...)
 }
 
 // ready is a step that waits for a Ready agent in the fixture, and keeps

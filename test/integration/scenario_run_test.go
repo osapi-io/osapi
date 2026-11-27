@@ -76,6 +76,8 @@ func (s *ScenarioSuite) runScenario(
 	switch {
 	case sc.ownServer && deployment():
 		t.Skip("changes the host that runs the suite: runs against the suite's own server")
+	case sc.labOnly && !deployment():
+		t.Skip("runs only against a deployment such as the lab: it takes the target down")
 	case sc.rootLinux && (runtime.GOOS != "linux" || os.Geteuid() != 0):
 		t.Skip("needs root on Linux, as on the CI runner")
 	}
@@ -102,6 +104,9 @@ func (s *ScenarioSuite) runScenario(
 				} else {
 					consumer[k] = v
 				}
+			}
+			for k, v := range sc.fixtureAgent {
+				agent[k] = v
 			}
 		})
 		r.base = r.f.dir

@@ -55,12 +55,19 @@ type scenario struct {
 	// fixtureConsumer replaces keys of the fixture's agent.consumer, such
 	// as a short ack_wait; a key whose value is nil is removed.
 	fixtureConsumer map[string]any
+	// fixtureAgent replaces keys of the fixture's agent config, such as
+	// command: {enabled: false}.
+	fixtureAgent map[string]any
 	// ownServer is a scenario that changes the host that runs the suite,
 	// such as the keys of its agent: it skips against a deployment.
 	ownServer bool
 	// rootLinux is a scenario that needs root on Linux with systemd.
 	rootLinux bool
-	steps     []step
+	// labOnly is a scenario that runs only against a deployment, such as a
+	// reboot of a lab VM: the CI runner and the suite's own host are not
+	// for it to lose.
+	labOnly bool
+	steps   []step
 	// cleanup runs after the steps, also when one fails. Its failures are
 	// not the scenario's.
 	cleanup []step
