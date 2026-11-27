@@ -204,8 +204,13 @@ type Agent struct {
 	// consumerErrs maps each job consumer of the running set that cannot
 	// be created or bound to its last error; the heartbeat reports it as
 	// the ConsumersUnavailable condition. Guarded by consumerErrMu.
-	consumerErrs  map[string]string
+	consumerErrs  map[string]consumerErr
 	consumerErrMu sync.Mutex
+	// consumerGen counts the consumer sets that started. Each consumer
+	// records and clears its failure under the generation of its set, so a
+	// set that stops late cannot clear a failure of the set after it, which
+	// has the same consumer names. Guarded by lifecycleMu.
+	consumerGen uint64
 
 	// missingPrograms are the behaviors' programs that this host lacks,
 	// found at start and again on each heartbeat, which reports them. Only

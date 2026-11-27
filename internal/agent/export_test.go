@@ -1256,3 +1256,24 @@ func SetFactsBucket(
 ) {
 	a.factsBucket = bucket
 }
+
+// ExportConsumerFailed records a failure of the consumer name of the set
+// gen, as a consumer goroutine does.
+func ExportConsumerFailed(
+	a *Agent,
+	name string,
+	gen uint64,
+	err error,
+) {
+	a.consumerFailed(name, gen, "failed", err)
+}
+
+// ExportConsumerRecovered clears the failure of the consumer name of the set
+// gen, as a consumer goroutine does when it runs or stops.
+func ExportConsumerRecovered(
+	a *Agent,
+	name string,
+	gen uint64,
+) {
+	a.consumerRecovered(name, gen)
+}
