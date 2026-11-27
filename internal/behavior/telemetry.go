@@ -206,13 +206,38 @@ func (m *Method) behaviorName() string {
 	return m.Name
 }
 
+type quietKey struct{}
+
+// Quiet is ctx in which a method runs with no span and no metrics. A run of
+// the examples uses it, such as the call tree of the catalog, because those
+// calls run on no host and must not count as calls of the behavior.
+func Quiet(
+	ctx context.Context,
+) context.Context {
+	return context.WithValue(ctx, quietKey{}, true)
+}
+
+func quiet(
+	ctx context.Context,
+) bool {
+	q, _ := ctx.Value(quietKey{}).(bool)
+
+	return q
+}
+
 // run runs call, the method with its input, inside the span of the method,
 // and records its metrics. call returns the output, and the input so that
-// the span can have its tagged fields.
+// the span can have its tagged fields. In a Quiet ctx it only runs call.
 func (m *Method) run(
 	ctx context.Context,
 	call func(ctx context.Context) (out any, in any, err error),
 ) (any, error) {
+	if quiet(ctx) {
+		out, _, err := call(ctx)
+
+		return out, err
+	}
+
 	name := m.behaviorName()
 
 	base := make([]attribute.KeyValue, 0, 4)

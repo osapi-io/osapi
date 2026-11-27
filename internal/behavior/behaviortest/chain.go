@@ -65,7 +65,11 @@ func Chains(
 			}
 			root := behavior.NewStep(b.Name, m.Name, ex.Input)
 			data, _ := json.Marshal(secret.Plain(ex.Input))
-			out, err := m.Invoke(behavior.Record(context.Background(), root), p, data)
+			out, err := m.Invoke(
+				behavior.Quiet(behavior.Record(context.Background(), root)),
+				p,
+				data,
+			)
 			if err != nil {
 				root.Error = err.Error()
 			} else {

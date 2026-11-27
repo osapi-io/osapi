@@ -24,6 +24,7 @@ import (
 	"context"
 	"maps"
 	"slices"
+	"sync"
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -36,15 +37,40 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// Get is the catalog, from the registries of the controller: each request
-// builds it, so it has each behavior that is registered when it runs.
+// chains runs the examples of a behavior, for the call tree of the catalog.
+var chains Runs = behaviortest.Chains
+
+var (
+	builtMu  sync.Mutex
+	builtFor []*behavior.Behavior
+	built    []Behavior
+)
+
+// registered is the behaviors of the catalog. Their examples run only when
+// the registry differs from the one of the last build, so a request with
+// the same registry runs none, and a behavior registered later is in the
+// next catalog.
+func registered() []Behavior {
+	all := behavior.All()
+	builtMu.Lock()
+	defer builtMu.Unlock()
+	if built == nil || !slices.Equal(all, builtFor) {
+		built = Behaviors(all, chains)
+		builtFor = all
+	}
+
+	return built
+}
+
+// Get is the catalog, from the registries of the controller when it runs.
+// Its behaviors are built again only when the registry changed.
 func Get(
 	_ context.Context,
 	_ Deps,
 	_ GetInput,
 ) (Response, error) {
 	out := Response{
-		Behaviors:    Behaviors(behavior.All(), behaviortest.Chains),
+		Behaviors:    registered(),
 		Areas:        []Area{},
 		Permissions:  authtoken.AllPermissions(),
 		Roles:        []Role{},

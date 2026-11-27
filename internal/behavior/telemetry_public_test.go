@@ -274,6 +274,23 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 	})
 }
 
+// TestQuiet: a method that runs in a Quiet ctx makes no span and records no
+// metric, and still answers.
+func (s *TelemetryPublicTestSuite) TestQuiet() {
+	out, err := top().Method("get").Invoke(
+		behavior.Quiet(context.Background()),
+		fakeProvider{},
+		nil,
+	)
+
+	s.Require().NoError(err)
+	s.NotNil(out)
+	s.Empty(s.spans.Ended())
+	var rm metricdata.ResourceMetrics
+	s.Require().NoError(s.reader.Collect(context.Background(), &rm))
+	s.Empty(rm.ScopeMetrics, "no metric")
+}
+
 func (s *TelemetryPublicTestSuite) TestSetMeterProvider() {
 	s.Run("when no provider was set the global one is used", func() {
 		behavior.ResetInstruments()
