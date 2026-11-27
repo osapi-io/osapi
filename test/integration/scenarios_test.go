@@ -38,7 +38,9 @@ func scenarios() []scenario {
 
 	out = append(out, jobScenarios()...)
 
-	return append(out, natsCertScenarios()...)
+	out = append(out, natsCertScenarios()...)
+
+	return append(out, deadLetterScenarios()...)
 }
 
 // ready is a step that waits for a Ready agent in the fixture, and keeps
@@ -1037,6 +1039,89 @@ func natsCertScenarios() []scenario {
 					ownServer: true,
 					cli:       []string{"controller", "join", "token", "create", "--json"},
 					checks:    []check{{path: "join", op: "contains", want: "fp={urlq:next}"}},
+				},
+			},
+		},
+	}
+}
+
+func deadLetterScenarios() []scenario {
+	return []scenario{
+		{
+			name:             "a job that its agent never acks becomes a dead letter, which retry runs again",
+			writeOp:          "DEAD_LETTER",
+			fixture:          true,
+			fixtureAutoAdmit: true,
+			// A delivery that is not acked in 3s goes again, and after two
+			// deliveries NATS gives up on it: the DLQ stream keeps its advisory.
+			fixtureConsumer: map[string]any{"ack_wait": "3s", "max_deliver": 2, "back_off": []string{"1s"}},
+			steps: []step{
+				{name: "start an agent", start: "agent", keyDir: "{dir:agent}"},
+				ready("the agent is Ready"),
+				{
+					name:       "send a job that runs long",
+					on:         onFixture,
+					background: true,
+					pause:      2 * time.Second,
+					cli: []string{
+						"client",
+						"node",
+						"command",
+						"exec",
+						"--target",
+						"{host}",
+						"--command",
+						"sleep",
+						"--args",
+						"60",
+					},
+				},
+				{name: "kill the agent while it runs the job", kill: "agent"},
+			// The delivery goes again once ack_wait ends: the new agent runs
+			// it, and is killed while it does.
+			{
+				name: "start the agent again, to take the job again", start: "again",
+				keyDir: "{dir:agent}", pause: 8 * time.Second,
+			},
+			{name: "kill the agent again", kill: "again"},
+			// NATS gives up on a pull consumer's message when an agent asks
+			// for it once more: the third agent's fetch makes the advisory.
+			{name: "start the agent for the retry", start: "third", keyDir: "{dir:agent}"},
+				{
+					name:  "NATS gives up after two deliveries",
+					on:    onFixture,
+					wait:  60 * time.Second,
+					pause: 2 * time.Second,
+					cli:   []string{"client", "job", "deadletter", "list", "--json"},
+					checks: []check{
+						{path: "items[0].deliveries", op: "==", want: "2"},
+						{path: "items[0].job_id", op: "nonempty"},
+						{path: "items[0].consumer", op: "nonempty"},
+					},
+					capture: map[string]string{"dead": "items[0].job_id"},
+				},
+					ready("the agent is Ready for the retry"),
+				{
+					name: "retry the dead job", on: onFixture,
+					cli:     []string{"client", "job", "retry", "--id", "{dead}", "--json"},
+					checks:  []check{{path: "job_id", op: "!=", want: "{dead}"}},
+					capture: map[string]string{"retried": "job_id"},
+				},
+				{
+					name: "the retry is a job of its own", on: onFixture,
+					cli:    []string{"client", "job", "get", "--id", "{retried}", "--json"},
+					checks: []check{{path: "id", op: "==", want: "{retried}"}},
+				},
+				{
+					name: "delete the dead job",
+					on:   onFixture,
+					cli:  []string{"client", "job", "delete", "--id", "{dead}"},
+				},
+				{
+					name:  "the dead job is gone",
+					on:    onFixture,
+					fails: true,
+					cli:   []string{"client", "job", "get", "--id", "{dead}", "--json"},
 				},
 			},
 		},
