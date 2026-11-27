@@ -71,20 +71,26 @@ func (c *cli) List(
 }
 
 // inspect is the ID and the size of image on the host; an empty ID when the
-// host does not have it.
+// host does not have it. A failure of docker, such as a daemon that does not
+// answer, is an error, not an image that the host does not have.
 func (c *cli) inspect(
 	ctx context.Context,
 	image string,
-) (string, int64) {
+) (string, int64, error) {
 	out, err := c.exec.RunPrivilegedCmd(ctx, "docker",
 		[]string{"image", "inspect", "--format", "{{.Id}} {{.Size}}", image})
 	if err != nil {
-		return "", 0
+		if strings.Contains(strings.ToLower(out), "no such image") {
+			return "", 0, nil
+		}
+
+		return "", 0, fmt.Errorf("docker image inspect %s: %w: %s",
+			image, err, strings.TrimSpace(out))
 	}
 	id, size, _ := strings.Cut(strings.TrimSpace(out), " ")
 	n, _ := strconv.ParseInt(size, 10, 64)
 
-	return id, n
+	return id, n, nil
 }
 
 // Pull pulls the image, and reports whether the host got a new one.
@@ -92,7 +98,10 @@ func (c *cli) Pull(
 	ctx context.Context,
 	image string,
 ) (PullResult, error) {
-	before, _ := c.inspect(ctx, image)
+	before, _, err := c.inspect(ctx, image)
+	if err != nil {
+		return PullResult{}, err
+	}
 	if out, err := c.exec.RunPrivilegedCmd(ctx, "docker", []string{"pull", image}); err != nil {
 		return PullResult{}, fmt.Errorf(
 			"docker pull %s: %w: %s",
@@ -101,7 +110,10 @@ func (c *cli) Pull(
 			strings.TrimSpace(out),
 		)
 	}
-	id, size := c.inspect(ctx, image)
+	id, size, err := c.inspect(ctx, image)
+	if err != nil {
+		return PullResult{}, err
+	}
 
 	return PullResult{Image: image, ImageID: id, Size: size, Changed: id != before}, nil
 }
@@ -113,7 +125,11 @@ func (c *cli) Delete(
 	image string,
 	force bool,
 ) (bool, error) {
-	if id, _ := c.inspect(ctx, image); id == "" {
+	id, _, err := c.inspect(ctx, image)
+	if err != nil {
+		return false, err
+	}
+	if id == "" {
 		return false, nil
 	}
 	args := []string{"rmi"}

@@ -93,6 +93,27 @@ func marked() gomock.Matcher {
 	})
 }
 
+// TestNoObjectStore: an agent with file state and no object store reads only.
+// A deploy is unsupported, not a call on a nil object provider, which
+// panicked.
+func (s *WriterPublicTestSuite) TestNoObjectStore() {
+	s.Run("a deploy is unsupported", func() {
+		p, err := certificate.NewWriter(host.Host{
+			Platform: behavior.PlatformDebian,
+			FS:       s.fs,
+			Exec:     s.exec,
+			Required: map[string]any{managedfile.Behavior.Name: s.files},
+		})
+		s.Require().NoError(err)
+
+		s.NotPanics(func() {
+			_, err = certificate.Create(context.Background(), p,
+				certificate.CreateInput{Name: "internal-ca", Object: "internal-ca.pem"})
+		})
+		s.ErrorIs(err, behavior.ErrUnsupported)
+	})
+}
+
 // TestRetryAfterAFailedDeploy: a CA whose file landed and whose rebuild of
 // the trust store failed is rebuilt by a retry with the same input. The
 // record of the file is marked, so the retry's write changes; managedfile's

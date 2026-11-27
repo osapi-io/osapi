@@ -62,13 +62,16 @@ type writer struct {
 // update-ca-certificates, each its own, and the others with update-ca-trust,
 // as the definition declares. osapi does not support Alpine, whose
 // update-ca-certificates the linux provider does not declare, so it reads
-// only there. An agent with no file state store has no managedfile, and
-// reads only.
+// only there. An agent with no file state store has no managedfile, and one
+// with no object store has no object: each reads only.
 func newWriter(
 	h host.Host,
 ) (Provider, error) {
 	files := host.Require[managedfile.Provider](h, managedfile.Behavior)
-	if files == nil || string(h.Platform) == family.Alpine {
+	objects := host.Require[object.Provider](h, object.Behavior)
+	// A write gets the PEM from the object store, so an agent with file
+	// state but no object store reads only, as one with no file state does.
+	if files == nil || objects == nil || string(h.Platform) == family.Alpine {
 		return newReader(h)
 	}
 	dir := ""
@@ -85,7 +88,7 @@ func newWriter(
 
 	return &writer{
 		reader:  &reader{src: h.Sources()},
-		objects: host.Require[object.Provider](h, object.Behavior),
+		objects: objects,
 		files:   files,
 		exec:    h.Exec,
 		fs:      h.FS,

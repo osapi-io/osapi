@@ -69,7 +69,8 @@ func (s *HostPublicTestSuite) TestProvider() {
 	s.Run("a pull that fails is the error", func() {
 		m := hostmocks.NewMockExec(gomock.NewController(s.T()))
 		behaviortest.ReadsThroughRunCmd(m)
-		m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", inspect).Return("", boom)
+		m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", inspect).
+			Return("Error: No such image: alpine\n", boom)
 		m.EXPECT().
 			RunPrivilegedCmd(gomock.Any(), "docker", []string{"pull", "alpine"}).
 			Return("denied", boom)
@@ -88,6 +89,69 @@ func (s *HostPublicTestSuite) TestProvider() {
 		_, err := p.Delete(ctx, "alpine", true)
 		s.ErrorIs(err, boom)
 	})
+}
+
+// TestDockerFails: an inspect that fails for a reason other than an image
+// that the host does not have, such as a daemon that does not answer, is the
+// error: a delete does not report that the image is gone, and a pull does
+// not report what it got.
+func (s *HostPublicTestSuite) TestDockerFails() {
+	ctx := context.Background()
+	down := errors.New("exit status 1")
+	inspect := []string{"image", "inspect", "--format", "{{.Id}} {{.Size}}", "alpine"}
+	daemon := "Cannot connect to the Docker daemon at unix:///var/run/docker.sock.\n"
+	tests := []struct {
+		name string
+		call func(image.Provider) error
+		more func(*hostmocks.MockExec)
+	}{
+		{
+			name: "delete",
+			call: func(p image.Provider) error {
+				_, err := p.Delete(ctx, "alpine", false)
+
+				return err
+			},
+		},
+		{
+			name: "pull, before it pulls",
+			call: func(p image.Provider) error {
+				_, err := p.Pull(ctx, "alpine")
+
+				return err
+			},
+		},
+		{
+			name: "pull, after it pulls",
+			call: func(p image.Provider) error {
+				_, err := p.Pull(ctx, "alpine")
+
+				return err
+			},
+			more: func(m *hostmocks.MockExec) {
+				m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", []string{"pull", "alpine"}).
+					Return("", nil)
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			m := hostmocks.NewMockExec(gomock.NewController(s.T()))
+			behaviortest.ReadsThroughRunCmd(m)
+			if tc.more != nil {
+				// The first inspect finds no image; the one after the pull fails.
+				m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", inspect).
+					Return("Error: No such image: alpine\n", down)
+				tc.more(m)
+			}
+			m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", inspect).Return(daemon, down)
+			p, _ := image.NewCLI(host.Host{Exec: m})
+
+			err := tc.call(p)
+			s.ErrorIs(err, down)
+			s.ErrorContains(err, "Cannot connect to the Docker daemon")
+		})
+	}
 }
 
 func TestHostPublicTestSuite(

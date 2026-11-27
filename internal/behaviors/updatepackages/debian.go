@@ -51,7 +51,10 @@ func newDebian(
 func (d *debian) Updates(
 	ctx context.Context,
 ) ([]Available, error) {
-	out, err := d.exec.RunCmd(ctx, "apt", []string{"list", "--upgradable"})
+	// A read command runs with LC_ALL=C: parse reads the English
+	// "upgradable from", which a translated apt shifts.
+	data, err := d.exec.RunReadCmd(ctx, "apt", []string{"list", "--upgradable"})
+	out := string(data)
 	if err != nil {
 		return nil, fmt.Errorf("list the updates: %w", err)
 	}

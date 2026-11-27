@@ -69,6 +69,15 @@ func (s *HostPublicTestSuite) provider(
 				if state == "" {
 					return "", nil
 				}
+				if state == "prefix" {
+					// web's ID starts with abc, and a second container is named abc.
+					return `{"ID":"abc123","Names":"web","State":"running"}` + "\n" +
+						`{"ID":"fff999","Names":"abc","State":"exited"}` + "\n", nil
+				}
+				if state == "ambiguous" {
+					return `{"ID":"abc123","Names":"web","State":"running"}` + "\n" +
+						`{"ID":"abc456","Names":"api","State":"exited"}` + "\n", nil
+				}
 				if state == "two" {
 					return `{"ID":"def456","Names":"web","State":"running"}` + "\n" +
 						`{"ID":"abc123","Names":"api","State":"exited"}` + "\n", nil
@@ -109,6 +118,53 @@ func (s *HostPublicTestSuite) TestReads() {
 			s.Equal([]string{"api", "web"}, []string{got[0].Name, got[1].Name}, "by name")
 		},
 	)
+}
+
+// TestLookup: an exact name or ID wins over the start of another
+// container's ID, a start of two IDs is refused, and create looks for its
+// name only.
+func (s *HostPublicTestSuite) TestLookup() {
+	ctx := context.Background()
+	got, err := s.provider("prefix", true, nil).Get(ctx, "abc")
+	s.Require().NoError(err)
+	s.Equal("abc", got.Name, "the name abc, not web, whose ID starts with abc")
+	got, err = s.provider("prefix", true, nil).Get(ctx, "abc1")
+	s.Require().NoError(err)
+	s.Equal("web", got.Name, "a start of one ID")
+	_, err = s.provider("ambiguous", true, nil).Get(ctx, "abc")
+	s.ErrorContains(err, "is the start of the ID of 2 containers")
+	_, err = s.provider("ambiguous", true, nil).Get(ctx, "zzz")
+	s.ErrorIs(err, behavior.ErrNotFound)
+
+	p := s.provider("running", true, func(m *hostmocks.MockExec) {
+		m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker",
+			[]string{"create", "--name", "abc", "nginx"}).Return("fff999\n", nil)
+	})
+	created, err := p.Create(ctx, docker.CreateInput{Name: "abc", Image: "nginx"})
+	s.Require().NoError(err)
+	s.Equal(docker.Result{Name: "abc", ID: "fff999", Changed: true}, created,
+		"web's ID starts with abc, and create still makes abc")
+}
+
+// TestEnvRefused: a variable that docker's env file cannot hold as one line
+// is refused before docker runs, for create and for exec.
+func (s *HostPublicTestSuite) TestEnvRefused() {
+	ctx := context.Background()
+	for name, env := range map[string]map[string]secret.Value{
+		"a key with =":                   {"A=B": "1"},
+		"a key with a line end":          {"A\nB": "1"},
+		"a key that starts with a digit": {"1A": "1"},
+		"a value with a line end":        {"A": "1\nB=2"},
+	} {
+		s.Run(name, func() {
+			_, err := s.provider("", true, nil).
+				Create(ctx, docker.CreateInput{Name: "web", Image: "nginx", Env: env})
+			s.ErrorContains(err, "environment variable")
+			_, err = s.provider("running", true, nil).
+				Exec(ctx, docker.ExecInput{Name: "web", Command: []string{"env"}, Env: env})
+			s.ErrorContains(err, "environment variable")
+		})
+	}
 }
 
 func (s *HostPublicTestSuite) TestCreate() {
