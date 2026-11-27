@@ -47,9 +47,12 @@ func (s *DiskPublicTestSuite) TestGetLocalUsageStats() {
 			"/dev/sdb1 /data xfs rw 0 0\n" +
 			"server:/export /mnt/nfs nfs rw 0 0\n",
 	}, map[string]string{
-		"df -akP": dfHead +
+		// gohai runs one df for the local mounts and one for each network
+		// mount, so a hung network mount cannot stall the local sizes.
+		"df -akP -- / /run /data": dfHead +
 			"/dev/sda1 100 40 60 40% /\n" +
-			"tmpfs 10 1 9 10% /run\n" +
+			"tmpfs 10 1 9 10% /run\n",
+		"df -akP -- /mnt/nfs": dfHead +
 			"server:/export 1000 1 999 1% /mnt/nfs\n",
 	})}
 	got, err := g.GetLocalUsageStats()

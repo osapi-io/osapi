@@ -54,13 +54,13 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-|                 |                                                                                                                                                            |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Span            | behavior.sshkey.&lt;method&gt;                                                                                                                             |
-| Child spans     | behavior.user.&lt;method&gt;, exec chown, exec dscl, exec useradd, exec chpasswd, exec userdel, exec usermod, exec id, file.write, file.remove, file.chmod |
-| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                  |
-| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                            |
-| Recorded inputs | name (list, create, delete), fingerprint (delete)                                                                                                          |
+|                 |                                                                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.sshkey.&lt;method&gt;                                                                                                                                                     |
+| Child spans     | behavior.user.&lt;method&gt;, exec chown, exec dscl, exec getent, exec sshd, exec useradd, exec chpasswd, exec userdel, exec usermod, exec id, file.write, file.remove, file.chmod |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                                          |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                                                    |
+| Recorded inputs | name (list, create, delete), fingerprint (delete)                                                                                                                                  |
 
 ## Method list
 
