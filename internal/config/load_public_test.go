@@ -178,6 +178,15 @@ func (s *LoadPublicTestSuite) TestLoad() {
 			wantRule: config.RuleValue,
 		},
 		{
+			name: "when an environment key with no id ends in base64 padding, the key has no id",
+			body: validConfig(),
+			env: map[string]string{
+				"OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS": testSigningKey + "==",
+			},
+			wantErr:  `controller.api.security.signing_keys[0].id breaks its rule "required"`,
+			wantRule: config.RuleValue,
+		},
+		{
 			name: "when the list of signing keys is empty, the config loads: the controller makes a key",
 			body: strings.Replace(validConfig(),
 				"      signing_keys:\n        - id: test\n          key: "+testSigningKey,
