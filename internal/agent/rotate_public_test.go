@@ -47,6 +47,75 @@ type RotateKeyPublicTestSuite struct {
 	suite.Suite
 }
 
+// TestLoadAgentKeys checks that the agent finishes a rotation that stopped
+// between the renames of Promote before it loads its keys, so it does not
+// sign with the private key of one pair and the public key of the other.
+func (s *RotateKeyPublicTestSuite) TestLoadAgentKeys() {
+	moves := [][2]string{
+		{"/keys/agent.next.ekey", "/keys/agent.ekey"},
+		{"/keys/agent.next.key", "/keys/agent.key"},
+		{"/keys/agent.next.pub", "/keys/agent.pub"},
+	}
+	tests := []struct {
+		name    string
+		moved   []int
+		garbage bool
+		wantNew bool
+		wantErr string
+	}{
+		{name: "with no rotation it loads the keys"},
+		{
+			name:  "after the private key moved it finishes the rotation",
+			moved: []int{0, 1}, wantNew: true,
+		},
+		{
+			name:  "after the encryption key moved it finishes the rotation",
+			moved: []int{0}, wantNew: true,
+		},
+		{
+			name: "a next public key that does not decode is the error", garbage: true,
+			wantErr: "finish the rotation of the agent's keys",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll("/keys", 0o700))
+			old := pki.New(fs, "/keys", "agent", pki.WithEncryptionKey())
+			s.Require().NoError(old.LoadOrGenerate())
+			want := old.PublicKey()
+			if tt.moved != nil || tt.garbage {
+				next, err := old.Next()
+				s.Require().NoError(err)
+				want = next.PublicKey()
+			}
+			for _, i := range tt.moved {
+				s.Require().NoError(fs.Rename(moves[i][0], moves[i][1]))
+			}
+			if tt.garbage {
+				s.Require().NoError(fs.WriteFile("/keys/agent.next.pub", []byte("nope"), 0o600))
+			}
+
+			keys := pki.New(fs, "/keys", "agent", pki.WithEncryptionKey())
+			err := agent.ExportLoadAgentKeys(
+				context.Background(), slog.Default(), keys, keys.LoadOrGenerate,
+			)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(want, keys.PublicKey())
+			s.Equal(keys.PublicKey(), keys.PrivateKey().Public(),
+				"the agent signs with the pair of its public key")
+			if tt.wantNew {
+				s.NotEqual(old.PublicKey(), keys.PublicKey())
+			}
+		})
+	}
+}
+
 func TestRotateKeyPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(RotateKeyPublicTestSuite))
 }

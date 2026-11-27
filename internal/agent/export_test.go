@@ -1256,3 +1256,13 @@ func SetFactsBucket(
 ) {
 	a.factsBucket = bucket
 }
+
+// ExportLoadAgentKeys exposes loadAgentKeys for testing.
+func ExportLoadAgentKeys(
+	ctx context.Context,
+	log *slog.Logger,
+	keys *pki.Manager,
+	load func() error,
+) error {
+	return loadAgentKeys(ctx, log, keys, load)
+}

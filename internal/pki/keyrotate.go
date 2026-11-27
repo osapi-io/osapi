@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"crypto/ecdh"
 	"crypto/ed25519"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -247,6 +248,27 @@ func (m *Manager) Resume(
 	}
 
 	return true, m.Load()
+}
+
+// ResumeNext is Resume for a host that keeps the next public key itself, as
+// an agent does: the public key of the next keys is in its next public key
+// file until the last rename of a Promote moves it. With no next public key
+// file there is nothing to finish.
+func (m *Manager) ResumeNext() (bool, error) {
+	_, fromPub, _ := m.pathsOf(m.keyPrefix + nextSuffix)
+	data, err := m.fs.ReadFile(fromPub)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read key %s: %w", fromPub, err)
+	}
+	block, _ := pem.Decode(data)
+	if block == nil || block.Type != pemPublicKeyType {
+		return false, fmt.Errorf("decode key %s: no public key PEM block", fromPub)
+	}
+
+	return m.Resume(ed25519.PublicKey(block.Bytes))
 }
 
 // pairOf is whether the keys in privPath and pubPath are a pair, of want.

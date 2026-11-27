@@ -61,7 +61,7 @@ func RotateKey(
 ) (string, error) {
 	keyDir := cfg.Agent.PKI.KeyDir
 	keys := pki.New(fs, keyDir, "agent", pki.WithEncryptionKey())
-	if err := keys.Load(); err != nil {
+	if err := loadAgentKeys(ctx, log, keys, keys.Load); err != nil {
 		return "", fmt.Errorf("the agent's keys: %w; the agent makes them at its first start", err)
 	}
 	next, err := keys.Next()
@@ -125,6 +125,31 @@ func RotateKey(
 	log.InfoContext(ctx, "rotated the agent's keys", slog.String("fingerprint", reply.Fingerprint))
 
 	return keys.Fingerprint(), nil
+}
+
+// loadAgentKeys finishes a key rotation that stopped between its renames,
+// then loads the agent's keys with load, such as Load or LoadOrGenerate.
+// Without the repair, a stop between the renames of Promote leaves the
+// private key of one pair beside the public key of the other, and the agent
+// signs with a key that the controller does not verify.
+func loadAgentKeys(
+	ctx context.Context,
+	log *slog.Logger,
+	keys *pki.Manager,
+	load func() error,
+) error {
+	moved, err := keys.ResumeNext()
+	if err != nil {
+		return fmt.Errorf("finish the rotation of the agent's keys: %w", err)
+	}
+	if moved {
+		log.InfoContext(
+			ctx,
+			"finished a rotation of the agent's keys that stopped between its renames",
+		)
+	}
+
+	return load()
 }
 
 // natsDialOptions is the URL and the options of a connection to NATS from

@@ -275,7 +275,7 @@ func joinNow(
 	}
 	keyDir := cfg.Agent.PKI.KeyDir
 	keys := pki.New(fs, keyDir, "agent", pki.WithEncryptionKey())
-	if err := keys.LoadOrGenerate(); err != nil {
+	if err := loadAgentKeys(ctx, log, keys, keys.LoadOrGenerate); err != nil {
 		return savedJoin{}, fmt.Errorf("load or make the agent's keys: %w", err)
 	}
 	// The agent's own NATS user, for operator mode: the controller mints a

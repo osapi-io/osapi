@@ -426,6 +426,78 @@ func (s *KeyRotatePublicTestSuite) TestResume() {
 	}
 }
 
+func (s *KeyRotatePublicTestSuite) TestResumeNext() {
+	moves := [][2]string{
+		{"/keys/agent.next.ekey", "/keys/agent.ekey"},
+		{"/keys/agent.next.key", "/keys/agent.key"},
+		{"/keys/agent.next.pub", "/keys/agent.pub"},
+	}
+	tests := []struct {
+		name      string
+		moved     []int
+		noNext    bool
+		garbage   bool
+		fail      bool
+		wantMoved bool
+		wantErr   string
+	}{
+		{name: "with no next keys, it does nothing", noNext: true},
+		{name: "with each next key beside the keys, it does nothing"},
+		{
+			name:  "after the private key moved, it moves the public key",
+			moved: []int{0, 1}, wantMoved: true,
+		},
+		{
+			name:  "after the encryption key moved, it moves the others",
+			moved: []int{0}, wantMoved: true,
+		},
+		{name: "with each key moved, it does nothing", moved: []int{0, 1, 2}},
+		{
+			name: "a next public key that does not decode", garbage: true,
+			wantErr: "decode key /keys/agent.next.pub",
+		},
+		{
+			name: "a next public key that does not read", fail: true,
+			wantErr: "read key /keys/agent.next.pub",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			base, m := made(s, pki.WithEncryptionKey())
+			want := m.PublicKey()
+			if !tt.noNext {
+				next, err := m.Next()
+				s.Require().NoError(err)
+				want = next.PublicKey()
+			}
+			for _, i := range tt.moved {
+				s.Require().NoError(base.Rename(moves[i][0], moves[i][1]))
+			}
+			if tt.garbage {
+				s.Require().NoError(base.WriteFile("/keys/agent.next.pub", []byte("nope"), 0o600))
+			}
+			fs := base
+			if tt.fail {
+				fs = failing(base, avfs.FnReadFile, "agent.next.pub")
+			}
+			resumed := pki.New(fs, "/keys", "agent", pki.WithEncryptionKey())
+			moved, err := resumed.ResumeNext()
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tt.wantMoved, moved)
+			loaded := pki.New(base, "/keys", "agent", pki.WithEncryptionKey())
+			s.Require().NoError(loaded.Load(), "the keys are a pair")
+			if tt.wantMoved {
+				s.Equal(want, loaded.PublicKey())
+			}
+		})
+	}
+}
+
 func (s *KeyRotatePublicTestSuite) TestDrop() {
 	tests := []struct {
 		name    string

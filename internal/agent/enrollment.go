@@ -77,7 +77,7 @@ func (a *Agent) handlePKIEnrollment(
 
 	m := pki.New(a.appFs, keyDir, "agent", pki.WithEncryptionKey())
 
-	if err := m.LoadOrGenerate(); err != nil {
+	if err := loadAgentKeys(ctx, a.pkiLogger, m, m.LoadOrGenerate); err != nil {
 		return err
 	}
 
