@@ -34,7 +34,9 @@ func scenarios() []scenario {
 	out = append(out, agentServiceScenarios()...)
 	out = append(out, cryptoScenarios()...)
 
-	return append(out, pkiScenarios()...)
+	out = append(out, pkiScenarios()...)
+
+	return append(out, jobScenarios()...)
 }
 
 // ready is a step that waits for a Ready agent in the fixture, and keeps
@@ -465,6 +467,37 @@ func sealScenarios() []scenario {
 					},
 				},
 				{
+					name: "get shows the secret, not its value",
+					cli: []string{
+						"client",
+						"secret",
+						"get",
+						"--vault",
+						"default",
+						"--key",
+						key,
+						"--json",
+					},
+					checks: []check{
+						{path: "", op: "absent", want: value},
+						{path: "version", op: "nonempty"},
+					},
+				},
+				{
+					name: "reveal shows the value",
+					cli: []string{
+						"client",
+						"secret",
+						"reveal",
+						"--vault",
+						"default",
+						"--key",
+						key,
+						"--json",
+					},
+					checks: []check{{path: "value", op: "==", want: value}},
+				},
+				{
 					name: "make a container",
 					cli: []string{
 						"client",
@@ -520,6 +553,14 @@ func sealScenarios() []scenario {
 					checks: []check{
 						{path: "operation.data.env.SEALED", op: "prefix", want: "sealed:"},
 						{path: "operation.data.env.SEALED", op: "absent", want: value},
+					},
+				},
+				{
+					name: "the audit log holds no value",
+					cli:  []string{"client", "audit", "list", "--limit", "100", "--json"},
+					checks: []check{
+						{path: "", op: "contains", want: key},
+						{path: "", op: "absent", want: value},
 					},
 				},
 			},
@@ -741,6 +782,188 @@ func pkiScenarios() []scenario {
 					cli:    []string{"pki", "key", "get", "--name", "agent", "--json"},
 					checks: []check{{path: "fingerprint", op: "==", want: "{made}"}},
 				},
+			},
+		},
+	}
+}
+
+// agentState is a step that waits until the fixture's agent host is in
+// state.
+func agentState(
+	state string,
+) step {
+	return step{
+		name: "the agent is " + state, on: onFixture, wait: 30 * time.Second, pause: time.Second,
+		cli:    []string{"client", "agent", "list", "--json"},
+		checks: []check{{path: "items[hostname={host}].state", op: "==", want: state}},
+	}
+}
+
+func jobScenarios() []scenario {
+	return []scenario{
+		{
+			name: "the controller's config of an agent reaches the agent", writeOp: "AGENT_CONFIG",
+			fixture: true, fixtureAutoAdmit: true,
+			steps: []step{
+				{name: "start an agent", start: "agent", keyDir: "{dir:agent}"},
+				ready("the agent is Ready"),
+				{
+					name: "set the agent's config", on: onFixture,
+					cli: []string{
+						"client",
+						"agent",
+						"config",
+						"update",
+						"--hostname",
+						"{host}",
+						"--labels",
+						"group=cfg",
+						"--max-jobs",
+						"2",
+						"--log-level",
+						"debug",
+						"--facts-interval",
+						"2m",
+					},
+				},
+				{
+					name: "the controller holds the config",
+					on:   onFixture,
+					cli: []string{
+						"client",
+						"agent",
+						"config",
+						"get",
+						"--hostname",
+						"{host}",
+						"--json",
+					},
+					checks: []check{
+						{path: "labels.group", op: "==", want: "cfg"},
+						{path: "max_jobs", op: "==", want: "2"},
+						{path: "log_level", op: "==", want: "debug"},
+						{path: "facts_interval", op: "==", want: "2m"},
+					},
+				},
+				{
+					name:  "the agent applies it at its heartbeat",
+					on:    onFixture,
+					wait:  30 * time.Second,
+					pause: time.Second,
+					cli:   []string{"client", "agent", "list", "--json"},
+					checks: []check{
+						{path: "items[hostname={host}].labels.group", op: "==", want: "cfg"},
+						{path: "items[hostname={host}].config_behind", op: "empty"},
+					},
+				},
+				{
+					name: "a job to the label reaches the agent",
+					on:   onFixture,
+					cli: []string{
+						"client",
+						"node",
+						"hostname",
+						"get",
+						"--target",
+						"group:cfg",
+						"--json",
+					},
+					checks: []check{{path: "results[*].hostname", op: "has", want: "{host}"}},
+				},
+				{
+					name: "a job to _all reaches the agent",
+					on:   onFixture,
+					cli: []string{
+						"client",
+						"node",
+						"hostname",
+						"get",
+						"--target",
+						"_all",
+						"--json",
+					},
+					checks: []check{{path: "results[*].hostname", op: "has", want: "{host}"}},
+				},
+			},
+		},
+		{
+			name:             "a job's life: a failed job, its retry and delete, and a drained agent",
+			writeOp:          "JOB_LIFE",
+			fixture:          true,
+			fixtureAutoAdmit: true,
+			steps: []step{
+				{name: "start an agent", start: "agent", keyDir: "{dir:agent}"},
+				ready("the agent is Ready"),
+				{
+					name:  "a job that fails on the agent",
+					on:    onFixture,
+					fails: true,
+					cli: []string{
+						"client",
+						"node",
+						"user",
+						"get",
+						"--target",
+						"{host}",
+						"--name",
+						"osapi-nosuch",
+						"--json",
+					},
+					checks: []check{{path: "!all", op: "contains", want: "not found"}},
+				},
+				{
+					name:    "the job list has the failed job",
+					on:      onFixture,
+					wait:    15 * time.Second,
+					pause:   time.Second,
+					cli:     []string{"client", "job", "list", "--status", "failed", "--json"},
+					checks:  []check{{path: "items[0].id", op: "nonempty"}},
+					capture: map[string]string{"failed": "items[0].id"},
+				},
+				{
+					name: "the failed job is failed", on: onFixture,
+					cli:    []string{"client", "job", "get", "--id", "{failed}", "--json"},
+					checks: []check{{path: "status", op: "==", want: "failed"}},
+				},
+				{
+					name: "retry the failed job", on: onFixture,
+					cli:     []string{"client", "job", "retry", "--id", "{failed}", "--json"},
+					checks:  []check{{path: "job_id", op: "!=", want: "{failed}"}},
+					capture: map[string]string{"retried": "job_id"},
+				},
+				{
+					name:   "the retry is a job of its own",
+					on:     onFixture,
+					wait:   15 * time.Second,
+					pause:  time.Second,
+					cli:    []string{"client", "job", "get", "--id", "{retried}", "--json"},
+					checks: []check{{path: "status", op: "==", want: "failed"}},
+				},
+				{
+					name: "delete the failed job",
+					on:   onFixture,
+					cli:  []string{"client", "job", "delete", "--id", "{failed}"},
+				},
+				{
+					name:  "the deleted job is gone",
+					on:    onFixture,
+					fails: true,
+					cli:   []string{"client", "job", "get", "--id", "{failed}", "--json"},
+				},
+				{
+					name: "drain the agent",
+					on:   onFixture,
+					cli:  []string{"client", "agent", "drain", "--hostname", "{host}"},
+				},
+				agentState("Cordoned"),
+				job("a job does not reach a drained agent", true, 0),
+				{
+					name: "undrain the agent",
+					on:   onFixture,
+					cli:  []string{"client", "agent", "undrain", "--hostname", "{host}"},
+				},
+				agentState("Ready"),
+				job("a job reaches the undrained agent", false, 0),
 			},
 		},
 	}
