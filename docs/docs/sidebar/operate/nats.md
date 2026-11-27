@@ -77,7 +77,9 @@ Do these steps on the host of NATS and the controller.
      Otherwise, it joins again.
 
    A certificate of your own, in `cert_file`, is served the same way when you
-   replace its files: NATS reads them again at its next handshake. To serve one:
+   replace its files. At a handshake, NATS reads them again, at most once each
+   second, and compares their content, so a copy that keeps the file times, such
+   as `cp -p`, is served too. To serve one:
 
    ```yaml
    nats:

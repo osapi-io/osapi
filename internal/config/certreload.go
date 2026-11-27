@@ -21,6 +21,7 @@
 package config
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"os"
@@ -29,19 +30,26 @@ import (
 )
 
 // certReloader serves the certificate of a server from its files, and reads
-// them again at a handshake after either file changed: a rotation renames
-// a new certificate into place, and the server serves it at its next
-// handshake, with no restart. A pair that does not load, such as a key that
-// is written before its certificate, leaves the last one in place.
+// them again, at most once each CertCheckInterval, at a handshake: a rotation
+// renames a new certificate into place, and the server serves it at a
+// handshake after it, with no restart. It compares the content of the
+// files, not their times, so a copy that keeps the time, such as rsync -t
+// or cp -p, is read too. A pair that does not load, such as a key that is
+// written before its certificate, leaves the last one in place.
 type certReloader struct {
 	certFile string
 	keyFile  string
 
 	mu      sync.Mutex
 	cert    *tls.Certificate
-	certMod time.Time
-	keyMod  time.Time
+	certPEM []byte
+	keyPEM  []byte
+	checked time.Time
 }
+
+// CertCheckInterval is the most often that a handshake reads the files of
+// its certificate again. A test sets it to 0.
+var CertCheckInterval = time.Second
 
 // newCertReloader loads the pair, which must load at the start.
 func newCertReloader(
@@ -49,28 +57,23 @@ func newCertReloader(
 	keyFile string,
 ) (*certReloader, error) {
 	r := &certReloader{certFile: certFile, keyFile: keyFile}
-	certMod, keyMod := r.mods()
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	certPEM, keyPEM := r.read()
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		return nil, fmt.Errorf("load the server certificate: %w", err)
 	}
-	r.cert, r.certMod, r.keyMod = &cert, certMod, keyMod
+	r.cert, r.certPEM, r.keyPEM, r.checked = &cert, certPEM, keyPEM, time.Now()
 
 	return r, nil
 }
 
-// mods are the modification times of the two files, or the zero time of a
-// file that is not there.
-func (r *certReloader) mods() (time.Time, time.Time) {
-	var certMod, keyMod time.Time
-	if fi, err := os.Stat(r.certFile); err == nil {
-		certMod = fi.ModTime()
-	}
-	if fi, err := os.Stat(r.keyFile); err == nil {
-		keyMod = fi.ModTime()
-	}
+// read is the content of the two files, or nil for a file that does not
+// read.
+func (r *certReloader) read() ([]byte, []byte) {
+	certPEM, _ := os.ReadFile(r.certFile)
+	keyPEM, _ := os.ReadFile(r.keyFile)
 
-	return certMod, keyMod
+	return certPEM, keyPEM
 }
 
 // certificate is the certificate to serve: the pair as it is now, when it
@@ -80,15 +83,20 @@ func (r *certReloader) certificate(
 ) (*tls.Certificate, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	certMod, keyMod := r.mods()
-	if certMod.Equal(r.certMod) && keyMod.Equal(r.keyMod) {
+	now := time.Now()
+	if now.Sub(r.checked) < CertCheckInterval {
 		return r.cert, nil
 	}
-	cert, err := tls.LoadX509KeyPair(r.certFile, r.keyFile)
+	r.checked = now
+	certPEM, keyPEM := r.read()
+	if bytes.Equal(certPEM, r.certPEM) && bytes.Equal(keyPEM, r.keyPEM) {
+		return r.cert, nil
+	}
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		return r.cert, nil
 	}
-	r.cert, r.certMod, r.keyMod = &cert, certMod, keyMod
+	r.cert, r.certPEM, r.keyPEM = &cert, certPEM, keyPEM
 
 	return r.cert, nil
 }

@@ -21,9 +21,11 @@
 package config
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -35,18 +37,31 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/osapi-io/osapi/internal/atomicfile"
+
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // selfSignedFor is how long a self-signed certificate is valid.
 const selfSignedFor = 5 * 365 * 24 * time.Hour
 
-// SelfSignedHostname and SelfSignedWrite are os.Hostname and os.WriteFile,
-// for a test to replace.
+// SelfSignedHostname and SelfSignedWrite are os.Hostname and an atomic
+// write, for a test to replace. The write goes through a temporary file and
+// a rename, so a crash leaves the old file or none, never a short one.
 var (
 	SelfSignedHostname = os.Hostname
-	SelfSignedWrite    = os.WriteFile
+	SelfSignedWrite    = writeAtomic
 )
+
+// writeAtomic writes data to name through a temporary file and a rename.
+func writeAtomic(
+	name string,
+	data []byte,
+	perm os.FileMode,
+) error {
+	return atomicfile.Write(context.Background(), osfs.NewWithNoIdm(), name, data, perm)
+}
 
 // SelfSignedFiles are the certificate and key files of the self-signed
 // certificate name in dir, such as api.crt and api.key.
@@ -70,7 +85,9 @@ func (s ServerTLS) WithSelfSigned(
 		return s, nil
 	}
 	certFile, keyFile := SelfSignedFiles(dir, name)
-	if _, err := os.Stat(certFile); err != nil {
+	// A pair that does not load, such as a certificate that a crash cut
+	// short or a key that is gone, is made again: it could never serve.
+	if _, err := tls.LoadX509KeyPair(certFile, keyFile); err != nil {
 		if err := writeSelfSigned(certFile, keyFile, urls); err != nil {
 			return s, err
 		}
@@ -139,7 +156,8 @@ func writeSelfSigned(
 	urls []string,
 ) error {
 	// With crypto/rand, a P-256 key, a self-signed template and PKCS #8 of
-	// an ECDSA key do not fail.
+	// an ECDSA key do not fail. A host with no name has the loopback names
+	// only.
 	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	host, _ := SelfSignedHostname()
 	tmpl := x509.Certificate{

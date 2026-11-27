@@ -59,7 +59,10 @@ func stringToSigningKeys(
 	keys := make([]SigningKey, 0, len(pairs))
 	for _, pair := range pairs {
 		id, key, ok := strings.Cut(pair, "=")
-		if !ok {
+		// A key with no ID can end in base64 padding, such as abc==. Its
+		// first = is then the padding, not the end of an ID, so the pair is
+		// the key, and the validation names the missing ID.
+		if !ok || strings.Trim(key, "=") == "" {
 			id, key = "", pair
 		}
 		keys = append(keys, SigningKey{ID: id, Key: key})

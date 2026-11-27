@@ -176,6 +176,14 @@ func handshake(
 	return err
 }
 
+func (s *TLSPublicTestSuite) SetupTest() {
+	config.CertCheckInterval = 0
+}
+
+func (s *TLSPublicTestSuite) TearDownTest() {
+	config.CertCheckInterval = time.Second
+}
+
 // replace writes the certificate and key of from over to, a second later,
 // so that a reader that compares modification times sees the change.
 func (s *TLSPublicTestSuite) replace(
@@ -233,6 +241,31 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 
 	s.Require().NoError(os.Remove(cert))
 	s.Equal(second, s.leaf(got), "a missing file keeps the last one")
+
+	// A copy that keeps the time of the file, such as cp -p, is read too:
+	// the reloader compares the content.
+	again, err := config.ServerTLS{Enabled: true, CertFile: other, KeyFile: otherKey}.Config()
+	s.Require().NoError(err)
+	before := s.leaf(again)
+	third, thirdKey := writeCert(s.T())
+	for _, f := range [][2]string{{third, other}, {thirdKey, otherKey}} {
+		fi, err := os.Stat(f[1])
+		s.Require().NoError(err)
+		data, err := os.ReadFile(f[0])
+		s.Require().NoError(err)
+		s.Require().NoError(os.WriteFile(f[1], data, 0o600))
+		s.Require().NoError(os.Chtimes(f[1], fi.ModTime(), fi.ModTime()))
+	}
+	s.NotEqual(before, s.leaf(again), "a copy with the same time is served")
+
+	// Within the interval, a handshake reads no file.
+	config.CertCheckInterval = time.Hour
+	held, err := config.ServerTLS{Enabled: true, CertFile: other, KeyFile: otherKey}.Config()
+	s.Require().NoError(err)
+	heldLeaf := s.leaf(held)
+	fourth, fourthKey := writeCert(s.T())
+	s.replace(fourth, fourthKey, other, otherKey)
+	s.Equal(heldLeaf, s.leaf(held), "a change within the interval waits for the next check")
 	s.Equal(uint16(tls.VersionTLS12), got.MinVersion, "it serves what Negotiation says")
 }
 

@@ -76,7 +76,7 @@ func SetWriteFileFn(
 // ResetTLSFns restores hostnameFn and writeFileFn.
 func ResetTLSFns() {
 	config.SelfSignedHostname = os.Hostname
-	config.SelfSignedWrite = os.WriteFile
+	config.SelfSignedWrite = selfSignedWrite
 }
 
 // SetListenFn replaces how Start opens its listener.
@@ -92,3 +92,7 @@ func ResetListenFn() {
 		return (&net.ListenConfig{}).Listen(ctx, network, addr)
 	}
 }
+
+// selfSignedWrite is config's write of a self-signed certificate, which
+// ResetTLSFns puts back.
+var selfSignedWrite = config.SelfSignedWrite

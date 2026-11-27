@@ -41,9 +41,13 @@ func TestSelfSignedPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(SelfSignedPublicTestSuite))
 }
 
+// atomicWrite is the write of a self-signed certificate that a test
+// replaces and puts back.
+var atomicWrite = config.SelfSignedWrite
+
 func (s *SelfSignedPublicTestSuite) TearDownTest() {
 	config.SelfSignedHostname = os.Hostname
-	config.SelfSignedWrite = os.WriteFile
+	config.SelfSignedWrite = atomicWrite
 }
 
 // cert is the certificate in file.
@@ -158,6 +162,19 @@ func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 		got, err := in.WithSelfSigned(s.T().TempDir(), "nats")
 		s.Require().NoError(err)
 		s.Equal(in, got)
+	})
+	s.Run("a certificate that a crash cut short is made again", func() {
+		dir := s.T().TempDir()
+		first, err := config.ServerTLS{Enabled: true}.WithSelfSigned(dir, "api")
+		s.Require().NoError(err)
+		data, err := os.ReadFile(first.CertFile)
+		s.Require().NoError(err)
+		s.Require().NoError(os.WriteFile(first.CertFile, data[:len(data)/2], 0o644))
+
+		got, err := config.ServerTLS{Enabled: true}.WithSelfSigned(dir, "api")
+		s.Require().NoError(err)
+		_, err = tls.LoadX509KeyPair(got.CertFile, got.KeyFile)
+		s.NoError(err, "the pair loads again")
 	})
 	s.Run("TLS on with no cert_file makes the certificate, for the host and each URL", func() {
 		config.SelfSignedHostname = func() (string, error) { return "web-01", nil }
