@@ -132,8 +132,13 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A container that the host does not have", GetInput{Name: "nothere"}, "not found").
 		Fails("A name that is an option", GetInput{Name: "-f"}, "container_id"),
 	behavior.Write("create", Create).
+		AdminOnly().
 		Describe("Create a container").
 		Explain("Runs docker create, which pulls the image when the host does not have it. "+
+			"Its permission is docker:write, which only the admin role gets: a container that "+
+			"names a command and a bind mount of / runs as root on the host. An agent with "+
+			"agent.command.enabled false refuses a create with a command or a bind mount, as "+
+			"it refuses a command. "+
 			"The environment goes on docker's standard input, not in its arguments, which "+
 			"each user of the host can read. auto_start starts the container once it is made. "+
 			"A container of the name that the host has already is not made again, and "+
@@ -167,6 +172,7 @@ var Behavior = behavior.Register(behavior.Define(
 			}, "volume_mapping").
 		Fails("No name", CreateInput{Image: image}, "required"),
 	behavior.Write("delete", Delete).Key("name").
+		AdminOnly().
 		Describe("Remove a container").
 		Explain("Runs docker rm -f, which also removes a container that runs: a delete "+
 			"leaves no container of the name. A container that the host does not have "+

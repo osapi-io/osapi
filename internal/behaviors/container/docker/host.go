@@ -152,6 +152,11 @@ func (c *cli) Create(
 	ctx context.Context,
 	in CreateInput,
 ) (Result, error) {
+	// A command or a bind mount makes the container a way to run a command
+	// on the host, so it is refused where commands are.
+	if !c.enabled && (len(in.Command) > 0 || len(in.Volumes) > 0) {
+		return Result{}, host.ErrCommandDisabled
+	}
 	existing, err := c.byName(ctx, in.Name)
 	switch {
 	case err == nil:
