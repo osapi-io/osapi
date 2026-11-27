@@ -70,6 +70,15 @@ func (s *LinuxPublicTestSuite) TestEntries() {
 			want: []entry.Entry{{Message: "audit: type=1400"}},
 		},
 		{
+			name: "when a message is bytes, as journalctl writes one that is not UTF-8, it is read",
+			out: `{"MESSAGE":[104,105,255,10],"PRIORITY":"6"}` + "\n" +
+				`{"MESSAGE":null,"PRIORITY":"6"}` + "\n" + `{"MESSAGE":[300],"PRIORITY":"6"}`,
+			want: []entry.Entry{
+				{Message: "hi\uFFFD\n", Priority: "info"},
+				{Priority: "info"},
+			},
+		},
+		{
 			name: "when the journal has no entries",
 			want: []entry.Entry{},
 		},

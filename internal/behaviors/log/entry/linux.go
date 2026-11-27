@@ -94,8 +94,35 @@ type journalEntry struct {
 	Timestamp string `json:"__REALTIME_TIMESTAMP"`
 	Unit      string `json:"SYSLOG_IDENTIFIER"`
 	Priority  string `json:"PRIORITY"`
-	Message   string `json:"MESSAGE"`
+	Message   field  `json:"MESSAGE"`
 	PID       string `json:"_PID"`
+}
+
+// field is a journald field. journalctl writes a field that is not valid
+// UTF-8, or has control characters, as an array of its bytes, not as a
+// string, and one too large to show as null (journalctl(1), --output=json).
+type field string
+
+// UnmarshalJSON reads a field as a string or as an array of bytes. null is
+// an empty field.
+func (f *field) UnmarshalJSON(
+	data []byte,
+) error {
+	var s *string
+	if err := json.Unmarshal(data, &s); err == nil {
+		if s != nil {
+			*f = field(*s)
+		}
+
+		return nil
+	}
+	var b []byte
+	if err := json.Unmarshal(data, &b); err != nil {
+		return err
+	}
+	*f = field(strings.ToValidUTF8(string(b), "\uFFFD"))
+
+	return nil
 }
 
 // parse reads journalctl --output=json, one entry a line. A line that is
@@ -121,7 +148,7 @@ func parse(
 			Timestamp: timestamp(je.Timestamp),
 			Unit:      je.Unit,
 			Priority:  priority,
-			Message:   je.Message,
+			Message:   string(je.Message),
 			PID:       pid,
 		})
 	}

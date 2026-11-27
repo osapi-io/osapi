@@ -71,6 +71,24 @@ func (s *DebianPublicTestSuite) TestRefresh() {
 	}
 }
 
+// TestUpdatesReadInC: apt list runs as a read command, which sets LC_ALL=C,
+// so its "upgradable from" is the English that parse reads in each locale.
+// A run as a plain command took the host's locale, and a translated apt
+// shifted the fields, so the updates were left out.
+func (s *DebianPublicTestSuite) TestUpdatesReadInC() {
+	exec := hostmocks.NewMockExec(gomock.NewController(s.T()))
+	exec.EXPECT().RunReadCmd(gomock.Any(), "apt", []string{"list", "--upgradable"}).
+		Return([]byte("curl/noble-updates 8.5.0-2ubuntu10.6 amd64 [upgradable from: 8.5.0-2ubuntu10.5]\n"), nil)
+	p, err := updatepackages.ExportNewDebian(host.Host{Exec: exec, FS: memfs.New()})
+	s.Require().NoError(err)
+
+	got, err := p.Updates(context.Background())
+	s.Require().NoError(err)
+	s.Equal([]updatepackages.Available{{
+		Name: "curl", CurrentVersion: "8.5.0-2ubuntu10.5", NewVersion: "8.5.0-2ubuntu10.6",
+	}}, got)
+}
+
 func TestDebianPublicTestSuite(
 	t *testing.T,
 ) {

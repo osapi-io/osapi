@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -101,8 +102,43 @@ func (c *cli) Get(
 	if err != nil {
 		return Entry{}, err
 	}
+	// An exact name or ID wins over the start of an ID: a container named
+	// abc is abc, also when another container's ID starts with abc.
 	for _, g := range all {
-		if g.Name == name || g.ID == name || strings.HasPrefix(g.ID, name) {
+		if g.Name == name || g.ID == name {
+			return entry(g), nil
+		}
+	}
+	var found []gohaidocker.Container
+	for _, g := range all {
+		if strings.HasPrefix(g.ID, name) {
+			found = append(found, g)
+		}
+	}
+	switch len(found) {
+	case 0:
+		return Entry{}, fmt.Errorf("container %q: %w", name, behavior.ErrNotFound)
+	case 1:
+		return entry(found[0]), nil
+	default:
+		return Entry{}, fmt.Errorf("container %q is the start of the ID of %d containers: "+
+			"give more of the ID, or the name", name, len(found))
+	}
+}
+
+// byName is the container of the name, and only of the name: create makes a
+// container of its name, so another container's ID that starts with it is
+// not that container.
+func (c *cli) byName(
+	ctx context.Context,
+	name string,
+) (Entry, error) {
+	all, err := c.containers(ctx)
+	if err != nil {
+		return Entry{}, err
+	}
+	for _, g := range all {
+		if g.Name == name {
 			return entry(g), nil
 		}
 	}
@@ -116,7 +152,7 @@ func (c *cli) Create(
 	ctx context.Context,
 	in CreateInput,
 ) (Result, error) {
-	existing, err := c.Get(ctx, in.Name)
+	existing, err := c.byName(ctx, in.Name)
 	switch {
 	case err == nil:
 		started := false
@@ -148,9 +184,13 @@ func (c *cli) Create(
 	if len(in.Env) > 0 {
 		// The values go on standard input, not in the arguments, which each
 		// user of the host can read.
+		file, fileErr := envFile(in.Env)
+		if fileErr != nil {
+			return Result{}, fileErr
+		}
 		args = append(args, "--env-file", "/dev/stdin", in.Image)
 		args = append(args, in.Command...)
-		out, err = c.exec.RunPrivilegedCmdWithStdin(ctx, "docker", args, envFile(in.Env))
+		out, err = c.exec.RunPrivilegedCmdWithStdin(ctx, "docker", args, file)
 	} else {
 		args = append(args, in.Image)
 		args = append(args, in.Command...)
@@ -256,7 +296,11 @@ func (c *cli) Exec(
 		// user of the host can read. Without -i, docker exec gives the
 		// container no standard input, so docker reads all of it.
 		args = append(args, "--env-file", "/dev/stdin")
-		stdin = envFile(in.Env)
+		file, err := envFile(in.Env)
+		if err != nil {
+			return ExecResult{}, err
+		}
+		stdin = file
 	}
 	if in.WorkingDir != "" {
 		args = append(args, "-w", in.WorkingDir)
@@ -274,14 +318,28 @@ func (c *cli) Exec(
 // by name.
 func envFile(
 	env map[string]secret.Value,
-) string {
+) (string, error) {
 	var b strings.Builder
 	for _, k := range slices.Sorted(maps.Keys(env)) {
-		b.WriteString(k + "=" + env[k].Reveal() + "\n")
+		// docker reads one KEY=value on each line: a key with = or a line
+		// end, or a value with a line end, would make lines of its own.
+		if !envKey.MatchString(k) {
+			return "", fmt.Errorf("environment variable %q: a name is letters, digits "+
+				"and _, and does not start with a digit", k)
+		}
+		v := env[k].Reveal()
+		if strings.ContainsAny(v, "\r\n") {
+			return "", fmt.Errorf("environment variable %q: a value has no line end", k)
+		}
+		b.WriteString(k + "=" + v + "\n")
 	}
 
-	return b.String()
+	return b.String(), nil
 }
+
+// envKey is the name of an environment variable that docker's env file
+// takes as one.
+var envKey = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
 // entry is a container as list and get answer it.
 func entry(
