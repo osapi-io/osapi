@@ -98,7 +98,11 @@ func RolePermissions(
 		p.consume(n.stream)
 		p.consume(n.dlq)
 		p.consume(n.audit)
-		p.add("$JS.API.STREAM.MSG.GET.", n.audit, "")
+		// The dead letter list reads each advisory of the DLQ by its
+		// sequence, and the job message that the advisory names.
+		for _, s := range []string{n.audit, n.dlq, n.stream} {
+			p.add("$JS.API.STREAM.MSG.GET.", s, "")
+		}
 		for _, s := range []string{n.audit, kvStream(n.enrollment), objStream(n.objects)} {
 			p.admin(s)
 		}
