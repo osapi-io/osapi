@@ -139,6 +139,9 @@ func (r *Rotation) Load(
 	if err != nil {
 		return err
 	}
+	if err := r.resume(rec); err != nil {
+		return err
+	}
 	pub := r.cfg.Keys.PublicKey()
 	switch {
 	case bytes.Equal(rec.Current, pub) && rec.SignedBy(pub):
@@ -146,15 +149,55 @@ func (r *Rotation) Load(
 			r.cfg.Keys.SetPreviousControllerPublicKey(rec.Previous)
 		}
 		r.cfg.Keys.SetRetiredControllerKeys(rec.Retired, r.cfg.RetiredKeyLifetime)
-	case rec.Rotating() && bytes.Equal(rec.Next, pub) && rec.SignedBy(rec.Current):
-		// The keys moved, and the record of the switch was not written.
-		r.cfg.Keys.SetPreviousControllerPublicKey(rec.Current)
-		r.cfg.Keys.SetRetiredControllerKeys(r.retire(rec), r.cfg.RetiredKeyLifetime)
-
-		return r.writeSwitch(ctx, rec, revision)
+	case r.unwritten(rec):
+		return r.finish(ctx, rec, revision)
 	}
 
 	return nil
+}
+
+// resume finishes the renames of a switch to rec's next key that stopped
+// between them, as at a crash: until they finish, the controller signs with
+// one key and gives the other as its public key.
+func (r *Rotation) resume(
+	rec pki.ControllerKeyRecord,
+) error {
+	if !rec.Rotating() || !rec.SignedBy(rec.Current) {
+		return nil
+	}
+	moved, err := r.cfg.Keys.Resume(rec.Next)
+	if err != nil {
+		return fmt.Errorf("finish the switch to the next controller key: %w", err)
+	}
+	if moved {
+		r.cfg.Keys.RotateControllerKey(r.cfg.Keys.PublicKey())
+	}
+
+	return nil
+}
+
+// unwritten is whether rec is a rotation whose keys moved and whose record
+// of the switch was not written: the controller's key is rec's next key,
+// and rec's current key signed rec.
+func (r *Rotation) unwritten(
+	rec pki.ControllerKeyRecord,
+) bool {
+	return rec.Rotating() &&
+		bytes.Equal(rec.Next, r.cfg.Keys.PublicKey()) &&
+		rec.SignedBy(rec.Current)
+}
+
+// finish writes the record of a switch whose keys moved, and gives the keys
+// rec's current key as the previous one.
+func (r *Rotation) finish(
+	ctx context.Context,
+	rec pki.ControllerKeyRecord,
+	revision uint64,
+) error {
+	r.cfg.Keys.SetPreviousControllerPublicKey(rec.Current)
+	r.cfg.Keys.SetRetiredControllerKeys(r.retire(rec), r.cfg.RetiredKeyLifetime)
+
+	return r.writeSwitch(ctx, rec, revision)
 }
 
 // Start starts a rotation: it makes the next key beside the current one,
@@ -168,6 +211,19 @@ func (r *Rotation) Start(
 	rec, revision, err := r.read(ctx)
 	if err != nil {
 		return Status{}, err
+	}
+	if err := r.resume(rec); err != nil {
+		return Status{}, err
+	}
+	if r.unwritten(rec) {
+		// A switch whose record did not write: write it first, so the new
+		// rotation starts from the switch and keeps its previous key.
+		if err := r.finish(ctx, rec, revision); err != nil {
+			return Status{}, err
+		}
+		if rec, revision, err = r.read(ctx); err != nil {
+			return Status{}, err
+		}
 	}
 	rec = r.trusted(rec)
 	if !rec.Rotating() {
@@ -285,6 +341,19 @@ func (r *Rotation) Step(
 	rec, revision, err := r.read(ctx)
 	if err != nil {
 		return false, err
+	}
+	if err := r.resume(rec); err != nil {
+		return false, err
+	}
+	if r.unwritten(rec) {
+		// The keys moved at an earlier step, and its record did not write.
+		// The current key does not verify the record now, so each step
+		// writes it until it is written.
+		if err := r.finish(ctx, rec, revision); err != nil {
+			return false, err
+		}
+
+		return true, nil
 	}
 	rec = r.trusted(rec)
 	if !rec.Rotating() {

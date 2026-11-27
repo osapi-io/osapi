@@ -42,9 +42,30 @@ var ErrNoKeys = errors.New("the keys are not on this host")
 // paths are the files of the manager's keys: the private and public signing
 // key, and the encryption key.
 func (m *Manager) paths() (string, string, string) {
-	base := filepath.Join(m.keyDir, m.keyPrefix)
+	return m.pathsOf(m.keyPrefix)
+}
+
+// pathsOf are the files of the keys of prefix in the manager's directory.
+func (m *Manager) pathsOf(
+	prefix string,
+) (string, string, string) {
+	base := filepath.Join(m.keyDir, prefix)
 
 	return base + ".key", base + ".pub", base + encryptionKeySuffix
+}
+
+// moves are the renames of a Promote of the keys in from, in their order:
+// the encryption key first and the public key last.
+func (m *Manager) moves(
+	fromPriv, fromPub, fromEkey string,
+) [][2]string {
+	toPriv, toPub, toEkey := m.paths()
+	moves := [][2]string{{fromPriv, toPriv}, {fromPub, toPub}}
+	if m.withEncryption {
+		moves = append([][2]string{{fromEkey, toEkey}}, moves...)
+	}
+
+	return moves
 }
 
 // Load loads the manager's keys, which must be on the host: it makes none.
@@ -161,13 +182,7 @@ func (m *Manager) Next() (*Manager, error) {
 func (m *Manager) Promote(
 	next *Manager,
 ) error {
-	fromPriv, fromPub, fromEkey := next.paths()
-	toPriv, toPub, toEkey := m.paths()
-	moves := [][2]string{{fromPriv, toPriv}, {fromPub, toPub}}
-	if m.withEncryption {
-		moves = append([][2]string{{fromEkey, toEkey}}, moves...)
-	}
-	for _, mv := range moves {
+	for _, mv := range m.moves(next.paths()) {
 		if err := m.fs.Rename(mv[0], mv[1]); err != nil {
 			return fmt.Errorf("move %s to %s: %w", mv[0], mv[1], err)
 		}
@@ -175,6 +190,86 @@ func (m *Manager) Promote(
 	m.set(next.PublicKey(), next.PrivateKey(), next.EncryptionKey())
 
 	return nil
+}
+
+// Resume finishes a Promote that stopped between its renames, as at a
+// crash, and loads the keys: want is the public key of the next keys. It
+// reports whether it moved a key. When no rename of a Promote is done, or
+// each is, it does nothing.
+//
+// A Promote that stopped leaves the private key of one pair beside the
+// public key of the other, and the manager signs with a key that its public
+// key does not verify, so each signature fails until the renames finish.
+func (m *Manager) Resume(
+	want ed25519.PublicKey,
+) (bool, error) {
+	fromPriv, fromPub, fromEkey := m.pathsOf(m.keyPrefix + nextSuffix)
+	moves := m.moves(fromPriv, fromPub, fromEkey)
+	var left [][2]string
+	for _, mv := range moves {
+		_, err := m.fs.Stat(mv[0])
+		if err == nil {
+			left = append(left, mv)
+
+			continue
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			return false, fmt.Errorf("read key %s: %w", mv[0], err)
+		}
+		if len(left) > 0 {
+			// A key that moved after one that did not: not a Promote.
+			return false, nil
+		}
+	}
+	if len(left) == 0 || len(left) == len(moves) {
+		return false, nil
+	}
+	toPriv, toPub, _ := m.paths()
+	privPath, pubPath := toPriv, toPub
+	for _, mv := range left {
+		switch mv[0] {
+		case fromPriv:
+			privPath = fromPriv
+		case fromPub:
+			pubPath = fromPub
+		}
+	}
+	if !m.pairOf(privPath, pubPath, want) {
+		return false, fmt.Errorf(
+			"%s and %s are halfway through a rotation, and are not the pair of the next key",
+			privPath, pubPath,
+		)
+	}
+	for _, mv := range left {
+		if err := m.fs.Rename(mv[0], mv[1]); err != nil {
+			return false, fmt.Errorf("move %s to %s: %w", mv[0], mv[1], err)
+		}
+	}
+
+	return true, m.Load()
+}
+
+// pairOf is whether the keys in privPath and pubPath are a pair, of want.
+func (m *Manager) pairOf(
+	privPath string,
+	pubPath string,
+	want ed25519.PublicKey,
+) bool {
+	priv, err := m.fs.ReadFile(privPath)
+	if err != nil {
+		return false
+	}
+	pub, err := m.fs.ReadFile(pubPath)
+	if err != nil {
+		return false
+	}
+	keys := &Manager{}
+	if err := keys.loadKeys(priv, pub); err != nil {
+		return false
+	}
+
+	return bytes.Equal(keys.publicKey, want) &&
+		bytes.Equal(keys.privateKey.Public().(ed25519.PublicKey), want)
 }
 
 // Drop removes the manager's keys from the host: the keys of a rotation

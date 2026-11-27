@@ -23,6 +23,7 @@ package certrotation
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,7 +78,7 @@ func NextFiles(
 }
 
 // read is the record and its revision, or the zero record and 0 when there
-// is none.
+// is none, or the zero record and its revision when it does not unmarshal.
 func (r *Rotation) read(
 	ctx context.Context,
 ) (pki.CertRecord, uint64, error) {
@@ -88,9 +89,15 @@ func (r *Rotation) read(
 	if err != nil {
 		return pki.CertRecord{}, 0, fmt.Errorf("read the certificate record: %w", err)
 	}
+	// An agent can write the state bucket, so a record that does not
+	// unmarshal is not the controller's, as one that its key did not sign:
+	// it is the zero record at its revision, which the next Start replaces.
 	var rec pki.CertRecord
 	if err := json.Unmarshal(entry.Value(), &rec); err != nil {
-		return pki.CertRecord{}, 0, fmt.Errorf("the certificate record: %w", err)
+		r.cfg.Logger.Warn("the certificate record does not read, and the next "+
+			"rotation replaces it", slog.String("error", err.Error()))
+
+		return pki.CertRecord{}, entry.Revision(), nil
 	}
 
 	return rec, entry.Revision(), nil
@@ -183,8 +190,10 @@ func (r *Rotation) Start(
 		if err := makeCert(certFile, keyFile); err != nil {
 			return Status{}, fmt.Errorf("make the next certificate: %w", err)
 		}
-		// makeCert wrote the file a moment ago.
-		next, _ := os.ReadFile(certFile)
+		next, err := os.ReadFile(certFile)
+		if err != nil {
+			return Status{}, fmt.Errorf("read the next certificate: %w", err)
+		}
 		rec = pki.CertRecord{
 			Serial:    rec.Serial + 1,
 			Name:      r.cfg.Source.Name,
@@ -335,7 +344,9 @@ func (r *Rotation) Step(
 // promote renames the next files into place: the key first, so that a
 // handshake between the two renames finds a pair that does not load, and
 // the server keeps the last one. A switch that stopped after its renames
-// finds the next certificate in place, and only writes its record.
+// finds the next certificate in place, and only writes its record. A
+// switch that stopped between them finds the next key in place, and
+// renames only the certificate.
 func (r *Rotation) promote(
 	next string,
 ) error {
@@ -356,7 +367,9 @@ func (r *Rotation) promote(
 				"and the record has %s", pki.CertFingerprint(data), next)
 	}
 	if err := os.Rename(keyFile, r.cfg.Source.KeyFile); err != nil {
-		return fmt.Errorf("switch to the next certificate: %w", err)
+		if !errors.Is(err, os.ErrNotExist) || !pairs(certFile, r.cfg.Source.KeyFile) {
+			return fmt.Errorf("switch to the next certificate: %w", err)
+		}
 	}
 	if err := os.Rename(certFile, r.cfg.Source.CertFile); err != nil {
 		return fmt.Errorf("switch to the next certificate: %w", err)
@@ -384,4 +397,15 @@ func (r *Rotation) Run(
 			}
 		}
 	}
+}
+
+// pairs is whether the certificate in certFile and the key in keyFile are
+// a pair.
+func pairs(
+	certFile string,
+	keyFile string,
+) bool {
+	_, err := tls.LoadX509KeyPair(certFile, keyFile)
+
+	return err == nil
 }

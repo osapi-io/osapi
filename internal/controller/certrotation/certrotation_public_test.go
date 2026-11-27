@@ -253,12 +253,24 @@ func (s *CertRotationPublicTestSuite) TestStart() {
 		_, err := s.rotation(true).Start(context.Background())
 		s.ErrorIs(err, errBoom)
 	})
-	s.Run("when the record is not JSON, it is an error", func() {
+	s.Run("when the record is not JSON, it starts over the record", func() {
 		entry := jobmocks.NewMockKeyValueEntry(s.ctrl)
 		entry.EXPECT().Value().Return([]byte("nope"))
+		entry.EXPECT().Revision().Return(uint64(3))
 		s.kv.EXPECT().KVGet(gomock.Any(), bucket, pki.NATSCertStateKey).Return(entry, nil)
+		s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, pki.NATSCertStateKey, gomock.Any(), uint64(3)).
+			Return(uint64(4), nil)
+		got, err := s.rotation(true).Start(context.Background())
+		s.Require().NoError(err)
+		s.NotEmpty(got.Next)
+	})
+	s.Run("when the next certificate does not read, it is an error", func() {
+		old := certrotation.SetMakeCert(func(string, string) error { return nil })
+		defer func() { certrotation.SetMakeCert(old) }()
+		s.kv.EXPECT().KVGet(gomock.Any(), bucket, pki.NATSCertStateKey).
+			Return(nil, jetstream.ErrKeyNotFound)
 		_, err := s.rotation(true).Start(context.Background())
-		s.ErrorContains(err, "the certificate record")
+		s.ErrorContains(err, "read the next certificate")
 	})
 	s.Run("when the certificate is not on this host, it says where to rotate it", func() {
 		s.kv.EXPECT().KVGet(gomock.Any(), bucket, pki.NATSCertStateKey).
@@ -410,6 +422,26 @@ func (s *CertRotationPublicTestSuite) TestStep() {
 		got, err := s.rotation(false).Step(context.Background())
 		s.Require().NoError(err)
 		s.True(got)
+	})
+	s.Run("when a switch stopped between its renames, it renames the certificate", func() {
+		next := s.makeNext()
+		s.record(s.rotating(next, s.now.Add(-2*time.Hour)), s.keys.PrivateKey())
+		_, key := certrotation.NextFiles(s.src)
+		s.Require().NoError(os.Rename(key, s.src.KeyFile))
+		s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, pki.NATSCertStateKey, gomock.Any(), uint64(3)).
+			Return(uint64(4), nil)
+		got, err := s.rotation(false).Step(context.Background())
+		s.Require().NoError(err)
+		s.True(got)
+		s.Equal(next, s.current(), "the next certificate is in place")
+	})
+	s.Run("when the next key is gone and the key in place is not its pair, it is an error", func() {
+		next := s.makeNext()
+		s.record(s.rotating(next, s.now.Add(-2*time.Hour)), s.keys.PrivateKey())
+		_, key := certrotation.NextFiles(s.src)
+		s.Require().NoError(os.Remove(key))
+		_, err := s.rotation(false).Step(context.Background())
+		s.ErrorContains(err, "switch to the next certificate")
 	})
 	s.Run("when the next certificate is gone, it is an error", func() {
 		s.record(s.rotating([]byte("next"), s.now.Add(-2*time.Hour)), s.keys.PrivateKey())
