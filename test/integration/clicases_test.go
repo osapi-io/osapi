@@ -187,11 +187,9 @@ var cliPolicies = map[string]cliPolicy{
 			"each key that it uses, and sets no JetStream key_file; its unit tests make each kind",
 		elsewhere: pkiScenario,
 	},
-	"pki cert rotate": {
-		skip: "a rotation of the API's certificate reaches the running server, but the suite's " +
-			"own clients may hold the old one: its unit tests rotate one until the issue checks them",
-		issue: "osapi-io/osapi#1569",
-	},
+	// A rotation of the API's certificate reaches the running server, and
+	// each later call of the suite reads the new api.crt (#1569).
+	"pki cert rotate": {host: true, write: true},
 	// A rotation needs a NATS server that serves its self-signed nats.crt, as
 	// the suite's own server does: the lab's serves a cert_file, which a
 	// rotation refuses with 409.

@@ -2,8 +2,8 @@
 
 Make a new self-signed certificate in place of the old one.
 
-It replaces a self-signed certificate; the server serves the new one at its next
-start. It refuses a cert_file of the operator: replace that file. Each join
+It replaces a self-signed certificate, and the running server serves the new one
+at once. It refuses a cert_file of the operator: replace that file. Each join
 string pins the NATS server's certificate, and each joined agent trusts it: a
 new one cuts those agents off, so it needs --force, then new join tokens and a
 join again of each agent.
