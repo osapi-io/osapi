@@ -52,8 +52,7 @@ func (c ClientTLS) Config() (*tls.Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read ca_file: %w", err)
 		}
-		// The system pool is never an error on the platforms osapi runs on.
-		pool, _ := x509.SystemCertPool()
+		pool := rootPool()
 		if !pool.AppendCertsFromPEM(pem) {
 			return nil, fmt.Errorf("%s: %w", c.CAFile, errNoCertificate)
 		}
@@ -115,8 +114,7 @@ func verifyChain(
 	if err != nil {
 		return fmt.Errorf("read ca_file: %w", err)
 	}
-	// The system pool is never an error on the platforms osapi runs on.
-	pool, _ := x509.SystemCertPool()
+	pool := rootPool()
 	if !pool.AppendCertsFromPEM(pem) {
 		return fmt.Errorf("%s: %w", file, errNoCertificate)
 	}
@@ -219,4 +217,18 @@ func (m MetricsServer) Address() string {
 	}
 
 	return scheme + "://" + net.JoinHostPort(m.Host, strconv.Itoa(m.Port))
+}
+
+// systemCertPoolFn reads the system's roots. A test replaces it.
+var systemCertPoolFn = x509.SystemCertPool
+
+// rootPool returns the system's roots, or an empty pool when the system has
+// none it can read, so a ca_file still makes a pool on such a host.
+func rootPool() *x509.CertPool {
+	pool, err := systemCertPoolFn()
+	if err != nil || pool == nil {
+		return x509.NewCertPool()
+	}
+
+	return pool
 }
