@@ -106,7 +106,9 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 	ctrl := gomock.NewController(s.T())
 	var cfg config.Config
 	cfg.Controller.UI.Enabled = true
-	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "test", Key: "test-key-of-at-least-32-characters"}}
+	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{
+		{ID: "test", Key: "test-key-of-at-least-32-characters"},
+	}
 	cfg.Controller.API.Security.Roles = map[types.Role]config.CustomRole{
 		"reader": {Permissions: []types.Permission{"status:read"}},
 	}

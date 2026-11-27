@@ -159,7 +159,9 @@ func startServer(
 	}
 	cfg.Controller.API.Port = freePort(t)
 	cfg.Controller.API.JobTimeout = "5s"
-	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "test", Key: "test-key-of-at-least-32-characters"}}
+	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{
+		{ID: "test", Key: "test-key-of-at-least-32-characters"},
+	}
 	cfg.Controller.PKI.KeyDir = t.TempDir()
 
 	return cfg
