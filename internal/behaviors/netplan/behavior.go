@@ -23,6 +23,8 @@
 package netplan
 
 import (
+	"time"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
@@ -47,6 +49,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Internal,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Requires(managedfile.Behavior),
+	// netplan try waits up to tryTimeout for the agent, and the agent then
+	// answers, so a write that requires netplan takes longer than 30 s when
+	// the change cuts NATS. The controller waits past tryTimeout for it.
+	behavior.JobWait(tryTimeout*time.Second+30*time.Second),
 	behavior.Sudo("netplan"),
 	behavior.Runs("netplan"),
 	behavior.Writes(Dir+"/osapi-*.yaml"),

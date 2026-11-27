@@ -318,6 +318,31 @@ func Requires(
 // later by removing the option.
 var Internal Option = optionFunc(func(b *Behavior) { b.Internal = true })
 
+// JobWait makes the controller wait d for the answer of a write of the
+// behavior, and of each behavior that requires it, when d is longer than the
+// job client's timeout. A write that takes longer than that, such as a
+// netplan change that netplan try confirms only after it checks NATS, would
+// otherwise be a 500 while the agent still works on it.
+func JobWait(
+	d time.Duration,
+) Option {
+	return optionFunc(func(b *Behavior) { b.JobWait = d })
+}
+
+// WriteWait is how long the controller waits for the answer of a write of
+// b: the longest JobWait of b and of the behaviors that b requires, at each
+// depth. Zero is the job client's timeout.
+func WriteWait(
+	b *Behavior,
+) time.Duration {
+	wait := b.JobWait
+	for _, r := range b.Requires {
+		wait = max(wait, WriteWait(r))
+	}
+
+	return wait
+}
+
 // RequiredBy are the registered behaviors that require b, in registry order.
 func RequiredBy(
 	b *Behavior,

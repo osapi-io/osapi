@@ -24,6 +24,7 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -292,6 +293,21 @@ func (s *ChainPublicTestSuite) TestFunc() {
 func (s *ChainPublicTestSuite) TestInternal() {
 	s.True(behavior.Define("files", "x", behavior.Internal).Internal)
 	s.False(behavior.Define("sysctl", "x").Internal)
+}
+
+// TestWriteWait: a write waits the longest JobWait of its behavior and of the
+// behaviors that it requires, at each depth; zero when none declares one.
+func (s *ChainPublicTestSuite) TestWriteWait() {
+	leaf := behavior.Define("waitleaf", "A slow leaf", behavior.JobWait(90*time.Second))
+	middle := behavior.Define("waitmiddle", "On the leaf", behavior.Requires(leaf))
+	top := behavior.Define("waittop", "On the middle",
+		behavior.JobWait(time.Minute), behavior.Requires(middle))
+	none := behavior.Define("waitnone", "No wait")
+
+	s.Equal(90*time.Second, behavior.WriteWait(leaf))
+	s.Equal(90*time.Second, behavior.WriteWait(middle), "from what it requires")
+	s.Equal(90*time.Second, behavior.WriteWait(top), "the longest, two deep")
+	s.Zero(behavior.WriteWait(none))
 }
 
 func (s *ChainPublicTestSuite) TestRequiredBy() {

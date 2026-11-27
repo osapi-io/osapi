@@ -98,6 +98,15 @@ require it can call it.
 
 Use: For work that two behaviors share, such as writing a file.
 
+### `JobWait(d)`
+
+Makes the controller wait d for the answer of a write of the behavior, and of
+each behavior that requires it, in place of the job client's timeout of 30 s
+when d is longer.
+
+Use: When a write takes longer than 30 s on a host, such as a netplan change
+that netplan try confirms only after it checks NATS.
+
 ### `Requires(behaviors...)`
 
 Builds the providers of those behaviors first. The builder gets them with

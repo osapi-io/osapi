@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -101,6 +102,71 @@ func yes() *bool {
 	b := true
 
 	return &b
+}
+
+// TestJobWait: a write of a behavior that requires one with a JobWait waits
+// that long for its answer, on one host and on a broadcast; a read and a
+// behavior with none keep the job client's timeout.
+func (s *DispatchPublicTestSuite) TestJobWait() {
+	slow := behavior.Define("slowkv", "Keys that take long to write",
+		behavior.JobWait(90*time.Second),
+		behavior.Read("get", get).Key("key"),
+		behavior.Write("set", set),
+	)
+	above := behavior.Define("abovekv", "Keys on slowkv",
+		behavior.Requires(slow),
+		behavior.Read("get", get).Key("key"),
+		behavior.Write("set", set),
+	)
+	waitOf := func(want *time.Duration) any {
+		return func(ctx context.Context, target, _ string, _ job.OperationType, _ any) (string, *job.Response, error) {
+			*want = job.Wait(ctx, 30*time.Second)
+
+			return "job-1", completed(target, `{"key":"a"}`, nil), nil
+		}
+	}
+	for _, tc := range []struct {
+		name   string
+		b      *behavior.Behavior
+		method string
+		want   time.Duration
+	}{
+		{name: "a write of the behavior", b: slow, method: "set", want: 90 * time.Second},
+		{name: "a write of a behavior that requires it", b: above, method: "set", want: 90 * time.Second},
+		{name: "a read", b: above, method: "get", want: 30 * time.Second},
+		{name: "a write with no wait", b: kv, method: "set", want: 30 * time.Second},
+	} {
+		s.Run(tc.name, func() {
+			var got time.Duration
+			if tc.method == "set" {
+				s.jobs.EXPECT().
+					Modify(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(waitOf(&got))
+			} else {
+				s.jobs.EXPECT().
+					Query(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(waitOf(&got))
+			}
+			_, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
+				tc.b, tc.method, "server1", kvIn{})
+			s.Require().NoError(err)
+			s.Equal(tc.want, got)
+		})
+	}
+	s.Run("a broadcast write", func() {
+		var got time.Duration
+		s.jobs.EXPECT().
+			ModifyBroadcast(gomock.Any(), "_all", gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, _, _ string, _ job.OperationType, _ any) (string, map[string]*job.Response, error) {
+				got = job.Wait(ctx, 30*time.Second)
+
+				return "job-1", map[string]*job.Response{}, nil
+			})
+		_, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
+			above, "set", "_all", kvIn{})
+		s.Require().NoError(err)
+		s.Equal(90*time.Second, got)
+	})
 }
 
 func (s *DispatchPublicTestSuite) TestRun() {

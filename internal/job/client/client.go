@@ -374,7 +374,7 @@ func (c *Client) publishAndWait(
 		return "", nil, endSpan(colSpan, fmt.Errorf("failed to create response watcher: %w", err))
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timeoutCtx, cancel := context.WithTimeout(ctx, job.Wait(ctx, c.timeout))
 	defer cancel()
 
 	for {
@@ -539,7 +539,7 @@ func (c *Client) publishAndCollect(
 	responses := make(map[string]*job.Response)
 
 	// Overall timeout as safety net
-	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	timeoutCtx, cancel := context.WithTimeout(ctx, job.Wait(ctx, c.timeout))
 	defer cancel()
 
 	for {
