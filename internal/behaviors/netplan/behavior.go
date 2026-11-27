@@ -88,8 +88,10 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Get what netplan status reports for an interface").
 		Explain("Reads netplan status: the interface's type, its section and the ID of the "+
 			"definition that matches it, which a write goes under, and each interface that "+
-			"definition matches. netplan lists only the interfaces it manages, so an "+
-			"interface that it does not list is an ethernet under its own name.").
+			"definition matches. netplan lists only the interfaces it manages, and an older "+
+			"netplan has no status. An interface that status does not list goes under its "+
+			"own name, with the type of its kind as gohai reads it from sysfs: a bridge, a "+
+			"bond, a Wi-Fi card, a VLAN or a tunnel. One of no other kind is an ethernet.").
 		Example("A bond", GetInput{Name: "bond0"},
 			Interface{
 				Name:    "bond0",
@@ -135,5 +137,38 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("An interface netplan does not manage", GetInput{Name: "eth9"},
 			Interface{Name: "eth9", Section: "ethernets", ID: "eth9", Matches: []string{"eth9"}},
 			behavior.Prints("netplan status --format json", status),
+		).
+		Example("A bridge on a netplan without status", GetInput{Name: "br0"},
+			Interface{
+				Name:    "br0",
+				Type:    "bridge",
+				Section: "bridges",
+				ID:      "br0",
+				Matches: []string{"br0"},
+			},
+			behavior.Prints("netplan status --format json", "Invalid command: status\n"),
+			behavior.Exists("/sys/class/net/br0/type", "1\n"),
+			behavior.Exists("/sys/class/net/br0/bridge/bridge_id", "8000.000000000000\n"),
+		).
+		Example("A Wi-Fi card that netplan does not list", GetInput{Name: "wlan0"},
+			Interface{
+				Name:    "wlan0",
+				Type:    "wifi",
+				Section: "wifis",
+				ID:      "wlan0",
+				Matches: []string{"wlan0"},
+			},
+			behavior.Prints("netplan status --format json", status),
+			behavior.Exists("/sys/class/net/wlan0/type", "1\n"),
+			behavior.Exists("/sys/class/net/wlan0/wireless/.keep", ""),
+		).
+		Example("A VLAN on a netplan without status", GetInput{Name: "eth0.10"},
+			Interface{
+				Name: "eth0.10", Type: "vlan", Section: "vlans", ID: "eth0.10",
+				Matches: []string{"eth0.10"},
+			},
+			behavior.Prints("netplan status --format json", "Invalid command: status\n"),
+			behavior.Exists("/sys/class/net/eth0.10/type", "1\n"),
+			behavior.Exists("/sys/class/net/eth0.10/uevent", "DEVTYPE=vlan\nINTERFACE=eth0.10\n"),
 		),
 ))

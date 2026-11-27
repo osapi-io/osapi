@@ -30,6 +30,7 @@ import (
 	"sync"
 
 	"github.com/avfs/avfs"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/network"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -161,11 +162,13 @@ func (d *debian) Remove(
 	return true, nil
 }
 
-// Interface reads netplan status. netplan lists only the interfaces it
-// manages, so an interface that it does not list, or a status netplan cannot
-// give, is an ethernet, the section most interfaces are in, under its own
-// name. Whether the host has the interface is gohai's to read: the callers
-// check it.
+// Interface reads netplan status, for the definition that matches the
+// interface, and the type that netplan gives it. netplan lists only the
+// interfaces it manages, and an older netplan has no status. For an interface
+// that status does not list, the type is the interface's kind as gohai reads
+// it, under its own name, and an interface of no kind is an ethernet, the
+// section most interfaces are in. Whether the host has the interface is
+// gohai's to read: the callers check it.
 func (d *debian) Interface(
 	ctx context.Context,
 	name string,
@@ -182,8 +185,13 @@ func (d *debian) Interface(
 	// the interface's name is ignored, so a write goes under the ID.
 	id := s.ID
 	if id == "" {
+		t := s.Type
+		if t == "" {
+			t = d.kind(ctx, name)
+		}
+
 		return Interface{
-			Name: name, Type: s.Type, Section: Section(s.Type), ID: name, Matches: []string{name},
+			Name: name, Type: t, Section: Section(t), ID: name, Matches: []string{name},
 		}, nil
 	}
 	matches := []string{}
@@ -203,6 +211,39 @@ func (d *debian) Interface(
 	}, nil
 }
 
+// netplanType is the netplan type of each kind that gohai reads, where the two
+// differ in name or netplan has a section for it. netplan defines a WireGuard
+// link as a tunnel. Other kinds, such as a NIC, a veth or a loopback, are an
+// ethernet.
+var netplanType = map[string]string{
+	"bridge":    "bridge",
+	"bond":      "bond",
+	"wifi":      "wifi",
+	"vlan":      "vlan",
+	"vxlan":     "vxlan",
+	"wireguard": "tunnel",
+}
+
+// kind is the netplan type of the interface name from its kind as gohai reads
+// it from sysfs, or "" when gohai does not know the interface or its kind
+// has no section of its own. It reads sysfs only, with no commands, because
+// a write asks it for each interface it changes.
+func (d *debian) kind(
+	ctx context.Context,
+	name string,
+) string {
+	out, _ := (&network.Linux{FS: d.fs}).Collect(ctx, nil)
+	if info, ok := out.(*network.Info); ok {
+		for _, iface := range info.Interfaces {
+			if iface.Name == name {
+				return netplanType[iface.Kind]
+			}
+		}
+	}
+
+	return ""
+}
+
 // Section is the netplan section of an interface of type t.
 func Section(
 	t string,
@@ -214,6 +255,8 @@ func Section(
 		return "bridges"
 	case "bond":
 		return "bonds"
+	case "vlan":
+		return "vlans"
 	case "tunnel", "vxlan":
 		return "tunnels"
 	case "dummy-device":
