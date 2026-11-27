@@ -355,23 +355,32 @@ func (h *Harness) conforms(
 ) {
 	route, params, err := h.router.FindRoute(req)
 	require.NoError(t, err, "the spec has no route for %s %s", req.Method, req.URL)
+	in := &openapi3filter.RequestValidationInput{
+		Request:    req,
+		PathParams: params,
+		Route:      route,
+		Options: &openapi3filter.Options{
+			AuthenticationFunc: openapi3filter.NoopAuthenticationFunc,
+		},
+	}
+
+	// A request that the server takes must be one that the spec takes too:
+	// a client made from the spec, or a proxy that checks it, refuses
+	// anything else before the server sees it (osapi-io/osapi#1611).
+	if rec.Code < http.StatusBadRequest {
+		assert.NoError(t, openapi3filter.ValidateRequest(context.Background(), in),
+			"the spec refuses the request %s %s that the server takes", req.Method, req.URL)
+	}
 
 	assert.NoError(
 		t,
 		openapi3filter.ValidateResponse(
 			context.Background(),
 			&openapi3filter.ResponseValidationInput{
-				RequestValidationInput: &openapi3filter.RequestValidationInput{
-					Request:    req,
-					PathParams: params,
-					Route:      route,
-					Options: &openapi3filter.Options{
-						AuthenticationFunc: openapi3filter.NoopAuthenticationFunc,
-					},
-				},
-				Status: rec.Code,
-				Header: rec.Header(),
-				Body:   io.NopCloser(bytes.NewReader(rec.Body.Bytes())),
+				RequestValidationInput: in,
+				Status:                 rec.Code,
+				Header:                 rec.Header(),
+				Body:                   io.NopCloser(bytes.NewReader(rec.Body.Bytes())),
 			},
 		),
 		"the response does not match the spec: %s",

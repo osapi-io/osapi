@@ -52,7 +52,7 @@ func HandleList(
 // GetRequest is the request of certificate get: its target and its input.
 type GetRequest struct {
 	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Name     string `doc:"The CA, as list names it, such as internal-ca, or ISRG Root X1 on macOS; a name with a slash, such as mozilla/ISRG_Root_X1, is in list only, because a path segment cannot have one" in:"path" json:"name" param:"CertificateName" validate:"required,max=255,ca_name"`
+	Name     string `doc:"The CA, as list names it, such as internal-ca, or ISRG Root X1 on macOS; a name with a slash, such as mozilla/ISRG_Root_X1, is in list only, because a path segment cannot have one" in:"path" json:"name" param:"CertificateGetName" validate:"required,max=255,ca_name"`
 }
 
 // CertificateGetResponse is each target host's result.
@@ -109,7 +109,7 @@ func HandleCreate(
 // UpdateRequest is the request of certificate update: its target and its input.
 type UpdateRequest struct {
 	Hostname string                   `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Name     string                   `doc:"The CA that osapi deployed, such as internal-ca" in:"path" json:"name" param:"CertificateName" validate:"required,resource_name"`
+	Name     string                   `doc:"The CA that osapi deployed, such as internal-ca" in:"path" json:"name" param:"CertificateUpdateName" validate:"required,resource_name"`
 	Body     CertificateUpdateRequest `in:"body" validate:"required"`
 }
 
@@ -136,7 +136,7 @@ func HandleUpdate(
 // DeleteRequest is the request of certificate delete: its target and its input.
 type DeleteRequest struct {
 	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Name     string `doc:"The CA that osapi deployed, such as internal-ca" in:"path" json:"name" param:"CertificateName" validate:"required,resource_name"`
+	Name     string `doc:"The CA that osapi deployed, such as internal-ca" in:"path" json:"name" param:"CertificateDeleteName" validate:"required,resource_name"`
 }
 
 // CertificateDeleteResponse is each target host's result.
