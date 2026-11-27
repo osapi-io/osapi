@@ -705,6 +705,25 @@ such as `osapi-io/osapi#1536`) or the check that runs it in place of the suite
 (`elsewhere`, such as a recipe of the justfile). The gate fails a skip with
 neither.
 
+The SDK runs the same cases. With `OSAPI_INTEGRATION_CLIENT=sdk`, the spec proxy
+sends each request of the CLI through the typed method of `pkg/sdk/client` for
+its operation, such as `Hostname.Update` for `PUT /api/node/{hostname}/hostname`
+(`test/integration/sdkreplay_test.go`). The CLI only reads the flags and prints
+the answer. Thus each example, refusal, check and scenario runs through the SDK,
+with no table of its own: the SDK builds the request that reaches the
+controller, and the checks read the answer that the SDK decoded. The spec checks
+the request of the SDK and the answer of the controller. A body field that the
+input of the SDK does not have fails the run, because the SDK cannot send it. CI
+runs the suite one time for each client, and `just int` in osapi-lab runs it one
+time for each client on each VM.
+
+`TestEachOperationHasAnSDKCall`, in `test/integration/sdkcalls_test.go`, has no
+build tag. It fails for an operation of the spec with no typed method, or with a
+method whose arguments do not agree with the spec. `TestEachCommandHasAnSDKCall`
+fails for a command of the DSL whose operation has no typed method. If the SDK
+suite cannot call an operation, add it to `sdkSkips` with the reason and the
+open issue that makes it run.
+
 A value of an example that the suite does not know, such as a new kind of ID, is
 used as it is, and the example fails. Add the thing that it names to
 `fixtures.value` in `test/integration/cli_test.go`.
@@ -717,6 +736,7 @@ goes in a `{domain}_test.go` suite. Guard each test that makes a change with
 
 | Variable                            | Effect                                                                                                                                                                                                                                                                                                                |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OSAPI_INTEGRATION_CLIENT`          | `sdk` sends each request of the CLI through the typed method of the SDK for its operation. The default is `cli`                                                                                                                                                                                                       |
 | `OSAPI_INTEGRATION_OSAPIFILE`       | An osapi client config. The suite starts nothing, and tests the controller that the file's `controller.client` URL and bearer token name                                                                                                                                                                              |
 | `OSAPI_INTEGRATION_TARGET`          | The host that a test sends one host's job to. The default is `_any`. Against several agents, name one host, so a read and its write match                                                                                                                                                                             |
 | `OSAPI_INTEGRATION_WRITE_BEHAVIORS` | `1` runs the write examples of each behavior. Before the tests, the suite prepares the target through osapi: the ping parameter, chrony and the dummy interface `osapi0`. After them, it puts back the parameter and removes `osapi0`. CI sets it, and runs the suite as root on its runner, with no other host setup |

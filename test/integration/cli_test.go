@@ -196,7 +196,11 @@ func runDirect(
 ) (string, string, int) {
 	cmd := exec.Command(binaryPath, append([]string{"-f", configPath}, args...)...)
 	cmd.Dir = dir
-	cmd.Env = append(clientEnv(), "OSAPI_CONTROLLER_CLIENT_URL="+controllerURL)
+	direct := controllerURL
+	if sdkMode {
+		direct = fmt.Sprintf("http://127.0.0.1:%d", directPort)
+	}
+	cmd.Env = append(clientEnv(), "OSAPI_CONTROLLER_CLIENT_URL="+direct)
 	cmd.Stdin = strings.NewReader(stdin)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
