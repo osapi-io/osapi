@@ -649,13 +649,30 @@ local command that the policy marks as a write, runs with
 
 A fixture server (`startFixture` in `test/integration/fixture_test.go`) is a
 second NATS server and controller of the suite's own, with its own ports, store
-and key directories. A test that spends an agent runs against it, so the suite's
-own agent stays as it is:
+and key directories. A scenario that spends an agent runs against it, so the
+suite's own agent stays as it is.
 
-- `JoinSuite` runs a join with a token and its refusals, and then a revoke, a
-  delete, a pending agent, an admit and a reject.
-- `AgentServiceSuite` installs and removes the agent's service with a join
-  string. It runs as root on Linux only.
+A flow of more than one command is a scenario, in
+`test/integration/scenarios_test.go`. A scenario is a list of steps, and each
+step is data:
+
+- the command and its flags, as the CLI has them, or the start or the stop of a
+  fixture's agent;
+- the checks of its output: a JSON path, such as `items[state=Ready].hostname`,
+  and a relation, such as `==`, `has` or `prefix`;
+- the values that it keeps for the later steps, as `{name}`;
+- how long it may try again, for a change that an agent applies at its next
+  heartbeat.
+
+`ScenarioSuite` runs each scenario as a subtest, and each step as a subtest
+under it. A step that fails stops its scenario. The scenarios are the join with
+a token and its refusals, the admission changes, the rotation of the agent's
+keys and of the controller's key, a sealed secret that a job opens, and the
+agent's service, which runs as root on Linux only. Do not write a flow as a test
+method of its own: add a scenario. `TestEachStepIsACommand`, in
+`scenario_test.go`, has no build tag. It fails for a step whose command or flag
+does not exist, for an unknown check, and for a placeholder that no step before
+it keeps.
 
 The fixture runs where the suite runs. Thus against a deployment such as the
 lab, the `host` commands and `SecurityDefaultsSuite` run against a fixture. Each

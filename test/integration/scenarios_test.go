@@ -1,0 +1,611 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package integration_test
+
+// This file has no build tag: the scenarios are data, which the unit gate
+// of scenario_test.go checks against the command tree.
+
+import "time"
+
+// scenarios is each flow that the suite runs as a table of steps.
+func scenarios() []scenario {
+	out := joinScenarios()
+	out = append(out, keyRotationScenarios()...)
+	out = append(out, sealScenarios()...)
+
+	return append(out, agentServiceScenarios()...)
+}
+
+// ready is a step that waits for a Ready agent in the fixture, and keeps
+// its hostname and machine ID as host and mid.
+func ready(
+	name string,
+) step {
+	return step{
+		name:   name,
+		on:     onFixture,
+		wait:   60 * time.Second,
+		pause:  time.Second,
+		cli:    []string{"client", "agent", "list", "--json"},
+		checks: []check{{path: "items[state=Ready].hostname", op: "nonempty"}},
+		capture: map[string]string{
+			"host": "items[state=Ready].hostname",
+			"mid":  "items[state=Ready].machine_id",
+		},
+	}
+}
+
+// admission is a step that waits until the fixture's admission of mid is
+// in state.
+func admission(
+	state string,
+) step {
+	return step{
+		name:   "the admission is " + state,
+		on:     onFixture,
+		wait:   30 * time.Second,
+		pause:  time.Second,
+		cli:    []string{"client", "admission", "get", "--machine-id", "{mid}", "--json"},
+		checks: []check{{path: "state", op: "==", want: state}},
+	}
+}
+
+// job is a step that runs a job on host, in the fixture. A job that may
+// not reach host fails, and waits for that when wait is set.
+func job(
+	name string,
+	fails bool,
+	wait time.Duration,
+) step {
+	return step{
+		name: name, on: onFixture, fails: fails, wait: wait, pause: time.Second,
+		cli: []string{"client", "node", "hostname", "get", "--target", "{host}", "--json"},
+	}
+}
+
+// joinToken is a step that makes a join token in the fixture, and keeps its
+// join string as name and its ID as name+"ID".
+func joinToken(
+	name string,
+	flags ...string,
+) step {
+	return step{
+		name: "make the " + name + " token", on: onFixture,
+		cli:     append([]string{"controller", "join", "token", "create", "--json"}, flags...),
+		checks:  []check{{path: "join", op: "nonempty"}},
+		capture: map[string]string{name: "join", name + "ID": "id"},
+	}
+}
+
+// refused is a step that starts an agent with the join string of name in
+// its own key directory: the controller must refuse it, so it stops.
+func refused(
+	name string,
+	join string,
+) step {
+	return step{
+		name: "a " + name + " token admits no agent", start: name, keyDir: "{dir:" + name + "}",
+		join: join, exits: true, wait: 60 * time.Second,
+	}
+}
+
+func joinScenarios() []scenario {
+	return []scenario{{
+		name: "join with a token, then each refusal and each admission change", writeOp: "JOIN",
+		fixture: true,
+		steps: []step{
+			joinToken("join", "--uses", "1", "--expires", "10m", "--labels", "group=fixture"),
+			{
+				name:   "start the agent with the token",
+				start:  "agent",
+				keyDir: "{dir:token}",
+				join:   "{join}",
+			},
+			ready("the agent joins"),
+			{
+				name: "the agent has the token's labels",
+				on:   onFixture,
+				cli:  []string{"client", "agent", "list", "--json"},
+				checks: []check{
+					{path: "items[hostname={host}].labels.group", op: "==", want: "fixture"},
+				},
+			},
+			admission("admitted"),
+			job("a job reaches the joined agent", false, 0),
+			{
+				name: "the join is in the audit log", on: onFixture,
+				cli:    []string{"client", "audit", "list", "--limit", "100", "--json"},
+				checks: []check{{path: "", op: "contains", want: `"agent.join"`}},
+			},
+			{name: "stop the agent", stop: "agent"},
+			joinToken("revoked", "--uses", "1"),
+			{
+				name: "revoke the token",
+				on:   onFixture,
+				cli:  []string{"controller", "join", "token", "revoke", "--id", "{revokedID}"},
+			},
+			joinToken("expired", "--uses", "1", "--expires", "1s"),
+			joinToken("valid", "--uses", "1"),
+			{
+				name:  "let the expired token expire",
+				on:    onFixture,
+				cli:   []string{"controller", "join", "token", "list", "--json"},
+				pause: 2 * time.Second,
+			},
+			refused("used", "{join}"),
+			refused("revoked", "{revoked}"),
+			refused("expired", "{expired}"),
+			refused("fingerprint", "{wrongfp:valid}"),
+			admission("admitted"),
+			{name: "start the agent again", start: "agent", keyDir: "{dir:token}"},
+			ready("the agent is back"),
+			{
+				name: "revoke the admission",
+				on:   onFixture,
+				cli:  []string{"client", "admission", "revoke", "--machine-id", "{mid}"},
+			},
+			admission("revoked"),
+			job("a job does not reach the revoked agent", true, 60*time.Second),
+			{name: "stop the revoked agent", stop: "agent"},
+			{
+				name: "delete the admission",
+				on:   onFixture,
+				cli:  []string{"client", "admission", "delete", "--machine-id", "{mid}"},
+			},
+			{
+				name:  "the admission is gone",
+				on:    onFixture,
+				fails: true,
+				wait:  30 * time.Second,
+				pause: time.Second,
+				cli:   []string{"client", "admission", "get", "--machine-id", "{mid}", "--json"},
+			},
+			{name: "start an agent with no token", start: "pending", keyDir: "{dir:pending}"},
+			admission("pending"),
+			job("a job does not reach a pending agent", true, 0),
+			{
+				name:    "read the pending agent's fingerprint",
+				on:      onFixture,
+				keyDir:  "{dir:pending}",
+				wait:    30 * time.Second,
+				pause:   time.Second,
+				cli:     []string{"pki", "key", "get", "--name", "agent", "--json"},
+				checks:  []check{{path: "fingerprint", op: "prefix", want: "SHA256:"}},
+				capture: map[string]string{"fp": "fingerprint"},
+			},
+			{
+				name: "admit the agent",
+				on:   onFixture,
+				cli: []string{
+					"client",
+					"admission",
+					"admit",
+					"--machine-id",
+					"{mid}",
+					"--fingerprint",
+					"{fp}",
+				},
+			},
+			admission("admitted"),
+			ready("the admitted agent is Ready"),
+			job("a job reaches the admitted agent", false, 0),
+			{name: "stop the admitted agent", stop: "pending"},
+			{
+				name: "delete the admission again",
+				on:   onFixture,
+				cli:  []string{"client", "admission", "delete", "--machine-id", "{mid}"},
+			},
+			{name: "start an agent to reject", start: "rejected", keyDir: "{dir:rejected}"},
+			admission("pending"),
+			{
+				name: "reject the agent",
+				on:   onFixture,
+				cli: []string{
+					"client",
+					"admission",
+					"reject",
+					"--machine-id",
+					"{mid}",
+					"--reason",
+					"integration test",
+				},
+			},
+			admission("rejected"),
+			job("a job does not reach a rejected agent", true, 0),
+			{name: "stop the rejected agent", stop: "rejected"},
+			{
+				name: "the admission changes are in the audit log", on: onFixture,
+				cli:    []string{"client", "audit", "list", "--limit", "100", "--json"},
+				checks: []check{{path: "", op: "contains", want: "admission"}},
+			},
+		},
+	}}
+}
+
+// agentKey is a step that reads the fingerprint of the agent's keys on its
+// host, in keyDir, and keeps it as name.
+func agentKey(
+	name string,
+	keyDir string,
+	checks ...check,
+) step {
+	return step{
+		name: "read the agent's fingerprint as " + name, on: onHost, keyDir: keyDir,
+		cli:     []string{"pki", "key", "get", "--name", "agent", "--json"},
+		checks:  append([]check{{path: "fingerprint", op: "prefix", want: "SHA256:"}}, checks...),
+		capture: map[string]string{name: "fingerprint"},
+	}
+}
+
+// admitted is a step whose checks read the fingerprint of each admitted
+// machine.
+func admitted(
+	name string,
+	checks ...check,
+) step {
+	return step{
+		name:   name,
+		cli:    []string{"client", "admission", "list", "--state", "admitted", "--json"},
+		checks: checks,
+	}
+}
+
+// controllerKey is a step that reads the controller's key and its rotation.
+func controllerKey(
+	name string,
+	wait time.Duration,
+	checks ...check,
+) step {
+	return step{
+		name: name, wait: wait, pause: 2 * time.Second,
+		cli: []string{"client", "pki", "key", "get", "--json"}, checks: checks,
+	}
+}
+
+func keyRotationScenarios() []scenario {
+	return []scenario{
+		{
+			name:      "rotate the agent's keys with no new admission",
+			writeOp:   "KEY_ROTATE",
+			ownServer: true,
+			steps: []step{
+				agentKey("before", ""),
+				admitted(
+					"the agent is admitted with its keys",
+					check{path: "items[*].fingerprint", op: "has", want: "{before}"},
+				),
+				{
+					name: "rotate the agent's keys", on: onHost,
+					cli: []string{"pki", "key", "rotate", "--name", "agent", "--json"},
+					checks: []check{
+						{path: "key.name", op: "==", want: "agent"},
+						{path: "key.fingerprint", op: "!=", want: "{before}"},
+					},
+					capture: map[string]string{"after": "key.fingerprint"},
+				},
+				agentKey("now", "", check{path: "fingerprint", op: "==", want: "{after}"}),
+				admitted("the admission holds the new keys, not the old",
+					check{path: "items[*].fingerprint", op: "has", want: "{after}"},
+					check{path: "items[*].fingerprint", op: "lacks", want: "{before}"}),
+				{
+					name:    "the running agent takes the new keys at its heartbeat",
+					wait:    30 * time.Second,
+					pause:   time.Second,
+					cli:     []string{"client", "agent", "list", "--json"},
+					checks:  []check{{path: "items[fingerprint={after}].hostname", op: "nonempty"}},
+					capture: map[string]string{"host": "items[fingerprint={after}].hostname"},
+				},
+				{
+					name: "the controller takes the agent's result",
+					cli: []string{
+						"client",
+						"node",
+						"hostname",
+						"get",
+						"--target",
+						"{host}",
+						"--json",
+					},
+					checks: []check{
+						{path: "results[*].error", op: "empty"},
+						{path: "results[*].status", op: "!=", want: "refused"},
+						{path: "results[*].name", op: "nonempty"},
+					},
+				},
+			},
+		},
+		{
+			name:      "keys that are not admitted do not rotate",
+			writeOp:   "KEY_ROTATE",
+			ownServer: true,
+			steps: []step{
+				{
+					name:   "make keys that are not admitted",
+					on:     onHost,
+					keyDir: "{dir:agent}",
+					cli:    []string{"pki", "key", "create", "--name", "agent"},
+				},
+				agentKey("before", "{dir:agent}"),
+				{
+					name:   "the controller refuses the rotation",
+					on:     onHost,
+					keyDir: "{dir:agent}",
+					fails:  true,
+					cli:    []string{"pki", "key", "rotate", "--name", "agent"},
+					checks: []check{
+						{path: "!all", op: "contains", want: "the controller refused the rotation"},
+					},
+				},
+				agentKey("after", "{dir:agent}",
+					check{path: "fingerprint", op: "==", want: "{before}"},
+					check{op: "nofile", want: "{dir:agent}/agent.next.key"}),
+			},
+		},
+		{
+			name:    "rotate the controller's key with no new admission",
+			writeOp: "CONTROLLER_KEY_ROTATE",
+			steps: []step{
+				{
+					name:    "read the controller's key",
+					cli:     []string{"client", "pki", "key", "get", "--json"},
+					checks:  []check{{path: "current", op: "nonempty"}},
+					capture: map[string]string{"before": "current"},
+				},
+				{
+					name: "start a rotation",
+					cli:  []string{"client", "pki", "key", "rotate", "--json"},
+					checks: []check{
+						{path: "next", op: "nonempty"},
+						{path: "next", op: "!=", want: "{before}"},
+						{path: "agents[*].hostname", op: "nonempty"},
+					},
+					capture: map[string]string{"next": "next"},
+				},
+				controllerKey(
+					"the controller switches when each agent has the next key",
+					90*time.Second,
+					check{path: "current", op: "==", want: "{next}"},
+					check{path: "next", op: "empty"},
+				),
+				{
+					name:   "each agent trusts the new key",
+					wait:   30 * time.Second,
+					pause:  time.Second,
+					cli:    []string{"client", "agent", "list", "--json"},
+					checks: []check{{path: "items[*].controller_key", op: "==", want: "{next}"}},
+				},
+				{
+					name: "an agent verifies a job that the new key signed",
+					cli: []string{
+						"client",
+						"node",
+						"hostname",
+						"get",
+						"--target",
+						"{target}",
+						"--json",
+					},
+					checks: []check{
+						{path: "results[*].error", op: "empty"},
+						{path: "results[*].name", op: "nonempty"},
+					},
+				},
+			},
+		},
+		{
+			name: "a rotation in progress is not started again", writeOp: "CONTROLLER_KEY_ROTATE",
+			steps: []step{
+				{
+					name:    "start a rotation",
+					cli:     []string{"client", "pki", "key", "rotate", "--json"},
+					checks:  []check{{path: "next", op: "nonempty"}},
+					capture: map[string]string{"first": "next"},
+				},
+				{
+					name: "rotate again during it",
+					cli:  []string{"client", "pki", "key", "rotate", "--json"},
+				},
+				controllerKey("the controller switches to the first rotation's key", 90*time.Second,
+					check{path: "current", op: "==", want: "{first}"}),
+			},
+		},
+	}
+}
+
+func sealScenarios() []scenario {
+	name := "osapi-int-sealed-{stamp}"
+	key := "int-sealed-{stamp}"
+	value := "sealed-value-{stamp}"
+
+	return []scenario{
+		{
+			name: "each admitted agent has a P-256 encryption key",
+			steps: []step{admitted("read the admitted keys",
+				check{path: "items[*].encryption_key", op: "p256"},
+				check{path: "items[*].fingerprint", op: "prefix", want: "SHA256:"})},
+		},
+		{
+			name:    "a job opens a sealed secret, and the stored job holds it sealed",
+			writeOp: "SEALED_SECRET",
+			steps: []step{
+				{
+					name:  "write the secret",
+					stdin: value,
+					cli: []string{
+						"client",
+						"secret",
+						"update",
+						"--vault",
+						"default",
+						"--key",
+						key,
+						"--value",
+						"-",
+					},
+				},
+				{
+					name: "make a container",
+					cli: []string{
+						"client",
+						"node",
+						"docker",
+						"create",
+						"--target",
+						"{target}",
+						"--name",
+						name,
+						"--image",
+						"alpine:3.20",
+						"--command",
+						"sleep",
+						"--command",
+						"300",
+						"--auto-start",
+						"--json",
+					},
+					skipIf:  &check{path: "results[0].status", op: "==", want: "skipped"},
+					checks:  []check{{path: "results[0].status", op: "!=", want: "failed"}},
+					capture: map[string]string{"host": "results[0].hostname"},
+				},
+				{
+					name: "the command gets the secret's value",
+					cli: []string{
+						"client",
+						"node",
+						"docker",
+						"exec",
+						"--target",
+						"{host}",
+						"--name",
+						name,
+						"--env",
+						"SEALED=secret://default/" + key,
+						"--command",
+						"printenv",
+						"--command",
+						"SEALED",
+						"--json",
+					},
+					skipIf: &check{path: "", op: "contains", want: "command execution is disabled"},
+					checks: []check{
+						{path: "results[0].exit_code", op: "==", want: "0"},
+						{path: "results[0].stdout", op: "==", want: value},
+					},
+					capture: map[string]string{"job": "job_id"},
+				},
+				{
+					name: "the stored job holds the value sealed",
+					cli:  []string{"client", "job", "get", "--id", "{job}", "--json"},
+					checks: []check{
+						{path: "operation.data.env.SEALED", op: "prefix", want: "sealed:"},
+						{path: "operation.data.env.SEALED", op: "absent", want: value},
+					},
+				},
+			},
+			cleanup: []step{
+				{
+					name: "stop the container",
+					cli: []string{
+						"client",
+						"node",
+						"docker",
+						"stop",
+						"--target",
+						"{host}",
+						"--name",
+						name,
+					},
+				},
+				{
+					name: "delete the container",
+					cli: []string{
+						"client",
+						"node",
+						"docker",
+						"delete",
+						"--target",
+						"{host}",
+						"--name",
+						name,
+					},
+				},
+				{
+					name: "delete the secret",
+					cli: []string{
+						"client",
+						"secret",
+						"delete",
+						"--vault",
+						"default",
+						"--key",
+						key,
+					},
+				},
+			},
+		},
+	}
+}
+
+func agentServiceScenarios() []scenario {
+	return []scenario{{
+		name: "install and uninstall the agent's service", writeOp: "AGENT_SERVICE",
+		fixture: true, fixtureAutoAdmit: true, ownServer: true, rootLinux: true,
+		steps: []step{
+			joinToken("join"),
+			{
+				name: "install the service with the join string", on: onFixtureHost,
+				cli:     []string{"agent", "service", "install", "--join", "{join}", "--json"},
+				capture: map[string]string{"service": "service", "config": "config_file"},
+				checks: []check{
+					{path: "joined", op: "==", want: "true"},
+					{op: "file", want: "{service}"},
+					{op: "file", want: "{config}"},
+				},
+			},
+			{
+				name:   "the service is enabled",
+				exec:   []string{"systemctl", "is-enabled", "osapi-agent"},
+				checks: []check{{path: "", op: "==", want: "enabled"}},
+			},
+			{
+				name:   "the service's agent is Ready",
+				on:     onFixture,
+				wait:   60 * time.Second,
+				pause:  time.Second,
+				cli:    []string{"client", "agent", "list", "--json"},
+				checks: []check{{path: "items[*].state", op: "==", want: "Ready"}},
+			},
+			{
+				name: "uninstall the service", on: onFixtureHost,
+				cli: []string{"agent", "service", "uninstall", "--purge", "--json"},
+				checks: []check{
+					{op: "nofile", want: "{service}"},
+					{op: "nofile", want: "{config}"},
+				},
+			},
+			{
+				name:   "the service is not active",
+				exec:   []string{"systemctl", "is-active", "osapi-agent"},
+				checks: []check{{path: "", op: "!=", want: "active"}},
+			},
+		},
+	}}
+}

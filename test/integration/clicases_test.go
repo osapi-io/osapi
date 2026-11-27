@@ -146,13 +146,13 @@ const (
 		"agent: the join suite runs it against a fixture server of its own"
 	skipScaffold = "writes the source of a definition into a checkout: the scaffold checks of the " +
 		"justfile run it in a copy"
-	skipService = "installs or removes a system service on the host: the agent service suite " +
+	skipService = "installs or removes a system service on the host: the agent service scenario " +
 		"installs one with a fixture's join string, as root on Linux"
 	// joinSuite runs the admission commands and the processes against a
 	// fixture server of its own.
-	joinSuite = "JoinSuite in join_test.go, against the fixture of fixture_test.go"
+	joinSuite = "the join scenario in scenarios_test.go, against the fixture of fixture_test.go"
 	// serviceSuite installs and removes the agent's service.
-	serviceSuite = "AgentServiceSuite in agentservice_test.go"
+	serviceSuite = "the agent service scenario in scenarios_test.go"
 	// scaffoldChecks are the recipes that run a scaffold in a copy.
 	scaffoldChecks = "just behavior-scaffold-check, endpoint-scaffold-check and command-scaffold-check"
 )

@@ -70,6 +70,13 @@ var rootCmd = &cobra.Command{
 	Short: "Typed, repeatable operations for Linux and macOS hosts",
 }
 
+// Root is the osapi command tree, with each generated and hand-written
+// command attached. The integration suite's gate checks that each step of
+// a scenario names a command and flags that exist.
+func Root() *cobra.Command {
+	return rootCmd
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
