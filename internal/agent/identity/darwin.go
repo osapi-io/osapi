@@ -21,11 +21,19 @@
 package identity
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 )
+
+// ioregTimeout bounds the run of ioreg. Identity resolution runs before the
+// agent starts, with no deadline of its own, so a hung ioreg would hang the
+// start with no log line.
+var ioregTimeout = 10 * time.Second
 
 // ioregFn is the function used to run ioreg and return its output.
 // Injectable for testing via export_test.go.
@@ -38,9 +46,22 @@ var execCommandFn = defaultExecCommandFn
 // uuidPattern matches the IOPlatformUUID value in ioreg output.
 var uuidPattern = regexp.MustCompile(`"IOPlatformUUID"\s*=\s*"([^"]+)"`)
 
-// defaultExecCommandFn runs the ioreg command via exec.Command.
+// ioregProgram is the program that defaultExecCommandFn runs; a test
+// replaces it.
+var ioregProgram = "ioreg"
+
+// defaultExecCommandFn runs ioreg, and kills it after ioregTimeout.
 func defaultExecCommandFn() ([]byte, error) {
-	return exec.Command("ioreg", "-rd1", "-c", "IOPlatformExpertDevice").Output()
+	ctx, cancel := context.WithTimeout(context.Background(), ioregTimeout)
+	defer cancel()
+
+	out, err := exec.CommandContext(ctx, ioregProgram, "-rd1", "-c", "IOPlatformExpertDevice").
+		Output()
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return nil, fmt.Errorf("ioreg did not answer in %s: %w", ioregTimeout, ctx.Err())
+	}
+
+	return out, err
 }
 
 // defaultIoregFn runs the ioreg command to retrieve platform expert device info.
