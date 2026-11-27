@@ -205,6 +205,73 @@ func (s *HostPublicTestSuite) TestBuild() {
 	}
 }
 
+// TestBuilder: a behavior that two others require is built once on one
+// host, and each of them gets that one provider; a failed build is not
+// tried again.
+func (s *HostPublicTestSuite) TestBuilder() {
+	shared := func(n *int, err error) *behavior.Behavior {
+		return behavior.Define("store", "Store", behavior.Node,
+			behavior.Platform("debian", func(host.Host) (*counted, error) {
+				*n++
+
+				return &counted{n: *n}, err
+			}),
+		)
+	}
+	needs := func(name string, store *behavior.Behavior) *behavior.Behavior {
+		return behavior.Define(name, name, behavior.Node,
+			behavior.Requires(store),
+			behavior.Platform("debian", func(h host.Host) (*counted, error) {
+				return host.Require[*counted](h, store), nil
+			}),
+		)
+	}
+
+	s.Run("when two behaviors require one, it is built once", func() {
+		var n int
+		store := shared(&n, nil)
+		bd := host.NewBuilder(host.Host{Platform: "debian"})
+
+		a, err := bd.Build(needs("a", store))
+		s.Require().NoError(err)
+		b, err := bd.Build(needs("b", store))
+		s.Require().NoError(err)
+		own, err := bd.Build(store)
+		s.Require().NoError(err)
+
+		s.Equal(1, n, "the shared behavior's builder ran once")
+		s.Same(a, b, "both get the same provider")
+		s.Same(a, own, "and so does the shared behavior itself")
+	})
+
+	s.Run("when the shared behavior fails, its error is kept", func() {
+		var n int
+		store := shared(&n, errors.New("no socket"))
+		bd := host.NewBuilder(host.Host{Platform: "debian"})
+
+		_, errA := bd.Build(needs("a", store))
+		_, errB := bd.Build(needs("b", store))
+
+		s.EqualError(errA, "a requires store: store provider on debian: no socket")
+		s.EqualError(errB, "b requires store: store provider on debian: no socket")
+		s.Equal(1, n, "the failed build is not tried again")
+	})
+
+	s.Run("when Build is called on its own, each call builds", func() {
+		var n int
+		store := shared(&n, nil)
+		h := host.Host{Platform: "debian"}
+
+		_, _ = host.Build(needs("a", store), h)
+		_, _ = host.Build(needs("b", store), h)
+
+		s.Equal(2, n, "Build is one build, with no builder kept between calls")
+	})
+}
+
+// counted is a provider that records which build of its behavior made it.
+type counted struct{ n int }
+
 // files is a provider another behavior requires.
 type files struct{ dir string }
 

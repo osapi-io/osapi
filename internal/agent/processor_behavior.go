@@ -63,8 +63,11 @@ func BuildBehaviorProviders(
 		built:    map[string]any{},
 		failed:   map[string]error{},
 	}
+	// One builder, so that a behavior that others require is built once,
+	// and each of them gets the same provider.
+	builder := host.NewBuilder(h)
 	for _, b := range behavior.All() {
-		p, err := host.Build(b, h)
+		p, err := builder.Build(b)
 		switch {
 		case errors.Is(err, provider.ErrUnsupported) || (err == nil && p == nil):
 			logger.Info("behavior unsupported on this platform; its methods are skipped",

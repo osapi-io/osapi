@@ -237,15 +237,51 @@ func Settings[T any](
 // Build builds b's provider for h's platform, with b's settings in the host
 // its builder gets, after building the provider of each behavior b requires
 // for the same host. It returns nil and no error when b declares no provider
-// for the platform. The agent builds every behavior's provider with it at
-// startup, and the provider tests build theirs with it on a fake host.
+// for the platform. The provider tests build theirs with it on a fake host.
+// It is one build: the agent, which builds every behavior, uses a Builder,
+// so that a behavior that several others require is built once.
 func Build(
 	b *behavior.Behavior,
 	h Host,
 ) (any, error) {
+	return NewBuilder(h).Build(b)
+}
+
+// Builder builds the providers of one host, each behavior once. A behavior
+// that several others require, such as managedfile, gives each of them, and
+// the agent, the same provider. Thus a lock or a cache that the provider
+// keeps is shared by every job that reaches it. A Builder is not safe for
+// concurrent use: the agent builds its providers at startup, one at a time.
+type Builder struct {
+	host  Host
+	built map[string]built
+}
+
+// built is the result of one behavior's build.
+type built struct {
+	provider any
+	err      error
+}
+
+// NewBuilder is a Builder for h.
+func NewBuilder(
+	h Host,
+) *Builder {
+	return &Builder{host: h, built: map[string]built{}}
+}
+
+// Build is Build of b on the Builder's host. A behavior that was built
+// already gives the provider, or the error, of that build.
+func (bd *Builder) Build(
+	b *behavior.Behavior,
+) (any, error) {
+	if r, ok := bd.built[b.Name]; ok {
+		return r.provider, r.err
+	}
+
 	required := make(map[string]any, len(b.Requires))
 	for _, r := range b.Requires {
-		p, err := Build(r, h)
+		p, err := bd.Build(r)
 		if err != nil && !errors.Is(err, behavior.ErrUnsupported) {
 			return nil, fmt.Errorf("%s requires %s: %w", b.Name, r.Name, err)
 		}
@@ -254,10 +290,14 @@ func Build(
 		}
 	}
 
+	h := bd.host
 	h.Settings = b.CurrentSettings()
 	h.Required = required
 
-	return b.Provider(h.Platform, h)
+	p, err := b.Provider(h.Platform, h)
+	bd.built[b.Name] = built{provider: p, err: err}
+
+	return p, err
 }
 
 // Objects reads the objects of the object store of the fleet.
