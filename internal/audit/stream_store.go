@@ -39,8 +39,12 @@ var _ Store = (*StreamStore)(nil)
 // marshalJSON is a package-level variable for testing the marshal error path.
 var marshalJSON = json.Marshal
 
-// fetchTimeout is the maximum wait time for fetching messages from a consumer.
+// fetchTimeout is the longest wait for one page of a read of the stream.
 const fetchTimeout = 5 * time.Second
+
+// readPage is the most entries that one read of the stream asks for. A large
+// export is many reads, and each one has its own fetchTimeout.
+const readPage = 500
 
 // Stream is the access to NATS that StreamStore uses: it publishes each entry
 // to the audit stream, and reads the stream back. A *natsclient.Client is one.
@@ -133,21 +137,18 @@ func (s *StreamStore) list(
 		return []Entry{}, total, nil
 	}
 
-	// For newest-first pagination, we need to compute which sequence
-	// range to fetch. Messages are stored oldest=FirstSeq to
-	// newest=FirstSeq+Msgs-1. To get the N-th newest page:
-	//   newestSeq = FirstSeq + Msgs - 1
-	//   startSeq  = newestSeq - offset - limit + 1
-	// We fetch `limit` messages starting at startSeq, then reverse.
-	newestSeq := info.State.FirstSeq + info.State.Msgs - 1
+	// For newest-first pagination, fetch the page that ends offset
+	// entries before the newest. The newest is LastSeq, not
+	// FirstSeq+Msgs-1: a deleted entry leaves a gap in the sequences, and
+	// then the two differ. A page that spans a gap has fewer entries.
 	count := limit
 	if offset+count > total {
 		count = total - offset
 	}
 
-	startSeq := newestSeq - uint64(offset) - uint64(count) + 1
+	startSeq := info.State.LastSeq - uint64(offset) - uint64(count) + 1
 
-	entries, err := s.read(ctx, startSeq, count)
+	entries, err := s.read(ctx, startSeq, info.State.LastSeq, count)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -174,7 +175,7 @@ func (s *StreamStore) listAll(
 		return []Entry{}, nil
 	}
 
-	entries, err := s.read(ctx, 0, total)
+	entries, err := s.read(ctx, info.State.FirstSeq, info.State.LastSeq, total)
 	if err != nil {
 		return nil, err
 	}
@@ -187,39 +188,65 @@ func (s *StreamStore) listAll(
 	return entries, nil
 }
 
-// read reads count entries of the stream from the sequence from, or from the
-// first when from is 0, oldest first. An entry that does not decode is left
-// out. When the read stops with an error after some entries, the entries are
-// kept and the error is logged; with no entry, the error is returned.
+// read reads at most count entries of the stream, oldest first, from the
+// sequence from up to the sequence last: the last of the stream when the
+// caller read its info. It reads in pages of readPage. A read that stops
+// before last is an error, so an export of part of the log never looks like
+// all of it. An entry that does not decode is left out, with a warning.
 func (s *StreamStore) read(
 	ctx context.Context,
 	from uint64,
+	last uint64,
 	count int,
 ) ([]Entry, error) {
-	ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
-	defer cancel()
+	entries := make([]Entry, 0, count)
+	next := from
+	var seen uint64
 
-	msgs, err := s.nc.StreamRead(ctx, s.stream, from, count)
-	if err != nil && len(msgs) == 0 {
-		return nil, fmt.Errorf("fetch audit entries: %w", err)
-	}
-	if err != nil {
-		s.logger.Warn("read of the audit stream stopped", slog.String("error", err.Error()))
-	}
+	for got := 0; got < count && seen < last; {
+		pageCtx, cancel := context.WithTimeout(ctx, fetchTimeout)
+		msgs, err := s.nc.StreamRead(pageCtx, s.stream, next, min(count-got, readPage))
+		cancel()
 
-	entries := make([]Entry, 0, len(msgs))
-	for _, msg := range msgs {
-		var entry Entry
-		if err := json.Unmarshal(msg.Data(), &entry); err != nil {
-			s.logger.Warn(
-				"failed to unmarshal audit entry",
-				slog.String("error", err.Error()),
-			)
+		for _, msg := range msgs {
+			meta, merr := msg.Metadata()
+			if merr != nil {
+				return nil, fmt.Errorf("fetch audit entries: %w", merr)
+			}
+			seen = meta.Sequence.Stream
+			if seen > last {
+				break
+			}
+			got++
 
-			continue
+			var entry Entry
+			if err := json.Unmarshal(msg.Data(), &entry); err != nil {
+				s.logger.Warn(
+					"failed to unmarshal audit entry",
+					slog.Uint64("sequence", seen),
+					slog.String("error", err.Error()),
+				)
+
+				continue
+			}
+
+			entries = append(entries, entry)
 		}
 
-		entries = append(entries, entry)
+		if seen >= last {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf(
+				"fetch audit entries: the read stopped at sequence %d of %d: %w",
+				seen, last, err)
+		}
+		if len(msgs) == 0 {
+			return nil, fmt.Errorf(
+				"fetch audit entries: the read stopped at sequence %d of %d",
+				seen, last)
+		}
+		next = seen + 1
 	}
 
 	return entries, nil
