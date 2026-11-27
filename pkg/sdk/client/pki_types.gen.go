@@ -4,6 +4,27 @@ package client
 
 import "time"
 
+// Component: Only this component: controller, nats or agent.
+type Component string
+
+// The values of Component.
+const (
+	ComponentController Component = "controller"
+	ComponentNATS       Component = "nats"
+	ComponentAgent      Component = "agent"
+)
+
+// Expiry is the Expiry of the spec.
+type Expiry string
+
+// The values of Expiry.
+const (
+	ExpiryOk      Expiry = "ok"
+	ExpirySoon    Expiry = "soon"
+	ExpiryExpired Expiry = "expired"
+	ExpiryUnknown Expiry = "unknown"
+)
+
 // PKICert is the PKICert of the spec.
 type PKICert struct {
 	// The component that serves it: controller, nats or agent.
@@ -28,6 +49,10 @@ type PKICert struct {
 	// The host that serves the certificate.
 	Hostname string `json:"hostname"`
 
+	// The issuer of the certificate, as a distinguished name. The subject again
+	// for a self-signed one.
+	Issuer string `json:"issuer,omitempty"`
+
 	// The algorithm and size of the public key, such as ECDSA P-256.
 	Key string `json:"key,omitempty"`
 
@@ -36,6 +61,9 @@ type PKICert struct {
 
 	// The DNS names and the IP addresses that the certificate is for.
 	Names []string `json:"names,omitempty"`
+
+	// When the certificate starts to be valid.
+	NotBefore time.Time `json:"not_before,omitzero"`
 
 	// The algorithm that signed the certificate, such as ECDSA-SHA256.
 	Signature string `json:"signature,omitempty"`
@@ -46,6 +74,9 @@ type PKICert struct {
 	// ok; not made, when the component has not started on the host; or unreadable,
 	// with the reason.
 	State string `json:"state"`
+
+	// The subject of the certificate, as a distinguished name.
+	Subject string `json:"subject,omitempty"`
 }
 
 // PKICertList is the PKICertList of the spec.
@@ -123,4 +154,96 @@ type PKINATSCertRotationAgent struct {
 
 	// The machine ID of the agent.
 	MachineID string `json:"machine_id"`
+}
+
+// PKITLSCert is the PKITLSCert of the spec.
+type PKITLSCert struct {
+	// The days that are left until it expires.
+	DaysLeft int `json:"days_left,omitempty"`
+
+	// When the certificate expires.
+	Expires time.Time `json:"expires,omitzero"`
+
+	// Expiry is the property expiry.
+	Expiry Expiry `json:"expiry"`
+
+	// Whether FIPS 186-5 and SP 800-131A approve the key and the signature
+	// algorithms.
+	FipsApproved bool `json:"fips_approved,omitempty"`
+
+	// The issuer of the certificate. The subject again for a self-signed one.
+	Issuer string `json:"issuer,omitempty"`
+
+	// The algorithm and size of the public key, such as ECDSA P-256.
+	Key string `json:"key,omitempty"`
+
+	// The name of the certificate, such as api or agent-metrics.
+	Name string `json:"name"`
+
+	// The DNS names and the IP addresses that the certificate is for: its subject
+	// alternative names.
+	Names []string `json:"names,omitempty"`
+
+	// When the certificate starts to be valid.
+	NotBefore time.Time `json:"not_before,omitzero"`
+
+	// self-signed, which osapi made, or cert_file, the operator's.
+	Source string `json:"source"`
+
+	// ok; not made, when the component has not started on the host; or unreadable,
+	// with the reason.
+	State string `json:"state"`
+
+	// The subject of the certificate, as a distinguished name.
+	Subject string `json:"subject,omitempty"`
+}
+
+// PKITLSList is the PKITLSList of the spec.
+type PKITLSList struct {
+	// Items is the property items.
+	Items []PKITLSSection `json:"items"`
+
+	// The number of components.
+	TotalItems int `json:"total_items"`
+}
+
+// PKITLSSection is the PKITLSSection of the spec.
+type PKITLSSection struct {
+	// Each algorithm that the component uses, with whether FIPS 140-3 approves it.
+	Algorithms []CryptoAlgorithm `json:"algorithms,omitempty"`
+
+	// Each certificate that the component serves, from the certificates of pki
+	// cert list.
+	Certificates []PKITLSCert `json:"certificates,omitempty"`
+
+	// Component is the property component.
+	Component Component `json:"component"`
+
+	// Expiry is the property expiry.
+	Expiry Expiry `json:"expiry"`
+
+	// The FIPS 140-3 mode, then what is not approved, by kind, or approved.
+	Fips string `json:"fips"`
+
+	// The Go version that built the component.
+	Go string `json:"go,omitempty"`
+
+	// The host of the component.
+	Hostname string `json:"hostname"`
+
+	// Each TLS listener of the component, with its lowest TLS version, its suites
+	// and its groups, and whether FIPS 140-3 approves them.
+	Listeners []CryptoListener `json:"listeners,omitempty"`
+
+	// The version of the Go Cryptographic Module in the component.
+	Module string `json:"module,omitempty"`
+
+	// Each reason that the component is not in FIPS 140-3 mode with only approved
+	// algorithms, as a sentence with what closes it, or with the issue that tracks
+	// it.
+	Reasons []string `json:"reasons,omitempty"`
+
+	// The section in one line, for a table: the FIPS 140-3 verdict, then the days
+	// left of the certificate that expires first.
+	Summary string `json:"summary"`
 }

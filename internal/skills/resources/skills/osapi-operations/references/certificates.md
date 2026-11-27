@@ -36,6 +36,32 @@ osapi client pki cert get --name agent-metrics --hostname web-01 --json
 Each item has the `hostname` of its host, and the fields of `osapi pki cert`.
 Rotate stays a command on the host: it writes the files there.
 
+## The TLS of each component
+
+`osapi client pki tls` puts the certificates and the crypto of each component in
+one section: the controller, the NATS server and each agent.
+
+```sh
+osapi client pki tls list --json                      # each component's section
+osapi client pki tls list --component nats --json     # one kind of component
+osapi client pki tls get --component controller --json
+osapi client pki tls get --component agent --hostname web-01 --json
+```
+
+A section has:
+
+- `summary`, such as `FIPS off · cert 62d`.
+- `fips`: the mode, then what is not approved, by kind.
+- `reasons`: each reason as a sentence, with what closes it or the issue.
+- `certificates`, from `pki cert list`, with `subject`, `names`, `issuer`,
+  `not_before`, `expires` and `expiry`. The expiry is `ok`, `soon` at 30 days or
+  less, `expired`, or `unknown`.
+- `listeners`, with their suites and groups.
+- `go`, `module` and `algorithms`.
+
+Read `expiry` to find a certificate that needs a new one, and `reasons` to find
+what keeps a component out of FIPS 140-3 mode.
+
 `fips_approved` is true when FIPS 186-5 approves the key (RSA of 2048 bits or
 more, ECDSA P-256, P-384 or P-521, Ed25519) and the signature (no MD5, no
 SHA-1). It is about the certificate only. FIPS 140-3 mode is a setting of each

@@ -20,7 +20,11 @@
 
 package pki
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/internal/cryptoreport"
+)
 
 var (
 	sampleDays     = 78
@@ -83,3 +87,37 @@ var (
 		},
 	}
 )
+
+// sampleTLS is what pki tls list prints for the controller's host.
+var sampleTLS = TLSList{
+	Items: []TLS{
+		{
+			Component: ComponentController, Hostname: "osapi-controller",
+			Summary: "FIPS off · cert 78d", FIPS: "off", Expiry: ExpiryOK,
+			Reasons: []string{"FIPS 140-3 mode is off: set GODEBUG=fips140=on"},
+			Certificates: []TLSCert{{
+				Name: "api", State: "ok", Subject: "CN=osapi-controller",
+				Names: []string{"osapi-controller", "127.0.0.1"}, Issuer: "CN=osapi-controller",
+				Source: "self-signed", NotBefore: sampleCert.Expires.AddDate(-1, 0, 0),
+				Expires: sampleCert.Expires, DaysLeft: &sampleDays, Expiry: ExpiryOK,
+				Key: "ECDSA P-256", FIPS: &sampleApproved,
+			}},
+			Listeners: []cryptoreport.Listener{
+				{
+					Name:       "api",
+					TLS:        true,
+					MinVersion: "TLS 1.2",
+					Approved:   true,
+					Suites: []string{
+						"TLS_AES_128_GCM_SHA256",
+						"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+					},
+					Groups: []string{"SecP256r1MLKEM768", "CurveP256"},
+				},
+			},
+			Go: "go1.27.3", Module: "v1.0.0",
+			Algorithms: []cryptoreport.Algorithm{cryptoreport.Seal, cryptoreport.Vault},
+		},
+	},
+	Total: 1,
+}

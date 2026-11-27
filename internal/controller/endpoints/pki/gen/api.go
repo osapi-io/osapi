@@ -22,6 +22,18 @@ func Routes(
 		},
 		{
 			Method:     http.MethodGet,
+			Path:       "/api/pki/tls",
+			Permission: "pki:read",
+			Handler:    server.Serve(s, pki.Group, "tls", pki.TLSSections, decodeTls),
+		},
+		{
+			Method:     http.MethodGet,
+			Path:       "/api/pki/tls/:component",
+			Permission: "pki:read",
+			Handler:    server.Serve(s, pki.Group, "tlsget", pki.TLSSection, decodeTlsget),
+		},
+		{
+			Method:     http.MethodGet,
 			Path:       "/api/pki/cert/:name",
 			Permission: "pki:read",
 			Handler:    server.Serve(s, pki.Group, "get", pki.Get, decodeGet),

@@ -1593,6 +1593,20 @@ const sidebar: SidebarsConfig = {
               className: "api-method post",
               key: "fleet-pki-api-pki-operations-gen-api-rotate-pkinats-cert",
             },
+            {
+              type: "doc",
+              id: "gen/api/list-pkitls",
+              label: "List the TLS of each component",
+              className: "api-method get",
+              key: "fleet-pki-api-pki-operations-gen-api-list-pkitls",
+            },
+            {
+              type: "doc",
+              id: "gen/api/get-pkitls",
+              label: "Get the TLS of one component",
+              className: "api-method get",
+              key: "fleet-pki-api-pki-operations-gen-api-get-pkitls",
+            },
           ],
         },
         {

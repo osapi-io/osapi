@@ -55,6 +55,9 @@ type Cert struct {
 	Source      string    `json:"source"`
 	File        string    `json:"file"`
 	Names       []string  `json:"names,omitempty"`
+	Subject     string    `json:"subject,omitempty"`
+	Issuer      string    `json:"issuer,omitempty"`
+	NotBefore   time.Time `json:"not_before,omitzero"`
 	Expires     time.Time `json:"expires,omitzero"`
 	DaysLeft    *int      `json:"days_left,omitempty"`
 	Fingerprint string    `json:"fingerprint,omitempty"`
@@ -104,7 +107,8 @@ func ReadCert(
 		Name: src.Name, State: CertOK, Component: src.Component, Source: certSource(src),
 		Key: key, Signature: c.SignatureAlgorithm.String(),
 		FIPS: &fips, File: src.CertFile, Names: names,
-		Expires: c.NotAfter, DaysLeft: &days,
+		Subject: c.Subject.String(), Issuer: c.Issuer.String(),
+		NotBefore: c.NotBefore, Expires: c.NotAfter, DaysLeft: &days,
 		Fingerprint: "SHA256:" + hex.EncodeToString(sum[:]),
 	}, nil
 }

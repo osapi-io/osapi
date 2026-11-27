@@ -5,13 +5,18 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  Component,
   ErrorResponse,
   GetPKICertParams,
+  GetPKITLSParams,
   ListPKICertsParams,
+  ListPKITLSParams,
   PKICert,
   PKICertList,
   PKIKeyRotation,
-  PKINATSCertRotation
+  PKINATSCertRotation,
+  PKITLSList,
+  PKITLSSection
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
@@ -364,6 +369,143 @@ export const rotatePKINATSCert = async ( options?: Parameters<typeof apiFetch>[1
   {
     ...options,
     method: 'POST'
+
+
+  }
+);}
+
+
+export type listPKITLSResponse200 = {
+  data: PKITLSList
+  status: 200
+}
+
+export type listPKITLSResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type listPKITLSResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type listPKITLSResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type listPKITLSResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type listPKITLSResponseSuccess = (listPKITLSResponse200) & {
+  headers: Headers;
+};
+export type listPKITLSResponseError = (listPKITLSResponse400 | listPKITLSResponse401 | listPKITLSResponse403 | listPKITLSResponse500) & {
+  headers: Headers;
+};
+
+export type listPKITLSResponse = (listPKITLSResponseSuccess | listPKITLSResponseError)
+
+export const getListPKITLSUrl = (params?: ListPKITLSParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/pki/tls?${stringifiedParams}` : `/api/pki/tls`
+}
+
+/**
+ * Lists the TLS section of the controller, of the NATS server and of each agent: the FIPS 140-3 mode, with each reason that the component is not approved as a sentence; each certificate that it serves, from pki cert list, with its subject, its issuer, its validity and the days that are left; each TLS listener, with its lowest version, its suites and its groups, and whether FIPS 140-3 approves them; and the Go version, the module and the algorithms of its crypto. A certificate within 30 days of its end is soon, and one past its end is expired.
+ * @summary List the TLS of each component
+ */
+export const listPKITLS = async (params?: ListPKITLSParams, options?: Parameters<typeof apiFetch>[1]): Promise<listPKITLSResponse> => {
+
+  return apiFetch<listPKITLSResponse>(getListPKITLSUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+export type getPKITLSResponse200 = {
+  data: PKITLSSection
+  status: 200
+}
+
+export type getPKITLSResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getPKITLSResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getPKITLSResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getPKITLSResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getPKITLSResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getPKITLSResponseSuccess = (getPKITLSResponse200) & {
+  headers: Headers;
+};
+export type getPKITLSResponseError = (getPKITLSResponse400 | getPKITLSResponse401 | getPKITLSResponse403 | getPKITLSResponse404 | getPKITLSResponse500) & {
+  headers: Headers;
+};
+
+export type getPKITLSResponse = (getPKITLSResponseSuccess | getPKITLSResponseError)
+
+export const getGetPKITLSUrl = (component: Component,
+    params?: GetPKITLSParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/pki/tls/${component}?${stringifiedParams}` : `/api/pki/tls/${component}`
+}
+
+/**
+ * Reads the TLS section of one component of one host in full: the controller or the NATS server of the controller's host when the hostname is empty, or the agent of the hostname. It has the reasons, each certificate, each listener and each algorithm.
+ * @summary Get the TLS of one component
+ */
+export const getPKITLS = async (component: Component,
+    params?: GetPKITLSParams, options?: Parameters<typeof apiFetch>[1]): Promise<getPKITLSResponse> => {
+
+  return apiFetch<getPKITLSResponse>(getGetPKITLSUrl(component,params),
+  {
+    ...options,
+    method: 'GET'
 
 
   }

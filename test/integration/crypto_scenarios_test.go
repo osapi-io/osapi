@@ -20,6 +20,8 @@
 
 package integration_test
 
+import "github.com/osapi-io/osapi/internal/cryptoreport"
+
 // cryptoScenarios read the crypto report of each process: of the
 // controller and the NATS server in health status, of an agent in agent
 // get, and the approved flag of each key in pki list. A build of osapi that
@@ -83,6 +85,68 @@ func cryptoScenarios() []scenario {
 							want: "false",
 						},
 						{path: "registry[type=nats].crypto.enforceable", op: "==", want: "false"},
+					},
+				},
+				{
+					name: "pki tls list has a section for the controller, NATS and each agent",
+					cli:  []string{"client", "pki", "tls", "list", "--json"},
+					checks: []check{
+						{path: "items[*].component", op: "has", want: "controller"},
+						{path: "items[*].component", op: "has", want: "nats"},
+						{path: "items[*].component", op: "has", want: "agent"},
+						{
+							path: "items[component=controller].summary",
+							op:   "prefix",
+							want: "FIPS off",
+						},
+						{path: "items[component=controller].go", op: "nonempty"},
+						{
+							path: "items[component=controller].listeners[*].name",
+							op:   "has",
+							want: "api",
+						},
+						{
+							path: "items[component=controller].certificates[*].name",
+							op:   "has",
+							want: "api",
+						},
+						{
+							path: "items[component=controller].certificates[name=api].issuer",
+							op:   "nonempty",
+						},
+						{
+							path: "items[component=controller].certificates[name=api].expiry",
+							op:   "==",
+							want: "ok",
+						},
+						// NATS's only-mode limit is a reason, with its issue.
+						{
+							path: "items[component=nats].reasons[*]",
+							op:   "has",
+							want: "FIPS 140-3 only mode refuses " + cryptoreport.NATSAuth.Name + ": " +
+								cryptoreport.NATSAuth.Reason,
+						},
+					},
+				},
+				{
+					name: "pki tls get has the controller's section in full",
+					cli: []string{
+						"client",
+						"pki",
+						"tls",
+						"get",
+						"--component",
+						"controller",
+						"--json",
+					},
+					checks: []check{
+						{path: "component", op: "==", want: "controller"},
+						{path: "fips", op: "prefix", want: "off"},
+						{
+							path: "reasons[*]",
+							op:   "has",
+							want: "FIPS 140-3 mode is off: set GODEBUG=fips140=on",
+						},
 					},
 				},
 				{

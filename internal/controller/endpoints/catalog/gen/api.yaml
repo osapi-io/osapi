@@ -527,6 +527,7 @@ components:
         - GetPKICert
         - GetPKIKeyRotation
         - GetPKINATSCertRotation
+        - GetPKITLS
         - GetSecret
         - GetSecretValue
         - GetSecretVaults
@@ -534,6 +535,7 @@ components:
         - GetTrace
         - ListDeadLetters
         - ListPKICerts
+        - ListPKITLS
         - PostFile
         - PostNodeCertificate
         - PostNodeCommandExec

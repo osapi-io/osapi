@@ -341,7 +341,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Require().NotNil(first.MemBytes)
 				s.Equal(int64(134217728), first.MemBytes)
 				s.Empty(first.Conditions)
-				s.Equal("on, approved", first.FIPS, "the verdict of the component's crypto")
+				s.Equal("on · approved", first.FIPS)
 				s.Equal(types.FIPSOn, first.Crypto.Mode)
 
 				second := r.Registry[1]

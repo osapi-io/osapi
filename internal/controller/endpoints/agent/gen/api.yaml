@@ -99,7 +99,7 @@ components:
           description: The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys.
           type: string
         fips:
-          description: The FIPS 140-3 mode of the agent's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail.
+          description: The FIPS 140-3 mode of the agent's process, then what is not approved, by kind, such as off · 1 TLS listener not approved, or approved. pki tls has the section, with each reason.
           type: string
         fqdn:
           description: Fully qualified domain name.

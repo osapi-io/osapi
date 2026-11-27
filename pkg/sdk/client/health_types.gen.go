@@ -61,9 +61,9 @@ type ComponentEntry struct {
 	// Crypto is the property crypto.
 	Crypto CryptoReport `json:"crypto,omitzero"`
 
-	// The FIPS 140-3 mode of the component's process, then approved, or the number
-	// of gaps that keep it from the mode with only approved algorithms. crypto has
-	// the detail.
+	// The FIPS 140-3 mode of the component's process, then what is not approved,
+	// by kind, such as off · 1 TLS listener not approved, or approved. pki tls
+	// has the section, with each reason.
 	Fips string `json:"fips,omitempty"`
 
 	// Component hostname.

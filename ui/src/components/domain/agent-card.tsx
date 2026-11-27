@@ -9,6 +9,7 @@ import { Text } from "@/components/ui/text";
 import { LabelTag } from "@/components/ui/label-tag";
 import { ConditionAlert } from "@/components/ui/condition-alert";
 import { FIPSLine } from "@/components/domain/registry-header";
+import { TLSSummary } from "@/components/domain/tls-section";
 import { CopyField } from "@/components/ui/copy-field";
 import { MetricValue } from "@/components/ui/metric-value";
 import { KVList } from "@/components/ui/kv-list";
@@ -16,7 +17,11 @@ import { AgentTimeline } from "@/components/domain/agent-timeline";
 import { useAuth } from "@/hooks/use-auth";
 import { formatAgeSince, formatBytes } from "@/lib/format";
 import { Monitor, Clock, Cpu, Pause, Play, Loader2 } from "lucide-react";
-import type { AgentInfo, ComponentEntry } from "@/sdk/gen/schemas";
+import type {
+  AgentInfo,
+  ComponentEntry,
+  PKITLSSection,
+} from "@/sdk/gen/schemas";
 import { useStatus } from "@/hooks/use-status";
 
 interface AgentCardProps {
@@ -27,6 +32,8 @@ interface AgentCardProps {
   // controllerVersion is the controller's build. The card shows the agent's
   // version only when it differs, since a mismatch is what a reader needs.
   controllerVersion?: string;
+  // tls is the agent's TLS section, which its summary opens.
+  tls?: PKITLSSection;
   onRefresh?: () => void;
 }
 
@@ -38,6 +45,7 @@ export function AgentCard({
   agent,
   components,
   controllerVersion,
+  tls,
   onRefresh,
 }: AgentCardProps) {
   const { canCall } = useAuth();
@@ -173,19 +181,27 @@ export function AgentCard({
                   ] as [string, ReactNode],
                 ]
               : []),
-            // FIPS 140-3 mode and the gaps of the agent's process.
-            ...(agent.fips
+            // The agent's TLS summary, which opens its section; FIPS alone
+            // when the token cannot read the sections.
+            ...(tls
               ? [
-                  [
-                    "FIPS",
-                    <FIPSLine
-                      key="f"
-                      fips={agent.fips}
-                      gaps={agent.crypto?.gaps}
-                    />,
-                  ] as [string, ReactNode],
+                  ["TLS", <TLSSummary key="t" section={tls} />] as [
+                    string,
+                    ReactNode,
+                  ],
                 ]
-              : []),
+              : agent.fips
+                ? [
+                    [
+                      "FIPS",
+                      <FIPSLine
+                        key="f"
+                        fips={agent.fips}
+                        gaps={agent.crypto?.gaps}
+                      />,
+                    ] as [string, ReactNode],
+                  ]
+                : []),
             // The version only when it is not the controller's: a
             // mismatch is the case that matters.
             ...(agent.version &&

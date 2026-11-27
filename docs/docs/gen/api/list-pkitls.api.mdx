@@ -1,0 +1,69 @@
+---
+id: list-pkitls
+title: "List the TLS of each component"
+description: "Lists the TLS section of the controller, of the NATS server and of each agent: the FIPS 140-3 mode, with each reason that the component is not approved as a sentence; each certificate that it serves, from pki cert list, with its subject, its issuer, its validity and the days that are left; each TLS listener, with its lowest version, its suites and its groups, and whether FIPS 140-3 approves them; and the Go version, the module and the algorithms of its crypto. A certificate within 30 days of its end is soon, and one past its end is expired."
+sidebar_label: "List the TLS of each component"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the TLS of each component"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/pki/tls"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Lists the TLS section of the controller, of the NATS server and of each agent: the FIPS 140-3 mode, with each reason that the component is not approved as a sentence; each certificate that it serves, from pki cert list, with its subject, its issuer, its validity and the days that are left; each TLS listener, with its lowest version, its suites and its groups, and whether FIPS 140-3 approves them; and the Go version, the module and the algorithms of its crypto. A certificate within 30 days of its end is soon, and one past its end is expired.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./list-pkitls.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./list-pkitls.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./list-pkitls.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

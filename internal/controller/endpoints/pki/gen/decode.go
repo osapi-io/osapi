@@ -24,6 +24,42 @@ func decodeList(
 	return in, "", true
 }
 
+// decodeTls reads the tls method's input from the request.
+func decodeTls(
+	c *echo.Context,
+) (pki.TLSListInput, string, bool) {
+	var in pki.TLSListInput
+	if msg, ok := server.Query(c, "hostname", &in.Hostname); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Query(c, "component", &in.Component); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
+// decodeTlsget reads the tlsget method's input from the request.
+func decodeTlsget(
+	c *echo.Context,
+) (pki.TLSGetInput, string, bool) {
+	var in pki.TLSGetInput
+	if msg, ok := server.Param(c, "component", &in.Component); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Query(c, "hostname", &in.Hostname); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
+
+	return in, "", true
+}
+
 // decodeGet reads the get method's input from the request.
 func decodeGet(
 	c *echo.Context,

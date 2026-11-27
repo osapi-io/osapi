@@ -29,6 +29,44 @@ var pkiListCmd = &cobra.Command{
 	Use:   "list",
 }
 
+var pkiTlsCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "tls",
+		reference.Permission: "pki:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client pki tls list\n\x1b[1;38;2;0;213;255mTLS (1):\x1b[0m\n  \x1b[38;2;10;143;176mCOMPONENT   \x1b[0m\x1b[38;2;10;143;176mHOSTNAME          \x1b[0m\x1b[38;2;10;143;176mSUMMARY              \x1b[0m\x1b[38;2;10;143;176mFIPS  \x1b[0m\x1b[38;2;10;143;176mEXPIRY\x1b[0m\n  controller  \x1b[1mosapi-controller\x1b[0m  FIPS off · cert 78d  off   \x1b[38;2;103;234;147mok\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"items\": [\n    {\n      \"component\": \"controller\",\n      \"hostname\": \"osapi-controller\",\n      \"summary\": \"FIPS off · cert 78d\",\n      \"fips\": \"off\",\n      \"expiry\": \"ok\",\n      \"reasons\": [\n        \"FIPS 140-3 mode is off: set GODEBUG=fips140=on\"\n      ],\n      \"certificates\": [\n        {\n          \"name\": \"api\",\n          \"state\": \"ok\",\n          \"subject\": \"CN=osapi-controller\",\n          \"names\": [\n            \"osapi-controller\",\n            \"127.0.0.1\"\n          ],\n          \"issuer\": \"CN=osapi-controller\",\n          \"source\": \"self-signed\",\n          \"not_before\": \"2026-02-12T19:40:01Z\",\n          \"expires\": \"2027-02-12T19:40:01Z\",\n          \"days_left\": 78,\n          \"expiry\": \"ok\",\n          \"key\": \"ECDSA P-256\",\n          \"fips_approved\": true\n        }\n      ],\n      \"listeners\": [\n        {\n          \"name\": \"api\",\n          \"tls\": true,\n          \"min_version\": \"TLS 1.2\",\n          \"suites\": [\n            \"TLS_AES_128_GCM_SHA256\",\n            \"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256\"\n          ],\n          \"groups\": [\n            \"SecP256r1MLKEM768\",\n            \"CurveP256\"\n          ],\n          \"approved\": true\n        }\n      ],\n      \"go\": \"go1.27.3\",\n      \"module\": \"v1.0.0\",\n      \"algorithms\": [\n        {\n          \"name\": \"secrets sealed to agents\",\n          \"algorithm\": \"ECDH P-256, HKDF-SHA256, AES-256-GCM\",\n          \"approved\": true,\n          \"only_mode\": true\n        },\n        {\n          \"name\": \"controller vault\",\n          \"algorithm\": \"AES-256-GCM\",\n          \"approved\": true,\n          \"only_mode\": true\n        }\n      ]\n    }\n  ],\n  \"total_items\": 1\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client pki tls list --component nats\n  osapi client pki tls list --hostname web-01\n  osapi client pki tls list",
+	Long:    "Shows for the controller, the NATS server and each agent its FIPS 140-3\nmode and the reasons it is not approved, its certificates with the days\nleft, its TLS listeners with their suites and groups, and its crypto.\nThe summary is the line that the tables of health status and agent\nlist link to.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		hostname, _ := cmd.Flags().GetString("hostname")
+		component, _ := cmd.Flags().GetString("component")
+
+		endpointcommand.Run(cmd, pki.Group, "tls", pki.TLSListInput{Hostname: hostname, Component: pki.Component(component)})
+	},
+	Short: "List the TLS of each component",
+	Use:   "list",
+}
+
+var pkiTlsgetCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "tls",
+		reference.Permission: "pki:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client pki tls get --component controller\n\x1b[1;38;2;0;213;255mTLS:\x1b[0m\n  \x1b[38;2;10;143;176mComponent:\x1b[0m  controller\n  \x1b[38;2;10;143;176mHostname:\x1b[0m   osapi-controller\n  \x1b[38;2;10;143;176mSummary:\x1b[0m    FIPS off · cert 78d\n  \x1b[38;2;10;143;176mFIPS:\x1b[0m       off\n  \x1b[38;2;10;143;176mExpiry:\x1b[0m     \x1b[38;2;103;234;147mok\x1b[0m\n  \x1b[38;2;10;143;176mReasons:\x1b[0m    FIPS 140-3 mode is off: set GODEBUG=fips140=on\n  \x1b[38;2;10;143;176mGo:\x1b[0m         go1.27.3\n  \x1b[38;2;10;143;176mModule:\x1b[0m     v1.0.0\n\n\x1b[1;38;2;255;0;255mCertificates (1):\x1b[0m\n  \x1b[38;2;176;48;176mNAME  \x1b[0m\x1b[38;2;176;48;176mSTATE  \x1b[0m\x1b[38;2;176;48;176mSUBJECT              \x1b[0m\x1b[38;2;176;48;176mSAN                          \x1b[0m\x1b[38;2;176;48;176mISSUER               \x1b[0m\x1b[38;2;176;48;176mSOURCE       \x1b[0m\x1b[38;2;176;48;176mVALID FROM           \x1b[0m\x1b[38;2;176;48;176mVALID TO             \x1b[0m\x1b[38;2;176;48;176mDAYS LEFT  \x1b[0m\x1b[38;2;176;48;176mEXPIRY  \x1b[0m\x1b[38;2;176;48;176mKEY          \x1b[0m\x1b[38;2;176;48;176mFIPS APPROVED\x1b[0m\n  \x1b[1mapi\x1b[0m   ok     CN=osapi-controller  osapi-controller, 127.0.0.1  CN=osapi-controller  self-signed  2026-02-12 19:40:01  2027-02-12 19:40:01  78         \x1b[38;2;103;234;147mok\x1b[0m      ECDSA P-256  yes\n\n\x1b[1;38;2;255;209;0mListeners (1):\x1b[0m\n  \x1b[38;2;176;143;0mNAME  \x1b[0m\x1b[38;2;176;143;0mTLS  \x1b[0m\x1b[38;2;176;143;0mMIN VERSION  \x1b[0m\x1b[38;2;176;143;0mSUITES                                                           \x1b[0m\x1b[38;2;176;143;0mGROUPS                        \x1b[0m\x1b[38;2;176;143;0mAPPROVED\x1b[0m\n  \x1b[1mapi\x1b[0m   yes  TLS 1.2      TLS_AES_128_GCM_SHA256, TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256  SecP256r1MLKEM768, CurveP256  yes\n\n\x1b[1;38;2;69;174;23mAlgorithms (2):\x1b[0m\n  \x1b[38;2;58;143;20mNAME                      \x1b[0m\x1b[38;2;58;143;20mALGORITHM                             \x1b[0m\x1b[38;2;58;143;20mAPPROVED  \x1b[0m\x1b[38;2;58;143;20mONLY MODE\x1b[0m\n  \x1b[1msecrets sealed to agents\x1b[0m  ECDH P-256, HKDF-SHA256, AES-256-GCM  yes       yes\n  \x1b[1mcontroller vault\x1b[0m          AES-256-GCM                           yes       yes\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"component\": \"controller\",\n  \"hostname\": \"osapi-controller\",\n  \"summary\": \"FIPS off · cert 78d\",\n  \"fips\": \"off\",\n  \"expiry\": \"ok\",\n  \"reasons\": [\n    \"FIPS 140-3 mode is off: set GODEBUG=fips140=on\"\n  ],\n  \"certificates\": [\n    {\n      \"name\": \"api\",\n      \"state\": \"ok\",\n      \"subject\": \"CN=osapi-controller\",\n      \"names\": [\n        \"osapi-controller\",\n        \"127.0.0.1\"\n      ],\n      \"issuer\": \"CN=osapi-controller\",\n      \"source\": \"self-signed\",\n      \"not_before\": \"2026-02-12T19:40:01Z\",\n      \"expires\": \"2027-02-12T19:40:01Z\",\n      \"days_left\": 78,\n      \"expiry\": \"ok\",\n      \"key\": \"ECDSA P-256\",\n      \"fips_approved\": true\n    }\n  ],\n  \"listeners\": [\n    {\n      \"name\": \"api\",\n      \"tls\": true,\n      \"min_version\": \"TLS 1.2\",\n      \"suites\": [\n        \"TLS_AES_128_GCM_SHA256\",\n        \"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256\"\n      ],\n      \"groups\": [\n        \"SecP256r1MLKEM768\",\n        \"CurveP256\"\n      ],\n      \"approved\": true\n    }\n  ],\n  \"go\": \"go1.27.3\",\n  \"module\": \"v1.0.0\",\n  \"algorithms\": [\n    {\n      \"name\": \"secrets sealed to agents\",\n      \"algorithm\": \"ECDH P-256, HKDF-SHA256, AES-256-GCM\",\n      \"approved\": true,\n      \"only_mode\": true\n    },\n    {\n      \"name\": \"controller vault\",\n      \"algorithm\": \"AES-256-GCM\",\n      \"approved\": true,\n      \"only_mode\": true\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client pki tls get --component agent --hostname web-01\n  osapi client pki tls get --component controller",
+	Long:    "Shows one component's TLS in full: its FIPS 140-3 mode and why it is\nnot approved, each certificate with its names, issuer and validity,\neach TLS listener with its suites and groups, and its algorithms.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		component, _ := cmd.Flags().GetString("component")
+		hostname, _ := cmd.Flags().GetString("hostname")
+
+		endpointcommand.Run(cmd, pki.Group, "tlsget", pki.TLSGetInput{Component: pki.Component(component), Hostname: hostname})
+	},
+	Short: "Get the TLS of one component",
+	Use:   "get",
+}
+
 var pkiGetCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey:    "cert",
@@ -114,8 +152,13 @@ var pkiNatscertrotateCmd = &cobra.Command{
 
 func init() {
 	pkiListCmd.Flags().String("hostname", "", "Only the certificates of this host: the controller's hostname, or an agent's")
+	pkiTlsCmd.Flags().String("hostname", "", "Only the components of this host: the controller's hostname, or an agent's")
+	pkiTlsCmd.Flags().String("component", "", "Only this component: controller, nats or agent (controller, nats, agent)")
+	pkiTlsgetCmd.Flags().String("component", "", "The component: controller, nats or agent (controller, nats, agent)")
+	_ = pkiTlsgetCmd.MarkFlagRequired("component")
+	pkiTlsgetCmd.Flags().String("hostname", "", "The host of the component. Empty is the controller's host, which an agent's section must name")
 	pkiGetCmd.Flags().String("name", "", "The name of the certificate, such as api or agent-metrics")
 	_ = pkiGetCmd.MarkFlagRequired("name")
 	pkiGetCmd.Flags().String("hostname", "", "The host of the certificate. Empty is the controller's host, which has the certificates of the controller")
-	clicommand.AddCommands(pki.Group, pkiListCmd, pkiGetCmd, pkiRotationCmd, pkiRotateCmd, pkiNatscertrotationCmd, pkiNatscertrotateCmd)
+	clicommand.AddCommands(pki.Group, pkiListCmd, pkiTlsCmd, pkiTlsgetCmd, pkiGetCmd, pkiRotationCmd, pkiRotateCmd, pkiNatscertrotationCmd, pkiNatscertrotateCmd)
 }

@@ -77,6 +77,8 @@ op GET /api/pki/cert id=ListPKICerts tags=[PKI_API_pki_operations] auth=BearerAu
 op GET /api/pki/cert/{name} id=GetPKICert tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[path:name!:string query:hostname:string] body= responses=[200=application/json:PKICert 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/pki/key id=GetPKIKeyRotation tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[] body= responses=[200=application/json:PKIKeyRotation 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/pki/nats id=GetPKINATSCertRotation tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[] body= responses=[200=application/json:PKINATSCertRotation 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/pki/tls id=ListPKITLS tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[query:component:Component query:hostname:string] body= responses=[200=application/json:PKITLSList 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/pki/tls/{component} id=GetPKITLS tags=[PKI_API_pki_operations] auth=BearerAuth:pki:read params=[path:component!:Component query:hostname:string] body= responses=[200=application/json:PKITLSSection 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret id=GetSecretVaults tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[] body= responses=[200=application/json:VaultListResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret/{vault} id=GetSecrets tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[path:vault!:string] body= responses=[200=application/json:SecretListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/secret/{vault}/{key} id=GetSecret tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:read params=[path:key!:string path:vault!:string] body= responses=[200=application/json:SecretInfo 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -358,6 +360,7 @@ schema CommandShellRequest.cwd = string
 schema CommandShellRequest.timeout = integer
 schema CommandShellResponse.job_id = string/uuid
 schema CommandShellResponse.results! = [CommandResult]
+schema Component = string(controller|nats|agent)
 schema ComponentEntry.address = string
 schema ComponentEntry.age = string
 schema ComponentEntry.components = [ComponentEntry]
@@ -508,6 +511,7 @@ schema Entry.uptime! = string
 schema ErrorResponse.details = string
 schema ErrorResponse.error = string
 schema ErrorResponse.reason = string(invalid_request|unauthorized|forbidden|not_found|not_managed|not_installed|conflict|unavailable|server_error)
+schema Expiry = string(ok|soon|expired|unknown)
 schema FIPSMode = string(off|on|only)
 schema FactKeyEntry.builtin = boolean
 schema FactKeyEntry.description = string
@@ -821,7 +825,7 @@ schema OSInfoResponse.family = string
 schema OSInfoResponse.version! = string
 schema ObjectStoreInfo.name! = string
 schema ObjectStoreInfo.size! = integer
-schema OperationID = string(AdmitMachine|DeleteFileByName|DeleteJobByID|DeleteMachine|DeleteNodeCertificate|DeleteNodeDns|DeleteNodeDocker|DeleteNodeFile|DeleteNodeGroup|DeleteNodeImage|DeleteNodeInterface|DeleteNodeInterfaceRoute|DeleteNodeNtp|DeleteNodePackage|DeleteNodeSchedule|DeleteNodeService|DeleteNodeSysctl|DeleteNodeUser|DeleteNodeUserSshkey|DeleteSecret|DrainAgent|GetAdmission|GetAdmissions|GetAgentConfig|GetAgentDetails|GetAgentFacts|GetAgents|GetAuditExport|GetAuditLogByID|GetAuditLogs|GetCatalog|GetFileByName|GetFileStale|GetFiles|GetHealthStatus|GetJobByID|GetJobs|GetNodeCertificate|GetNodeCertificateByKey|GetNodeDisk|GetNodeDnsByKey|GetNodeDocker|GetNodeDockerByKey|GetNodeFile|GetNodeGroup|GetNodeGroupByKey|GetNodeHostname|GetNodeImage|GetNodeInterface|GetNodeInterfaceByKey|GetNodeInterfaceRoute|GetNodeLoad|GetNodeLog|GetNodeLogSource|GetNodeMemory|GetNodeNtp|GetNodeOs|GetNodePackage|GetNodePackageByKey|GetNodePackageUpdates|GetNodeProcess|GetNodeProcessByKey|GetNodeSchedule|GetNodeScheduleByKey|GetNodeService|GetNodeServiceByKey|GetNodeStatus|GetNodeSysctl|GetNodeSysctlByKey|GetNodeTimezone|GetNodeUptime|GetNodeUser|GetNodeUserByKey|GetNodeUserSshkey|GetPKICert|GetPKIKeyRotation|GetPKINATSCertRotation|GetSecret|GetSecretValue|GetSecretVaults|GetSecrets|GetTrace|ListDeadLetters|ListPKICerts|PostFile|PostNodeCertificate|PostNodeCommandExec|PostNodeCommandShell|PostNodeConnectivityPing|PostNodeDocker|PostNodeDockerExec|PostNodeDockerStart|PostNodeDockerStop|PostNodeGroup|PostNodeImagePull|PostNodeInterface|PostNodeInterfaceRoute|PostNodeNtp|PostNodePackage|PostNodePowerReboot|PostNodePowerShutdown|PostNodeProcessSignal|PostNodeSchedule|PostNodeService|PostNodeServiceDisable|PostNodeServiceEnable|PostNodeServiceRestart|PostNodeServiceStart|PostNodeServiceStop|PostNodeSysctl|PostNodeUser|PostNodeUserSshkey|PostSecret|PutAgentConfig|PutFileByName|PutNodeCertificate|PutNodeDns|PutNodeFile|PutNodeGroup|PutNodeHostname|PutNodeInterface|PutNodeInterfaceRoute|PutNodeNtp|PutNodePackageUpdates|PutNodeSchedule|PutNodeService|PutNodeSysctl|PutNodeTimezone|PutNodeUser|PutNodeUserPassword|PutSecret|RejectMachine|RetryJobByID|RevokeMachine|RotatePKIKey|RotatePKINATSCert|UndrainAgent)
+schema OperationID = string(AdmitMachine|DeleteFileByName|DeleteJobByID|DeleteMachine|DeleteNodeCertificate|DeleteNodeDns|DeleteNodeDocker|DeleteNodeFile|DeleteNodeGroup|DeleteNodeImage|DeleteNodeInterface|DeleteNodeInterfaceRoute|DeleteNodeNtp|DeleteNodePackage|DeleteNodeSchedule|DeleteNodeService|DeleteNodeSysctl|DeleteNodeUser|DeleteNodeUserSshkey|DeleteSecret|DrainAgent|GetAdmission|GetAdmissions|GetAgentConfig|GetAgentDetails|GetAgentFacts|GetAgents|GetAuditExport|GetAuditLogByID|GetAuditLogs|GetCatalog|GetFileByName|GetFileStale|GetFiles|GetHealthStatus|GetJobByID|GetJobs|GetNodeCertificate|GetNodeCertificateByKey|GetNodeDisk|GetNodeDnsByKey|GetNodeDocker|GetNodeDockerByKey|GetNodeFile|GetNodeGroup|GetNodeGroupByKey|GetNodeHostname|GetNodeImage|GetNodeInterface|GetNodeInterfaceByKey|GetNodeInterfaceRoute|GetNodeLoad|GetNodeLog|GetNodeLogSource|GetNodeMemory|GetNodeNtp|GetNodeOs|GetNodePackage|GetNodePackageByKey|GetNodePackageUpdates|GetNodeProcess|GetNodeProcessByKey|GetNodeSchedule|GetNodeScheduleByKey|GetNodeService|GetNodeServiceByKey|GetNodeStatus|GetNodeSysctl|GetNodeSysctlByKey|GetNodeTimezone|GetNodeUptime|GetNodeUser|GetNodeUserByKey|GetNodeUserSshkey|GetPKICert|GetPKIKeyRotation|GetPKINATSCertRotation|GetPKITLS|GetSecret|GetSecretValue|GetSecretVaults|GetSecrets|GetTrace|ListDeadLetters|ListPKICerts|ListPKITLS|PostFile|PostNodeCertificate|PostNodeCommandExec|PostNodeCommandShell|PostNodeConnectivityPing|PostNodeDocker|PostNodeDockerExec|PostNodeDockerStart|PostNodeDockerStop|PostNodeGroup|PostNodeImagePull|PostNodeInterface|PostNodeInterfaceRoute|PostNodeNtp|PostNodePackage|PostNodePowerReboot|PostNodePowerShutdown|PostNodeProcessSignal|PostNodeSchedule|PostNodeService|PostNodeServiceDisable|PostNodeServiceEnable|PostNodeServiceRestart|PostNodeServiceStart|PostNodeServiceStop|PostNodeSysctl|PostNodeUser|PostNodeUserSshkey|PostSecret|PutAgentConfig|PutFileByName|PutNodeCertificate|PutNodeDns|PutNodeFile|PutNodeGroup|PutNodeHostname|PutNodeInterface|PutNodeInterfaceRoute|PutNodeNtp|PutNodePackageUpdates|PutNodeSchedule|PutNodeService|PutNodeSysctl|PutNodeTimezone|PutNodeUser|PutNodeUserPassword|PutSecret|RejectMachine|RetryJobByID|RevokeMachine|RotatePKIKey|RotatePKINATSCert|UndrainAgent)
 schema OsEntry.error = string
 schema OsEntry.hostname! = string
 schema OsEntry.os_info = Release
@@ -835,12 +839,15 @@ schema PKICert.file! = string
 schema PKICert.fingerprint = string
 schema PKICert.fips_approved = boolean
 schema PKICert.hostname! = string
+schema PKICert.issuer = string
 schema PKICert.key = string
 schema PKICert.name! = string
 schema PKICert.names = [string]
+schema PKICert.not_before = string/date-time
 schema PKICert.signature = string
 schema PKICert.source! = string
 schema PKICert.state! = string
+schema PKICert.subject = string
 schema PKICertList.items! = [PKICert]
 schema PKICertList.total_items! = integer
 schema PKIKeyRotation.agents = [PKIKeyRotationAgent]
@@ -859,6 +866,31 @@ schema PKINATSCertRotation.switch_by = string/date-time
 schema PKINATSCertRotationAgent.has_next! = boolean
 schema PKINATSCertRotationAgent.hostname! = string
 schema PKINATSCertRotationAgent.machine_id! = string
+schema PKITLSCert.days_left = integer
+schema PKITLSCert.expires = string/date-time
+schema PKITLSCert.expiry! = Expiry
+schema PKITLSCert.fips_approved = boolean
+schema PKITLSCert.issuer = string
+schema PKITLSCert.key = string
+schema PKITLSCert.name! = string
+schema PKITLSCert.names = [string]
+schema PKITLSCert.not_before = string/date-time
+schema PKITLSCert.source! = string
+schema PKITLSCert.state! = string
+schema PKITLSCert.subject = string
+schema PKITLSList.items! = [PKITLSSection]
+schema PKITLSList.total_items! = integer
+schema PKITLSSection.algorithms = [CryptoAlgorithm]
+schema PKITLSSection.certificates = [PKITLSCert]
+schema PKITLSSection.component! = Component
+schema PKITLSSection.expiry! = Expiry
+schema PKITLSSection.fips! = string
+schema PKITLSSection.go = string
+schema PKITLSSection.hostname! = string
+schema PKITLSSection.listeners = [CryptoListener]
+schema PKITLSSection.module = string
+schema PKITLSSection.reasons = [string]
+schema PKITLSSection.summary! = string
 schema PackageCollectionResponse.job_id = string/uuid
 schema PackageCollectionResponse.results! = [PackageInstalled]
 schema PackageCreateRequest.name! = string
