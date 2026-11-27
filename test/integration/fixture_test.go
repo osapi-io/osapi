@@ -101,6 +101,7 @@ func (b *lockedBuffer) String() string {
 func startFixture(
 	t *testing.T,
 	autoAdmit bool,
+	edits ...func(cfg map[string]any),
 ) *fixtureServer {
 	t.Helper()
 
@@ -122,7 +123,7 @@ func startFixture(
 		t.Fatalf("make the fixture's token: %v", err)
 	}
 
-	cfgPath, err := writeConfig(dir, true)
+	cfgPath, err := writeConfig(dir, true, edits...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,6 +370,7 @@ func (f *fixtureServer) cliWith(
 func writeConfig(
 	dir string,
 	fixture bool,
+	edits ...func(cfg map[string]any),
 ) (string, error) {
 	raw, err := os.ReadFile(filepath.Join(repoRoot(), "test", "integration", "osapi.yaml"))
 	if err != nil {
@@ -393,6 +395,9 @@ func writeConfig(
 			return "", fmt.Errorf("the suite's config has no nats.server")
 		}
 		server["metrics"] = map[string]any{"enabled": false}
+	}
+	for _, edit := range edits {
+		edit(cfg)
 	}
 	out, err := yaml.Marshal(cfg)
 	if err != nil {

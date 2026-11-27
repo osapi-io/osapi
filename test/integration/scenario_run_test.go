@@ -57,6 +57,8 @@ type run struct {
 	stamp string
 	vars  map[string]string
 	procs map[string]*fixtureProc
+	// bg is each command of a background step, which the end stops.
+	bg []*exec.Cmd
 }
 
 func (s *ScenarioSuite) TestScenarios() {
@@ -91,7 +93,17 @@ func (s *ScenarioSuite) runScenario(
 	}
 	r.base = t.TempDir()
 	if sc.fixture {
-		r.f = startFixture(t, sc.fixtureAutoAdmit)
+		r.f = startFixture(t, sc.fixtureAutoAdmit, func(cfg map[string]any) {
+			agent, _ := cfg["agent"].(map[string]any)
+			consumer, _ := agent["consumer"].(map[string]any)
+			for k, v := range sc.fixtureConsumer {
+				if v == nil {
+					delete(consumer, k)
+				} else {
+					consumer[k] = v
+				}
+			}
+		})
 		r.base = r.f.dir
 	}
 	defer r.cleanup(sc.cleanup)
@@ -125,6 +137,10 @@ func (r *run) cleanup(
 	}
 	for _, p := range r.procs {
 		r.f.stopProc(p)
+	}
+	for _, c := range r.bg {
+		_ = c.Process.Kill()
+		_ = c.Wait()
 	}
 }
 
@@ -190,6 +206,9 @@ func (r *run) step(
 		s.Require().NoError(err)
 		p := r.f.startAgent(keyDir, join)
 		r.procs[st.start] = p
+		if !st.exits && st.pause > 0 {
+			time.Sleep(st.pause)
+		}
 		if st.exits {
 			code := p.exited(st.wait)
 			s.NotEqual(
@@ -211,6 +230,26 @@ func (r *run) step(
 	case st.stop != "":
 		r.f.stopProc(r.procs[st.stop])
 		delete(r.procs, st.stop)
+
+		return ""
+	case st.kill != "":
+		p := r.procs[st.kill]
+		s.Require().NotNil(p, "no agent %s to kill", st.kill)
+		_ = p.cmd.Process.Kill()
+		<-p.done
+		delete(r.procs, st.kill)
+
+		return ""
+	case st.background:
+		args, err := r.expandAll(st.cli)
+		s.Require().NoError(err)
+		cmd := exec.Command(binaryPath, append([]string{"-f", r.f.cfg}, args...)...)
+		cmd.Env = r.f.env
+		s.Require().NoError(cmd.Start())
+		r.bg = append(r.bg, cmd)
+		if st.pause > 0 {
+			time.Sleep(st.pause)
+		}
 
 		return ""
 	}
