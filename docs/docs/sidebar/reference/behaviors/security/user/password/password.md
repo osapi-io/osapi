@@ -53,7 +53,7 @@ None. Declare them with behavior.Config.
 |                 |                                                                                                                 |
 | --------------- | --------------------------------------------------------------------------------------------------------------- |
 | Span            | behavior.password.&lt;method&gt;                                                                                |
-| Child spans     | behavior.user.&lt;method&gt;, exec chpasswd, exec useradd, exec usermod, exec userdel, exec id, exec dscl       |
+| Child spans     | behavior.user.&lt;method&gt;, exec chpasswd, exec useradd, exec userdel, exec usermod, exec id, exec dscl       |
 | Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                       |
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
 | Recorded inputs | name (update)                                                                                                   |

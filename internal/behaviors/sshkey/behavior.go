@@ -67,6 +67,9 @@ func with(
 // chown is the call that gives the user its directory again.
 var chown = behavior.Ran("chown", "-R", "1001:1001", "/home/osapitest/.ssh")
 
+// chownFile is the chown of the file that a removal writes again.
+var chownFile = behavior.Ran("chown", "1001:1001", "/home/osapitest/.ssh/authorized_keys")
+
 // Behavior is the authorized SSH keys of a user.
 var Behavior = behavior.Register(behavior.Define(
 	"sshkey", "The authorized SSH keys of a user",
@@ -173,14 +176,17 @@ var Behavior = behavior.Register(behavior.Define(
 		Explain("Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys "+
 			"of the user, and keeps the other lines as they are. A key that the file does not "+
 			"have, a user with no file, or a user that the host does not have, changes "+
-			"nothing. It runs on the Debian family only, and elsewhere reports "+
+			"nothing. The file that it writes is owned by the user again, so that sshd "+
+			"reads it. It runs on the Debian family only, and elsewhere reports "+
 			"skipped.").
+		Sudo("chown").
 		Example("Remove a key", DeleteInput{Name: "osapitest", Fingerprint: fp1},
 			Result{Fingerprint: fp1, Changed: true},
 			with(
 				behavior.After(CreateInput{Name: "osapitest", Key: key1}),
 				behavior.After(CreateInput{Name: "osapitest", Key: key2}),
 				behavior.Wrote(authorizedKeys, key2+"\n"),
+				chownFile,
 				behavior.ReadsNone(ListInput{Name: "osapitest"}, Key{Fingerprint: "SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}, "fingerprint"),
 			)...,
 		).

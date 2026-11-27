@@ -85,7 +85,18 @@ func (d *debian) Create(
 	}
 	if in.PasswordHash != "" {
 		if err := d.chpasswd(ctx, in.Name, in.PasswordHash); err != nil {
-			return true, err
+			// A user with no password would stay: a second run finds it and
+			// reports changed: false, and nothing sets the password. Thus
+			// the user goes, and a second run adds it again.
+			if _, delErr := d.exec.RunPrivilegedCmd(
+				ctx, "userdel", []string{"-r", "--", in.Name},
+			); delErr != nil {
+				return true, errors.Join(
+					err, fmt.Errorf("remove user %s after it: %w", in.Name, delErr),
+				)
+			}
+
+			return false, err
 		}
 	}
 
