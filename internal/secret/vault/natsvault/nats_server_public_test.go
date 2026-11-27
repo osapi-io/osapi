@@ -67,7 +67,7 @@ func startNATS(
 		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
 		Name: "test",
 	})
-	require.NoError(t, nc.Connect())
+	require.NoError(t, nc.Connect(context.Background()))
 	t.Cleanup(nc.Close)
 	require.NoError(t, nc.KVCreateOrUpdate(context.Background(), jetstream.KeyValueConfig{
 		Bucket:  testBucket,

@@ -270,7 +270,7 @@ func ExportCalloutService(
 func ExportCalloutConnect(
 	cfg config.Config,
 ) error {
-	c, err := calloutConnect(slog.Default(), cfg)
+	c, err := calloutConnect(context.Background(), slog.Default(), cfg)
 	if err == nil {
 		c.NC.Close()
 	}
@@ -280,7 +280,7 @@ func ExportCalloutConnect(
 
 // SetCalloutConnect swaps the connection of the auth callout.
 func SetCalloutConnect(
-	fn func(*slog.Logger, config.Config) (*natsclient.Client, error),
+	fn func(context.Context, *slog.Logger, config.Config) (*natsclient.Client, error),
 ) func() {
 	was := calloutConnect
 	calloutConnect = fn
@@ -292,7 +292,7 @@ func SetCalloutConnect(
 func ExportRevocationConnect(
 	cfg config.Config,
 ) error {
-	c, err := revocationConnect(slog.Default(), cfg)
+	c, err := revocationConnect(context.Background(), slog.Default(), cfg)
 	if err == nil {
 		c.NC.Close()
 	}
@@ -302,7 +302,7 @@ func ExportRevocationConnect(
 
 // SetRevocationConnect swaps the connection of the NATS user revocation.
 func SetRevocationConnect(
-	fn func(*slog.Logger, config.Config) (*natsclient.Client, error),
+	fn func(context.Context, *slog.Logger, config.Config) (*natsclient.Client, error),
 ) func() {
 	was := revocationConnect
 	revocationConnect = fn

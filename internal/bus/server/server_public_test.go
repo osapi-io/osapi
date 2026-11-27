@@ -168,7 +168,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 	tests := []struct {
 		name    string
 		cfg     func() config.NATS
-		dial    func(*slog.Logger, *natsclient.Options) (*natsclient.Client, error)
+		dial    func(context.Context, *slog.Logger, *natsclient.Options) (*natsclient.Client, error)
 		wantErr string
 	}{
 		{
@@ -264,7 +264,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 		{
 			name: "when the connection fails stops the server and returns the error",
 			cfg:  func() config.NATS { return serverNATS(s.T()) },
-			dial: func(*slog.Logger, *natsclient.Options) (*natsclient.Client, error) {
+			dial: func(context.Context, *slog.Logger, *natsclient.Options) (*natsclient.Client, error) {
 				return nil, errors.New("connect to NATS: refused")
 			},
 			wantErr: "connect to NATS: refused",
@@ -327,7 +327,7 @@ func registryKeys(
 	t *testing.T,
 	cfg config.NATS,
 ) func() []string {
-	nc, err := bus.Dial(slog.Default(), &natsclient.Options{
+	nc, err := bus.Dial(context.Background(), slog.Default(), &natsclient.Options{
 		Host: cfg.Server.Host,
 		Port: cfg.Server.Port,
 		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
@@ -349,7 +349,7 @@ func registryVersion(
 	cfg config.NATS,
 	key string,
 ) string {
-	nc, err := bus.Dial(slog.Default(), &natsclient.Options{
+	nc, err := bus.Dial(context.Background(), slog.Default(), &natsclient.Options{
 		Host: cfg.Server.Host,
 		Port: cfg.Server.Port,
 		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
@@ -399,7 +399,7 @@ func putAndGet(
 	}
 	defer srv.Stop(context.Background())
 
-	nc, err := bus.Dial(slog.Default(), &natsclient.Options{
+	nc, err := bus.Dial(context.Background(), slog.Default(), &natsclient.Options{
 		Host: cfg.Server.Host,
 		Port: cfg.Server.Port,
 		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
@@ -579,13 +579,13 @@ func (s *ServerPublicTestSuite) TestTLS() {
 	}
 	opts, err := bus.ConnectionOptions(conn, "test")
 	s.Require().NoError(err)
-	nc, err := bus.Dial(slog.Default(), opts)
+	nc, err := bus.Dial(context.Background(), slog.Default(), opts)
 	s.Require().NoError(err)
 	bus.Close(nc)
 
 	conn.TLS = config.ClientTLS{}
 	opts, err = bus.ConnectionOptions(conn, "test")
 	s.Require().NoError(err)
-	_, err = bus.Dial(slog.Default(), opts)
+	_, err = bus.Dial(context.Background(), slog.Default(), opts)
 	s.Error(err, "plain text is refused")
 }

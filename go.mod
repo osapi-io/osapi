@@ -24,8 +24,8 @@ require (
 	github.com/nats-io/nats.go v1.56.0
 	github.com/nats-io/nkeys v0.4.17
 	github.com/osapi-io/gohai v1.17.0
-	github.com/osapi-io/nats-client v1.6.0
-	github.com/osapi-io/nats-server v1.3.0
+	github.com/osapi-io/nats-client v1.7.0
+	github.com/osapi-io/nats-server v1.3.1
 	github.com/prometheus/client_golang v1.25.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.10.0

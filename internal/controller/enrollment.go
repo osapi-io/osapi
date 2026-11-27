@@ -194,7 +194,7 @@ func startEnrollment(
 			return enrollment{}, fmt.Errorf("auth callout: %w", err)
 		}
 		background(ctx, log, "auth callout", func(ctx context.Context) error {
-			c, err := calloutConnect(log, cfg)
+			c, err := calloutConnect(ctx, log, cfg)
 			if err != nil {
 				return err
 			}
@@ -384,7 +384,7 @@ func startRevocation(
 	if pub, _ := signer.PublicKey(); !nkeys.IsValidPublicOperatorKey(pub) {
 		return errors.New("the operator signing key is not an operator key (SO...)")
 	}
-	system, err := revocationConnect(log, cfg)
+	system, err := revocationConnect(ctx, log, cfg)
 	if err != nil {
 		return err
 	}
@@ -413,6 +413,7 @@ func startRevocation(
 // revocationConnect connects to the controller's NATS as the system
 // account's user of controller.join.revocation.
 var revocationConnect = func(
+	ctx context.Context,
 	log *slog.Logger,
 	cfg config.Config,
 ) (*natsclient.Client, error) {
@@ -426,12 +427,13 @@ var revocationConnect = func(
 		return nil, err
 	}
 
-	return bus.Dial(log, opts)
+	return bus.Dial(ctx, log, opts)
 }
 
 // calloutConnect connects to the controller's NATS as the callout user,
 // one of the server's auth_users, which the callout does not decide.
 var calloutConnect = func(
+	ctx context.Context,
 	log *slog.Logger,
 	cfg config.Config,
 ) (*natsclient.Client, error) {
@@ -442,5 +444,5 @@ var calloutConnect = func(
 		return nil, err
 	}
 
-	return bus.Dial(log, opts)
+	return bus.Dial(ctx, log, opts)
 }

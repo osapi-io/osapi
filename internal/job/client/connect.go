@@ -79,7 +79,7 @@ func Connect(
 	if err != nil {
 		return nil, err
 	}
-	nc, err := bus.Dial(log, bus.Telemetry(opts, mp))
+	nc, err := bus.Dial(ctx, log, bus.Telemetry(opts, mp))
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +111,9 @@ func Connect(
 		}
 	}
 
+	// Dial returned a connected client, and a connected client always has
+	// JetStream.
+	js, _ := nc.JetStream()
 	c.Jobs, err = newFn(log, nc, &Options{
 		Timeout:        timeout,
 		JobsBucket:     c.JobsBucket,
@@ -119,7 +122,7 @@ func Connect(
 		StateBucket:    c.StateBucket,
 		StreamName:     job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name),
 		TargetResolver: resolve,
-		Consumers:      nc.ExtJS,
+		Consumers:      js,
 	})
 	if err != nil {
 		bus.Close(nc)

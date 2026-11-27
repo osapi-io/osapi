@@ -68,7 +68,7 @@ func (s *RevocationPublicTestSuite) TestStartRevocation() {
 	tests := []struct {
 		name    string
 		key     func() string
-		connect func(*slog.Logger, config.Config) (*natsclient.Client, error)
+		connect func(context.Context, *slog.Logger, config.Config) (*natsclient.Client, error)
 		wantErr string
 	}{
 		{
@@ -93,7 +93,7 @@ func (s *RevocationPublicTestSuite) TestStartRevocation() {
 		{
 			name: "a system user that does not connect",
 			key:  func() string { return s.seedFile(nkeys.CreateOperator, nil) },
-			connect: func(*slog.Logger, config.Config) (*natsclient.Client, error) {
+			connect: func(context.Context, *slog.Logger, config.Config) (*natsclient.Client, error) {
 				return nil, errors.New("no route")
 			},
 			wantErr: "no route",
@@ -106,11 +106,11 @@ func (s *RevocationPublicTestSuite) TestStartRevocation() {
 			if connect == nil {
 				// The test's server is not in operator mode: the revoker
 				// connects as the controller, and its sends fail and log.
-				connect = func(log *slog.Logger, c config.Config) (*natsclient.Client, error) {
+				connect = func(ctx context.Context, log *slog.Logger, c config.Config) (*natsclient.Client, error) {
 					opts, err := bus.ConnectionOptions(c.Controller.NATS, "osapi-revocation")
 					s.Require().NoError(err)
 
-					return bus.Dial(log, opts)
+					return bus.Dial(ctx, log, opts)
 				}
 			}
 			defer controller.SetRevocationConnect(connect)()
@@ -142,7 +142,7 @@ func (s *RevocationPublicTestSuite) TestStartRevocation() {
 // JWT, starts with the revocation off.
 func (s *RevocationPublicTestSuite) TestNoAccountJWT() {
 	defer controller.SetRevocationConnect(
-		func(*slog.Logger, config.Config) (*natsclient.Client, error) {
+		func(context.Context, *slog.Logger, config.Config) (*natsclient.Client, error) {
 			s.Fail("a controller with no account JWT connects no revoker")
 
 			return nil, errors.New("not called")

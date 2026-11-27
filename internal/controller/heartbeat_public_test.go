@@ -60,7 +60,7 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 		s.Require().NoError(err)
 		defer c.Stop(context.Background())
 
-		nc, err := bus.Dial(slog.Default(), natsOptions(cfg))
+		nc, err := bus.Dial(context.Background(), slog.Default(), natsOptions(cfg))
 		s.Require().NoError(err)
 		defer nc.Close()
 		bucket := bus.RegistryKV("test", cfg.NATS.Registry).Bucket

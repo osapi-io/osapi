@@ -325,13 +325,13 @@ func joinDeps() join.Deps {
 	return join.Deps{
 		Config: appConfig,
 		Now:    time.Now,
-		Dial: func(context.Context) (jointoken.KV, func(), error) {
+		Dial: func(ctx context.Context) (jointoken.KV, func(), error) {
 			n := appConfig.Controller.NATS
 			opts, err := bus.ConnectionOptions(n, "osapi-join-token")
 			if err != nil {
 				return nil, nil, err
 			}
-			nc, err := bus.Dial(logger, opts)
+			nc, err := bus.Dial(ctx, logger, opts)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -390,7 +390,7 @@ func writeLocalAudit(
 	if err != nil {
 		return err
 	}
-	nc, err := bus.Dial(logger, opts)
+	nc, err := bus.Dial(ctx, logger, opts)
 	if err != nil {
 		return err
 	}
@@ -419,13 +419,13 @@ func pkiKeyDeps() pkikey.Deps {
 		RotateAgent: func(ctx context.Context) (string, error) {
 			return agent.RotateKey(ctx, logger, fs, appConfig)
 		},
-		Dial: func(context.Context) (natsvault.KV, func(), error) {
+		Dial: func(ctx context.Context) (natsvault.KV, func(), error) {
 			n := appConfig.Controller.NATS
 			opts, err := bus.ConnectionOptions(n, "osapi-vault-key")
 			if err != nil {
 				return nil, nil, err
 			}
-			nc, err := bus.Dial(logger, opts)
+			nc, err := bus.Dial(ctx, logger, opts)
 			if err != nil {
 				return nil, nil, err
 			}

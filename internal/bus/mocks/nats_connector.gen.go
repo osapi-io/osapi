@@ -100,25 +100,6 @@ func (mr *MockNATSConnectorMockRecorder) ConnectedUrl() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectedUrl", reflect.TypeOf((*MockNATSConnector)(nil).ConnectedUrl))
 }
 
-// JetStream mocks base method.
-func (m *MockNATSConnector) JetStream(opts ...nats.JSOpt) (nats.JetStreamContext, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "JetStream", varargs...)
-	ret0, _ := ret[0].(nats.JetStreamContext)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// JetStream indicates an expected call of JetStream.
-func (mr *MockNATSConnectorMockRecorder) JetStream(opts ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JetStream", reflect.TypeOf((*MockNATSConnector)(nil).JetStream), opts...)
-}
-
 // Publish mocks base method.
 func (m *MockNATSConnector) Publish(subject string, data []byte) error {
 	m.ctrl.T.Helper()
