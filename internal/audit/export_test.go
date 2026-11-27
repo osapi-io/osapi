@@ -47,3 +47,6 @@ func SetCurrentUser(
 
 	return func() { currentUser = old }
 }
+
+// ReadPage is readPage, for tests that read more than one page.
+const ReadPage = readPage

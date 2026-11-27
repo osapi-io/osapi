@@ -86,12 +86,32 @@ func (s *StreamStorePublicTestSuite) newStreamInfo(
 	msgs uint64,
 	firstSeq uint64,
 ) *jetstream.StreamInfo {
+	var lastSeq uint64
+	if msgs > 0 {
+		lastSeq = firstSeq + msgs - 1
+	}
+
 	return &jetstream.StreamInfo{
 		State: jetstream.StreamState{
 			Msgs:     msgs,
 			FirstSeq: firstSeq,
+			LastSeq:  lastSeq,
 		},
 	}
+}
+
+// msgAt is a message of the stream at the sequence seq.
+func (s *StreamStorePublicTestSuite) msgAt(
+	seq uint64,
+	data []byte,
+) jetstream.Msg {
+	msg := mocks.NewMockMsg(s.ctrl)
+	msg.EXPECT().Data().Return(data).AnyTimes()
+	msg.EXPECT().Metadata().Return(&jetstream.MsgMetadata{
+		Sequence: jetstream.SequencePair{Stream: seq},
+	}, nil).AnyTimes()
+
+	return msg
 }
 
 func (s *StreamStorePublicTestSuite) TestWrite() {
@@ -216,12 +236,11 @@ func (s *StreamStorePublicTestSuite) TestGet() {
 }
 
 func (s *StreamStorePublicTestSuite) TestList() {
-	entry1 := s.newEntry("aaa")
-	entry2 := s.newEntry("bbb")
-	entry3 := s.newEntry("ccc")
-	data1, _ := json.Marshal(entry1)
-	data2, _ := json.Marshal(entry2)
-	data3, _ := json.Marshal(entry3)
+	data := func(id string) []byte {
+		b, _ := json.Marshal(s.newEntry(id))
+
+		return b
+	}
 
 	tests := []struct {
 		name         string
@@ -238,23 +257,18 @@ func (s *StreamStorePublicTestSuite) TestList() {
 				s.mockStream.EXPECT().
 					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
-
-				msg1 := mocks.NewMockMsg(s.ctrl)
-				msg1.EXPECT().Data().Return(data1)
-				msg2 := mocks.NewMockMsg(s.ctrl)
-				msg2.EXPECT().Data().Return(data2)
-				msg3 := mocks.NewMockMsg(s.ctrl)
-				msg3.EXPECT().Data().Return(data3)
-
 				s.mockStream.EXPECT().
 					StreamRead(gomock.Any(), "AUDIT", uint64(1), 3).
-					Return([]jetstream.Msg{msg1, msg2, msg3}, nil)
+					Return([]jetstream.Msg{
+						s.msgAt(1, data("aaa")),
+						s.msgAt(2, data("bbb")),
+						s.msgAt(3, data("ccc")),
+					}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(3, total)
 				s.Len(entries, 3)
-				// Reversed: newest first
 				s.Equal("ccc", entries[0].ID)
 				s.Equal("bbb", entries[1].ID)
 				s.Equal("aaa", entries[2].ID)
@@ -268,21 +282,43 @@ func (s *StreamStorePublicTestSuite) TestList() {
 				s.mockStream.EXPECT().
 					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
-
-				// newestSeq=3, offset=1, count=1 => startSeq=3-1-1+1=2
-
-				msg := mocks.NewMockMsg(s.ctrl)
-				msg.EXPECT().Data().Return(data2)
-
+				// last=3, offset=1, count=1, so the page starts at 2.
 				s.mockStream.EXPECT().
 					StreamRead(gomock.Any(), "AUDIT", uint64(2), 1).
-					Return([]jetstream.Msg{msg}, nil)
+					Return([]jetstream.Msg{s.msgAt(2, data("bbb"))}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
 				s.Equal(3, total)
 				s.Len(entries, 1)
 				s.Equal("bbb", entries[0].ID)
+			},
+		},
+		{
+			name:   "the first page ends at the newest entry when a deleted entry left a gap",
+			limit:  2,
+			offset: 0,
+			setupMock: func() {
+				// Sequences 1, 3 and 4: 2 was deleted. FirstSeq+Msgs-1 is 3,
+				// but the newest is 4.
+				s.mockStream.EXPECT().
+					StreamInfo(gomock.Any(), "AUDIT").
+					Return(&jetstream.StreamInfo{State: jetstream.StreamState{
+						Msgs: 3, FirstSeq: 1, LastSeq: 4,
+					}}, nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(3), 2).
+					Return([]jetstream.Msg{
+						s.msgAt(3, data("ccc")),
+						s.msgAt(4, data("ddd")),
+					}, nil)
+			},
+			validateFunc: func(entries []audit.Entry, total int, err error) {
+				s.NoError(err)
+				s.Equal(3, total)
+				s.Len(entries, 2)
+				s.Equal("ddd", entries[0].ID)
+				s.Equal("ccc", entries[1].ID)
 			},
 		},
 		{
@@ -351,6 +387,47 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			},
 		},
 		{
+			name:   "returns error when the read stops before the last entry",
+			limit:  10,
+			offset: 0,
+			setupMock: func() {
+				s.mockStream.EXPECT().
+					StreamInfo(gomock.Any(), "AUDIT").
+					Return(s.newStreamInfo(3, 1), nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 3).
+					Return([]jetstream.Msg{s.msgAt(1, data("aaa"))},
+						fmt.Errorf("batch timeout"))
+			},
+			validateFunc: func(entries []audit.Entry, total int, err error) {
+				s.Error(err)
+				s.Nil(entries)
+				s.Equal(0, total)
+				s.Contains(err.Error(), "stopped at sequence 1 of 3")
+			},
+		},
+		{
+			name:   "returns error when a message has no metadata",
+			limit:  10,
+			offset: 0,
+			setupMock: func() {
+				s.mockStream.EXPECT().
+					StreamInfo(gomock.Any(), "AUDIT").
+					Return(s.newStreamInfo(1, 1), nil)
+				msg := mocks.NewMockMsg(s.ctrl)
+				msg.EXPECT().Metadata().Return(nil, fmt.Errorf("not a JetStream message"))
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 1).
+					Return([]jetstream.Msg{msg}, nil)
+			},
+			validateFunc: func(entries []audit.Entry, total int, err error) {
+				s.Error(err)
+				s.Nil(entries)
+				s.Equal(0, total)
+				s.Contains(err.Error(), "not a JetStream message")
+			},
+		},
+		{
 			name:   "skips entries when unmarshal fails",
 			limit:  10,
 			offset: 0,
@@ -358,15 +435,12 @@ func (s *StreamStorePublicTestSuite) TestList() {
 				s.mockStream.EXPECT().
 					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(2, 1), nil)
-
-				badMsg := mocks.NewMockMsg(s.ctrl)
-				badMsg.EXPECT().Data().Return([]byte("not-json"))
-				goodMsg := mocks.NewMockMsg(s.ctrl)
-				goodMsg.EXPECT().Data().Return(data1)
-
 				s.mockStream.EXPECT().
 					StreamRead(gomock.Any(), "AUDIT", uint64(1), 2).
-					Return([]jetstream.Msg{badMsg, goodMsg}, nil)
+					Return([]jetstream.Msg{
+						s.msgAt(1, []byte("not-json")),
+						s.msgAt(2, data("aaa")),
+					}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -376,20 +450,17 @@ func (s *StreamStorePublicTestSuite) TestList() {
 			},
 		},
 		{
-			name:   "logs warning on batch error",
+			name:   "a batch error after the last entry is not an error",
 			limit:  10,
 			offset: 0,
 			setupMock: func() {
 				s.mockStream.EXPECT().
 					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(1, 1), nil)
-
-				msg := mocks.NewMockMsg(s.ctrl)
-				msg.EXPECT().Data().Return(data1)
-
 				s.mockStream.EXPECT().
 					StreamRead(gomock.Any(), "AUDIT", uint64(1), 1).
-					Return([]jetstream.Msg{msg}, fmt.Errorf("batch timeout"))
+					Return([]jetstream.Msg{s.msgAt(1, data("aaa"))},
+						fmt.Errorf("batch timeout"))
 			},
 			validateFunc: func(entries []audit.Entry, total int, err error) {
 				s.NoError(err)
@@ -409,12 +480,11 @@ func (s *StreamStorePublicTestSuite) TestList() {
 }
 
 func (s *StreamStorePublicTestSuite) TestListAll() {
-	entry1 := s.newEntry("aaa")
-	entry2 := s.newEntry("bbb")
-	entry3 := s.newEntry("ccc")
-	data1, _ := json.Marshal(entry1)
-	data2, _ := json.Marshal(entry2)
-	data3, _ := json.Marshal(entry3)
+	data := func(id string) []byte {
+		b, _ := json.Marshal(s.newEntry(id))
+
+		return b
+	}
 
 	tests := []struct {
 		name         string
@@ -427,25 +497,98 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 				s.mockStream.EXPECT().
 					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(3, 1), nil)
-
-				msg1 := mocks.NewMockMsg(s.ctrl)
-				msg1.EXPECT().Data().Return(data1)
-				msg2 := mocks.NewMockMsg(s.ctrl)
-				msg2.EXPECT().Data().Return(data2)
-				msg3 := mocks.NewMockMsg(s.ctrl)
-				msg3.EXPECT().Data().Return(data3)
-
 				s.mockStream.EXPECT().
-					StreamRead(gomock.Any(), "AUDIT", uint64(0), 3).
-					Return([]jetstream.Msg{msg1, msg2, msg3}, nil)
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 3).
+					Return([]jetstream.Msg{
+						s.msgAt(1, data("aaa")),
+						s.msgAt(2, data("bbb")),
+						s.msgAt(3, data("ccc")),
+					}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
 				s.Len(entries, 3)
-				// Reversed: newest first
 				s.Equal("ccc", entries[0].ID)
 				s.Equal("bbb", entries[1].ID)
 				s.Equal("aaa", entries[2].ID)
+			},
+		},
+		{
+			name: "reads a stream larger than a page in pages",
+			setupMock: func() {
+				const n = audit.ReadPage + 2
+				s.mockStream.EXPECT().
+					StreamInfo(gomock.Any(), "AUDIT").
+					Return(s.newStreamInfo(n, 1), nil)
+
+				first := make([]jetstream.Msg, 0, audit.ReadPage)
+				for seq := uint64(1); seq <= audit.ReadPage; seq++ {
+					first = append(first, s.msgAt(seq, data(fmt.Sprintf("e%d", seq))))
+				}
+				gomock.InOrder(
+					s.mockStream.EXPECT().
+						StreamRead(gomock.Any(), "AUDIT", uint64(1), audit.ReadPage).
+						Return(first, nil),
+					s.mockStream.EXPECT().
+						StreamRead(gomock.Any(), "AUDIT", uint64(audit.ReadPage+1), 2).
+						Return([]jetstream.Msg{
+							s.msgAt(audit.ReadPage+1, data("next")),
+							s.msgAt(audit.ReadPage+2, data("newest")),
+						}, nil),
+				)
+			},
+			validateFunc: func(entries []audit.Entry, err error) {
+				s.NoError(err)
+				s.Len(entries, audit.ReadPage+2)
+				s.Equal("newest", entries[0].ID)
+				s.Equal("e1", entries[len(entries)-1].ID)
+			},
+		},
+		{
+			name: "returns error when a later page stops before the last entry",
+			setupMock: func() {
+				const n = audit.ReadPage + 2
+				s.mockStream.EXPECT().
+					StreamInfo(gomock.Any(), "AUDIT").
+					Return(s.newStreamInfo(n, 1), nil)
+
+				first := make([]jetstream.Msg, 0, audit.ReadPage)
+				for seq := uint64(1); seq <= audit.ReadPage; seq++ {
+					first = append(first, s.msgAt(seq, data("e")))
+				}
+				gomock.InOrder(
+					s.mockStream.EXPECT().
+						StreamRead(gomock.Any(), "AUDIT", uint64(1), audit.ReadPage).
+						Return(first, nil),
+					s.mockStream.EXPECT().
+						StreamRead(gomock.Any(), "AUDIT", uint64(audit.ReadPage+1), 2).
+						Return(nil, nil),
+				)
+			},
+			validateFunc: func(entries []audit.Entry, err error) {
+				s.Error(err)
+				s.Nil(entries)
+				s.Contains(err.Error(),
+					fmt.Sprintf("stopped at sequence %d of %d", audit.ReadPage, audit.ReadPage+2))
+			},
+		},
+		{
+			name: "an entry written after the read began is left out",
+			setupMock: func() {
+				s.mockStream.EXPECT().
+					StreamInfo(gomock.Any(), "AUDIT").
+					Return(s.newStreamInfo(1, 1), nil)
+				s.mockStream.EXPECT().
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 1).
+					Return([]jetstream.Msg{
+						s.msgAt(1, data("aaa")),
+						s.msgAt(2, data("later")),
+					}, nil)
+			},
+			validateFunc: func(entries []audit.Entry, err error) {
+				s.NoError(err)
+				s.Len(entries, 1)
+				s.Equal("aaa", entries[0].ID)
 			},
 		},
 		{
@@ -495,39 +638,17 @@ func (s *StreamStorePublicTestSuite) TestListAll() {
 				s.mockStream.EXPECT().
 					StreamInfo(gomock.Any(), "AUDIT").
 					Return(s.newStreamInfo(2, 1), nil)
-
-				badMsg := mocks.NewMockMsg(s.ctrl)
-				badMsg.EXPECT().Data().Return([]byte("not-json"))
-				goodMsg := mocks.NewMockMsg(s.ctrl)
-				goodMsg.EXPECT().Data().Return(data1)
-
 				s.mockStream.EXPECT().
-					StreamRead(gomock.Any(), "AUDIT", uint64(0), 2).
-					Return([]jetstream.Msg{badMsg, goodMsg}, nil)
+					StreamRead(gomock.Any(), "AUDIT", uint64(1), 2).
+					Return([]jetstream.Msg{
+						s.msgAt(1, []byte("not-json")),
+						s.msgAt(2, data("aaa")),
+					}, nil)
 			},
 			validateFunc: func(entries []audit.Entry, err error) {
 				s.NoError(err)
 				s.Len(entries, 1)
 				s.Equal("aaa", entries[0].ID)
-			},
-		},
-		{
-			name: "logs warning on batch error",
-			setupMock: func() {
-				s.mockStream.EXPECT().
-					StreamInfo(gomock.Any(), "AUDIT").
-					Return(s.newStreamInfo(1, 1), nil)
-
-				msg := mocks.NewMockMsg(s.ctrl)
-				msg.EXPECT().Data().Return(data1)
-
-				s.mockStream.EXPECT().
-					StreamRead(gomock.Any(), "AUDIT", uint64(0), 1).
-					Return([]jetstream.Msg{msg}, fmt.Errorf("batch timeout"))
-			},
-			validateFunc: func(entries []audit.Entry, err error) {
-				s.NoError(err)
-				s.Len(entries, 1)
 			},
 		},
 	}
