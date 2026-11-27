@@ -1205,3 +1205,10 @@ func ExportOpenJob(
 ) (*seal.Opener, error) {
 	return a.openJob(req)
 }
+
+// ExportKeepAliveInterval exposes the private keepAliveInterval for testing.
+func ExportKeepAliveInterval(
+	c config.AgentConsumer,
+) time.Duration {
+	return keepAliveInterval(c)
+}

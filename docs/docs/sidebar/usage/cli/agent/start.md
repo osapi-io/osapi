@@ -24,7 +24,7 @@ The command prints:
 ```ansi
 $ osapi agent start
 [2m10:00AM[0m [92mINF[0m starting node agent [2mcomponent=[0magent [2msubsystem=[0magent
-[2m10:00AM[0m [92mINF[0m agent configuration [2mcomponent=[0magent [2msubsystem=[0magent [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mqueue_group=[0mjob-agents [2mmax_jobs=[0m10 [2mlabels=[0mmap[group:web.dev.us-east]
+[2m10:00AM[0m [92mINF[0m agent configuration [2mcomponent=[0magent [2msubsystem=[0magent [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mmax_jobs=[0m10 [2mlabels=[0mmap[group:web.dev.us-east]
 [2m10:00AM[0m [92mINF[0m registered in agent registry [2mcomponent=[0magent [2msubsystem=[0magent.heartbeat [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mkey=[0magents.d530664edc1c431eb5ef1e9dfd6617a5 [2mttl=[0m30s
 [2m10:00AM[0m [92mINF[0m node agent started successfully [2mcomponent=[0magent [2msubsystem=[0magent
 [2m10:00AM[0m [92mINF[0m metrics server started [2mcomponent=[0magent [2msubsystem=[0mmetrics [2maddr=[0m0.0.0.0:9091
@@ -35,7 +35,7 @@ With `--json`, the command prints:
 
 ```json
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"starting node agent","component":"agent","subsystem":"agent"}
-{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"agent configuration","component":"agent","subsystem":"agent","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","queue_group":"job-agents","max_jobs":10,"labels":{"group":"web.dev.us-east"}}
+{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"agent configuration","component":"agent","subsystem":"agent","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","max_jobs":10,"labels":{"group":"web.dev.us-east"}}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"registered in agent registry","component":"agent","subsystem":"agent.heartbeat","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","key":"agents.d530664edc1c431eb5ef1e9dfd6617a5","ttl":"30s"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"node agent started successfully","component":"agent","subsystem":"agent"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"metrics server started","component":"agent","subsystem":"metrics","addr":"0.0.0.0:9091"}
@@ -57,7 +57,6 @@ With `--json`, the command prints:
 | `--agent-nats-client-name`            | Client name sent to NATS for identification (agent.nats.client_name)                                                         | `osapi-agent`         |
 | `--agent-nats-host`                   | NATS server hostname to connect to (agent.nats.host)                                                                         | `localhost`           |
 | `--agent-nats-port`                   | NATS server port to connect to (agent.nats.port)                                                                             | `4222`                |
-| `--agent-queue-group`                 | Queue group for load-balanced (_any) subscriptions (agent.queue_group)                                                       | `job-agents`          |
 
 ## Global flags
 

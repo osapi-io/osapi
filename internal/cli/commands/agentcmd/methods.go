@@ -49,7 +49,6 @@ func Start(
 		slog.String("agent.nats.client_name", a.NATS.ClientName),
 		slog.String("agent.nats.namespace", a.NATS.Namespace),
 		slog.String("agent.nats.auth.type", a.NATS.Auth.Type),
-		slog.String("agent.queue_group", a.QueueGroup),
 		slog.String("agent.hostname", a.Hostname),
 		slog.Int("agent.max_jobs", a.MaxJobs),
 		slog.String("agent.consumer.name", a.Consumer.Name),

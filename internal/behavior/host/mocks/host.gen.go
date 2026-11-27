@@ -119,6 +119,21 @@ func (mr *MockExecMockRecorder) RunPrivilegedCmdWithStdin(ctx, name, args, stdin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdWithStdin", reflect.TypeOf((*MockExec)(nil).RunPrivilegedCmdWithStdin), ctx, name, args, stdin)
 }
 
+// RunReadCmd mocks base method.
+func (m *MockExec) RunReadCmd(ctx context.Context, name string, args []string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunReadCmd", ctx, name, args)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RunReadCmd indicates an expected call of RunReadCmd.
+func (mr *MockExecMockRecorder) RunReadCmd(ctx, name, args any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunReadCmd", reflect.TypeOf((*MockExec)(nil).RunReadCmd), ctx, name, args)
+}
+
 // MockObjects is a mock of Objects interface.
 type MockObjects struct {
 	ctrl     *gomock.Controller

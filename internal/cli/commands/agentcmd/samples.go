@@ -47,7 +47,6 @@ var StartLogs = []command.LogLine{
 			slog.String("subsystem", "agent"),
 			slog.String("machine_id", "d530664edc1c431eb5ef1e9dfd6617a5"),
 			slog.String("hostname", "web-03"),
-			slog.String("queue_group", "job-agents"),
 			slog.Int("max_jobs", 10),
 			slog.Any("labels", map[string]string{"group": "web.dev.us-east"}),
 		},

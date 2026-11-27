@@ -30,6 +30,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/container/docker"
@@ -55,6 +56,7 @@ func (s *HostPublicTestSuite) provider(
 	expect func(m *hostmocks.MockExec),
 ) docker.Provider {
 	m := hostmocks.NewMockExec(gomock.NewController(s.T()))
+	behaviortest.ReadsThroughRunCmd(m)
 	m.EXPECT().RunCmd(gomock.Any(), "docker", gomock.Any()).
 		DoAndReturn(func(_ context.Context, _ string, args []string) (string, error) {
 			switch strings.Join(args, " ") {

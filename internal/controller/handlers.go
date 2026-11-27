@@ -21,7 +21,6 @@
 package controller
 
 import (
-	"context"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -72,6 +71,10 @@ type handlerDeps struct {
 	vaults          *vault.Set
 	// version is the build version of the binary.
 	version string
+	// health answers the health endpoints. New makes it and starts its
+	// metrics refresh, which Stop ends; with none, handlers makes one with
+	// no refresh.
+	health *health.Health
 }
 
 // handlers returns each REST API handler. The UI handler is only there
@@ -91,10 +94,10 @@ func handlers(
 		}
 	}
 
-	// The controller's sub-components come to the health answer with its
-	// registry entry, from its heartbeat.
-	reporter := health.New(d.log, d.checker, startTime, d.version, d.metricsProvider)
-	reporter.StartMetricsRefresh(context.Background())
+	reporter := d.health
+	if reporter == nil {
+		reporter = health.New(d.log, d.checker, startTime, d.version, d.metricsProvider)
+	}
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
 	handlers = append(

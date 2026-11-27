@@ -60,7 +60,6 @@ func (a *Agent) Start() {
 		"agent configuration",
 		slog.String("machine_id", a.machineID),
 		slog.String("hostname", a.hostname),
-		slog.String("queue_group", a.appConfig.Agent.QueueGroup),
 		slog.Int("max_jobs", a.appConfig.Agent.MaxJobs),
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)

@@ -106,11 +106,10 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 			},
 		},
 		Agent: config.AgentConfig{
-			Hostname:   "test-agent",
-			QueueGroup: "test-queue",
-			MaxJobs:    5,
-			Labels:     map[string]string{"group": "web"},
-			PKI:        config.AgentPKI{KeyDir: keyDir},
+			Hostname: "test-agent",
+			MaxJobs:  5,
+			Labels:   map[string]string{"group": "web"},
+			PKI:      config.AgentPKI{KeyDir: keyDir},
 			Consumer: config.AgentConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s", "2s", "5s"},

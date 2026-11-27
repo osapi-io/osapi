@@ -646,8 +646,6 @@ type AgentConfig struct {
 	Consumer AgentConsumer `mapstructure:"consumer,omitempty"`
 	// Facts settings for the agent's facts collection.
 	Facts AgentFacts `mapstructure:"facts,omitempty"`
-	// QueueGroup for load balancing multiple agents.
-	QueueGroup string `mapstructure:"queue_group" doc:"Queue group for load-balanced (_any) subscriptions."`
 	// Hostname identifies this agent instance for routing.
 	Hostname string `mapstructure:"hostname" doc:"Agent hostname for direct routing. Defaults to the system hostname when empty." choice:"empty is the host's own hostname"`
 	// MaxJobs maximum number of concurrent jobs to process.

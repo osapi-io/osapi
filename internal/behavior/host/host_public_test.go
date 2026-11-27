@@ -59,11 +59,11 @@ type HostPublicTestSuite struct {
 func (s *HostPublicTestSuite) TestSources() {
 	ctrl := gomock.NewController(s.T())
 	exec := mocks.NewMockExec(ctrl)
-	exec.EXPECT().RunCmd(gomock.Any(), "hostname", []string{"-s"}).
-		DoAndReturn(func(ctx context.Context, _ string, _ []string) (string, error) {
+	exec.EXPECT().RunReadCmd(gomock.Any(), "hostname", []string{"-s"}).
+		DoAndReturn(func(ctx context.Context, _ string, _ []string) ([]byte, error) {
 			s.True(host.FromGohai(ctx), "gohai's runner marks its commands")
 
-			return "web-01\n", nil
+			return []byte("web-01\n"), nil
 		})
 	now := func() time.Time { return time.Unix(1, 0) }
 	h := host.Host{Exec: exec, Now: now, Platform: "debian"}

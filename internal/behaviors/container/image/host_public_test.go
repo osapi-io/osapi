@@ -29,6 +29,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/container/image"
@@ -45,6 +46,7 @@ func (s *HostPublicTestSuite) TestProvider() {
 
 	s.Run("a host whose docker does not answer is skipped", func() {
 		m := hostmocks.NewMockExec(gomock.NewController(s.T()))
+		behaviortest.ReadsThroughRunCmd(m)
 		m.EXPECT().RunCmd(gomock.Any(), "docker", gomock.Any()).Return("", boom).AnyTimes()
 		p, _ := image.NewCLI(host.Host{Exec: m})
 		_, err := p.List(ctx)
@@ -52,6 +54,7 @@ func (s *HostPublicTestSuite) TestProvider() {
 	})
 	s.Run("the images come by repository and tag", func() {
 		m := hostmocks.NewMockExec(gomock.NewController(s.T()))
+		behaviortest.ReadsThroughRunCmd(m)
 		m.EXPECT().
 			RunCmd(gomock.Any(), "docker", []string{"version", "--format", "{{.Server.Version}}"}).
 			Return("29\n", nil)
@@ -65,6 +68,7 @@ func (s *HostPublicTestSuite) TestProvider() {
 	})
 	s.Run("a pull that fails is the error", func() {
 		m := hostmocks.NewMockExec(gomock.NewController(s.T()))
+		behaviortest.ReadsThroughRunCmd(m)
 		m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", inspect).Return("", boom)
 		m.EXPECT().
 			RunPrivilegedCmd(gomock.Any(), "docker", []string{"pull", "alpine"}).
@@ -75,6 +79,7 @@ func (s *HostPublicTestSuite) TestProvider() {
 	})
 	s.Run("delete with force runs docker rmi -f, and its failure is the error", func() {
 		m := hostmocks.NewMockExec(gomock.NewController(s.T()))
+		behaviortest.ReadsThroughRunCmd(m)
 		m.EXPECT().RunPrivilegedCmd(gomock.Any(), "docker", inspect).Return("sha256:x 1\n", nil)
 		m.EXPECT().
 			RunPrivilegedCmd(gomock.Any(), "docker", []string{"rmi", "-f", "alpine"}).

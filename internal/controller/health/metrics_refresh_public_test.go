@@ -162,6 +162,42 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 	}
 }
 
+// TestStopMetricsRefresh is the stop that StartMetricsRefresh returns: when
+// it returns, the refresh made its last call, so the NATS connection that
+// the metrics read can close.
+func (s *MetricsRefreshPublicTestSuite) TestStopMetricsRefresh() {
+	tests := []struct {
+		name    string
+		metrics bool
+	}{
+		{name: "when the refresh runs, stop ends it and waits", metrics: true},
+		{name: "when there are no metrics, stop does nothing", metrics: false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var callCount atomic.Int32
+			var metrics health.MetricsProvider
+			if tc.metrics {
+				metrics = s.newMetricsProvider(&callCount)
+			}
+			handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics)
+			handler.MetricsRefreshInterval = 5 * time.Millisecond
+
+			stop := handler.StartMetricsRefresh(s.ctx)
+			time.Sleep(30 * time.Millisecond)
+			stop()
+			after := callCount.Load()
+			time.Sleep(30 * time.Millisecond)
+
+			s.Equal(after, callCount.Load(), "no call after stop returned")
+			if tc.metrics {
+				s.Positive(after)
+			}
+		})
+	}
+}
+
 func TestMetricsRefreshPublicTestSuite(
 	t *testing.T,
 ) {

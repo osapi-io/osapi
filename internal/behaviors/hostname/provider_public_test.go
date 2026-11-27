@@ -32,6 +32,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/hostname"
@@ -58,6 +59,7 @@ func (e exec) mock(
 		return e.out[line], e.err[line]
 	}
 	m := hostmocks.NewMockExec(gomock.NewController(t))
+	behaviortest.ReadsThroughRunCmd(m)
 	m.EXPECT().RunCmd(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(answer).AnyTimes()
 	m.EXPECT().
 		RunPrivilegedCmd(gomock.Any(), gomock.Any(), gomock.Any()).

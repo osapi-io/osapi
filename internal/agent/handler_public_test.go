@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -42,6 +43,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
@@ -984,6 +986,54 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 	}
 }
 
+// TestHandleJobMessageConcurrently is the jobs of one consumer at once, as
+// MaxInFlight (agent.max_jobs) lets nats-client run them: each one answers,
+// and -race finds no state that the jobs share without a lock.
+func (s *HandlerPublicTestSuite) TestHandleJobMessageConcurrently() {
+	tests := []struct {
+		name string
+		jobs int
+	}{
+		{name: "when ten jobs run at once", jobs: 10},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			msgs := make([]jetstream.Msg, tt.jobs)
+			for i := range tt.jobs {
+				id := fmt.Sprintf("concurrent-job-%d", i)
+				msgs[i] = newTestMsg(s.mockCtrl, "jobs.query.test-agent", []byte(id))
+				s.expectNotAnswered(id)
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs."+id).
+					Return(signedJob(`{"id": "`+id+`", "operation": {"type": "node.unsupported.get", "data": {}}}`), nil)
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), id, gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(3)
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), id, gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+			}
+
+			errs := make([]error, tt.jobs)
+			var wg sync.WaitGroup
+			for i, msg := range msgs {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					errs[i] = agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg)
+				}()
+			}
+			wg.Wait()
+
+			for i, err := range errs {
+				s.NoError(err, "job %d", i)
+			}
+		})
+	}
+}
+
 func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 	tests := []struct {
 		name         string
@@ -1562,6 +1612,52 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 
 			msg := tt.setupMsg(s.mockCtrl)
 			tt.validateFunc(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
+		})
+	}
+}
+
+// TestKeepAliveInterval is the keepalive of a job: it pings before the
+// server delivers the job again, which with a back_off is back_off[0], not
+// ack_wait.
+func (s *HandlerPublicTestSuite) TestKeepAliveInterval() {
+	tests := []struct {
+		name     string
+		consumer config.AgentConsumer
+		want     time.Duration
+	}{
+		{
+			name:     "when there is no back_off, half of ack_wait",
+			consumer: config.AgentConsumer{AckWait: "2m"},
+			want:     time.Minute,
+		},
+		{
+			name: "when back_off is shorter than ack_wait, half of its shortest entry",
+			consumer: config.AgentConsumer{
+				AckWait: "2m",
+				BackOff: []string{"30s", "2m", "5m"},
+			},
+			want: 15 * time.Second,
+		},
+		{
+			name:     "when back_off is longer than ack_wait, half of ack_wait",
+			consumer: config.AgentConsumer{AckWait: "20s", BackOff: []string{"30s"}},
+			want:     10 * time.Second,
+		},
+		{
+			name:     "when an entry does not parse, it is not the wait",
+			consumer: config.AgentConsumer{AckWait: "2m", BackOff: []string{"soon", "0s", "40s"}},
+			want:     20 * time.Second,
+		},
+		{
+			name:     "when ack_wait does not parse, half of the default",
+			consumer: config.AgentConsumer{AckWait: "later"},
+			want:     time.Minute,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.want, agent.ExportKeepAliveInterval(tt.consumer))
 		})
 	}
 }
