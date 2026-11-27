@@ -2121,3 +2121,60 @@ func (s *ClientPublicTestSuite) TestAuditRecordsSteps() {
 		}}, audit.StepsFrom(ctx))
 	})
 }
+
+// TestCancelIsNotATimeout: a caller whose ctx ends first stopped waiting.
+// No agent timed out, so the error says the wait ended, and a broadcast
+// fills no timeout rows. Before, both said timeout.
+func (s *ClientPublicTestSuite) TestCancelIsNotATimeout() {
+	opts := &client.Options{
+		Timeout:        5 * time.Second,
+		JobsBucket:     "jobs",
+		StreamName:     "JOBS",
+		RegistryBucket: "registry",
+	}
+	cancelSoon := func() context.Context {
+		ctx, cancel := context.WithCancel(context.Background())
+		time.AfterFunc(20*time.Millisecond, cancel)
+
+		return ctx
+	}
+
+	s.Run("a query", func() {
+		c, err := newTrusted(s.mockNATSClient, opts)
+		s.Require().NoError(err)
+		setupPublishAndWaitMocksWithOpts(
+			s.mockCtrl, s.mockNATSClient, s.mockNATSClient,
+			"jobs.query.host.server1",
+			&publishAndWaitMockOpts{closeWatch: true},
+		)
+
+		_, _, err = c.Query(cancelSoon(), "server1", "node",
+			job.OperationType("node.hostname.get"), nil)
+
+		s.ErrorIs(err, context.Canceled)
+		s.ErrorContains(err, "wait for job response")
+		s.NotContains(err.Error(), "timeout")
+	})
+
+	s.Run("a broadcast with one answer", func() {
+		setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+		c, err := newTrusted(s.mockNATSClient, opts)
+		s.Require().NoError(err)
+		setupPublishAndCollectMocks(
+			s.mockCtrl, s.mockNATSClient, s.mockNATSClient,
+			"jobs.query._all",
+			&publishAndCollectMockOpts{
+				responseEntries: []string{`{"status":"completed","hostname":"server1"}`},
+				mockError:       errors.New("partial"),
+				errorMode:       errorOnTimeoutWithPartialResponse,
+			},
+		)
+
+		_, results, err := c.QueryBroadcast(cancelSoon(), "_all", "node",
+			job.OperationType("node.hostname.get"), nil)
+
+		s.ErrorIs(err, context.Canceled)
+		s.ErrorContains(err, "wait for broadcast responses")
+		s.Nil(results, "no timeout rows")
+	})
+}
