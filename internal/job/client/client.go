@@ -380,6 +380,12 @@ func (c *Client) publishAndWait(
 	for {
 		select {
 		case <-timeoutCtx.Done():
+			// The caller's ctx ended first: the caller stopped waiting,
+			// which is not an agent that did not answer.
+			if err := ctx.Err(); err != nil {
+				return "", nil, endSpan(colSpan, fmt.Errorf("wait for job response: %w", err))
+			}
+
 			return "", nil, endSpan(
 				colSpan,
 				fmt.Errorf("timeout waiting for job response: %w", timeoutCtx.Err()),
@@ -539,6 +545,14 @@ func (c *Client) publishAndCollect(
 	for {
 		select {
 		case <-timeoutCtx.Done():
+			// The caller's ctx ended first: no host timed out, so the
+			// answer has no timeout rows.
+			if err := ctx.Err(); err != nil {
+				return "", nil, endSpan(
+					colSpan,
+					fmt.Errorf("wait for broadcast responses: %w", err),
+				)
+			}
 			if len(responses) == 0 {
 				return "", nil, endSpan(colSpan, fmt.Errorf(
 					"timeout waiting for broadcast responses: no agents responded",
