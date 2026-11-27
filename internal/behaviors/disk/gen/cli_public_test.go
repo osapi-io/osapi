@@ -32,6 +32,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 				Body:   "",
 			},
 		},
+		{
+			name: "when the example \"A btrfs filesystem with subvolumes at /home, / and /var\" is run",
+			args: []string{"node", "disk", "get", "--target", "server1"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/disk",
+				Body:   "",
+			},
+		},
 	}
 
 	for _, tc := range tests {
