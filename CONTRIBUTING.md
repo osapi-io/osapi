@@ -636,6 +636,7 @@ each other command, of an endpoint group or a local group:
   of its own. It removes each one at the end, and undoes a drain and a config
   update of the agent.
 - Each `.Check` after an example is a read that shows what the example changed.
+  After a read, it shows a field of the answer, such as the state of the agent.
   The suite runs it with `--json` after the example and compares each field that
   it names, again for up to 30 seconds, because an agent applies a config at its
   next heartbeat. A `.CheckFails` read must fail with its text.
@@ -740,7 +741,7 @@ goes in a `{domain}_test.go` suite. Guard each test that makes a change with
 | `OSAPI_INTEGRATION_OSAPIFILE`       | An osapi client config. The suite starts nothing, and tests the controller that the file's `controller.client` URL and bearer token name                                                                                                                                                                              |
 | `OSAPI_INTEGRATION_TARGET`          | The host that a test sends one host's job to. The default is `_any`. Against several agents, name one host, so a read and its write match                                                                                                                                                                             |
 | `OSAPI_INTEGRATION_WRITE_BEHAVIORS` | `1` runs the write examples of each behavior. Before the tests, the suite prepares the target through osapi: the ping parameter, chrony and the dummy interface `osapi0`. After them, it puts back the parameter and removes `osapi0`. CI sets it, and runs the suite as root on its runner, with no other host setup |
-| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests: the API writes of `CommandSmokeSuite` and the hand-written suites                                                                                                                                                                                                                           |
+| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests: the API writes of `CommandSmokeSuite`, the scenarios that write, and `InFlightSuite`                                                                                                                                                                                                        |
 
 To test the lab from this checkout:
 

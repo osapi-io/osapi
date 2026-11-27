@@ -32,6 +32,10 @@ import (
 // InFlightSuite holds that a job in flight sends its result when the agent
 // restarts its consumers: a config with new labels does, and before
 // osapi-io/osapi#1487 it cancelled the job, whose caller then timed out.
+//
+// It is not a scenario: its check reads the result of a command that runs
+// while the next step runs, and a background step of a scenario keeps no
+// output for a check.
 type InFlightSuite struct {
 	suite.Suite
 }

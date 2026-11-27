@@ -77,6 +77,16 @@ var (
 func TestMain(
 	m *testing.M,
 ) {
+	os.Exit(runSuite(m))
+}
+
+// runSuite starts the suite's server, or reads the deployment that
+// OSAPI_INTEGRATION_OSAPIFILE names, runs the tests, and returns the exit
+// code. Its defers remove the temporary directory, stop the server and
+// close the spec proxy, also when a step before the tests fails.
+func runSuite(
+	m *testing.M,
+) int {
 	var err error
 
 	runWrites = os.Getenv("OSAPI_INTEGRATION_WRITES") == "1"
@@ -88,21 +98,22 @@ func TestMain(
 	tempDir, err = os.MkdirTemp("", "osapi-integration-*")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "create temp dir: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	storeDir = filepath.Join(tempDir, "jetstream")
 
 	apiPort, err = getFreePort()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "get free api port: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	natsPort, err = getFreePort()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "get free nats port: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	binaryPath = filepath.Join(tempDir, "osapi")
@@ -112,17 +123,17 @@ func TestMain(
 	buildCmd.Stderr = os.Stderr
 	if err := buildCmd.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "build binary: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	configPath, err = filepath.Abs(filepath.Join(repoRoot(), "test", "integration", "osapi.yaml"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "resolve config path: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	if file := os.Getenv("OSAPI_INTEGRATION_OSAPIFILE"); file != "" {
-		os.Exit(runAgainst(m, file))
+		return runAgainst(m, file)
 	}
 
 	// The suite's own server keeps its vault key in its directory, so a
@@ -130,14 +141,14 @@ func TestMain(
 	configPath, err = writeConfig(tempDir, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	t := authtoken.New(nil)
 	token, err = t.Generate(signingKey, []types.Role{types.RoleAdmin}, "integration@test", nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "generate token: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	// The API serves TLS by default, with its self-signed api.crt in the
@@ -158,35 +169,39 @@ func TestMain(
 	serverCmd.Stderr = os.Stderr
 	if err := serverCmd.Start(); err != nil {
 		fmt.Fprintf(os.Stderr, "start server: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
+	defer stopServer()
 
 	if err := waitForReady(15 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "wait for ready: %v\n", err)
-		stopServer()
-		os.Exit(1)
+		return 1
 	}
 
 	proxy, proxyPort, err = startSpecProxy(controllerURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "start the spec proxy: %v\n", err)
-		stopServer()
-		os.Exit(1)
+		return 1
 	}
+	defer proxy.Close()
 
 	// The controller is ready before the agent's first heartbeat. A suite
 	// that runs first then finds no agent (#806). A failed first heartbeat
 	// is written again after the 10s heartbeat interval.
 	if err := waitForAgent(30 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "wait for agent: %v\n", err)
-		stopServer()
-		os.Exit(1)
+		return 1
 	}
 
-	code := runPrepared(m)
+	return finish(runPrepared(m))
+}
 
-	// Each request and response went through the spec: one that broke it
-	// fails the run, even when its own test passed.
+// finish is code, or 1 when the SDK's report or the spec proxy found a
+// problem: each request and response went through the spec, and one that
+// broke it fails the run, even when its own test passed.
+func finish(
+	code int,
+) int {
 	if reportSDK() != 0 {
 		code = 1
 	}
@@ -198,9 +213,7 @@ func TestMain(
 		code = 1
 	}
 
-	stopServer()
-	os.RemoveAll(tempDir)
-	os.Exit(code)
+	return code
 }
 
 func getFreePort() (int, error) {
@@ -463,20 +476,6 @@ func skipWriteOp(
 	}
 }
 
-func writeTempFile(
-	t *testing.T,
-	content string,
-) string {
-	t.Helper()
-
-	path := filepath.Join(t.TempDir(), "upload.txt")
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		t.Fatalf("write temp file: %v", err)
-	}
-
-	return path
-}
-
 // runPrepared runs the tests on a target that prepare made ready, when the
 // write examples run, and puts back what prepare changed after them. A
 // prepare that fails stops the run: each test would fail for what is
@@ -554,25 +553,13 @@ func runAgainst(
 		fmt.Fprintf(os.Stderr, "start the spec proxy: %v\n", err)
 		return 1
 	}
+	defer proxy.Close()
 	if err := waitForAgent(30 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "wait for agent: %v\n", err)
 		return 1
 	}
 
-	code := runPrepared(m)
-	if reportSDK() != 0 {
-		code = 1
-	}
-	if v := proxy.Violations(); len(v) > 0 {
-		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the full spec:\n", len(v))
-		for _, line := range v {
-			fmt.Fprintln(os.Stderr, "  "+line)
-		}
-		code = 1
-	}
-	os.RemoveAll(tempDir)
-
-	return code
+	return finish(runPrepared(m))
 }
 
 // skipIfCommandOff skips a command test when the agent has

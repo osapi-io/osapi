@@ -49,7 +49,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Liveness probe", "").
 		Example("").
 		Prints(sampleLiveness).
-		Example("--json"),
+		Example("--json").
+		Check("client health liveness", "", "status", "ok"),
 	endpoint.Get[ReadyInput, ReadyResponse]("ready").
 		Handle(Ready).
 		Sub("ready").
@@ -63,7 +64,8 @@ var Group = endpoint.Register(endpoint.Define(
 			"The command checks that the controller can reach NATS and the KV buckets.").
 		Example("").
 		Prints(sampleReady).
-		Example("--json"),
+		Example("--json").
+		Check("client health ready", "", "status", "ready"),
 	endpoint.Get[StatusInput, StatusResponse]("status").
 		Handle(Status).
 		Sub("status").
@@ -87,5 +89,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Prints(sampleStatus).
 		Example("--component agent").
 		Example("--json").
+		Check("client health status", "", "status", "ok").
 		Fails("a component that is not controller, nats or agent", StatusInput{Component: "disk"}),
 ))
