@@ -342,13 +342,27 @@ func joinDeps() join.Deps {
 	}
 }
 
+// controllerInFile reports whether the config file sets the controller. An
+// agent host's file sets only agent: its join gives it the agent's NATS
+// connection, and no controller.nats to write an audit entry with
+// (osapi-io/osapi#1552). A test replaces it.
+var controllerInFile = func() bool { return viper.InConfig("controller") }
+
 // localAudit writes e to the audit log of the controller, with a connection
 // to NATS as the controller makes it. The controller keeps no audit log when
-// nats.audit.stream is empty.
+// nats.audit.stream is empty. An agent host keeps no local audit log: the
+// controller audits what reaches it, such as agent.key.rotate.
 func localAudit(
 	ctx context.Context,
 	e audit.Entry,
 ) error {
+	if !controllerInFile() {
+		logger.Info("an agent host keeps no local audit log: the controller audits what reaches it",
+			slog.String("action", e.Action),
+		)
+
+		return nil
+	}
 	err := writeLocalAudit(ctx, e)
 	if err != nil {
 		// The change was made. Say that the audit log does not have it,

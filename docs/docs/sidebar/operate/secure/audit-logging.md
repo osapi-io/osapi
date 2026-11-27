@@ -127,6 +127,12 @@ that no request made.
 Then the change is made, and the command warns that the audit log does not have
 it: `the change is not in the audit log: NATS could not be reached`.
 
+An agent host keeps no local audit log. Its config file sets only `agent`, so it
+has no `controller.nats` to connect with. A local command there, such as
+`pki key rotate --name agent`, writes no entry and says so once:
+`an agent host keeps no local audit log`. The controller audits what reaches it:
+a rotation is `agent.key.rotate`.
+
 ## Viewing audit logs
 
 Query audit entries through the API or CLI. You can list recent entries
