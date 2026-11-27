@@ -256,7 +256,7 @@ func requestFields(
 		switch {
 		case m.InPath(name):
 			tags["in"] = "path"
-			tags["param"] = b.TypeName() + title(name)
+			tags["param"] = paramName(b, m, name)
 			out = append(out, field().Tag(tags))
 		case m.Verb == types.VerbRead:
 			tags["in"] = "query"
@@ -276,6 +276,38 @@ func requestFields(
 	}
 
 	return out
+}
+
+// paramName is the name of a path parameter in the components of the spec.
+// The methods of a behavior share one parameter for a key, such as
+// CertificateName, when each of them checks the key the same way. When one
+// checks it another way, such as a get that takes a name with spaces and an
+// update that does not, a shared parameter would hold the rules of only one,
+// and the spec would refuse the other's request before it is validated. Thus
+// each method then has its own, such as CertificateGetName.
+func paramName(
+	b *behavior.Behavior,
+	m *behavior.Method,
+	name string,
+) string {
+	rules := func(o *behavior.Method) string {
+		for i := range o.In.NumField() {
+			fld := o.In.Field(i)
+			if behavior.JSONName(fld) == name {
+				return fld.Tag.Get("validate") + "\x00" + fld.Tag.Get("pattern")
+			}
+		}
+
+		return ""
+	}
+	own := rules(m)
+	for _, o := range b.Methods {
+		if o.InPath(name) && rules(o) != own {
+			return b.TypeName() + title(m.Name) + title(name)
+		}
+	}
+
+	return b.TypeName() + title(name)
 }
 
 // rowType is the fields and the name of a method's row: the host, its
