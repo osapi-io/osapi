@@ -500,16 +500,18 @@ type CustomRole struct {
 }
 
 // ServerTLS makes a server of osapi serve TLS: the API, each metrics
-// server, and the NATS server. With no certificate set, the API makes a
-// self-signed one in controller.pki.key_dir at its first start, and uses it
-// after that; a metrics server and the NATS server need one.
+// server, and the NATS server. With no certificate set, the server makes a
+// self-signed one in the key directory of its component at its first start,
+// and uses it after that: controller.pki.key_dir for the API and the
+// controller's metrics, agent.pki.key_dir for the agent's metrics, and
+// nats.server.key_dir for NATS and its metrics.
 type ServerTLS struct {
 	// Enabled serves TLS on the server's port, in place of plain text.
-	Enabled bool `mapstructure:"enabled" doc:"Serve TLS on the port (HTTPS for the API and metrics), in place of plain text. Without cert_file and key_file, the API makes a self-signed certificate in controller.pki.key_dir; a metrics server and the NATS server need both."`
+	Enabled bool `mapstructure:"enabled" doc:"Serve TLS on the port (HTTPS for the API and metrics), in place of plain text. Without cert_file and key_file, the server makes a self-signed certificate in the key directory of its component: controller.pki.key_dir, agent.pki.key_dir or nats.server.key_dir. That directory must be one that the server's user can write."`
 	// CertFile is the PEM certificate to serve, with its chain.
-	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty is the API's self-signed certificate"`
+	CertFile string `mapstructure:"cert_file" doc:"The PEM certificate to serve, with its chain, such as one from tailscale cert or certbot. Set it with key_file, or neither for the self-signed certificate." validate:"required_with=KeyFile" choice:"a certificate of the operator; empty is a self-signed certificate in the key directory of the component"`
 	// KeyFile is the PEM private key of CertFile.
-	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile" choice:"a certificate of the operator; empty is the API's self-signed certificate"`
+	KeyFile string `mapstructure:"key_file" doc:"The PEM private key of cert_file." validate:"required_with=CertFile" choice:"a certificate of the operator; empty is a self-signed certificate in the key directory of the component"`
 }
 
 // ServerSecurity represents security-related settings for the server.

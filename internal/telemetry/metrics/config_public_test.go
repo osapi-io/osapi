@@ -21,6 +21,7 @@
 package metrics_test
 
 import (
+	"bytes"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -42,15 +43,19 @@ type ConfigPublicTestSuite struct {
 func (s *ConfigPublicTestSuite) TestFromConfigNoCertificate() {
 	blocked := filepath.Join(s.T().TempDir(), "file")
 	s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+	var logs bytes.Buffer
 	got := metrics.FromConfig(config.MetricsServer{
 		Enabled: true, Host: "127.0.0.1", TLS: config.ServerTLS{Enabled: true},
-	}, filepath.Join(blocked, "pki"), "metrics", slog.New(slog.DiscardHandler))
+	}, filepath.Join(blocked, "pki"), "nats.server.key_dir", "metrics",
+		slog.New(slog.NewTextHandler(&logs, nil)))
 	s.Nil(got, "no fall back to plain HTTP")
+	s.Contains(logs.String(), "set nats.server.key_dir to a directory",
+		"the error names the config key of the key directory")
 
 	got = metrics.FromConfig(config.MetricsServer{
 		Enabled: true, Host: "127.0.0.1",
 		TLS: config.ServerTLS{Enabled: true, CertFile: "/no/such.crt", KeyFile: "/no/such.key"},
-	}, "", "metrics", slog.New(slog.DiscardHandler))
+	}, "", "nats.server.key_dir", "metrics", slog.New(slog.DiscardHandler))
 	s.Nil(got, "a certificate that does not load does not start it")
 }
 
@@ -108,6 +113,7 @@ func (s *ConfigPublicTestSuite) TestFromConfig() {
 				metrics.FromConfig(
 					tc.cfg,
 					s.T().TempDir(),
+					"agent.pki.key_dir",
 					"metrics",
 					slog.New(slog.DiscardHandler),
 				),
