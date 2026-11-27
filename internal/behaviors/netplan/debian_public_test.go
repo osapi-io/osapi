@@ -24,7 +24,10 @@ import (
 	"context"
 	"errors"
 	"maps"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
@@ -99,6 +102,49 @@ func (s *DebianPublicTestSuite) TestRefusedFileIsRolledBack() {
 			s.ErrorContains(err, "bad yaml")
 		})
 	}
+}
+
+// TestOneChangeAtATime: changes from jobs that run at once, such as a dns
+// write and a route write, reach netplan generate and apply one at a time.
+// netplan reads each file in the directory, so two at once would apply one
+// file half written, or roll back the other's.
+func (s *DebianPublicTestSuite) TestOneChangeAtATime() {
+	ctrl := gomock.NewController(s.T())
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+	files := managedfilemocks.NewMockProvider(ctrl)
+	files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil).AnyTimes()
+	var active, peak atomic.Int32
+	exec := hostmocks.NewMockExec(ctrl)
+	exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", gomock.Any()).
+		DoAndReturn(func(context.Context, string, []string) (string, error) {
+			n := active.Add(1)
+			if n > peak.Load() {
+				peak.Store(n)
+			}
+			time.Sleep(20 * time.Millisecond)
+			active.Add(-1)
+
+			return "", nil
+		}).AnyTimes()
+	p, err := netplan.ExportNewDebian(host.Host{
+		FS:       fs,
+		Exec:     exec,
+		Required: map[string]any{managedfile.Behavior.Name: files},
+	})
+	s.Require().NoError(err)
+
+	var wg sync.WaitGroup
+	for _, name := range []string{"osapi-dns-eth0.yaml", "osapi-eth0-routes.yaml", "osapi-eth1.yaml"} {
+		wg.Go(func() {
+			_, err := p.Apply(context.Background(),
+				netplan.UpdateInput{Path: netplan.Dir + "/" + name, Content: "network: {}\n"})
+			s.NoError(err)
+		})
+	}
+	wg.Wait()
+
+	s.Equal(int32(1), peak.Load(), "one netplan command at a time")
 }
 
 // TestFailedStepIsInTheTree is a chain that fails after a step changed the

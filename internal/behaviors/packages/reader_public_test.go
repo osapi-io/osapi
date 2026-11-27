@@ -59,7 +59,15 @@ func (s *ReaderPublicTestSuite) TestInstallAVersion() {
 	exec.EXPECT().RunCmd(gomock.Any(), "dpkg-query", gomock.Any()).
 		Return("tree\t2.1.1-2\tamd64\tinstalled\ttree\t100\n", nil).AnyTimes()
 	exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "apt-get",
-		[]string{"install", "-y", "--", "tree=2.1.1-3"}).Return("", nil)
+		[]string{
+			"install",
+			"-y",
+			"-o",
+			"DPkg::Lock::Timeout=300",
+			"--",
+			"tree=2.1.1-3",
+		}).
+		Return("", nil)
 	p, err := packages.ExportNewDebian(host.Host{Platform: behavior.PlatformDebian, Exec: exec})
 	s.Require().NoError(err)
 

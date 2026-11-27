@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/avfs/avfs"
 
@@ -37,6 +38,12 @@ import (
 
 // debian writes netplan files through managedfile, which keeps each one's
 // record, and runs netplan.
+// applying holds one netplan change at a time on the host. dns, route and
+// interface each write their own file, through this behavior, from jobs that
+// can run at once, and netplan generate and apply read each file: two at
+// once would apply one's file half written, or roll back the other's.
+var applying sync.Mutex
+
 type debian struct {
 	files managedfile.Provider
 	exec  host.Exec
@@ -65,6 +72,8 @@ func (d *debian) Apply(
 	if err := own(in.Path); err != nil {
 		return false, err
 	}
+	applying.Lock()
+	defer applying.Unlock()
 	previous, readErr := d.fs.ReadFile(in.Path)
 	result, err := behavior.Call(
 		ctx,
@@ -124,6 +133,8 @@ func (d *debian) Remove(
 	if err := own(path); err != nil {
 		return false, err
 	}
+	applying.Lock()
+	defer applying.Unlock()
 	previous, readErr := d.fs.ReadFile(path)
 	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, d.files,
 		managedfile.DeleteInput{Path: path})

@@ -124,8 +124,8 @@ var Behavior = behavior.Register(behavior.Define(
 		// needs it.
 		Example("Install a package", CreateInput{Name: "tree"},
 			Result{Name: "tree", Changed: true},
-			behavior.PrintsAfter("apt-get install -y -- tree", dpkg, tree),
-			behavior.Ran("apt-get", "install", "-y", "--", "tree"),
+			behavior.PrintsAfter("apt-get install -y -o DPkg::Lock::Timeout=300 -- tree", dpkg, tree),
+			behavior.Ran("apt-get", "install", "-y", "-o", "DPkg::Lock::Timeout=300", "--", "tree"),
 			behavior.Reads(GetInput{Name: "tree"}, Installed{Name: "tree"}),
 		).
 		Fails("A name that is an option", CreateInput{Name: "-oAPT::Get=x"}, "not a valid package name").
@@ -148,9 +148,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("Remove a package", DeleteInput{Name: "tree"},
 			Result{Name: "tree", Changed: true},
 			behavior.After(CreateInput{Name: "tree"}),
-			behavior.PrintsAfter("apt-get install -y -- tree", dpkg, tree),
-			behavior.PrintsAfter("apt-get remove -y -- tree", dpkg, ""),
-			behavior.Ran("apt-get", "remove", "-y", "--", "tree"),
+			behavior.PrintsAfter("apt-get install -y -o DPkg::Lock::Timeout=300 -- tree", dpkg, tree),
+			behavior.PrintsAfter("apt-get remove -y -o DPkg::Lock::Timeout=300 -- tree", dpkg, ""),
+			behavior.Ran("apt-get", "remove", "-y", "-o", "DPkg::Lock::Timeout=300", "--", "tree"),
 			behavior.ReadsNone(GetInput{Name: "tree"}, Installed{Name: "tree"}, "name"),
 		).
 		Example("A package that is not installed", DeleteInput{Name: "tree"},

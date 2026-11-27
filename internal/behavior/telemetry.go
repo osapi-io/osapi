@@ -159,14 +159,51 @@ func current() *meters {
 
 // observe decodes input and runs the method inside its span with its
 // metrics, as the agent calls it.
+//
+// A write takes the lock of its behavior first, so two jobs never write one
+// behavior's state at once. The agent runs several jobs at a time, and a
+// write such as route.create or sshkey.add reads a file, changes it and
+// writes it again: two at once would lose one change. Reads and exec take no
+// lock, so a long command does not hold back other jobs. A behavior that a
+// write calls through Call takes no lock of its own, so one write is never
+// held behind a second write that it called.
 func (m *Method) observe(
 	ctx context.Context,
 	provider any,
 	input []byte,
 ) (any, error) {
+	if m.Verb == types.VerbWrite {
+		unlock := lockWrites(m.behaviorName())
+		defer unlock()
+	}
+
 	return m.run(ctx, func(ctx context.Context) (any, any, error) {
 		return m.invoke(ctx, provider, input)
 	})
+}
+
+// writeLocks holds one lock for each behavior that a job writes.
+var writeLocks sync.Map
+
+// lockWrites takes the lock of the writes of a behavior, and gives the
+// function that gives it back.
+func lockWrites(
+	behavior string,
+) func() {
+	mu, _ := writeLocks.LoadOrStore(behavior, &sync.Mutex{})
+	l := mu.(*sync.Mutex)
+	l.Lock()
+
+	return l.Unlock
+}
+
+// behaviorName is the name of the behavior that owns the method.
+func (m *Method) behaviorName() string {
+	if m.owner != nil {
+		return m.owner.Name
+	}
+
+	return m.Name
 }
 
 // run runs call, the method with its input, inside the span of the method,
@@ -176,10 +213,7 @@ func (m *Method) run(
 	ctx context.Context,
 	call func(ctx context.Context) (out any, in any, err error),
 ) (any, error) {
-	name := m.Name
-	if m.owner != nil {
-		name = m.owner.Name
-	}
+	name := m.behaviorName()
 
 	base := make([]attribute.KeyValue, 0, 4)
 	base = append(base,
