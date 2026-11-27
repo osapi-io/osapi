@@ -83,8 +83,6 @@ var (
 
 const (
 	lcSystem  = "launchctl print system"
-	lcPrint   = "launchctl print system/io.osapi.app"
-	lcLoaded  = "system/io.osapi.app = {\n\tstate = running\n}\n"
 	lcCron    = "\t\t     412      - \tcom.apple.cron\n"
 	lcAppUp   = "\t\t     612      - \tio.osapi.app\n"
 	lcAppOff  = "\tdisabled services = {\n\t\t\"io.osapi.app\" => disabled\n\t}\n"
@@ -153,7 +151,6 @@ var macAction = map[string][]behavior.HostOption{
 	"restart": {
 		behavior.After(StartInput{Name: "app"}),
 		behavior.Prints(lcSystem, lcOut(lcCron+lcAppUp, "")),
-		behavior.Prints(lcPrint, lcLoaded),
 		behavior.Ran("launchctl", "kickstart", "-k", "system/io.osapi.app"),
 	},
 	"enable": {
@@ -384,7 +381,6 @@ var Behavior = behavior.Register(behavior.Define(
 			macOnly, storedPlist, deployedPlist,
 			behavior.After(StartInput{Name: "app"}),
 			behavior.Prints(lcSystem, lcOut(lcCron+lcAppUp, "")),
-			behavior.Prints(lcPrint, lcLoaded),
 			behavior.Ran("launchctl", "bootout", "system/io.osapi.app"),
 			behavior.Removed(plistApp),
 			behavior.ReadsNone(GetInput{Name: "app"}, Entry{Name: "app", Managed: true}, "name", "managed"),
