@@ -401,7 +401,11 @@ agents. The state bucket holds a record of the rotation at the key
    `controller.pki.rotation_grace_period` (`24h`) has the next key, or when that
    period ends. It moves the next key in place of its key and signs with it. It
    then writes a record with the new key as the current key and the old key as
-   the previous key. The new key signs this record.
+   the previous key. The record also keeps each key that an earlier switch
+   replaced, as a retired key. The new key signs this record. The controller
+   verifies a job that it stored with its current key, its previous key or a
+   retired key, so a job from before each rotation still shows in `job list` and
+   `job get`. A retired key verifies no message from an agent.
 1. At its next heartbeat, each agent reads the record. The key that signed it is
    the next key that the agent has. Thus the agent makes the next key its
    controller key, in `enrolled-controller.pub`, and keeps the old key as the

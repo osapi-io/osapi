@@ -436,6 +436,73 @@ func keyRotationScenarios() []scenario {
 					check{path: "current", op: "==", want: "{first}"}),
 			},
 		},
+		{
+			name:    "a job from before two rotations of the controller's key reads and lists",
+			writeOp: "CONTROLLER_KEY_ROTATE",
+			steps: []step{
+				{
+					name:  "a job that fails on the agent",
+					fails: true,
+					cli: []string{
+						"client",
+						"node",
+						"user",
+						"get",
+						"--target",
+						"{target}",
+						"--name",
+						"osapi-nosuch",
+						"--json",
+					},
+				},
+				{
+					name:    "the job list has the failed job",
+					wait:    15 * time.Second,
+					pause:   time.Second,
+					cli:     []string{"client", "job", "list", "--status", "failed", "--json"},
+					checks:  []check{{path: "items[0].id", op: "nonempty"}},
+					capture: map[string]string{"failed": "items[0].id"},
+				},
+				{
+					name:    "start the first rotation",
+					cli:     []string{"client", "pki", "key", "rotate", "--json"},
+					checks:  []check{{path: "next", op: "nonempty"}},
+					capture: map[string]string{"first": "next"},
+				},
+				controllerKey("the controller switches to the first key", 90*time.Second,
+					check{path: "current", op: "==", want: "{first}"}),
+				{
+					name:    "start the second rotation",
+					cli:     []string{"client", "pki", "key", "rotate", "--json"},
+					checks:  []check{{path: "next", op: "nonempty"}},
+					capture: map[string]string{"second": "next"},
+				},
+				controllerKey("the controller switches to the second key", 90*time.Second,
+					check{path: "current", op: "==", want: "{second}"}),
+				{
+					name: "the job that a retired key signed reads",
+					cli:  []string{"client", "job", "get", "--id", "{failed}", "--json"},
+					checks: []check{
+						{path: "status", op: "==", want: "failed"},
+						{path: "operation.type", op: "nonempty"},
+					},
+				},
+				{
+					name: "the failed list shows the job, and no job it cannot read",
+					cli:  []string{"client", "job", "list", "--status", "failed", "--json"},
+					checks: []check{
+						{path: "items[*].id", op: "has", want: "{failed}"},
+						{path: "items[*].error", op: "absent", want: "cannot be read"},
+					},
+				},
+			},
+			cleanup: []step{
+				{
+					name: "delete the failed job",
+					cli:  []string{"client", "job", "delete", "--id", "{failed}"},
+				},
+			},
+		},
 	}
 }
 
