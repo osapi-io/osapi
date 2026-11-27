@@ -354,6 +354,7 @@ const (
 	OperationIDGetNodeUserSshkey        OperationID = "GetNodeUserSshkey"
 	OperationIDGetPKICert               OperationID = "GetPKICert"
 	OperationIDGetPKIKeyRotation        OperationID = "GetPKIKeyRotation"
+	OperationIDGetPKINATSCertRotation   OperationID = "GetPKINATSCertRotation"
 	OperationIDGetSecret                OperationID = "GetSecret"
 	OperationIDGetSecretValue           OperationID = "GetSecretValue"
 	OperationIDGetSecretVaults          OperationID = "GetSecretVaults"
@@ -411,5 +412,6 @@ const (
 	OperationIDRetryJobByID             OperationID = "RetryJobByID"
 	OperationIDRevokeMachine            OperationID = "RevokeMachine"
 	OperationIDRotatePKIKey             OperationID = "RotatePKIKey"
+	OperationIDRotatePKINATSCert        OperationID = "RotatePKINATSCert"
 	OperationIDUndrainAgent             OperationID = "UndrainAgent"
 )

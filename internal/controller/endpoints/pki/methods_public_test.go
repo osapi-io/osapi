@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	pkiEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/pki"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/pki/mocks"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
@@ -218,6 +219,124 @@ func (s *MethodsPublicTestSuite) TestKeyRotation() {
 			tc.setup(r)
 			d := s.deps()
 			d.Rotation = r
+			got, err := tc.call(d)
+			if tc.wantErr != "" {
+				s.ErrorContains(err, tc.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestNATSCertRotation() {
+	started := time.Date(2026, 11, 26, 12, 0, 0, 0, time.UTC)
+	status := certrotation.Status{
+		Current:   "SHA256:old",
+		Next:      "SHA256:new",
+		StartedAt: started,
+		SwitchBy:  started.Add(time.Hour),
+		Agents:    []certrotation.Agent{{MachineID: "m-1", Hostname: "web-01", HasNext: true}},
+	}
+	want := pkiEndpoint.CertRotation{
+		Current:   "SHA256:old",
+		Next:      "SHA256:new",
+		StartedAt: started,
+		SwitchBy:  started.Add(time.Hour),
+		Agents: []pkiEndpoint.CertRotationAgent{
+			{Hostname: "web-01", MachineID: "m-1", HasNext: true},
+		},
+	}
+
+	tests := []struct {
+		name    string
+		call    func(d pkiEndpoint.Deps) (pkiEndpoint.CertRotation, error)
+		setup   func(r *mocks.MockCertRotator)
+		want    pkiEndpoint.CertRotation
+		wantErr string
+	}{
+		{
+			name: "rotate starts the rotation, and answers it",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.CertRotation, error) {
+				return pkiEndpoint.RotateNATSCert(
+					context.Background(),
+					d,
+					pkiEndpoint.CertRotateInput{},
+				)
+			},
+			setup: func(r *mocks.MockCertRotator) { r.EXPECT().Start(gomock.Any()).Return(status, nil) },
+			want:  want,
+		},
+		{
+			name: "a rotation that does not start",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.CertRotation, error) {
+				return pkiEndpoint.RotateNATSCert(
+					context.Background(),
+					d,
+					pkiEndpoint.CertRotateInput{},
+				)
+			},
+			setup: func(r *mocks.MockCertRotator) {
+				r.EXPECT().
+					Start(gomock.Any()).
+					Return(certrotation.Status{}, errors.New("nats down"))
+			},
+			wantErr: "nats down",
+		},
+		{
+			name: "rotation shows it",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.CertRotation, error) {
+				return pkiEndpoint.NATSCertRotation(
+					context.Background(),
+					d,
+					pkiEndpoint.CertRotationInput{},
+				)
+			},
+			setup: func(r *mocks.MockCertRotator) { r.EXPECT().Status(gomock.Any()).Return(status, nil) },
+			want:  want,
+		},
+		{
+			name: "with no rotation, only the current certificate",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.CertRotation, error) {
+				return pkiEndpoint.NATSCertRotation(
+					context.Background(),
+					d,
+					pkiEndpoint.CertRotationInput{},
+				)
+			},
+			setup: func(r *mocks.MockCertRotator) {
+				r.EXPECT().
+					Status(gomock.Any()).
+					Return(certrotation.Status{Current: "SHA256:old"}, nil)
+			},
+			want: pkiEndpoint.CertRotation{Current: "SHA256:old"},
+		},
+		{
+			name: "a rotation that does not read",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.CertRotation, error) {
+				return pkiEndpoint.NATSCertRotation(
+					context.Background(),
+					d,
+					pkiEndpoint.CertRotationInput{},
+				)
+			},
+			setup: func(r *mocks.MockCertRotator) {
+				r.EXPECT().
+					Status(gomock.Any()).
+					Return(certrotation.Status{}, errors.New("nats down"))
+			},
+			wantErr: "nats down",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := mocks.NewMockCertRotator(gomock.NewController(s.T()))
+			tc.setup(r)
+			d := s.deps()
+			d.CertRotation = r
 			got, err := tc.call(d)
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)

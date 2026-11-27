@@ -140,6 +140,7 @@ func (a *Agent) writeRegistration(
 	a.applyConfig(ctx)
 	if a.pkiManager != nil {
 		a.followControllerKey(ctx)
+		a.followNATSCert(ctx)
 	}
 	a.writeSeen(ctx, machineID)
 	a.refreshPrograms()
@@ -159,6 +160,7 @@ func (a *Agent) writeRegistration(
 		Certificates:    a.certificates(),
 	}
 	reg.ControllerKey, reg.ControllerKeyNext = a.controllerKeys()
+	reg.NATSCertNext = a.natsCertNext
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {
 		info.Family = detectFn()

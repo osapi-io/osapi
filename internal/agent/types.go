@@ -130,6 +130,10 @@ type Agent struct {
 	// configVersion is the version of the controller's config that the
 	// agent applied, 0 for none.
 	configVersion int
+	// natsCertNext is the fingerprint of the NATS server's next certificate,
+	// which the agent trusts during a rotation of it, as its registration
+	// reports it.
+	natsCertNext string
 
 	// prevConditions tracks condition state between heartbeats.
 	prevConditions []job.Condition

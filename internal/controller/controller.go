@@ -207,6 +207,7 @@ func newController(
 		fileStateBucket: fileStateBucket,
 		admission:       enrolled.watcher,
 		keyRotation:     enrolled.rotation,
+		certRotation:    enrolled.certs,
 		vaults:          vaults,
 		version:         o.version,
 		health:          reporter,

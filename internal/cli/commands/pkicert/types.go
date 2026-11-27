@@ -32,8 +32,7 @@ type GetInput struct {
 
 // RotateInput names a certificate, and whether to rotate one that agents pin.
 type RotateInput struct {
-	Name  string `json:"name"  validate:"required,max=64" doc:"The name of the certificate, as list shows it, such as api or nats."`
-	Force bool   `json:"force" validate:"omitempty"       doc:"Rotate the NATS server's certificate, which each join string pins and each joined agent trusts."`
+	Name string `json:"name" validate:"required,max=64" doc:"The name of the certificate, as list shows it, such as api or nats."`
 }
 
 // ListOutput is each certificate.
@@ -43,9 +42,10 @@ type ListOutput struct {
 
 // RotateOutput is the certificate that rotate made.
 type RotateOutput struct {
-	_    struct{} `title:"Rotated"`
-	Cert CertInfo `                json:"cert"`
-	Next string   `                json:"next"`
+	_        struct{} `title:"Rotated"`
+	Cert     CertInfo `                json:"cert"`
+	NextCert string   `                json:"next_cert,omitempty" doc:"The fingerprint of the NATS server's next certificate, which it switches to when each agent trusts it."`
+	Next     string   `                json:"next"`
 }
 
 // CertInfo is a certificate as list and get show it.

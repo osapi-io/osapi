@@ -332,6 +332,22 @@ func (mr *MockJobClientMockRecorder) ModifyBroadcast(ctx, target, category, oper
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyBroadcast", reflect.TypeOf((*MockJobClient)(nil).ModifyBroadcast), ctx, target, category, operation, data)
 }
 
+// NATSCert mocks base method.
+func (m *MockJobClient) NATSCert(ctx context.Context) (pki.CertRecord, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NATSCert", ctx)
+	ret0, _ := ret[0].(pki.CertRecord)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// NATSCert indicates an expected call of NATSCert.
+func (mr *MockJobClientMockRecorder) NATSCert(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NATSCert", reflect.TypeOf((*MockJobClient)(nil).NATSCert), ctx)
+}
+
 // Query mocks base method.
 func (m *MockJobClient) Query(ctx context.Context, target, category string, operation job.OperationType, data any) (string, *job.Response, error) {
 	m.ctrl.T.Helper()

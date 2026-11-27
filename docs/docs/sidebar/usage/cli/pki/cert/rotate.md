@@ -66,10 +66,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag      | Description                                                                                    | Default |
-| --------- | ---------------------------------------------------------------------------------------------- | ------- |
-| `--force` | Rotate the NATS server's certificate, which each join string pins and each joined agent trusts |         |
-| `--name`  | The name of the certificate, as list shows it, such as api or nats (required)                  |         |
+| Flag     | Description                                                                   | Default |
+| -------- | ----------------------------------------------------------------------------- | ------- |
+| `--name` | The name of the certificate, as list shows it, such as api or nats (required) |         |
 
 ## Global flags
 

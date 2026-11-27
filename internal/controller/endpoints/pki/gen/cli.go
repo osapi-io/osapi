@@ -80,10 +80,42 @@ var pkiRotateCmd = &cobra.Command{
 	Use:   "rotate",
 }
 
+var pkiNatscertrotationCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "nats",
+		reference.Permission: "pki:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client pki nats get\n\x1b[1;38;2;0;213;255mNATS certificate:\x1b[0m\n  \x1b[38;2;10;143;176mCurrent:\x1b[0m     SHA256:4b7d20e1c9f8a7b6d5e4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2\n  \x1b[38;2;10;143;176mNext:\x1b[0m        SHA256:a83f61c2e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8\n  \x1b[38;2;10;143;176mStarted at:\x1b[0m  2026-11-26 12:00:00\n  \x1b[38;2;10;143;176mSwitch by:\x1b[0m   2026-11-27 12:00:00\n\n\x1b[1;38;2;255;0;255mAgents (1):\x1b[0m\n  \x1b[38;2;176;48;176mHOSTNAME  \x1b[0m\x1b[38;2;176;48;176mMACHINE ID                        \x1b[0m\x1b[38;2;176;48;176mHAS NEXT\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;138;138;138md530664edc1c431eb5ef1e9dfd6617a5\x1b[0m  yes\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"current\": \"SHA256:4b7d20e1c9f8a7b6d5e4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2\",\n  \"next\": \"SHA256:a83f61c2e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8\",\n  \"started_at\": \"2026-11-26T12:00:00Z\",\n  \"switch_by\": \"2026-11-27T12:00:00Z\",\n  \"agents\": [\n    {\n      \"hostname\": \"web-01\",\n      \"machine_id\": \"d530664edc1c431eb5ef1e9dfd6617a5\",\n      \"has_next\": true\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client pki nats get",
+	Long:    "Shows the NATS server's certificate, and during a rotation, each agent that\nthe switch waits for. The controller switches when each one trusts the next\ncertificate, or when controller.pki.rotation_grace_period ends.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		endpointcommand.Run(cmd, pki.Group, "natscertrotation", pki.CertRotationInput{})
+	},
+	Short: "Show the rotation of the NATS server's certificate",
+	Use:   "get",
+}
+
+var pkiNatscertrotateCmd = &cobra.Command{
+	Annotations: map[string]string{
+		clicommand.SubKey:    "nats",
+		reference.Permission: "pki:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client pki nats rotate\n\x1b[1;38;2;0;213;255mNATS certificate:\x1b[0m\n  \x1b[38;2;10;143;176mCurrent:\x1b[0m     SHA256:4b7d20e1c9f8a7b6d5e4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2\n  \x1b[38;2;10;143;176mNext:\x1b[0m        SHA256:a83f61c2e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8\n  \x1b[38;2;10;143;176mStarted at:\x1b[0m  2026-11-26 12:00:00\n  \x1b[38;2;10;143;176mSwitch by:\x1b[0m   2026-11-27 12:00:00\n\n\x1b[1;38;2;255;0;255mAgents (1):\x1b[0m\n  \x1b[38;2;176;48;176mHOSTNAME  \x1b[0m\x1b[38;2;176;48;176mMACHINE ID                        \x1b[0m\x1b[38;2;176;48;176mHAS NEXT\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;138;138;138md530664edc1c431eb5ef1e9dfd6617a5\x1b[0m  no\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"current\": \"SHA256:4b7d20e1c9f8a7b6d5e4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2\",\n  \"next\": \"SHA256:a83f61c2e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8\",\n  \"started_at\": \"2026-11-26T12:00:00Z\",\n  \"switch_by\": \"2026-11-27T12:00:00Z\",\n  \"agents\": [\n    {\n      \"hostname\": \"web-01\",\n      \"machine_id\": \"d530664edc1c431eb5ef1e9dfd6617a5\",\n      \"has_next\": false\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client pki nats rotate",
+	Long:    "Starts the rotation of the NATS server's certificate. The agents trust the\nnext certificate at their next heartbeat, and the controller switches when\neach one does. osapi client pki nats get shows the progress.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		endpointcommand.Run(cmd, pki.Group, "natscertrotate", pki.CertRotateInput{})
+	},
+	Short: "Rotate the NATS server's certificate",
+	Use:   "rotate",
+}
+
 func init() {
 	pkiListCmd.Flags().String("hostname", "", "Only the certificates of this host: the controller's hostname, or an agent's")
 	pkiGetCmd.Flags().String("name", "", "The name of the certificate, such as api or agent-metrics")
 	_ = pkiGetCmd.MarkFlagRequired("name")
 	pkiGetCmd.Flags().String("hostname", "", "The host of the certificate. Empty is the controller's host, which has the certificates of the controller")
-	clicommand.AddCommands(pki.Group, pkiListCmd, pkiGetCmd, pkiRotationCmd, pkiRotateCmd)
+	clicommand.AddCommands(pki.Group, pkiListCmd, pkiGetCmd, pkiRotationCmd, pkiRotateCmd, pkiNatscertrotationCmd, pkiNatscertrotateCmd)
 }

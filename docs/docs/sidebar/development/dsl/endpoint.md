@@ -591,6 +591,14 @@ mockgen mock.
 
 Use: For the pki group, whose key rotation and key rotate methods use it.
 
+### `CertRotation`
+
+Starts and shows the rotation of the NATS server's certificate: the
+\*certrotation.Rotation that startEnrollment makes and runs. A test gives a
+mockgen mock.
+
+Use: For the pki group, whose nats get and nats rotate methods use it.
+
 ### `Vaults`
 
 The vaults of controller.secrets.vaults, by name: each vault's spec, and the

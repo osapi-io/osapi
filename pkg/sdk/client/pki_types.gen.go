@@ -90,3 +90,37 @@ type PKIKeyRotationAgent struct {
 	// The machine ID of the agent.
 	MachineID string `json:"machine_id"`
 }
+
+// PKINATSCertRotation is the PKINATSCertRotation of the spec.
+type PKINATSCertRotation struct {
+	// The admitted agents that the switch waits for: each one that reported within
+	// the grace period.
+	Agents []PKINATSCertRotationAgent `json:"agents,omitempty"`
+
+	// The fingerprint of the certificate that the NATS server serves.
+	Current string `json:"current"`
+
+	// The fingerprint of the certificate that the server switches to. Empty when
+	// no rotation is in progress.
+	Next string `json:"next,omitempty"`
+
+	// When the rotation started.
+	StartedAt time.Time `json:"started_at,omitzero"`
+
+	// When the server switches at the latest: the start and
+	// controller.pki.rotation_grace_period. It switches before, once each agent
+	// trusts the next certificate.
+	SwitchBy time.Time `json:"switch_by,omitzero"`
+}
+
+// PKINATSCertRotationAgent is the PKINATSCertRotationAgent of the spec.
+type PKINATSCertRotationAgent struct {
+	// Whether the agent reports that it trusts the next certificate.
+	HasNext bool `json:"has_next"`
+
+	// The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// The machine ID of the agent.
+	MachineID string `json:"machine_id"`
+}

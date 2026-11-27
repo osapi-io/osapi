@@ -231,3 +231,54 @@ func (s *AgentConfigPublicTestSuite) TestControllerKey() {
 		})
 	}
 }
+
+func (s *AgentConfigPublicTestSuite) TestNATSCert() {
+	ctx := context.Background()
+	rec := pki.CertRecord{Serial: 3, Name: "nats", Current: []byte("a"), Next: []byte("b")}
+	stored, _ := json.Marshal(rec)
+	tests := []struct {
+		name    string
+		state   string
+		setup   func()
+		want    pki.CertRecord
+		wantOK  bool
+		wantErr string
+	}{
+		{name: "no state bucket", state: "", wantErr: "agent state bucket not configured"},
+		{name: "no record: the certificate has not rotated", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.NATSCertStateKey).
+				Return(nil, jetstream.ErrKeyNotFound)
+		}},
+		{name: "the record", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.NATSCertStateKey).
+				Return(s.entry(stored), nil)
+		}, want: rec, wantOK: true},
+		{name: "a bucket that cannot be read", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.NATSCertStateKey).
+				Return(nil, errors.New("nats down"))
+		}, wantErr: "read the certificate record: nats down"},
+		{name: "a record that is not JSON", state: "state", setup: func() {
+			s.nc.EXPECT().
+				KVGet(gomock.Any(), "state", pki.NATSCertStateKey).
+				Return(s.entry([]byte("{")), nil)
+		}, wantErr: "the certificate record"},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.setup != nil {
+				tt.setup()
+			}
+			got, ok, err := s.client(tt.state).NATSCert(ctx)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tt.wantOK, ok)
+			s.Equal(tt.want, got)
+		})
+	}
+}

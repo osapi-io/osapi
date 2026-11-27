@@ -88,6 +88,7 @@ export const OperationID = {
   GetNodeUserSshkey: 'GetNodeUserSshkey',
   GetPKICert: 'GetPKICert',
   GetPKIKeyRotation: 'GetPKIKeyRotation',
+  GetPKINATSCertRotation: 'GetPKINATSCertRotation',
   GetSecret: 'GetSecret',
   GetSecretValue: 'GetSecretValue',
   GetSecretVaults: 'GetSecretVaults',
@@ -145,5 +146,6 @@ export const OperationID = {
   RetryJobByID: 'RetryJobByID',
   RevokeMachine: 'RevokeMachine',
   RotatePKIKey: 'RotatePKIKey',
+  RotatePKINATSCert: 'RotatePKINATSCert',
   UndrainAgent: 'UndrainAgent',
 } as const;

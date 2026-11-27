@@ -75,6 +75,31 @@ type Rotation struct {
 	Agents    []RotationAgent `                                               json:"agents,omitempty"    doc:"The admitted agents that the switch waits for: each one that reported within the grace period."`
 }
 
+// CertRotationInput is the input of nats get: it has no field.
+type CertRotationInput struct{}
+
+// CertRotateInput is the input of nats rotate: it has no field.
+type CertRotateInput struct{}
+
+// CertRotation is the NATS server's certificate and its rotation.
+type CertRotation struct {
+	_         struct{}            `schema:"PKINATSCertRotation" title:"NATS certificate"`
+	Current   string              `                                                      json:"current"             doc:"The fingerprint of the certificate that the NATS server serves."                                                                                              example:"SHA256:4b7d20e1"`
+	Next      string              `                                                      json:"next,omitempty"      doc:"The fingerprint of the certificate that the server switches to. Empty when no rotation is in progress."                                                       example:"SHA256:a83f61c2"`
+	StartedAt time.Time           `                                                      json:"started_at,omitzero" doc:"When the rotation started."`
+	SwitchBy  time.Time           `                                                      json:"switch_by,omitzero"  doc:"When the server switches at the latest: the start and controller.pki.rotation_grace_period. It switches before, once each agent trusts the next certificate."                           label:"Switch by"`
+	Agents    []CertRotationAgent `                                                      json:"agents,omitempty"    doc:"The admitted agents that the switch waits for: each one that reported within the grace period."`
+}
+
+// CertRotationAgent is one agent that the switch of a certificate's
+// rotation waits for.
+type CertRotationAgent struct {
+	_         struct{} `schema:"PKINATSCertRotationAgent" title:"Agent"`
+	Hostname  string   `                                                json:"hostname"   doc:"The hostname of the agent."                                     example:"web-01"`
+	MachineID string   `                                                json:"machine_id" doc:"The machine ID of the agent."                                   example:"d530664edc1c431eb5ef1e9dfd6617a5"`
+	HasNext   bool     `                                                json:"has_next"   doc:"Whether the agent reports that it trusts the next certificate."                                            label:"Has next"`
+}
+
 // RotationAgent is one agent that the switch of a rotation waits for.
 type RotationAgent struct {
 	_         struct{} `schema:"PKIKeyRotationAgent" title:"Agent"`

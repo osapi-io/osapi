@@ -29,7 +29,9 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
@@ -37,9 +39,7 @@ import (
 var (
 	ErrNoCert       = errors.New("no certificate with this name: list shows each")
 	ErrNotMade      = errors.New("not made")
-	ErrOperatorCert = errors.New("the certificate is the operator's cert_file: replace that file")
-	ErrPinned       = errors.New("each join string pins the NATS server's certificate, and each " +
-		"joined agent trusts it: --force rotates it, then make new join tokens and join each agent again")
+	ErrOperatorCert = certrotation.ErrOperatorCert
 )
 
 // List is each certificate of osapi on this host, with its expiry.
@@ -77,7 +77,11 @@ func Get(
 	return info, err
 }
 
-// Rotate makes a new self-signed certificate in place of src's.
+// Rotate makes a new self-signed certificate in place of src's, which its
+// server serves at its next handshake, with no restart. The NATS server's
+// certificate, which each joined agent pins, rotates with an overlap: the
+// controller gives the agents the next certificate, and switches to it when
+// they trust it.
 func Rotate(
 	ctx context.Context,
 	d Deps,
@@ -90,8 +94,8 @@ func Rotate(
 	if !src.SelfSigned {
 		return RotateOutput{}, ErrOperatorCert
 	}
-	if src.Name == "nats" && !in.Force {
-		return RotateOutput{}, ErrPinned
+	if src.Name == "nats" {
+		return rotateNATS(ctx, d, src)
 	}
 	for _, f := range []string{src.CertFile, src.KeyFile} {
 		if err := d.FS.Remove(f); err != nil && !errors.Is(err, fs.ErrNotExist) {
@@ -107,12 +111,54 @@ func Rotate(
 		return RotateOutput{}, err
 	}
 	audit.RecordLocal(ctx, d.Audit, "cert.rotate", src.Name, "fingerprint="+info.Fingerprint)
-	next := "restart the server to serve it"
-	if src.Name == "nats" {
-		next += "; make new join tokens, and join each agent again"
+	next := "the server serves it at its next handshake"
+	if src.Name == "api" {
+		next += "; join tokens made from now carry its fingerprint, and a client on " +
+			"another host that trusts the old one needs the new one as its ca_file"
 	}
 
 	return RotateOutput{Cert: info, Next: next}, nil
+}
+
+// rotateNATS starts the rotation of the NATS server's certificate, on the
+// controller's host: it makes the next certificate beside the current one,
+// and writes the record that gives both to the agents, over NATS as the
+// controller connects. The running controller switches to it when each
+// agent trusts it.
+func rotateNATS(
+	ctx context.Context,
+	d Deps,
+	src pki.CertSource,
+) (RotateOutput, error) {
+	keys := pki.New(d.FS, d.Config.Controller.PKI.KeyDir, "controller")
+	if err := keys.Load(); err != nil {
+		return RotateOutput{}, fmt.Errorf("the controller's key signs the rotation of the NATS "+
+			"server's certificate: run this on the controller's host: %w", err)
+	}
+	info, err := read(d, src)
+	if err != nil {
+		return RotateOutput{}, err
+	}
+	kv, closeKV, err := d.Dial(ctx)
+	if err != nil {
+		return RotateOutput{}, err
+	}
+	defer closeKV()
+	bucket := bus.StateKV(d.Config.Controller.NATS.Namespace, d.Config.NATS.State).Bucket
+	status, err := certrotation.New(certrotation.Config{
+		KV: kv, Bucket: bucket, Keys: keys, Source: src,
+	}).Start(ctx)
+	if err != nil {
+		return RotateOutput{}, err
+	}
+	audit.RecordLocal(ctx, d.Audit, "cert.rotate", src.Name,
+		"fingerprint="+info.Fingerprint+" next="+status.Next)
+
+	return RotateOutput{
+		Cert:     info,
+		NextCert: status.Next,
+		Next:     "each agent trusts the next certificate at its next heartbeat, and the controller switches to it when each agent does, within controller.pki.rotation_grace_period; pki cert get shows the agents that it waits for",
+	}, nil
 }
 
 // find is the certificate named name.

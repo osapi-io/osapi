@@ -55,6 +55,24 @@ var (
 			{Hostname: "web-01", MachineID: "d530664edc1c431eb5ef1e9dfd6617a5"},
 		},
 	}
+	sampleCertRotationStarted = CertRotation{
+		Current:   "SHA256:4b7d20e1c9f8a7b6d5e4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2",
+		Next:      "SHA256:a83f61c2e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8",
+		StartedAt: sampleStarted,
+		SwitchBy:  sampleStarted.Add(24 * time.Hour),
+		Agents: []CertRotationAgent{
+			{Hostname: "web-01", MachineID: "d530664edc1c431eb5ef1e9dfd6617a5"},
+		},
+	}
+	sampleCertRotation = CertRotation{
+		Current:   sampleCertRotationStarted.Current,
+		Next:      sampleCertRotationStarted.Next,
+		StartedAt: sampleStarted,
+		SwitchBy:  sampleCertRotationStarted.SwitchBy,
+		Agents: []CertRotationAgent{
+			{Hostname: "web-01", MachineID: "d530664edc1c431eb5ef1e9dfd6617a5", HasNext: true},
+		},
+	}
 	sampleRotation = Rotation{
 		Current:   sampleRotationStarted.Current,
 		Next:      sampleRotationStarted.Next,

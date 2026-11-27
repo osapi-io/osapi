@@ -13,10 +13,65 @@ import (
 	context "context"
 	reflect "reflect"
 
+	certrotation "github.com/osapi-io/osapi/internal/controller/certrotation"
 	keyrotation "github.com/osapi-io/osapi/internal/controller/keyrotation"
 	job "github.com/osapi-io/osapi/internal/job"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockCertRotator is a mock of CertRotator interface.
+type MockCertRotator struct {
+	ctrl     *gomock.Controller
+	recorder *MockCertRotatorMockRecorder
+	isgomock struct{}
+}
+
+// MockCertRotatorMockRecorder is the mock recorder for MockCertRotator.
+type MockCertRotatorMockRecorder struct {
+	mock *MockCertRotator
+}
+
+// NewMockCertRotator creates a new mock instance.
+func NewMockCertRotator(ctrl *gomock.Controller) *MockCertRotator {
+	mock := &MockCertRotator{ctrl: ctrl}
+	mock.recorder = &MockCertRotatorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCertRotator) EXPECT() *MockCertRotatorMockRecorder {
+	return m.recorder
+}
+
+// Start mocks base method.
+func (m *MockCertRotator) Start(ctx context.Context) (certrotation.Status, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Start", ctx)
+	ret0, _ := ret[0].(certrotation.Status)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockCertRotatorMockRecorder) Start(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCertRotator)(nil).Start), ctx)
+}
+
+// Status mocks base method.
+func (m *MockCertRotator) Status(ctx context.Context) (certrotation.Status, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Status", ctx)
+	ret0, _ := ret[0].(certrotation.Status)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Status indicates an expected call of Status.
+func (mr *MockCertRotatorMockRecorder) Status(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockCertRotator)(nil).Status), ctx)
+}
 
 // MockRotator is a mock of Rotator interface.
 type MockRotator struct {

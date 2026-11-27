@@ -37,6 +37,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 
 	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
@@ -141,11 +142,17 @@ func init() {
 		}
 	})
 	command.Provide(pkicert.Group, func() pkicert.Deps {
+		keys := pkiKeyDeps()
+
 		return pkicert.Deps{
-			FS:    osfs.NewWithNoIdm(),
-			Certs: func() []pki.CertSource { return config.CertSources(appConfig) },
-			Now:   time.Now,
-			Audit: localAudit,
+			FS:     osfs.NewWithNoIdm(),
+			Certs:  func() []pki.CertSource { return config.CertSources(appConfig) },
+			Now:    time.Now,
+			Audit:  localAudit,
+			Config: appConfig,
+			Dial: func(ctx context.Context) (certrotation.KV, func(), error) {
+				return keys.Dial(ctx)
+			},
 		}
 	})
 	command.Provide(agentservice.Group, func() agentservice.Deps {

@@ -140,6 +140,50 @@ components:
         - machine_id
         - has_next
       type: object
+    PKINATSCertRotation:
+      properties:
+        agents:
+          description: 'The admitted agents that the switch waits for: each one that reported within the grace period.'
+          items:
+            $ref: '#/components/schemas/PKINATSCertRotationAgent'
+          type: array
+        current:
+          description: The fingerprint of the certificate that the NATS server serves.
+          example: SHA256:4b7d20e1
+          type: string
+        next:
+          description: The fingerprint of the certificate that the server switches to. Empty when no rotation is in progress.
+          example: SHA256:a83f61c2
+          type: string
+        started_at:
+          description: When the rotation started.
+          format: date-time
+          type: string
+        switch_by:
+          description: 'When the server switches at the latest: the start and controller.pki.rotation_grace_period. It switches before, once each agent trusts the next certificate.'
+          format: date-time
+          type: string
+      required:
+        - current
+      type: object
+    PKINATSCertRotationAgent:
+      properties:
+        has_next:
+          description: Whether the agent reports that it trusts the next certificate.
+          type: boolean
+        hostname:
+          description: The hostname of the agent.
+          example: web-01
+          type: string
+        machine_id:
+          description: The machine ID of the agent.
+          example: d530664edc1c431eb5ef1e9dfd6617a5
+          type: string
+      required:
+        - hostname
+        - machine_id
+        - has_next
+      type: object
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT
@@ -365,8 +409,93 @@ paths:
         - doc: Rotate the controller's key
           input: {}
       x-osapi-method: rotate
+  /api/pki/nats:
+    get:
+      description: Shows the certificate that the NATS server serves, and during a rotation the certificate that it switches to, when it switches at the latest, and each admitted agent that the switch waits for, with whether it trusts the next certificate.
+      operationId: GetPKINATSCertRotation
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKINATSCertRotation'
+          description: The rotation of the NATS server's certificate.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:read
+      summary: Show the rotation of the NATS server's certificate
+      tags:
+        - pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Show the rotation of the NATS server's certificate
+          input: {}
+      x-osapi-method: natscertrotation
+    post:
+      description: Starts the rotation of the NATS server's self-signed certificate, which each joined agent pins, with no restart and no new join. The controller makes the next certificate beside the current one, and signs a record that gives both to the agents. Each agent trusts the next one at its next heartbeat. The controller renames it into place when each admitted agent that reported within controller.pki.rotation_grace_period trusts it, or when the grace period ends, and NATS serves it at its next handshake. A rotation in progress is not started again. It runs on the controller's host, which must hold the NATS server's certificate, and refuses a certificate of the operator's cert_file.
+      operationId: RotatePKINATSCert
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKINATSCertRotation'
+          description: The rotation that started, or the one in progress.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'The NATS server serves a certificate of the operator''s cert_file: replace that file.'
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:write
+      summary: Rotate the NATS server's certificate
+      tags:
+        - pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Rotate the NATS server's certificate
+          input: {}
+      x-osapi-method: natscertrotate
 tags:
-  - description: The certificates of the fleet, and the rotation of the controller's key.
+  - description: The certificates of the fleet, and the rotation of the controller's key and of the NATS server's certificate.
     name: pki_operations
     x-displayName: PKI
     x-osapi-area: fleet

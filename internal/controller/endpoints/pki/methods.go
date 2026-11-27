@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	"github.com/osapi-io/osapi/internal/pki"
@@ -144,6 +145,51 @@ func KeyRotation(
 	}
 
 	return rotationOf(s), nil
+}
+
+// RotateNATSCert starts the rotation of the NATS server's certificate, or
+// shows the one in progress.
+func RotateNATSCert(
+	ctx context.Context,
+	d Deps,
+	_ CertRotateInput,
+) (CertRotation, error) {
+	s, err := d.CertRotation.Start(ctx)
+	if err != nil {
+		return CertRotation{}, err
+	}
+
+	return certRotationOf(s), nil
+}
+
+// NATSCertRotation is the rotation of the NATS server's certificate now.
+func NATSCertRotation(
+	ctx context.Context,
+	d Deps,
+	_ CertRotationInput,
+) (CertRotation, error) {
+	s, err := d.CertRotation.Status(ctx)
+	if err != nil {
+		return CertRotation{}, err
+	}
+
+	return certRotationOf(s), nil
+}
+
+// certRotationOf is s in the API's shape.
+func certRotationOf(
+	s certrotation.Status,
+) CertRotation {
+	out := CertRotation{
+		Current: s.Current, Next: s.Next, StartedAt: s.StartedAt, SwitchBy: s.SwitchBy,
+	}
+	for _, a := range s.Agents {
+		out.Agents = append(out.Agents, CertRotationAgent{
+			Hostname: a.Hostname, MachineID: a.MachineID, HasNext: a.HasNext,
+		})
+	}
+
+	return out
 }
 
 // rotationOf is s in the API's shape.

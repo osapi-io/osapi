@@ -1,0 +1,59 @@
+---
+id: rotate-pkinats-cert
+title: "Rotate the NATS server's certificate"
+description: "Starts the rotation of the NATS server's self-signed certificate, which each joined agent pins, with no restart and no new join. The controller makes the next certificate beside the current one, and signs a record that gives both to the agents. Each agent trusts the next one at its next heartbeat. The controller renames it into place when each admitted agent that reported within controller.pki.rotation_grace_period trusts it, or when the grace period ends, and NATS serves it at its next handshake. A rotation in progress is not started again. It runs on the controller's host, which must hold the NATS server's certificate, and refuses a certificate of the operator's cert_file."
+sidebar_label: "Rotate the NATS server's certificate"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Rotate the NATS server's certificate"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/pki/nats"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Starts the rotation of the NATS server's self-signed certificate, which each joined agent pins, with no restart and no new join. The controller makes the next certificate beside the current one, and signs a record that gives both to the agents. Each agent trusts the next one at its next heartbeat. The controller renames it into place when each admitted agent that reported within controller.pki.rotation_grace_period trusts it, or when the grace period ends, and NATS serves it at its next handshake. A rotation in progress is not started again. It runs on the controller's host, which must hold the NATS server's certificate, and refuses a certificate of the operator's cert_file.
+
+<ParamsDetails>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./rotate-pkinats-cert.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./rotate-pkinats-cert.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

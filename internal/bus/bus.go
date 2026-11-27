@@ -67,7 +67,7 @@ func ConnectionOptions(
 	conn config.NATSConnection,
 	name string,
 ) (*natsclient.Options, error) {
-	tlsConfig, err := conn.TLS.Dial()
+	tlsConfig, err := conn.TLS.Dial(conn.Host)
 	if err != nil {
 		return nil, fmt.Errorf("nats tls: %w", err)
 	}

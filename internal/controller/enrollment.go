@@ -42,6 +42,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/natsjwt"
@@ -59,6 +60,21 @@ const defaultControllerKeyGrace = 24 * time.Hour
 type enrollment struct {
 	watcher  *admission.Watcher
 	rotation *keyrotation.Rotation
+	certs    *certrotation.Rotation
+}
+
+// natsCertSource is the NATS server's certificate in cfg.
+func natsCertSource(
+	cfg config.Config,
+) pki.CertSource {
+	var out pki.CertSource
+	for _, src := range config.CertSources(cfg) {
+		if src.Name == "nats" {
+			out = src
+		}
+	}
+
+	return out
 }
 
 // startEnrollment loads or makes the controller keypair, and starts the
@@ -204,7 +220,22 @@ func startEnrollment(
 	})
 	background(ctx, log, "controller key rotation", rotation.Run)
 
-	return enrollment{watcher: watcher, rotation: rotation}, nil
+	// The NATS server's self-signed certificate rotates with no new join of
+	// the agents, when it is on this host: the grace period is the overlap,
+	// in which the agents trust both certificates.
+	certs := certrotation.New(certrotation.Config{
+		KV:       conn.NATS,
+		Bucket:   bus.StateKV(namespace, cfg.NATS.State).Bucket,
+		Keys:     keys,
+		Source:   natsCertSource(cfg),
+		Admitted: watcher,
+		Seen:     conn.Jobs,
+		Grace:    grace,
+		Logger:   log,
+	})
+	background(ctx, log, "NATS certificate rotation", certs.Run)
+
+	return enrollment{watcher: watcher, rotation: rotation, certs: certs}, nil
 }
 
 // errNoUserKey is a join in operator mode from an agent that sent no NATS

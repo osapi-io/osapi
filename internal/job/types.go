@@ -375,6 +375,10 @@ type AgentRegistration struct {
 	// switches to, which the agent has from the rotation record: empty when
 	// no rotation is in progress, or the agent has not read it yet.
 	ControllerKeyNext string `json:"controller_key_next,omitempty"`
+	// NATSCertNext is the fingerprint of the NATS server's next certificate,
+	// which the agent trusts during a rotation of it: empty when no rotation
+	// is in progress, or the agent does not trust it yet.
+	NATSCertNext string `json:"nats_cert_next,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
 	// Signature is the agent's Ed25519 signature over the routing fields of
@@ -414,6 +418,10 @@ type AgentInfo struct {
 	// ControllerKeyNext is the fingerprint of the key that the controller
 	// switches to, as the agent reports it during a rotation.
 	ControllerKeyNext string `json:"controller_key_next,omitempty"`
+	// NATSCertNext is the fingerprint of the NATS server's next certificate,
+	// which the agent trusts during a rotation of it: empty when no rotation
+	// is in progress, or the agent does not trust it yet.
+	NATSCertNext string `json:"nats_cert_next,omitempty"`
 	// MissingPrograms are the programs that the agent's behaviors declare
 	// and that the host lacks.
 	MissingPrograms []string `json:"missing_programs,omitempty"`

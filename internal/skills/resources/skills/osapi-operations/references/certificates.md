@@ -11,7 +11,7 @@ directory of its component at its first start: `api.crt` and
 osapi pki cert list --json                 # each certificate, expiry, key, FIPS
 osapi pki cert get --name nats --json      # names, fingerprint, signature
 osapi pki cert rotate --name api --json    # a new self-signed certificate
-osapi pki cert rotate --name nats --force  # cuts off each joined agent
+osapi pki cert rotate --name nats --json   # with an overlap, on the controller's host
 ```
 
 Each of the five is in the list, with a `state`: `ok`; `not made`, when that
@@ -45,8 +45,27 @@ A metrics certificate follows the host's name: a server that starts on a renamed
 host makes a new one for its new name. Nothing pins it. The API's and NATS's
 certificates keep the names that they were made with.
 
-Rotate refuses a `cert_file` of the operator: replace that file. The server
-serves a new certificate at its next start. Each join string pins the NATS
-server's certificate, and each joined agent trusts it, so after
-`rotate --name nats --force` make new join tokens and join each agent again. A
-CLI on another host needs the new `api.crt` as `controller.client.tls.ca_file`.
+Rotate refuses a `cert_file` of the operator: replace that file. Each server
+reads its certificate files again when they change, at its next handshake, so a
+new certificate takes effect with no restart, also one of the operator's.
+
+Each joined agent pins the NATS server's certificate, so `rotate --name nats`
+rotates it with an overlap. It makes `nats.next.crt` beside the current one, and
+writes a record to the state bucket that the controller's key signs. Each agent
+adds the next certificate to the ones it trusts at its next heartbeat;
+`osapi client agent get` shows it as `nats_cert_next`. When each admitted agent
+trusts it, or `controller.pki.rotation_grace_period` ends, the controller
+renames it into place. Run it on the controller's host: the controller's key
+signs the record.
+
+From any machine with a client config, the API starts the same rotation and
+shows its progress, with each agent that the switch waits for:
+
+```sh
+osapi client pki nats rotate --json   # start it, or show the one in progress
+osapi client pki nats get --json      # current, next, and each agent's has_next
+```
+
+A rotation of `api` changes the fingerprint that join tokens carry: a token made
+before it no longer joins. A CLI on another host needs the new `api.crt` as
+`controller.client.tls.ca_file`.

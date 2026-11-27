@@ -68,3 +68,37 @@ func (c *Client) controllerKey(
 
 	return rec, true, nil
 }
+
+// NATSCert is the record of the rotation of the NATS server's certificate,
+// in a pki.nats_cert.get span. With no record, it is the zero record and
+// false: the certificate has not rotated.
+func (c *Client) NATSCert(
+	ctx context.Context,
+) (pki.CertRecord, bool, error) {
+	ctx, span := opspan.Start(ctx, tracerName, "pki.nats_cert.get")
+	rec, ok, err := c.natsCert(ctx)
+
+	return rec, ok, opspan.End(span, err)
+}
+
+// natsCert reads the record.
+func (c *Client) natsCert(
+	ctx context.Context,
+) (pki.CertRecord, bool, error) {
+	if c.stateBucket == "" {
+		return pki.CertRecord{}, false, fmt.Errorf("agent state bucket not configured")
+	}
+	entry, err := c.natsClient.KVGet(ctx, c.stateBucket, pki.NATSCertStateKey)
+	if errors.Is(err, jetstream.ErrKeyNotFound) {
+		return pki.CertRecord{}, false, nil
+	}
+	if err != nil {
+		return pki.CertRecord{}, false, fmt.Errorf("read the certificate record: %w", err)
+	}
+	var rec pki.CertRecord
+	if err := json.Unmarshal(entry.Value(), &rec); err != nil {
+		return pki.CertRecord{}, false, fmt.Errorf("the certificate record: %w", err)
+	}
+
+	return rec, true, nil
+}

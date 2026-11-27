@@ -9,7 +9,7 @@ import (
 )
 
 // PkiService calls the API's Pki group: the certificates of the fleet, and the
-// rotation of the controller's key.
+// rotation of the controller's key and of the NATS server's certificate.
 type PkiService struct {
 	client *Client
 }
@@ -97,4 +97,40 @@ func (s *PkiService) Rotate(
 	ctx context.Context,
 ) (*Response[PKIKeyRotation], error) {
 	return send[PKIKeyRotation](ctx, s.client, http.MethodPost, "/api/pki/key", nil, nil)
+}
+
+// Natscertrotation is the operation GetPKINATSCertRotation: show the rotation
+// of the NATS server's certificate.
+//
+// Shows the certificate that the NATS server serves, and during a rotation the
+// certificate that it switches to, when it switches at the latest, and each
+// admitted agent that the switch waits for, with whether it trusts the next
+// certificate.
+//
+// It sends GET /api/pki/nats, and needs the permission pki:read.
+func (s *PkiService) Natscertrotation(
+	ctx context.Context,
+) (*Response[PKINATSCertRotation], error) {
+	return send[PKINATSCertRotation](ctx, s.client, http.MethodGet, "/api/pki/nats", nil, nil)
+}
+
+// Natscertrotate is the operation RotatePKINATSCert: rotate the NATS server's
+// certificate.
+//
+// Starts the rotation of the NATS server's self-signed certificate, which each
+// joined agent pins, with no restart and no new join. The controller makes the
+// next certificate beside the current one, and signs a record that gives both
+// to the agents. Each agent trusts the next one at its next heartbeat. The
+// controller renames it into place when each admitted agent that reported
+// within controller.pki.rotation_grace_period trusts it, or when the grace
+// period ends, and NATS serves it at its next handshake. A rotation in
+// progress is not started again. It runs on the controller's host, which must
+// hold the NATS server's certificate, and refuses a certificate of the
+// operator's cert_file.
+//
+// It sends POST /api/pki/nats, and needs the permission pki:write.
+func (s *PkiService) Natscertrotate(
+	ctx context.Context,
+) (*Response[PKINATSCertRotation], error) {
+	return send[PKINATSCertRotation](ctx, s.client, http.MethodPost, "/api/pki/nats", nil, nil)
 }

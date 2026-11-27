@@ -36,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	admissionEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
@@ -70,6 +71,7 @@ type handlerDeps struct {
 	fileStateBucket string
 	admission       *admission.Watcher
 	keyRotation     *keyrotation.Rotation
+	certRotation    *certrotation.Rotation
 	vaults          *vault.Set
 	// version is the build version of the binary.
 	version string
@@ -187,10 +189,11 @@ func pkiDeps(
 	srcs := config.CertSourcesOf(d.cfg, "controller", "nats")
 
 	return pkiEndpoint.Deps{
-		Agents:   d.jobs,
-		Hostname: host,
-		Local:    func() []pki.Cert { return pki.ReadCerts(fsys, srcs, time.Now()) },
-		Rotation: d.keyRotation,
+		Agents:       d.jobs,
+		Hostname:     host,
+		Local:        func() []pki.Cert { return pki.ReadCerts(fsys, srcs, time.Now()) },
+		Rotation:     d.keyRotation,
+		CertRotation: d.certRotation,
 	}
 }
 

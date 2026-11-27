@@ -806,7 +806,7 @@ func Services() []ServiceSpec {
 		Node: true,
 	}, {
 		Area: "fleet",
-		Doc:  "The certificates of the fleet, and the rotation of the controller's key.",
+		Doc:  "The certificates of the fleet, and the rotation of the controller's key and of the NATS server's certificate.",
 		Methods: []MethodSpec{{
 			Doc:        "List the certificates of the fleet",
 			Examples:   2,
@@ -835,6 +835,20 @@ func Services() []ServiceSpec {
 			Name:       "Rotate",
 			Permission: "pki:write",
 			Result:     "PKIKeyRotation",
+		}, {
+			Doc:        "Show the rotation of the NATS server's certificate",
+			Examples:   1,
+			HTTP:       "GET /api/pki/nats",
+			Name:       "Natscertrotation",
+			Permission: "pki:read",
+			Result:     "PKINATSCertRotation",
+		}, {
+			Doc:        "Rotate the NATS server's certificate",
+			Examples:   1,
+			HTTP:       "POST /api/pki/nats",
+			Name:       "Natscertrotate",
+			Permission: "pki:write",
+			Result:     "PKINATSCertRotation",
 		}},
 		Name: "Pki",
 		Node: false,

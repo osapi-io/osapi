@@ -45,9 +45,8 @@ Show and rotate the TLS certificates of osapi on this host.
 | Description | Make a new self-signed certificate in place of the old one |
 | Refuses     | no name, a name of more than 64 characters                 |
 
-### Flags (2)
+### Flags (1)
 
-| FLAG    | TYPE   | VALIDATE        | HELP                                                                                            |
-| ------- | ------ | --------------- | ----------------------------------------------------------------------------------------------- |
-| --name  | string | required,max=64 | The name of the certificate, as list shows it, such as api or nats.                             |
-| --force | bool   | omitempty       | Rotate the NATS server's certificate, which each join string pins and each joined agent trusts. |
+| FLAG   | TYPE   | VALIDATE        | HELP                                                                |
+| ------ | ------ | --------------- | ------------------------------------------------------------------- |
+| --name | string | required,max=64 | The name of the certificate, as list shows it, such as api or nats. |

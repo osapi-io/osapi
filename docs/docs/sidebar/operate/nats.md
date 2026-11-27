@@ -60,10 +60,24 @@ Do these steps on the host of NATS and the controller.
 1. NATS serves TLS by default. With no `cert_file`, the server makes a
    self-signed certificate, `nats.crt`, in `nats.server.key_dir` at its first
    start. The controller and an agent on the same host trust it with no setting.
-   `osapi pki cert get --name nats` shows it. Each join string pins it, so
-   `osapi pki cert rotate --name nats` needs `--force`, then new join tokens and
-   a join again of each agent on another host. To serve a certificate of your
-   own:
+   `osapi pki cert get --name nats` shows it. Each joined agent pins it, so
+   `osapi pki cert rotate --name nats`, on the controller's host, rotates it
+   with an overlap and no restart:
+
+   - It makes the next certificate, `nats.next.crt`, beside the current one, and
+     writes a record to the state bucket that the controller's key signs.
+   - At its next heartbeat, each agent adds the next certificate to the ones
+     that it trusts, and `osapi client agent get` shows it as `nats_cert_next`.
+   - When each admitted agent trusts it, or
+     `controller.pki.rotation_grace_period` ends, the controller renames it into
+     place. NATS serves it at its next handshake, and the agents' connections
+     stay up.
+   - An agent that was away for the whole overlap trusts the new certificate
+     from the record at its next heartbeat, if it still has a connection.
+     Otherwise, it joins again.
+
+   A certificate of your own, in `cert_file`, is served the same way when you
+   replace its files: NATS reads them again at its next handshake. To serve one:
 
    ```yaml
    nats:
