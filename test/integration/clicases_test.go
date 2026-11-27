@@ -134,6 +134,10 @@ type cliPolicy struct {
 	// write is a local command that changes the server's state, which runs
 	// with OSAPI_INTEGRATION_WRITES=1.
 	write bool
+	// madeByWrite is a read whose item only a write example of the same run
+	// makes, such as the file that file upload stores. It runs with
+	// OSAPI_INTEGRATION_WRITES=1, as that write does (osapi-io/osapi#1612).
+	madeByWrite bool
 	// env is what the command runs with besides the client's environment,
 	// such as the NATS user that it connects as.
 	env []string
@@ -211,6 +215,11 @@ var cliPolicies = map[string]cliPolicy{
 	"pki key rotate": {host: true, write: true},
 	"pki list":       {host: true},
 	"pki cert get":   {host: true},
+	// The file that file upload stores, and the secret that secret set
+	// stores.
+	"client file get":      {madeByWrite: true},
+	"client secret get":    {madeByWrite: true},
+	"client secret reveal": {madeByWrite: true},
 }
 
 // undo is a command that undoes an example on the agent that the other

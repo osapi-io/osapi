@@ -126,6 +126,8 @@ func (s *CommandSmokeSuite) TestExamples() {
 					s.T().Skip(p.skip)
 				case (p.write || c.api && c.verb != "GET") && !runWrites:
 					s.T().Skip("a write: set OSAPI_INTEGRATION_WRITES=1")
+				case p.madeByWrite && !runWrites:
+					s.T().Skip("reads what a write makes: set OSAPI_INTEGRATION_WRITES=1")
 				}
 				// A command that reads the files of a component on its host
 				// runs against a fixture server of the suite's own when the
