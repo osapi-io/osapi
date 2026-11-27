@@ -124,6 +124,14 @@ func TestMain(
 		os.Exit(runAgainst(m, file))
 	}
 
+	// The suite's own server keeps its vault key in its directory, so a
+	// user that is not root runs it too.
+	configPath, err = writeConfig(tempDir, false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
 	t := authtoken.New(nil)
 	token, err = t.Generate(signingKey, []types.Role{types.RoleAdmin}, "integration@test", nil, nil)
 	if err != nil {
@@ -260,11 +268,19 @@ func hostEnv() []string {
 // self-signed api.crt, once the controller made it, besides the system's
 // roots.
 func apiClient() *http.Client {
+	return apiClientFor(filepath.Join(tempDir, "pki", "controller", "api.crt"))
+}
+
+// apiClientFor is an HTTP client that trusts the certificate in certFile,
+// once a controller made it, besides the system's roots.
+func apiClientFor(
+	certFile string,
+) *http.Client {
 	pool, _ := x509.SystemCertPool()
 	if pool == nil {
 		pool = x509.NewCertPool()
 	}
-	if pem, err := os.ReadFile(filepath.Join(tempDir, "pki", "controller", "api.crt")); err == nil {
+	if pem, err := os.ReadFile(certFile); err == nil {
 		pool.AppendCertsFromPEM(pem)
 	}
 	t := http.DefaultTransport.(*http.Transport).Clone()
@@ -354,6 +370,10 @@ func runCLIEnv(
 	fullArgs := append([]string{"-f", configPath}, args...)
 	cmd := exec.Command(binaryPath, fullArgs...)
 	cmd.Env = append(clientEnv(), env...)
+	if hostTarget != nil {
+		cmd = exec.Command(binaryPath, append([]string{"-f", hostTarget.cfg}, args...)...)
+		cmd.Env = append(append([]string{}, hostTarget.env...), env...)
+	}
 	cmd.Stdin = strings.NewReader(stdin)
 
 	var stdout, stderr bytes.Buffer

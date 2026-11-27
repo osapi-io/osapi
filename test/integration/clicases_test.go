@@ -138,17 +138,19 @@ type cliPolicy struct {
 }
 
 const (
-	skipProcess = "a process that runs until it stops; the suite starts its server with " +
-		"osapi start, and a second server of its own would run this one"
-	skipAdmission = "changes the admission of a machine, and the suite has no machine to spend: " +
-		"each other test needs its agent, and a second agent of its own would run it"
+	skipProcess = "a process that runs until it stops: the join suite's fixture server runs " +
+		"it, with a short life"
+	skipAdmission = "changes the admission of a machine, and each other test needs the suite's " +
+		"agent: the join suite runs it against a fixture server of its own"
 	skipScaffold = "writes the source of a definition into a checkout: the scaffold checks of the " +
 		"justfile run it in a copy"
-	skipService = "installs or removes a system service on the host, which the suite's own agent " +
-		"runs as: a lab VM or a second agent would run it"
-	// issueSecondServer is the issue of the commands that need a second
-	// server or a second agent of the suite's own.
-	issueSecondServer = "osapi-io/osapi#1536"
+	skipService = "installs or removes a system service on the host: the agent service suite " +
+		"installs one with a fixture's join string, as root on Linux"
+	// joinSuite runs the admission commands and the processes against a
+	// fixture server of its own.
+	joinSuite = "JoinSuite in join_test.go, against the fixture of fixture_test.go"
+	// serviceSuite installs and removes the agent's service.
+	serviceSuite = "AgentServiceSuite in agentservice_test.go"
 	// scaffoldChecks are the recipes that run a scaffold in a copy.
 	scaffoldChecks = "just behavior-scaffold-check, endpoint-scaffold-check and command-scaffold-check"
 )
@@ -159,15 +161,15 @@ var cliPolicies = map[string]cliPolicy{
 		skip:      "a process that runs until it stops: TestMain starts the suite's server with it",
 		elsewhere: "TestMain in integration_test.go",
 	},
-	"agent start":             {skip: skipProcess, issue: issueSecondServer},
-	"controller start":        {skip: skipProcess, issue: issueSecondServer},
-	"nats start":              {skip: skipProcess, issue: issueSecondServer},
-	"client admission admit":  {skip: skipAdmission, issue: issueSecondServer},
-	"client admission reject": {skip: skipAdmission, issue: issueSecondServer},
-	"client admission revoke": {skip: skipAdmission, issue: issueSecondServer},
-	"client admission delete": {skip: skipAdmission, issue: issueSecondServer},
-	"agent service install":   {skip: skipService, issue: issueSecondServer},
-	"agent service uninstall": {skip: skipService, issue: issueSecondServer},
+	"agent start":             {skip: skipProcess, elsewhere: joinSuite},
+	"controller start":        {skip: skipProcess, elsewhere: joinSuite},
+	"nats start":              {skip: skipProcess, elsewhere: joinSuite},
+	"client admission admit":  {skip: skipAdmission, elsewhere: joinSuite},
+	"client admission reject": {skip: skipAdmission, elsewhere: joinSuite},
+	"client admission revoke": {skip: skipAdmission, elsewhere: joinSuite},
+	"client admission delete": {skip: skipAdmission, elsewhere: joinSuite},
+	"agent service install":   {skip: skipService, elsewhere: serviceSuite},
+	"agent service uninstall": {skip: skipService, elsewhere: serviceSuite},
 	"dsl behavior create":     {skip: skipScaffold, elsewhere: scaffoldChecks},
 	"dsl endpoint create":     {skip: skipScaffold, elsewhere: scaffoldChecks},
 	"dsl command create":      {skip: skipScaffold, elsewhere: scaffoldChecks},

@@ -50,10 +50,26 @@ import (
 type CommandSmokeSuite struct {
 	suite.Suite
 	fx *fixtures
+	// host is the fixture server of the host commands against a
+	// deployment.
+	host *fixtureServer
+	// t is the suite's own T, which outlives each subtest.
+	t *testing.T
 }
 
 func (s *CommandSmokeSuite) SetupSuite() {
+	s.t = s.T()
 	s.fx = &fixtures{s: s, dir: s.T().TempDir(), made: map[string]string{}}
+}
+
+// hostFixture is the fixture server that the host commands run against
+// when the suite runs against a deployment: started at the first one.
+func (s *CommandSmokeSuite) hostFixture() *fixtureServer {
+	if s.host == nil {
+		s.host = startFixture(s.t, true)
+	}
+
+	return s.host
 }
 
 func (s *CommandSmokeSuite) TearDownSuite() {
@@ -100,11 +116,15 @@ func (s *CommandSmokeSuite) TestExamples() {
 				switch {
 				case p.skip != "":
 					s.T().Skip(p.skip)
-				case p.host && deployment():
-					s.T().
-						Skip("reads the files of a component on its host: runs against the suite's own server")
 				case (p.write || c.api && c.verb != "GET") && !runWrites:
 					s.T().Skip("a write: set OSAPI_INTEGRATION_WRITES=1")
+				}
+				// A command that reads the files of a component on its host
+				// runs against a fixture server of the suite's own when the
+				// suite runs against a deployment, whose files are elsewhere.
+				if p.host && deployment() {
+					hostTarget = s.hostFixture()
+					defer func() { hostTarget = nil }()
 				}
 				words, stdin := s.fx.example(c, flags)
 				args := append(strings.Fields(c.path), words...)

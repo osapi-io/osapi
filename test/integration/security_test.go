@@ -41,15 +41,31 @@ import (
 // SecurityDefaultsSuite checks the defaults of osapi-io/osapi#1413 from the
 // outside, as an attacker on the network sees them: TLS on each port, NATS
 // auth, and the API's tokens and roles. It runs against the suite's own
-// server, whose ports it knows.
+// server, whose ports it knows, and against a fixture server of its own
+// when the suite runs against a deployment.
 type SecurityDefaultsSuite struct {
 	suite.Suite
+
+	dir      string
+	base     string
+	apiPort  int
+	natsPort int
 }
 
 func (s *SecurityDefaultsSuite) SetupSuite() {
-	if os.Getenv("OSAPI_INTEGRATION_OSAPIFILE") != "" {
-		s.T().Skip("checks the suite's own server, not a deployment such as the lab's")
+	s.dir, s.apiPort, s.natsPort = tempDir, apiPort, natsPort
+	// A deployment's server, such as the lab's, has its own config: the
+	// suite checks the defaults on a fixture server of its own there.
+	if deployment() {
+		f := startFixture(s.T(), true)
+		s.dir, s.apiPort, s.natsPort = f.dir, f.apiPort, f.natsPort
 	}
+	s.base = fmt.Sprintf("https://127.0.0.1:%d", s.apiPort)
+}
+
+// client is an HTTP client that trusts the API of the server under test.
+func (s *SecurityDefaultsSuite) client() *http.Client {
+	return apiClientFor(filepath.Join(s.dir, "pki", "controller", "api.crt"))
 }
 
 // get is the status of a GET of url with token, with client.
@@ -82,45 +98,45 @@ func (s *SecurityDefaultsSuite) tokenFor(
 }
 
 func (s *SecurityDefaultsSuite) TestAPI() {
-	health := controllerURL + "/api/health/ready"
-	audit := controllerURL + "/api/audit"
+	health := s.base + "/api/health/ready"
+	audit := s.base + "/api/audit"
 	other := authtoken.Key{ID: "other", Secret: "0123456789abcdef0123456789abcdef0123456789abcdef"}
 
 	s.Run("plain HTTP to the API is refused", func() {
-		plain := fmt.Sprintf("http://127.0.0.1:%d/api/health/ready", apiPort)
+		plain := fmt.Sprintf("http://127.0.0.1:%d/api/health/ready", s.apiPort)
 		s.Equal(http.StatusBadRequest, s.get(&http.Client{Timeout: 5 * time.Second}, plain, ""))
 	})
 	s.Run("HTTPS with the self-signed certificate is served", func() {
-		s.Equal(http.StatusOK, s.get(apiClient(), health, ""))
+		s.Equal(http.StatusOK, s.get(s.client(), health, ""))
 	})
 	s.Run("HTTPS that does not trust the certificate is refused by the client", func() {
 		_, err := (&http.Client{Timeout: 5 * time.Second}).Get(health)
 		s.ErrorContains(err, "certificate")
 	})
 	s.Run("no token is 401", func() {
-		s.Equal(http.StatusUnauthorized, s.get(apiClient(), audit, ""))
+		s.Equal(http.StatusUnauthorized, s.get(s.client(), audit, ""))
 	})
 	s.Run("a token of another signing key is 401", func() {
 		s.Equal(
 			http.StatusUnauthorized,
-			s.get(apiClient(), audit, s.tokenFor(other, types.RoleAdmin)),
+			s.get(s.client(), audit, s.tokenFor(other, types.RoleAdmin)),
 		)
 	})
 	s.Run("a role without the permission is 403", func() {
 		s.Equal(
 			http.StatusForbidden,
-			s.get(apiClient(), audit, s.tokenFor(signingKey, types.RoleObserver)),
+			s.get(s.client(), audit, s.tokenFor(signingKey, types.RoleObserver)),
 		)
 	})
 	s.Run("a role with the permission is 200", func() {
-		s.Equal(http.StatusOK, s.get(apiClient(), audit, s.tokenFor(signingKey, types.RoleAuditor)))
+		s.Equal(http.StatusOK, s.get(s.client(), audit, s.tokenFor(signingKey, types.RoleAuditor)))
 	})
 }
 
 func (s *SecurityDefaultsSuite) TestNATS() {
-	url := fmt.Sprintf("nats://127.0.0.1:%d", natsPort)
+	url := fmt.Sprintf("nats://127.0.0.1:%d", s.natsPort)
 	pool := x509.NewCertPool()
-	pem, err := os.ReadFile(filepath.Join(tempDir, "pki", "nats", "nats.crt"))
+	pem, err := os.ReadFile(filepath.Join(s.dir, "pki", "nats", "nats.crt"))
 	s.Require().NoError(err, "the NATS server made its self-signed certificate")
 	s.Require().True(pool.AppendCertsFromPEM(pem))
 	secure := nats.Secure(
