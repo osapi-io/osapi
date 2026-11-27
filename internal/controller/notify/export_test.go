@@ -58,6 +58,9 @@ func WatcherSetPrev(
 	prev map[string]map[types.ConditionType]*conditionState,
 ) {
 	w.prev = prev
+	// A test that sets prev starts with no names and no expired keys too.
+	w.names = make(map[string]string)
+	w.unreachable = make(map[string]bool)
 }
 
 // WatcherSetPrevEntry sets a single key in the prev state map for test setup.
@@ -143,4 +146,12 @@ func ParseRegistryKey(
 	key string,
 ) (componentType string, hostname string, ok bool) {
 	return parseRegistryKey(key)
+}
+
+// SetRewatchDelay sets how long w waits to watch the registry again.
+func SetRewatchDelay(
+	w *Watcher,
+	d time.Duration,
+) {
+	w.rewatchDelay = d
 }

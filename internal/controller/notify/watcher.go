@@ -55,14 +55,27 @@ type Registry interface {
 // emits ConditionEvents via the configured Notifier. Active conditions
 // are re-notified after the configured renotify interval.
 type Watcher struct {
-	kv               Registry
-	bucket           string
-	notifier         Notifier
-	logger           *slog.Logger
-	prev             map[string]map[types.ConditionType]*conditionState // key → condition → state
+	kv       Registry
+	bucket   string
+	notifier Notifier
+	logger   *slog.Logger
+	prev     map[string]map[types.ConditionType]*conditionState // key → condition → state
+	// names is the display name of each key, so a delete, which carries
+	// no value, names the hostname of an agent and not its machine ID.
+	names map[string]string
+	// unreachable is each key whose heartbeat expired, so its next
+	// heartbeat resolves the ComponentUnreachable that the expiry sent.
+	unreachable      map[string]bool
 	renotifyInterval time.Duration
-	mu               sync.Mutex
+	// rewatchDelay is how long Start waits before it watches the registry
+	// again after a watch ended.
+	rewatchDelay time.Duration
+	mu           sync.Mutex
 }
+
+// defaultRewatchDelay is how long Start waits to watch again after the
+// registry watch ended, such as on a NATS reconnect.
+const defaultRewatchDelay = time.Second
 
 // NewWatcher creates a new Watcher that monitors registry KV entries and
 // notifies on condition transitions. Active conditions are re-notified
@@ -80,12 +93,19 @@ func NewWatcher(
 		notifier:         notifier,
 		logger:           logger.With(slog.String("subsystem", "controller.notify")),
 		prev:             make(map[string]map[types.ConditionType]*conditionState),
+		names:            make(map[string]string),
+		unreachable:      make(map[string]bool),
 		renotifyInterval: renotifyInterval,
+		rewatchDelay:     defaultRewatchDelay,
 	}
 }
 
 // Start watches the registry KV for changes. Blocks until ctx is cancelled.
-// Returns nil when the context is cancelled, or an error if WatchAll fails.
+// Returns nil when the context is cancelled, or an error if the first watch
+// fails. A watch that ends before ctx, such as on a NATS reconnect, is
+// logged and started again, so the notifications do not stop with no word.
+// The state of each condition stays, so the values that a new watch sends
+// first fire only what changed.
 func (w *Watcher) Start(
 	ctx context.Context,
 ) error {
@@ -97,15 +117,60 @@ func (w *Watcher) Start(
 	}
 
 	for {
+		w.consume(ctx, updates)
+		if ctx.Err() != nil {
+			return nil
+		}
+		w.logger.Warn("the registry watch ended, watching it again")
+
+		updates = nil
+		for updates == nil {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(w.rewatchDelay):
+			}
+			updates, err = w.kv.KVWatch(ctx, w.bucket, ">")
+			if err != nil {
+				w.logger.Warn("watch the registry again",
+					slog.String("error", err.Error()))
+				updates = nil
+			}
+		}
+	}
+}
+
+// consume handles each entry of updates until it closes or ctx ends.
+func (w *Watcher) consume(
+	ctx context.Context,
+	updates <-chan jetstream.KeyValueEntry,
+) {
+	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return
 		case entry, ok := <-updates:
 			if !ok {
-				return nil
+				return
 			}
 			w.handleEntry(ctx, entry)
 		}
+	}
+}
+
+// notify sends event, and logs a notifier that fails, so a lost
+// notification is in the log.
+func (w *Watcher) notify(
+	ctx context.Context,
+	event ConditionEvent,
+) {
+	if err := w.notifier.Notify(ctx, event); err != nil {
+		w.logger.Warn("send a condition notification",
+			slog.String("component_type", event.ComponentType),
+			slog.String("hostname", event.Hostname),
+			slog.String("condition", string(event.Condition)),
+			slog.Bool("active", event.Active),
+			slog.String("error", err.Error()))
 	}
 }
 
@@ -129,6 +194,7 @@ func (w *Watcher) handleEntry(
 	// For agents, resolve the display name from the registration value.
 	// The identifier is the machine ID, but we want the hostname for display.
 	displayName := resolveDisplayName(componentType, identifier, entry.Value())
+	w.resolveUnreachable(ctx, key, componentType, displayName)
 
 	conditions, ok := w.extractConditions(key, componentType, entry.Value())
 	if !ok {
@@ -160,25 +226,57 @@ func resolveDisplayName(
 }
 
 // handleDelete emits a ComponentUnreachable event when a key expires or is
-// deleted, and cleans up internal state.
+// deleted, and cleans up internal state. The event names the component as
+// its last heartbeat did, because a delete carries no value.
 func (w *Watcher) handleDelete(
 	ctx context.Context,
 	key string,
 	componentType string,
-	hostname string,
+	identifier string,
 ) {
-	_ = w.notifier.Notify(ctx, ConditionEvent{
+	w.mu.Lock()
+	name, ok := w.names[key]
+	if !ok {
+		name = identifier
+	}
+	delete(w.prev, key)
+	w.unreachable[key] = true
+	w.mu.Unlock()
+
+	w.notify(ctx, ConditionEvent{
 		ComponentType: componentType,
-		Hostname:      hostname,
+		Hostname:      name,
 		Condition:     ConditionComponentUnreachable,
 		Active:        true,
 		Reason:        "heartbeat expired",
 		Timestamp:     time.Now(),
 	})
+}
 
+// resolveUnreachable records name as the display name of key, and resolves
+// the ComponentUnreachable of a key whose heartbeat expired and came back.
+func (w *Watcher) resolveUnreachable(
+	ctx context.Context,
+	key string,
+	componentType string,
+	name string,
+) {
 	w.mu.Lock()
-	delete(w.prev, key)
+	w.names[key] = name
+	was := w.unreachable[key]
+	delete(w.unreachable, key)
 	w.mu.Unlock()
+
+	if was {
+		w.notify(ctx, ConditionEvent{
+			ComponentType: componentType,
+			Hostname:      name,
+			Condition:     ConditionComponentUnreachable,
+			Active:        false,
+			Reason:        "heartbeat resumed",
+			Timestamp:     time.Now(),
+		})
+	}
 }
 
 // extractConditions parses a KV value into a slice of conditions based on
@@ -250,7 +348,7 @@ func (w *Watcher) detectTransitions(
 
 		if state == nil {
 			// New condition — fire.
-			_ = w.notifier.Notify(ctx, ConditionEvent{
+			w.notify(ctx, ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,
@@ -264,7 +362,7 @@ func (w *Watcher) detectTransitions(
 		} else if state.active && w.renotifyInterval > 0 &&
 			now.Sub(state.lastNotified) >= w.renotifyInterval {
 			// Still active and renotify interval elapsed — re-fire.
-			_ = w.notifier.Notify(ctx, ConditionEvent{
+			w.notify(ctx, ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,
@@ -278,7 +376,7 @@ func (w *Watcher) detectTransitions(
 	// Resolved conditions (in prev, not in current).
 	for condType, state := range prev {
 		if !current[condType] && state.active {
-			_ = w.notifier.Notify(ctx, ConditionEvent{
+			w.notify(ctx, ConditionEvent{
 				ComponentType: componentType,
 				Hostname:      hostname,
 				Condition:     condType,

@@ -759,36 +759,6 @@ func (s *WatcherPublicTestSuite) TestStart() {
 				s.NoError(err)
 			},
 		},
-		{
-			name: "returns nil when updates channel is closed",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *notifymocks.MockRegistry {
-				ch := make(chan jetstream.KeyValueEntry)
-				close(ch)
-
-				return watch(ctrl, ch, nil)
-			},
-			validateFunc: func(err error) {
-				s.NoError(err)
-			},
-		},
-		{
-			name: "processes real entry from updates channel then exits on close",
-			setup: func(ctrl *gomock.Controller, _ context.Context) *notifymocks.MockRegistry {
-				// Build an entry with an unrecognized key so handleEntry returns
-				// quickly without needing further mock expectations.
-				entry := jobmocks.NewMockKeyValueEntry(ctrl)
-				entry.EXPECT().Key().Return("unknown.host")
-
-				ch := make(chan jetstream.KeyValueEntry, 2)
-				ch <- entry
-				close(ch)
-
-				return watch(ctrl, ch, nil)
-			},
-			validateFunc: func(err error) {
-				s.NoError(err)
-			},
-		},
 	}
 
 	for _, tt := range tests {
@@ -834,4 +804,199 @@ func TestWatcherPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(WatcherPublicTestSuite))
+}
+
+func (s *WatcherPublicTestSuite) TestStartWatchesAgain() {
+	tests := []struct {
+		name string
+		// second is the error of the second watch; a third watch succeeds.
+		second  error
+		watches int
+	}{
+		{name: "when the watch ends, it watches again", watches: 2},
+		{
+			name:    "when a new watch fails, it tries again",
+			second:  errors.New("nats: no responders"),
+			watches: 3,
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			closed := make(chan jetstream.KeyValueEntry)
+			close(closed)
+			// The last watch sends one entry, and the test ends when the
+			// watcher handles it.
+			entry := jobmocks.NewMockKeyValueEntry(ctrl)
+			entry.EXPECT().Key().DoAndReturn(func() string {
+				cancel()
+
+				return "unknown.host"
+			})
+			last := make(chan jetstream.KeyValueEntry, 1)
+			last <- entry
+
+			kv := notifymocks.NewMockRegistry(ctrl)
+			calls := []any{
+				kv.EXPECT().KVWatch(gomock.Any(), "registry", ">").
+					Return((<-chan jetstream.KeyValueEntry)(closed), nil),
+			}
+			if tt.second != nil {
+				calls = append(calls, kv.EXPECT().KVWatch(gomock.Any(), "registry", ">").
+					Return(nil, tt.second))
+			}
+			calls = append(calls, kv.EXPECT().KVWatch(gomock.Any(), "registry", ">").
+				Return((<-chan jetstream.KeyValueEntry)(last), nil))
+			gomock.InOrder(calls...)
+			s.Len(calls, tt.watches)
+
+			w := notify.NewWatcher(kv, "registry", s.mockNotifier, slog.Default(), 0)
+			notify.SetRewatchDelay(w, time.Millisecond)
+
+			done := make(chan error, 1)
+			go func() { done <- w.Start(ctx) }()
+			select {
+			case err := <-done:
+				s.NoError(err)
+			case <-time.After(2 * time.Second):
+				s.Fail("Start did not return within timeout")
+			}
+		})
+	}
+	s.Run("when ctx ends after a new watch failed, it returns nil", func() {
+		ctrl := gomock.NewController(s.T())
+		defer ctrl.Finish()
+		ctx, cancel := context.WithCancel(context.Background())
+		closed := make(chan jetstream.KeyValueEntry)
+		close(closed)
+		kv := notifymocks.NewMockRegistry(ctrl)
+		gomock.InOrder(
+			kv.EXPECT().KVWatch(gomock.Any(), "registry", ">").
+				Return((<-chan jetstream.KeyValueEntry)(closed), nil),
+			kv.EXPECT().KVWatch(gomock.Any(), "registry", ">").
+				DoAndReturn(func(context.Context, string, string, ...jetstream.WatchOpt) (<-chan jetstream.KeyValueEntry, error) {
+					cancel()
+
+					return nil, errors.New("nats: connection closed")
+				}),
+		)
+		w := notify.NewWatcher(kv, "registry", s.mockNotifier, slog.Default(), 0)
+		notify.SetRewatchDelay(w, time.Millisecond)
+		s.NoError(w.Start(ctx))
+	})
+	s.Run("when ctx ends while it waits to watch again, it returns nil", func() {
+		ctrl := gomock.NewController(s.T())
+		defer ctrl.Finish()
+		ctx, cancel := context.WithCancel(context.Background())
+		closed := make(chan jetstream.KeyValueEntry)
+		close(closed)
+		kv := notifymocks.NewMockRegistry(ctrl)
+		kv.EXPECT().KVWatch(gomock.Any(), "registry", ">").
+			DoAndReturn(func(context.Context, string, string, ...jetstream.WatchOpt) (<-chan jetstream.KeyValueEntry, error) {
+				cancel()
+
+				return closed, nil
+			})
+		w := notify.NewWatcher(kv, "registry", s.mockNotifier, slog.Default(), 0)
+		notify.SetRewatchDelay(w, time.Hour)
+		s.NoError(w.Start(ctx))
+	})
+}
+
+func (s *WatcherPublicTestSuite) TestUnreachable() {
+	put := func(ctrl *gomock.Controller, hostname string) *jobmocks.MockKeyValueEntry {
+		b, _ := json.Marshal(job.AgentRegistration{Hostname: hostname})
+		entry := jobmocks.NewMockKeyValueEntry(ctrl)
+		entry.EXPECT().Key().Return("agents.m-1").AnyTimes()
+		entry.EXPECT().Operation().Return(jetstream.KeyValuePut).AnyTimes()
+		entry.EXPECT().Value().Return(b).AnyTimes()
+
+		return entry
+	}
+	expire := func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
+		entry := jobmocks.NewMockKeyValueEntry(ctrl)
+		entry.EXPECT().Key().Return("agents.m-1").AnyTimes()
+		entry.EXPECT().Operation().Return(jetstream.KeyValueDelete).AnyTimes()
+
+		return entry
+	}
+	tests := []struct {
+		name         string
+		steps        func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry
+		notifyErr    error
+		validateFunc func(events []notify.ConditionEvent)
+	}{
+		{
+			name: "an expired agent is named by the hostname of its last heartbeat",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{put(ctrl, "web-01"), expire(ctrl)}
+			},
+			validateFunc: func(events []notify.ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("web-01", events[0].Hostname)
+				s.Equal(notify.ConditionComponentUnreachable, events[0].Condition)
+				s.True(events[0].Active)
+			},
+		},
+		{
+			name: "an agent that expires before any heartbeat is named by its machine ID",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{expire(ctrl)}
+			},
+			validateFunc: func(events []notify.ConditionEvent) {
+				s.Require().Len(events, 1)
+				s.Equal("m-1", events[0].Hostname)
+			},
+		},
+		{
+			name: "the next heartbeat resolves the unreachable condition, once",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{
+					put(ctrl, "web-01"), expire(ctrl), put(ctrl, "web-01"), put(ctrl, "web-01"),
+				}
+			},
+			validateFunc: func(events []notify.ConditionEvent) {
+				s.Require().Len(events, 2)
+				s.True(events[0].Active)
+				s.Equal(notify.ConditionComponentUnreachable, events[1].Condition)
+				s.False(events[1].Active)
+				s.Equal("heartbeat resumed", events[1].Reason)
+			},
+		},
+		{
+			name: "a notifier that fails is logged, and the watcher goes on",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{expire(ctrl), put(ctrl, "web-01")}
+			},
+			notifyErr: errors.New("webhook down"),
+			validateFunc: func(events []notify.ConditionEvent) {
+				s.Len(events, 2)
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			defer ctrl.Finish()
+			var events []notify.ConditionEvent
+			notifier := notifymocks.NewMockNotifier(ctrl)
+			notifier.EXPECT().
+				Notify(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, event notify.ConditionEvent) error {
+					events = append(events, event)
+
+					return tt.notifyErr
+				}).
+				AnyTimes()
+			w := notify.NewWatcher(nil, "registry", notifier, slog.Default(), 0)
+			for _, entry := range tt.steps(ctrl) {
+				notify.WatcherHandleEntry(context.Background(), w, entry)
+			}
+			tt.validateFunc(events)
+		})
+	}
 }
