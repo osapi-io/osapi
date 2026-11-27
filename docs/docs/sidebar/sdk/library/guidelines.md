@@ -157,7 +157,7 @@ error, with the message and the reason of the answer's body:
 | 401, 403 | `*AuthError`             |
 | 404      | `*NotFoundError`         |
 | 409      | `*ConflictError`         |
-| 500      | `*ServerError`           |
+| 5xx      | `*ServerError`           |
 | other    | `*UnexpectedStatusError` |
 
 A body that does not decode into the type of the method is an error that names

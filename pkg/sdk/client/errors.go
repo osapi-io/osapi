@@ -90,7 +90,8 @@ func (e *ValidationError) Unwrap() error {
 	return &e.APIError
 }
 
-// ServerError represents internal server errors (500).
+// ServerError represents a server error: a status of 500 or more, such as
+// the 503 of a controller that cannot reach NATS.
 type ServerError struct {
 	APIError
 }
