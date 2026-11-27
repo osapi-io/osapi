@@ -108,6 +108,12 @@ func readBackProblem(
 			ex.Doc, read.Name, got, read.Name, row,
 		)}
 	}
+	if row.Kind() != reflect.Struct {
+		return []string{fmt.Sprintf(
+			"example %q: %s answers %v, and a read back compares the fields of a struct",
+			ex.Doc, read.Name, row,
+		)}
+	}
 	var out []string
 	names := map[string]bool{}
 	for i := range row.NumField() {

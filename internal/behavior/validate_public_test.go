@@ -65,6 +65,16 @@ func readList(
 	return nil, nil
 }
 
+// readNames answers a list of strings, a shape that no read has: its rows
+// are not structs.
+func readNames(
+	_ context.Context,
+	_ fakeProvider,
+	_ getIn,
+) ([]string, error) {
+	return nil, nil
+}
+
 func readPointer(
 	_ context.Context,
 	_ fakeProvider,
@@ -776,6 +786,26 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 				behavior.RuleReadBack, behavior.RuleReadBack, behavior.RuleReadBack,
 				behavior.RuleReadBack, behavior.RuleReadBack, behavior.RuleReadBack,
 			},
+		},
+		{
+			name: "when a read back reads rows that are not structs it is a problem, not a panic",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				behavior.API,
+				behavior.CLI,
+				behavior.Area(area.Config),
+				onDebian,
+				behavior.Read("list", readNames).Describe("List").
+					Example("Each name", getIn{Key: "a"}, []string{"a"}).
+					Fails("no key", getIn{}, "key"),
+				behavior.Write("create", set).Key("key").Describe("Create").
+					Example("Set it", getIn{Key: "a"}, result{Key: "a", Changed: true},
+						behavior.Reads(getIn{Key: "a"}, "a")).
+					Fails("no key", getIn{}, "key"),
+			),
+			wantRules: []string{behavior.RuleOutputShape, behavior.RuleReadBack},
 		},
 		{
 			name: "when a .Before step is not func(context.Context, In) (In, error)",

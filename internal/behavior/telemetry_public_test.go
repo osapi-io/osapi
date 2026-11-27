@@ -23,6 +23,7 @@ package behavior_test
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -78,6 +79,17 @@ type tagged struct {
 	List   []int        `json:"list"   telemetry:"attr"`
 	Secret string       `json:"secret"`
 	Token  secret.Value `json:"token"  telemetry:"attr"`
+}
+
+// kinds has a tagged field of each kind that a list or an unsigned int
+// records.
+type kinds struct {
+	Names  []string  `json:"names"  telemetry:"attr"`
+	Flags  []bool    `json:"flags"  telemetry:"attr"`
+	Ratios []float64 `json:"ratios" telemetry:"attr"`
+	Size   uint      `json:"size"   telemetry:"attr"`
+	Big    uint64    `json:"big"    telemetry:"attr"`
+	Rows   []tagged  `json:"rows"   telemetry:"attr"`
 }
 
 func (s *TelemetryPublicTestSuite) metrics() map[string]int64 {
@@ -324,6 +336,35 @@ func (s *TelemetryPublicTestSuite) TestInputAttributes() {
 		{
 			name: "when the pointer is nil",
 			in:   (*tagged)(nil), fields: all, want: map[string]any{},
+		},
+		{
+			name:   "when a list of ints is set it is recorded, and an empty one is not",
+			in:     tagged{Key: "k", List: []int{1, 2}},
+			fields: []string{"key", "list", "on"},
+			want: map[string]any{
+				"osapi.behavior.input.key":  "k",
+				"osapi.behavior.input.list": []int64{1, 2},
+				"osapi.behavior.input.on":   false,
+			},
+		},
+		{
+			name: "when lists and unsigned ints are tagged they are recorded, and a list of structs is not",
+			in: kinds{
+				Names:  []string{"0.pool.ntp.org", "1.pool.ntp.org"},
+				Flags:  []bool{true},
+				Ratios: []float64{0.5},
+				Size:   7,
+				Big:    math.MaxUint64,
+				Rows:   []tagged{{Key: "k"}},
+			},
+			fields: []string{"names", "flags", "ratios", "size", "big", "rows"},
+			want: map[string]any{
+				"osapi.behavior.input.names":  []string{"0.pool.ntp.org", "1.pool.ntp.org"},
+				"osapi.behavior.input.flags":  []bool{true},
+				"osapi.behavior.input.ratios": []float64{0.5},
+				"osapi.behavior.input.size":   int64(7),
+				"osapi.behavior.input.big":    "18446744073709551615",
+			},
 		},
 		{name: "when the input is not a struct", in: "x", fields: all, want: map[string]any{}},
 	}

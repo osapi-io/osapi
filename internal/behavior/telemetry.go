@@ -22,8 +22,10 @@ package behavior
 
 import (
 	"context"
+	"math"
 	"reflect"
 	"slices"
+	"strconv"
 	"sync"
 	"time"
 
@@ -295,12 +297,76 @@ func InputAttributes(
 			attrs = append(attrs, key.Bool(fv.Bool()))
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			attrs = append(attrs, key.Int64(fv.Int()))
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			attrs = append(attrs, uintAttr(key, fv.Uint()))
 		case reflect.Float32, reflect.Float64:
 			attrs = append(attrs, key.Float64(fv.Float()))
+		case reflect.Slice, reflect.Array:
+			if fv.Len() == 0 {
+				continue
+			}
+			if a, ok := sliceAttr(key, fv); ok {
+				attrs = append(attrs, a)
+			}
 		}
 	}
 
 	return attrs
+}
+
+// uintAttr is u as an int attribute, or as text when it is too large for
+// one.
+func uintAttr(
+	key attribute.Key,
+	u uint64,
+) attribute.KeyValue {
+	if u > math.MaxInt64 {
+		return key.String(strconv.FormatUint(u, 10))
+	}
+
+	return key.Int64(int64(u))
+}
+
+// sliceAttr is a list of strings, bools, ints or floats as a list
+// attribute, such as the servers of ntp. ok is false for a list of
+// anything else, such as structs.
+func sliceAttr(
+	key attribute.Key,
+	fv reflect.Value,
+) (attribute.KeyValue, bool) {
+	n := fv.Len()
+	switch fv.Type().Elem().Kind() {
+	case reflect.String:
+		out := make([]string, n)
+		for i := range n {
+			out[i] = fv.Index(i).String()
+		}
+
+		return key.StringSlice(out), true
+	case reflect.Bool:
+		out := make([]bool, n)
+		for i := range n {
+			out[i] = fv.Index(i).Bool()
+		}
+
+		return key.BoolSlice(out), true
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		out := make([]int64, n)
+		for i := range n {
+			out[i] = fv.Index(i).Int()
+		}
+
+		return key.Int64Slice(out), true
+	case reflect.Float32, reflect.Float64:
+		out := make([]float64, n)
+		for i := range n {
+			out[i] = fv.Index(i).Float()
+		}
+
+		return key.Float64Slice(out), true
+	default:
+		return attribute.KeyValue{}, false
+	}
 }
 
 // Changed reports a write's changed field: the bool field whose JSON name is
