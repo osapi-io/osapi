@@ -65,7 +65,7 @@ func New(
 }
 
 // read is the record and its revision, or the zero record and 0 when there
-// is none.
+// is none, or the zero record and its revision when it does not unmarshal.
 func (r *Rotation) read(
 	ctx context.Context,
 ) (pki.ControllerKeyRecord, uint64, error) {
@@ -76,9 +76,15 @@ func (r *Rotation) read(
 	if err != nil {
 		return pki.ControllerKeyRecord{}, 0, fmt.Errorf("read the controller key record: %w", err)
 	}
+	// An agent can write the state bucket, so a record that does not
+	// unmarshal is not the controller's, as one that its key did not sign:
+	// it is the zero record at its revision, which the next Start replaces.
 	var rec pki.ControllerKeyRecord
 	if err := json.Unmarshal(entry.Value(), &rec); err != nil {
-		return pki.ControllerKeyRecord{}, 0, fmt.Errorf("the controller key record: %w", err)
+		r.cfg.Logger.Warn("the controller key record does not read, and the next "+
+			"rotation replaces it", slog.String("error", err.Error()))
+
+		return pki.ControllerKeyRecord{}, entry.Revision(), nil
 	}
 
 	return rec, entry.Revision(), nil

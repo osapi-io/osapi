@@ -300,11 +300,36 @@ func (s *KeyRotationPublicTestSuite) TestStart() {
 			wantErr: "read the controller key record: timeout",
 		},
 		{
-			name: "a record that is not JSON",
+			name: "a record that does not unmarshal is replaced at its revision",
 			setup: func() {
 				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.raw([]byte("{")), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(1)).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+						var got pki.ControllerKeyRecord
+						s.Require().NoError(json.Unmarshal(data, &got))
+						s.Equal(uint64(1), got.Serial)
+						s.True(got.SignedBy(s.keys.PublicKey()))
+
+						return 2, nil
+					})
+				s.agents("")
 			},
-			wantErr: "the controller key record: ",
+			validateFunc: func(st keyrotation.Status) {
+				s.NotEmpty(st.Next)
+			},
+		},
+		{
+			name: "a record with retired keys of the old shape is replaced at its revision",
+			setup: func() {
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).
+					Return(s.raw([]byte(`{"serial":3,"retired":["AAAA"]}`)), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(1)).
+					Return(uint64(2), nil)
+				s.agents("")
+			},
+			validateFunc: func(st keyrotation.Status) {
+				s.NotEmpty(st.Next)
+			},
 		},
 		{
 			name: "a next key that is not made",
