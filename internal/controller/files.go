@@ -133,13 +133,6 @@ func (o objects) Put(
 	return o.nc.ObjectPut(ctx, o.bucket, meta, r)
 }
 
-func (o objects) GetBytes(
-	ctx context.Context,
-	name string,
-) ([]byte, error) {
-	return o.nc.ObjectGetBytes(ctx, o.bucket, name)
-}
-
 func (o objects) Info(
 	ctx context.Context,
 	name string,

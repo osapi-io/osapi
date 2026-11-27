@@ -117,7 +117,6 @@ func (s *FilesPublicTestSuite) TestFileDeps() {
 
 	d := controller.ExportFileDeps(nc, "objects", "state")
 	nc.EXPECT().ObjectPut(ctx, "objects", jetstream.ObjectMeta{Name: "a"}, nil).Return(nil, nil)
-	nc.EXPECT().ObjectGetBytes(ctx, "objects", "a").Return([]byte("x"), nil)
 	nc.EXPECT().ObjectInfo(ctx, "objects", "a").Return(nil, nil)
 	nc.EXPECT().ObjectDelete(ctx, "objects", "a").Return(nil)
 	nc.EXPECT().ObjectList(ctx, "objects").Return(nil, nil)
@@ -125,8 +124,6 @@ func (s *FilesPublicTestSuite) TestFileDeps() {
 	nc.EXPECT().KVGet(ctx, "state", "k").Return(nil, nil)
 
 	_, _ = d.Objects.Put(ctx, jetstream.ObjectMeta{Name: "a"}, nil)
-	data, _ := d.Objects.GetBytes(ctx, "a")
-	s.Equal("x", string(data))
 	_, _ = d.Objects.Info(ctx, "a")
 	s.NoError(d.Objects.Delete(ctx, "a"))
 	_, _ = d.Objects.List(ctx)
