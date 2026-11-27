@@ -21,6 +21,7 @@
 package config
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -69,41 +70,96 @@ func (c ClientTLS) Config() (*tls.Config, error) {
 	return out, nil
 }
 
-// Dial is the TLS config of a connection that has no scheme to decide, such
-// as one to NATS: nil when c is not enabled, else Config.
-func (c ClientTLS) Dial() (*tls.Config, error) {
+// Dial is the TLS config of a connection to host that has no scheme to
+// decide, such as one to NATS: nil when c is not enabled, else Config. With a
+// ca_file, it reads the file again at each handshake, and checks the server's
+// chain against it and host or server_name: a connection that reconnects
+// trusts a certificate that the file gained since it connected, such as the
+// next one of a rotation of the NATS server's certificate.
+func (c ClientTLS) Dial(
+	host string,
+) (*tls.Config, error) {
 	if !c.Enabled {
 		return nil, nil
 	}
+	out, err := c.Config()
+	if err != nil || c.CAFile == "" || c.InsecureSkipVerify {
+		return out, err
+	}
+	name := c.ServerName
+	if name == "" {
+		name = host
+	}
+	file := c.CAFile
+	// The check is VerifyConnection's, against the file as it is now, in
+	// place of the one of crypto/tls, against the file as it was.
+	out.InsecureSkipVerify = true
+	out.VerifyConnection = func(cs tls.ConnectionState) error {
+		return verifyChain(cs, file, name)
+	}
 
-	return c.Config()
+	return out, nil
+}
+
+// verifyChain checks the server's chain in cs against the system's roots and
+// the certificates in file, and that its leaf is name's.
+func verifyChain(
+	cs tls.ConnectionState,
+	file string,
+	name string,
+) error {
+	if len(cs.PeerCertificates) == 0 {
+		return errors.New("the server showed no certificate")
+	}
+	pem, err := os.ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("read ca_file: %w", err)
+	}
+	// The system pool is never an error on the platforms osapi runs on.
+	pool, _ := x509.SystemCertPool()
+	if !pool.AppendCertsFromPEM(pem) {
+		return fmt.Errorf("%s: %w", file, errNoCertificate)
+	}
+	intermediates := x509.NewCertPool()
+	for _, c := range cs.PeerCertificates[1:] {
+		intermediates.AddCert(c)
+	}
+	_, err = cs.PeerCertificates[0].Verify(x509.VerifyOptions{
+		DNSName: name, Roots: pool, Intermediates: intermediates,
+	})
+
+	return err
 }
 
 // SelfClient is the TLS config with which a server of osapi connects to
 // itself, such as the NATS server for its setup and heartbeat, from the
-// config that it serves: it trusts its own certificate, and checks the first
-// name in it, since it dials an address that the certificate may not name.
-// Nil when the server serves no TLS.
+// config that it serves: it trusts the certificate that the server serves
+// at the time of each handshake, so a certificate that the server loads
+// again changes nothing for it. Nil when the server serves no TLS.
 func SelfClient(
 	server *tls.Config,
 ) *tls.Config {
 	if server == nil {
 		return nil
 	}
-	// LoadX509KeyPair fills Leaf.
-	leaf := server.Certificates[0].Leaf
-	pool := x509.NewCertPool()
-	pool.AddCert(leaf)
-	names := append([]string{}, leaf.DNSNames...)
-	for _, ip := range leaf.IPAddresses {
-		names = append(names, ip.String())
-	}
-	name := "localhost"
-	if len(names) > 0 {
-		name = names[0]
-	}
 
-	return &tls.Config{RootCAs: pool, ServerName: name, MinVersion: tls.VersionTLS12}
+	return &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		// The check is VerifyConnection's: the server's own certificate.
+		InsecureSkipVerify: true,
+		VerifyConnection: func(cs tls.ConnectionState) error {
+			own, err := server.GetCertificate(&tls.ClientHelloInfo{})
+			if err != nil {
+				return err
+			}
+			if len(cs.PeerCertificates) == 0 ||
+				!bytes.Equal(cs.PeerCertificates[0].Raw, own.Certificate[0]) {
+				return errors.New("the server showed a certificate that is not its own")
+			}
+
+			return nil
+		},
+	}
 }
 
 // Warn logs a warning when c accepts any certificate, with the key of its
@@ -120,7 +176,10 @@ func (c ClientTLS) Warn(
 
 // Config is the TLS config that a server with s serves, a metrics server or
 // the NATS server: its certificate, or nil when s is not enabled. Neither has
-// a self-signed fallback, so TLS on with no certificate is an error.
+// a self-signed fallback, so TLS on with no certificate is an error. The
+// server reads the certificate again when its files change, at the next
+// handshake: a certificate that a rotation or the operator replaces takes
+// effect with no restart.
 func (s ServerTLS) Config() (*tls.Config, error) {
 	if !s.Enabled {
 		return nil, nil
@@ -128,12 +187,12 @@ func (s ServerTLS) Config() (*tls.Config, error) {
 	if s.CertFile == "" {
 		return nil, errNoServerCertificate
 	}
-	cert, err := tls.LoadX509KeyPair(s.CertFile, s.KeyFile)
+	r, err := newCertReloader(s.CertFile, s.KeyFile)
 	if err != nil {
-		return nil, fmt.Errorf("load the server certificate: %w", err)
+		return nil, err
 	}
 
-	return &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}, nil
+	return &tls.Config{GetCertificate: r.certificate, MinVersion: tls.VersionTLS12}, nil
 }
 
 // Address is where m listens, with https:// when it serves TLS, as health

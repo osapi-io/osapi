@@ -23,11 +23,14 @@ package config_test
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -120,8 +123,68 @@ func (s *TLSPublicTestSuite) TestWarn() {
 	s.Contains(buf.String(), "controller.client.tls.insecure_skip_verify")
 }
 
+// handshake runs a TLS handshake between server and client over loopback
+// TCP, and returns the client's error.
+func handshake(
+	server *tls.Config,
+	client *tls.Config,
+) error {
+	ln, err := tls.Listen("tcp", "127.0.0.1:0", server)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = ln.Close() }()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		c, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		_ = c.SetDeadline(time.Now().Add(5 * time.Second))
+		_ = c.(*tls.Conn).Handshake()
+		_ = c.Close()
+	}()
+	d := &net.Dialer{Timeout: 5 * time.Second}
+	c, err := tls.DialWithDialer(d, "tcp", ln.Addr().String(), client)
+	if err == nil {
+		_ = c.Close()
+	}
+	<-done
+
+	return err
+}
+
+// replace writes the certificate and key of from over to, a second later,
+// so that a reader that compares modification times sees the change.
+func (s *TLSPublicTestSuite) replace(
+	fromCert string,
+	fromKey string,
+	toCert string,
+	toKey string,
+) {
+	for _, f := range [][2]string{{fromCert, toCert}, {fromKey, toKey}} {
+		data, err := os.ReadFile(f[0])
+		s.Require().NoError(err)
+		s.Require().NoError(os.WriteFile(f[1], data, 0o600))
+		later := time.Now().Add(time.Second)
+		s.Require().NoError(os.Chtimes(f[1], later, later))
+	}
+}
+
+// leaf is the leaf of the certificate that server serves now.
+func (s *TLSPublicTestSuite) leaf(
+	server *tls.Config,
+) []byte {
+	got, err := server.GetCertificate(&tls.ClientHelloInfo{})
+	s.Require().NoError(err)
+
+	return got.Certificate[0]
+}
+
 func (s *TLSPublicTestSuite) TestServerConfig() {
 	cert, key := writeCert(s.T())
+	other, otherKey := writeCert(s.T())
 
 	got, err := config.ServerTLS{}.Config()
 	s.Require().NoError(err)
@@ -135,42 +198,110 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 
 	got, err = config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
 	s.Require().NoError(err)
-	s.Len(got.Certificates, 1)
+	first := s.leaf(got)
+	s.Equal(first, s.leaf(got), "unchanged files serve the same certificate")
+
+	s.replace(other, otherKey, cert, key)
+	second := s.leaf(got)
+	s.NotEqual(first, second, "a replaced certificate is served at the next handshake")
+
+	s.Require().NoError(os.WriteFile(cert, []byte("not a certificate"), 0o600))
+	later := time.Now().Add(2 * time.Second)
+	s.Require().NoError(os.Chtimes(cert, later, later))
+	s.Equal(second, s.leaf(got), "a pair that does not load keeps the last one")
+
+	s.Require().NoError(os.Remove(cert))
+	s.Equal(second, s.leaf(got), "a missing file keeps the last one")
 }
 
 func (s *TLSPublicTestSuite) TestDial() {
-	got, err := config.ClientTLS{CAFile: "/no/such/ca.crt"}.Dial()
+	got, err := config.ClientTLS{CAFile: "/no/such/ca.crt"}.Dial("hub.lab")
 	s.Require().NoError(err, "off reads nothing")
 	s.Nil(got)
 
-	got, err = config.ClientTLS{Enabled: true, ServerName: "hub.lab"}.Dial()
+	got, err = config.ClientTLS{Enabled: true, ServerName: "hub.lab"}.Dial("10.0.0.1")
 	s.Require().NoError(err)
 	s.Equal("hub.lab", got.ServerName)
+	s.Nil(got.VerifyConnection, "with no ca_file, crypto/tls checks the system roots")
+
+	_, err = config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"}.Dial("hub.lab")
+	s.ErrorContains(err, "read ca_file")
+
+	got, err = config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt", InsecureSkipVerify: true}.
+		Dial("hub.lab")
+	s.ErrorContains(err, "read ca_file", "the file must load once, also with no check")
+	s.Nil(got)
+
+	cert, key := writeCertFor(s.T(), []string{"localhost"}, nil)
+	next, nextKey := writeCertFor(s.T(), []string{"localhost"}, nil)
+	server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
+	s.Require().NoError(err)
+	ca := filepath.Join(s.T().TempDir(), "ca.crt")
+	current, err := os.ReadFile(cert)
+	s.Require().NoError(err)
+	s.Require().NoError(os.WriteFile(ca, current, 0o600))
+
+	client, err := config.ClientTLS{Enabled: true, CAFile: ca}.Dial("localhost")
+	s.Require().NoError(err)
+	s.NoError(handshake(server, client), "the server's certificate is in ca_file")
+
+	wrongName, err := config.ClientTLS{Enabled: true, CAFile: ca}.Dial("hub.lab")
+	s.Require().NoError(err)
+	s.Error(handshake(server, wrongName), "the certificate does not name the host")
+
+	s.replace(next, nextKey, cert, key)
+	s.Error(handshake(server, client), "ca_file does not have the new certificate yet")
+
+	nextPEM, err := os.ReadFile(next)
+	s.Require().NoError(err)
+	s.Require().NoError(os.WriteFile(ca, append(current, nextPEM...), 0o600))
+	s.NoError(handshake(server, client), "the same config trusts what ca_file gained")
+	block, _ := pem.Decode(nextPEM)
+	leaf, err := x509.ParseCertificate(block.Bytes)
+	s.Require().NoError(err)
+	s.NoError(client.VerifyConnection(tls.ConnectionState{
+		PeerCertificates: []*x509.Certificate{leaf, leaf},
+	}), "a chain with an intermediate checks it too")
+
+	s.Require().NoError(os.WriteFile(ca, []byte("not a certificate"), 0o600))
+	s.ErrorContains(handshake(server, client), "no PEM certificate")
+
+	s.Require().NoError(os.Remove(ca))
+	s.ErrorContains(handshake(server, client), "read ca_file")
+
+	s.ErrorContains(client.VerifyConnection(tls.ConnectionState{}), "no certificate")
+
+	skip, err := config.ClientTLS{Enabled: true, CAFile: cert, InsecureSkipVerify: true}.
+		Dial("localhost")
+	s.Require().NoError(err)
+	s.Nil(skip.VerifyConnection, "insecure_skip_verify checks nothing")
 }
 
 func (s *TLSPublicTestSuite) TestSelfClient() {
 	s.Nil(config.SelfClient(nil), "no TLS is plain text")
 
-	for _, tc := range []struct {
-		name  string
-		names []string
-		ips   []net.IP
-		want  string
-	}{
-		{name: "the first DNS name", names: []string{"hub.lab", "localhost"}, want: "hub.lab"},
-		{name: "an IP when it has no DNS name", ips: []net.IP{net.IPv4(10, 0, 0, 1)}, want: "10.0.0.1"},
-		{name: "localhost when it has neither", want: "localhost"},
-	} {
-		s.Run(tc.name, func() {
-			cert, key := writeCertFor(s.T(), tc.names, tc.ips)
-			server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
-			s.Require().NoError(err)
+	cert, key := writeCertFor(s.T(), []string{"hub.lab"}, nil)
+	next, nextKey := writeCertFor(s.T(), nil, []net.IP{net.IPv4(10, 0, 0, 1)})
+	server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
+	s.Require().NoError(err)
+	client := config.SelfClient(server)
+	s.NoError(handshake(server, client), "it trusts the server's own certificate")
 
-			got := config.SelfClient(server)
-			s.Equal(tc.want, got.ServerName)
-			s.NotNil(got.RootCAs)
-		})
+	s.replace(next, nextKey, cert, key)
+	s.NoError(handshake(server, client), "and the one that the server loaded again")
+
+	stranger, strangerKey := writeCert(s.T())
+	other, err := config.ServerTLS{Enabled: true, CertFile: stranger, KeyFile: strangerKey}.Config()
+	s.Require().NoError(err)
+	s.ErrorContains(handshake(other, client), "not its own")
+	s.ErrorContains(client.VerifyConnection(tls.ConnectionState{}), "not its own")
+
+	failing := &tls.Config{
+		GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+			return nil, os.ErrNotExist
+		},
 	}
+	s.ErrorIs(config.SelfClient(failing).VerifyConnection(tls.ConnectionState{}), os.ErrNotExist)
 }
 
 func (s *TLSPublicTestSuite) TestAddress() {

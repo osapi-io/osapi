@@ -41,7 +41,8 @@ const (
 // TLSConfig is the server's TLS config: the certificate of c, or the
 // self-signed certificate in keyDir, which it makes when it does not exist.
 // A certificate that c names later replaces the self-signed one with no
-// other change.
+// other change. The server reads the files again when they change, at the
+// next handshake: a rotated certificate takes effect with no restart.
 func TLSConfig(
 	c config.ServerTLS,
 	keyDir string,
@@ -52,12 +53,12 @@ func TLSConfig(
 	if err != nil {
 		return nil, err
 	}
-	cert, err := tls.LoadX509KeyPair(c.CertFile, c.KeyFile)
+	out, err := c.Config()
 	if err != nil {
 		return nil, fmt.Errorf("load the API's certificate: %w", err)
 	}
 
-	return &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}, nil
+	return out, nil
 }
 
 // CertFingerprint is the SHA-256 of the certificate that the API serves, as
