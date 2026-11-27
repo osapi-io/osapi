@@ -37,8 +37,8 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	endpoints "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	"github.com/osapi-io/osapi/internal/controller/health"
-	"github.com/osapi-io/osapi/internal/cryptoreport"
 	healthmocks "github.com/osapi-io/osapi/internal/controller/health/mocks"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 )
 
 type HealthStatusGetPublicTestSuite struct {

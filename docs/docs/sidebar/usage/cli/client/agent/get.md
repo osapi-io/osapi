@@ -51,11 +51,11 @@ $ osapi client agent get --hostname web-01
   [38;2;58;143;20mFamily:[0m        debian
 
 [1;38;2;69;174;23mCrypto:[0m
-  [38;2;58;143;20mGo:[0m           go1.27.3
-  [38;2;58;143;20mModule:[0m       v1.0.0
-  [38;2;58;143;20mMode:[0m         off
-  [38;2;58;143;20mEnforceable:[0m  no
-  [38;2;58;143;20mGaps:[0m         FIPS 140-3 mode is off: set GODEBUG=fips140=on, metrics: crypto/tls may negotiate a suite or group that is not approved
+  [38;2;58;143;20mGo:[0m         go1.27.3
+  [38;2;58;143;20mModule:[0m     v1.0.0
+  [38;2;58;143;20mMode:[0m       off
+  [38;2;58;143;20mOnly mode:[0m  no
+  [38;2;58;143;20mGaps:[0m       FIPS 140-3 mode is off: set GODEBUG=fips140=on, metrics: crypto/tls may negotiate a suite or group that is not approved
 
 [1;38;2;107;92;255mListeners (1):[0m
   [38;2;89;76;216mNAME     [0m[38;2;89;76;216mTLS  [0m[38;2;89;76;216mMIN VERSION  [0m[38;2;89;76;216mSUITES                                                [0m[38;2;89;76;216mGROUPS              [0m[38;2;89;76;216mAPPROVED[0m

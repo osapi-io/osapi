@@ -55,8 +55,10 @@ var (
 	}
 	// Store encrypts the JetStream store of the NATS server.
 	Store = Algorithm{
-		Name: "JetStream store", Algorithm: "AES-256-GCM (nats-server)", Approved: true,
-		Reason: "nats-server picks its own GCM nonce, which FIPS 140-3 only mode refuses (osapi#1549)",
+		Name:      "JetStream store",
+		Algorithm: "AES-256-GCM (nats-server)",
+		Approved:  true,
+		Reason:    "nats-server picks its own GCM nonce, which FIPS 140-3 only mode refuses (osapi#1549)",
 	}
 )
 

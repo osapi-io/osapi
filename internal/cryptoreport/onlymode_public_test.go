@@ -93,7 +93,11 @@ func (s *OnlyModePublicTestSuite) TestProbes() {
 		probe func() error
 	}{
 		{name: "NATS JWTs sign with nkeys", use: cryptoreport.NATSAuth, probe: nkeysSign},
-		{name: "the JetStream store seals with its own nonce", use: cryptoreport.Store, probe: storeSeal},
+		{
+			name:  "the JetStream store seals with its own nonce",
+			use:   cryptoreport.Store,
+			probe: storeSeal,
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
@@ -102,8 +106,14 @@ func (s *OnlyModePublicTestSuite) TestProbes() {
 				s.NoError(err, "it works outside only mode")
 				return
 			}
-			s.Equal(tc.use.OnlyMode, err == nil,
-				"%s: OnlyMode is %v, and in only mode the probe gave %v", tc.use.Name, tc.use.OnlyMode, err)
+			s.Equal(
+				tc.use.OnlyMode,
+				err == nil,
+				"%s: OnlyMode is %v, and in only mode the probe gave %v",
+				tc.use.Name,
+				tc.use.OnlyMode,
+				err,
+			)
 		})
 	}
 }

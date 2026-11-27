@@ -35,8 +35,9 @@ func Controller(
 	certs []pki.Cert,
 ) Report {
 	c := cfg.Controller
-	listeners := []TLS{{Name: "api", Config: c.API.TLS.Negotiation()}}
-	listeners = append(listeners, metrics(c.Metrics)...)
+	listeners := append(
+		[]TLS{{Name: "api", Config: c.API.TLS.Negotiation()}},
+		metrics(c.Metrics)...)
 	uses := []Algorithm{APITokens, Signatures, Seal}
 	for _, v := range c.Secrets.Vaults {
 		if v.Type == natsVault {

@@ -48,7 +48,8 @@ func (s *ProcessPublicTestSuite) TearDownTest() {
 func names(
 	r cryptoreport.Report,
 ) ([]string, []string) {
-	var uses, listeners []string
+	uses := make([]string, 0, len(r.Algorithms))
+	listeners := make([]string, 0, len(r.Listeners))
 	for _, a := range r.Algorithms {
 		uses = append(uses, a.Name)
 	}
@@ -61,7 +62,9 @@ func names(
 
 func (s *ProcessPublicTestSuite) TestProcesses() {
 	yes := true
-	cert := []pki.Cert{{Name: "api", State: pki.CertOK, Key: "ECDSA P-256", Signature: "ECDSA-SHA256", FIPS: &yes}}
+	cert := []pki.Cert{
+		{Name: "api", State: pki.CertOK, Key: "ECDSA P-256", Signature: "ECDSA-SHA256", FIPS: &yes},
+	}
 	on := config.ServerTLS{Enabled: true}
 	tests := []struct {
 		name          string
@@ -76,7 +79,10 @@ func (s *ProcessPublicTestSuite) TestProcesses() {
 				var cfg config.Config
 				cfg.Controller.API.TLS = on
 				cfg.Controller.Metrics = config.MetricsServer{Enabled: true}
-				cfg.Controller.Secrets.Vaults = []vault.Spec{{Name: "other", Type: "file"}, {Name: "default", Type: "nats"}}
+				cfg.Controller.Secrets.Vaults = []vault.Spec{
+					{Name: "other", Type: "file"},
+					{Name: "default", Type: "nats"},
+				}
 
 				return cryptoreport.Controller(cfg, cert)
 			},
@@ -103,7 +109,8 @@ func (s *ProcessPublicTestSuite) TestProcesses() {
 			name: "when a key encrypts the NATS store",
 			report: func() cryptoreport.Report {
 				return cryptoreport.NATS(config.NATSServer{
-					TLS: on, JetStream: config.NATSServerJetStream{KeyFile: "/etc/osapi/jetstream.key"},
+					TLS:       on,
+					JetStream: config.NATSServerJetStream{KeyFile: "/etc/osapi/jetstream.key"},
 				}, nil)
 			},
 			wantUses:      []string{"NATS operator, account and user JWTs", "JetStream store"},

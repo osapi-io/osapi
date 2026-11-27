@@ -75,8 +75,41 @@ osapi do not operate in it:
   only mode refuses. Thus the server does not make an encrypted stream in only
   mode (osapi-io/osapi#1549). A store with no `key_file` is not encrypted, and
   operates in only mode.
-- **Facts from gohai.** The SSH host key facts and the shard of a host use MD5
-  (osapi-io/gohai#357).
 
 The `go-fips-test` recipe runs the tests of the seal, the NATS vault and the
 agent keys in only mode. CI runs it in the `fips140=only` job.
+
+## The crypto of each process
+
+FIPS 140-3 mode is a setting of each process, not of the fleet. `GODEBUG` sets
+it when the process starts. Thus each process reports its own crypto: the
+controller, the NATS server and each agent. The report goes in each heartbeat.
+
+| Where                                      | What it shows                               |
+| ------------------------------------------ | ------------------------------------------- |
+| `osapi client health status`               | The FIPS column of the controller and NATS  |
+| `osapi client health status --json`        | The `crypto` of each component              |
+| `osapi client agent get --hostname <name>` | The FIPS line and the crypto of the agent   |
+| The dashboard and the agent card in the UI | The FIPS line, with each gap in its tooltip |
+| `osapi pki list` and `osapi pki key list`  | Whether FIPS 140-3 approves each key        |
+
+The report of a process has:
+
+- **The Go version and the module version**, from `crypto/fips140.Version()`.
+- **The mode:** `off`, `on`, or `only`.
+- **Each TLS listener**, such as `api`, `nats` or `metrics`: its lowest TLS
+  version, its suites and its groups. In FIPS 140-3 mode, crypto/tls negotiates
+  only approved suites and groups. Out of the mode, a listener that sets no
+  groups can negotiate X25519, which is not approved.
+- **Each algorithm that the process uses**, with `approved` and `only_mode`. An
+  approved algorithm can still fail in only mode, as NATS authentication does.
+  `only_mode` says so, and `reason` names the issue.
+- **The gaps:** each reason that the process is not in FIPS 140-3 mode with only
+  approved algorithms. The FIPS line is the mode, then `approved` when there is
+  no gap, or the number of gaps.
+
+A test holds `only_mode` to what the code does. Each algorithm that claims to
+operate in only mode is in a package that the `fips140=only` job tests. For NATS
+authentication and the JetStream store, the job runs the same call that nkeys
+and nats-server make, and expects it to fail. When a fix upstream makes that
+call operate, the test fails until the report says so.

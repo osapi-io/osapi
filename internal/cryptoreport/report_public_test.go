@@ -120,8 +120,8 @@ func (s *ReportPublicTestSuite) TestNew() {
 			},
 		},
 		{
-			name: "when a listener sets nothing in FIPS mode, crypto/tls restricts it",
-			mode: types.FIPSOn,
+			name:      "when a listener sets nothing in FIPS mode, crypto/tls restricts it",
+			mode:      types.FIPSOn,
 			listeners: []cryptoreport.TLS{{Name: "nats", Config: &tls.Config{}}},
 			validateFunc: func(r cryptoreport.Report) {
 				s.Equal("TLS 1.2", r.Listeners[0].MinVersion, "crypto/tls's lowest")
@@ -171,9 +171,15 @@ func (s *ReportPublicTestSuite) TestCertificates() {
 	}{
 		{
 			name: "when a certificate is approved",
-			certs: []pki.Cert{{
-				Name: "api", State: pki.CertOK, Key: "ECDSA P-256", Signature: "ECDSA-SHA256", FIPS: &yes,
-			}},
+			certs: []pki.Cert{
+				{
+					Name:      "api",
+					State:     pki.CertOK,
+					Key:       "ECDSA P-256",
+					Signature: "ECDSA-SHA256",
+					FIPS:      &yes,
+				},
+			},
 			want: []cryptoreport.Algorithm{{
 				Name: "certificate api", Algorithm: "ECDSA P-256, ECDSA-SHA256",
 				Approved: true, OnlyMode: true,

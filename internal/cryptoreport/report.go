@@ -79,7 +79,10 @@ func New(
 		rl := listener(l, m)
 		r.Listeners = append(r.Listeners, rl)
 		if rl.TLS && !rl.Approved {
-			r.Gaps = append(r.Gaps, l.Name+": crypto/tls may negotiate a suite or group that is not approved")
+			r.Gaps = append(
+				r.Gaps,
+				l.Name+": crypto/tls may negotiate a suite or group that is not approved",
+			)
 		}
 	}
 	for _, a := range uses {

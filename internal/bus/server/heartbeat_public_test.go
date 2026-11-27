@@ -81,7 +81,12 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			srv.StartHeartbeat(ctx, "v1.2.3-test", config.ProcessConditions{}, &cryptoreport.Report{Go: "go1.27.3"})
+			srv.StartHeartbeat(
+				ctx,
+				"v1.2.3-test",
+				config.ProcessConditions{},
+				&cryptoreport.Report{Go: "go1.27.3"},
+			)
 
 			if tc.wantKey == "" {
 				return
