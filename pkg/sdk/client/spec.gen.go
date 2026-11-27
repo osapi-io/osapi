@@ -244,7 +244,7 @@ func Services() []ServiceSpec {
 			Result:     "Collection[DnsEntry]",
 		}, {
 			Doc:        "Set the DNS resolvers of an interface",
-			Examples:   2,
+			Examples:   3,
 			HTTP:       "PUT /api/node/{hostname}/dns/{interface_name}",
 			Input:      "DNSUpdateInput",
 			Name:       "Update",

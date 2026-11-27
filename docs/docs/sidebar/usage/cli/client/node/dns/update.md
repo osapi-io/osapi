@@ -6,9 +6,11 @@ Writes a netplan file of the interface's own, such as
 /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that
 matches the interface, and applies it. A definition that matches several
 interfaces, such as cloud-init's all for en\*, gives each of them the resolvers.
-An empty list keeps the interface's servers or domains, and an interface with no
-resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It
-runs on the Debian family, and elsewhere, and in a container, reports skipped.
+An empty list writes nothing for that list, so the interface keeps what DHCP
+gives it. override_dhcp drops the servers and domains DHCP gives, and then an
+empty list keeps the interface's current ones in the file; an interface with no
+resolvers yet starts from none. It runs on the Debian family, and elsewhere, and
+in a container, reports skipped.
 
 ```bash
 osapi client node dns update [flags]
@@ -23,8 +25,8 @@ osapi client node dns update --target web-01 --interface-name osapi0 --servers 9
 # Set the search domains, and keep the servers
 osapi client node dns update --target web-01 --interface-name osapi0 --search-domains corp.example --override-dhcp
 
-# An interface with no resolvers yet
-osapi client node dns update --target web-01 --interface-name osapi0 --servers 9.9.9.9
+# An interface with no resolvers yet, with DHCP's dropped
+osapi client node dns update --target web-01 --interface-name osapi0 --servers 9.9.9.9 --override-dhcp
 ```
 
 ## Result
@@ -113,10 +115,10 @@ With `--json`, the API's response:
 }
 ```
 
-An interface with no resolvers yet, on one host:
+An interface with no resolvers yet, with DHCP's dropped, on one host:
 
 ```ansi
-$ osapi client node dns update --target web-01 --interface-name osapi0 --servers 9.9.9.9
+$ osapi client node dns update --target web-01 --interface-name osapi0 --servers 9.9.9.9 --override-dhcp
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
@@ -127,7 +129,7 @@ $ osapi client node dns update --target web-01 --interface-name osapi0 --servers
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node dns update --target _all --interface-name osapi0 --servers 9.9.9.9
+$ osapi client node dns update --target _all --interface-name osapi0 --servers 9.9.9.9 --override-dhcp
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
@@ -157,11 +159,11 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example                                      | On the host                                                                                                                                                                                                                                                                                                                                                                  |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Set the servers of an interface              | writes `/etc/netplan/osapi-dns-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n        addresses:\n          - 9.9.9.9\n        search:\n          - example.com`; runs `netplan generate`; runs `netplan apply`                                                                                                                       |
-| Set the search domains, and keep the servers | writes `/etc/netplan/osapi-dns-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n        addresses:\n          - 1.1.1.1\n          - 8.8.8.8\n        search:\n          - corp.example\n      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false`; runs `netplan generate`; runs `netplan apply` |
-| An interface with no resolvers yet           | writes `/etc/netplan/osapi-dns-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n        addresses:\n          - 9.9.9.9`; runs `netplan generate`; runs `netplan apply`                                                                                                                                                                 |
+| Example                                                 | On the host                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Set the servers of an interface                         | writes `/etc/netplan/osapi-dns-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n        addresses:\n          - 9.9.9.9`; runs `netplan generate`; runs `netplan apply`                                                                                                                                                                 |
+| Set the search domains, and keep the servers            | writes `/etc/netplan/osapi-dns-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n        addresses:\n          - 1.1.1.1\n          - 8.8.8.8\n        search:\n          - corp.example\n      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false`; runs `netplan generate`; runs `netplan apply` |
+| An interface with no resolvers yet, with DHCP's dropped | writes `/etc/netplan/osapi-dns-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n        addresses:\n          - 9.9.9.9\n      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false`; runs `netplan generate`; runs `netplan apply`                                                                 |
 
 The command fails in these cases:
 

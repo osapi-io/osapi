@@ -33,6 +33,7 @@ var examples = []struct {
 	{"get-2", "A Mac", runGet2},
 	{"update", "Set the servers of an interface", runUpdate},
 	{"update-2", "Set the search domains, and keep the servers", runUpdate2},
+	{"update-3", "An interface with no resolvers yet, with DHCP's dropped", runUpdate3},
 	{"delete", "An interface osapi set", runDelete},
 }
 
@@ -91,6 +92,24 @@ func runUpdate2(
 		InterfaceName: "osapi0",
 		OverrideDHCP:  true,
 		SearchDomains: []string{"corp.example"},
+	})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runUpdate3 runs the example update-3: an interface with no resolvers yet, with DHCP's dropped.
+func runUpdate3(
+	ctx context.Context,
+	c *client.Client,
+	target string,
+) error {
+	resp, err := c.DNS.Update(ctx, target, client.DNSUpdateInput{
+		InterfaceName: "osapi0",
+		OverrideDHCP:  true,
+		Servers:       []string{"9.9.9.9"},
 	})
 	if err != nil {
 		return err

@@ -24,8 +24,8 @@ The behaviors that dns calls, and each call that its examples make.
 | ----------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | dns update              | interface_name=osapi0 servers=\[9.9.9.9]                                               | changed=true interface_name=osapi0                                      |
 | └─ netplan get          | name=osapi0                                                                            | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets type=ethernet |
-| └─ netplan update       | content=&lt;9 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; path… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
-| · └─ managedfile update | content=&lt;9 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; mode… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
+| └─ netplan update       | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; path… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
+| · └─ managedfile update | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; mode… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
 
 ## Set the search domains, and keep the servers (update)
 
@@ -36,14 +36,14 @@ The behaviors that dns calls, and each call that its examples make.
 | └─ netplan update       | content=&lt;14 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; pat… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
 | · └─ managedfile update | content=&lt;14 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; mod… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
 
-## An interface with no resolvers yet (update)
+## An interface with no resolvers yet, with DHCP's dropped (update)
 
 | CALL                    | SENDS                                                                                  | GETS                                                                    |
 | ----------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| dns update              | interface_name=osapi0 servers=\[9.9.9.9]                                               | changed=true interface_name=osapi0                                      |
+| dns update              | interface_name=osapi0 override_dhcp=true servers=\[9.9.9.9]                            | changed=true interface_name=osapi0                                      |
 | └─ netplan get          | name=osapi0                                                                            | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets type=ethernet |
-| └─ netplan update       | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; path… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
-| · └─ managedfile update | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; mode… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
+| └─ netplan update       | content=&lt;11 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; pat… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
+| · └─ managedfile update | content=&lt;11 lines&gt; metadata=&#123;"domain":"dns","interface":"osapi0"&#125; mod… | changed=true path=/etc/netplan/osapi-dns-osapi0.yaml                    |
 
 ## An interface osapi set (delete)
 
