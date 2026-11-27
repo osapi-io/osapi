@@ -42,6 +42,8 @@ func scenarios() []scenario {
 
 	out = append(out, deadLetterScenarios()...)
 
+	out = append(out, revocationScenarios()...)
+
 	return append(out, liveWriteScenarios()...)
 }
 
@@ -249,6 +251,96 @@ func joinScenarios() []scenario {
 			},
 		},
 	}}
+}
+
+// natsRevoked is the error of a NATS client whose user the server revoked.
+const natsRevoked = "authentication revoked"
+
+// cut is a step that waits until the fixture's agent name logs that the
+// NATS server revoked its user: the server cut it at once, not when its JWT
+// expires.
+func cut(
+	what string,
+	name string,
+) step {
+	return step{
+		name: "the NATS server cuts the " + what + " agent at once", logs: name,
+		wait: 30 * time.Second, pause: time.Second,
+		checks: []check{{path: "", op: "contains", want: natsRevoked}},
+	}
+}
+
+// revocationScenarios: in operator mode, each agent has a NATS user of its
+// own, and a revocation, a rejection or a delete of its machine cuts that
+// user from the NATS server at once. The machine joins again with a new
+// token, which gives it a new user.
+func revocationScenarios() []scenario {
+	return []scenario{
+		{
+			name:            "in operator mode, a removal cuts the agent's NATS user at once, and it joins again",
+			writeOp:         "JOIN",
+			fixture:         true,
+			fixtureOperator: true,
+			steps: []step{
+				joinToken("first", "--uses", "1", "--expires", "10m"),
+				{
+					name:   "start the agent with the token",
+					start:  "agent",
+					keyDir: "{dir:first}",
+					join:   "{first}",
+				},
+				ready("the agent joins with a NATS user of its own"),
+				job("a job reaches the joined agent", false, 0),
+				{
+					name: "the agent's NATS user is not revoked", logs: "agent",
+					checks: []check{{path: "", op: "absent", want: natsRevoked}},
+				},
+				{
+					name: "revoke the admission", on: onFixture,
+					cli: []string{"client", "admission", "revoke", "--machine-id", "{mid}"},
+				},
+				cut("revoked", "agent"),
+				{name: "stop the revoked agent", stop: "agent"},
+				{
+					name: "delete the admission", on: onFixture,
+					cli: []string{"client", "admission", "delete", "--machine-id", "{mid}"},
+				},
+				joinToken("again", "--uses", "1", "--expires", "10m"),
+				{
+					name:   "join again with a new token",
+					start:  "again",
+					keyDir: "{dir:again}",
+					join:   "{again}",
+				},
+				ready("the machine joins again with a new NATS user"),
+				// The registry has the old agent's registration until the new
+				// agent's first heartbeat replaces it.
+				job("a job reaches the agent that joined again", false, 60*time.Second),
+				{
+					name: "delete the admission of the joined agent", on: onFixture,
+					cli: []string{"client", "admission", "delete", "--machine-id", "{mid}"},
+				},
+				cut("deleted", "again"),
+				{name: "stop the deleted agent", stop: "again"},
+				{name: "start an agent to reject", start: "rejected", keyDir: "{dir:rejected}"},
+				admission("pending"),
+				{
+					name: "reject the agent", on: onFixture,
+					cli: []string{
+						"client",
+						"admission",
+						"reject",
+						"--machine-id",
+						"{mid}",
+						"--reason",
+						"integration test",
+					},
+				},
+				admission("rejected"),
+				{name: "stop the rejected agent", stop: "rejected"},
+			},
+		},
+	}
 }
 
 // agentKey is a step that reads the fingerprint of the agent's keys on its

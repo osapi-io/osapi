@@ -35,14 +35,19 @@ var (
 		{Role: "server", Path: "/etc/osapi/nats/nats-server.conf"},
 	}}
 	sampleOperator = CreateOutput{Files: []Written{
+		{Role: "controller", Path: "/etc/osapi/nats/account.jwt"},
+		{Role: "operator", Path: "/etc/osapi/nats/account.nk"},
+		{Role: "controller", Path: "/etc/osapi/nats/account.pub"},
+		{Role: "controller", Path: "/etc/osapi/nats/agent-signing.nk"},
 		{Role: "agent", Path: "/etc/osapi/nats/agent.creds"},
 		{Role: "controller", Path: "/etc/osapi/nats/controller.creds"},
+		{Role: "controller", Path: "/etc/osapi/nats/join-signing.nk"},
+		{Role: "controller", Path: "/etc/osapi/nats/operator-signing.nk"},
 		{Role: "operator", Path: "/etc/osapi/nats/operator.nk"},
 		{Role: "osapi", Path: "/etc/osapi/nats/osapi-nats.yaml"},
 		{Role: "server", Path: "/etc/osapi/nats/resolver.conf"},
 		{Role: "setup", Path: "/etc/osapi/nats/setup.creds"},
-		{Role: "controller", Path: "/etc/osapi/nats/agent-signing.nk"},
-		{Role: "controller", Path: "/etc/osapi/nats/join-signing.nk"},
-		{Role: "operator", Path: "/etc/osapi/nats/account.nk"},
+		{Role: "operator", Path: "/etc/osapi/nats/system-signing.nk"},
+		{Role: "controller", Path: "/etc/osapi/nats/system.creds"},
 	}}
 )

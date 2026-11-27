@@ -46,6 +46,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/natsjwt"
+	"github.com/osapi-io/osapi/internal/natsrevoke"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/validation"
 )
@@ -165,6 +166,22 @@ func startEnrollment(
 	agentUser, mint, err := joinAgentUser(cfg, namespace)
 	if err != nil {
 		return enrollment{}, fmt.Errorf("join over NATS: %w", err)
+	}
+	// In operator mode, a revocation, a rejection or a delete cuts the
+	// machine's NATS user from the server at once.
+	// A setup from before it has no account JWT until osapi nats auth
+	// operator update, or the next start of osapi's own NATS server, writes
+	// one: until then a removed agent is cut when its JWT expires.
+	if f := cfg.Controller.Join.Revocation.AccountJWTFile; f != "" {
+		if _, err := os.Stat(f); err != nil {
+			log.Warn(
+				"no account JWT for the revocation of an agent's NATS user; a removed agent is cut from NATS when its JWT expires",
+				slog.String("account_jwt_file", f),
+				slog.String("fix", "osapi nats auth operator update"),
+			)
+		} else if err := startRevocation(ctx, log, cfg, conn, enrollmentCfg.Bucket, watcher); err != nil {
+			return enrollment{}, fmt.Errorf("NATS user revocation: %w", err)
+		}
 	}
 	background(ctx, log, "join over NATS", func(ctx context.Context) error {
 		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, agentUser)
@@ -343,6 +360,73 @@ func calloutService(
 			Join: join, Agent: agent, AgentTTL: ttl, Tokens: tokens,
 		}),
 	}, nil
+}
+
+// startRevocation gives watcher the revoker of controller.join.revocation,
+// and sends the revocations to the NATS server until ctx is done.
+func startRevocation(
+	ctx context.Context,
+	log *slog.Logger,
+	cfg config.Config,
+	conn *jobclient.Connection,
+	bucket string,
+	watcher *admission.Watcher,
+) error {
+	r := cfg.Controller.Join.Revocation
+	data, err := os.ReadFile(r.OperatorSigningKeyFile)
+	if err != nil {
+		return fmt.Errorf("read the operator signing key: %w", err)
+	}
+	signer, err := nkeys.FromSeed([]byte(strings.TrimSpace(string(data))))
+	if err != nil {
+		return fmt.Errorf("the operator signing key: %w", err)
+	}
+	if pub, _ := signer.PublicKey(); !nkeys.IsValidPublicOperatorKey(pub) {
+		return errors.New("the operator signing key is not an operator key (SO...)")
+	}
+	system, err := revocationConnect(log, cfg)
+	if err != nil {
+		return err
+	}
+	// The config's check refuses an agent_ttl that is not a duration; an
+	// empty one keeps each revocation.
+	ttl, _ := time.ParseDuration(cfg.Controller.Join.AgentTTL)
+	revoker := natsrevoke.New(natsrevoke.Config{
+		KV:             conn.NATS,
+		Bucket:         bucket,
+		Conn:           natsrevoke.Requester{NC: system.NC},
+		Signer:         signer,
+		AccountJWTFile: r.AccountJWTFile,
+		TTL:            ttl,
+		Logger:         log,
+	})
+	watcher.SetRevoker(revoker)
+	background(ctx, log, "NATS user revocation", func(ctx context.Context) error {
+		defer bus.Close(system.NC)
+
+		return revoker.Run(ctx)
+	})
+
+	return nil
+}
+
+// revocationConnect connects to the controller's NATS as the system
+// account's user of controller.join.revocation.
+var revocationConnect = func(
+	log *slog.Logger,
+	cfg config.Config,
+) (*natsclient.Client, error) {
+	n := cfg.Controller.NATS
+	n.Auth = config.NATSAuth{
+		Type:      "creds",
+		CredsFile: cfg.Controller.Join.Revocation.SystemCredsFile,
+	}
+	opts, err := bus.ConnectionOptions(n, "osapi-revocation")
+	if err != nil {
+		return nil, err
+	}
+
+	return bus.Dial(log, opts)
 }
 
 // calloutConnect connects to the controller's NATS as the callout user,

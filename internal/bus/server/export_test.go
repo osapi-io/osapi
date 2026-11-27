@@ -67,3 +67,13 @@ func SetNatsauthOperator(
 
 	return func() { natsauthOperator = was }
 }
+
+// SetNatsauthUpdateOperator swaps how the server signs its operator again.
+func SetNatsauthUpdateOperator(
+	fn func(context.Context, avfs.VFS, string, string, config.NATS) (natsauth.Result, error),
+) func() {
+	was := natsauthUpdateOperator
+	natsauthUpdateOperator = fn
+
+	return func() { natsauthUpdateOperator = was }
+}

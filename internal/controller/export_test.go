@@ -287,3 +287,25 @@ func SetCalloutConnect(
 
 	return func() { calloutConnect = was }
 }
+
+// ExportRevocationConnect calls revocationConnect.
+func ExportRevocationConnect(
+	cfg config.Config,
+) error {
+	c, err := revocationConnect(slog.Default(), cfg)
+	if err == nil {
+		c.NC.Close()
+	}
+
+	return err
+}
+
+// SetRevocationConnect swaps the connection of the NATS user revocation.
+func SetRevocationConnect(
+	fn func(*slog.Logger, config.Config) (*natsclient.Client, error),
+) func() {
+	was := revocationConnect
+	revocationConnect = fn
+
+	return func() { revocationConnect = was }
+}

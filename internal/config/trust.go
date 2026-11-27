@@ -61,6 +61,12 @@ func TrustLocal(
 			j.SigningKeyFile = filepath.Join(dir, "agent-signing.nk")
 			j.JoinSigningKeyFile = filepath.Join(dir, "join-signing.nk")
 		}
+		if r := &c.Controller.Join.Revocation; r.AccountJWTFile == "" &&
+			c.Controller.Join.Callout.IssuerKeyFile == "" {
+			r.AccountJWTFile = filepath.Join(dir, "account.jwt")
+			r.OperatorSigningKeyFile = filepath.Join(dir, "operator-signing.nk")
+			r.SystemCredsFile = filepath.Join(dir, "system.creds")
+		}
 	}
 	natsCA, _ := SelfSignedFiles(c.NATS.Server.KeyDir, "nats")
 	clients := []*NATSConnection{&c.Controller.NATS}

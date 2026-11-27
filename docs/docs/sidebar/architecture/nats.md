@@ -59,14 +59,28 @@ A shared user does not let one agent answer for another. The controller admits
 each agent by its own key, and checks the signature of each answer
 ([Agent identity](agent-identity.md)).
 
-## Why a revocation can wait for a JWT
+## How a revocation cuts an agent from NATS
 
 In operator mode, the NATS server checks the JWT of an agent, not its admission.
-A revoked host keeps its connection until its JWT expires. The controller renews
-a JWT only for a host that is admitted, for a request that the host's admitted
-key signed. Thus `controller.join.agent_ttl` is the longest time that a revoked
-host stays on NATS. Before that time, osapi refuses each answer and each
-registration that the revoked host signs.
+Thus the controller tells the server when it removes a machine. A revocation, a
+rejection or a delete of an admitted machine adds the agent's NATS user to the
+revocations of osapi's account. The controller signs the account again with an
+operator signing key, and sends it to the server as a user of the system
+account. The server closes each connection of that user at once, and refuses
+each JWT of the user from before the revocation.
+
+The server keeps the account that it gets in memory only. Thus the controller
+records each revocation in the enrollment bucket, and sends the account again
+each minute while a revocation is left. A revocation older than
+`controller.join.agent_ttl` is removed, because each JWT that it refuses has
+expired. A machine that joins again gets a new NATS user, so the old revocation
+does not stop it.
+
+A setup with no `controller.join.revocation.account_jwt_file` file cuts a
+revoked host only when its JWT expires. The controller renews a JWT only for a
+host that is admitted. Thus `controller.join.agent_ttl` is then the longest time
+that a revoked host stays on NATS. In each setup, osapi refuses each answer and
+each registration that the revoked host signs.
 
 ## Design
 

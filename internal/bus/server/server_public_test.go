@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/osapi-io/osapi/internal/natsauth"
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -65,6 +66,54 @@ func (s *ServerPublicTestSuite) TestNewOperatorFails() {
 	c.Server.KeyDir = s.T().TempDir()
 	_, err := server.New(context.Background(), slog.Default(), c, nil)
 	s.ErrorContains(err, "make the operator: no entropy")
+}
+
+// TestNewOperatorFromBefore: credentials that the server made before the
+// revocation of an agent's NATS user get its files at the next start, with
+// the keys that they have.
+func (s *ServerPublicTestSuite) TestNewOperatorFromBefore() {
+	setup := func() (config.NATS, string) {
+		c := serverNATS(s.T())
+		c.Server.Auth = config.NATSServerAuth{Type: "operator"}
+		c.Server.KeyDir = s.T().TempDir()
+		dir := config.NATSAuthDir(c.Server.KeyDir)
+		s.Require().NoError(os.MkdirAll(dir, 0o700))
+		_, err := natsauth.Operator(context.Background(), osfs.New(), dir, c.Server.Namespace, c)
+		s.Require().NoError(err)
+		for _, f := range []string{
+			natsauth.AccountJWTFile, natsauth.OperatorSigningKeyFile,
+			natsauth.SystemSigningKeyFile, natsauth.SystemCredsFile,
+		} {
+			s.Require().NoError(os.Remove(filepath.Join(dir, f)))
+		}
+
+		return c, dir
+	}
+
+	s.Run("gets the files of the revocation, with the same keys", func() {
+		c, dir := setup()
+		before, err := os.ReadFile(filepath.Join(dir, "account.nk"))
+		s.Require().NoError(err)
+		srv, err := server.New(context.Background(), slog.Default(), c, nil)
+		s.Require().NoError(err)
+		defer srv.Stop(context.Background())
+		s.FileExists(filepath.Join(dir, natsauth.AccountJWTFile))
+		s.FileExists(filepath.Join(dir, natsauth.SystemCredsFile))
+		after, err := os.ReadFile(filepath.Join(dir, "account.nk"))
+		s.Require().NoError(err)
+		s.Equal(before, after, "the account keeps its key")
+	})
+
+	s.Run("an update that fails is the error", func() {
+		defer server.SetNatsauthUpdateOperator(func(
+			context.Context, avfs.VFS, string, string, config.NATS,
+		) (natsauth.Result, error) {
+			return natsauth.Result{}, errors.New("read only")
+		})()
+		c, _ := setup()
+		_, err := server.New(context.Background(), slog.Default(), c, nil)
+		s.ErrorContains(err, "add the revocation to the operator: read only")
+	})
 }
 
 func TestServerPublicTestSuite(

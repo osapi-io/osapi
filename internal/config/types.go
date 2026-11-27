@@ -376,6 +376,26 @@ type ControllerJoin struct {
 	// Callout is osapi's auth callout service, for a NATS server whose
 	// auth_callout block names osapi's issuer key.
 	Callout JoinCallout `mapstructure:"callout"`
+	// Revocation cuts the NATS user of a machine from the server at once
+	// when an operator revokes, rejects or deletes the machine.
+	Revocation JoinRevocation `mapstructure:"revocation"`
+}
+
+// JoinRevocation is what the controller needs, in operator mode, to add the
+// NATS user of a machine that it removes to the revocations of osapi's
+// account, and to send the account to the NATS server: the account's JWT,
+// an operator signing key that signs it again, and a user of the system
+// account that sends it.
+type JoinRevocation struct {
+	// AccountJWTFile is the JWT of osapi's account, which the controller
+	// adds the revocations to.
+	AccountJWTFile string `mapstructure:"account_jwt_file" doc:"For operator mode: a file with the JWT of osapi's account, as the NATS server has it. The controller adds the NATS user of each machine that it revokes, rejects or deletes to its revocations. Empty turns the revocation off: a removed agent is cut from NATS when its JWT expires." choice:"set for operator mode; osapi nats auth operator create writes account.jwt"`
+	// OperatorSigningKeyFile is a signing key of the operator, which signs
+	// the account with its revocations.
+	OperatorSigningKeyFile string `mapstructure:"operator_signing_key_file" doc:"For operator mode: a file with a signing key seed (SO...) of the operator, which signs osapi's account again with its revocations." choice:"set with account_jwt_file"`
+	// SystemCredsFile is a user of the system account, which sends the
+	// account to the NATS server.
+	SystemCredsFile string `mapstructure:"system_creds_file" doc:"For operator mode: the credentials of a user of the system account, which can send only the update of osapi's account to the NATS server." choice:"set with account_jwt_file"`
 }
 
 // JoinCallout is osapi's auth callout service: the NATS server sends it

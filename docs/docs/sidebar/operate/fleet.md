@@ -100,10 +100,22 @@ In operator mode, the controller gives each agent its own NATS user, a JWT. With
 over NATS when a third of its life is left. The controller renews only a host
 that is admitted, for a request that its key signed.
 
-Thus `osapi client admission revoke` removes the host from NATS when its JWT
-expires. Select the TTL by how fast a revocation must apply, and how long a host
-can be off: a host that is off for longer than the TTL cannot renew, and must
-join again. An empty `agent_ttl` gives a JWT that does not expire.
+`osapi client admission revoke`, `reject` and `delete` cut the host's NATS user
+from the server at once. The controller adds the user to the revocations of
+osapi's account, with the files that `osapi nats auth operator create` writes
+and `controller.join.revocation` names. The agent logs
+`nats: authentication revoked`. To join again, the host needs a new token or a
+new admission, and it gets a new NATS user.
+
+A setup from before these files has no `account.jwt`. osapi's own NATS server
+adds the files at its next start. For another server, run
+`osapi nats auth operator update`, and merge its `osapi-nats.yaml`. Until then,
+the controller logs a warning, and a revoked host stays on NATS until its JWT
+expires.
+
+Select the TTL by how long a host can be off: a host that is off for longer than
+the TTL cannot renew, and must join again. An empty `agent_ttl` gives a JWT that
+does not expire.
 
 ## Rotate an agent's keys
 

@@ -64,8 +64,13 @@ var Group = command.Register(command.Define(
 			"`agent-signing.nk`, whose template is the agent role's permissions, and\n"+
 			"`join-signing.nk`, the join role's. Thus the controller cannot mint a user\n"+
 			"with more than an agent or a join user has. Keep `operator.nk` and\n"+
-			"`account.nk` offline: they sign the accounts and the static users.\n"+
-			"`--print` also prints the resolver file.").
+			"`account.nk` offline: they sign the accounts and the static users.\n\n"+
+			"The controller cuts the NATS user of a machine that it revokes, rejects\n"+
+			"or deletes at once. It adds the user to the revocations of osapi's\n"+
+			"account (`account.jwt`), signs the account again with an operator\n"+
+			"signing key (`operator-signing.nk`), and sends it to the server as a\n"+
+			"user of the system account (`system.creds`), which may send only that\n"+
+			"update. `--print` also prints the resolver file.").
 		Example("--out /etc/osapi/nats").
 		Prints(sampleOperator).
 		Fails("no directory", CreateInput{}).

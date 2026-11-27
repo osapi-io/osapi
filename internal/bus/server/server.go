@@ -190,6 +190,21 @@ func selfMadeOperator(
 		); err != nil {
 			return config.NATSServerAuth{}, fmt.Errorf("make the operator: %w", err)
 		}
+	} else if _, err := os.Stat(filepath.Join(dir, natsauth.AccountJWTFile)); err != nil {
+		// Credentials from before the revocation of an agent's NATS user get
+		// its keys and files. The other keys stay, so no agent joins again.
+		if _, err := natsauthUpdateOperator(
+			ctx,
+			osfs.NewWithNoIdm(),
+			dir,
+			cfg.Server.Namespace,
+			cfg,
+		); err != nil {
+			return config.NATSServerAuth{}, fmt.Errorf(
+				"add the revocation to the operator: %w",
+				err,
+			)
+		}
 	}
 
 	return config.NATSServerAuth{
@@ -199,5 +214,10 @@ func selfMadeOperator(
 	}, nil
 }
 
-// natsauthOperator makes the operator credentials. Tests swap it.
-var natsauthOperator = natsauth.Operator
+// natsauthOperator makes the operator credentials, and
+// natsauthUpdateOperator signs them again with the keys that they have.
+// Tests swap them.
+var (
+	natsauthOperator       = natsauth.Operator
+	natsauthUpdateOperator = natsauth.UpdateOperator
+)
