@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><meta data-rh="true" property="og:description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Behavior DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.668d3c15.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.16e3d3f9.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.be18b3a4.js" defer="defer"></script>
 </head>
 <body>
@@ -624,19 +624,21 @@ virtualization.NewWith(h.Sources()).</p>
 /proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
 /sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
 /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
-/var/snap/lxd/common/lxd/devlxd, Prints for command -v docker; command -v nova;
-command -v podman; systemd-detect-virt --container; systemd-detect-virt --vm. On
-rhel: Exists for /.dockerenv, /.dockerinit, /dev/lxd/sock, /proc/1/environ,
-/proc/bc/0, /proc/cpuinfo, /proc/modules, /proc/self/cgroup, /proc/self/status,
-/proc/vz, /proc/xen, /sys/class/dmi/id/product_name,
-/sys/class/dmi/id/sys_vendor, /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
-/var/snap/lxd/common/lxd/devlxd, Prints for command -v docker; command -v nova;
-command -v podman; systemd-detect-virt --container; systemd-detect-virt --vm. On
-darwin: Exists for /Applications/VMware Fusion.app, Prints for command -v
-VBoxManage; command -v docker; command -v prlctl; ioreg -n pci1ab8,4000; sysctl
--n kern.hv_vmm_present; system_profiler SPHardwareDataType. With content, it
-reads more under those paths. gohai collector get --name virtualization shows it
-in full; virtualization is its package.</p>
+/var/snap/lxd/common/lxd/devlxd, Prints for sh -c command -v &quot;$1&quot; sh docker; sh
+-c command -v &quot;$1&quot; sh nova; sh -c command -v &quot;$1&quot; sh podman; systemd-detect-virt
+--container; systemd-detect-virt --vm. On rhel: Exists for /.dockerenv,
+/.dockerinit, /dev/lxd/sock, /proc/1/environ, /proc/bc/0, /proc/cpuinfo,
+/proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
+/sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
+/var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
+/var/snap/lxd/common/lxd/devlxd, Prints for sh -c command -v &quot;$1&quot; sh docker; sh
+-c command -v &quot;$1&quot; sh nova; sh -c command -v &quot;$1&quot; sh podman; systemd-detect-virt
+--container; systemd-detect-virt --vm. On darwin: Exists for
+/Applications/VMware Fusion.app, Prints for ioreg -n pci1ab8,4000; sh -c command
+-v &quot;$1&quot; sh VBoxManage; sh -c command -v &quot;$1&quot; sh docker; sh -c command -v &quot;$1&quot; sh
+prlctl; sysctl -n kern.hv_vmm_present; system_profiler SPHardwareDataType. With
+content, it reads more under those paths. gohai collector get --name
+virtualization shows it in full; virtualization is its package.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="machine_id"><code>machine_id</code><a href="#machine_id" class="hash-link" aria-label="Direct link to machine_id" title="Direct link to machine_id" translate="no">​</a></h3>
 <p>Returns id. Build it with machineid.NewWith(h.Sources()).</p>
 <p>Use: An example&#x27;s fake host gives, on debian: Exists for /etc/machine-id,
@@ -979,10 +981,10 @@ get --name ipc shows it in full; ipc is its package.</p>
 <p>Returns go, python, ruby, node, java, perl. Build it with
 languages.NewWith(h.Sources()).</p>
 <p>Use: An example&#x27;s fake host gives, on debian: Prints for go version; java
--version; node --version; perl --version; python3 --version; ruby --version. On
-rhel: Prints for go version; java -version; node --version; perl --version;
+--version; node --version; perl --version; python3 --version; ruby --version. On
+rhel: Prints for go version; java --version; node --version; perl --version;
 python3 --version; ruby --version. On darwin: Prints for go version; java
--version; node --version; perl --version; python3 --version; ruby --version.
+--version; node --version; perl --version; python3 --version; ruby --version.
 With content, it reads more under those paths. gohai collector get --name
 languages shows it in full; languages is its package.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="libvirt"><code>libvirt</code><a href="#libvirt" class="hash-link" aria-label="Direct link to libvirt" title="Direct link to libvirt" translate="no">​</a></h3>
