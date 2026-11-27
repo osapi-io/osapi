@@ -29,6 +29,7 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	api "github.com/osapi-io/osapi/internal/controller/endpoints/health"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 )
 
 // Checker checks the health of a dependency.
@@ -124,6 +125,8 @@ type ComponentEntry struct {
 	// Version is the build version of the component's binary.
 	Version       string
 	SubComponents map[string]SubComponentInfo
+	// Crypto is the crypto of the component's process.
+	Crypto *cryptoreport.Report
 }
 
 // ClosureMetricsProvider implements MetricsProvider using function closures.

@@ -41,11 +41,15 @@ func TestMethodsPublicTestSuite(t *testing.T) {
 }
 
 func (s *MethodsPublicTestSuite) TestList() {
+	yes := true
 	expires := time.Date(2031, 11, 25, 12, 0, 0, 0, time.UTC)
 	d := pkilist.Deps{
 		Keys: func() []pkikey.Key {
 			return []pkikey.Key{
-				{Name: "controller", State: "ok", Algorithm: "Ed25519", Fingerprint: "SHA256:aa"},
+				{
+					Name: "controller", State: "ok", Algorithm: "Ed25519", Approved: true,
+					Fingerprint: "SHA256:aa",
+				},
 				{Name: "jetstream", State: "ok", Algorithm: "AES-256-GCM", KeyID: "7f3a"},
 				{Name: "agent-encryption", State: "ok", Algorithm: "ECDH P-256", PublicKey: "BA"},
 				{Name: "vault:default", State: "not made"},
@@ -57,6 +61,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 					Name:        "api",
 					State:       "ok",
 					Key:         "ECDSA P-256",
+					FIPS:        &yes,
 					Fingerprint: "SHA256:bb",
 					Expires:     expires,
 				},
@@ -71,11 +76,15 @@ func (s *MethodsPublicTestSuite) TestList() {
 	s.Require().Len(got.Items, 6)
 	s.Equal(pkilist.KindKey, got.Items[0].Kind)
 	s.Equal("SHA256:aa", got.Items[0].Fingerprint)
+	s.True(got.Items[0].Approved, "a key has the approval of its algorithm")
+	s.False(got.Items[3].Approved, "a key that is not made has none")
 	s.Equal("7f3a", got.Items[1].Fingerprint, "a secret key shows its ID")
 	s.Equal("BA", got.Items[2].Fingerprint, "an encryption key shows its public key")
 	s.Empty(got.Items[3].Fingerprint)
 	s.Equal(pkilist.KindCert, got.Items[4].Kind)
 	s.Equal("ECDSA P-256", got.Items[4].Algorithm)
+	s.True(got.Items[4].Approved, "a certificate has the approval of its algorithms")
+	s.False(got.Items[5].Approved, "a certificate that is not made has none")
 	s.Equal(expires, *got.Items[4].Expires)
 	s.Nil(got.Items[5].Expires, "a certificate that is not made has no expiry")
 }

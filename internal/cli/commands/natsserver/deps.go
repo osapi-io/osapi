@@ -27,13 +27,19 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 )
 
 // Server is the embedded NATS server, which server.New makes.
 type Server interface {
 	Start()
 	Stop(ctx context.Context)
-	StartHeartbeat(ctx context.Context, version string, conditions config.ProcessConditions)
+	StartHeartbeat(
+		ctx context.Context,
+		version string,
+		conditions config.ProcessConditions,
+		crypto *cryptoreport.Report,
+	)
 }
 
 // Deps is what start uses: the config, the log, the version of the binary,

@@ -27,12 +27,12 @@ The command prints:
 ```ansi
 $ osapi pki key list
 [1;38;2;0;213;255mKeys (5):[0m
-  [38;2;10;143;176mNAME              [0m[38;2;10;143;176mKIND        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM    [0m[38;2;10;143;176mKEY ID[0m
-  [1mcontroller[0m        signing     controller  ok     Ed25519      [38;2;138;138;138m[0m
-  [1magent[0m             signing     agent       ok     Ed25519      [38;2;138;138;138m[0m
-  [1magent-encryption[0m  encryption  agent       ok     ECDH P-256   [38;2;138;138;138m[0m
-  [1mjetstream[0m         encryption  nats        ok     AES-256-GCM  [38;2;138;138;138m7f3a9c1e5b2d8f40[0m
-  [1mvault:default[0m     encryption  vault       ok     AES-256-GCM  [38;2;138;138;138mb8e14a2c9d3f6071[0m
+  [38;2;10;143;176mNAME              [0m[38;2;10;143;176mKIND        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM    [0m[38;2;10;143;176mAPPROVED  [0m[38;2;10;143;176mKEY ID[0m
+  [1mcontroller[0m        signing     controller  ok     Ed25519      yes       [38;2;138;138;138m[0m
+  [1magent[0m             signing     agent       ok     Ed25519      yes       [38;2;138;138;138m[0m
+  [1magent-encryption[0m  encryption  agent       ok     ECDH P-256   yes       [38;2;138;138;138m[0m
+  [1mjetstream[0m         encryption  nats        ok     AES-256-GCM  yes       [38;2;138;138;138m7f3a9c1e5b2d8f40[0m
+  [1mvault:default[0m     encryption  vault       ok     AES-256-GCM  yes       [38;2;138;138;138mb8e14a2c9d3f6071[0m
 ```
 
 With `--json`, the command prints:
@@ -47,6 +47,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/pki/controller.key",
       "algorithm": "Ed25519",
+      "approved": true,
       "fingerprint": "SHA256:9c1f2e3d4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4"
     },
     {
@@ -56,6 +57,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/pki/agent/agent.key",
       "algorithm": "Ed25519",
+      "approved": true,
       "fingerprint": "SHA256:4b2a7c6d5e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b",
       "admit": "osapi client admission admit --machine-id 4c4c4544-0035-4b10-8031-b4c04f4d3332 --fingerprint SHA256:4b2a7c6d5e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b"
     },
@@ -66,6 +68,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/pki/agent/agent.ekey",
       "algorithm": "ECDH P-256",
+      "approved": true,
       "public_key": "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs"
     },
     {
@@ -75,6 +78,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/nats/jetstream.key",
       "algorithm": "AES-256-GCM",
+      "approved": true,
       "key_id": "7f3a9c1e5b2d8f40"
     },
     {
@@ -84,6 +88,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/secrets.key",
       "algorithm": "AES-256-GCM",
+      "approved": true,
       "key_id": "b8e14a2c9d3f6071",
       "keys": 1
     }

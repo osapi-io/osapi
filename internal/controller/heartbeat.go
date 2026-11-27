@@ -29,9 +29,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avfs/avfs/vfs/osfs"
+
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
@@ -48,6 +52,7 @@ func startHeartbeat(
 	version string,
 	subs map[string]job.SubComponentInfo,
 	conditions config.ProcessConditions,
+	crypto *cryptoreport.Report,
 ) {
 	hostname, err := hostnameFn()
 	if err != nil {
@@ -71,6 +76,7 @@ func startHeartbeat(
 			HighCPUPercent:      conditions.HighCPUPercent,
 		},
 		SubComponents: subs,
+		Crypto:        crypto,
 	})
 	go hb.Start(ctx)
 }
@@ -150,4 +156,15 @@ func enabledOrDisabled(
 	}
 
 	return "disabled"
+}
+
+// controllerCrypto is the crypto report of the controller that cfg
+// starts, with the certificates that it serves.
+func controllerCrypto(
+	cfg config.Config,
+) *cryptoreport.Report {
+	certs := pki.ReadCerts(osfs.NewWithNoIdm(), config.CertSourcesOf(cfg, "controller"), time.Now())
+	r := cryptoreport.Controller(cfg, certs)
+
+	return &r
 }

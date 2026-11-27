@@ -274,6 +274,7 @@ func newMetricsProvider(
 						Status:   string(status),
 						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
 						Version:  reg.AgentVersion,
+						Crypto:   reg.Crypto,
 					}
 					for _, c := range reg.Conditions {
 						if c.Status {
@@ -296,6 +297,7 @@ func newMetricsProvider(
 						Status:   string(types.AgentReady),
 						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
 						Version:  reg.Version,
+						Crypto:   reg.Crypto,
 					}
 					for _, c := range reg.Conditions {
 						if c.Status {

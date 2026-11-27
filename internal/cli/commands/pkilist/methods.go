@@ -58,7 +58,7 @@ func ofKey(
 
 	return Item{
 		Kind: KindKey, Name: k.Name, Component: k.Component, State: k.State,
-		File: k.File, Algorithm: k.Algorithm, Fingerprint: fp,
+		File: k.File, Algorithm: k.Algorithm, Approved: k.Approved, Fingerprint: fp,
 	}
 }
 
@@ -68,7 +68,8 @@ func ofCert(
 ) Item {
 	it := Item{
 		Kind: KindCert, Name: c.Name, Component: c.Component, State: c.State,
-		File: c.File, Algorithm: c.Key, Fingerprint: c.Fingerprint,
+		File: c.File, Algorithm: c.Key, Approved: c.FIPS != nil && *c.FIPS,
+		Fingerprint: c.Fingerprint,
 	}
 	if !c.Expires.IsZero() {
 		t := c.Expires

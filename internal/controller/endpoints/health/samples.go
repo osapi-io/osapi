@@ -44,6 +44,7 @@ var (
 				MemBytes:   52428800,
 				Version:    "v1.4.0",
 				Address:    "0.0.0.0:8080",
+				FIPS:       "off",
 			},
 			{
 				Type:     "nats",
@@ -52,6 +53,7 @@ var (
 				Age:      "51h3m",
 				Version:  "2.11.4",
 				URL:      "nats://localhost:4222",
+				FIPS:     "off",
 			},
 			{
 				Type:       "agent",

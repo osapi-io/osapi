@@ -334,6 +334,10 @@ func (h *Health) populateMetrics(
 				CPUPercent: float32(e.CPUPercent),
 				MemBytes:   e.MemBytes,
 				Version:    e.Version,
+				Crypto:     e.Crypto,
+			}
+			if e.Crypto != nil {
+				entry.FIPS = e.Crypto.Verdict()
 			}
 			if len(e.Conditions) > 0 {
 				entry.Conditions = append([]types.ConditionType(nil), e.Conditions...)

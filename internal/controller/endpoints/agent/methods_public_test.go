@@ -41,6 +41,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
@@ -189,9 +190,12 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				}},
 				KeyStored: true,
 				Verified:  true,
+				Crypto:    &cryptoreport.Report{Mode: types.FIPSOn},
 			},
 			validateFunc: func(got agent.Info) {
 				s.Equal("m-1", got.MachineID)
+				s.Equal("on, approved", got.FIPS, "the verdict of the agent's crypto")
+				s.Equal(types.FIPSOn, got.Crypto.Mode)
 				s.Equal("v1.4.0", got.Version)
 				s.Equal(map[string]string{"role": "web"}, got.Labels)
 				s.Equal(at, got.RegisteredAt)
@@ -230,6 +234,8 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 			info: job.AgentInfo{Hostname: "server1"},
 			validateFunc: func(got agent.Info) {
 				s.Empty(got.MachineID)
+				s.Empty(got.FIPS)
+				s.Nil(got.Crypto)
 				s.Nil(got.Labels)
 				s.Nil(got.Facts)
 				s.Nil(got.MissingPrograms)

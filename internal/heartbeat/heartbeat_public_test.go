@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
@@ -71,6 +72,26 @@ func (s *HeartbeatPublicTestSuite) SetupTest() {
 func (s *HeartbeatPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 	heartbeat.ResetHeartbeatMarshalFn()
+}
+
+// TestWriteRegistrationCrypto: the registration carries the crypto of the
+// process.
+func (s *HeartbeatPublicTestSuite) TestWriteRegistrationCrypto() {
+	report := &cryptoreport.Report{Go: "go1.27.3", Mode: types.FIPSOff}
+	hb := heartbeat.New(slog.Default(), heartbeat.Options{
+		KV: s.mockKV, RegistryBucket: "registry", Hostname: "web-server-01",
+		Component: "nats", Process: s.mockProcess, Interval: time.Second, Crypto: report,
+	})
+	s.mockProcess.EXPECT().GetMetrics().Return(nil, errors.New("no metrics"))
+	s.mockKV.EXPECT().
+		KVPut(gomock.Any(), "registry", "nats.web_server_01", gomock.Any()).
+		DoAndReturn(func(_ context.Context, _ string, _ string, data []byte) (uint64, error) {
+			var reg job.ComponentRegistration
+			s.Require().NoError(json.Unmarshal(data, &reg))
+			s.Equal(report, reg.Crypto)
+			return uint64(1), nil
+		})
+	heartbeat.ExportWriteRegistration(context.Background(), hb)
 }
 
 func (s *HeartbeatPublicTestSuite) TestWriteRegistration() {

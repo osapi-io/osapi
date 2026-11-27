@@ -47,6 +47,11 @@ func (ContentType) Doc() string {
 	return "ContentType is how a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts."
 }
 
+// Doc is what FIPSMode is, from its doc comment.
+func (FIPSMode) Doc() string {
+	return "FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it once, at the start of the process, from GODEBUG=fips140."
+}
+
 // Doc is what FieldIn is, from its doc comment.
 func (FieldIn) Doc() string {
 	return "FieldIn is where a field of a request goes."
@@ -150,6 +155,10 @@ func All() []TypeSpec {
 		Doc:    ContentType("").Doc(),
 		Name:   "ContentType",
 		Values: names(ContentType("").Values()),
+	}, {
+		Doc:    FIPSMode("").Doc(),
+		Name:   "FIPSMode",
+		Values: names(FIPSMode("").Values()),
 	}, {
 		Doc:    FieldIn("").Doc(),
 		Name:   "FieldIn",

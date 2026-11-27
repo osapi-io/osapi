@@ -30,6 +30,7 @@ $ osapi pki key get --name agent
   [38;2;10;143;176mState:[0m        ok
   [38;2;10;143;176mFile:[0m         /etc/osapi/pki/agent/agent.key
   [38;2;10;143;176mAlgorithm:[0m    Ed25519
+  [38;2;10;143;176mApproved:[0m     yes
   [38;2;10;143;176mFingerprint:[0m  SHA256:4b2a7c6d5e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b
   [38;2;10;143;176mTo admit:[0m     osapi client admission admit --machine-id 4c4c4544-0035-4b10-8031-b4c04f4d3332 --fingerprint SHA256:4b2a7c6d5e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b
 ```
@@ -44,6 +45,7 @@ With `--json`, the command prints:
   "state": "ok",
   "file": "/etc/osapi/pki/agent/agent.key",
   "algorithm": "Ed25519",
+  "approved": true,
   "fingerprint": "SHA256:4b2a7c6d5e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b",
   "admit": "osapi client admission admit --machine-id 4c4c4544-0035-4b10-8031-b4c04f4d3332 --fingerprint SHA256:4b2a7c6d5e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b"
 }

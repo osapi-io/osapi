@@ -222,6 +222,7 @@ func newController(
 		o.version,
 		subs,
 		cfg.Agent.ProcessConditions,
+		controllerCrypto(cfg),
 	)
 	startConditionWatcher(ctx, log, conn.NATS, conn.RegistryBucket, cfg.Controller.Notifications)
 

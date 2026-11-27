@@ -251,8 +251,10 @@ A `string`, one of `inet`, `inet6`, `dual`.
 | `ControllerKey`     | `string`                     | The fingerprint of the controller key that the agent verifies jobs with.                                                                                                                                                      |
 | `ControllerKeyNext` | `string`                     | The fingerprint of the key that the controller switches to, which the agent has: empty when no rotation of the controller's key is in progress, or the agent has not taken it yet.                                            |
 | `CPUCount`          | `int`                        | Number of logical CPUs.                                                                                                                                                                                                       |
+| `Crypto`            | `CryptoReport`               |                                                                                                                                                                                                                               |
 | `Facts`             | `map[string]any`             | Extended facts from additional providers.                                                                                                                                                                                     |
 | `Fingerprint`       | `string`                     | The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys.                                                                                                                                   |
+| `Fips`              | `string`                     | The FIPS 140-3 mode of the agent's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail.                                                             |
 | `FQDN`              | `string`                     | Fully qualified domain name.                                                                                                                                                                                                  |
 | `Hostname`          | `string`                     | The hostname of the agent.                                                                                                                                                                                                    |
 | `Interfaces`        | `[]NetworkInterfaceResponse` |                                                                                                                                                                                                                               |
@@ -311,6 +313,46 @@ A condition that an agent or a component evaluates.
 A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
 `ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`,
 `KeyMismatch`.
+
+### CryptoAlgorithm
+
+| Field       | Type     | Description                                                                                                                                          |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Algorithm` | `string` | The algorithm, with its key size or curve.                                                                                                           |
+| `Approved`  | `bool`   | Whether FIPS 140-3 approves the algorithm.                                                                                                           |
+| `Name`      | `string` | What the process uses it for.                                                                                                                        |
+| `OnlyMode`  | `bool`   | Whether it works in FIPS 140-3 only mode. An approved algorithm can still fail there, when its code calls the module in a way that the mode refuses. |
+| `Reason`    | `string` | Why it is not approved, or why it fails in FIPS 140-3 only mode.                                                                                     |
+
+### CryptoListener
+
+| Field        | Type       | Description                                                                                                                          |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Approved`   | `bool`     | Whether the listener negotiates only approved versions, suites and groups: true in FIPS 140-3 mode, where crypto/tls restricts them. |
+| `Groups`     | `[]string` | The key exchange groups that the listener can negotiate: the configured ones, or those of crypto/tls for the process's mode.         |
+| `MinVersion` | `string`   | The lowest TLS version that the listener accepts.                                                                                    |
+| `Name`       | `string`   | The listener, such as api, nats or metrics.                                                                                          |
+| `Suites`     | `[]string` | The cipher suites that the listener can negotiate: the configured ones, or those of crypto/tls for the process's mode.               |
+| `Tls`        | `bool`     | Whether the listener serves TLS. A listener with no TLS has no other fields.                                                         |
+
+### CryptoReport
+
+| Field         | Type                | Description                                                                                                                                       |
+| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Algorithms`  | `[]CryptoAlgorithm` | Each algorithm that the process uses.                                                                                                             |
+| `Enforceable` | `bool`              | Whether each algorithm of the process works in FIPS 140-3 only mode, GODEBUG=fips140=only.                                                        |
+| `Gaps`        | `[]string`          | What keeps the process from FIPS 140-3 mode with only approved algorithms. Empty when the mode is on and each algorithm and listener is approved. |
+| `Go`          | `string`            | The Go version that built the process.                                                                                                            |
+| `Listeners`   | `[]CryptoListener`  | Each TLS listener of the process.                                                                                                                 |
+| `Mode`        | `FIPSMode`          | FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it once, at the start of the process, from GODEBUG=fips140.              |
+| `Module`      | `string`            | The version of the Go Cryptographic Module in the process.                                                                                        |
+
+### FIPSMode
+
+FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it
+once, at the start of the process, from GODEBUG=fips140.
+
+A `string`, one of `off`, `on`, `only`.
 
 ### FactKeyEntry
 

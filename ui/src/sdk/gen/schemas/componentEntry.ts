@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ConditionType } from './conditionType';
+import type { CryptoReport } from './cryptoReport';
 
 export interface ComponentEntry {
   /** Listen address of a sub-component, such as :8080. */
@@ -17,6 +18,9 @@ export interface ComponentEntry {
   conditions?: ConditionType[];
   /** Process CPU usage percentage. */
   cpu_percent?: number;
+  crypto?: CryptoReport;
+  /** The FIPS 140-3 mode of the component's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail. */
+  fips?: string;
   /** Component hostname. */
   hostname?: string;
   /** Process RSS memory in bytes. */

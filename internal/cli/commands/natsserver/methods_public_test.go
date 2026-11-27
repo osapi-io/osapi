@@ -34,6 +34,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 )
 
 type MethodsPublicTestSuite struct {
@@ -75,9 +76,12 @@ func (s *MethodsPublicTestSuite) TestStart() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			var version string
+			var report *cryptoreport.Report
 			srv := mocks.NewMockServer(gomock.NewController(s.T()))
-			srv.EXPECT().StartHeartbeat(gomock.Any(), gomock.Any(), gomock.Any()).
-				Do(func(_ context.Context, v string, _ config.ProcessConditions) { version = v }).
+			srv.EXPECT().StartHeartbeat(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Do(func(_ context.Context, v string, _ config.ProcessConditions, r *cryptoreport.Report) {
+					version, report = v, r
+				}).
 				AnyTimes()
 			cfg := config.Config{}
 			cfg.NATS.Server.Metrics = config.MetricsServer{Enabled: tc.metrics, Host: "127.0.0.1"}
@@ -97,6 +101,10 @@ func (s *MethodsPublicTestSuite) TestStart() {
 
 			r, err := natsserver.Start(context.Background(), d)
 			tc.validateFunc(len(r.Components), version, err)
+			if err == nil {
+				s.Require().NotNil(report, "the heartbeat has the crypto of the process")
+				s.Equal("NATS operator, account and user JWTs", report.Algorithms[0].Name)
+			}
 		})
 	}
 }

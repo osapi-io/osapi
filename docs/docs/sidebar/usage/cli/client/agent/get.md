@@ -29,6 +29,7 @@ $ osapi client agent get --hostname web-01
   [38;2;176;48;176mLabels:[0m             group:web
   [38;2;176;48;176mAge:[0m                2d 3h
   [38;2;176;48;176mVersion:[0m            v1.4.0
+  [38;2;176;48;176mFIPS:[0m               off
   [38;2;176;48;176mLast seen:[0m          8s
   [38;2;176;48;176mUptime:[0m             2 days, 3 hours
   [38;2;176;48;176mArchitecture:[0m       amd64
@@ -49,12 +50,29 @@ $ osapi client agent get --hostname web-01
   [38;2;58;143;20mVersion:[0m       24.04
   [38;2;58;143;20mFamily:[0m        debian
 
-[1;38;2;69;174;23mMemory:[0m
+[1;38;2;69;174;23mCrypto:[0m
+  [38;2;58;143;20mGo:[0m           go1.27.3
+  [38;2;58;143;20mModule:[0m       v1.0.0
+  [38;2;58;143;20mMode:[0m         off
+  [38;2;58;143;20mEnforceable:[0m  no
+  [38;2;58;143;20mGaps:[0m         FIPS 140-3 mode is off: set GODEBUG=fips140=on, metrics: crypto/tls may negotiate a suite or group that is not approved
+
+[1;38;2;107;92;255mListeners (1):[0m
+  [38;2;89;76;216mNAME     [0m[38;2;89;76;216mTLS  [0m[38;2;89;76;216mMIN VERSION  [0m[38;2;89;76;216mSUITES                                                [0m[38;2;89;76;216mGROUPS              [0m[38;2;89;76;216mAPPROVED[0m
+  [1mmetrics[0m  yes  TLS 1.2      TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256  crypto/tls default  no
+
+[1;38;2;0;213;255mAlgorithms (3):[0m
+  [38;2;10;143;176mNAME                                  [0m[38;2;10;143;176mALGORITHM                             [0m[38;2;10;143;176mAPPROVED  [0m[38;2;10;143;176mONLY MODE  [0m[38;2;10;143;176mREASON[0m
+  [1mjob, join and admission signatures[0m    Ed25519                               yes       yes
+  [1msecrets sealed to agents[0m              ECDH P-256, HKDF-SHA256, AES-256-GCM  yes       yes
+  [1mNATS operator, account and user JWTs[0m  Ed25519 (nkeys)                       yes       no         nkeys v0.4.17 makes a key with ed25519.GenerateKey from a seed, which FIPS 140…
+
+[1;38;2;255;0;255mMemory:[0m
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
-  [38;2;58;143;20mTotal:[0m  8.0 GB
-  [38;2;58;143;20mFree:[0m   5.0 GB
-  [38;2;58;143;20mUsed:[0m   3.0 GB
+  [38;2;176;48;176mTotal:[0m  8.0 GB
+  [38;2;176;48;176mFree:[0m   5.0 GB
+  [38;2;176;48;176mUsed:[0m   3.0 GB
 ```
 
 With `--json`, the API's response:
@@ -79,6 +97,48 @@ With `--json`, the API's response:
     "family": "debian"
   },
   "version": "v1.4.0",
+  "fips": "off",
+  "crypto": {
+    "go": "go1.27.3",
+    "module": "v1.0.0",
+    "mode": "off",
+    "enforceable": false,
+    "listeners": [
+      {
+        "name": "metrics",
+        "tls": true,
+        "min_version": "TLS 1.2",
+        "suites": ["TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256"],
+        "groups": ["crypto/tls default"],
+        "approved": false
+      }
+    ],
+    "algorithms": [
+      {
+        "name": "job, join and admission signatures",
+        "algorithm": "Ed25519",
+        "approved": true,
+        "only_mode": true
+      },
+      {
+        "name": "secrets sealed to agents",
+        "algorithm": "ECDH P-256, HKDF-SHA256, AES-256-GCM",
+        "approved": true,
+        "only_mode": true
+      },
+      {
+        "name": "NATS operator, account and user JWTs",
+        "algorithm": "Ed25519 (nkeys)",
+        "approved": true,
+        "only_mode": false,
+        "reason": "nkeys v0.4.17 makes a key with ed25519.GenerateKey from a seed, which FIPS 140-3 only mode refuses (osapi#1527)"
+      }
+    ],
+    "gaps": [
+      "FIPS 140-3 mode is off: set GODEBUG=fips140=on",
+      "metrics: crypto/tls may negotiate a suite or group that is not approved"
+    ]
+  },
   "registered_at": "2026-01-15T09:59:52Z",
   "uptime": "2 days, 3 hours",
   "memory": {

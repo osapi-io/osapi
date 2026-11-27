@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	endpoints "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	"github.com/osapi-io/osapi/internal/controller/health"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	healthmocks "github.com/osapi-io/osapi/internal/controller/health/mocks"
 )
 
@@ -304,6 +305,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 							Age:        "7h 6m",
 							CPUPercent: 2.1,
 							MemBytes:   134217728,
+							Crypto:     &cryptoreport.Report{Mode: types.FIPSOn},
 						},
 						{
 							Type:       "agent",
@@ -338,8 +340,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Require().NotNil(first.MemBytes)
 				s.Equal(int64(134217728), first.MemBytes)
 				s.Empty(first.Conditions)
+				s.Equal("on, approved", first.FIPS, "the verdict of the component's crypto")
+				s.Equal(types.FIPSOn, first.Crypto.Mode)
 
 				second := r.Registry[1]
+				s.Empty(second.FIPS, "a component that reports no crypto has no verdict")
 				s.Require().NotNil(second.Type)
 				s.Equal("agent", second.Type)
 				s.Require().NotNil(second.Conditions)

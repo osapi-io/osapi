@@ -8,6 +8,7 @@ import { HealthDot } from "@/components/ui/health-dot";
 import { Text } from "@/components/ui/text";
 import { LabelTag } from "@/components/ui/label-tag";
 import { ConditionAlert } from "@/components/ui/condition-alert";
+import { FIPSLine } from "@/components/domain/registry-header";
 import { CopyField } from "@/components/ui/copy-field";
 import { MetricValue } from "@/components/ui/metric-value";
 import { KVList } from "@/components/ui/kv-list";
@@ -169,6 +170,19 @@ export function AgentCard({
                       {agent.config_behind &&
                         `, applying v${agent.config_wanted}`}
                     </span>,
+                  ] as [string, ReactNode],
+                ]
+              : []),
+            // FIPS 140-3 mode and the gaps of the agent's process.
+            ...(agent.fips
+              ? [
+                  [
+                    "FIPS",
+                    <FIPSLine
+                      key="f"
+                      fips={agent.fips}
+                      gaps={agent.crypto?.gaps}
+                    />,
                   ] as [string, ReactNode],
                 ]
               : []),

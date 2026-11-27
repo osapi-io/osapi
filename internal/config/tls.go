@@ -192,7 +192,22 @@ func (s ServerTLS) Config() (*tls.Config, error) {
 		return nil, err
 	}
 
-	return &tls.Config{GetCertificate: r.certificate, MinVersion: tls.VersionTLS12}, nil
+	out := s.Negotiation()
+	out.GetCertificate = r.certificate
+
+	return out, nil
+}
+
+// Negotiation is what a server with s negotiates, with no certificate: its
+// lowest TLS version, and crypto/tls's suites and groups for the process's
+// FIPS 140-3 mode. Nil when s is not enabled. Config serves it, and the
+// crypto report of the process reads it.
+func (s ServerTLS) Negotiation() *tls.Config {
+	if !s.Enabled {
+		return nil
+	}
+
+	return &tls.Config{MinVersion: tls.VersionTLS12}
 }
 
 // Address is where m listens, with https:// when it serves TLS, as health

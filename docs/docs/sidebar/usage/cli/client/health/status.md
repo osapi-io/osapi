@@ -34,9 +34,9 @@ $ osapi client health status
   [1mkv[0m    [38;2;103;234;147mok[0m
 
 [1;38;2;255;209;0mComponents (3):[0m
-  [38;2;176;143;0mTYPE        [0m[38;2;176;143;0mHOSTNAME  [0m[38;2;176;143;0mSTATUS  [0m[38;2;176;143;0mCONDITIONS  [0m[38;2;176;143;0mAGE    [0m[38;2;176;143;0mCPU %  [0m[38;2;176;143;0mMEM      [0m[38;2;176;143;0mVERSION  [0m[38;2;176;143;0mADDRESS       [0m[38;2;176;143;0mURL[0m
-  [1mcontroller[0m  [1mosapi-01[0m  [38;2;103;234;147mok[0m      [38;2;138;138;138m-[0m           [38;2;138;138;138m51h3m[0m  1.20   50.0 MB  v1.4.0   0.0.0.0:8080
-  [1mnats[0m        [1mosapi-01[0m  [38;2;103;234;147mok[0m      [38;2;138;138;138m-[0m           [38;2;138;138;138m51h3m[0m                  2.11.4                 nats://localhost:4222
+  [38;2;176;143;0mTYPE        [0m[38;2;176;143;0mHOSTNAME  [0m[38;2;176;143;0mSTATUS  [0m[38;2;176;143;0mCONDITIONS  [0m[38;2;176;143;0mAGE    [0m[38;2;176;143;0mCPU %  [0m[38;2;176;143;0mMEM      [0m[38;2;176;143;0mVERSION  [0m[38;2;176;143;0mFIPS  [0m[38;2;176;143;0mADDRESS       [0m[38;2;176;143;0mURL[0m
+  [1mcontroller[0m  [1mosapi-01[0m  [38;2;103;234;147mok[0m      [38;2;138;138;138m-[0m           [38;2;138;138;138m51h3m[0m  1.20   50.0 MB  v1.4.0   off   0.0.0.0:8080
+  [1mnats[0m        [1mosapi-01[0m  [38;2;103;234;147mok[0m      [38;2;138;138;138m-[0m           [38;2;138;138;138m51h3m[0m                  2.11.4   off                 nats://localhost:4222
   [1magent[0m       [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m-[0m           [38;2;138;138;138m51h2m[0m  0.40   30.0 MB  v1.4.0
 
 [1;38;2;69;174;23mJobs:[0m
@@ -89,6 +89,7 @@ With `--json`, the API's response:
       "cpu_percent": 1.2,
       "mem_bytes": 52428800,
       "version": "v1.4.0",
+      "fips": "off",
       "address": "0.0.0.0:8080"
     },
     {
@@ -97,6 +98,7 @@ With `--json`, the API's response:
       "status": "ok",
       "age": "51h3m",
       "version": "2.11.4",
+      "fips": "off",
       "url": "nats://localhost:4222"
     },
     {

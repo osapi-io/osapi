@@ -405,6 +405,7 @@ func agentInfoFromRegistration(
 		State:             reg.State,
 		Fingerprint:       reg.Fingerprint,
 		Certificates:      reg.Certificates,
+		Crypto:            reg.Crypto,
 	}
 }
 

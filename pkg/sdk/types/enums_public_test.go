@@ -69,6 +69,8 @@ func (s *EnumsPublicTestSuite) TestValid() {
 		},
 		{name: "when a log level is listed", valid: types.LogWarn.Valid, want: true},
 		{name: "when a log level is not listed", valid: types.LogLevel("verbose").Valid},
+		{name: "when a FIPS mode is listed", valid: types.FIPSOnly.Valid, want: true},
+		{name: "when a FIPS mode is not listed", valid: types.FIPSMode("strict").Valid},
 		{name: "when a Signal is listed", valid: types.SignalTerm.Valid, want: true},
 		{name: "when a Signal is not listed", valid: types.Signal("nope").Valid},
 		{name: "when a ContainerState is listed", valid: types.ContainerRunning.Valid, want: true},
