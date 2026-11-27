@@ -43,7 +43,7 @@ func Prepare(
 	namespace string,
 	cfg config.NATS,
 ) error {
-	nc, err := Dial(log, opts)
+	nc, err := Dial(ctx, log, opts)
 	if err != nil {
 		return err
 	}
@@ -52,13 +52,14 @@ func Prepare(
 	return Setup(ctx, nc, namespace, cfg)
 }
 
-// Dial connects to NATS with opts.
+// Dial connects to NATS with opts. The deadline of ctx bounds the dial.
 func Dial(
+	ctx context.Context,
 	log *slog.Logger,
 	opts *natsclient.Options,
 ) (*natsclient.Client, error) {
 	nc := natsclient.New(log, opts)
-	if err := nc.Connect(); err != nil {
+	if err := nc.Connect(ctx); err != nil {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}
 

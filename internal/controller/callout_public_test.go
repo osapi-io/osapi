@@ -121,7 +121,7 @@ func (s *CalloutPublicTestSuite) TestJoinGivesNoUser() {
 // background task, and the controller starts.
 func (s *CalloutPublicTestSuite) TestCalloutConnectFails() {
 	restore := controller.SetCalloutConnect(
-		func(*slog.Logger, config.Config) (*natsclient.Client, error) {
+		func(context.Context, *slog.Logger, config.Config) (*natsclient.Client, error) {
 			return nil, errors.New("no route")
 		},
 	)

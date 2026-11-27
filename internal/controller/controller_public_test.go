@@ -118,7 +118,7 @@ func withSecret(
 	value string,
 ) config.Config {
 	nc := natsclient.New(slog.Default(), natsOptions(cfg))
-	require.NoError(t, nc.Connect())
+	require.NoError(t, nc.Connect(context.Background()))
 	defer nc.Close()
 	spec := cfg.Controller.Secrets.Vaults[0]
 	v, err := natsvault.Open(context.Background(), nc,

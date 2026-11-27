@@ -48,7 +48,7 @@ func ResetHostnameFn() {
 
 // SetDialFn replaces the function that connects to NATS.
 func SetDialFn(
-	fn func(*slog.Logger, *natsclient.Options) (*natsclient.Client, error),
+	fn func(context.Context, *slog.Logger, *natsclient.Options) (*natsclient.Client, error),
 ) {
 	dialFn = fn
 }

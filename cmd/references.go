@@ -46,7 +46,7 @@ func resolveReferences(
 	if err != nil {
 		return fmt.Errorf("resolve the references of the config: %w", err)
 	}
-	nc, err := bus.Dial(logger, opts)
+	nc, err := bus.Dial(ctx, logger, opts)
 	if err != nil {
 		return fmt.Errorf("resolve the references of the config: %w", err)
 	}

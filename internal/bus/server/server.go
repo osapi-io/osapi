@@ -106,7 +106,7 @@ func New(
 		return nil, fmt.Errorf("start embedded NATS server: %w", err)
 	}
 
-	nc, err := dialFn(log, bus.Telemetry(&natsclient.Options{
+	nc, err := dialFn(ctx, log, bus.Telemetry(&natsclient.Options{
 		Host: sc.Host,
 		Port: sc.Port,
 		Auth: bus.ServerClientAuth(sc.Auth),
