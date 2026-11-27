@@ -1054,7 +1054,11 @@ func deadLetterScenarios() []scenario {
 			fixtureAutoAdmit: true,
 			// A delivery that is not acked in 3s goes again, and after two
 			// deliveries NATS gives up on it: the DLQ stream keeps its advisory.
-			fixtureConsumer: map[string]any{"ack_wait": "3s", "max_deliver": 2, "back_off": []string{"1s"}},
+			fixtureConsumer: map[string]any{
+				"ack_wait":    "3s",
+				"max_deliver": 2,
+				"back_off":    []string{"1s"},
+			},
 			steps: []step{
 				{name: "start an agent", start: "agent", keyDir: "{dir:agent}"},
 				ready("the agent is Ready"),
@@ -1077,16 +1081,16 @@ func deadLetterScenarios() []scenario {
 					},
 				},
 				{name: "kill the agent while it runs the job", kill: "agent"},
-			// The delivery goes again once ack_wait ends: the new agent runs
-			// it, and is killed while it does.
-			{
-				name: "start the agent again, to take the job again", start: "again",
-				keyDir: "{dir:agent}", pause: 8 * time.Second,
-			},
-			{name: "kill the agent again", kill: "again"},
-			// NATS gives up on a pull consumer's message when an agent asks
-			// for it once more: the third agent's fetch makes the advisory.
-			{name: "start the agent for the retry", start: "third", keyDir: "{dir:agent}"},
+				// The delivery goes again once ack_wait ends: the new agent runs
+				// it, and is killed while it does.
+				{
+					name: "start the agent again, to take the job again", start: "again",
+					keyDir: "{dir:agent}", pause: 8 * time.Second,
+				},
+				{name: "kill the agent again", kill: "again"},
+				// NATS gives up on a pull consumer's message when an agent asks
+				// for it once more: the third agent's fetch makes the advisory.
+				{name: "start the agent for the retry", start: "third", keyDir: "{dir:agent}"},
 				{
 					name:  "NATS gives up after two deliveries",
 					on:    onFixture,
@@ -1100,7 +1104,7 @@ func deadLetterScenarios() []scenario {
 					},
 					capture: map[string]string{"dead": "items[0].job_id"},
 				},
-					ready("the agent is Ready for the retry"),
+				ready("the agent is Ready for the retry"),
 				{
 					name: "retry the dead job", on: onFixture,
 					cli:     []string{"client", "job", "retry", "--id", "{dead}", "--json"},
