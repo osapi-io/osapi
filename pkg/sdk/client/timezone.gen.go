@@ -37,8 +37,8 @@ type TimezoneUpdateInput struct {
 // Update is the operation PutNodeTimezone: set the timezone of the host.
 //
 // Sets the timezone with timedatectl set-timezone. A host that already has the
-// timezone does not change and reports changed: false. It runs on the Debian
-// family only, and elsewhere reports skipped.
+// timezone, as gohai reads it, does not change and reports changed: false. It
+// runs on the Debian family only, and elsewhere reports skipped.
 //
 // It sends PUT /api/node/{hostname}/timezone, and needs the permission
 // timezone:write.

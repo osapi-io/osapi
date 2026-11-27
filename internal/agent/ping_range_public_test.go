@@ -21,12 +21,15 @@
 package agent_test
 
 import (
+	"context"
 	"errors"
 	"os"
-	"path/filepath"
 	"testing"
 
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+	sourcemocks "github.com/osapi-io/gohai/pkg/gohai/source/mocks"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 
 	"github.com/osapi-io/osapi/internal/agent"
@@ -37,7 +40,6 @@ type PingRangePublicTestSuite struct {
 }
 
 func (s *PingRangePublicTestSuite) TearDownSubTest() {
-	agent.ResetPingRangePath()
 	agent.ResetProcessGroups()
 }
 
@@ -50,6 +52,11 @@ func (s *PingRangePublicTestSuite) TestPingProblem() {
 		want      string
 	}{
 		{name: "when the host has no setting, such as macOS, there is no problem", want: ""},
+		{
+			name:    "when sysctl cannot run there is no problem to report",
+			setting: ptr.To(""),
+			want:    "",
+		},
 		{
 			name:    "when a group of the agent is in the range a ping works",
 			setting: ptr.To("0\t2147483647\n"),
@@ -88,14 +95,24 @@ func (s *PingRangePublicTestSuite) TestPingProblem() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			path := filepath.Join(s.T().TempDir(), "ping_group_range")
-			if tc.setting != nil {
-				s.Require().NoError(os.WriteFile(path, []byte(*tc.setting), 0o600))
+			// gohai's sysctl collector runs sysctl -a: the setting is one
+			// line of its output, as Linux prints it.
+			runner := sourcemocks.NewMockRunner(gomock.NewController(s.T()))
+			out, err := []byte("kernel.ostype = Linux\n"), error(nil)
+			switch {
+			case tc.setting == nil:
+			case *tc.setting == "":
+				out, err = nil, errors.New("no sysctl")
+			default:
+				out = append(out, []byte("net.ipv4.ping_group_range = "+*tc.setting+"\n")...)
 			}
-			agent.SetPingRangePath(path)
+			runner.EXPECT().Execute(gomock.Any(), "sysctl", "-a").Return(out, err)
 			agent.SetProcessGroups(func() ([]int, error) { return tc.groups, tc.groupsErr })
 
-			s.Equal(tc.want, agent.PingProblem())
+			s.Equal(tc.want, agent.PingProblem(
+				context.Background(),
+				source.Sources{Exec: runner, Family: "debian"},
+			))
 		})
 	}
 }

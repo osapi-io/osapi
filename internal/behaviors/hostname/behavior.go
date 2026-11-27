@@ -59,16 +59,13 @@ var Behavior = behavior.Register(behavior.Define(
 			"it also reports skipped.").
 		// Each example names its host with After, as a live host can run it:
 		// the integration test runs these on CI's runner and puts its name
-		// back. Prints and PrintsAfter are the fake host's hostnamectl.
+		// back. Prints and PrintsAfter are the fake host's hostname.
 		Example("Rename a host", UpdateInput{Name: "web-02"},
 			Result{Name: "web-02", Changed: true},
 			append(
 				named("web-01"),
-				behavior.PrintsAfter(
-					"hostnamectl set-hostname web-02",
-					"hostnamectl hostname",
-					"web-02\n",
-				),
+				behavior.PrintsAfter("hostnamectl set-hostname web-02", "hostname", "web-02\n"),
+				behavior.PrintsAfter("hostnamectl set-hostname web-02", "hostname -s", "web-02\n"),
 				behavior.Ran("hostnamectl", "set-hostname", "web-02"),
 				behavior.Reads(GetInput{}, Entry{Name: "web-02"}),
 			)...,
@@ -86,14 +83,17 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("No name", UpdateInput{}, "invalid hostname"),
 ))
 
-// named is a host that an earlier update named name: hostnamectl prints
-// localhost until set-hostname name runs, and name after it.
+// named is a host that an earlier update named name: hostname prints
+// localhost until hostnamectl set-hostname name runs, and name after it.
+// The update compares with the name that gohai reads, through hostname.
 func named(
 	name string,
 ) []behavior.HostOption {
 	return []behavior.HostOption{
+		behavior.Prints("hostname", "localhost\n"),
+		behavior.Prints("hostname -s", "localhost\n"),
+		behavior.PrintsAfter("hostnamectl set-hostname "+name, "hostname", name+"\n"),
+		behavior.PrintsAfter("hostnamectl set-hostname "+name, "hostname -s", name+"\n"),
 		behavior.After(UpdateInput{Name: name}),
-		behavior.Prints("hostnamectl hostname", "localhost\n"),
-		behavior.PrintsAfter("hostnamectl set-hostname "+name, "hostnamectl hostname", name+"\n"),
 	}
 }

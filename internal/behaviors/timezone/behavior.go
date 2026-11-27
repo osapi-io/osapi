@@ -28,9 +28,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
-// The timedatectl query of the update's current timezone.
-const show = "timedatectl show -p Timezone --value"
-
 // Behavior is the timezone of the host. gohai reads it on every platform;
 // timedatectl sets it on the Debian family.
 var Behavior = behavior.Register(behavior.Define(
@@ -59,12 +56,12 @@ var Behavior = behavior.Register(behavior.Define(
 		Sudo("timedatectl").
 		Describe("Set the timezone of the host").
 		Explain("Sets the timezone with timedatectl set-timezone. A host that already "+
-			"has the timezone does not change and reports changed: false. It runs on "+
+			"has the timezone, as gohai reads it, does not change and reports changed: false. It runs on "+
 			"the Debian family only, and elsewhere reports skipped.").
 		Example("Set a new timezone", UpdateInput{Timezone: "America/New_York"},
 			Result{Timezone: "America/New_York", Changed: true},
-			behavior.Prints(show, "UTC\n"),
-			behavior.PrintsAfter("timedatectl set-timezone America/New_York", show,
+			behavior.Exists("/etc/timezone", "UTC\n"),
+			behavior.ExistsAfter("timedatectl set-timezone America/New_York", "/etc/timezone",
 				"America/New_York\n"),
 			behavior.Ran("timedatectl", "set-timezone", "America/New_York"),
 			behavior.Reads(GetInput{}, Entry{Timezone: "America/New_York"}),
@@ -74,9 +71,9 @@ var Behavior = behavior.Register(behavior.Define(
 		// back.
 		Example("A host that already has the timezone", UpdateInput{Timezone: "UTC"},
 			Result{Timezone: "UTC"},
+			behavior.Exists("/etc/timezone", "America/New_York\n"),
+			behavior.ExistsAfter("timedatectl set-timezone UTC", "/etc/timezone", "UTC\n"),
 			behavior.After(UpdateInput{Timezone: "UTC"}),
-			behavior.Prints(show, "America/New_York\n"),
-			behavior.PrintsAfter("timedatectl set-timezone UTC", show, "UTC\n"),
 			behavior.Reads(GetInput{}, Entry{Timezone: "UTC"}),
 		).
 		Fails("A name that is not a timezone", UpdateInput{Timezone: "../../etc/passwd"},

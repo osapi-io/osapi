@@ -147,14 +147,14 @@ func (s *ProviderPublicTestSuite) TestSetHostnameErrors() {
 			want: behavior.ErrUnsupported,
 		},
 		{
-			name: "when hostnamectl cannot read the name", platform: behavior.PlatformLinux,
-			exec:     exec{err: map[string]error{"hostnamectl hostname": errors.New("boom")}},
-			wantText: "read the hostname: boom",
+			name: "when gohai cannot read the name", platform: behavior.PlatformLinux,
+			exec:     exec{err: map[string]error{"hostname": errors.New("boom")}},
+			wantText: "read the hostname",
 		},
 		{
 			name: "when hostnamectl cannot set the name", platform: behavior.PlatformLinux,
 			exec: exec{
-				out: map[string]string{"hostnamectl hostname": "web-01\n"},
+				out: map[string]string{"hostname": "web-01\n", "hostname -s": "web-01\n"},
 				err: map[string]error{"hostnamectl set-hostname web-02": errors.New("boom")},
 			},
 			wantText: "set the hostname: boom",

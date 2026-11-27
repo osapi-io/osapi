@@ -867,16 +867,17 @@ func ExportRecordOutcome(
 	recordOutcome(span, response, requestType)
 }
 
-// SetPingRangePath overrides the ping_group_range path for testing.
-func SetPingRangePath(
-	p string,
+// SetPingSources overrides the sources that the start check reads
+// net.ipv4.ping_group_range through, for testing.
+func SetPingSources(
+	src source.Sources,
 ) {
-	pingRangePath = p
+	pingSources = func() source.Sources { return src }
 }
 
-// ResetPingRangePath restores the default ping_group_range path.
-func ResetPingRangePath() {
-	pingRangePath = "/proc/sys/net/ipv4/ping_group_range"
+// ResetPingSources restores the host as the sources of the start check.
+func ResetPingSources() {
+	pingSources = func() source.Sources { return source.Sources{} }
 }
 
 // SetProcessGroups overrides the groups of the agent for testing.
