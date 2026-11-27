@@ -108,11 +108,26 @@ func (s *AuthorizationSuite) send(
 
 		return "integration-nosuch"
 	})
-	var body io.Reader
+	body := ""
 	if r.method != http.MethodGet && r.method != http.MethodDelete {
-		body = strings.NewReader("{}")
+		body = "{}"
 	}
-	req, err := http.NewRequest(r.method, s.base+path, body)
+
+	return s.sendBody(route{method: r.method, path: path}, token, body)
+}
+
+// sendBody sends r with token and body, "" for none, and returns the
+// status and the body of the answer.
+func (s *AuthorizationSuite) sendBody(
+	r route,
+	token string,
+	body string,
+) (int, []byte) {
+	var reader io.Reader
+	if body != "" {
+		reader = strings.NewReader(body)
+	}
+	req, err := http.NewRequest(r.method, s.base+r.path, reader)
 	s.Require().NoError(err)
 	req.Header.Set("Content-Type", "application/json")
 	if token != "" {
