@@ -947,16 +947,16 @@ virtualization.NewWith(h.Sources()).
 
 Use: An example's fake host gives, on debian: Exists for /.dockerenv,
 /.dockerinit, /dev/lxd/sock, /proc/1/environ, /proc/bc/0, /proc/cpuinfo,
-/proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
-/sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
-/var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
+/proc/modules, /proc/self/cgroup, /proc/self/environ, /proc/self/status,
+/proc/vz, /proc/xen, /run/.containerenv, /sys/class/dmi/id/product_name,
+/sys/class/dmi/id/sys_vendor, /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
 /var/snap/lxd/common/lxd/devlxd, Prints for sh -c command -v "$1" sh docker; sh
 -c command -v "$1" sh nova; sh -c command -v "$1" sh podman; systemd-detect-virt
 --container; systemd-detect-virt --vm. On rhel: Exists for /.dockerenv,
 /.dockerinit, /dev/lxd/sock, /proc/1/environ, /proc/bc/0, /proc/cpuinfo,
-/proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
-/sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
-/var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
+/proc/modules, /proc/self/cgroup, /proc/self/environ, /proc/self/status,
+/proc/vz, /proc/xen, /run/.containerenv, /sys/class/dmi/id/product_name,
+/sys/class/dmi/id/sys_vendor, /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
 /var/snap/lxd/common/lxd/devlxd, Prints for sh -c command -v "$1" sh docker; sh
 -c command -v "$1" sh nova; sh -c command -v "$1" sh podman; systemd-detect-virt
 --container; systemd-detect-virt --vm. On darwin: Exists for
@@ -1516,13 +1516,14 @@ Returns keys, authorized_keys. Build it with ssh.NewWith(h.Sources()).
 
 Use: An example's fake host gives, on debian: Exists for /etc/passwd,
 /etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
-/etc/ssh/ssh_host_rsa_key.pub. On rhel: Exists for /etc/passwd,
-/etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
-/etc/ssh/ssh_host_rsa_key.pub. On darwin: Exists for
-/etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
-/etc/ssh/ssh_host_rsa_key.pub, Prints for dscl . -list /Users NFSHomeDirectory.
-With content, it reads more under those paths. gohai collector get --name ssh
-shows it in full; ssh is its package.
+/etc/ssh/ssh_host_rsa_key.pub, Prints for getent passwd; sshd -T. On rhel:
+Exists for /etc/passwd, /etc/ssh/ssh_host_ecdsa_key.pub,
+/etc/ssh/ssh_host_ed25519_key.pub, /etc/ssh/ssh_host_rsa_key.pub, Prints for
+getent passwd; sshd -T. On darwin: Exists for /etc/ssh/ssh_host_ecdsa_key.pub,
+/etc/ssh/ssh_host_ed25519_key.pub, /etc/ssh/ssh_host_rsa_key.pub, Prints for
+dscl . -list /Users NFSHomeDirectory; sshd -T. With content, it reads more under
+those paths. gohai collector get --name ssh shows it in full; ssh is its
+package.
 
 ### `sysconf`
 

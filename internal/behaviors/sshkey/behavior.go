@@ -83,7 +83,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
-	behavior.RunsIfPresent("dscl"),
+	// gohai reads the key files from sshd -T, and Linux users from
+	// getent passwd. It falls back to ~/.ssh/authorized_keys and
+	// /etc/passwd when a host does not have them.
+	behavior.RunsIfPresent("dscl", "getent", "sshd"),
 	behavior.Writes("/home/*/.ssh/authorized_keys"),
 	behavior.Read("list", List).
 		Describe("List the authorized SSH keys of a user").
