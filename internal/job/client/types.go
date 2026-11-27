@@ -231,6 +231,9 @@ type JobClient interface {
 	// ControllerKey is the record of the rotation of the controller's key,
 	// which each agent follows at its heartbeat.
 	ControllerKey(ctx context.Context) (pki.ControllerKeyRecord, bool, error)
+	// NATSCert is the record of the rotation of the NATS server's
+	// certificate, and false when there is none.
+	NATSCert(ctx context.Context) (pki.CertRecord, bool, error)
 
 	// Agent timeline
 	WriteAgentTimelineEvent(

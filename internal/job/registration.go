@@ -76,6 +76,9 @@ func RegistrationSigningBytes(
 	if reg.ControllerKeyNext != "" {
 		b.WriteString("controller_key_next=" + reg.ControllerKeyNext + "\n")
 	}
+	if reg.NATSCertNext != "" {
+		b.WriteString("nats_cert_next=" + reg.NATSCertNext + "\n")
+	}
 
 	keys := make([]string, 0, len(reg.Labels))
 	for k := range reg.Labels {

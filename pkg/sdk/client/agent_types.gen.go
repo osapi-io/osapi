@@ -103,6 +103,10 @@ type AgentInfo struct {
 	// behavior fails until its program is installed.
 	MissingPrograms []string `json:"missing_programs,omitempty"`
 
+	// The fingerprint of the NATS server's next certificate, which the agent
+	// trusts during a rotation of it.
+	NATSCertNext string `json:"nats_cert_next,omitempty"`
+
 	// Operating system information.
 	OSInfo OSInfoResponse `json:"os_info,omitzero"`
 

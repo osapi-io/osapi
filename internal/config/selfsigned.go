@@ -121,6 +121,16 @@ func certNames(
 	return err == nil && c.VerifyHostname(host) == nil
 }
 
+// MakeSelfSigned makes a self-signed certificate at certFile and keyFile,
+// as WithSelfSigned makes one with no URLs, such as the next certificate of
+// a rotation, beside the current one.
+func MakeSelfSigned(
+	certFile string,
+	keyFile string,
+) error {
+	return writeSelfSigned(certFile, keyFile, nil)
+}
+
 // writeSelfSigned makes an ECDSA P-256 certificate for this host, localhost
 // and the hosts of urls, and writes it and its key.
 func writeSelfSigned(

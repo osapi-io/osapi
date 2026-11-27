@@ -23,6 +23,7 @@ package pki
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
@@ -39,6 +40,16 @@ type Deps struct {
 	Hostname string
 	// Rotation starts and shows the rotation of the controller's key.
 	Rotation Rotator
+	// CertRotation starts and shows the rotation of the NATS server's
+	// certificate.
+	CertRotation CertRotator
+}
+
+// CertRotator starts and shows the rotation of the NATS server's
+// certificate. A *certrotation.Rotation is one.
+type CertRotator interface {
+	Start(ctx context.Context) (certrotation.Status, error)
+	Status(ctx context.Context) (certrotation.Status, error)
 }
 
 // Rotator starts and shows the rotation of the controller's key. A

@@ -47,9 +47,11 @@ certificate of a CA that it trusts. A join over HTTPS pins the certificate.
 
 `osapi pki cert list` shows each certificate of osapi on the host: its source,
 its key and signature algorithms, whether FIPS approves them, and when it
-expires. `osapi pki cert rotate --name api` makes a new self-signed certificate;
-the controller serves it at its next start. Give the new `api.crt` to each CLI
-on another host.
+expires. `osapi pki cert rotate --name api` makes a new self-signed certificate,
+and the controller serves it at its next handshake, with no restart. Join tokens
+made from then on carry its fingerprint, and a token made before it no longer
+joins. Give the new `api.crt` to each CLI on another host. A certificate of your
+own, in `cert_file`, is served the same way when you replace its files.
 
 `osapi pki cert list` reads only the host that it runs on.
 `osapi client pki cert list` reads the fleet through the API, from any machine

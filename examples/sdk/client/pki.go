@@ -2,8 +2,9 @@
 
 // Package main runs the examples of the SDK's Pki service, which calls the
 // API's Pki group: the certificates of the fleet, and the rotation of the
-// controller's key. Each example calls a method with the input of an example
-// of the method's definition, and prints the answer as JSON.
+// controller's key and of the NATS server's certificate. Each example calls a
+// method with the input of an example of the method's definition, and prints
+// the answer as JSON.
 //
 // Give the name of an example to run it. With no name, the program lists them:
 //
@@ -34,6 +35,8 @@ var examples = []struct {
 	{"get-2", "Get one certificate of a host, with --name agent-metrics --hostname web-01", runGet2},
 	{"rotation", "Show the rotation of the controller's key", runRotation},
 	{"rotate", "Rotate the controller's key", runRotate},
+	{"natscertrotation", "Show the rotation of the NATS server's certificate", runNatscertrotation},
+	{"natscertrotate", "Rotate the NATS server's certificate", runNatscertrotate},
 }
 
 // runList runs the example list: list the certificates of the fleet.
@@ -107,6 +110,32 @@ func runRotate(
 	c *client.Client,
 ) error {
 	resp, err := c.Pki.Rotate(ctx)
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runNatscertrotation runs the example natscertrotation: show the rotation of the NATS server's certificate.
+func runNatscertrotation(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Natscertrotation(ctx)
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runNatscertrotate runs the example natscertrotate: rotate the NATS server's certificate.
+func runNatscertrotate(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Natscertrotate(ctx)
 	if err != nil {
 		return err
 	}

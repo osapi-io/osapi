@@ -102,7 +102,7 @@ type services struct {
 	PackageUpdates *PackageUpdatesService
 
 	// Pki calls the API's Pki group: the certificates of the fleet, and the
-	// rotation of the controller's key.
+	// rotation of the controller's key and of the NATS server's certificate.
 	Pki *PkiService
 
 	// Power calls the API's Power group: reboot or shut down the host.

@@ -1235,3 +1235,14 @@ func ExportControllerKeys(
 ) (string, string) {
 	return a.controllerKeys()
 }
+
+// ExportFollowNATSCert exposes followNATSCert for testing, and returns the
+// next NATS certificate that the registration reports after it.
+func ExportFollowNATSCert(
+	ctx context.Context,
+	a *Agent,
+) string {
+	a.followNATSCert(ctx)
+
+	return a.natsCertNext
+}

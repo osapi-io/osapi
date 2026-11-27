@@ -37,11 +37,15 @@ import (
 	"time"
 
 	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
+	"github.com/osapi-io/osapi/internal/controller/certrotation/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
@@ -83,6 +87,19 @@ func (s *MethodsPublicTestSuite) deps() pkicert.Deps {
 			return nil
 		},
 	}
+}
+
+// natsDeps are deps with the controller's key in its key directory, which
+// signs the record of a rotation of the NATS certificate.
+func (s *MethodsPublicTestSuite) natsDeps() pkicert.Deps {
+	d := s.deps()
+	keyDir := filepath.Join(s.dir, "controller")
+	s.Require().NoError(pki.New(d.FS, keyDir, "controller").LoadOrGenerate())
+	d.Config.Controller.PKI.KeyDir = keyDir
+	d.Config.NATS.State.Bucket = "agent-state"
+	d.Config.Controller.NATS.Namespace = "osapi"
+
+	return d
 }
 
 func (s *MethodsPublicTestSuite) TestList() {
@@ -202,34 +219,97 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		got, err := pkicert.Rotate(
 			context.Background(),
 			s.deps(),
-			pkicert.RotateInput{Name: "api", Force: false},
+			pkicert.RotateInput{Name: "api"},
 		)
 		s.Require().NoError(err)
 		s.NotEqual(before.Fingerprint, got.Cert.Fingerprint)
-		s.Equal("restart the server to serve it", got.Next)
+		s.Contains(got.Next, "next handshake")
+		s.Contains(got.Next, "join tokens made from now")
 		s.Require().Len(s.entries, 1)
 		s.Equal("cert.rotate", s.entries[0].Action)
 	})
-	s.Run("the NATS certificate needs --force, and says to join again", func() {
-		_, err := pkicert.Rotate(
-			context.Background(),
-			s.deps(),
-			pkicert.RotateInput{Name: "nats", Force: false},
-		)
-		s.ErrorIs(err, pkicert.ErrPinned)
+	s.Run("a metrics certificate says only when it is served", func() {
+		d := s.deps()
+		d.Certs = func() []pki.CertSource {
+			cert, key := config.SelfSignedFiles(s.dir, "api")
+			return []pki.CertSource{{
+				Name: "controller-metrics", CertFile: cert, KeyFile: key, SelfSigned: true,
+			}}
+		}
 		got, err := pkicert.Rotate(
 			context.Background(),
-			s.deps(),
-			pkicert.RotateInput{Name: "nats", Force: true},
+			d,
+			pkicert.RotateInput{Name: "controller-metrics"},
 		)
 		s.Require().NoError(err)
-		s.Contains(got.Next, "join each agent again")
+		s.Equal("the server serves it at its next handshake", got.Next)
+	})
+	s.Run("the NATS certificate starts a rotation that the agents follow", func() {
+		d := s.natsDeps()
+		before, _ := pkicert.Get(context.Background(), d, pkicert.GetInput{Name: "nats"})
+		ctrl := gomock.NewController(s.T())
+		kv := mocks.NewMockKV(ctrl)
+		kv.EXPECT().KVGet(gomock.Any(), "osapi-agent-state", pki.NATSCertStateKey).
+			Return(nil, jetstream.ErrKeyNotFound)
+		kv.EXPECT().KVCreate(gomock.Any(), "osapi-agent-state", pki.NATSCertStateKey, gomock.Any()).
+			Return(uint64(1), nil)
+		closed := false
+		d.Dial = func(context.Context) (certrotation.KV, func(), error) {
+			return kv, func() { closed = true }, nil
+		}
+		got, err := pkicert.Rotate(context.Background(), d, pkicert.RotateInput{Name: "nats"})
+		s.Require().NoError(err)
+		s.True(closed)
+		s.Equal(
+			before.Fingerprint,
+			got.Cert.Fingerprint,
+			"the server serves the old one until the switch",
+		)
+		s.Contains(got.NextCert, "SHA256:")
+		s.NotEqual(got.Cert.Fingerprint, got.NextCert)
+		s.Contains(got.Next, "pki cert get")
+		next, _ := certrotation.NextFiles(d.Certs()[1])
+		s.FileExists(next)
+		s.Require().Len(s.entries, 1)
+		s.Contains(s.entries[0].RequestSummary, "next="+got.NextCert)
+	})
+	s.Run("the NATS certificate needs the controller's key", func() {
+		d := s.natsDeps()
+		d.Config.Controller.PKI.KeyDir = filepath.Join(s.dir, "none")
+		_, err := pkicert.Rotate(context.Background(), d, pkicert.RotateInput{Name: "nats"})
+		s.ErrorContains(err, "run this on the controller's host")
+	})
+	s.Run("the NATS certificate that is not on this host", func() {
+		d := s.natsDeps()
+		s.Require().NoError(os.Remove(filepath.Join(s.dir, "nats.crt")))
+		_, err := pkicert.Rotate(context.Background(), d, pkicert.RotateInput{Name: "nats"})
+		s.ErrorIs(err, os.ErrNotExist)
+	})
+	s.Run("the NATS certificate when NATS does not connect", func() {
+		d := s.natsDeps()
+		d.Dial = func(context.Context) (certrotation.KV, func(), error) {
+			return nil, nil, os.ErrDeadlineExceeded
+		}
+		_, err := pkicert.Rotate(context.Background(), d, pkicert.RotateInput{Name: "nats"})
+		s.ErrorIs(err, os.ErrDeadlineExceeded)
+	})
+	s.Run("the NATS certificate when the record does not write", func() {
+		d := s.natsDeps()
+		ctrl := gomock.NewController(s.T())
+		kv := mocks.NewMockKV(ctrl)
+		kv.EXPECT().KVGet(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil, os.ErrPermission)
+		d.Dial = func(context.Context) (certrotation.KV, func(), error) {
+			return kv, func() {}, nil
+		}
+		_, err := pkicert.Rotate(context.Background(), d, pkicert.RotateInput{Name: "nats"})
+		s.ErrorIs(err, os.ErrPermission)
 	})
 	s.Run("a cert_file of the operator is refused", func() {
 		_, err := pkicert.Rotate(
 			context.Background(),
 			s.deps(),
-			pkicert.RotateInput{Name: "mine", Force: false},
+			pkicert.RotateInput{Name: "mine"},
 		)
 		s.ErrorIs(err, pkicert.ErrOperatorCert)
 	})
@@ -237,7 +317,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		_, err := pkicert.Rotate(
 			context.Background(),
 			s.deps(),
-			pkicert.RotateInput{Name: "none", Force: false},
+			pkicert.RotateInput{Name: "none"},
 		)
 		s.ErrorIs(err, pkicert.ErrNoCert)
 	})
@@ -254,7 +334,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		_, err := pkicert.Rotate(
 			context.Background(),
 			d,
-			pkicert.RotateInput{Name: "x", Force: false},
+			pkicert.RotateInput{Name: "x"},
 		)
 		s.Error(err)
 	})
@@ -266,7 +346,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		_, err := pkicert.Rotate(
 			context.Background(),
 			s.deps(),
-			pkicert.RotateInput{Name: "api", Force: false},
+			pkicert.RotateInput{Name: "api"},
 		)
 		s.ErrorIs(err, os.ErrPermission)
 	})
@@ -280,7 +360,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		_, err := pkicert.Rotate(
 			context.Background(),
 			s.deps(),
-			pkicert.RotateInput{Name: "api", Force: false},
+			pkicert.RotateInput{Name: "api"},
 		)
 		s.ErrorContains(err, "no PEM certificate")
 	})
@@ -290,7 +370,7 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		_, err := pkicert.Rotate(
 			context.Background(),
 			s.deps(),
-			pkicert.RotateInput{Name: "api", Force: false},
+			pkicert.RotateInput{Name: "api"},
 		)
 		s.ErrorContains(err, "remove")
 	})

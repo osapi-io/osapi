@@ -221,6 +221,7 @@ func buildAgentInfo(
 		ConfigVersion:     a.ConfigVersion,
 		ControllerKey:     a.ControllerKey,
 		ControllerKeyNext: a.ControllerKeyNext,
+		NATSCertNext:      a.NATSCertNext,
 		Hostname:          a.Hostname,
 		RegisteredAt:      a.RegisteredAt,
 		StartedAt:         a.StartedAt,

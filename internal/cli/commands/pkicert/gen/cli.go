@@ -42,9 +42,8 @@ var certRotateCmd = &cobra.Command{
 	Long:        "It replaces a self-signed certificate; the server serves the new one at\nits next start. It refuses a cert_file of the operator: replace that file.\nEach join string pins the NATS server's certificate, and each joined agent\ntrusts it: a new one cuts those agents off, so it needs --force, then new\njoin tokens and a join again of each agent.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")
-		force, _ := cmd.Flags().GetBool("force")
 
-		return clicommand.Run(cmd, pkicert.Group, "rotate", pkicert.RotateInput{Name: name, Force: force})
+		return clicommand.Run(cmd, pkicert.Group, "rotate", pkicert.RotateInput{Name: name})
 	},
 	Short: "Make a new self-signed certificate in place of the old one",
 	Use:   "rotate",
@@ -55,6 +54,5 @@ func init() {
 	_ = certGetCmd.MarkFlagRequired("name")
 	certRotateCmd.Flags().String("name", "", "The name of the certificate, as list shows it, such as api or nats")
 	_ = certRotateCmd.MarkFlagRequired("name")
-	certRotateCmd.Flags().Bool("force", false, "Rotate the NATS server's certificate, which each join string pins and each joined agent trusts")
 	clicommand.AddCommands(pkicert.Group, certListCmd, certGetCmd, certRotateCmd)
 }

@@ -399,6 +399,7 @@ func agentInfoFromRegistration(
 		ConfigVersion:     reg.ConfigVersion,
 		ControllerKey:     reg.ControllerKey,
 		ControllerKeyNext: reg.ControllerKeyNext,
+		NATSCertNext:      reg.NATSCertNext,
 		MissingPrograms:   reg.MissingPrograms,
 		Conditions:        reg.Conditions,
 		State:             reg.State,

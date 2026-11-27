@@ -10,7 +10,8 @@ import type {
   ListPKICertsParams,
   PKICert,
   PKICertList,
-  PKIKeyRotation
+  PKIKeyRotation,
+  PKINATSCertRotation
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
@@ -249,6 +250,112 @@ export const getRotatePKIKeyUrl = () => {
 export const rotatePKIKey = async ( options?: Parameters<typeof apiFetch>[1]): Promise<rotatePKIKeyResponse> => {
 
   return apiFetch<rotatePKIKeyResponse>(getRotatePKIKeyUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+export type getPKINATSCertRotationResponse200 = {
+  data: PKINATSCertRotation
+  status: 200
+}
+
+export type getPKINATSCertRotationResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getPKINATSCertRotationResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getPKINATSCertRotationResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getPKINATSCertRotationResponseSuccess = (getPKINATSCertRotationResponse200) & {
+  headers: Headers;
+};
+export type getPKINATSCertRotationResponseError = (getPKINATSCertRotationResponse401 | getPKINATSCertRotationResponse403 | getPKINATSCertRotationResponse500) & {
+  headers: Headers;
+};
+
+export type getPKINATSCertRotationResponse = (getPKINATSCertRotationResponseSuccess | getPKINATSCertRotationResponseError)
+
+export const getGetPKINATSCertRotationUrl = () => {
+
+
+
+
+  return `/api/pki/nats`
+}
+
+/**
+ * Shows the certificate that the NATS server serves, and during a rotation the certificate that it switches to, when it switches at the latest, and each admitted agent that the switch waits for, with whether it trusts the next certificate.
+ * @summary Show the rotation of the NATS server's certificate
+ */
+export const getPKINATSCertRotation = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getPKINATSCertRotationResponse> => {
+
+  return apiFetch<getPKINATSCertRotationResponse>(getGetPKINATSCertRotationUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+export type rotatePKINATSCertResponse200 = {
+  data: PKINATSCertRotation
+  status: 200
+}
+
+export type rotatePKINATSCertResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type rotatePKINATSCertResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type rotatePKINATSCertResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type rotatePKINATSCertResponseSuccess = (rotatePKINATSCertResponse200) & {
+  headers: Headers;
+};
+export type rotatePKINATSCertResponseError = (rotatePKINATSCertResponse401 | rotatePKINATSCertResponse403 | rotatePKINATSCertResponse500) & {
+  headers: Headers;
+};
+
+export type rotatePKINATSCertResponse = (rotatePKINATSCertResponseSuccess | rotatePKINATSCertResponseError)
+
+export const getRotatePKINATSCertUrl = () => {
+
+
+
+
+  return `/api/pki/nats`
+}
+
+/**
+ * Starts the rotation of the NATS server's self-signed certificate, which each joined agent pins, with no restart and no new join. The controller makes the next certificate beside the current one, and signs a record that gives both to the agents. Each agent trusts the next one at its next heartbeat. The controller renames it into place when each admitted agent that reported within controller.pki.rotation_grace_period trusts it, or when the grace period ends, and NATS serves it at its next handshake. A rotation in progress is not started again. It runs on the controller's host, which must hold the NATS server's certificate, and refuses a certificate of the operator's cert_file.
+ * @summary Rotate the NATS server's certificate
+ */
+export const rotatePKINATSCert = async ( options?: Parameters<typeof apiFetch>[1]): Promise<rotatePKINATSCertResponse> => {
+
+  return apiFetch<rotatePKINATSCertResponse>(getRotatePKINATSCertUrl(),
   {
     ...options,
     method: 'POST'

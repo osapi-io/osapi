@@ -526,6 +526,7 @@ components:
         - GetNodeUserSshkey
         - GetPKICert
         - GetPKIKeyRotation
+        - GetPKINATSCertRotation
         - GetSecret
         - GetSecretValue
         - GetSecretVaults
@@ -583,6 +584,7 @@ components:
         - RetryJobByID
         - RevokeMachine
         - RotatePKIKey
+        - RotatePKINATSCert
         - UndrainAgent
       type: string
     Permission:

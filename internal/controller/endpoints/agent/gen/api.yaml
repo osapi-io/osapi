@@ -131,6 +131,9 @@ components:
           items:
             type: string
           type: array
+        nats_cert_next:
+          description: The fingerprint of the NATS server's next certificate, which the agent trusts during a rotation of it.
+          type: string
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
         package_mgr:

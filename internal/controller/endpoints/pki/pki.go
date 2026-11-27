@@ -34,15 +34,18 @@ import (
 // commands and their pages come from it.
 var Group = endpoint.Register(endpoint.Define(
 	"pki",
-	"The certificates of the fleet, and the rotation of the controller's key",
+	"The certificates of the fleet, and the rotation of the controller's key and of the NATS server's certificate",
 	endpoint.Area(area.Fleet),
 	endpoint.SubDoc("cert", "Read the certificates of the controller and of each agent"),
 	endpoint.SubDoc("key", "Rotate the controller's key with no new admission of the agents"),
+	endpoint.SubDoc("nats",
+		"Rotate the NATS server's certificate with no restart and no new join of the agents"),
 	endpoint.Title("PKI API"),
 	endpoint.Tag(
 		"pki_operations",
 		"PKI",
-		"The certificates of the fleet, and the rotation of the controller's key.",
+		"The certificates of the fleet, and the rotation of the controller's key and of "+
+			"the NATS server's certificate.",
 	),
 	endpoint.Uses[Deps](),
 	endpoint.Get[ListInput, CertList]("list").
@@ -125,4 +128,46 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("").
 		Check("client pki key get", "", "next", "{out.next}").
 		Prints(sampleRotationStarted),
+	endpoint.Get[CertRotationInput, CertRotation]("natscertrotation").
+		Handle(NATSCertRotation).
+		Sub("nats").
+		Use("get").
+		ID("GetPKINATSCertRotation").
+		Describe("Show the rotation of the NATS server's certificate").
+		Explain("Shows the certificate that the NATS server serves, and during a "+
+			"rotation the certificate that it switches to, when it switches at the "+
+			"latest, and each admitted agent that the switch waits for, with whether "+
+			"it trusts the next certificate.").
+		Returns("The rotation of the NATS server's certificate.").
+		Command("Show the rotation of the NATS server's certificate",
+			"Shows the NATS server's certificate, and during a rotation, each agent that\n"+
+				"the switch waits for. The controller switches when each one trusts the next\n"+
+				"certificate, or when controller.pki.rotation_grace_period ends.").
+		Example("").
+		Prints(sampleCertRotation),
+	endpoint.Post[CertRotateInput, CertRotation]("natscertrotate").
+		AdminOnly().
+		Handle(RotateNATSCert).
+		Sub("nats").
+		Use("rotate").
+		ID("RotatePKINATSCert").
+		Describe("Rotate the NATS server's certificate").
+		Explain("Starts the rotation of the NATS server's self-signed certificate, "+
+			"which each joined agent pins, with no restart and no new join. The "+
+			"controller makes the next certificate beside the current one, and signs a "+
+			"record that gives both to the agents. Each agent trusts the next one at its "+
+			"next heartbeat. The controller renames it into place when each admitted "+
+			"agent that reported within controller.pki.rotation_grace_period trusts it, "+
+			"or when the grace period ends, and NATS serves it at its next handshake. A "+
+			"rotation in progress is not started again. It runs on the controller's host, "+
+			"which must hold the NATS server's certificate, and refuses a certificate of "+
+			"the operator's cert_file.").
+		Returns("The rotation that started, or the one in progress.").
+		Command("Rotate the NATS server's certificate",
+			"Starts the rotation of the NATS server's certificate. The agents trust the\n"+
+				"next certificate at their next heartbeat, and the controller switches when\n"+
+				"each one does. osapi client pki nats get shows the progress.").
+		Example("").
+		Check("client pki nats get", "", "next", "{out.next}").
+		Prints(sampleCertRotationStarted),
 ))

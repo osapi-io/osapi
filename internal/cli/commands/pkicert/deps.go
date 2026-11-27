@@ -27,15 +27,20 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
 // Deps is what the cert commands use: the file system, the certificates of
-// each component on this host, the time now, and the record of a change in
-// the audit log, or nil.
+// each component on this host, the time now, the record of a change in the
+// audit log, or nil, and, for a rotation of the NATS server's certificate,
+// the config and a connection to NATS as the controller makes it.
 type Deps struct {
-	FS    avfs.VFS
-	Certs func() []pki.CertSource
-	Now   func() time.Time
-	Audit func(ctx context.Context, e audit.Entry) error
+	FS     avfs.VFS
+	Certs  func() []pki.CertSource
+	Now    func() time.Time
+	Audit  func(ctx context.Context, e audit.Entry) error
+	Config config.Config
+	Dial   func(ctx context.Context) (certrotation.KV, func(), error)
 }

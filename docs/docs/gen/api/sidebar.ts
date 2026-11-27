@@ -1572,6 +1572,20 @@ const sidebar: SidebarsConfig = {
               className: "api-method post",
               key: "fleet-pki-api-pki-operations-gen-api-rotate-pki-key",
             },
+            {
+              type: "doc",
+              id: "gen/api/get-pkinats-cert-rotation",
+              label: "Show the rotation of the NATS server's certificate",
+              className: "api-method get",
+              key: "fleet-pki-api-pki-operations-gen-api-get-pkinats-cert-rotation",
+            },
+            {
+              type: "doc",
+              id: "gen/api/rotate-pkinats-cert",
+              label: "Rotate the NATS server's certificate",
+              className: "api-method post",
+              key: "fleet-pki-api-pki-operations-gen-api-rotate-pkinats-cert",
+            },
           ],
         },
         {

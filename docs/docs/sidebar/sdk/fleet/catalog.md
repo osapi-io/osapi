@@ -226,12 +226,12 @@ A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
 `GetNodeScheduleByKey`, `GetNodeService`, `GetNodeServiceByKey`,
 `GetNodeStatus`, `GetNodeSysctl`, `GetNodeSysctlByKey`, `GetNodeTimezone`,
 `GetNodeUptime`, `GetNodeUser`, `GetNodeUserByKey`, `GetNodeUserSshkey`,
-`GetPKICert`, `GetPKIKeyRotation`, `GetSecret`, `GetSecretValue`,
-`GetSecretVaults`, `GetSecrets`, `GetTrace`, `ListDeadLetters`, `ListPKICerts`,
-`PostFile`, `PostNodeCertificate`, `PostNodeCommandExec`,
-`PostNodeCommandShell`, `PostNodeConnectivityPing`, `PostNodeDocker`,
-`PostNodeDockerExec`, `PostNodeDockerStart`, `PostNodeDockerStop`,
-`PostNodeGroup`, `PostNodeImagePull`, `PostNodeInterface`,
+`GetPKICert`, `GetPKIKeyRotation`, `GetPKINATSCertRotation`, `GetSecret`,
+`GetSecretValue`, `GetSecretVaults`, `GetSecrets`, `GetTrace`,
+`ListDeadLetters`, `ListPKICerts`, `PostFile`, `PostNodeCertificate`,
+`PostNodeCommandExec`, `PostNodeCommandShell`, `PostNodeConnectivityPing`,
+`PostNodeDocker`, `PostNodeDockerExec`, `PostNodeDockerStart`,
+`PostNodeDockerStop`, `PostNodeGroup`, `PostNodeImagePull`, `PostNodeInterface`,
 `PostNodeInterfaceRoute`, `PostNodeNtp`, `PostNodePackage`,
 `PostNodePowerReboot`, `PostNodePowerShutdown`, `PostNodeProcessSignal`,
 `PostNodeSchedule`, `PostNodeService`, `PostNodeServiceDisable`,
@@ -242,7 +242,8 @@ A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
 `PutNodeInterfaceRoute`, `PutNodeNtp`, `PutNodePackageUpdates`,
 `PutNodeSchedule`, `PutNodeService`, `PutNodeSysctl`, `PutNodeTimezone`,
 `PutNodeUser`, `PutNodeUserPassword`, `PutSecret`, `RejectMachine`,
-`RetryJobByID`, `RevokeMachine`, `RotatePKIKey`, `UndrainAgent`.
+`RetryJobByID`, `RevokeMachine`, `RotatePKIKey`, `RotatePKINATSCert`,
+`UndrainAgent`.
 
 ### Permission
 

@@ -59,3 +59,21 @@ func decodeRotate(
 
 	return in, "", true
 }
+
+// decodeNatscertrotation reads the natscertrotation method's input from the request.
+func decodeNatscertrotation(
+	c *echo.Context,
+) (pki.CertRotationInput, string, bool) {
+	var in pki.CertRotationInput
+
+	return in, "", true
+}
+
+// decodeNatscertrotate reads the natscertrotate method's input from the request.
+func decodeNatscertrotate(
+	c *echo.Context,
+) (pki.CertRotateInput, string, bool) {
+	var in pki.CertRotateInput
+
+	return in, "", true
+}

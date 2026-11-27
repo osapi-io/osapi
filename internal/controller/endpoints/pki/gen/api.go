@@ -38,6 +38,18 @@ func Routes(
 			Permission: "pki:write",
 			Handler:    server.Serve(s, pki.Group, "rotate", pki.RotateKey, decodeRotate),
 		},
+		{
+			Method:     http.MethodGet,
+			Path:       "/api/pki/nats",
+			Permission: "pki:read",
+			Handler:    server.Serve(s, pki.Group, "natscertrotation", pki.NATSCertRotation, decodeNatscertrotation),
+		},
+		{
+			Method:     http.MethodPost,
+			Path:       "/api/pki/nats",
+			Permission: "pki:write",
+			Handler:    server.Serve(s, pki.Group, "natscertrotate", pki.RotateNATSCert, decodeNatscertrotate),
+		},
 	}
 }
 
