@@ -23,7 +23,7 @@ package integration_test
 
 import (
 	"fmt"
-	"strings"
+	"net/url"
 	"testing"
 	"time"
 
@@ -123,8 +123,12 @@ func (s *NATSCertRotationSuite) TestRotateTheNATSCertificate() {
 		Join string `json:"join"`
 	}
 	s.Require().NoError(parseJSON(stdout, &token), stdout)
-	if strings.HasPrefix(token.Join, "tls://") {
-		s.Contains(token.Join, "fp="+started.Next,
+	// The join string holds the token and the bootstrap user: compare and
+	// print only its fingerprint.
+	join, err := url.Parse(token.Join)
+	s.Require().NoError(err, "the join string does not parse")
+	if join.Scheme == "tls" {
+		s.Equal(started.Next, join.Query().Get("fp"),
 			"a join string made after the switch pins the new certificate")
 	}
 }
