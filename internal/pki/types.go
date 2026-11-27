@@ -26,6 +26,7 @@ import (
 	"crypto/ecdh"
 	"crypto/ed25519"
 	"sync"
+	"time"
 
 	"github.com/avfs/avfs"
 )
@@ -47,10 +48,12 @@ type Manager struct {
 	controllerPubKey         ed25519.PublicKey
 	previousControllerPubKey ed25519.PublicKey
 	nextControllerPubKey     ed25519.PublicKey
-	// retiredControllerPubKeys is each key that a switch before the last
-	// one replaced: it verifies only the records that the controller
-	// stored, such as its jobs, never a message.
-	retiredControllerPubKeys []ed25519.PublicKey
+	// retiredControllerKeys is each key that a switch before the last one
+	// replaced: it verifies only the records that the controller stored,
+	// such as its jobs, never a message, and only until
+	// retiredKeyLifetime after it retired.
+	retiredControllerKeys []RetiredKey
+	retiredKeyLifetime    time.Duration
 
 	// withEncryption makes LoadOrGenerate also load or generate the P-256
 	// ECDH key that opens values the controller seals for this agent.

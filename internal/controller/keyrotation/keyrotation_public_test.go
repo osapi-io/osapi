@@ -72,7 +72,9 @@ func (s *KeyRotationPublicTestSuite) SetupTest() {
 	s.keys = pki.New(s.fs, "/ctl", "controller")
 	s.Require().NoError(s.keys.LoadOrGenerate())
 	s.keys.SetControllerPublicKey(s.keys.PublicKey())
-	s.now = time.Date(2026, 11, 26, 12, 0, 0, 0, time.UTC)
+	// The keys' manager reads the wall clock for a retired key's lifetime,
+	// so the suite's clock is now.
+	s.now = time.Now().UTC().Truncate(time.Second)
 }
 
 // rotation is a Rotation over the suite's doubles and keys.
@@ -207,7 +209,7 @@ func (s *KeyRotationPublicTestSuite) TestStart() {
 					Serial:   4,
 					Current:  s.keys.PublicKey(),
 					Previous: old,
-					Retired:  [][]byte{retired},
+					Retired:  []pki.RetiredKey{{Key: retired, RetiredAt: s.now}},
 				}
 				rec.Sign(s.keys.PrivateKey())
 				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 7), nil)
@@ -217,7 +219,39 @@ func (s *KeyRotationPublicTestSuite) TestStart() {
 						s.Require().NoError(json.Unmarshal(data, &got))
 						s.Equal(uint64(5), got.Serial)
 						s.Equal(old, ed25519.PublicKey(got.Previous))
-						s.Equal([][]byte{retired}, got.Retired)
+						s.Equal([]pki.RetiredKey{{Key: retired, RetiredAt: s.now}}, got.Retired)
+
+						return 8, nil
+					})
+				s.agents("")
+			},
+			validateFunc: func(st keyrotation.Status) {
+				s.NotEmpty(st.Next)
+			},
+		},
+		{
+			name: "it drops a retired key past its lifetime from the record",
+			setup: func() {
+				old, _ := s.foreign()
+				expired, _ := s.foreign()
+				rec := pki.ControllerKeyRecord{
+					Serial:   4,
+					Current:  s.keys.PublicKey(),
+					Previous: old,
+					Retired: []pki.RetiredKey{
+						{
+							Key:       expired,
+							RetiredAt: s.now.Add(-keyrotation.DefaultRetiredKeyLifetime),
+						},
+					},
+				}
+				rec.Sign(s.keys.PrivateKey())
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 7), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(7)).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+						var got pki.ControllerKeyRecord
+						s.Require().NoError(json.Unmarshal(data, &got))
+						s.Empty(got.Retired)
 
 						return 8, nil
 					})
@@ -621,7 +655,7 @@ func (s *KeyRotationPublicTestSuite) TestLoad() {
 					Serial:   3,
 					Current:  s.keys.PublicKey(),
 					Previous: old,
-					Retired:  [][]byte{retired},
+					Retired:  []pki.RetiredKey{{Key: retired, RetiredAt: s.now}},
 				}
 				rec.Sign(s.keys.PrivateKey())
 				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 3), nil)
@@ -633,13 +667,38 @@ func (s *KeyRotationPublicTestSuite) TestLoad() {
 			},
 		},
 		{
+			name: "a retired key past its lifetime verifies no stored record",
+			setup: func() ed25519.PublicKey {
+				old, _ := s.foreign()
+				expired, _ := s.foreign()
+				rec := pki.ControllerKeyRecord{
+					Serial:   3,
+					Current:  s.keys.PublicKey(),
+					Previous: old,
+					Retired: []pki.RetiredKey{{
+						Key:       expired,
+						RetiredAt: s.now.Add(-keyrotation.DefaultRetiredKeyLifetime - time.Minute),
+					}},
+				}
+				rec.Sign(s.keys.PrivateKey())
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 3), nil)
+
+				return expired
+			},
+			validateFunc: func(want ed25519.PublicKey) {
+				s.NotContains(s.keys.StoredRecordKeys(), want)
+			},
+		},
+		{
 			name: "a stopped switch retires the previous key in its record",
 			setup: func() ed25519.PublicKey {
 				oldPub, oldPriv := s.foreign()
 				previous, _ := s.foreign()
+				// The previous key stopped signing at the last switch.
+				switched := s.now.Add(-time.Hour)
 				rec := pki.ControllerKeyRecord{
 					Serial: 2, Current: oldPub, Next: s.keys.PublicKey(),
-					Previous: previous, StartedAt: s.now,
+					Previous: previous, StartedAt: s.now, SwitchedAt: switched,
 				}
 				rec.Sign(oldPriv)
 				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 6), nil)
@@ -648,7 +707,10 @@ func (s *KeyRotationPublicTestSuite) TestLoad() {
 						var done pki.ControllerKeyRecord
 						s.Require().NoError(json.Unmarshal(data, &done))
 						s.True(done.SignedBy(s.keys.PublicKey()))
-						s.Equal([][]byte{previous}, done.Retired)
+						s.Equal(
+							[]pki.RetiredKey{{Key: previous, RetiredAt: switched}},
+							done.Retired,
+						)
 
 						return 7, nil
 					})

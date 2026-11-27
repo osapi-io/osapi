@@ -209,14 +209,19 @@ func startEnrollment(
 
 	// The controller's own key rotates with no new admission of the agents:
 	// the grace period is the overlap, in which both keys verify.
+	// A retired key verifies the jobs that it signed for its lifetime only,
+	// so that a leaked old key cannot sign a stored job forever. An empty
+	// or bad lifetime is the default.
+	retiredLifetime, _ := time.ParseDuration(cfg.Controller.PKI.RetiredKeyLifetime)
 	rotation := keyrotation.New(keyrotation.Config{
-		KV:       conn.NATS,
-		Bucket:   bus.StateKV(namespace, cfg.NATS.State).Bucket,
-		Keys:     keys,
-		Admitted: watcher,
-		Seen:     conn.Jobs,
-		Grace:    grace,
-		Logger:   log,
+		KV:                 conn.NATS,
+		Bucket:             bus.StateKV(namespace, cfg.NATS.State).Bucket,
+		Keys:               keys,
+		Admitted:           watcher,
+		Seen:               conn.Jobs,
+		Grace:              grace,
+		RetiredKeyLifetime: retiredLifetime,
+		Logger:             log,
 	})
 	background(ctx, log, "controller key rotation", rotation.Run)
 

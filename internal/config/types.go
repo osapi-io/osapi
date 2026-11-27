@@ -630,6 +630,10 @@ type ControllerPKI struct {
 	// RotationGracePeriod is how long both old and new keys are accepted
 	// during key rotation. Uses Go duration format.
 	RotationGracePeriod string `mapstructure:"rotation_grace_period" doc:"Grace period during key rotation where both old and new keys are accepted. Go duration format." validate:"omitempty,go_duration"`
+	// RetiredKeyLifetime is how long a controller key that a switch before
+	// the last one replaced still verifies the jobs that it signed. Uses Go
+	// duration format.
+	RetiredKeyLifetime string `mapstructure:"retired_key_lifetime" doc:"How long after a rotation of the controller's key replaced it a retired key still verifies the jobs that it signed, such as 168h. After it, job list and job get show such a job as unreadable. Empty is 168h. Go duration format." validate:"omitempty,go_duration"`
 	// DeleteAfter deletes an admitted machine that has not reported for
 	// this long. Empty is never. Uses Go duration format.
 	DeleteAfter string `mapstructure:"delete_after" doc:"Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format." validate:"omitempty,go_duration" choice:"empty keeps a machine that stops reporting"`

@@ -20,7 +20,10 @@
 
 package pki
 
-import "crypto/ed25519"
+import (
+	"crypto/ed25519"
+	"time"
+)
 
 // VerifyWithGrace checks the signature against each controller key that the
 // manager accepts: the current one, the previous one, which signed the jobs
@@ -96,29 +99,39 @@ func (m *Manager) SetNextControllerPublicKey(
 	m.nextControllerPubKey = key
 }
 
-// SetRetiredControllerPublicKeys sets the keys that switches before the
-// last one replaced, from the controller's key record.
-func (m *Manager) SetRetiredControllerPublicKeys(
-	keys []ed25519.PublicKey,
+// SetRetiredControllerKeys sets the keys that switches before the last one
+// replaced, from the controller's key record, and how long after it
+// retired each one still verifies a stored record.
+func (m *Manager) SetRetiredControllerKeys(
+	keys []RetiredKey,
+	lifetime time.Duration,
 ) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.retiredControllerPubKeys = keys
+	m.retiredControllerKeys = keys
+	m.retiredKeyLifetime = lifetime
 }
 
 // StoredRecordKeys is each controller key that verifies a record that the
 // controller stored, such as a job in the queue: the current, the next, the
-// previous and each retired key, in that order. A message from the network
-// is verified with VerifyWithGrace, which takes no retired key.
+// previous and each retired key that has not expired, in that order. A
+// message from the network is verified with VerifyWithGrace, which takes no
+// retired key.
 func (m *Manager) StoredRecordKeys() []ed25519.PublicKey {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	keys := make([]ed25519.PublicKey, 0, 3+len(m.retiredControllerPubKeys))
-	for _, k := range append([]ed25519.PublicKey{
+	now := time.Now()
+	keys := make([]ed25519.PublicKey, 0, 3+len(m.retiredControllerKeys))
+	for _, k := range []ed25519.PublicKey{
 		m.controllerPubKey, m.nextControllerPubKey, m.previousControllerPubKey,
-	}, m.retiredControllerPubKeys...) {
+	} {
 		if len(k) == ed25519.PublicKeySize {
 			keys = append(keys, k)
+		}
+	}
+	for _, k := range m.retiredControllerKeys {
+		if len(k.Key) == ed25519.PublicKeySize && !k.Expired(now, m.retiredKeyLifetime) {
+			keys = append(keys, k.Key)
 		}
 	}
 
