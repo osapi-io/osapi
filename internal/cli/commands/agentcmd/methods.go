@@ -78,13 +78,16 @@ func Components(
 	log := d.Logger.With("component", "agent")
 	// The metrics server is made before the NATS connection, so that
 	// nats-client records the calls of the agent on it.
-	ms := metrics.FromConfig(
+	ms, err := metrics.FromConfig(
 		d.Config.Agent.Metrics,
 		d.Config.Agent.PKI.KeyDir,
 		"agent.pki.key_dir",
 		"agent-metrics",
 		log,
 	)
+	if err != nil {
+		return command.Running{}, err
+	}
 	a, closeConn, err := d.NewAgent(ctx, log, d.FS, d.Config, ms.MeterProvider())
 	if err != nil {
 		return command.Running{}, fmt.Errorf("start the agent: %w", err)

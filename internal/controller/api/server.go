@@ -22,6 +22,7 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -125,41 +126,64 @@ func New(
 	return s
 }
 
-// Start starts the Echo server on the configured host and port. An empty
-// host binds every interface.
-func (s *Server) Start() {
+// Start listens on the configured host and port, then serves the API
+// without blocking. An empty host binds every interface. A listen that
+// fails, such as on a port in use, is the error, so the process exits and
+// its service manager can start it again.
+func (s *Server) Start() error {
+	addr := net.JoinHostPort(
+		s.appConfig.Controller.API.Host,
+		strconv.Itoa(s.appConfig.Controller.API.Port),
+	)
+	ln, err := listenFn(context.Background(), "tcp", addr)
+	if err != nil {
+		return fmt.Errorf("listen on %s: %w", addr, err)
+	}
+	if s.tls != nil {
+		ln = tls.NewListener(ln, s.tls)
+	}
+
 	// v5 drives the listener from a context rather than a Shutdown method,
 	// so Stop cancels this one.
 	ctx, cancel := context.WithCancel(context.Background())
 	s.stop = cancel
 
 	go func() {
-		s.logger.Info("starting server")
+		s.logger.Info("starting server", slog.String("address", addr))
 
 		sc := echo.StartConfig{
-			Address: net.JoinHostPort(
-				s.appConfig.Controller.API.Host,
-				strconv.Itoa(s.appConfig.Controller.API.Port),
-			),
+			Listener:        ln,
 			HideBanner:      true,
 			GracefulTimeout: shutdownGracePeriod,
-			TLSConfig:       s.tls,
 		}
 		if err := sc.Start(ctx, s.Echo); err != nil &&
 			!errors.Is(err, http.ErrServerClosed) {
 			s.logger.Error(
-				"failed to start server",
+				"server stopped with an error",
 				slog.String("error", err.Error()),
 			)
+
+			return
 		}
+		s.logger.Info("server stopped")
 	}()
+
+	return nil
 }
 
-// Stop gracefully shuts down the Echo server.
+// listenFn opens the API's listener. A test replaces it.
+var listenFn = func(
+	ctx context.Context,
+	network string,
+	addr string,
+) (net.Listener, error) {
+	return (&net.ListenConfig{}).Listen(ctx, network, addr)
+}
+
 // Stop asks the server to drain and returns without waiting for it.
 //
 // Cancelling is what starts the drain; StartConfig.GracefulTimeout bounds how long
-// Echo waits, and the goroutine in Start reports the outcome. A caller must not
+// Echo waits, and the goroutine in Start logs the outcome. A caller must not
 // treat this returning as "every in-flight request finished" — the start
 // command then runs the cleanups within one shutdown budget. That budget bounds
 // the process, not this call.
@@ -171,16 +195,11 @@ func (s *Server) Stop(
 	s.logger.Info("stopping server")
 
 	if s.stop == nil {
-		s.logger.Info("server stopped gracefully")
-
 		return
 	}
 
-	// Cancelling is what asks v5 to drain. StartConfig.GracefulTimeout bounds
-	// how long it waits, and the goroutine in Start reports any error.
 	s.stop()
 	s.stop = nil
-	s.logger.Info("server stopped gracefully")
 }
 
 // untraced tells which requests get no span and no HTTP metrics: the health

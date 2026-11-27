@@ -56,13 +56,14 @@ type MethodsPublicTestSuite struct {
 
 func (s *MethodsPublicTestSuite) TestStart() {
 	tests := []struct {
-		name         string
-		metrics      bool
-		level        bool
-		hostErr      error
-		tracerErr    error
-		agentErr     error
-		validateFunc func(got result)
+		name           string
+		metrics        bool
+		badMetricsCert bool
+		level          bool
+		hostErr        error
+		tracerErr      error
+		agentErr       error
+		validateFunc   func(got result)
 	}{
 		{
 			name: "when it starts, the agent is the one component, and the cleanup closes, then stops the tracer",
@@ -83,6 +84,14 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				s.Require().NoError(got.err)
 				s.True(got.leveled)
 				got.cleanup()
+			},
+		},
+		{
+			name:           "when the metrics server is on and its certificate does not load, it is the error",
+			metrics:        true,
+			badMetricsCert: true,
+			validateFunc: func(got result) {
+				s.ErrorContains(got.err, "metrics server: tls")
 			},
 		},
 		{
@@ -133,6 +142,13 @@ func (s *MethodsPublicTestSuite) TestStart() {
 			var closed, stopped bool
 			cfg := config.Config{}
 			cfg.Agent.Metrics = config.MetricsServer{Enabled: tc.metrics, Host: "127.0.0.1"}
+			if tc.badMetricsCert {
+				cfg.Agent.Metrics.TLS = config.ServerTLS{
+					Enabled:  true,
+					CertFile: "/no/such.crt",
+					KeyFile:  "/no/such.key",
+				}
+			}
 			d := agentcmd.Deps{
 				Config:    cfg,
 				Logger:    slog.New(slog.DiscardHandler),

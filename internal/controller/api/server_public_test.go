@@ -23,6 +23,7 @@ package api_test
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net"
@@ -254,7 +255,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 			server := api.New(appConfig, slog.Default())
 
 			if tt.start {
-				server.Start()
+				s.Require().NoError(server.Start())
 				time.Sleep(50 * time.Millisecond)
 			}
 
@@ -275,7 +276,7 @@ func (s *ServerPublicTestSuite) TestStartErrorPath() {
 		name string
 	}{
 		{
-			name: "logs error when port already in use",
+			name: "a port in use is the error of Start",
 		},
 	}
 
@@ -299,9 +300,7 @@ func (s *ServerPublicTestSuite) TestStartErrorPath() {
 			}
 
 			server := api.New(appConfig, slog.Default())
-			server.Start()
-
-			time.Sleep(100 * time.Millisecond)
+			s.ErrorContains(server.Start(), "listen on ")
 		})
 	}
 }
@@ -340,7 +339,7 @@ func (s *ServerPublicTestSuite) TestStopErrorPath() {
 				return c.String(http.StatusOK, "done")
 			})
 
-			server.Start()
+			s.Require().NoError(server.Start())
 			time.Sleep(50 * time.Millisecond)
 
 			go http.Get(fmt.Sprintf("http://localhost:%d/slow", port)) //nolint:errcheck
@@ -503,7 +502,7 @@ func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
 			}
 
 			server := api.New(appConfig, logger)
-			server.Start()
+			s.Require().NoError(server.Start())
 
 			s.Eventually(func() bool {
 				return strings.Contains(out.String(), "http(s) server started")
@@ -516,6 +515,63 @@ func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			server.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStartServes() {
+	appConfig := config.Config{
+		Controller: config.Controller{
+			API: config.APIServer{
+				Security: config.ServerSecurity{
+					SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
+				},
+			},
+		},
+	}
+	tests := []struct {
+		name    string
+		opts    []api.Option
+		closeLn bool
+		wantLog string
+	}{
+		{
+			name: "with TLS, it serves through a TLS listener",
+			opts: []api.Option{api.WithTLS(&tls.Config{MinVersion: tls.VersionTLS12})},
+		},
+		{
+			name:    "a listener that fails while it serves is logged",
+			closeLn: true,
+			wantLog: "server stopped with an error",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var ln net.Listener
+			api.SetListenFn(func(ctx context.Context, network, _ string) (net.Listener, error) {
+				l, err := (&net.ListenConfig{}).Listen(ctx, network, "127.0.0.1:0")
+				ln = l
+
+				return l, err
+			})
+			defer api.ResetListenFn()
+
+			var buf lockedBuffer
+			log := slog.New(slog.NewTextHandler(&buf, nil))
+			server := api.New(appConfig, log, tt.opts...)
+			s.Require().NoError(server.Start())
+			if tt.closeLn {
+				_ = ln.Close()
+			}
+			s.Eventually(func() bool {
+				return strings.Contains(buf.String(), "starting server")
+			}, 2*time.Second, 10*time.Millisecond)
+			if tt.wantLog != "" {
+				s.Eventually(func() bool {
+					return strings.Contains(buf.String(), tt.wantLog)
+				}, 2*time.Second, 10*time.Millisecond)
+			}
+			server.Stop(context.Background())
 		})
 	}
 }

@@ -236,11 +236,10 @@ func newController(
 	}, nil
 }
 
-// Start serves the REST API without blocking.
+// Start serves the REST API without blocking. A listen that fails is the
+// error.
 func (c *Controller) Start() error {
-	c.api.Start()
-
-	return nil
+	return c.api.Start()
 }
 
 // Stop asks the REST API to stop, ends the health metrics refresh, then

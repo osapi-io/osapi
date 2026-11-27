@@ -90,7 +90,8 @@ func (s *MeterPublicTestSuite) TestSetMeterProvider() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			tt.validateFunc(srv)
 
 			ctx, cancel := context.WithTimeout(

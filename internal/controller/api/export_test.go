@@ -21,7 +21,9 @@
 package api
 
 import (
+	"context"
 	"log/slog"
+	"net"
 	"os"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -75,4 +77,18 @@ func SetWriteFileFn(
 func ResetTLSFns() {
 	config.SelfSignedHostname = os.Hostname
 	config.SelfSignedWrite = os.WriteFile
+}
+
+// SetListenFn replaces how Start opens its listener.
+func SetListenFn(
+	fn func(ctx context.Context, network string, addr string) (net.Listener, error),
+) {
+	listenFn = fn
+}
+
+// ResetListenFn restores how Start opens its listener.
+func ResetListenFn() {
+	listenFn = func(ctx context.Context, network string, addr string) (net.Listener, error) {
+		return (&net.ListenConfig{}).Listen(ctx, network, addr)
+	}
 }

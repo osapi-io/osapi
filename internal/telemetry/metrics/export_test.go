@@ -23,6 +23,10 @@
 package metrics
 
 import (
+	"context"
+	"crypto/tls"
+	"net"
+
 	"github.com/labstack/echo/v5"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 )
@@ -47,4 +51,26 @@ func ExportServerAddRoute(
 	handler echo.HandlerFunc,
 ) {
 	s.echo.Any(path, handler)
+}
+
+// SetListenFn replaces how Start opens its listener.
+func SetListenFn(
+	fn func(ctx context.Context, network string, addr string) (net.Listener, error),
+) {
+	listenFn = fn
+}
+
+// ResetListenFn restores how Start opens its listener.
+func ResetListenFn() {
+	listenFn = func(ctx context.Context, network string, addr string) (net.Listener, error) {
+		return (&net.ListenConfig{}).Listen(ctx, network, addr)
+	}
+}
+
+// SetServerTLS makes s serve HTTPS with c.
+func SetServerTLS(
+	s *Server,
+	c *tls.Config,
+) {
+	s.tls = c
 }
