@@ -20,6 +20,7 @@
 package config_test
 
 import (
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -130,6 +131,20 @@ func (s *SelfSignedPublicTestSuite) TestWithCurrentSelfSigned() {
 		s.Require().NoError(err)
 		s.Contains(s.cert(got.CertFile).DNSNames, "web-01")
 	})
+}
+
+func (s *SelfSignedPublicTestSuite) TestMakeSelfSigned() {
+	dir := s.T().TempDir()
+	cert, key := filepath.Join(dir, "nats.next.crt"), filepath.Join(dir, "nats.next.key")
+	s.Require().NoError(config.MakeSelfSigned(cert, key))
+	pair, err := tls.LoadX509KeyPair(cert, key)
+	s.Require().NoError(err, "the certificate and key are a pair")
+	leaf, err := x509.ParseCertificate(pair.Certificate[0])
+	s.Require().NoError(err)
+	s.Contains(leaf.DNSNames, "localhost")
+
+	s.Error(config.MakeSelfSigned(filepath.Join(cert, "x.crt"), filepath.Join(cert, "x.key")),
+		"a directory that is a file")
 }
 
 func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
