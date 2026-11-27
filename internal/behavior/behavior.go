@@ -303,7 +303,7 @@ type Method struct {
 	// Action is true for a write declared with Action: it is named for what
 	// it does, such as restart, and its route ends in its name.
 	Action bool
-	// Always is true for a method declared with .Always: it changes the
+	// AlwaysChanges is true for a method declared with .Always: it changes the
 	// host each time it runs, as restart does, so no run is unchanged.
 	AlwaysChanges bool
 	// Disruptive is true for a method declared with .Disrupts: it takes the
