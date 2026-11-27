@@ -664,7 +664,7 @@ func HandleError(
 			pendingTraceID = ""
 			_, _ = fmt.Fprintf(errOut, "  %s\n", DimStyle.Render("trace "+id))
 		}
-		osExit(1)
+		exit(1)
 
 		return
 	}
@@ -679,7 +679,7 @@ func HandleError(
 		}
 	}
 	WriteErrorJSON(errOut, doc)
-	osExit(ExitError)
+	exit(ExitError)
 }
 
 // LocalTime renders a time as local "2006-01-02 15:04:05", the one format

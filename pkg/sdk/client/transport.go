@@ -39,6 +39,9 @@ type authTransport struct {
 func (t *authTransport) RoundTrip(
 	req *http.Request,
 ) (*http.Response, error) {
+	// A RoundTripper must not change the caller's request, so the headers go
+	// on a copy.
+	req = req.Clone(req.Context())
 	req.Header.Set("Authorization", t.authHeader)
 	otel.GetTextMapPropagator().Inject(req.Context(), propagation.HeaderCarrier(req.Header))
 

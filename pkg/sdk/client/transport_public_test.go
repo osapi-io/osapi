@@ -39,6 +39,19 @@ func (f *failingRoundTripper) RoundTrip(
 	return nil, fmt.Errorf("transport error")
 }
 
+// recordingRoundTripper keeps the request that it was sent.
+type recordingRoundTripper struct {
+	got *http.Request
+}
+
+func (r *recordingRoundTripper) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
+	r.got = req
+
+	return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody, Request: req}, nil
+}
+
 type TransportPublicTestSuite struct {
 	suite.Suite
 }
@@ -71,8 +84,40 @@ func (s *TransportPublicTestSuite) TestRoundTripError() {
 
 			resp, err := transport.RoundTrip(req)
 			tt.validateFunc(resp, err)
+		})
+	}
+}
 
-			s.Equal("Bearer test-token", req.Header.Get("Authorization"))
+// A RoundTripper must not change the request that it is given, so a caller
+// that sends the same request again, or a retry, sees it as it was.
+func (s *TransportPublicTestSuite) TestRoundTripLeavesTheRequest() {
+	tests := []struct {
+		name         string
+		validateFunc func(sent *http.Request, got *http.Request)
+	}{
+		{
+			name: "when a request is sent the base gets the header and the caller's request has none",
+			validateFunc: func(sent *http.Request, got *http.Request) {
+				s.Require().NotNil(got)
+				s.Equal("Bearer test-token", got.Header.Get("Authorization"))
+				s.Empty(sent.Header.Get("Authorization"))
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			base := &recordingRoundTripper{}
+			transport := client.ExportNewAuthTransport(base, "Bearer test-token", slog.Default())
+
+			req, err := http.NewRequest(http.MethodGet, "http://example.com/test", nil)
+			s.Require().NoError(err)
+
+			resp, err := transport.RoundTrip(req)
+			s.Require().NoError(err)
+			_ = resp.Body.Close()
+
+			tt.validateFunc(req, base.got)
 		})
 	}
 }

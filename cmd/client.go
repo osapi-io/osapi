@@ -51,6 +51,16 @@ var (
 	commandSpan trace.Span
 )
 
+// endCommandTrace ends the command's span and flushes its tracer.
+func endCommandTrace() {
+	if commandSpan != nil {
+		commandSpan.End()
+	}
+	if tracerShutdown != nil {
+		_ = tracerShutdown(context.Background())
+	}
+}
+
 // clientCmd represents the client command.
 var clientCmd = &cobra.Command{
 	Use: "client",
@@ -66,6 +76,10 @@ var clientCmd = &cobra.Command{
 		if err != nil {
 			cli.LogFatal(logger, "failed to initialize tracer", err)
 		}
+		// The span ends and the tracer flushes also when the command fails
+		// through HandleError, LogFatal or an error from RunE, where cobra
+		// skips PersistentPostRun.
+		cli.AtExit(endCommandTrace)
 
 		// The command opens its own span only when it sends spans somewhere. A
 		// span that is not exported would still go to the controller as the
@@ -107,14 +121,7 @@ var clientCmd = &cobra.Command{
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {
 		// The trace of a result that had no summary line to carry it.
 		cli.FlushTraceID()
-		// A command that exits through LogFatal does not reach here, so its
-		// span is not sent. The controller still has the request.
-		if commandSpan != nil {
-			commandSpan.End()
-		}
-		if tracerShutdown != nil {
-			_ = tracerShutdown(context.Background())
-		}
+		cli.RunExitHooks()
 	},
 }
 

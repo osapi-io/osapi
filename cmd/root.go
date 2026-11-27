@@ -100,6 +100,9 @@ func Execute() {
 		if !errors.Is(err, command.FailedError{}) {
 			cli.PrintError(os.Stderr, cmd, err, jsonOutput)
 		}
+		// os.Exit skips the deferred work, so it runs here.
+		cli.RunExitHooks()
+		cancel()
 		os.Exit(cli.ExitCode(err))
 	}
 }

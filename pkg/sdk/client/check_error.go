@@ -44,16 +44,16 @@ func checkError(
 		Reason:     errorReason(body),
 	}
 
-	switch statusCode {
-	case 400:
+	switch {
+	case statusCode == 400:
 		return &ValidationError{e}
-	case 401, 403:
+	case statusCode == 401 || statusCode == 403:
 		return &AuthError{e}
-	case 404:
+	case statusCode == 404:
 		return &NotFoundError{e}
-	case 409:
+	case statusCode == 409:
 		return &ConflictError{e}
-	case 500:
+	case statusCode >= 500:
 		return &ServerError{e}
 	default:
 		return &UnexpectedStatusError{e}

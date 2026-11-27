@@ -57,6 +57,9 @@ func (s *FileService) Upload(
 	}
 
 	sha256Hex := fmt.Sprintf("%x", sha256.Sum256(fileData))
+	// The read only finds an upload that it can skip. Any error, such as a
+	// 404 for a new file or a 403 for a token that can write but not read,
+	// goes on to the upload, which reports its own error.
 	if existing, err := s.Get(ctx, name); err == nil && existing.Data.SHA256 == sha256Hex {
 		return NewResponse(FileUploadResponse{
 			Name:        name,

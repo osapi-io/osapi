@@ -91,7 +91,7 @@ func LogFatal(
 				Mute(errOut, fmt.Sprintf("  %v: %v", kvPairs[i], kvPairs[i+1])),
 			)
 		}
-		osExit(1)
+		exit(1)
 
 		return
 	}
@@ -109,5 +109,5 @@ func LogFatal(
 	}
 	WriteErrorJSON(errOut, doc)
 
-	osExit(1)
+	exit(1)
 }

@@ -134,9 +134,29 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			statusCode: 503,
 			validateFunc: func(err error) {
 				suite.Error(err)
-				var target *client.UnexpectedStatusError
+				var target *client.ServerError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(503, target.StatusCode)
+			},
+		},
+		{
+			name:       "when status is 502",
+			statusCode: 502,
+			validateFunc: func(err error) {
+				suite.Error(err)
+				var target *client.ServerError
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
+				suite.Equal(502, target.StatusCode)
+			},
+		},
+		{
+			name:       "when status is 418",
+			statusCode: 418,
+			validateFunc: func(err error) {
+				suite.Error(err)
+				var target *client.UnexpectedStatusError
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
+				suite.Equal(418, target.StatusCode)
 			},
 		},
 	}
