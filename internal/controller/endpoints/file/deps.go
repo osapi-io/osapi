@@ -40,7 +40,6 @@ type Deps struct {
 // Objects is the Object Store bucket of the files.
 type Objects interface {
 	Put(ctx context.Context, meta jetstream.ObjectMeta, r io.Reader) (*jetstream.ObjectInfo, error)
-	GetBytes(ctx context.Context, name string) ([]byte, error)
 	Info(ctx context.Context, name string) (*jetstream.ObjectInfo, error)
 	Delete(ctx context.Context, name string) error
 	List(ctx context.Context) ([]*jetstream.ObjectInfo, error)

@@ -56,21 +56,6 @@ func (mr *MockObjectsMockRecorder) Delete(ctx, name any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockObjects)(nil).Delete), ctx, name)
 }
 
-// GetBytes mocks base method.
-func (m *MockObjects) GetBytes(ctx context.Context, name string) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBytes", ctx, name)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetBytes indicates an expected call of GetBytes.
-func (mr *MockObjectsMockRecorder) GetBytes(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBytes", reflect.TypeOf((*MockObjects)(nil).GetBytes), ctx, name)
-}
-
 // Info mocks base method.
 func (m *MockObjects) Info(ctx context.Context, name string) (*jetstream.ObjectInfo, error) {
 	m.ctrl.T.Helper()

@@ -305,6 +305,23 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 			wantErr: errBoom,
 		},
 		{
+			name:     "when the store cannot be read, the upload is a 500 and writes nothing",
+			fileName: "nginx.conf",
+			setup: func() {
+				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(nil, errBoom)
+			},
+			wantErr: errBoom,
+		},
+		{
+			name:     "when the store cannot be read, the update is a 500 and writes nothing",
+			update:   true,
+			fileName: "nginx.conf",
+			setup: func() {
+				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(nil, errBoom)
+			},
+			wantErr: errBoom,
+		},
+		{
 			name:     "when an update names a new file, it is stored: 201",
 			update:   true,
 			fileName: "nginx.conf",
@@ -488,11 +505,15 @@ func (s *MethodsPublicTestSuite) TestStale() {
 					Return(entry{value: state("f", "/etc/a", "y", true)}, nil)
 				s.states.EXPECT().Get(gomock.Any(), "bad").Return(entry{value: []byte("{")}, nil)
 				s.states.EXPECT().Get(gomock.Any(), "short").Return(nil, errBoom)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "svc").Return(content, nil)
 				s.objects.EXPECT().
-					GetBytes(gomock.Any(), "ca").
+					Info(gomock.Any(), "svc").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "ca").
 					Return(nil, jetstream.ErrObjectNotFound)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "cron").Return(content, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "cron").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
 			},
 			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
 				s.Require().NoError(err)
@@ -512,7 +533,9 @@ func (s *MethodsPublicTestSuite) TestStale() {
 				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
 				s.states.EXPECT().Get(gomock.Any(), "web-01").
 					Return(entry{value: state("t", "/etc/app.conf", hexOf(content), false)}, nil)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "t").Return(content, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "t").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
 			},
 			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
 				s.Require().NoError(err)
@@ -525,7 +548,9 @@ func (s *MethodsPublicTestSuite) TestStale() {
 				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
 				s.states.EXPECT().Get(gomock.Any(), "web-01").
 					Return(entry{value: state("t", "/etc/app.conf", "old", false)}, nil)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "t").Return(content, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "t").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
 			},
 			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
 				s.Require().NoError(err)
@@ -541,7 +566,9 @@ func (s *MethodsPublicTestSuite) TestStale() {
 				s.states.EXPECT().Get(gomock.Any(), "web-01").Return(entry{value: []byte(
 					`{"object_name":"t","path":"/etc/app.conf","sha256":"` + hexOf(content) + `"}`,
 				)}, nil)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "t").Return(content, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "t").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
 			},
 			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
 				s.Require().NoError(err)
@@ -559,6 +586,18 @@ func (s *MethodsPublicTestSuite) TestStale() {
 			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
 				s.Require().NoError(err)
 				s.Empty(got.Items)
+			},
+		},
+		{
+			name: "when the store cannot be read, it is a 500, not each deploy stale",
+			setup: func() {
+				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
+				s.states.EXPECT().Get(gomock.Any(), "web-01").
+					Return(entry{value: state("t", "/etc/app.conf", hexOf(content), false)}, nil)
+				s.objects.EXPECT().Info(gomock.Any(), "t").Return(nil, errBoom)
+			},
+			validateFunc: func(_ file.StaleDeploymentsResponse, err error) {
+				s.EqualError(err, "failed to get file info")
 			},
 		},
 		{
@@ -584,8 +623,12 @@ func (s *MethodsPublicTestSuite) TestStale() {
 					Return(entry{value: state("f", "/etc/app.conf", "z", false)}, nil)
 				s.states.EXPECT().Get(gomock.Any(), "web-06").
 					Return(entry{value: state("c", "/etc/cron.daily/backup", "z", false)}, nil)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "f").Return(content, nil)
-				s.objects.EXPECT().GetBytes(gomock.Any(), "c").Return(content, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "f").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
+				s.objects.EXPECT().
+					Info(gomock.Any(), "c").
+					Return(&jetstream.ObjectInfo{Digest: digest(content)}, nil)
 			},
 			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
 				s.Require().NoError(err)
