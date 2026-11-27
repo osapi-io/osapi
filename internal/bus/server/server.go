@@ -102,7 +102,7 @@ func New(
 		Options:      opts,
 		ReadyTimeout: 5 * time.Second,
 	})
-	if err := s.Start(); err != nil {
+	if err := s.Start(ctx); err != nil {
 		return nil, fmt.Errorf("start embedded NATS server: %w", err)
 	}
 
