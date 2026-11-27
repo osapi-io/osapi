@@ -151,6 +151,9 @@ const (
 	// joinSuite runs the admission commands and the processes against a
 	// fixture server of its own.
 	joinSuite = "the join scenario in scenarios_test.go, against the fixture of fixture_test.go"
+	// pkiScenario makes an agent's keys in a new directory, and refuses a
+	// second create.
+	pkiScenario = "the pki scenario in scenarios_test.go, against a fixture"
 	// serviceSuite installs and removes the agent's service.
 	serviceSuite = "the agent service scenario in scenarios_test.go"
 	// scaffoldChecks are the recipes that run a scaffold in a copy.
@@ -182,7 +185,7 @@ var cliPolicies = map[string]cliPolicy{
 	"pki key create": {
 		skip: "makes a key on the host, and refuses one that is there: the suite's server made " +
 			"each key that it uses, and sets no JetStream key_file; its unit tests make each kind",
-		issue: "osapi-io/osapi#1537",
+		elsewhere: pkiScenario,
 	},
 	"pki cert rotate": {
 		skip: "a rotation of the API's certificate reaches the running server, but the suite's " +

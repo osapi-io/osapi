@@ -31,7 +31,9 @@ func scenarios() []scenario {
 	out = append(out, keyRotationScenarios()...)
 	out = append(out, sealScenarios()...)
 
-	return append(out, agentServiceScenarios()...)
+	out = append(out, agentServiceScenarios()...)
+
+	return append(out, pkiScenarios()...)
 }
 
 // ready is a step that waits for a Ready agent in the fixture, and keeps
@@ -608,4 +610,137 @@ func agentServiceScenarios() []scenario {
 			},
 		},
 	}}
+}
+
+// pkiStep is a step that runs an osapi pki command against the fixture's
+// config, so it reads the fixture's keys and certificates.
+func pkiStep(
+	name string,
+	cli []string,
+	checks ...check,
+) step {
+	return step{name: name, on: onFixture, cli: append([]string{"pki"}, cli...), checks: checks}
+}
+
+func pkiScenarios() []scenario {
+	keyGet := pkiStep(
+		"the controller's key, by name",
+		[]string{"key", "get", "--name", "controller", "--json"},
+		check{path: "fingerprint", op: "==", want: "{ctl}"},
+		check{path: "algorithm", op: "==", want: "Ed25519"},
+		check{path: "state", op: "==", want: "ok"},
+		check{op: "file", want: "{ctlFile}"},
+	)
+	keyGet.capture = map[string]string{"ctlFile": "file"}
+	certGet := pkiStep(
+		"the API certificate, by name",
+		[]string{"cert", "get", "--name", "api", "--json"},
+		check{path: "fingerprint", op: "==", want: "{api}"},
+		check{path: "expires", op: "nonempty"},
+		check{path: "names[*]", op: "has", want: "localhost"},
+		check{op: "file", want: "{apiFile}"},
+	)
+	certGet.capture = map[string]string{"apiFile": "file"}
+
+	return []scenario{
+		{
+			name:             "the keys and certificates of a controller, from its host and from the API",
+			writeOp:          "PKI",
+			fixture:          true,
+			fixtureAutoAdmit: true,
+			steps: []step{
+				{
+					name: "pki list has the controller's key and its API certificate",
+					on:   onFixture,
+					cli:  []string{"pki", "list", "--json"},
+					checks: []check{
+						{path: "items[kind=key].name", op: "has", want: "controller"},
+						{path: "items[kind=cert].name", op: "has", want: "api"},
+						{path: "items[name=controller].fingerprint", op: "prefix", want: "SHA256:"},
+					},
+					capture: map[string]string{"ctl": "items[name=controller].fingerprint"},
+				},
+				{
+					name: "pki key list agrees",
+					on:   onFixture,
+					cli:  []string{"pki", "key", "list", "--json"},
+					checks: []check{
+						{path: "items[name=controller].fingerprint", op: "==", want: "{ctl}"},
+					},
+				},
+				keyGet,
+				{
+					name:  "an unknown key is refused",
+					on:    onFixture,
+					fails: true,
+					cli:   []string{"pki", "key", "get", "--name", "nosuch"},
+				},
+				{
+					name: "pki cert list has the API certificate",
+					on:   onFixture,
+					cli:  []string{"pki", "cert", "list", "--json"},
+					checks: []check{
+						{path: "items[name=api].fingerprint", op: "prefix", want: "SHA256:"},
+						{path: "items[name=api].state", op: "==", want: "ok"},
+					},
+					capture: map[string]string{"api": "items[name=api].fingerprint"},
+				},
+				certGet,
+				{
+					name:  "an unknown certificate is refused",
+					on:    onFixture,
+					fails: true,
+					cli:   []string{"pki", "cert", "get", "--name", "nosuch"},
+				},
+				{
+					name: "the API shows the same certificate",
+					on:   onFixture,
+					cli:  []string{"client", "pki", "cert", "list", "--json"},
+					checks: []check{
+						{path: "items[name=api].fingerprint", op: "has", want: "{api}"},
+					},
+				},
+				{
+					name: "the API shows the same controller key", on: onFixture,
+					cli:    []string{"client", "pki", "key", "get", "--json"},
+					checks: []check{{path: "current", op: "==", want: "{ctl}"}},
+				},
+				{name: "start an agent", start: "agent", keyDir: "{dir:agent}"},
+				ready("the agent is Ready"),
+				{
+					name:   "the agent trusts the controller's key",
+					on:     onFixture,
+					wait:   30 * time.Second,
+					pause:  time.Second,
+					cli:    []string{"client", "agent", "list", "--json"},
+					checks: []check{{path: "items[*].controller_key", op: "==", want: "{ctl}"}},
+				},
+				{
+					name:   "make an agent's keys in a new directory",
+					on:     onFixture,
+					keyDir: "{dir:new}",
+					cli:    []string{"pki", "key", "create", "--name", "agent"},
+				},
+				{
+					name: "read the new keys", on: onFixture, keyDir: "{dir:new}",
+					cli:     []string{"pki", "key", "get", "--name", "agent", "--json"},
+					checks:  []check{{path: "fingerprint", op: "prefix", want: "SHA256:"}},
+					capture: map[string]string{"made": "fingerprint"},
+				},
+				{
+					name:   "a second create refuses the key that is there",
+					on:     onFixture,
+					keyDir: "{dir:new}",
+					fails:  true,
+					cli:    []string{"pki", "key", "create", "--name", "agent"},
+					checks: []check{{path: "!all", op: "contains", want: "exists"}},
+				},
+				{
+					name: "the refused create left the keys", on: onFixture, keyDir: "{dir:new}",
+					cli:    []string{"pki", "key", "get", "--name", "agent", "--json"},
+					checks: []check{{path: "fingerprint", op: "==", want: "{made}"}},
+				},
+			},
+		},
+	}
 }
