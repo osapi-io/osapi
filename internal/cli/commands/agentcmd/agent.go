@@ -45,7 +45,6 @@ var Group = command.Register(command.Define(
 			"agent.nats.host",
 			"agent.nats.port",
 			"agent.nats.client_name",
-			"agent.queue_group",
 			"agent.hostname",
 			"agent.max_jobs",
 			"agent.consumer.max_deliver",

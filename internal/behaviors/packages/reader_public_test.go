@@ -28,6 +28,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/packages"
@@ -54,6 +55,7 @@ func (s *ReaderPublicTestSuite) TestWritesAreUnsupported() {
 func (s *ReaderPublicTestSuite) TestInstallAVersion() {
 	ctrl := gomock.NewController(s.T())
 	exec := hostmocks.NewMockExec(ctrl)
+	behaviortest.ReadsThroughRunCmd(exec)
 	exec.EXPECT().RunCmd(gomock.Any(), "dpkg-query", gomock.Any()).
 		Return("tree\t2.1.1-2\tamd64\tinstalled\ttree\t100\n", nil).AnyTimes()
 	exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "apt-get",

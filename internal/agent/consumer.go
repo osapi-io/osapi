@@ -56,9 +56,8 @@ func (a *Agent) consumeQueryJobs(
 	// Direct targeting uses machine ID (permanent), not hostname (mutable).
 	consumers := []consumerSpec{
 		{
-			name:       consumerPrefix + "query_any_" + sanitizedMachineID,
-			filter:     job.JobsQueryPrefix + "._any",
-			queueGroup: a.appConfig.Agent.QueueGroup,
+			name:   consumerPrefix + "query_any_" + sanitizedMachineID,
+			filter: job.JobsQueryPrefix + "._any",
 		},
 		{
 			name:   consumerPrefix + "query_all_" + sanitizedMachineID,
@@ -117,9 +116,8 @@ func (a *Agent) consumeModifyJobs(
 	// Direct targeting uses machine ID (permanent), not hostname (mutable).
 	consumers := []consumerSpec{
 		{
-			name:       consumerPrefix + "modify_any_" + sanitizedMachineID,
-			filter:     job.JobsModifyPrefix + "._any",
-			queueGroup: a.appConfig.Agent.QueueGroup,
+			name:   consumerPrefix + "modify_any_" + sanitizedMachineID,
+			filter: job.JobsModifyPrefix + "._any",
 		},
 		{
 			name:   consumerPrefix + "modify_all_" + sanitizedMachineID,
@@ -157,12 +155,11 @@ func (a *Agent) consumeModifyJobs(
 	return nil
 }
 
-// consumerSpec is one durable job consumer of the agent: its name, the
-// subject it filters on, and the queue group of an _any consumer.
+// consumerSpec is one durable job consumer of the agent: its name and the
+// subject it filters on.
 type consumerSpec struct {
-	name       string
-	filter     string
-	queueGroup string
+	name   string
+	filter string
 }
 
 // consumerRetryInterval is how long the agent waits before it tries again
@@ -187,7 +184,6 @@ func (a *Agent) startConsumer(
 	}
 
 	opts := &natsclient.ConsumeOptions{
-		QueueGroup:  c.queueGroup,
 		MaxInFlight: a.appConfig.Agent.MaxJobs,
 	}
 	retry := consumerRetryInterval

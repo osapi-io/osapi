@@ -72,9 +72,8 @@ func (s *ConsumerPublicTestSuite) newAgent(
 			},
 		},
 		Agent: config.AgentConfig{
-			Hostname:   "test-agent",
-			QueueGroup: "test-queue",
-			MaxJobs:    5,
+			Hostname: "test-agent",
+			MaxJobs:  5,
 			Consumer: config.AgentConsumer{
 				AckWait:       "30s",
 				BackOff:       []string{"1s", "2s"},

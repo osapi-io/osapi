@@ -72,6 +72,20 @@ func (mr *MockNATSConnectorMockRecorder) Connect(url any, opts ...any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockNATSConnector)(nil).Connect), varargs...)
 }
 
+// ConnectedServerVersion mocks base method.
+func (m *MockNATSConnector) ConnectedServerVersion() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConnectedServerVersion")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// ConnectedServerVersion indicates an expected call of ConnectedServerVersion.
+func (mr *MockNATSConnectorMockRecorder) ConnectedServerVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectedServerVersion", reflect.TypeOf((*MockNATSConnector)(nil).ConnectedServerVersion))
+}
+
 // ConnectedUrl mocks base method.
 func (m *MockNATSConnector) ConnectedUrl() string {
 	m.ctrl.T.Helper()

@@ -30,6 +30,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
@@ -78,6 +79,7 @@ func (s *DarwinPublicTestSuite) TestServiceWhenTheRecordCannotBeRead() {
 			files.EXPECT().Read(gomock.Any(), gomock.Any()).
 				Return(managedfile.Record{}, errors.New("bucket is down")).AnyTimes()
 			exec := hostmocks.NewMockExec(ctrl)
+			behaviortest.ReadsThroughRunCmd(exec)
 			exec.EXPECT().RunCmd(gomock.Any(), "launchctl", []string{"print", "system"}).
 				Return("system = {\n\tservices = {\n\t\t     612      - \tio.osapi.app\n\t}\n}\n", nil).
 				AnyTimes()
@@ -108,6 +110,7 @@ func (s *DarwinPublicTestSuite) TestStartADisabledDaemon() {
 				Return(managedfile.Record{Path: "/Library/LaunchDaemons/io.osapi.app.plist"}, nil).
 				AnyTimes()
 			exec := hostmocks.NewMockExec(ctrl)
+			behaviortest.ReadsThroughRunCmd(exec)
 			exec.EXPECT().RunCmd(gomock.Any(), "launchctl", []string{"print", "system"}).
 				Return("system = {\n\tdisabled services = {\n\t\t\"io.osapi.app\" => disabled\n\t}\n}\n", nil).
 				AnyTimes()
@@ -156,6 +159,7 @@ func (s *DarwinPublicTestSuite) TestStartALoadedDaemon() {
 				Return(managedfile.Record{Path: "/Library/LaunchDaemons/io.osapi.app.plist"}, nil).
 				AnyTimes()
 			exec := hostmocks.NewMockExec(ctrl)
+			behaviortest.ReadsThroughRunCmd(exec)
 			exec.EXPECT().RunCmd(gomock.Any(), "launchctl", []string{"print", "system"}).
 				Return("system = {\n\tservices = {\n\t\t       0      0 \tio.osapi.app\n\t}\n}\n", nil).
 				AnyTimes()

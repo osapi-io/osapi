@@ -43,7 +43,7 @@ $ osapi start
 [2m10:00AM[0m [92mINF[0m metrics cache initialized [2mcomponent=[0mcontroller [2msubsystem=[0mcontroller.health [2mnext_in=[0m15s
 [2m10:00AM[0m [92mINF[0m registered in component registry [2mcomponent=[0mcontroller [2msubsystem=[0mcontroller.heartbeat [2mhostname=[0mweb-03 [2mtype=[0mcontroller [2mkey=[0mcontroller.web-03
 [2m10:00AM[0m [92mINF[0m starting node agent [2mcomponent=[0magent [2msubsystem=[0magent
-[2m10:00AM[0m [92mINF[0m agent configuration [2mcomponent=[0magent [2msubsystem=[0magent [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mqueue_group=[0mjob-agents [2mmax_jobs=[0m10 [2mlabels=[0mmap[group:web.dev.us-east]
+[2m10:00AM[0m [92mINF[0m agent configuration [2mcomponent=[0magent [2msubsystem=[0magent [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mmax_jobs=[0m10 [2mlabels=[0mmap[group:web.dev.us-east]
 [2m10:00AM[0m [92mINF[0m registered in agent registry [2mcomponent=[0magent [2msubsystem=[0magent.heartbeat [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mkey=[0magents.d530664edc1c431eb5ef1e9dfd6617a5 [2mttl=[0m30s
 [2m10:00AM[0m [92mINF[0m node agent started successfully [2mcomponent=[0magent [2msubsystem=[0magent
 [2m10:00AM[0m [92mINF[0m metrics server started [2mcomponent=[0magent [2msubsystem=[0mmetrics [2maddr=[0m0.0.0.0:9091
@@ -69,7 +69,7 @@ With `--json`, the command prints:
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"metrics cache initialized","component":"controller","subsystem":"controller.health","next_in":"15s"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"registered in component registry","component":"controller","subsystem":"controller.heartbeat","hostname":"web-03","type":"controller","key":"controller.web-03"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"starting node agent","component":"agent","subsystem":"agent"}
-{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"agent configuration","component":"agent","subsystem":"agent","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","queue_group":"job-agents","max_jobs":10,"labels":{"group":"web.dev.us-east"}}
+{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"agent configuration","component":"agent","subsystem":"agent","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","max_jobs":10,"labels":{"group":"web.dev.us-east"}}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"registered in agent registry","component":"agent","subsystem":"agent.heartbeat","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","key":"agents.d530664edc1c431eb5ef1e9dfd6617a5","ttl":"30s"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"node agent started successfully","component":"agent","subsystem":"agent"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"metrics server started","component":"agent","subsystem":"metrics","addr":"0.0.0.0:9091"}

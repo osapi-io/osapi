@@ -42,9 +42,8 @@ var Defaults = config.AgentConfig{
 		BackOff:           []string{"30s", "2m", "5m", "15m", "30m"},
 		InactiveThreshold: "24h",
 	},
-	QueueGroup: "job-agents",
-	MaxJobs:    10,
-	Facts:      config.AgentFacts{Interval: "60s"},
+	MaxJobs: 10,
+	Facts:   config.AgentFacts{Interval: "60s"},
 	Conditions: config.AgentConditions{
 		MemoryPressureThreshold: 90,
 		HighLoadMultiplier:      2.0,

@@ -21,6 +21,7 @@
 package server_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -443,6 +444,37 @@ func (s *ServerPublicTestSuite) TestJetStreamEncryption() {
 		s.Require().NoError(err)
 		s.Equal("SECRET-MARK-2", got)
 	})
+}
+
+// TestDebugLog is the server's own debug lines, such as the one of each
+// client connection: they reach the log when osapi logs at debug, and not
+// at info.
+func (s *ServerPublicTestSuite) TestDebugLog() {
+	tests := []struct {
+		name  string
+		level slog.Level
+		want  bool
+	}{
+		{name: "at debug, the server logs its debug lines", level: slog.LevelDebug, want: true},
+		{name: "at info, it logs none", level: slog.LevelInfo, want: false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var buf bytes.Buffer
+			log := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: tt.level}))
+
+			srv, err := server.New(context.Background(), log, serverNATS(s.T()), nil)
+			s.Require().NoError(err)
+			srv.Stop(context.Background())
+
+			s.Equal(
+				tt.want,
+				strings.Contains(buf.String(), "Client connection created"),
+				buf.String(),
+			)
+		})
+	}
 }
 
 // TestTLS is a client of a server that serves TLS: one that trusts the

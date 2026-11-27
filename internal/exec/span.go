@@ -66,3 +66,14 @@ func endSpan(
 		span.SetStatus(codes.Error, err.Error())
 	}
 }
+
+// endReadSpan marks the span of a read as failed when the read failed.
+// gohai's runner gives no exit code apart from its error.
+func endReadSpan(
+	span trace.Span,
+	err error,
+) {
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+	}
+}

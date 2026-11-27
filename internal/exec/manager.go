@@ -66,6 +66,15 @@ type Manager interface {
 		stdin string,
 	) (string, string, int, error)
 
+	// RunReadCmd runs a command to read the host, as gohai runs one: its
+	// standard output is the data and its standard error is in the error,
+	// with LC_ALL=C, a timeout and a limit on its output.
+	RunReadCmd(
+		ctx context.Context,
+		name string,
+		args []string,
+	) ([]byte, error)
+
 	// RunCmdFull executes a command with separate stdout/stderr capture,
 	// an optional working directory, and a timeout in seconds.
 	RunCmdFull(

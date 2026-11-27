@@ -353,6 +353,15 @@ func (h *fakeHost) commands(
 			return run(ctx, name, args)
 		}).
 		AnyTimes()
+	// gohai's reads run through RunReadCmd, as the agent runs them.
+	m.EXPECT().RunReadCmd(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, name string, args []string) ([]byte, error) {
+			h.check(name, false)
+			out, err := run(ctx, name, args)
+
+			return []byte(out), err
+		}).
+		AnyTimes()
 	m.EXPECT().RunCmdFull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, name string, args []string, _ string, _ int) (*exec.CmdResult, error) {
 			h.check(name, false)

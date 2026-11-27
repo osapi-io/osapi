@@ -110,7 +110,8 @@ func (h Host) Sources() source.Sources {
 }
 
 // runner is the host's commands as gohai's source.Runner: each runs as the
-// agent's own user, with RunCmd.
+// agent's own user, with RunReadCmd, which runs it as gohai's own runner
+// does.
 type runner struct {
 	exec Exec
 }
@@ -122,9 +123,7 @@ func (r runner) Execute(
 	name string,
 	args ...string,
 ) ([]byte, error) {
-	out, err := r.exec.RunCmd(context.WithValue(ctx, gohaiKey{}, true), name, args)
-
-	return []byte(out), err
+	return r.exec.RunReadCmd(context.WithValue(ctx, gohaiKey{}, true), name, args)
 }
 
 // gohaiKey marks the context of a command that gohai runs.
@@ -160,6 +159,15 @@ type Exec interface {
 		name string,
 		args []string,
 	) (string, error)
+	// RunReadCmd runs name with args as the agent's own user to read the
+	// host, as gohai runs a command: stdout is the data and stderr is in the
+	// error, with LC_ALL=C, a timeout and a limit on the output. gohai's
+	// runner of the host is this.
+	RunReadCmd(
+		ctx context.Context,
+		name string,
+		args []string,
+	) ([]byte, error)
 	// RunPrivilegedCmd runs name with args, through sudo when the agent's
 	// privilege escalation is on. A behavior declares each program it runs
 	// this way with behavior.Sudo.

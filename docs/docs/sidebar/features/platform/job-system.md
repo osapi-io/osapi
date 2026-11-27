@@ -71,11 +71,10 @@ the REST endpoints.
 
 ## Configuration
 
-<!-- osapi:config nats.kv agent.max_jobs agent.queue_group agent.hostname agent.labels -->
+<!-- osapi:config nats.kv agent.max_jobs agent.hostname agent.labels -->
 
 | Key                 | Type   | Default                                                | Environment               | Description                                                                                                                                                                                       |
 | ------------------- | ------ | ------------------------------------------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `agent.queue_group` | string | `job-agents`                                           | `OSAPI_AGENT_QUEUE_GROUP` | Queue group for load-balanced (_any) subscriptions.                                                                                                                                               |
 | `agent.hostname`    | string | none: empty is the host's own hostname                 | `OSAPI_AGENT_HOSTNAME`    | Agent hostname for direct routing. Defaults to the system hostname when empty.                                                                                                                    |
 | `agent.max_jobs`    | int    | `10`                                                   | `OSAPI_AGENT_MAX_JOBS`    | Maximum number of concurrent jobs to process.                                                                                                                                                     |
 | `agent.labels`      | map    | none: the labels of the host, which the operator picks | `OSAPI_AGENT_LABELS`      | Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details. |

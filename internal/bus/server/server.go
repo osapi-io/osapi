@@ -92,6 +92,12 @@ func New(
 		return nil, err
 	}
 
+	// The server logs its debug lines when osapi logs at debug. It never
+	// traces: a trace line is each protocol message, with its payload, such
+	// as a sealed job or a credential.
+	opts.Debug = log.Enabled(ctx, slog.LevelDebug)
+	opts.Trace = false
+
 	s := natsembedded.New(log, &natsembedded.Options{
 		Options:      opts,
 		ReadyTimeout: 5 * time.Second,

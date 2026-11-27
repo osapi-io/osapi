@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -980,6 +981,54 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 			msg := tt.setupMsg(s.mockCtrl)
 			tt.validateFunc(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
+		})
+	}
+}
+
+// TestHandleJobMessageConcurrently is the jobs of one consumer at once, as
+// MaxInFlight (agent.max_jobs) lets nats-client run them: each one answers,
+// and -race finds no state that the jobs share without a lock.
+func (s *HandlerPublicTestSuite) TestHandleJobMessageConcurrently() {
+	tests := []struct {
+		name string
+		jobs int
+	}{
+		{name: "when ten jobs run at once", jobs: 10},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			msgs := make([]jetstream.Msg, tt.jobs)
+			for i := range tt.jobs {
+				id := fmt.Sprintf("concurrent-job-%d", i)
+				msgs[i] = newTestMsg(s.mockCtrl, "jobs.query.test-agent", []byte(id))
+				s.expectNotAnswered(id)
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs."+id).
+					Return(signedJob(`{"id": "`+id+`", "operation": {"type": "node.unsupported.get", "data": {}}}`), nil)
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), id, gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(3)
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), id, gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+			}
+
+			errs := make([]error, tt.jobs)
+			var wg sync.WaitGroup
+			for i, msg := range msgs {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					errs[i] = agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg)
+				}()
+			}
+			wg.Wait()
+
+			for i, err := range errs {
+				s.NoError(err, "job %d", i)
+			}
 		})
 	}
 }

@@ -60,9 +60,8 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 			Stream: config.NATSStream{Name: "test-stream"},
 		},
 		Agent: config.AgentConfig{
-			Hostname:   "test-agent",
-			QueueGroup: "test-queue",
-			MaxJobs:    5,
+			Hostname: "test-agent",
+			MaxJobs:  5,
 		},
 	}
 

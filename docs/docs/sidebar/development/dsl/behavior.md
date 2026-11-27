@@ -936,19 +936,21 @@ Use: An example's fake host gives, on debian: Exists for /.dockerenv,
 /proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
 /sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
 /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
-/var/snap/lxd/common/lxd/devlxd, Prints for command -v docker; command -v nova;
-command -v podman; systemd-detect-virt --container; systemd-detect-virt --vm. On
-rhel: Exists for /.dockerenv, /.dockerinit, /dev/lxd/sock, /proc/1/environ,
-/proc/bc/0, /proc/cpuinfo, /proc/modules, /proc/self/cgroup, /proc/self/status,
-/proc/vz, /proc/xen, /sys/class/dmi/id/product_name,
-/sys/class/dmi/id/sys_vendor, /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
-/var/snap/lxd/common/lxd/devlxd, Prints for command -v docker; command -v nova;
-command -v podman; systemd-detect-virt --container; systemd-detect-virt --vm. On
-darwin: Exists for /Applications/VMware Fusion.app, Prints for command -v
-VBoxManage; command -v docker; command -v prlctl; ioreg -n pci1ab8,4000; sysctl
--n kern.hv_vmm_present; system_profiler SPHardwareDataType. With content, it
-reads more under those paths. gohai collector get --name virtualization shows it
-in full; virtualization is its package.
+/var/snap/lxd/common/lxd/devlxd, Prints for sh -c command -v "$1" sh docker; sh
+-c command -v "$1" sh nova; sh -c command -v "$1" sh podman; systemd-detect-virt
+--container; systemd-detect-virt --vm. On rhel: Exists for /.dockerenv,
+/.dockerinit, /dev/lxd/sock, /proc/1/environ, /proc/bc/0, /proc/cpuinfo,
+/proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
+/sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
+/var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
+/var/snap/lxd/common/lxd/devlxd, Prints for sh -c command -v "$1" sh docker; sh
+-c command -v "$1" sh nova; sh -c command -v "$1" sh podman; systemd-detect-virt
+--container; systemd-detect-virt --vm. On darwin: Exists for
+/Applications/VMware Fusion.app, Prints for ioreg -n pci1ab8,4000; sh -c command
+-v "$1" sh VBoxManage; sh -c command -v "$1" sh docker; sh -c command -v "$1" sh
+prlctl; sysctl -n kern.hv_vmm_present; system_profiler SPHardwareDataType. With
+content, it reads more under those paths. gohai collector get --name
+virtualization shows it in full; virtualization is its package.
 
 ### `machine_id`
 
@@ -1417,10 +1419,10 @@ Returns go, python, ruby, node, java, perl. Build it with
 languages.NewWith(h.Sources()).
 
 Use: An example's fake host gives, on debian: Prints for go version; java
--version; node --version; perl --version; python3 --version; ruby --version. On
-rhel: Prints for go version; java -version; node --version; perl --version;
+--version; node --version; perl --version; python3 --version; ruby --version. On
+rhel: Prints for go version; java --version; node --version; perl --version;
 python3 --version; ruby --version. On darwin: Prints for go version; java
--version; node --version; perl --version; python3 --version; ruby --version.
+--version; node --version; perl --version; python3 --version; ruby --version.
 With content, it reads more under those paths. gohai collector get --name
 languages shows it in full; languages is its package.
 

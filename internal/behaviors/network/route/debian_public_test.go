@@ -25,6 +25,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	netplanmocks "github.com/osapi-io/osapi/internal/behaviors/netplan/mocks"
 	"go.uber.org/mock/gomock"
@@ -95,6 +96,7 @@ func (s *DebianPublicTestSuite) TestNetplanFails() {
 	s.Require().NoError(fs.WriteFile("/sys/class/net/osapi0/ifindex", []byte("3"), 0o644))
 	s.Require().NoError(fs.WriteFile("/sys/class/net/osapi0/flags", []byte("0x82"), 0o644))
 	exec := hostmocks.NewMockExec(ctrl)
+	behaviortest.ReadsThroughRunCmd(exec)
 	exec.EXPECT().RunCmd(gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 	np := netplanmocks.NewMockProvider(ctrl)
 	np.EXPECT().

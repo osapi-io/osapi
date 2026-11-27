@@ -452,7 +452,6 @@ func (s *AgentPublicTestSuite) TestConsumeJobs() {
 				return nil
 			},
 			opts: &natsclient.ConsumeOptions{
-				QueueGroup:  "test-queue",
 				MaxInFlight: 5,
 			},
 			validateFunc: func(err error) {
