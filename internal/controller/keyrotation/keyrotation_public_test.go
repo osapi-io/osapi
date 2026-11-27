@@ -199,13 +199,15 @@ func (s *KeyRotationPublicTestSuite) TestStart() {
 			},
 		},
 		{
-			name: "after a switch, it updates the record at its revision",
+			name: "after a switch, it updates the record at its revision and keeps its retired keys",
 			setup: func() {
 				old, _ := s.foreign()
+				retired, _ := s.foreign()
 				rec := pki.ControllerKeyRecord{
 					Serial:   4,
 					Current:  s.keys.PublicKey(),
 					Previous: old,
+					Retired:  [][]byte{retired},
 				}
 				rec.Sign(s.keys.PrivateKey())
 				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 7), nil)
@@ -215,6 +217,7 @@ func (s *KeyRotationPublicTestSuite) TestStart() {
 						s.Require().NoError(json.Unmarshal(data, &got))
 						s.Equal(uint64(5), got.Serial)
 						s.Equal(old, ed25519.PublicKey(got.Previous))
+						s.Equal([][]byte{retired}, got.Retired)
 
 						return 8, nil
 					})

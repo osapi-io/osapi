@@ -172,6 +172,7 @@ func (r *Rotation) Start(
 			Current:    r.cfg.Keys.PublicKey(),
 			Next:       next.PublicKey(),
 			Previous:   rec.Previous,
+			Retired:    rec.Retired,
 			StartedAt:  r.cfg.Now().UTC(),
 			SwitchedAt: rec.SwitchedAt,
 		}
