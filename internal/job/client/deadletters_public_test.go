@@ -122,11 +122,16 @@ func (s *DeadLettersPublicTestSuite) TestListDeadLetters() {
 		_, _, err := s.jobs.ListDeadLetters(context.Background(), 10)
 		s.ErrorContains(err, "read dead letter 1: timeout")
 	})
-	s.Run("a dead letter that is not an advisory is the error", func() {
-		s.state(1, 1, 1)
-		s.nats.EXPECT().StreamGetMsg(gomock.Any(), "JOBS-DLQ", uint64(1)).
+	s.Run("a dead letter that is not an advisory is skipped, not the error", func() {
+		s.state(1, 2, 2)
+		s.nats.EXPECT().StreamGetMsg(gomock.Any(), "JOBS-DLQ", uint64(2)).
 			Return(&jetstream.RawStreamMsg{Data: []byte("not json")}, nil)
-		_, _, err := s.jobs.ListDeadLetters(context.Background(), 10)
-		s.ErrorContains(err, "dead letter 1: ")
+		s.advisory(1, 10)
+		s.nats.EXPECT().StreamGetMsg(gomock.Any(), "JOBS", uint64(10)).
+			Return(&jetstream.RawStreamMsg{Data: []byte("job-1")}, nil)
+		got, _, err := s.jobs.ListDeadLetters(context.Background(), 10)
+		s.Require().NoError(err)
+		s.Require().Len(got, 1)
+		s.Equal("job-1", got[0].JobID)
 	})
 }

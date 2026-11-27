@@ -70,6 +70,7 @@ func (s *AgentConfigPublicTestSuite) entry(
 ) jetstream.KeyValueEntry {
 	e := jobmocks.NewMockKeyValueEntry(s.ctrl)
 	e.EXPECT().Value().Return(v).AnyTimes()
+	e.EXPECT().Revision().Return(uint64(7)).AnyTimes()
 
 	return e
 }
@@ -127,10 +128,10 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 	stored, _ := json.Marshal(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "db"}})
 	labels := map[string]string{"group": "web"}
 
-	s.Run("the next version, with the new labels", func() {
+	s.Run("the next version, with the new labels, over the revision it read", func() {
 		s.nc.EXPECT().KVGet(gomock.Any(), "state", "config.m-1").Return(s.entry(stored), nil)
-		s.nc.EXPECT().KVPut(gomock.Any(), "state", "config.m-1", gomock.Any()).
-			DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+		s.nc.EXPECT().KVUpdate(gomock.Any(), "state", "config.m-1", gomock.Any(), uint64(7)).
+			DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
 				var cfg job.AgentConfig
 				s.Require().NoError(json.Unmarshal(data, &cfg))
 				s.Equal(3, cfg.Version)
@@ -140,7 +141,7 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 				s.Equal("5m", cfg.FactsInterval)
 				s.False(cfg.UpdatedAt.IsZero())
 
-				return 1, nil
+				return 8, nil
 			})
 		got, err := s.client("state").SetAgentConfig(ctx, "m-1",
 			job.AgentConfig{
@@ -152,6 +153,45 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 			})
 		s.Require().NoError(err)
 		s.Equal(3, got.Version)
+	})
+	s.Run("an agent with no config gets version 1, created only if still absent", func() {
+		s.nc.EXPECT().
+			KVGet(gomock.Any(), "state", "config.m-1").
+			Return(nil, jetstream.ErrKeyNotFound)
+		s.nc.EXPECT().
+			KVCreate(gomock.Any(), "state", "config.m-1", gomock.Any()).
+			Return(uint64(1), nil)
+		got, err := s.client("state").SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
+		s.Require().NoError(err)
+		s.Equal(1, got.Version)
+	})
+	s.Run("a write that loses to another reads again and makes the version after it", func() {
+		newer, _ := json.Marshal(job.AgentConfig{Version: 3})
+		gomock.InOrder(
+			s.nc.EXPECT().KVGet(gomock.Any(), "state", "config.m-1").Return(s.entry(stored), nil),
+			s.nc.EXPECT().
+				KVUpdate(gomock.Any(), "state", "config.m-1", gomock.Any(), uint64(7)).
+				Return(uint64(0), jetstream.ErrKeyExists),
+			s.nc.EXPECT().KVGet(gomock.Any(), "state", "config.m-1").Return(s.entry(newer), nil),
+			s.nc.EXPECT().
+				KVUpdate(gomock.Any(), "state", "config.m-1", gomock.Any(), uint64(7)).
+				Return(uint64(9), nil),
+		)
+		got, err := s.client("state").SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
+		s.Require().NoError(err)
+		s.Equal(4, got.Version)
+	})
+	s.Run("a config that changes on each attempt", func() {
+		s.nc.EXPECT().
+			KVGet(gomock.Any(), "state", "config.m-1").
+			Return(s.entry(stored), nil).
+			Times(3)
+		s.nc.EXPECT().
+			KVUpdate(gomock.Any(), "state", "config.m-1", gomock.Any(), uint64(7)).
+			Return(uint64(0), jetstream.ErrKeyExists).
+			Times(3)
+		_, err := s.client("state").SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
+		s.ErrorContains(err, "it changed 3 times during the write")
 	})
 	s.Run("a config that cannot be read", func() {
 		s.nc.EXPECT().
@@ -165,7 +205,7 @@ func (s *AgentConfigPublicTestSuite) TestSetAgentConfig() {
 			KVGet(gomock.Any(), "state", "config.m-1").
 			Return(nil, jetstream.ErrKeyNotFound)
 		s.nc.EXPECT().
-			KVPut(gomock.Any(), "state", "config.m-1", gomock.Any()).
+			KVCreate(gomock.Any(), "state", "config.m-1", gomock.Any()).
 			Return(uint64(0), errors.New("full"))
 		_, err := s.client("state").SetAgentConfig(ctx, "m-1", job.AgentConfig{Labels: labels})
 		s.ErrorContains(err, "write the config of m-1: full")

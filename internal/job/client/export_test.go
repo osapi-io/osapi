@@ -165,3 +165,10 @@ func ExportRefused(
 ) (*job.Response, bool) {
 	return c.refused(ctx, jobID, verifyErr)
 }
+
+// TimeoutOf is how long c waits for job responses.
+func TimeoutOf(
+	c *Client,
+) time.Duration {
+	return c.timeout
+}

@@ -36,6 +36,9 @@ var (
 	ErrNotFound = errors.New("job not found")
 	// ErrNoOperation is a job with no operation to run again.
 	ErrNoOperation = errors.New("job has no operation data")
+	// ErrSealed is a job whose secrets are sealed to its own ID, which a
+	// new job cannot carry.
+	ErrSealed = errors.New("job holds sealed secrets")
 	// ErrOutOfScope is a retry to a target outside the token's target scope.
 	ErrOutOfScope = errors.New("target is outside the token's target scope")
 )
@@ -134,8 +137,10 @@ var Group = endpoint.Register(endpoint.Define(
 		Status(http.StatusCreated).
 		Location("job_id").
 		Command("Retry a failed or stuck job",
-			"The new job has the same operation as the old job. The original job stays in\n"+
-				"the history. Its timeline gets a `retried` event that links to the new job.").
+			"The new job has the same operation as the old job, on the same queue. The\n"+
+				"original job stays in the history. Its timeline gets a `retried` event that\n"+
+				"links to the new job. A job with secrets cannot run again, because its secrets\n"+
+				"are sealed to its own ID: send the request again.").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleRetry).
 		Check("client job get", "--id {out.job_id}", "id", "{out.job_id}").
@@ -146,5 +151,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"Invalid request parameters, or a job with no operation data to run again."),
 			endpoint.Forbidden(ErrOutOfScope,
 				"Insufficient permissions, or a target outside the token's target scope."),
+			endpoint.Conflict(ErrSealed,
+				"The job holds secrets sealed to its own ID. Send the request again instead."),
 		),
 ))

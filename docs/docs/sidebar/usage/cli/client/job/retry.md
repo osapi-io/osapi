@@ -2,8 +2,10 @@
 
 Retry a failed or stuck job.
 
-The new job has the same operation as the old job. The original job stays in the
-history. Its timeline gets a `retried` event that links to the new job.
+The new job has the same operation as the old job, on the same queue. The
+original job stays in the history. Its timeline gets a `retried` event that
+links to the new job. A job with secrets cannot run again, because its secrets
+are sealed to its own ID: send the request again.
 
 ```bash
 osapi client job retry [flags]

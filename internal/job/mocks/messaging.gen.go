@@ -70,6 +70,21 @@ func (mr *MockNATSClientMockRecorder) ConsumerCreateOrUpdate(ctx, stream, config
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumerCreateOrUpdate", reflect.TypeOf((*MockNATSClient)(nil).ConsumerCreateOrUpdate), ctx, stream, config)
 }
 
+// KVCreate mocks base method.
+func (m *MockNATSClient) KVCreate(ctx context.Context, bucket, key string, value []byte) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVCreate", ctx, bucket, key, value)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVCreate indicates an expected call of KVCreate.
+func (mr *MockNATSClientMockRecorder) KVCreate(ctx, bucket, key, value any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVCreate", reflect.TypeOf((*MockNATSClient)(nil).KVCreate), ctx, bucket, key, value)
+}
+
 // KVDelete mocks base method.
 func (m *MockNATSClient) KVDelete(ctx context.Context, bucket, key string) error {
 	m.ctrl.T.Helper()
@@ -132,6 +147,21 @@ func (m *MockNATSClient) KVPut(ctx context.Context, bucket, key string, value []
 func (mr *MockNATSClientMockRecorder) KVPut(ctx, bucket, key, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVPut", reflect.TypeOf((*MockNATSClient)(nil).KVPut), ctx, bucket, key, value)
+}
+
+// KVUpdate mocks base method.
+func (m *MockNATSClient) KVUpdate(ctx context.Context, bucket, key string, value []byte, revision uint64) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVUpdate", ctx, bucket, key, value, revision)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KVUpdate indicates an expected call of KVUpdate.
+func (mr *MockNATSClientMockRecorder) KVUpdate(ctx, bucket, key, value, revision any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVUpdate", reflect.TypeOf((*MockNATSClient)(nil).KVUpdate), ctx, bucket, key, value, revision)
 }
 
 // KVWatch mocks base method.

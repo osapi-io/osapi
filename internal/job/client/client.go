@@ -84,7 +84,7 @@ type Client struct {
 
 // Options configures the jobs client.
 type Options struct {
-	// Timeout for waiting for job responses (default: 30s)
+	// Timeout for waiting for job responses. Zero is DefaultTimeout.
 	Timeout time.Duration
 	// JobsBucket is the KV bucket of the jobs and their responses (required).
 	JobsBucket string
@@ -107,6 +107,11 @@ type Options struct {
 	Consumers ConsumerStore
 }
 
+// DefaultTimeout is how long a job client waits for job responses when its
+// Options name no timeout. With no default, a zero timeout would end each
+// wait at once, and each job would time out.
+const DefaultTimeout = 30 * time.Second
+
 // New creates a new jobs client using an existing NATS client.
 func New(
 	logger *slog.Logger,
@@ -119,6 +124,10 @@ func New(
 	if opts.JobsBucket == "" {
 		return nil, fmt.Errorf("jobs bucket cannot be empty")
 	}
+	timeout := opts.Timeout
+	if timeout <= 0 {
+		timeout = DefaultTimeout
+	}
 
 	return &Client{
 		logger:         logger.With(slog.String("subsystem", "job.client")),
@@ -128,7 +137,7 @@ func New(
 		factsBucket:    opts.FactsBucket,
 		stateBucket:    opts.StateBucket,
 		streamName:     opts.StreamName,
-		timeout:        opts.Timeout,
+		timeout:        timeout,
 		JSONMarshalFn:  json.Marshal,
 		pkiSigner:      opts.PKISigner,
 		targetResolver: opts.TargetResolver,
@@ -599,14 +608,33 @@ func (c *Client) publishAndCollect(
 			responses[hostname] = response
 			audit.RecordSteps(ctx, jobID, hostname, response.Steps)
 
-			// Return early when all expected agents have responded.
-			if len(expectedHostnames) > 0 && len(responses) >= len(expectedHostnames) {
+			// Return early when each expected agent has responded. A
+			// count is not enough: an agent that joined after the
+			// snapshot, or an "unknown" or refused row, is a response
+			// too, and counting it would return before an expected agent
+			// answered and drop that agent's timeout row.
+			if len(expectedHostnames) > 0 && allAnswered(expectedHostnames, responses) {
 				endCollectSpan(colSpan, len(expectedHostnames), responses)
 
 				return jobID, responses, nil
 			}
 		}
 	}
+}
+
+// allAnswered reports whether responses holds a row for each expected
+// hostname.
+func allAnswered(
+	expected []string,
+	responses map[string]*job.Response,
+) bool {
+	for _, hostname := range expected {
+		if _, ok := responses[hostname]; !ok {
+			return false
+		}
+	}
+
+	return true
 }
 
 // operation is the operation of the job data in the KV: its type, its

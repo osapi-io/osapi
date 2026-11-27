@@ -68,6 +68,12 @@ var (
 	// it cannot be retried. Not a missing job: the record is there and unusable,
 	// which the API answers with 400 rather than 404.
 	ErrNoOperationData = errors.New("job has no operation data")
+	// ErrSealedJob means a stored job holds secrets sealed to its own job
+	// ID, so a new job cannot carry them: the agents would not open them.
+	ErrSealedJob = errors.New("job holds sealed secrets")
+	// ErrUnknownQueue means a stored job's subject names neither the query
+	// nor the modify queue, so a retry cannot tell which one to use.
+	ErrUnknownQueue = errors.New("job subject names no queue")
 )
 
 // sentinelFor maps a code to the error a handler tests against. A code this

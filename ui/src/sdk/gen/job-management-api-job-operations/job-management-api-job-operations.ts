@@ -253,6 +253,11 @@ export type retryJobByIDResponse404 = {
   status: 404
 }
 
+export type retryJobByIDResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type retryJobByIDResponse500 = {
   data: ErrorResponse
   status: 500
@@ -261,7 +266,7 @@ export type retryJobByIDResponse500 = {
 export type retryJobByIDResponseSuccess = (retryJobByIDResponse201) & {
   headers: Headers;
 };
-export type retryJobByIDResponseError = (retryJobByIDResponse400 | retryJobByIDResponse401 | retryJobByIDResponse403 | retryJobByIDResponse404 | retryJobByIDResponse500) & {
+export type retryJobByIDResponseError = (retryJobByIDResponse400 | retryJobByIDResponse401 | retryJobByIDResponse403 | retryJobByIDResponse404 | retryJobByIDResponse409 | retryJobByIDResponse500) & {
   headers: Headers;
 };
 

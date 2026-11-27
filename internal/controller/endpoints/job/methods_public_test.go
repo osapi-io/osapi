@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -545,6 +546,18 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 			},
 		},
 		{
+			name: "when the job holds sealed secrets, it is ErrSealed",
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "").
+					Return(nil, fmt.Errorf("job %s: %w", jobID, job.ErrSealedJob))
+			},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrSealed)
+				s.ErrorContains(err, "send the request again")
+			},
+		},
+		{
 			name: "when the job client fails, the caller gets a message without its error",
 			setup: func() {
 				s.jobs.EXPECT().
@@ -632,7 +645,7 @@ func (s *MethodsPublicTestSuite) TestDeadLetters() {
 			in:    jobgroup.DeadLetterListInput{Limit: 5},
 			scope: []string{"web-01"},
 			setup: func() {
-				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 5).Return(dls, 654, nil)
+				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 5).Return(dls, 3, nil)
 				jobs()
 			},
 			validateFunc: func(got jobgroup.DeadLetterList, err error) {
@@ -640,6 +653,59 @@ func (s *MethodsPublicTestSuite) TestDeadLetters() {
 				s.Equal(1, got.TotalItems, "the total counts only what the token sees")
 				s.Require().Len(got.Items, 1)
 				s.Equal("job-web", got.Items[0].JobID)
+			},
+		},
+		{
+			name:  "a scoped token reads past the newest limit to find its own",
+			in:    jobgroup.DeadLetterListInput{Limit: 1},
+			scope: []string{"web-01"},
+			setup: func() {
+				newest := job.DeadLetter{Seq: 4, JobID: "job-db", Deliveries: 5}
+				all := append([]job.DeadLetter{newest}, dls...)
+				gomock.InOrder(
+					s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 1).Return(all[:1], 4, nil),
+					s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 4).Return(all, 4, nil),
+				)
+				jobs()
+			},
+			validateFunc: func(got jobgroup.DeadLetterList, err error) {
+				s.Require().NoError(err)
+				s.Require().Len(got.Items, 1)
+				s.Equal("job-web", got.Items[0].JobID)
+			},
+		},
+		{
+			name:  "a scoped token keeps only the newest limit of its own",
+			in:    jobgroup.DeadLetterListInput{Limit: 1},
+			scope: []string{"web-01"},
+			setup: func() {
+				two := []job.DeadLetter{
+					{Seq: 5, JobID: "job-web", Deliveries: 5},
+					{Seq: 4, JobID: "job-web", Deliveries: 5},
+				}
+				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 1).Return(two[:1], 2, nil)
+				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 2).Return(two, 2, nil)
+				jobs()
+			},
+			validateFunc: func(got jobgroup.DeadLetterList, err error) {
+				s.Require().NoError(err)
+				s.Equal(2, got.TotalItems)
+				s.Require().Len(got.Items, 1)
+				s.Equal(uint64(5), got.Items[0].Seq)
+			},
+		},
+		{
+			name:  "a scoped token's second read that fails is a 500",
+			in:    jobgroup.DeadLetterListInput{Limit: 1},
+			scope: []string{"web-01"},
+			setup: func() {
+				s.jobs.EXPECT().ListDeadLetters(gomock.Any(), 1).Return(dls[:1], 3, nil)
+				s.jobs.EXPECT().
+					ListDeadLetters(gomock.Any(), 3).
+					Return(nil, 0, errors.New("nats down"))
+			},
+			validateFunc: func(_ jobgroup.DeadLetterList, err error) {
+				s.ErrorContains(err, "failed to list the dead letters")
 			},
 		},
 		{
@@ -829,6 +895,18 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 					Return(nil, job.ErrNoOperationData)
 			},
 			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:   "when the old job holds sealed secrets, the retry is a 409",
+			method: http.MethodPost,
+			path:   "/api/job/" + jobID + "/retry",
+			token:  token("job:write"),
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "").
+					Return(nil, job.ErrSealedJob)
+			},
+			wantCode: http.StatusConflict,
 		},
 		{
 			name:   "when the job client fails, it is a 500 that does not name its error",

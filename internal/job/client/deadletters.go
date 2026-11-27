@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -60,7 +61,7 @@ func (c *Client) ListDeadLetters(
 
 // listDeadLetters reads the dead letter stream from its last message back.
 // A sequence that the stream no longer has, such as one past its max age,
-// is skipped.
+// and an advisory that does not unmarshal, are skipped.
 func (c *Client) listDeadLetters(
 	ctx context.Context,
 	limit int,
@@ -80,9 +81,15 @@ func (c *Client) listDeadLetters(
 		if err != nil {
 			return nil, 0, fmt.Errorf("read dead letter %d: %w", seq, err)
 		}
+		// One advisory that does not unmarshal is skipped, so that it does
+		// not hide each other dead letter.
 		var a advisory
 		if err := json.Unmarshal(msg.Data, &a); err != nil {
-			return nil, 0, fmt.Errorf("dead letter %d: %w", seq, err)
+			c.logger.WarnContext(ctx, "skip a dead letter that does not unmarshal",
+				slog.Uint64("seq", seq),
+				slog.String("error", err.Error()))
+
+			continue
 		}
 		dl := job.DeadLetter{
 			Seq: seq, Time: a.Timestamp, Consumer: a.Consumer,

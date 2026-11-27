@@ -606,6 +606,42 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 			},
 		},
 		{
+			name: "when an unexpected host answers waits for each expected host",
+			data: nil,
+			setupMocks: func() *client.Client {
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+				opts := &client.Options{
+					Timeout:        50 * time.Millisecond,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					RegistryBucket: "registry",
+				}
+				c, err := newTrusted(s.mockNATSClient, opts)
+				s.Require().NoError(err)
+
+				setupPublishAndCollectMocks(
+					s.mockCtrl,
+					s.mockNATSClient,
+					s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{
+							`{"status":"completed","hostname":"server3"}`,
+							host1Resp,
+						},
+						closeWatch: true,
+					},
+				)
+				return c
+			},
+			validateFunc: func(jobID string, results map[string]*job.Response) {
+				s.NotEmpty(jobID)
+				s.Len(results, 3)
+				s.Equal(types.AgentJobStatusCompleted, results["server1"].Status)
+				s.Equal(types.AgentJobStatusTimeout, results["server2"].Status)
+			},
+		},
+		{
 			name: "when broadcast response has invalid JSON skips entry then collects valid",
 			data: nil,
 			setupMocks: func() *client.Client {
@@ -1951,7 +1987,10 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 				return wrapped
 			},
 			validateFunc: func(responses map[string]*job.Response) {
-				s.NotContains(responses, "server1", "it cannot answer for server1")
+				// It cannot answer for server1: server1 never answered, so
+				// its row is a timeout.
+				s.Require().Contains(responses, "server1")
+				s.Equal(types.AgentJobStatusTimeout, responses["server1"].Status)
 				s.Contains(responses, "evil-01", "its answer is under its own name")
 			},
 		},

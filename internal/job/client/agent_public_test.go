@@ -533,7 +533,7 @@ func (s *AgentPublicTestSuite) TestGetJobData() {
 			setupMocks: func() {
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "jobs", "jobs.nonexistent").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 			},
 			validateFunc: func(_ []byte, err error) {
 				s.Error(err)
@@ -991,7 +991,7 @@ func (s *AgentPublicTestSuite) TestListAgents() {
 					Return([]string{"agents.server1", "agents.server2"}, nil)
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "registry", "agents.server1").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry.EXPECT().Value().Return(agentRegistrationJSON("server2"))
 				s.mockNATSClient.EXPECT().
@@ -1132,7 +1132,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{}, nil)
@@ -1165,7 +1165,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// Direct lookup fails (server1 is not a machine ID key).
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "registry", "agents.server1").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				// Fallback: ListAgents scans all keys.
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "registry").
@@ -1179,7 +1179,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// overlayDrainState in ListAgents
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				// GetAgentTimeline for hostname fallback
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
@@ -1199,7 +1199,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 			setupClient: func() *client.Client {
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "registry", "agents.nonexistent").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "registry").
 					Return([]string{"agents.abc123"}, nil)
@@ -1211,7 +1211,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 
 				return s.newClientWithAllKVs("registry", "", "state")
 			},
@@ -1223,13 +1223,24 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 			setupClient: func() *client.Client {
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "registry", "agents.server1").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "registry").
 					Return(nil, errors.New("connection refused"))
 				return s.newClientWithAllKVs("registry", "", "")
 			},
-			expectedErr: "agent server1: not found",
+			expectedErr: "connection refused",
+		},
+		{
+			name:   "when the registry read fails returns the error, not a missing agent",
+			target: "server1",
+			setupClient: func() *client.Client {
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "registry", "agents.server1").
+					Return(nil, errors.New("nats: timeout"))
+				return s.newClientWithAllKVs("registry", "", "")
+			},
+			expectedErr: "read agent server1: nats: timeout",
 		},
 		{
 			name:   "when timeline available sets timeline on direct lookup",
@@ -1253,7 +1264,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// overlayDrainState: no drain flag
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				// GetAgentTimeline: returns one key
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
@@ -1313,7 +1324,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{}, nil)
@@ -1335,7 +1346,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// Direct lookup fails (server1 is not a machine ID).
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "registry", "agents.server1").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				// ListAgents scan.
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "registry").
@@ -1358,7 +1369,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// overlayDrainState in ListAgents.
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				// GetAgentTimeline for hostname fallback.
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
@@ -1418,7 +1429,7 @@ func (s *AgentPublicTestSuite) TestMergeFacts() {
 					Return(entry, nil)
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{}, nil)
@@ -1442,11 +1453,11 @@ func (s *AgentPublicTestSuite) TestMergeFacts() {
 
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "facts", "facts.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{}, nil)
@@ -1476,7 +1487,7 @@ func (s *AgentPublicTestSuite) TestMergeFacts() {
 
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.abc123").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{}, nil)
