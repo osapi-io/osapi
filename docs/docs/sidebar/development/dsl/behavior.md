@@ -1162,9 +1162,8 @@ package.
 Returns seed. Build it with shard.NewWith(h.Sources()).
 
 Use: An example's fake host gives, on debian: nothing. On rhel: nothing. On
-darwin: Prints for ioreg -rd1 -c IOPlatformExpertDevice; system_profiler
-SPHardwareDataType -json. With content, it reads more under those paths. gohai
-collector get --name shard shows it in full; shard is its package.
+darwin: nothing. With content, it reads more under those paths. gohai collector
+get --name shard shows it in full; shard is its package.
 
 ### `package_mgr`
 
