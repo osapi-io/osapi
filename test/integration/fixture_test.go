@@ -144,6 +144,9 @@ func startFixture(
 		// sets.
 		fmt.Sprintf("OSAPI_AGENT_PKI_KEY_DIR=%s", filepath.Join(dir, "pki", "agent")),
 		fmt.Sprintf("OSAPI_CONTROLLER_PKI_AUTO_ADMIT=%t", autoAdmit),
+		// A job that no agent takes, as for a revoked or a pending agent,
+		// fails after this, not after the suite's 2m.
+		"OSAPI_CONTROLLER_API_JOB_TIMEOUT=15s",
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=https://127.0.0.1:%d", apiPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", tok),
 	)
