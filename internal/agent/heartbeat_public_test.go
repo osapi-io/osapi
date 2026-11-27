@@ -26,7 +26,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -231,12 +233,110 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 			},
 		},
 	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			a := tt.setupFunc()
+			a.Start()
+			tt.stopFunc(a)
+		})
+	}
+}
+
+// TestStartOrder checks that Start creates the job consumers before the
+// first heartbeat makes the agent Ready: the consumers deliver only the jobs
+// sent after they exist (osapi-io/osapi#1560).
+func (s *HeartbeatPublicTestSuite) TestStartOrder() {
+	var (
+		mu    sync.Mutex
+		calls []string
+	)
+	record := func(call string) {
+		mu.Lock()
+		defer mu.Unlock()
+		calls = append(calls, call)
+	}
+
+	tests := []struct {
+		name         string
+		setupFunc    func() *agent.Agent
+		stopFunc     func(a *agent.Agent)
+		validateFunc func()
+	}{
+		{
+			name: "creates each job consumer before the first heartbeat",
+			setupFunc: func() *agent.Agent {
+				calls = nil
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), gomock.Any()).
+					Return(false).
+					AnyTimes()
+				s.mockKV.EXPECT().
+					KVPut(gomock.Any(), "registry", gomock.Any(), gomock.Any()).
+					DoAndReturn(func(context.Context, string, string, []byte) (uint64, error) {
+						record("heartbeat")
+
+						return 1, nil
+					}).
+					MinTimes(1)
+				s.mockKV.EXPECT().
+					KVDelete(gomock.Any(), "registry", gomock.Any()).
+					Return(nil).
+					Times(1)
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					DoAndReturn(func(context.Context, string, jetstream.ConsumerConfig) error {
+						record("consumer")
+
+						return nil
+					}).
+					Times(8)
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(8)
+
+				return newTestAgent(newTestAgentParams{
+					appFs:           s.appFs,
+					appConfig:       s.appConfig,
+					logger:          s.logger,
+					jobClient:       s.mockJobClient,
+					streamName:      "test-stream",
+					hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+					diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+					memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
+					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+					registryBucket:  "registry",
+					natsClient:      s.mockKV,
+				})
+			},
+			stopFunc: func(a *agent.Agent) {
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				a.Stop(stopCtx)
+			},
+			validateFunc: func() {
+				mu.Lock()
+				defer mu.Unlock()
+				first := slices.Index(calls, "heartbeat")
+				s.Require().NotEqual(-1, first)
+				s.Equal(8, strings.Count(strings.Join(calls[:first], ","), "consumer"),
+					"the first heartbeat came before each consumer: %v", calls)
+			},
+		},
+	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			a := tt.setupFunc()
 			a.Start()
 			tt.stopFunc(a)
+			tt.validateFunc()
 		})
 	}
 }

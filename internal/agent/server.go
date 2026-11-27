@@ -115,6 +115,16 @@ func (a *Agent) Start() {
 		a.logger.Info("preflight checks done")
 	}
 
+	// Start consuming messages only when not pending enrollment, and
+	// before the first heartbeat: the consumers deliver only the jobs sent
+	// after they exist, so an agent that shows Ready must have them
+	// (osapi-io/osapi#1560). Pending agents are visible (heartbeat) but
+	// don't process jobs.
+	pending := a.State() == types.AgentPending
+	if !pending {
+		a.startConsumers()
+	}
+
 	// Register in agent registry and start heartbeat keepalive.
 	// Heartbeats run even in Pending state so the agent is visible.
 	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
@@ -126,11 +136,7 @@ func (a *Agent) Start() {
 	// Collect and publish system facts.
 	a.startFacts(a.ctx, a.machineID, a.hostname)
 
-	// Start consuming messages only when not pending enrollment.
-	// Pending agents are visible (heartbeat) but don't process jobs.
-	if a.State() != types.AgentPending {
-		a.startConsumers()
-	} else {
+	if pending {
 		a.logger.Info(
 			"waiting for admission; run osapi pki key get --name agent on this machine, and give its fingerprint to osapi client admission admit",
 			slog.String("machine_id", a.machineID),
