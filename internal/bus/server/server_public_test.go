@@ -30,7 +30,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/osapi-io/osapi/internal/natsauth"
@@ -461,20 +463,53 @@ func (s *ServerPublicTestSuite) TestDebugLog() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var buf bytes.Buffer
+			// The server's goroutines write the log while the test reads
+			// it, also as their connections close after Stop.
+			var buf lockedBuffer
 			log := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: tt.level}))
 
 			srv, err := server.New(context.Background(), log, serverNATS(s.T()), nil)
 			s.Require().NoError(err)
-			srv.Stop(context.Background())
 
-			s.Equal(
-				tt.want,
-				strings.Contains(buf.String(), "Client connection created"),
-				buf.String(),
-			)
+			created := func() bool { return strings.Contains(buf.String(), "Client connection created") }
+			if tt.want {
+				s.Eventually(
+					created,
+					5*time.Second,
+					10*time.Millisecond,
+					"no connection line in:\n%s",
+					buf.String(),
+				)
+			}
+			srv.Stop(context.Background())
+			if !tt.want {
+				s.False(created(), buf.String())
+			}
 		})
 	}
+}
+
+// lockedBuffer is a bytes.Buffer that the server's goroutines and the test
+// can use at the same time.
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *lockedBuffer) Write(
+	p []byte,
+) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.String()
 }
 
 // TestTLS is a client of a server that serves TLS: one that trusts the
