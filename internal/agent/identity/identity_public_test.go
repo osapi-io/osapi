@@ -22,8 +22,11 @@ package identity_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
@@ -281,6 +284,7 @@ func (suite *PlatformPublicTestSuite) TearDownSubTest() {
 }
 
 func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
+	var started time.Time
 	tests := []struct {
 		name         string
 		setupFn      func()
@@ -304,6 +308,24 @@ func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
 				if err != nil {
 					assert.Empty(suite.T(), out)
 				}
+			},
+		},
+		{
+			name: "when ioreg does not answer it is stopped at the timeout",
+			setupFn: func() {
+				// The stand-in ignores its arguments and runs for 30 s.
+				prog := filepath.Join(suite.T().TempDir(), "ioreg")
+				require.NoError(suite.T(), os.WriteFile(prog,
+					[]byte("#!/bin/sh\nexec sleep 30\n"), 0o700))
+				restore := identity.SetIoreg(prog, 100*time.Millisecond)
+				suite.T().Cleanup(restore)
+				identity.ResetExecCommandFn()
+				started = time.Now()
+			},
+			validateFunc: func(out string, err error) {
+				require.ErrorContains(suite.T(), err, "ioreg did not answer in 100ms")
+				assert.Empty(suite.T(), out)
+				assert.Less(suite.T(), time.Since(started), 5*time.Second)
 			},
 		},
 		{

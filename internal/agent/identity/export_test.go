@@ -22,6 +22,7 @@ package identity
 
 import (
 	"runtime"
+	"time"
 
 	"github.com/avfs/avfs"
 )
@@ -84,4 +85,16 @@ func SetOSPlatform(
 // ResetOSPlatform restores the osPlatform variable to its default.
 func ResetOSPlatform() {
 	osPlatform = runtime.GOOS
+}
+
+// SetIoreg replaces the program that runs as ioreg and its timeout, and
+// returns a function that puts both back.
+func SetIoreg(
+	program string,
+	timeout time.Duration,
+) func() {
+	oldProgram, oldTimeout := ioregProgram, ioregTimeout
+	ioregProgram, ioregTimeout = program, timeout
+
+	return func() { ioregProgram, ioregTimeout = oldProgram, oldTimeout }
 }
