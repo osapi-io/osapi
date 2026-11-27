@@ -655,6 +655,11 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationFindsProgramsAga
 		s.Require().Len(got[0].Certificates, 1)
 		s.Equal("agent-metrics", got[0].Certificates[0].Name)
 		s.Equal(pki.CertNotMade, got[0].Certificates[0].State)
+		// The registration has the crypto of the agent's process, with no
+		// use for a certificate that the agent has not made.
+		s.Require().NotNil(got[0].Crypto)
+		s.Len(got[0].Crypto.Algorithms, 3)
+		s.Equal("job, join and admission signatures", got[0].Crypto.Algorithms[0].Name)
 	})
 }
 

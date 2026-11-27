@@ -23,10 +23,10 @@ The command prints:
 ```ansi
 $ osapi pki list
 [1;38;2;0;213;255mKeys and certificates (3):[0m
-  [38;2;10;143;176mKIND  [0m[38;2;10;143;176mNAME        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM    [0m[38;2;10;143;176mEXPIRES[0m
-  key   [1mcontroller[0m  controller  ok     Ed25519
-  key   [1mjetstream[0m   nats        ok     AES-256-GCM
-  cert  [1mapi[0m         controller  ok     ECDSA P-256  2031-11-25 12:00:00
+  [38;2;10;143;176mKIND  [0m[38;2;10;143;176mNAME        [0m[38;2;10;143;176mCOMPONENT   [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mALGORITHM    [0m[38;2;10;143;176mAPPROVED  [0m[38;2;10;143;176mEXPIRES[0m
+  key   [1mcontroller[0m  controller  ok     Ed25519      no
+  key   [1mjetstream[0m   nats        ok     AES-256-GCM  no
+  cert  [1mapi[0m         controller  ok     ECDSA P-256  no        2031-11-25 12:00:00
 ```
 
 With `--json`, the command prints:
@@ -41,6 +41,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/pki/controller.key",
       "algorithm": "Ed25519",
+      "approved": false,
       "fingerprint": "SHA256:9c1f2e3d4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4"
     },
     {
@@ -50,6 +51,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/nats/jetstream.key",
       "algorithm": "AES-256-GCM",
+      "approved": false,
       "fingerprint": "7f3a9c1e5b2d8f40"
     },
     {
@@ -59,6 +61,7 @@ With `--json`, the command prints:
       "state": "ok",
       "file": "/etc/osapi/pki/api.crt",
       "algorithm": "ECDSA P-256",
+      "approved": false,
       "fingerprint": "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
       "expires": "2031-11-25T12:00:00Z"
     }

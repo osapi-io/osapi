@@ -326,7 +326,7 @@ func read(
 ) Key {
 	k := Key{
 		Name: s.name, Kind: s.kind, Component: s.component, File: s.display(),
-		Algorithm: s.algorithm, State: StateOK,
+		Algorithm: s.algorithm, Approved: s.use.Approved, State: StateOK,
 	}
 	var err error
 	switch s.typ {

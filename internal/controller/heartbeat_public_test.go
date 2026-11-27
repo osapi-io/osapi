@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -72,10 +73,15 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 		entry, err := nc.KVGet(context.Background(), bucket, "controller.unknown")
 		s.Require().NoError(err)
 		var reg struct {
-			Version string `json:"version"`
+			Version string               `json:"version"`
+			Crypto  *cryptoreport.Report `json:"crypto"`
 		}
 		s.Require().NoError(json.Unmarshal(entry.Value(), &reg))
 		s.Equal("v1.2.3-test", reg.Version)
+		// The registration has the crypto of the controller's process.
+		s.Require().NotNil(reg.Crypto)
+		s.NotEmpty(reg.Crypto.Go)
+		s.Equal("API tokens", reg.Crypto.Algorithms[0].Name)
 	})
 }
 

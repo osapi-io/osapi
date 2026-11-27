@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -145,6 +146,8 @@ func (a *Agent) writeRegistration(
 	a.writeSeen(ctx, machineID)
 	a.refreshPrograms()
 
+	certs := a.certificates()
+	report := cryptoreport.Agent(a.appConfig, certs)
 	reg := job.AgentRegistration{
 		MachineID:       machineID,
 		Hostname:        hostname,
@@ -157,7 +160,8 @@ func (a *Agent) writeRegistration(
 		AgentVersion:    a.version,
 		ConfigVersion:   a.configVersion,
 		MissingPrograms: a.missingPrograms,
-		Certificates:    a.certificates(),
+		Certificates:    certs,
+		Crypto:          &report,
 	}
 	reg.ControllerKey, reg.ControllerKeyNext = a.controllerKeys()
 	reg.NATSCertNext = a.natsCertNext

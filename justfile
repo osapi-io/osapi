@@ -181,7 +181,7 @@ behavior-cover-check:
 # vault and the agent's encryption key use only approved ones. The other
 # packages do not pass yet: NATS JWTs sign with nkeys, which nkeys v0.4.17
 # refuses in this mode. Add a package here when it passes.
-go_fips_packages := "./internal/secret/seal/ ./internal/secret/vault/natsvault/ ./internal/authtoken/ ./internal/cli/commands/pkicert/ ./internal/pki/ ./internal/job/... ./internal/controller/endpoints/agent/ ./internal/controller/endpoints/admission/"
+go_fips_packages := "./internal/cryptoreport/ ./internal/secret/seal/ ./internal/secret/vault/natsvault/ ./internal/authtoken/ ./internal/cli/commands/pkicert/ ./internal/pki/ ./internal/job/... ./internal/controller/endpoints/agent/ ./internal/controller/endpoints/admission/"
 
 go-fips-test:
     GODEBUG=fips140=only go test {{ go_fips_packages }}

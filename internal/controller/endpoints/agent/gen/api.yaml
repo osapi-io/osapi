@@ -89,12 +89,17 @@ components:
           description: Number of logical CPUs.
           example: 4
           type: integer
+        crypto:
+          $ref: '#/components/schemas/CryptoReport'
         facts:
           additionalProperties: true
           description: Extended facts from additional providers.
           type: object
         fingerprint:
           description: The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys.
+          type: string
+        fips:
+          description: The FIPS 140-3 mode of the agent's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail.
           type: string
         fqdn:
           description: Fully qualified domain name.
@@ -203,6 +208,98 @@ components:
         - ProcessHighCPU
         - KeyMismatch
       type: string
+    CryptoAlgorithm:
+      properties:
+        algorithm:
+          description: The algorithm, with its key size or curve.
+          example: ECDH P-256, HKDF-SHA256, AES-256-GCM
+          type: string
+        approved:
+          description: Whether FIPS 140-3 approves the algorithm.
+          type: boolean
+        name:
+          description: What the process uses it for.
+          example: secrets sealed to agents
+          type: string
+        only_mode:
+          description: Whether it works in FIPS 140-3 only mode. An approved algorithm can still fail there, when its code calls the module in a way that the mode refuses.
+          type: boolean
+        reason:
+          description: Why it is not approved, or why it fails in FIPS 140-3 only mode.
+          type: string
+      required:
+        - name
+        - algorithm
+        - approved
+        - only_mode
+      type: object
+    CryptoListener:
+      properties:
+        approved:
+          description: 'Whether the listener negotiates only approved versions, suites and groups: true in FIPS 140-3 mode, where crypto/tls restricts them.'
+          type: boolean
+        groups:
+          description: 'The key exchange groups that the listener can negotiate: the configured ones, or those of crypto/tls for the process''s mode.'
+          items:
+            type: string
+          type: array
+        min_version:
+          description: The lowest TLS version that the listener accepts.
+          example: TLS 1.2
+          type: string
+        name:
+          description: The listener, such as api, nats or metrics.
+          example: api
+          type: string
+        suites:
+          description: 'The cipher suites that the listener can negotiate: the configured ones, or those of crypto/tls for the process''s mode.'
+          items:
+            type: string
+          type: array
+        tls:
+          description: Whether the listener serves TLS. A listener with no TLS has no other fields.
+          type: boolean
+      required:
+        - name
+        - tls
+        - approved
+      type: object
+    CryptoReport:
+      properties:
+        algorithms:
+          description: Each algorithm that the process uses.
+          items:
+            $ref: '#/components/schemas/CryptoAlgorithm'
+          type: array
+        enforceable:
+          description: Whether each algorithm of the process works in FIPS 140-3 only mode, GODEBUG=fips140=only.
+          type: boolean
+        gaps:
+          description: What keeps the process from FIPS 140-3 mode with only approved algorithms. Empty when the mode is on and each algorithm and listener is approved.
+          items:
+            type: string
+          type: array
+        go:
+          description: The Go version that built the process.
+          example: go1.27.3
+          type: string
+        listeners:
+          description: Each TLS listener of the process.
+          items:
+            $ref: '#/components/schemas/CryptoListener'
+          type: array
+        mode:
+          $ref: '#/components/schemas/FIPSMode'
+        module:
+          description: The version of the Go Cryptographic Module in the process.
+          example: v1.0.0
+          type: string
+      required:
+        - go
+        - module
+        - mode
+        - enforceable
+      type: object
     ErrorResponse:
       properties:
         details:
@@ -228,6 +325,13 @@ components:
           example: not_found
           type: string
       type: object
+    FIPSMode:
+      description: FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it once, at the start of the process, from GODEBUG=fips140.
+      enum:
+        - "off"
+        - "on"
+        - only
+      type: string
     FactKeyEntry:
       properties:
         builtin:

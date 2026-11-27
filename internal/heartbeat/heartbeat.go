@@ -28,6 +28,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
@@ -50,6 +51,7 @@ type Heartbeat struct {
 	thresholds      process.ConditionThresholds
 	prevConditions  []job.Condition
 	subComponents   map[string]job.SubComponentInfo
+	crypto          *cryptoreport.Report
 }
 
 // RegistryStore writes and removes a registration in a KV bucket. A
@@ -79,6 +81,8 @@ type Options struct {
 	Thresholds process.ConditionThresholds
 	// SubComponents are the parts of the component that the registration names.
 	SubComponents map[string]job.SubComponentInfo
+	// Crypto is the crypto of the component's process.
+	Crypto *cryptoreport.Report
 }
 
 // New creates a heartbeat writer for a component that is not an agent.
@@ -98,6 +102,7 @@ func New(
 		startedAt:       time.Now(),
 		thresholds:      opts.Thresholds,
 		subComponents:   opts.SubComponents,
+		crypto:          opts.Crypto,
 	}
 }
 
@@ -153,6 +158,7 @@ func (h *Heartbeat) writeRegistration(
 		StartedAt:     h.startedAt,
 		Version:       h.version,
 		SubComponents: h.subComponents,
+		Crypto:        h.crypto,
 	}
 
 	if pm, err := h.processProvider.GetMetrics(); err == nil {

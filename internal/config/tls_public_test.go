@@ -212,6 +212,27 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 
 	s.Require().NoError(os.Remove(cert))
 	s.Equal(second, s.leaf(got), "a missing file keeps the last one")
+	s.Equal(uint16(tls.VersionTLS12), got.MinVersion, "it serves what Negotiation says")
+}
+
+func (s *TLSPublicTestSuite) TestNegotiation() {
+	tests := []struct {
+		name string
+		tls  config.ServerTLS
+		want *tls.Config
+	}{
+		{name: "when TLS is off, it negotiates nothing", tls: config.ServerTLS{}},
+		{
+			name: "when TLS is on, it is TLS 1.2 or later with crypto/tls's suites",
+			tls:  config.ServerTLS{Enabled: true},
+			want: &tls.Config{MinVersion: tls.VersionTLS12},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.tls.Negotiation())
+		})
+	}
 }
 
 func (s *TLSPublicTestSuite) TestDial() {

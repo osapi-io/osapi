@@ -58,6 +58,14 @@ type ComponentEntry struct {
 	// Process CPU usage percentage.
 	CPUPercent float64 `json:"cpu_percent,omitempty"`
 
+	// Crypto is the property crypto.
+	Crypto CryptoReport `json:"crypto,omitzero"`
+
+	// The FIPS 140-3 mode of the component's process, then approved, or the number
+	// of gaps that keep it from the mode with only approved algorithms. crypto has
+	// the detail.
+	Fips string `json:"fips,omitempty"`
+
 	// Component hostname.
 	Hostname string `json:"hostname,omitempty"`
 

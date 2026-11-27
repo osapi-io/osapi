@@ -20,7 +20,10 @@
 
 package health
 
-import "github.com/osapi-io/osapi/pkg/sdk/types"
+import (
+	"github.com/osapi-io/osapi/internal/cryptoreport"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // LivenessInput is the input of the liveness probe, which has none.
 type LivenessInput struct{}
@@ -125,14 +128,16 @@ type AgentDetail struct {
 
 // ComponentEntry is one registered component, with its health.
 type ComponentEntry struct {
-	Type       string                `json:"type,omitempty"        doc:"Component type (agent, controller, nats), or the name of a sub-component, such as api."       example:"agent"`
-	Hostname   string                `json:"hostname,omitempty"    doc:"Component hostname."                                                                          example:"web-01"`
-	Status     string                `json:"status,omitempty"      doc:"Component status."                                                                            example:"Ready"                                render:"status"`
-	Conditions []types.ConditionType `json:"conditions,omitempty"  doc:"Active conditions."                                                                                                                                          none:"-"`
-	Age        string                `json:"age,omitempty"         doc:"Time since component started."                                                                example:"7h 6m"`
-	CPUPercent float32               `json:"cpu_percent,omitempty" doc:"Process CPU usage percentage."                                                                example:"2.1"                                                           label:"CPU %"`
-	MemBytes   int64                 `json:"mem_bytes,omitempty"   doc:"Process RSS memory in bytes."                                                                 example:"134217728"                            render:"bytes"           label:"Mem"`
-	Version    string                `json:"version,omitempty"     doc:"Build version of the component's binary."                                                     example:"v0.2.1-0.20261119003517-f6bc5af55ceb"`
+	Type       string                `json:"type,omitempty"        doc:"Component type (agent, controller, nats), or the name of a sub-component, such as api."                                                                                example:"agent"`
+	Hostname   string                `json:"hostname,omitempty"    doc:"Component hostname."                                                                                                                                                   example:"web-01"`
+	Status     string                `json:"status,omitempty"      doc:"Component status."                                                                                                                                                     example:"Ready"                                render:"status"`
+	Conditions []types.ConditionType `json:"conditions,omitempty"  doc:"Active conditions."                                                                                                                                                                                                                   none:"-"`
+	Age        string                `json:"age,omitempty"         doc:"Time since component started."                                                                                                                                         example:"7h 6m"`
+	CPUPercent float32               `json:"cpu_percent,omitempty" doc:"Process CPU usage percentage."                                                                                                                                         example:"2.1"                                                           label:"CPU %"`
+	MemBytes   int64                 `json:"mem_bytes,omitempty"   doc:"Process RSS memory in bytes."                                                                                                                                          example:"134217728"                            render:"bytes"           label:"Mem"`
+	Version    string                `json:"version,omitempty"     doc:"Build version of the component's binary."                                                                                                                              example:"v0.2.1-0.20261119003517-f6bc5af55ceb"`
+	FIPS       string                `json:"fips,omitempty"        doc:"The FIPS 140-3 mode of the component's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail." example:"off"                                                           label:"FIPS"`
+	Crypto     *cryptoreport.Report  `json:"crypto,omitempty"      doc:"The crypto of the component's process: the Go Cryptographic Module, its FIPS 140-3 mode, each TLS listener, and each algorithm with whether it is approved."                                                                                                 table:"-"`
 	Address    string                `json:"address,omitempty"     doc:"Listen address of a sub-component, such as :8080."`
 	URL        string                `json:"url,omitempty"         doc:"Where a person opens a sub-component, from its url config key."`
 	Components []ComponentEntry      `json:"components,omitempty"  doc:"The sub-components of the component, such as its api and its metrics server, sorted by name."`

@@ -45,8 +45,9 @@ type Item struct {
 	Name        string     `json:"name"`
 	Component   string     `json:"component"             doc:"The component that uses it: controller, agent, nats or vault."`
 	State       string     `json:"state"                 doc:"ok; not made; off, for a JetStream store with no key; or unreadable, with the reason."`
-	File        string     `json:"file"                                                                                                                     table:"-"`
+	File        string     `json:"file"                                                                                                                          table:"-"`
 	Algorithm   string     `json:"algorithm"             doc:"The algorithm of the key, such as Ed25519, or of the certificate's key, such as ECDSA P-256."`
-	Fingerprint string     `json:"fingerprint,omitempty" doc:"The fingerprint of a public key or a certificate, or the ID of a secret key."                 table:"-"`
+	Approved    bool       `json:"approved"              doc:"Whether FIPS 140-3 approves the algorithm: of the key, or of the certificate's key and signature."`
+	Fingerprint string     `json:"fingerprint,omitempty" doc:"The fingerprint of a public key or a certificate, or the ID of a secret key."                      table:"-"`
 	Expires     *time.Time `json:"expires,omitempty"     doc:"When a certificate expires."`
 }

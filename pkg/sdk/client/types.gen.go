@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // Averages is the Averages of the spec.
 type Averages struct {
 	// The load average over 15 minutes.
@@ -12,6 +14,76 @@ type Averages struct {
 
 	// The load average over 5 minutes.
 	Min5 float64 `json:"5min"`
+}
+
+// CryptoAlgorithm is the CryptoAlgorithm of the spec.
+type CryptoAlgorithm struct {
+	// The algorithm, with its key size or curve.
+	Algorithm string `json:"algorithm"`
+
+	// Whether FIPS 140-3 approves the algorithm.
+	Approved bool `json:"approved"`
+
+	// What the process uses it for.
+	Name string `json:"name"`
+
+	// Whether it works in FIPS 140-3 only mode. An approved algorithm can still
+	// fail there, when its code calls the module in a way that the mode refuses.
+	OnlyMode bool `json:"only_mode"`
+
+	// Why it is not approved, or why it fails in FIPS 140-3 only mode.
+	Reason string `json:"reason,omitempty"`
+}
+
+// CryptoListener is the CryptoListener of the spec.
+type CryptoListener struct {
+	// Whether the listener negotiates only approved versions, suites and groups:
+	// true in FIPS 140-3 mode, where crypto/tls restricts them.
+	Approved bool `json:"approved"`
+
+	// The key exchange groups that the listener can negotiate: the configured
+	// ones, or those of crypto/tls for the process's mode.
+	Groups []string `json:"groups,omitempty"`
+
+	// The lowest TLS version that the listener accepts.
+	MinVersion string `json:"min_version,omitempty"`
+
+	// The listener, such as api, nats or metrics.
+	Name string `json:"name"`
+
+	// The cipher suites that the listener can negotiate: the configured ones, or
+	// those of crypto/tls for the process's mode.
+	Suites []string `json:"suites,omitempty"`
+
+	// Whether the listener serves TLS. A listener with no TLS has no other fields.
+	Tls bool `json:"tls"`
+}
+
+// CryptoReport is the CryptoReport of the spec.
+type CryptoReport struct {
+	// Each algorithm that the process uses.
+	Algorithms []CryptoAlgorithm `json:"algorithms,omitempty"`
+
+	// Whether each algorithm of the process works in FIPS 140-3 only mode,
+	// GODEBUG=fips140=only.
+	Enforceable bool `json:"enforceable"`
+
+	// What keeps the process from FIPS 140-3 mode with only approved algorithms.
+	// Empty when the mode is on and each algorithm and listener is approved.
+	Gaps []string `json:"gaps,omitempty"`
+
+	// The Go version that built the process.
+	Go string `json:"go"`
+
+	// Each TLS listener of the process.
+	Listeners []CryptoListener `json:"listeners,omitempty"`
+
+	// FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it
+	// once, at the start of the process, from GODEBUG=fips140.
+	Mode types.FIPSMode `json:"mode"`
+
+	// The version of the Go Cryptographic Module in the process.
+	Module string `json:"module"`
 }
 
 // Disk is the Disk of the spec.

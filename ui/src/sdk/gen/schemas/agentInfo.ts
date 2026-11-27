@@ -7,6 +7,7 @@
 import type { AgentInfoFacts } from './agentInfoFacts';
 import type { AgentInfoLabels } from './agentInfoLabels';
 import type { AgentState } from './agentState';
+import type { CryptoReport } from './cryptoReport';
 import type { LoadAverageResponse } from './loadAverageResponse';
 import type { MemoryResponse } from './memoryResponse';
 import type { NetworkInterfaceResponse } from './networkInterfaceResponse';
@@ -32,10 +33,13 @@ export interface AgentInfo {
   controller_key_next?: string;
   /** Number of logical CPUs. */
   cpu_count?: number;
+  crypto?: CryptoReport;
   /** Extended facts from additional providers. */
   facts?: AgentInfoFacts;
   /** The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys. */
   fingerprint?: string;
+  /** The FIPS 140-3 mode of the agent's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail. */
+  fips?: string;
   /** Fully qualified domain name. */
   fqdn?: string;
   /** The hostname of the agent. */

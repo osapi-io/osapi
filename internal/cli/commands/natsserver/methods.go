@@ -24,10 +24,16 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
+
+	"github.com/avfs/avfs/vfs/osfs"
 
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
@@ -73,7 +79,9 @@ func Components(
 		return command.Running{}, fmt.Errorf("start the NATS server: %w", err)
 	}
 
-	s.StartHeartbeat(ctx, d.Version, d.Config.Agent.ProcessConditions)
+	certs := pki.ReadCerts(osfs.NewWithNoIdm(), config.CertSourcesOf(d.Config, "nats"), time.Now())
+	report := cryptoreport.NATS(n.Server, certs)
+	s.StartHeartbeat(ctx, d.Version, d.Config.Agent.ProcessConditions, &report)
 
 	components := []command.Component{s}
 	if ms != nil {

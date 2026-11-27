@@ -31,6 +31,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -80,7 +81,12 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			srv.StartHeartbeat(ctx, "v1.2.3-test", config.ProcessConditions{})
+			srv.StartHeartbeat(
+				ctx,
+				"v1.2.3-test",
+				config.ProcessConditions{},
+				&cryptoreport.Report{Go: "go1.27.3"},
+			)
 
 			if tc.wantKey == "" {
 				return

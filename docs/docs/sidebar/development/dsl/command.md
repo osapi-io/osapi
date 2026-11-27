@@ -757,6 +757,15 @@ Use: A field that takes one of these values: types.ContentType with
 validate:"enum". A closed set that pkg/sdk/types does not have is a named type
 with Values and Valid in the package's types.go; validate refuses oneof.
 
+### `types.FIPSMode`
+
+FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it
+once, at the start of the process, from GODEBUG=fips140. Values: off, on, only.
+
+Use: A field that takes one of these values: types.FIPSMode with
+validate:"enum". A closed set that pkg/sdk/types does not have is a named type
+with Values and Valid in the package's types.go; validate refuses oneof.
+
 ### `types.FieldIn`
 
 FieldIn is where a field of a request goes. Values: path, query, body.

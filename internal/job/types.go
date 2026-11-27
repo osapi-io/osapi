@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
@@ -326,6 +327,9 @@ type ComponentRegistration struct {
 	Version string `json:"version,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
+	// Crypto is the crypto of the component's process, which it reports at
+	// its start.
+	Crypto *cryptoreport.Report `json:"crypto,omitempty"`
 }
 
 // AgentRegistration represents an agent's registration entry in the KV registry.
@@ -381,6 +385,9 @@ type AgentRegistration struct {
 	NATSCertNext string `json:"nats_cert_next,omitempty"`
 	// SubComponents reports the status of internal services.
 	SubComponents map[string]SubComponentInfo `json:"sub_components,omitempty"`
+	// Crypto is the crypto of the agent's process, which it reports at its
+	// start.
+	Crypto *cryptoreport.Report `json:"crypto,omitempty"`
 	// Signature is the agent's Ed25519 signature over the routing fields of
 	// this registration, as RegistrationSigningBytes encodes them. Empty before
 	// the agent loads its keys, and then unverifiable rather than trusted.
@@ -454,6 +461,8 @@ type AgentInfo struct {
 	Fingerprint string `json:"fingerprint,omitempty"`
 	// Certificates are the certificates that the agent serves.
 	Certificates []pki.Cert `json:"certificates,omitempty"`
+	// Crypto is the crypto of the agent's process.
+	Crypto *cryptoreport.Report `json:"crypto,omitempty"`
 	// Timeline contains the chronological sequence of state transition events.
 	Timeline []TimelineEvent `json:"timeline,omitempty"`
 	// Verified reports whether this registration's signature checked out

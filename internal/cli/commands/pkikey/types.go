@@ -82,6 +82,7 @@ type Key struct {
 	State       string `json:"state"                 doc:"ok; not made, when the component has not made it on this host; off, for a JetStream store with no key; or unreadable, with the reason."`
 	File        string `json:"file"                  doc:"The file of the key, or $NAME for a vault key in an environment variable."                                                              table:"-"`
 	Algorithm   string `json:"algorithm"             doc:"Ed25519, ECDH P-256 or AES-256-GCM."`
+	Approved    bool   `json:"approved"              doc:"Whether FIPS 140-3 approves the algorithm of the key."`
 	Fingerprint string `json:"fingerprint,omitempty" doc:"The SHA-256 fingerprint of a public key. The agent's covers its signing and its encryption key, as its admission does."                 table:"-"`
 	PublicKey   string `json:"public_key,omitempty"  doc:"The public key of the P-256 encryption key, in base64url."                                                                              table:"-" label:"Public key"`
 	KeyID       string `json:"key_id,omitempty"      doc:"The ID of a secret key: the first 16 hex digits of its SHA-256."                                                                                  label:"Key ID"`

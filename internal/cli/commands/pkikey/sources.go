@@ -23,6 +23,7 @@ package pkikey
 import (
 	"path/filepath"
 
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 )
 
@@ -45,7 +46,10 @@ type source struct {
 	kind      string
 	component string
 	algorithm string
-	typ       string
+	// use is the use of crypto that the key is for, which says whether
+	// FIPS 140-3 approves its algorithm.
+	use cryptoreport.Algorithm
+	typ string
 	// dir and prefix are the key directory and the prefix of the files of a
 	// key of package pki: prefix.key, prefix.pub and prefix.ekey.
 	dir    string
@@ -66,22 +70,22 @@ func sources(
 	out := []source{
 		{
 			name: controllerName, kind: KindSigning, component: "controller",
-			algorithm: "Ed25519", typ: typeSigning,
+			algorithm: "Ed25519", use: cryptoreport.Signatures, typ: typeSigning,
 			dir: c.Controller.PKI.KeyDir, prefix: "controller",
 		},
 		{
 			name: agentName, kind: KindSigning, component: "agent",
-			algorithm: "Ed25519", typ: typeSigning,
+			algorithm: "Ed25519", use: cryptoreport.Signatures, typ: typeSigning,
 			dir: c.Agent.PKI.KeyDir, prefix: "agent",
 		},
 		{
 			name: "agent-encryption", kind: KindEncryption, component: "agent",
-			algorithm: "ECDH P-256", typ: typeAgentEKey,
+			algorithm: "ECDH P-256", use: cryptoreport.Seal, typ: typeAgentEKey,
 			dir: c.Agent.PKI.KeyDir, prefix: "agent",
 		},
 		{
 			name: jetStreamName, kind: KindEncryption, component: "nats",
-			algorithm: "AES-256-GCM", typ: typeJetStream,
+			algorithm: "AES-256-GCM", use: cryptoreport.Store, typ: typeJetStream,
 			file: c.NATS.Server.JetStream.KeyFile,
 		},
 	}
@@ -91,7 +95,8 @@ func sources(
 		}
 		out = append(out, source{
 			name: vaultPrefix + v.Name, kind: KindEncryption, component: "vault",
-			algorithm: "AES-256-GCM", typ: typeVault, file: v.KeyFile, env: v.KeyEnv,
+			algorithm: "AES-256-GCM", use: cryptoreport.Vault, typ: typeVault,
+			file: v.KeyFile, env: v.KeyEnv,
 		})
 	}
 

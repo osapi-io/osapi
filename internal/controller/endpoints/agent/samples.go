@@ -23,6 +23,7 @@ package agent
 import (
 	"time"
 
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -56,6 +57,8 @@ var (
 		ServiceMgr:       "systemd",
 		PackageMgr:       "apt",
 		PrimaryInterface: "eth0",
+		FIPS:             "off",
+		Crypto:           &sampleCrypto,
 	}
 	sampleMac01 = Info{
 		Hostname:     "mac-01",
@@ -82,4 +85,21 @@ var sampleConfig = ConfigResponse{
 
 		return &t
 	}(),
+}
+
+// sampleCrypto is the crypto of an agent that runs with no FIPS 140-3 mode.
+var sampleCrypto = cryptoreport.Report{
+	Go: "go1.27.3", Module: "v1.0.0", Mode: types.FIPSOff, Enforceable: false,
+	Listeners: []cryptoreport.Listener{{
+		Name: "metrics", TLS: true, MinVersion: "TLS 1.2",
+		Suites: []string{"TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256"},
+		Groups: []string{"crypto/tls default"},
+	}},
+	Algorithms: []cryptoreport.Algorithm{
+		cryptoreport.Signatures, cryptoreport.Seal, cryptoreport.NATSAuth,
+	},
+	Gaps: []string{
+		"FIPS 140-3 mode is off: set GODEBUG=fips140=on",
+		"metrics: crypto/tls may negotiate a suite or group that is not approved",
+	},
 }

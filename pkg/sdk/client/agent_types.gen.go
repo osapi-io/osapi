@@ -63,12 +63,20 @@ type AgentInfo struct {
 	// Number of logical CPUs.
 	CPUCount int `json:"cpu_count,omitempty"`
 
+	// Crypto is the property crypto.
+	Crypto CryptoReport `json:"crypto,omitzero"`
+
 	// Extended facts from additional providers.
 	Facts map[string]any `json:"facts,omitempty"`
 
 	// The SHA256 fingerprint of the agent's PKI public key. Empty until the agent
 	// loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
+
+	// The FIPS 140-3 mode of the agent's process, then approved, or the number of
+	// gaps that keep it from the mode with only approved algorithms. crypto has
+	// the detail.
+	Fips string `json:"fips,omitempty"`
 
 	// Fully qualified domain name.
 	FQDN string `json:"fqdn,omitempty"`

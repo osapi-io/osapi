@@ -53,6 +53,7 @@ $ osapi pki key rotate --name vault:default
   [38;2;176;48;176mState:[0m      ok
   [38;2;176;48;176mFile:[0m       /etc/osapi/secrets.key
   [38;2;176;48;176mAlgorithm:[0m  AES-256-GCM
+  [38;2;176;48;176mApproved:[0m   yes
   [38;2;176;48;176mKey ID:[0m     b8e14a2c9d3f6071
   [38;2;176;48;176mKeys:[0m       1
 ```
@@ -68,6 +69,7 @@ With `--json`, the command prints:
     "state": "ok",
     "file": "/etc/osapi/secrets.key",
     "algorithm": "AES-256-GCM",
+    "approved": true,
     "key_id": "b8e14a2c9d3f6071",
     "keys": 1
   },

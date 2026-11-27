@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/controller/mocks"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
@@ -368,6 +369,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 				Conditions:    conditions,
 				Process:       process,
 				SubComponents: subs,
+				Crypto:        &cryptoreport.Report{Mode: types.FIPSOn},
 			}), nil)
 		s.nc.EXPECT().
 			KVGet(gomock.Any(), "registry", "agents.app-01").
@@ -386,6 +388,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 				Conditions:    conditions,
 				Process:       process,
 				SubComponents: map[string]job.SubComponentInfo{"controller.api": {Status: "ok"}},
+				Crypto:        &cryptoreport.Report{Mode: types.FIPSOff},
 			}), nil)
 		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "nats.bad-json").Return(s.entry("{"), nil)
 		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "unknown.x").Return(s.entry("{}"), nil)
@@ -406,6 +409,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.Equal("Ready", got[1].Status, "an agent with no state is Ready")
 		s.Equal([]types.ConditionType{"HighCPU"}, got[1].Conditions)
 		s.Equal("v1.2.3-agent", got[1].Version, "an agent's entry has its binary's version")
+		s.Equal(types.FIPSOn, got[1].Crypto.Mode, "an agent's entry has its crypto")
 		s.Equal(1.5, got[1].CPUPercent)
 		s.Equal(int64(2048), got[1].MemBytes)
 		s.Equal(
@@ -417,6 +421,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.Equal("Ready", got[2].Status)
 		s.Equal([]types.ConditionType{"HighCPU"}, got[2].Conditions)
 		s.Equal("v1.2.3-ctl", got[2].Version, "a controller's entry has its binary's version")
+		s.Equal(types.FIPSOff, got[2].Crypto.Mode, "a controller's entry has its crypto")
 	})
 
 	s.Run("when the registry is empty returns no components", func() {

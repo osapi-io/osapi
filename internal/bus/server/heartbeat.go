@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/heartbeat"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
@@ -37,12 +38,15 @@ import (
 var hostnameFn = os.Hostname
 
 // StartHeartbeat writes the registration of the server to the registry KV
-// bucket until ctx ends, with version, the build version of the binary. If the config names no registry bucket, it logs a
+// bucket until ctx ends, with version, the build version of the binary,
+// and crypto, the crypto of the process. If the config names no registry
+// bucket, it logs a
 // warning and returns, because the server runs without a heartbeat.
 func (s *Server) StartHeartbeat(
 	ctx context.Context,
 	version string,
 	conditions config.ProcessConditions,
+	crypto *cryptoreport.Report,
 ) {
 	if s.registryBucket == "" {
 		s.log.Warn("no registry KV bucket, NATS heartbeat skipped")
@@ -71,6 +75,7 @@ func (s *Server) StartHeartbeat(
 			HighCPUPercent:      conditions.HighCPUPercent,
 		},
 		SubComponents: SubComponents(s.cfg),
+		Crypto:        crypto,
 	})
 	go hb.Start(ctx)
 }

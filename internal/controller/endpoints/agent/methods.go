@@ -222,6 +222,7 @@ func buildAgentInfo(
 		ControllerKey:     a.ControllerKey,
 		ControllerKeyNext: a.ControllerKeyNext,
 		NATSCertNext:      a.NATSCertNext,
+		Crypto:            a.Crypto,
 		Hostname:          a.Hostname,
 		RegisteredAt:      a.RegisteredAt,
 		StartedAt:         a.StartedAt,
@@ -247,6 +248,9 @@ func buildAgentInfo(
 	}
 	if a.Uptime > 0 {
 		info.Uptime = formatDuration(a.Uptime)
+	}
+	if a.Crypto != nil {
+		info.FIPS = a.Crypto.Verdict()
 	}
 	if a.OSInfo != nil {
 		info.OSInfo = &OSInfoResponse{

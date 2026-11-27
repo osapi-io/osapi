@@ -32,6 +32,7 @@ func scenarios() []scenario {
 	out = append(out, sealScenarios()...)
 
 	out = append(out, agentServiceScenarios()...)
+	out = append(out, cryptoScenarios()...)
 
 	return append(out, pkiScenarios()...)
 }

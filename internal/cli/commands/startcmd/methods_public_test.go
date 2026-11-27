@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -55,7 +56,13 @@ func (fake) LastHeartbeatTime() time.Time                   { return time.Time{}
 func (fake) SetVersion(string)                              {}
 func (fake) SetLogLevel(*slog.LevelVar)                     {}
 func (fake) SetMeterProvider(*sdkmetric.MeterProvider)      {}
-func (fake) StartHeartbeat(context.Context, string, config.ProcessConditions) {
+
+func (fake) StartHeartbeat(
+	context.Context,
+	string,
+	config.ProcessConditions,
+	*cryptoreport.Report,
+) {
 }
 
 // result is what Start made, and what its cleanup did.

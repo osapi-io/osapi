@@ -57,6 +57,21 @@ export function RegistryHeader({
           {entry.version}
         </p>
       )}
+      {/* FIPS 140-3 mode and the gaps of the process, in the title. */}
+      {entry.fips && <FIPSLine fips={entry.fips} gaps={entry.crypto?.gaps} />}
     </div>
+  );
+}
+
+// FIPSLine is the FIPS verdict of a process: muted when it is approved,
+// pending otherwise, with each gap in its title.
+export function FIPSLine({ fips, gaps }: { fips: string; gaps?: string[] }) {
+  return (
+    <p
+      className={`mt-0.5 truncate text-[10px] ${fips.endsWith("approved") ? "text-text-muted" : "text-status-pending"}`}
+      title={gaps?.join("\n")}
+    >
+      FIPS {fips}
+    </p>
   );
 }

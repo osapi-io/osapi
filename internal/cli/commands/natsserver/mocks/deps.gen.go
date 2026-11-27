@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	config "github.com/osapi-io/osapi/internal/config"
+	cryptoreport "github.com/osapi-io/osapi/internal/cryptoreport"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -54,15 +55,15 @@ func (mr *MockServerMockRecorder) Start() *gomock.Call {
 }
 
 // StartHeartbeat mocks base method.
-func (m *MockServer) StartHeartbeat(ctx context.Context, version string, conditions config.ProcessConditions) {
+func (m *MockServer) StartHeartbeat(ctx context.Context, version string, conditions config.ProcessConditions, crypto *cryptoreport.Report) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "StartHeartbeat", ctx, version, conditions)
+	m.ctrl.Call(m, "StartHeartbeat", ctx, version, conditions, crypto)
 }
 
 // StartHeartbeat indicates an expected call of StartHeartbeat.
-func (mr *MockServerMockRecorder) StartHeartbeat(ctx, version, conditions any) *gomock.Call {
+func (mr *MockServerMockRecorder) StartHeartbeat(ctx, version, conditions, crypto any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartHeartbeat", reflect.TypeOf((*MockServer)(nil).StartHeartbeat), ctx, version, conditions)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartHeartbeat", reflect.TypeOf((*MockServer)(nil).StartHeartbeat), ctx, version, conditions, crypto)
 }
 
 // Stop mocks base method.
