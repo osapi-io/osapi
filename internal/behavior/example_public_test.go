@@ -99,6 +99,13 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 			want:   behavior.Example{NotLive: "no method starts a process"},
 		},
 		{
+			name:   "when Live gives a field the live target's fact",
+			option: behavior.Live("name", behavior.FactInterface),
+			want: behavior.Example{
+				Live: []behavior.LiveField{{Field: "name", Fact: behavior.FactInterface}},
+			},
+		},
+		{
 			name:   "when Links gives a symbolic link",
 			option: behavior.Links("/etc/localtime", "/usr/share/zoneinfo/UTC"),
 			want: behavior.Example{Given: []behavior.Given{

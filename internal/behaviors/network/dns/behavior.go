@@ -80,6 +80,7 @@ var Behavior = behavior.Register(behavior.Define(
 			append(
 				[]behavior.HostOption{
 					behavior.OnPlatform(behavior.PlatformDebian, behavior.PlatformLinux),
+					behavior.Live("interface_name", behavior.FactInterface),
 				},
 				linuxHost...)...,
 		).
@@ -87,6 +88,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Entry{Servers: []string{"10.0.0.2"}, SearchDomains: []string{"svc.local"}},
 			behavior.OnPlatform(behavior.PlatformDebian, behavior.PlatformLinux),
 			behavior.Exists("/etc/resolv.conf", "nameserver 10.0.0.2\nsearch svc.local\n"),
+			behavior.Live("interface_name", behavior.FactInterface),
 		).
 		Example("A Mac", GetInput{InterfaceName: "en0"},
 			Entry{Servers: []string{"1.1.1.1"}, SearchDomains: []string{}},

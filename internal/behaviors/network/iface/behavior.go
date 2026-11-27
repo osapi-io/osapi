@@ -196,8 +196,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Read("get", Get).Key("name").
 		Describe("Get a network interface of the host").
 		Explain("Reads the interface as list does.").
-		Example("An interface with a DHCP address", GetInput{Name: "eth0"}, eth0Entry, linuxHost...).
-		Example("A Mac", GetInput{Name: "en0"}, en0Entry, darwinHost...).
+		Example("An interface with a DHCP address", GetInput{Name: "eth0"}, eth0Entry,
+			append(slices.Clone(linuxHost), behavior.Live("name", behavior.FactInterface))...).
+		Example("A Mac", GetInput{Name: "en0"}, en0Entry,
+			append(slices.Clone(darwinHost), behavior.Live("name", behavior.FactInterface))...).
 		Fails("An interface the host does not have", GetInput{Name: "eth9"}, "not found",
 			linuxHost...).
 		Fails("A name that is not an interface name", GetInput{Name: "eth0;reboot"}, "Name").

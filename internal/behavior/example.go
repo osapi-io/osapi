@@ -56,6 +56,59 @@ type Example struct {
 	// NoReadBack is why no read shows what a write example changed, which
 	// NoReadBack sets.
 	NoReadBack string `json:"no_read_back,omitempty"`
+	// Live are the fields of Input that the integration test fills with a
+	// fact of the live target, which Live sets.
+	Live []LiveField `json:"live,omitempty"`
+}
+
+// Fact is a value of the live target that an example's input can take in
+// the integration test, in place of the value that it names for the fake
+// host.
+type Fact string
+
+const (
+	// FactInterface is the target's primary network interface, such as
+	// enp0s1, as agent get reports it.
+	FactInterface Fact = "interface"
+	// FactAdminGroup is the group of the administrator: root on Linux,
+	// wheel on macOS.
+	FactAdminGroup Fact = "admin_group"
+	// FactUser is a user that each host has: root.
+	FactUser Fact = "user"
+	// FactPID is a process that each host runs: 1, the init process.
+	FactPID Fact = "pid"
+	// FactSSHService is the SSH server's service: ssh on the Debian
+	// family, sshd on the others.
+	FactSSHService Fact = "ssh_service"
+	// FactSSHUnit is FactSSHService's systemd unit, such as ssh.service.
+	FactSSHUnit Fact = "ssh_unit"
+)
+
+// LiveField is a field of an example's input, by its JSON name, and the
+// fact of the live target that the integration test puts in it.
+type LiveField struct {
+	Field string `json:"field"`
+	Fact  Fact   `json:"fact"`
+}
+
+// Live says that on the live target of the integration test, the input's
+// field, by its JSON name, takes fact in place of the value that the
+// example names for the fake host: an eth0 that the target does not have
+// becomes its own interface. The provider tests keep the example's value.
+func Live(
+	field string,
+	fact Fact,
+) HostOption {
+	return exampleLive(LiveField{Field: field, Fact: fact})
+}
+
+// exampleLive is the HostOption of Live.
+type exampleLive LiveField
+
+func (l exampleLive) applyExample(
+	e *Example,
+) {
+	e.Live = append(e.Live, LiveField(l))
 }
 
 // ReadBack is a read of the behavior, or of its parent, that shows what a

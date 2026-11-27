@@ -24,6 +24,8 @@
 package process
 
 import (
+	"slices"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
@@ -109,8 +111,10 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Get one process").
 		Explain("Reads one process by its ID, without the others. A process that the host "+
 			"does not have is not found.").
-		Example("A process of a Linux host", GetInput{PID: 1234}, sleeping, linux...).
-		Example("A process of a Mac", GetInput{PID: 1234}, sleepingMac, ps("-p 1234")...).
+		Example("A process of a Linux host", GetInput{PID: 1234}, sleeping,
+			append(slices.Clone(linux), behavior.Live("pid", behavior.FactPID))...).
+		Example("A process of a Mac", GetInput{PID: 1234}, sleepingMac,
+			append(ps("-p 1234"), behavior.Live("pid", behavior.FactPID))...).
 		Fails("A process that the host does not have", GetInput{PID: 99999}, "not found").
 		Fails("A process ID below 1", GetInput{PID: -1}, "min"),
 	behavior.Action("signal", Signal).Key("pid").

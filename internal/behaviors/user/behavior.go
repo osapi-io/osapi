@@ -124,8 +124,10 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Get one user").
 		Explain("Reads one user from the same list. A user that the host does not have "+
 			"is not found.").
-		Example("A user", GetInput{Name: "alice"}, alice, withHost()...).
-		Fails("A user that the host does not have", GetInput{Name: "nobody"}, "not found").
+		Example("A user", GetInput{Name: "alice"}, alice,
+			append(withHost(), behavior.Live("name", behavior.FactUser))...).
+		Fails("A user that the host does not have", GetInput{Name: "nobody"}, "not found",
+			behavior.NotLive("each real host has nobody")).
 		Fails("A name that is an option", GetInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",
 			GetInput{Name: strings.Repeat("a", 33)}, "max"),

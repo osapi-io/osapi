@@ -621,9 +621,11 @@ that it tests. The tables have `validateFunc` callbacks.
 Each command runs from its definition, so a new command needs no test of its
 own. `BehaviorSmokeSuite` runs each example of each behavior on the platform
 that the example is for. After a write example, it runs each `behavior.Reads` of
-the example and checks that a row of the read answers its want.
-`CommandSmokeSuite` runs each other command, of an endpoint group or a local
-group:
+the example and checks that a row of the read answers its want. It runs each
+example of a read that names an item, such as a service's get, with the target's
+fact in each field that `behavior.Live` marks. It runs each refusal that names
+only an input, which must fail on the live target too. `CommandSmokeSuite` runs
+each other command, of an endpoint group or a local group:
 
 - Each input of a `Fails` must fail. It runs always, because it changes nothing.
   A refusal that the CLI does not catch goes to the controller, not through the

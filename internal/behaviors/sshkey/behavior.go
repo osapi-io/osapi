@@ -100,15 +100,17 @@ var Behavior = behavior.Register(behavior.Define(
 			append(slices.Clone(osapitest), behavior.Exists(
 				authorizedKeys,
 				key1+"\n# a comment\n"+`from="10.0.0.0/8" `+key2+"\n",
-			))...).
-		Example("A user with no keys", ListInput{Name: "osapitest"}, []Key{}, osapitest...).
+			), behavior.Live("name", behavior.FactUser))...).
+		Example("A user with no keys", ListInput{Name: "osapitest"}, []Key{},
+			append(slices.Clone(osapitest), behavior.Live("name", behavior.FactUser))...).
 		Fails("A user that the host does not have", ListInput{Name: "nobody"}, "not found",
 			osapitest...).
 		Example("A host key that gohai cannot read", ListInput{Name: "osapitest"},
 			[]Key{{Type: "ssh-ed25519", Fingerprint: fp1, Comment: "osapitest@example"}},
 			append(slices.Clone(osapitest),
 				behavior.Exists("/etc/ssh/ssh_host_ed25519_key.pub", "ssh-ed25519"),
-				behavior.Exists(authorizedKeys, key1+"\n"))...).
+				behavior.Exists(authorizedKeys, key1+"\n"),
+				behavior.Live("name", behavior.FactUser))...).
 		Fails("A name that is not a user name", ListInput{Name: "Bad;name"}, "Name").
 		Fails("A name over 32 characters", ListInput{Name: strings.Repeat("a", 33)}, "max"),
 	behavior.Write("create", Create).

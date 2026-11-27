@@ -236,11 +236,13 @@ var Behavior = behavior.Register(behavior.Define(
 			"deployed and launchd has not loaded is dead.").
 		Example("A running service", GetInput{Name: "ssh"}, ssh,
 			linuxOnly,
+			behavior.Live("name", behavior.FactSSHService),
 			behavior.Prints(units, sshUnit),
 			behavior.Prints(files, sshFile),
 		).
 		Example("A name with .service", GetInput{Name: "ssh.service"}, ssh,
 			linuxOnly,
+			behavior.Live("name", behavior.FactSSHUnit),
 			behavior.Prints(units, sshUnit),
 			behavior.Prints(files, sshFile),
 		).
