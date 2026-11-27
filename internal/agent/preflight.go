@@ -25,16 +25,21 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	osexec "os/exec"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/exec"
 )
+
+// hostFS is the filesystem of the host, which a test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // PreflightResult holds the outcome of a single preflight check. A failed
 // fatal check stops the agent; any other failed check is a warning, because
@@ -240,7 +245,7 @@ func checkCapabilities(
 // readCapEff reads the CapEff line from /proc/self/status and parses it
 // as a hexadecimal uint64.
 func readCapEff() (uint64, error) {
-	f, err := os.Open(procStatusPath)
+	f, err := hostFS.Open(procStatusPath)
 	if err != nil {
 		return 0, fmt.Errorf("open %s: %w", procStatusPath, err)
 	}

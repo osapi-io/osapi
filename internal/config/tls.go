@@ -28,9 +28,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"os"
 	"strconv"
 
+	"github.com/avfs/avfs"
 	"github.com/osapi-io/osapi/internal/tlspolicy"
 )
 
@@ -48,7 +48,7 @@ func (c ClientTLS) Config() (*tls.Config, error) {
 	out.ServerName = c.ServerName
 	out.InsecureSkipVerify = c.InsecureSkipVerify //nolint:gosec // the setting says so, and Warn logs it
 	if c.CAFile != "" {
-		pem, err := os.ReadFile(c.CAFile)
+		pem, err := avfs.ReadFile(hostFS, c.CAFile)
 		if err != nil {
 			return nil, fmt.Errorf("read ca_file: %w", err)
 		}
@@ -110,7 +110,7 @@ func verifyChain(
 	if len(cs.PeerCertificates) == 0 {
 		return errors.New("the server showed no certificate")
 	}
-	pem, err := os.ReadFile(file)
+	pem, err := avfs.ReadFile(hostFS, file)
 	if err != nil {
 		return fmt.Errorf("read ca_file: %w", err)
 	}

@@ -26,9 +26,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/avfs/avfs"
 
 	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/osapi-io/osapi/internal/natsauth"
@@ -41,6 +42,9 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 )
+
+// hostFS is the filesystem of the host, which a test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // dialFn connects to NATS (injectable for testing).
 var dialFn = bus.Dial
@@ -177,8 +181,8 @@ func selfMadeOperator(
 ) (config.NATSServerAuth, error) {
 	dir := config.NATSAuthDir(cfg.Server.KeyDir)
 	resolver := filepath.Join(dir, "resolver.conf")
-	if _, err := os.Stat(resolver); err != nil {
-		if err := os.MkdirAll(dir, 0o700); err != nil {
+	if _, err := hostFS.Stat(resolver); err != nil {
+		if err := hostFS.MkdirAll(dir, 0o700); err != nil {
 			return config.NATSServerAuth{}, fmt.Errorf("make %s: %w", dir, err)
 		}
 		if _, err := natsauthOperator(
@@ -190,7 +194,7 @@ func selfMadeOperator(
 		); err != nil {
 			return config.NATSServerAuth{}, fmt.Errorf("make the operator: %w", err)
 		}
-	} else if _, err := os.Stat(filepath.Join(dir, natsauth.AccountJWTFile)); err != nil {
+	} else if _, err := hostFS.Stat(filepath.Join(dir, natsauth.AccountJWTFile)); err != nil {
 		// Credentials from before the revocation of an agent's NATS user get
 		// its keys and files. The other keys stay, so no agent joins again.
 		if _, err := natsauthUpdateOperator(

@@ -24,9 +24,11 @@ package bus
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
 
@@ -36,6 +38,9 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 )
+
+// hostFS is the filesystem of the host, which a test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // StorageType maps "memory"/"file" strings to jetstream.StorageType.
 func StorageType(
@@ -200,7 +205,7 @@ func JetStreamKey(
 	if cfg.KeyFile == "" {
 		return "", nil
 	}
-	b, err := os.ReadFile(cfg.KeyFile)
+	b, err := avfs.ReadFile(hostFS, cfg.KeyFile)
 	if err != nil {
 		return "", fmt.Errorf("read the JetStream key: %w", err)
 	}

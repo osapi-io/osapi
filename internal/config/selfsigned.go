@@ -37,6 +37,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/avfs/avfs"
+
 	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/osapi-io/osapi/internal/atomicfile"
 
@@ -112,8 +114,8 @@ func (s ServerTLS) WithCurrentSelfSigned(
 	}
 	certFile, keyFile := SelfSignedFiles(dir, name)
 	if host, _ := SelfSignedHostname(); host != "" && !certNames(certFile, host) {
-		_ = os.Remove(certFile)
-		_ = os.Remove(keyFile)
+		_ = hostFS.Remove(certFile)
+		_ = hostFS.Remove(keyFile)
 	}
 
 	return s.WithSelfSigned(dir, name)
@@ -125,7 +127,7 @@ func certNames(
 	file string,
 	host string,
 ) bool {
-	data, err := os.ReadFile(file)
+	data, err := avfs.ReadFile(hostFS, file)
 	if err != nil {
 		return false
 	}
@@ -190,7 +192,7 @@ func writeSelfSigned(
 	}
 	der, _ := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &key.PublicKey, key)
 	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
-	if err := os.MkdirAll(filepath.Dir(certFile), 0o700); err != nil {
+	if err := hostFS.MkdirAll(filepath.Dir(certFile), 0o700); err != nil {
 		return fmt.Errorf("make the key directory: %w", err)
 	}
 	if err := SelfSignedWrite(
