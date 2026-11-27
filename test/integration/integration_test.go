@@ -34,6 +34,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -269,6 +270,32 @@ func hostEnv() []string {
 // roots.
 func apiClient() *http.Client {
 	return apiClientFor(filepath.Join(tempDir, "pki", "controller", "api.crt"))
+}
+
+// certTransport is a transport that trusts the certificate in file as it
+// is now: a rotation writes a new api.crt, which the running controller
+// serves at once, so a client that the suite keeps, such as the spec
+// proxy's, reads the file again when it changed (osapi-io/osapi#1569).
+type certTransport struct {
+	file string
+
+	mu  sync.Mutex
+	pem []byte
+	t   http.RoundTripper
+}
+
+func (c *certTransport) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
+	pem, _ := os.ReadFile(c.file)
+	c.mu.Lock()
+	if c.t == nil || !bytes.Equal(pem, c.pem) {
+		c.t, c.pem = apiClientFor(c.file).Transport, pem
+	}
+	t := c.t
+	c.mu.Unlock()
+
+	return t.RoundTrip(req)
 }
 
 // apiClientFor is an HTTP client that trusts the certificate in certFile,
