@@ -245,6 +245,17 @@ func (s *MethodsPublicTestSuite) TestCreateNATS() {
 		s.Empty(u.Query().Get("fp"))
 	})
 
+	s.Run("a controller with no namespace: the string has an empty ns", func() {
+		d := natsDeps("nats://hub:4222")
+		d.Config.Controller.NATS.Namespace = ""
+		got, err := join.Create(ctx, d, in)
+		s.Require().NoError(err)
+		u, err := url.Parse(got.Join)
+		s.Require().NoError(err)
+		s.True(u.Query().Has("ns"), "the string says that the namespace is empty: %s", got.Join)
+		s.Empty(u.Query().Get("ns"))
+	})
+
 	s.Run("a tls:// server: the fingerprint of its certificate", func() {
 		defer join.SetNATSFingerprint(func(url string, auth []nats.Option) (string, error) {
 			s.Equal("tls://hub:4222", url)

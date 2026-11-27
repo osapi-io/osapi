@@ -150,9 +150,9 @@ func natsJoin(
 		}
 		auth = append(auth, opt)
 	}
-	if ns := d.Config.Controller.NATS.Namespace; ns != "" {
-		q.Set("ns", ns)
-	}
+	// The string carries the namespace also when it is empty: an agent
+	// takes its own config's only when the string has none (#1563).
+	q.Set("ns", d.Config.Controller.NATS.Namespace)
 	if u.Scheme == "tls" {
 		fp, err := natsFingerprint(raw, auth)
 		if err != nil {

@@ -82,6 +82,9 @@ type natsJoinString struct {
 	password    string
 	fingerprint string
 	namespace   string
+	// hasNamespace is whether the string has ns, also an empty one: a
+	// controller with no namespace gives ns=.
+	hasNamespace bool
 	// creds is, in operator mode, the bootstrap user's credentials.
 	creds []byte
 }
@@ -164,7 +167,7 @@ func parseNATSJoin(
 	j := natsJoinString{
 		scheme: u.Scheme, host: host, port: port,
 		token: q.Get("token"), user: q.Get("user"), password: q.Get("pass"),
-		fingerprint: q.Get("fp"), namespace: q.Get("ns"),
+		fingerprint: q.Get("fp"), namespace: q.Get("ns"), hasNamespace: q.Has("ns"),
 	}
 	creds, credsErr := base64.RawURLEncoding.DecodeString(q.Get("creds"))
 	j.creds = creds
@@ -263,7 +266,7 @@ func joinNow(
 	if err != nil {
 		return savedJoin{}, err
 	}
-	if j.namespace == "" {
+	if !j.hasNamespace {
 		j.namespace = cfg.Agent.NATS.Namespace
 	}
 	id, err := getIdentity(fs, cfg.Agent.Hostname)
