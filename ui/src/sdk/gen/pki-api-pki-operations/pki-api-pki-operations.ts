@@ -327,6 +327,11 @@ export type rotatePKINATSCertResponse403 = {
   status: 403
 }
 
+export type rotatePKINATSCertResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type rotatePKINATSCertResponse500 = {
   data: ErrorResponse
   status: 500
@@ -335,7 +340,7 @@ export type rotatePKINATSCertResponse500 = {
 export type rotatePKINATSCertResponseSuccess = (rotatePKINATSCertResponse200) & {
   headers: Headers;
 };
-export type rotatePKINATSCertResponseError = (rotatePKINATSCertResponse401 | rotatePKINATSCertResponse403 | rotatePKINATSCertResponse500) & {
+export type rotatePKINATSCertResponseError = (rotatePKINATSCertResponse401 | rotatePKINATSCertResponse403 | rotatePKINATSCertResponse409 | rotatePKINATSCertResponse500) & {
   headers: Headers;
 };
 

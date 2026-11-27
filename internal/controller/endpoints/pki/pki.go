@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -169,5 +170,9 @@ var Group = endpoint.Register(endpoint.Define(
 				"each one does. osapi client pki nats get shows the progress.").
 		Example("").
 		Check("client pki nats get", "", "next", "{out.next}").
-		Prints(sampleCertRotationStarted),
+		Prints(sampleCertRotationStarted).
+		Errors(endpoint.Conflict(
+			certrotation.ErrOperatorCert,
+			"The NATS server serves a certificate of the operator's cert_file: replace that file.",
+		)),
 ))

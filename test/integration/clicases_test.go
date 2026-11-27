@@ -183,10 +183,14 @@ var cliPolicies = map[string]cliPolicy{
 		issue: "osapi-io/osapi#1537",
 	},
 	"pki cert rotate": {
-		skip: "the running server keeps serving the old certificate, so each later call of the " +
-			"suite, which trusts the new file, would fail TLS; its unit tests rotate one",
-		issue: "osapi-io/osapi#1533",
+		skip: "a rotation of the API's certificate reaches the running server, but the suite's " +
+			"own clients may hold the old one: its unit tests rotate one until the issue checks them",
+		issue: "osapi-io/osapi#1569",
 	},
+	// A rotation needs a NATS server that serves its self-signed nats.crt, as
+	// the suite's own server does: the lab's serves a cert_file, which a
+	// rotation refuses with 409.
+	"client pki nats rotate":       {host: true, write: true},
 	"controller join token create": {host: true, write: true},
 	"controller join token list":   {host: true},
 	"controller join token revoke": {host: true, write: true},

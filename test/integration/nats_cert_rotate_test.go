@@ -42,6 +42,16 @@ type NATSCertRotationSuite struct {
 
 func (s *NATSCertRotationSuite) SetupSuite() {
 	skipWriteOp(s.T(), "NATS_CERT_ROTATE")
+	stdout, stderr, code := runCLI("client", "pki", "cert", "get", "--name", "nats", "--json")
+	s.Require().Zero(code, "%s%s", stdout, stderr)
+	var c struct {
+		Source string `json:"source"`
+	}
+	s.Require().NoError(parseJSON(stdout, &c), stdout)
+	if c.Source != "self-signed" {
+		s.T().Skipf("the NATS server serves a certificate of the operator's cert_file, " +
+			"which a rotation refuses: the suite's own server rotates its self-signed one")
+	}
 }
 
 // natsCert is the NATS server's certificate and its rotation, as
