@@ -467,6 +467,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindDeps,
+			Name: "Rotation",
+			Does: "Starts and shows the rotation of the controller's key: the *keyrotation.Rotation that startEnrollment makes and runs. A test gives a mockgen mock.",
+			When: "For the pki group, whose key rotation and key rotate methods use it.",
+		},
+		{
+			Kind: KindDeps,
 			Name: "Vaults",
 			Does: "The vaults of controller.secrets.vaults, by name: each vault's spec, and the vault.Vault that gets, puts, deletes and lists its keys. handlers.go gives the vault.Set that the controller opens at startup.",
 			When: "For the secret group. A handler reads the metadata of a key from List, so that no method reads a value that it does not give.",

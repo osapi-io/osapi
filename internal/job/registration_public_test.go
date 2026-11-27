@@ -101,6 +101,29 @@ func (s *RegistrationPublicTestSuite) TestVerifyRegistration() {
 			validateFunc: func(ok bool) { s.False(ok) },
 		},
 		{
+			name: "accepts a registration with the controller keys, signed",
+			build: func() (job.AgentRegistration, ed25519.PublicKey) {
+				reg := s.base()
+				reg.ControllerKey = "SHA256:current"
+				reg.ControllerKeyNext = "SHA256:next"
+
+				return s.signed(reg), s.pub
+			},
+			validateFunc: func(ok bool) { s.True(ok) },
+		},
+		{
+			name: "rejects a next controller key that the agent did not sign",
+			build: func() (job.AgentRegistration, ed25519.PublicKey) {
+				reg := s.base()
+				reg.ControllerKey = "SHA256:current"
+				reg = s.signed(reg)
+				reg.ControllerKeyNext = "SHA256:next"
+
+				return reg, s.pub
+			},
+			validateFunc: func(ok bool) { s.False(ok) },
+		},
+		{
 			name: "rejects a changed hostname",
 			build: func() (job.AgentRegistration, ed25519.PublicKey) {
 				reg := s.signed(s.base())

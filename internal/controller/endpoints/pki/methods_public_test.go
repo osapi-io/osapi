@@ -24,12 +24,14 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	pkiEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/pki"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/pki/mocks"
+	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 )
@@ -130,4 +132,100 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		_, err := pkiEndpoint.Get(context.Background(), s.deps(), pkiEndpoint.GetInput{Name: "api"})
 		s.ErrorContains(err, "nats down")
 	})
+}
+
+func (s *MethodsPublicTestSuite) TestKeyRotation() {
+	started := time.Date(2026, 11, 26, 12, 0, 0, 0, time.UTC)
+	status := keyrotation.Status{
+		Current:   "SHA256:old",
+		Next:      "SHA256:new",
+		StartedAt: started,
+		SwitchBy:  started.Add(time.Hour),
+		Agents:    []keyrotation.Agent{{MachineID: "m-1", Hostname: "web-01", HasNext: true}},
+	}
+	want := pkiEndpoint.Rotation{
+		Current:   "SHA256:old",
+		Next:      "SHA256:new",
+		StartedAt: started,
+		SwitchBy:  started.Add(time.Hour),
+		Agents: []pkiEndpoint.RotationAgent{
+			{Hostname: "web-01", MachineID: "m-1", HasNext: true},
+		},
+	}
+
+	tests := []struct {
+		name    string
+		call    func(d pkiEndpoint.Deps) (pkiEndpoint.Rotation, error)
+		setup   func(r *mocks.MockRotator)
+		want    pkiEndpoint.Rotation
+		wantErr string
+	}{
+		{
+			name: "rotate starts the rotation, and answers it",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.Rotation, error) {
+				return pkiEndpoint.RotateKey(context.Background(), d, pkiEndpoint.RotateInput{})
+			},
+			setup: func(r *mocks.MockRotator) { r.EXPECT().Start(gomock.Any()).Return(status, nil) },
+			want:  want,
+		},
+		{
+			name: "a rotation that does not start",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.Rotation, error) {
+				return pkiEndpoint.RotateKey(context.Background(), d, pkiEndpoint.RotateInput{})
+			},
+			setup: func(r *mocks.MockRotator) {
+				r.EXPECT().Start(gomock.Any()).Return(keyrotation.Status{}, errors.New("nats down"))
+			},
+			wantErr: "nats down",
+		},
+		{
+			name: "rotation shows it",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.Rotation, error) {
+				return pkiEndpoint.KeyRotation(context.Background(), d, pkiEndpoint.RotationInput{})
+			},
+			setup: func(r *mocks.MockRotator) { r.EXPECT().Status(gomock.Any()).Return(status, nil) },
+			want:  want,
+		},
+		{
+			name: "with no rotation, only the current key",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.Rotation, error) {
+				return pkiEndpoint.KeyRotation(context.Background(), d, pkiEndpoint.RotationInput{})
+			},
+			setup: func(r *mocks.MockRotator) {
+				r.EXPECT().
+					Status(gomock.Any()).
+					Return(keyrotation.Status{Current: "SHA256:old"}, nil)
+			},
+			want: pkiEndpoint.Rotation{Current: "SHA256:old"},
+		},
+		{
+			name: "a rotation that does not read",
+			call: func(d pkiEndpoint.Deps) (pkiEndpoint.Rotation, error) {
+				return pkiEndpoint.KeyRotation(context.Background(), d, pkiEndpoint.RotationInput{})
+			},
+			setup: func(r *mocks.MockRotator) {
+				r.EXPECT().
+					Status(gomock.Any()).
+					Return(keyrotation.Status{}, errors.New("nats down"))
+			},
+			wantErr: "nats down",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := mocks.NewMockRotator(gomock.NewController(s.T()))
+			tc.setup(r)
+			d := s.deps()
+			d.Rotation = r
+			got, err := tc.call(d)
+			if tc.wantErr != "" {
+				s.ErrorContains(err, tc.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tc.want, got)
+		})
+	}
 }

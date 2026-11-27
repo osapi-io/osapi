@@ -223,6 +223,8 @@ export * from './packageUpdatesUpdateResponse';
 export * from './permission';
 export * from './pKICert';
 export * from './pKICertList';
+export * from './pKIKeyRotation';
+export * from './pKIKeyRotationAgent';
 export * from './postFileBody';
 export * from './powerRebootRequest';
 export * from './powerRebootResponse';

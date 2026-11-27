@@ -138,6 +138,9 @@ func (a *Agent) writeRegistration(
 	a.handleDrainDetection(ctx, machineID, hostname)
 	a.reloadKeys()
 	a.applyConfig(ctx)
+	if a.pkiManager != nil {
+		a.followControllerKey(ctx)
+	}
 	a.writeSeen(ctx, machineID)
 	a.refreshPrograms()
 
@@ -155,6 +158,7 @@ func (a *Agent) writeRegistration(
 		MissingPrograms: a.missingPrograms,
 		Certificates:    a.certificates(),
 	}
+	reg.ControllerKey, reg.ControllerKeyNext = a.controllerKeys()
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {
 		info.Family = detectFn()

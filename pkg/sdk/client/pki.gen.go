@@ -8,7 +8,8 @@ import (
 	"net/url"
 )
 
-// PkiService calls the API's Pki group: the certificates of the fleet.
+// PkiService calls the API's Pki group: the certificates of the fleet, and the
+// rotation of the controller's key.
 type PkiService struct {
 	client *Client
 }
@@ -65,4 +66,35 @@ func (s *PkiService) Get(
 		q.Set("hostname", params.Hostname)
 	}
 	return send[PKICert](ctx, s.client, http.MethodGet, "/api/pki/cert/"+url.PathEscape(name), q, nil)
+}
+
+// Rotation is the operation GetPKIKeyRotation: show the rotation of the
+// controller's key.
+//
+// Shows the key that the controller signs jobs with, and during a rotation the
+// key that it switches to, when it switches at the latest, and each admitted
+// agent that the switch waits for, with whether it has the next key.
+//
+// It sends GET /api/pki/key, and needs the permission pki:read.
+func (s *PkiService) Rotation(
+	ctx context.Context,
+) (*Response[PKIKeyRotation], error) {
+	return send[PKIKeyRotation](ctx, s.client, http.MethodGet, "/api/pki/key", nil, nil)
+}
+
+// Rotate is the operation RotatePKIKey: rotate the controller's key.
+//
+// Starts the rotation of the controller's key, with no new admission of the
+// agents. The controller makes the next key, and signs a record that gives it
+// to the agents with its current key. Each agent takes it at its next
+// heartbeat. The controller switches to the next key when each admitted agent
+// that reported within controller.pki.rotation_grace_period has it, or when
+// the grace period ends. An agent that does not have it then needs a new
+// admission. A rotation in progress is not started again.
+//
+// It sends POST /api/pki/key, and needs the permission pki:write.
+func (s *PkiService) Rotate(
+	ctx context.Context,
+) (*Response[PKIKeyRotation], error) {
+	return send[PKIKeyRotation](ctx, s.client, http.MethodPost, "/api/pki/key", nil, nil)
 }

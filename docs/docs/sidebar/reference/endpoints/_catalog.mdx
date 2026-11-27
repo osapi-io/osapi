@@ -2,15 +2,15 @@
 
 ### Endpoint groups (10)
 
-| NAME                            | AREA        | METHODS                                                      | DESCRIPTION                                                         |
-| ------------------------------- | ----------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
-| [admission](fleet/admission.md) | fleet       | list, get, admit, reject, revoke, delete                     | The admission of nodes                                              |
-| [agent](fleet/agent.md)         | fleet       | facts, list, get, join, drain, getconfig, setconfig, undrain | Manage the agents in the fleet: discovery, drain and PKI enrollment |
-| [audit](audit/audit.md)         | audit       | list, export, get                                            | Read the audit log                                                  |
-| [catalog](fleet/catalog.md)     | fleet       | get                                                          | The catalog of what the controller serves                           |
-| [file](objectstore/file.md)     | objectstore | list, upload, get, update, delete, stale                     | Manage the files in the Object Store                                |
-| [health](fleet/health.md)       | fleet       | liveness, ready, status                                      | Check the health of the controller                                  |
-| [job](fleet/job.md)             | fleet       | list, deadletters, get, delete, retry                        | Manage the jobs in the queue                                        |
-| [pki](fleet/pki.md)             | fleet       | list, get                                                    | The certificates of the fleet                                       |
-| [secret](secrets/secret.md)     | secrets     | vaults, list, get, reveal, update, delete                    | Manage the secrets in the vaults of the controller                  |
-| [telemetry](fleet/telemetry.md) | fleet       | get                                                          | Read telemetry through the controller                               |
+| NAME                            | AREA        | METHODS                                                      | DESCRIPTION                                                             |
+| ------------------------------- | ----------- | ------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [admission](fleet/admission.md) | fleet       | list, get, admit, reject, revoke, delete                     | The admission of nodes                                                  |
+| [agent](fleet/agent.md)         | fleet       | facts, list, get, join, drain, getconfig, setconfig, undrain | Manage the agents in the fleet: discovery, drain and PKI enrollment     |
+| [audit](audit/audit.md)         | audit       | list, export, get                                            | Read the audit log                                                      |
+| [catalog](fleet/catalog.md)     | fleet       | get                                                          | The catalog of what the controller serves                               |
+| [file](objectstore/file.md)     | objectstore | list, upload, get, update, delete, stale                     | Manage the files in the Object Store                                    |
+| [health](fleet/health.md)       | fleet       | liveness, ready, status                                      | Check the health of the controller                                      |
+| [job](fleet/job.md)             | fleet       | list, deadletters, get, delete, retry                        | Manage the jobs in the queue                                            |
+| [pki](fleet/pki.md)             | fleet       | list, get, rotation, rotate                                  | The certificates of the fleet, and the rotation of the controller's key |
+| [secret](secrets/secret.md)     | secrets     | vaults, list, get, reveal, update, delete                    | Manage the secrets in the vaults of the controller                      |
+| [telemetry](fleet/telemetry.md) | fleet       | get                                                          | Read telemetry through the controller                                   |

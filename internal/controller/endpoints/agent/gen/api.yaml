@@ -79,6 +79,12 @@ components:
           description: The version of the config that the controller holds for the agent. Absent when it holds none.
           example: 3
           type: integer
+        controller_key:
+          description: The fingerprint of the controller key that the agent verifies jobs with.
+          type: string
+        controller_key_next:
+          description: 'The fingerprint of the key that the controller switches to, which the agent has: empty when no rotation of the controller''s key is in progress, or the agent has not taken it yet.'
+          type: string
         cpu_count:
           description: Number of logical CPUs.
           example: 4

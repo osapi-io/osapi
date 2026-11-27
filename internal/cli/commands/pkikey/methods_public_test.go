@@ -442,6 +442,8 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 		wantErr string
 		// agent is a rotation of the agent's keys, which has no values.
 		agent bool
+		// next is a rotation of the controller's key, which has a next key.
+		next bool
 	}{
 		{
 			name: "a vault key, and each value again with it",
@@ -495,9 +497,48 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 			wantErr: "jetstream: osapi does not rotate this key: a new key makes each stream",
 		},
 		{
-			name:    "the controller's key is refused",
+			name: "the controller's key, which starts a rotation",
+			in:   "controller",
+			setup: func(d *pkikey.Deps) {
+				d.Config.NATS.State.Bucket = "agent-state"
+				s.Require().NoError(pki.New(s.fs, "/ctl", "controller").LoadOrGenerate())
+				s.kv.EXPECT().KVGet(gomock.Any(), "agent-state", pki.ControllerKeyStateKey).
+					Return(nil, jetstream.ErrKeyNotFound)
+				s.kv.EXPECT().
+					KVCreate(gomock.Any(), "agent-state", pki.ControllerKeyStateKey, gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			next: true,
+		},
+		{
+			name:    "the controller's key that is not on this host",
 			in:      "controller",
-			wantErr: "controller: osapi does not rotate this key: each admitted agent verifies",
+			wantErr: "controller: osapi rotates the controller's key on the controller's host",
+		},
+		{
+			name: "the controller's key with NATS that does not answer",
+			in:   "controller",
+			setup: func(d *pkikey.Deps) {
+				s.Require().NoError(pki.New(s.fs, "/ctl", "controller").LoadOrGenerate())
+				d.Dial = func(context.Context) (natsvault.KV, func(), error) {
+					return nil, nil, errors.New("no route")
+				}
+			},
+			wantErr: "no route",
+		},
+		{
+			name: "the controller's key whose record does not write",
+			in:   "controller",
+			setup: func(d *pkikey.Deps) {
+				d.Config.NATS.State.Bucket = "agent-state"
+				s.Require().NoError(pki.New(s.fs, "/ctl", "controller").LoadOrGenerate())
+				s.kv.EXPECT().KVGet(gomock.Any(), "agent-state", pki.ControllerKeyStateKey).
+					Return(nil, jetstream.ErrKeyNotFound)
+				s.kv.EXPECT().
+					KVCreate(gomock.Any(), "agent-state", pki.ControllerKeyStateKey, gomock.Any()).
+					Return(uint64(0), errors.New("timeout"))
+			},
+			wantErr: "write the controller key record: timeout",
 		},
 		{
 			name: "the agent's keys, with the controller",
@@ -562,10 +603,17 @@ func (s *MethodsPublicTestSuite) TestRotate() {
 			}
 			s.Require().NoError(err)
 			s.Equal(0, got.Values)
+			s.Equal(tc.next, got.Next != "")
 			s.Require().Len(s.audits, 1)
 			s.Equal("key.rotate", s.audits[0].Action)
 			if tc.agent {
 				s.Equal("agent", got.Key.Name)
+				s.Equal(pkikey.StateOK, got.Key.State)
+
+				return
+			}
+			if tc.next {
+				s.Equal("controller", got.Key.Name)
 				s.Equal(pkikey.StateOK, got.Key.State)
 
 				return

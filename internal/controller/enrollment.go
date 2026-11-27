@@ -42,15 +42,27 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
+// defaultControllerKeyGrace is the overlap of a rotation of the
+// controller's key when controller.pki.rotation_grace_period is empty.
+const defaultControllerKeyGrace = 24 * time.Hour
+
+// enrollment is what startEnrollment started: the watcher, which the agent
+// and admission handlers list, accept and reject agents with, and the
+// rotation of the controller's key, which the pki handlers start and show.
+type enrollment struct {
+	watcher  *admission.Watcher
+	rotation *keyrotation.Rotation
+}
+
 // startEnrollment loads or makes the controller keypair, and starts the
-// enrollment watcher. It returns the watcher, so that the agent handler can
-// list, accept and reject agents. If the enrollment bucket does not open,
+// enrollment watcher and the rotation of the controller's key. If the enrollment bucket does not open,
 // the controller does not start: PKI is always on, and an agent that is not
 // admitted takes no job.
 func startEnrollment(
@@ -60,15 +72,15 @@ func startEnrollment(
 	namespace string,
 	cfg config.Config,
 	auditLog audit.Writer,
-) (*admission.Watcher, error) {
+) (enrollment, error) {
 	enrollmentCfg := bus.EnrollmentKV(namespace, cfg.NATS.Enrollment)
 	if err := conn.NATS.KVCreateOrUpdate(ctx, enrollmentCfg); err != nil {
-		return nil, fmt.Errorf("create the enrollment KV bucket: %w", err)
+		return enrollment{}, fmt.Errorf("create the enrollment KV bucket: %w", err)
 	}
 
 	keys := pki.New(osfs.New(), cfg.Controller.PKI.KeyDir, "controller")
 	if err := keys.LoadOrGenerate(); err != nil {
-		return nil, fmt.Errorf("load or generate controller keypair: %w", err)
+		return enrollment{}, fmt.Errorf("load or generate controller keypair: %w", err)
 	}
 	// The controller verifies the job records that it signed with its own
 	// key: a reader refuses a record that it cannot verify.
@@ -109,8 +121,14 @@ func startEnrollment(
 	// A rotation replaces the key of an agent. The replaced key stays
 	// acceptable for the configured window, so that a message signed just
 	// before the rotation is not rejected for arriving late.
-	if grace, err := time.ParseDuration(cfg.Controller.PKI.RotationGracePeriod); err == nil {
+	grace, err := time.ParseDuration(cfg.Controller.PKI.RotationGracePeriod)
+	if err == nil {
 		watcher.SetRotationGracePeriod(grace)
+	}
+	// With no grace period, a rotation of the controller's key would switch
+	// at once, and cut off each agent that does not have the next key yet.
+	if grace <= 0 {
+		grace = defaultControllerKeyGrace
 	}
 
 	// A join takes a use of a token in the same bucket that join token
@@ -130,7 +148,7 @@ func startEnrollment(
 	}
 	agentUser, mint, err := joinAgentUser(cfg, namespace)
 	if err != nil {
-		return nil, fmt.Errorf("join over NATS: %w", err)
+		return enrollment{}, fmt.Errorf("join over NATS: %w", err)
 	}
 	background(ctx, log, "join over NATS", func(ctx context.Context) error {
 		return watcher.ServeJoin(ctx, conn.NATS.NC.QueueSubscribe, agentUser)
@@ -140,7 +158,7 @@ func startEnrollment(
 	if cfg.Controller.Join.Callout.IssuerKeyFile != "" {
 		svc, err := calloutService(cfg, namespace, watcher, tokens, log)
 		if err != nil {
-			return nil, fmt.Errorf("auth callout: %w", err)
+			return enrollment{}, fmt.Errorf("auth callout: %w", err)
 		}
 		background(ctx, log, "auth callout", func(ctx context.Context) error {
 			c, err := calloutConnect(log, cfg)
@@ -173,7 +191,20 @@ func startEnrollment(
 		})
 	}
 
-	return watcher, nil
+	// The controller's own key rotates with no new admission of the agents:
+	// the grace period is the overlap, in which both keys verify.
+	rotation := keyrotation.New(keyrotation.Config{
+		KV:       conn.NATS,
+		Bucket:   bus.StateKV(namespace, cfg.NATS.State).Bucket,
+		Keys:     keys,
+		Admitted: watcher,
+		Seen:     conn.Jobs,
+		Grace:    grace,
+		Logger:   log,
+	})
+	background(ctx, log, "controller key rotation", rotation.Run)
+
+	return enrollment{watcher: watcher, rotation: rotation}, nil
 }
 
 // errNoUserKey is a join in operator mode from an agent that sent no NATS

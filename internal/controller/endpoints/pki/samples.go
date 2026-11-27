@@ -45,4 +45,23 @@ var (
 		},
 		Total: 2,
 	}
+	sampleStarted         = time.Date(2026, 11, 26, 12, 0, 0, 0, time.UTC)
+	sampleRotationStarted = Rotation{
+		Current:   "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
+		Next:      "SHA256:9c2e41b07d3a8f6e5c4b3a2918f7e6d5c4b3a29180f7e6d5c4b3a2918f7e6d5c",
+		StartedAt: sampleStarted,
+		SwitchBy:  sampleStarted.Add(24 * time.Hour),
+		Agents: []RotationAgent{
+			{Hostname: "web-01", MachineID: "d530664edc1c431eb5ef1e9dfd6617a5"},
+		},
+	}
+	sampleRotation = Rotation{
+		Current:   sampleRotationStarted.Current,
+		Next:      sampleRotationStarted.Next,
+		StartedAt: sampleStarted,
+		SwitchBy:  sampleRotationStarted.SwitchBy,
+		Agents: []RotationAgent{
+			{Hostname: "web-01", MachineID: "d530664edc1c431eb5ef1e9dfd6617a5", HasNext: true},
+		},
+	}
 )

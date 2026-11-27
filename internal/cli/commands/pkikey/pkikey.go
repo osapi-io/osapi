@@ -74,7 +74,7 @@ var Group = command.Register(command.Define(
 		Fails("a name of more than 64 characters", CreateInput{Name: strings.Repeat("a", 65)}).
 		Handle(Create),
 	command.Method[RotateInput, RotateOutput]("rotate").
-		Short("Rotate the agent's keys or the key of a vault").
+		Short("Rotate the agent's keys, the controller's key or the key of a vault").
 		Long("For the agent, it makes two new keys beside the old ones and sends them to\n"+
 			"the controller over NATS, as the agent connects, signed with the old\n"+
 			"signing key and the new one. The controller takes them in place of the\n"+
@@ -88,9 +88,14 @@ var Group = command.Register(command.Define(
 			"NATS as the controller does. A running controller reads the new key at its\n"+
 			"next call. A rotation that stops leaves the old key in the file, and a\n"+
 			"second rotation completes it.\n\n"+
-			"It refuses each other key, with what to do instead: a new JetStream key\n"+
-			"makes the store unreadable, and a new controller key needs each agent\n"+
-			"admitted again.").
+			"For the controller, on the controller's host, it makes the next key beside\n"+
+			"the current one, and writes a record that the current key signs to the\n"+
+			"state bucket. Each agent takes the next key at its next heartbeat. The\n"+
+			"controller switches to it when each admitted agent has it, or when\n"+
+			"controller.pki.rotation_grace_period ends, with no new admission.\n"+
+			"osapi client pki key rotate does the same from any host, through the API.\n\n"+
+			"It refuses the JetStream key, with what to do instead: a new JetStream key\n"+
+			"makes the store unreadable.").
 		Example("--name vault:default").
 		Prints(sampleRotate).
 		Check("pki key get", "--name vault:default",

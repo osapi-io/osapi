@@ -206,11 +206,16 @@ func (m *Manager) Sign(
 func (m *Manager) SetControllerPublicKey(
 	key ed25519.PublicKey,
 ) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.controllerPubKey = key
 }
 
 // ControllerPublicKey returns the stored controller public key.
 func (m *Manager) ControllerPublicKey() ed25519.PublicKey {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.controllerPubKey
 }
 

@@ -58,3 +58,27 @@ type Cert struct {
 	Signature   string    `                              json:"signature,omitempty"     doc:"The algorithm that signed the certificate, such as ECDSA-SHA256."                                                      table:"-"`
 	FIPS        *bool     `                              json:"fips_approved,omitempty" doc:"Whether FIPS 186-5 and SP 800-131A approve the key and the signature algorithms."                                                label:"FIPS approved"`
 }
+
+// RotationInput is the input of key get: it has no field.
+type RotationInput struct{}
+
+// RotateInput is the input of key rotate: it has no field.
+type RotateInput struct{}
+
+// Rotation is the controller's key and its rotation.
+type Rotation struct {
+	_         struct{}        `schema:"PKIKeyRotation" title:"Controller key"`
+	Current   string          `                                               json:"current"             doc:"The fingerprint of the key that the controller signs jobs with."                                                                                       example:"SHA256:1f53dea6"`
+	Next      string          `                                               json:"next,omitempty"      doc:"The fingerprint of the key that the controller switches to. Empty when no rotation is in progress."                                                    example:"SHA256:9c2e41b0"`
+	StartedAt time.Time       `                                               json:"started_at,omitzero" doc:"When the rotation started."`
+	SwitchBy  time.Time       `                                               json:"switch_by,omitzero"  doc:"When the controller switches at the latest: the start and controller.pki.rotation_grace_period. It switches before, once each agent has the next key."                           label:"Switch by"`
+	Agents    []RotationAgent `                                               json:"agents,omitempty"    doc:"The admitted agents that the switch waits for: each one that reported within the grace period."`
+}
+
+// RotationAgent is one agent that the switch of a rotation waits for.
+type RotationAgent struct {
+	_         struct{} `schema:"PKIKeyRotationAgent" title:"Agent"`
+	Hostname  string   `                                           json:"hostname"   doc:"The hostname of the agent."                          example:"web-01"`
+	MachineID string   `                                           json:"machine_id" doc:"The machine ID of the agent."                        example:"d530664edc1c431eb5ef1e9dfd6617a5"`
+	HasNext   bool     `                                           json:"has_next"   doc:"Whether the agent reports that it has the next key."                                            label:"Has next"`
+}

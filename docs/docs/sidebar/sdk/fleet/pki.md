@@ -6,14 +6,17 @@ title: Pki
 
 # Pki
 
-`c.Pki` calls the API's Pki group. The certificates of the fleet.
+`c.Pki` calls the API's Pki group. The certificates of the fleet, and the
+rotation of the controller's key.
 
 ## Methods
 
-| Method                           | Returns                  | Permission | Description                         |
-| -------------------------------- | ------------------------ | ---------- | ----------------------------------- |
-| [`List(ctx, params)`](#list)     | `*Response[PKICertList]` | `pki:read` | List the certificates of the fleet. |
-| [`Get(ctx, name, params)`](#get) | `*Response[PKICert]`     | `pki:read` | Get one certificate of a host.      |
+| Method                           | Returns                     | Permission  | Description                                |
+| -------------------------------- | --------------------------- | ----------- | ------------------------------------------ |
+| [`List(ctx, params)`](#list)     | `*Response[PKICertList]`    | `pki:read`  | List the certificates of the fleet.        |
+| [`Get(ctx, name, params)`](#get) | `*Response[PKICert]`        | `pki:read`  | Get one certificate of a host.             |
+| [`Rotation(ctx)`](#rotation)     | `*Response[PKIKeyRotation]` | `pki:read`  | Show the rotation of the controller's key. |
+| [`Rotate(ctx)`](#rotate)         | `*Response[PKIKeyRotation]` | `pki:write` | Rotate the controller's key.               |
 
 ### List
 
@@ -80,6 +83,58 @@ Get one certificate of a host, with --name agent-metrics --hostname web-01,
 resp, err := c.Pki.Get(ctx, "agent-metrics", client.PkiGetParams{Hostname: "web-01"})
 ```
 
+### Rotation
+
+```go
+func (s *PkiService) Rotation(
+	ctx context.Context,
+) (*Response[PKIKeyRotation], error)
+```
+
+Show the rotation of the controller's key.
+
+Shows the key that the controller signs jobs with, and during a rotation the key
+that it switches to, when it switches at the latest, and each admitted agent
+that the switch waits for, with whether it has the next key.
+
+It sends `GET /api/pki/key`, and needs the permission `pki:read`.
+
+The examples of the method's definition:
+
+Show the rotation of the controller's key, `go run pki.go rotation`:
+
+```go
+resp, err := c.Pki.Rotation(ctx)
+```
+
+### Rotate
+
+```go
+func (s *PkiService) Rotate(
+	ctx context.Context,
+) (*Response[PKIKeyRotation], error)
+```
+
+Rotate the controller's key.
+
+Starts the rotation of the controller's key, with no new admission of the
+agents. The controller makes the next key, and signs a record that gives it to
+the agents with its current key. Each agent takes it at its next heartbeat. The
+controller switches to the next key when each admitted agent that reported
+within controller.pki.rotation_grace_period has it, or when the grace period
+ends. An agent that does not have it then needs a new admission. A rotation in
+progress is not started again.
+
+It sends `POST /api/pki/key`, and needs the permission `pki:write`.
+
+The examples of the method's definition:
+
+Rotate the controller's key, `go run pki.go rotate`:
+
+```go
+resp, err := c.Pki.Rotate(ctx)
+```
+
 ## Types
 
 The fields of each type are the properties of its schema in the API's spec.
@@ -108,6 +163,24 @@ The fields of each type are the properties of its schema in the API's spec.
 | ------------ | ----------- | --------------------------- |
 | `Items`      | `[]PKICert` |                             |
 | `TotalItems` | `int`       | The number of certificates. |
+
+### PKIKeyRotation
+
+| Field       | Type                    | Description                                                                                                                                           |
+| ----------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Agents`    | `[]PKIKeyRotationAgent` | The admitted agents that the switch waits for: each one that reported within the grace period.                                                        |
+| `Current`   | `string`                | The fingerprint of the key that the controller signs jobs with.                                                                                       |
+| `Next`      | `string`                | The fingerprint of the key that the controller switches to. Empty when no rotation is in progress.                                                    |
+| `StartedAt` | `time.Time`             | When the rotation started.                                                                                                                            |
+| `SwitchBy`  | `time.Time`             | When the controller switches at the latest: the start and controller.pki.rotation_grace_period. It switches before, once each agent has the next key. |
+
+### PKIKeyRotationAgent
+
+| Field       | Type     | Description                                         |
+| ----------- | -------- | --------------------------------------------------- |
+| `HasNext`   | `bool`   | Whether the agent reports that it has the next key. |
+| `Hostname`  | `string` | The hostname of the agent.                          |
+| `MachineID` | `string` | The machine ID of the agent.                        |
 
 ## Example
 

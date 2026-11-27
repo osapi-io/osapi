@@ -583,6 +583,14 @@ the controller's own certificates. A test gives a fixed name.
 Use: For the pki group, whose get takes a certificate of the controller's host
 when the hostname is empty.
 
+### `Rotation`
+
+Starts and shows the rotation of the controller's key: the
+\*keyrotation.Rotation that startEnrollment makes and runs. A test gives a
+mockgen mock.
+
+Use: For the pki group, whose key rotation and key rotate methods use it.
+
 ### `Vaults`
 
 The vaults of controller.secrets.vaults, by name: each vault's spec, and the
@@ -1053,7 +1061,7 @@ package:read, package:write, power:execute, process:read, process:execute,
 schedule:read, schedule:write, service:read, service:write, service:execute,
 status:read, sysctl:read, sysctl:write, timezone:read, timezone:write,
 uptime:read, user:read, user:write, admission:read, admission:write, agent:read,
-agent:write, audit:read, catalog:read, job:read, job:write, pki:read,
+agent:write, audit:read, catalog:read, job:read, job:write, pki:read, pki:write,
 secret:read, secret:write.
 
 Use: A field that takes one of these values: types.Permission with

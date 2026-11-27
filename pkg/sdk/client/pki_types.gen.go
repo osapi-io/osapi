@@ -56,3 +56,37 @@ type PKICertList struct {
 	// The number of certificates.
 	TotalItems int `json:"total_items"`
 }
+
+// PKIKeyRotation is the PKIKeyRotation of the spec.
+type PKIKeyRotation struct {
+	// The admitted agents that the switch waits for: each one that reported within
+	// the grace period.
+	Agents []PKIKeyRotationAgent `json:"agents,omitempty"`
+
+	// The fingerprint of the key that the controller signs jobs with.
+	Current string `json:"current"`
+
+	// The fingerprint of the key that the controller switches to. Empty when no
+	// rotation is in progress.
+	Next string `json:"next,omitempty"`
+
+	// When the rotation started.
+	StartedAt time.Time `json:"started_at,omitzero"`
+
+	// When the controller switches at the latest: the start and
+	// controller.pki.rotation_grace_period. It switches before, once each agent
+	// has the next key.
+	SwitchBy time.Time `json:"switch_by,omitzero"`
+}
+
+// PKIKeyRotationAgent is the PKIKeyRotationAgent of the spec.
+type PKIKeyRotationAgent struct {
+	// Whether the agent reports that it has the next key.
+	HasNext bool `json:"has_next"`
+
+	// The hostname of the agent.
+	Hostname string `json:"hostname"`
+
+	// The machine ID of the agent.
+	MachineID string `json:"machine_id"`
+}

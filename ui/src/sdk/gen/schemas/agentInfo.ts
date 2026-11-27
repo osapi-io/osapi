@@ -26,6 +26,10 @@ export interface AgentInfo {
   config_version?: number;
   /** The version of the config that the controller holds for the agent. Absent when it holds none. */
   config_wanted?: number;
+  /** The fingerprint of the controller key that the agent verifies jobs with. */
+  controller_key?: string;
+  /** The fingerprint of the key that the controller switches to, which the agent has: empty when no rotation of the controller's key is in progress, or the agent has not taken it yet. */
+  controller_key_next?: string;
   /** Number of logical CPUs. */
   cpu_count?: number;
   /** Extended facts from additional providers. */
