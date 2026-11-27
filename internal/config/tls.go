@@ -30,6 +30,8 @@ import (
 	"net"
 	"os"
 	"strconv"
+
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 )
 
 // errNoCertificate is the error of a ca_file with no PEM certificate.
@@ -42,11 +44,9 @@ var errNoServerCertificate = errors.New("tls.enabled needs cert_file and key_fil
 // Config is the TLS config of a connection with c: the system's roots and
 // ca_file, the client certificate, the server name, and InsecureSkipVerify.
 func (c ClientTLS) Config() (*tls.Config, error) {
-	out := &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		ServerName:         c.ServerName,
-		InsecureSkipVerify: c.InsecureSkipVerify, //nolint:gosec // the setting says so, and Warn logs it
-	}
+	out := tlspolicy.Client()
+	out.ServerName = c.ServerName
+	out.InsecureSkipVerify = c.InsecureSkipVerify //nolint:gosec // the setting says so, and Warn logs it
 	if c.CAFile != "" {
 		pem, err := os.ReadFile(c.CAFile)
 		if err != nil {
@@ -141,23 +141,23 @@ func SelfClient(
 		return nil
 	}
 
-	return &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		// The check is VerifyConnection's: the server's own certificate.
-		InsecureSkipVerify: true,
-		VerifyConnection: func(cs tls.ConnectionState) error {
-			own, err := server.GetCertificate(&tls.ClientHelloInfo{})
-			if err != nil {
-				return err
-			}
-			if len(cs.PeerCertificates) == 0 ||
-				!bytes.Equal(cs.PeerCertificates[0].Raw, own.Certificate[0]) {
-				return errors.New("the server showed a certificate that is not its own")
-			}
+	out := tlspolicy.Client()
+	// The check is VerifyConnection's: the server's own certificate.
+	out.InsecureSkipVerify = true
+	out.VerifyConnection = func(cs tls.ConnectionState) error {
+		own, err := server.GetCertificate(&tls.ClientHelloInfo{})
+		if err != nil {
+			return err
+		}
+		if len(cs.PeerCertificates) == 0 ||
+			!bytes.Equal(cs.PeerCertificates[0].Raw, own.Certificate[0]) {
+			return errors.New("the server showed a certificate that is not its own")
+		}
 
-			return nil
-		},
+		return nil
 	}
+
+	return out
 }
 
 // Warn logs a warning when c accepts any certificate, with the key of its
@@ -196,16 +196,16 @@ func (s ServerTLS) Config() (*tls.Config, error) {
 	return out, nil
 }
 
-// Negotiation is what a server with s negotiates, with no certificate: its
-// lowest TLS version, and crypto/tls's suites and groups for the process's
-// FIPS 140-3 mode. Nil when s is not enabled. Config serves it, and the
+// Negotiation is what a server with s negotiates, with no certificate:
+// tlspolicy's TLS 1.2 or later, and only the suites and groups that FIPS
+// 140-3 approves. Nil when s is not enabled. Config serves it, and the
 // crypto report of the process reads it.
 func (s ServerTLS) Negotiation() *tls.Config {
 	if !s.Enabled {
 		return nil
 	}
 
-	return &tls.Config{MinVersion: tls.VersionTLS12}
+	return tlspolicy.Server()
 }
 
 // Address is where m listens, with https:// when it serves TLS, as health

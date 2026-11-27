@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 
 	"github.com/osapi-io/osapi/internal/audit"
 
@@ -91,20 +92,7 @@ var natsFingerprint = func(
 	opts := []nats.Option{
 		nats.Name("osapi-join-token"),
 		nats.Timeout(10 * time.Second),
-		nats.Secure(&tls.Config{
-			MinVersion: tls.VersionTLS12,
-			// It only reads the certificate, to put its fingerprint in the
-			// join string; it sends nothing.
-			InsecureSkipVerify: true, //nolint:gosec // reads the certificate only
-			VerifyConnection: func(cs tls.ConnectionState) error {
-				if len(cs.PeerCertificates) > 0 {
-					sum := sha256.Sum256(cs.PeerCertificates[0].Raw)
-					fp = "SHA256:" + hex.EncodeToString(sum[:])
-				}
-
-				return nil
-			},
-		}),
+		nats.Secure(fingerprintTLS(&fp)),
 	}
 	nc, err := nats.Connect(url, append(opts, auth...)...)
 	if err != nil {
@@ -327,4 +315,25 @@ func calloutAuth(
 	}
 
 	return nats.UserInfo(a.Username, a.Password), nil
+}
+
+// fingerprintTLS is the TLS config of the connection that reads the NATS
+// server's certificate, with tlspolicy's suites and groups: it puts the
+// fingerprint of the certificate in fp, to put it in the join string, and it
+// sends nothing.
+func fingerprintTLS(
+	fp *string,
+) *tls.Config {
+	c := tlspolicy.Client()
+	c.InsecureSkipVerify = true //nolint:gosec // reads the certificate only
+	c.VerifyConnection = func(cs tls.ConnectionState) error {
+		if len(cs.PeerCertificates) > 0 {
+			sum := sha256.Sum256(cs.PeerCertificates[0].Raw)
+			*fp = "SHA256:" + hex.EncodeToString(sum[:])
+		}
+
+		return nil
+	}
+
+	return c
 }

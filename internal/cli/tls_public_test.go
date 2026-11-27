@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 
 	"github.com/stretchr/testify/suite"
 
@@ -70,11 +71,14 @@ func (s *TLSPublicTestSuite) TestTLSTransport() {
 		validateFunc func(http.RoundTripper, error)
 	}{
 		{
-			name:   "when there is no ca_file, it is the default transport",
+			name:   "when there is no ca_file, it offers only approved suites and groups",
 			caFile: func() string { return "" },
 			validateFunc: func(rt http.RoundTripper, err error) {
 				s.Require().NoError(err)
-				s.Equal(http.DefaultTransport, rt)
+				t, ok := rt.(*http.Transport)
+				s.Require().True(ok)
+				s.True(tlspolicy.Approved(t.TLSClientConfig, false))
+				s.Nil(t.TLSClientConfig.RootCAs, "it trusts the system roots")
 			},
 		},
 		{

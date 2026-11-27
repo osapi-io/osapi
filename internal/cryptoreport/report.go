@@ -25,8 +25,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"runtime"
-	"slices"
 
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -95,9 +95,10 @@ func New(
 	return r
 }
 
-// listener is l as m negotiates it. With no configured suites or groups,
-// crypto/tls picks them: in FIPS 140-3 mode only approved ones, else ones
-// such as X25519 and ChaCha20-Poly1305 too.
+// listener is what the server l negotiates, in FIPS 140-3 mode m. With
+// tlspolicy's suites, groups and TLS 1.3 guard it is approved in each mode.
+// With crypto/tls's defaults it is approved only in FIPS 140-3 mode, which
+// restricts them: outside it they include X25519 and ChaCha20-Poly1305.
 func listener(
 	l TLS,
 	m types.FIPSMode,
@@ -105,31 +106,47 @@ func listener(
 	if l.Config == nil {
 		return Listener{Name: l.Name}
 	}
-	out := Listener{Name: l.Name, TLS: true, MinVersion: tls.VersionName(minVersion(l.Config))}
-	suites := l.Config.CipherSuites
-	if len(suites) == 0 {
-		for _, s := range tls.CipherSuites() {
-			suites = append(suites, s.ID)
-		}
+	pinned := tlspolicy.Approved(l.Config, true)
+	out := Listener{
+		Name: l.Name, TLS: true, MinVersion: tls.VersionName(minVersion(l.Config)),
+		Approved: m != types.FIPSOff || pinned,
 	}
-	approved := true
-	for _, id := range suites {
+	for _, id := range suites(l.Config, pinned) {
 		out.Suites = append(out.Suites, tls.CipherSuiteName(id))
-		approved = approved && slices.Contains(approvedSuites, id)
 	}
-	// crypto/tls does not export the groups that it offers by default, and
-	// outside FIPS 140-3 mode they include X25519.
 	if len(l.Config.CurvePreferences) == 0 {
+		// crypto/tls does not export the groups that it offers by default.
 		out.Groups = []string{defaultGroups}
-		approved = false
 	}
 	for _, g := range l.Config.CurvePreferences {
 		out.Groups = append(out.Groups, g.String())
-		approved = approved && slices.Contains(approvedGroups, g)
 	}
-	out.Approved = m != types.FIPSOff || approved
 
 	return out
+}
+
+// suites are the suites that a server with c can pick, for TLS 1.3 and TLS
+// 1.2. crypto/tls takes no list for TLS 1.3: with tlspolicy's guard, a client
+// gets only its AES-GCM suites, and with no guard, ChaCha20-Poly1305 too.
+func suites(
+	c *tls.Config,
+	pinned bool,
+) []uint16 {
+	if len(c.CipherSuites) == 0 {
+		all := tls.CipherSuites()
+		out := make([]uint16, 0, len(all))
+		for _, s := range all {
+			out = append(out, s.ID)
+		}
+
+		return out
+	}
+	out := []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384}
+	if !pinned {
+		out = append(out, tls.TLS_CHACHA20_POLY1305_SHA256)
+	}
+
+	return append(out, c.CipherSuites...)
 }
 
 // minVersion is the lowest version that c accepts: crypto/tls's TLS 1.2
@@ -142,19 +159,6 @@ func minVersion(
 	}
 
 	return c.MinVersion
-}
-
-// approvedSuites are the suites of crypto/tls that SP 800-52 approves: the
-// AES-GCM ones.
-var approvedSuites = []uint16{
-	tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384,
-	tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-}
-
-// approvedGroups are the key exchange groups that SP 800-56A approves.
-var approvedGroups = []tls.CurveID{
-	tls.CurveP256, tls.CurveP384, tls.CurveP521, tls.SecP256r1MLKEM768, tls.SecP384r1MLKEM1024,
 }
 
 // defaultGroups is the name of the groups that crypto/tls offers when a
