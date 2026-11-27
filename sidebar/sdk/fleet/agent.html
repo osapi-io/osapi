@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/agent"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent | OSAPI"><meta data-rh="true" name="description" content="c.Agent calls the API&#x27;s Agent group. Operations related to agent discovery and"><meta data-rh="true" property="og:description" content="c.Agent calls the API&#x27;s Agent group. Operations related to agent discovery and"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/agent"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/agent" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/fleet/agent" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SDK","item":"https://osapi-io.github.io/osapi/sidebar/sdk/"},{"@type":"ListItem","position":2,"name":"Agent","item":"https://osapi-io.github.io/osapi/sidebar/sdk/fleet/agent"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.75a27548.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.81a907f5.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -372,7 +372,17 @@ token: the join token authorizes it.</p>
 
 
 
-<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Architecture</code></td><td><code>string</code></td><td>CPU architecture.</td></tr><tr><td><code>Conditions</code></td><td><code>[]NodeCondition</code></td><td>The conditions that hold now, such as HighLoad. A condition that does not hold is not in the list.</td></tr><tr><td><code>ConfigBehind</code></td><td><code>bool</code></td><td>The agent has not applied the newest config that the controller holds for it yet: it applies it at its next heartbeat, or it cannot reach the controller&#x27;s config.</td></tr><tr><td><code>ConfigVersion</code></td><td><code>int</code></td><td>The version of the controller&#x27;s config of the agent that the agent applied. Absent when it applied none.</td></tr><tr><td><code>ConfigWanted</code></td><td><code>int</code></td><td>The version of the config that the controller holds for the agent. Absent when it holds none.</td></tr><tr><td><code>ControllerKey</code></td><td><code>string</code></td><td>The fingerprint of the controller key that the agent verifies jobs with.</td></tr><tr><td><code>ControllerKeyNext</code></td><td><code>string</code></td><td>The fingerprint of the key that the controller switches to, which the agent has: empty when no rotation of the controller&#x27;s key is in progress, or the agent has not taken it yet.</td></tr><tr><td><code>CPUCount</code></td><td><code>int</code></td><td>Number of logical CPUs.</td></tr><tr><td><code>Facts</code></td><td><code>map[string]any</code></td><td>Extended facts from additional providers.</td></tr><tr><td><code>Fingerprint</code></td><td><code>string</code></td><td>The SHA256 fingerprint of the agent&#x27;s PKI public key. Empty until the agent loads its keys.</td></tr><tr><td><code>FQDN</code></td><td><code>string</code></td><td>Fully qualified domain name.</td></tr><tr><td><code>Hostname</code></td><td><code>string</code></td><td>The hostname of the agent.</td></tr><tr><td><code>Interfaces</code></td><td><code>[]NetworkInterfaceResponse</code></td><td></td></tr><tr><td><code>KernelVersion</code></td><td><code>string</code></td><td>OS kernel version.</td></tr><tr><td><code>KeyStored</code></td><td><code>bool</code></td><td>Whether the controller holds this agent&#x27;s public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement.</td></tr><tr><td><code>Labels</code></td><td><code>map[string]string</code></td><td>Key-value labels configured on the agent.</td></tr><tr><td><code>LoadAverage</code></td><td><code>LoadAverageResponse</code></td><td>The system load averages for 1, 5, and 15 minutes.</td></tr><tr><td><code>MachineID</code></td><td><code>string</code></td><td>The permanent machine identifier.</td></tr><tr><td><code>Memory</code></td><td><code>MemoryResponse</code></td><td>Memory usage information.</td></tr><tr><td><code>MissingPrograms</code></td><td><code>[]string</code></td><td>The programs that the agent&#x27;s behaviors declare and that the host lacks. A behavior fails until its program is installed.</td></tr><tr><td><code>NATSCertNext</code></td><td><code>string</code></td><td>The fingerprint of the NATS server&#x27;s next certificate, which the agent trusts during a rotation of it.</td></tr><tr><td><code>OSInfo</code></td><td><code>OSInfoResponse</code></td><td>Operating system information.</td></tr><tr><td><code>PackageMgr</code></td><td><code>string</code></td><td>Package manager.</td></tr><tr><td><code>PrimaryInterface</code></td><td><code>string</code></td><td>Name of the interface used for the default route.</td></tr><tr><td><code>RegisteredAt</code></td><td><code>time.Time</code></td><td>When the agent last refreshed its heartbeat.</td></tr><tr><td><code>Routes</code></td><td><code>[]RouteResponse</code></td><td>Network routing table entries.</td></tr><tr><td><code>ServiceMgr</code></td><td><code>string</code></td><td>Init system.</td></tr><tr><td><code>StartedAt</code></td><td><code>time.Time</code></td><td>When the agent process started.</td></tr><tr><td><code>State</code></td><td><code>AgentState</code></td><td>The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.</td></tr><tr><td><code>Timeline</code></td><td><code>[]TimelineEvent</code></td><td>Agent state transition history.</td></tr><tr><td><code>Uptime</code></td><td><code>string</code></td><td>The system uptime.</td></tr><tr><td><code>Verified</code></td><td><code>bool</code></td><td>Whether this agent&#x27;s registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.</td></tr><tr><td><code>Version</code></td><td><code>string</code></td><td>The build version of the agent binary. Absent for an agent that does not report it.</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Architecture</code></td><td><code>string</code></td><td>CPU architecture.</td></tr><tr><td><code>Conditions</code></td><td><code>[]NodeCondition</code></td><td>The conditions that hold now, such as HighLoad. A condition that does not hold is not in the list.</td></tr><tr><td><code>ConfigBehind</code></td><td><code>bool</code></td><td>The agent has not applied the newest config that the controller holds for it yet: it applies it at its next heartbeat, or it cannot reach the controller&#x27;s config.</td></tr><tr><td><code>ConfigVersion</code></td><td><code>int</code></td><td>The version of the controller&#x27;s config of the agent that the agent applied. Absent when it applied none.</td></tr><tr><td><code>ConfigWanted</code></td><td><code>int</code></td><td>The version of the config that the controller holds for the agent. Absent when it holds none.</td></tr><tr><td><code>ControllerKey</code></td><td><code>string</code></td><td>The fingerprint of the controller key that the agent verifies jobs with.</td></tr><tr><td><code>ControllerKeyNext</code></td><td><code>string</code></td><td>The fingerprint of the key that the controller switches to, which the agent has: empty when no rotation of the controller&#x27;s key is in progress, or the agent has not taken it yet.</td></tr><tr><td><code>CPUCount</code></td><td><code>int</code></td><td>Number of logical CPUs.</td></tr><tr><td><code>Crypto</code></td><td><code>CryptoReport</code></td><td></td></tr><tr><td><code>Facts</code></td><td><code>map[string]any</code></td><td>Extended facts from additional providers.</td></tr><tr><td><code>Fingerprint</code></td><td><code>string</code></td><td>The SHA256 fingerprint of the agent&#x27;s PKI public key. Empty until the agent loads its keys.</td></tr><tr><td><code>Fips</code></td><td><code>string</code></td><td>The FIPS 140-3 mode of the agent&#x27;s process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail.</td></tr><tr><td><code>FQDN</code></td><td><code>string</code></td><td>Fully qualified domain name.</td></tr><tr><td><code>Hostname</code></td><td><code>string</code></td><td>The hostname of the agent.</td></tr><tr><td><code>Interfaces</code></td><td><code>[]NetworkInterfaceResponse</code></td><td></td></tr><tr><td><code>KernelVersion</code></td><td><code>string</code></td><td>OS kernel version.</td></tr><tr><td><code>KeyStored</code></td><td><code>bool</code></td><td>Whether the controller holds this agent&#x27;s public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement.</td></tr><tr><td><code>Labels</code></td><td><code>map[string]string</code></td><td>Key-value labels configured on the agent.</td></tr><tr><td><code>LoadAverage</code></td><td><code>LoadAverageResponse</code></td><td>The system load averages for 1, 5, and 15 minutes.</td></tr><tr><td><code>MachineID</code></td><td><code>string</code></td><td>The permanent machine identifier.</td></tr><tr><td><code>Memory</code></td><td><code>MemoryResponse</code></td><td>Memory usage information.</td></tr><tr><td><code>MissingPrograms</code></td><td><code>[]string</code></td><td>The programs that the agent&#x27;s behaviors declare and that the host lacks. A behavior fails until its program is installed.</td></tr><tr><td><code>NATSCertNext</code></td><td><code>string</code></td><td>The fingerprint of the NATS server&#x27;s next certificate, which the agent trusts during a rotation of it.</td></tr><tr><td><code>OSInfo</code></td><td><code>OSInfoResponse</code></td><td>Operating system information.</td></tr><tr><td><code>PackageMgr</code></td><td><code>string</code></td><td>Package manager.</td></tr><tr><td><code>PrimaryInterface</code></td><td><code>string</code></td><td>Name of the interface used for the default route.</td></tr><tr><td><code>RegisteredAt</code></td><td><code>time.Time</code></td><td>When the agent last refreshed its heartbeat.</td></tr><tr><td><code>Routes</code></td><td><code>[]RouteResponse</code></td><td>Network routing table entries.</td></tr><tr><td><code>ServiceMgr</code></td><td><code>string</code></td><td>Init system.</td></tr><tr><td><code>StartedAt</code></td><td><code>time.Time</code></td><td>When the agent process started.</td></tr><tr><td><code>State</code></td><td><code>AgentState</code></td><td>The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.</td></tr><tr><td><code>Timeline</code></td><td><code>[]TimelineEvent</code></td><td>Agent state transition history.</td></tr><tr><td><code>Uptime</code></td><td><code>string</code></td><td>The system uptime.</td></tr><tr><td><code>Verified</code></td><td><code>bool</code></td><td>Whether this agent&#x27;s registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.</td></tr><tr><td><code>Version</code></td><td><code>string</code></td><td>The build version of the agent binary. Absent for an agent that does not report it.</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="agentjoininput">AgentJoinInput<a href="#agentjoininput" class="hash-link" aria-label="Direct link to AgentJoinInput" title="Direct link to AgentJoinInput" translate="no">​</a></h3>
 
 
@@ -456,6 +466,136 @@ that the agent has not applied yet is Draining.</p>
 <p>A <code>string</code>, one of <code>MemoryPressure</code>, <code>HighLoad</code>, <code>DiskPressure</code>, <code>DrainStuck</code>,
 <code>ConsumersUnavailable</code>, <code>ProcessMemoryPressure</code>, <code>ProcessHighCPU</code>,
 <code>KeyMismatch</code>.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cryptoalgorithm">CryptoAlgorithm<a href="#cryptoalgorithm" class="hash-link" aria-label="Direct link to CryptoAlgorithm" title="Direct link to CryptoAlgorithm" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Algorithm</code></td><td><code>string</code></td><td>The algorithm, with its key size or curve.</td></tr><tr><td><code>Approved</code></td><td><code>bool</code></td><td>Whether FIPS 140-3 approves the algorithm.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>What the process uses it for.</td></tr><tr><td><code>OnlyMode</code></td><td><code>bool</code></td><td>Whether it works in FIPS 140-3 only mode. An approved algorithm can still fail there, when its code calls the module in a way that the mode refuses.</td></tr><tr><td><code>Reason</code></td><td><code>string</code></td><td>Why it is not approved, or why it fails in FIPS 140-3 only mode.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cryptolistener">CryptoListener<a href="#cryptolistener" class="hash-link" aria-label="Direct link to CryptoListener" title="Direct link to CryptoListener" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Approved</code></td><td><code>bool</code></td><td>Whether the listener negotiates only approved versions, suites and groups: true in FIPS 140-3 mode, where crypto/tls restricts them.</td></tr><tr><td><code>Groups</code></td><td><code>[]string</code></td><td>The key exchange groups that the listener can negotiate: the configured ones, or those of crypto/tls for the process&#x27;s mode.</td></tr><tr><td><code>MinVersion</code></td><td><code>string</code></td><td>The lowest TLS version that the listener accepts.</td></tr><tr><td><code>Name</code></td><td><code>string</code></td><td>The listener, such as api, nats or metrics.</td></tr><tr><td><code>Suites</code></td><td><code>[]string</code></td><td>The cipher suites that the listener can negotiate: the configured ones, or those of crypto/tls for the process&#x27;s mode.</td></tr><tr><td><code>Tls</code></td><td><code>bool</code></td><td>Whether the listener serves TLS. A listener with no TLS has no other fields.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cryptoreport">CryptoReport<a href="#cryptoreport" class="hash-link" aria-label="Direct link to CryptoReport" title="Direct link to CryptoReport" translate="no">​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Algorithms</code></td><td><code>[]CryptoAlgorithm</code></td><td>Each algorithm that the process uses.</td></tr><tr><td><code>Enforceable</code></td><td><code>bool</code></td><td>Whether each algorithm of the process works in FIPS 140-3 only mode, GODEBUG=fips140=only.</td></tr><tr><td><code>Gaps</code></td><td><code>[]string</code></td><td>What keeps the process from FIPS 140-3 mode with only approved algorithms. Empty when the mode is on and each algorithm and listener is approved.</td></tr><tr><td><code>Go</code></td><td><code>string</code></td><td>The Go version that built the process.</td></tr><tr><td><code>Listeners</code></td><td><code>[]CryptoListener</code></td><td>Each TLS listener of the process.</td></tr><tr><td><code>Mode</code></td><td><code>FIPSMode</code></td><td>FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it once, at the start of the process, from GODEBUG=fips140.</td></tr><tr><td><code>Module</code></td><td><code>string</code></td><td>The version of the Go Cryptographic Module in the process.</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="fipsmode">FIPSMode<a href="#fipsmode" class="hash-link" aria-label="Direct link to FIPSMode" title="Direct link to FIPSMode" translate="no">​</a></h3>
+<p>FIPSMode is the FIPS 140-3 mode of a process, one of its Values. Go sets it
+once, at the start of the process, from GODEBUG=fips140.</p>
+<p>A <code>string</code>, one of <code>off</code>, <code>on</code>, <code>only</code>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="factkeyentry">FactKeyEntry<a href="#factkeyentry" class="hash-link" aria-label="Direct link to FactKeyEntry" title="Direct link to FactKeyEntry" translate="no">​</a></h3>
 
 
@@ -772,6 +912,6 @@ that the agent has not applied yet is Draining.</p>
 <table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Error</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Event</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Hostname</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Message</code></td><td><code>string</code></td><td></td></tr><tr><td><code>Timestamp</code></td><td><code>time.Time</code></td><td></td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="example">Example<a href="#example" class="hash-link" aria-label="Direct link to Example" title="Direct link to Example" translate="no">​</a></h2>
 <p><a href="https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/agent.go" target="_blank" rel="noopener noreferrer" class=""><code>examples/sdk/client/agent.go</code></a>
-runs each example of this page. With no argument, it lists them.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/sdk/fleet/admission"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Admission</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/sdk/fleet/catalog"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Catalog</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#methods" class="table-of-contents__link toc-highlight">Methods</a><ul><li><a href="#list" class="table-of-contents__link toc-highlight">List</a></li><li><a href="#getconfig" class="table-of-contents__link toc-highlight">Getconfig</a></li><li><a href="#setconfig" class="table-of-contents__link toc-highlight">Setconfig</a></li><li><a href="#facts" class="table-of-contents__link toc-highlight">Facts</a></li><li><a href="#join" class="table-of-contents__link toc-highlight">Join</a></li><li><a href="#get" class="table-of-contents__link toc-highlight">Get</a></li><li><a href="#drain" class="table-of-contents__link toc-highlight">Drain</a></li><li><a href="#undrain" class="table-of-contents__link toc-highlight">Undrain</a></li></ul></li><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#addressfamily" class="table-of-contents__link toc-highlight">AddressFamily</a></li><li><a href="#agentconfigresponse" class="table-of-contents__link toc-highlight">AgentConfigResponse</a></li><li><a href="#agentinfo" class="table-of-contents__link toc-highlight">AgentInfo</a></li><li><a href="#agentjoininput" class="table-of-contents__link toc-highlight">AgentJoinInput</a></li><li><a href="#agentsetconfiginput" class="table-of-contents__link toc-highlight">AgentSetconfigInput</a></li><li><a href="#agentstate" class="table-of-contents__link toc-highlight">AgentState</a></li><li><a href="#conditiontype" class="table-of-contents__link toc-highlight">ConditionType</a></li><li><a href="#factkeyentry" class="table-of-contents__link toc-highlight">FactKeyEntry</a></li><li><a href="#factkeysresponse" class="table-of-contents__link toc-highlight">FactKeysResponse</a></li><li><a href="#joinresponse" class="table-of-contents__link toc-highlight">JoinResponse</a></li><li><a href="#listagentsresponse" class="table-of-contents__link toc-highlight">ListAgentsResponse</a></li><li><a href="#loadaverageresponse" class="table-of-contents__link toc-highlight">LoadAverageResponse</a></li><li><a href="#loglevel" class="table-of-contents__link toc-highlight">LogLevel</a></li><li><a href="#memoryresponse" class="table-of-contents__link toc-highlight">MemoryResponse</a></li><li><a href="#networkinterfaceresponse" class="table-of-contents__link toc-highlight">NetworkInterfaceResponse</a></li><li><a href="#nodecondition" class="table-of-contents__link toc-highlight">NodeCondition</a></li><li><a href="#osinforesponse" class="table-of-contents__link toc-highlight">OSInfoResponse</a></li><li><a href="#routeresponse" class="table-of-contents__link toc-highlight">RouteResponse</a></li><li><a href="#timelineevent" class="table-of-contents__link toc-highlight">TimelineEvent</a></li></ul></li><li><a href="#example" class="table-of-contents__link toc-highlight">Example</a></li></ul></div></div></div></div></main></div></div></div></div>
+runs each example of this page. With no argument, it lists them.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/sdk/fleet/admission"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Admission</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/sdk/fleet/catalog"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Catalog</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#methods" class="table-of-contents__link toc-highlight">Methods</a><ul><li><a href="#list" class="table-of-contents__link toc-highlight">List</a></li><li><a href="#getconfig" class="table-of-contents__link toc-highlight">Getconfig</a></li><li><a href="#setconfig" class="table-of-contents__link toc-highlight">Setconfig</a></li><li><a href="#facts" class="table-of-contents__link toc-highlight">Facts</a></li><li><a href="#join" class="table-of-contents__link toc-highlight">Join</a></li><li><a href="#get" class="table-of-contents__link toc-highlight">Get</a></li><li><a href="#drain" class="table-of-contents__link toc-highlight">Drain</a></li><li><a href="#undrain" class="table-of-contents__link toc-highlight">Undrain</a></li></ul></li><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#addressfamily" class="table-of-contents__link toc-highlight">AddressFamily</a></li><li><a href="#agentconfigresponse" class="table-of-contents__link toc-highlight">AgentConfigResponse</a></li><li><a href="#agentinfo" class="table-of-contents__link toc-highlight">AgentInfo</a></li><li><a href="#agentjoininput" class="table-of-contents__link toc-highlight">AgentJoinInput</a></li><li><a href="#agentsetconfiginput" class="table-of-contents__link toc-highlight">AgentSetconfigInput</a></li><li><a href="#agentstate" class="table-of-contents__link toc-highlight">AgentState</a></li><li><a href="#conditiontype" class="table-of-contents__link toc-highlight">ConditionType</a></li><li><a href="#cryptoalgorithm" class="table-of-contents__link toc-highlight">CryptoAlgorithm</a></li><li><a href="#cryptolistener" class="table-of-contents__link toc-highlight">CryptoListener</a></li><li><a href="#cryptoreport" class="table-of-contents__link toc-highlight">CryptoReport</a></li><li><a href="#fipsmode" class="table-of-contents__link toc-highlight">FIPSMode</a></li><li><a href="#factkeyentry" class="table-of-contents__link toc-highlight">FactKeyEntry</a></li><li><a href="#factkeysresponse" class="table-of-contents__link toc-highlight">FactKeysResponse</a></li><li><a href="#joinresponse" class="table-of-contents__link toc-highlight">JoinResponse</a></li><li><a href="#listagentsresponse" class="table-of-contents__link toc-highlight">ListAgentsResponse</a></li><li><a href="#loadaverageresponse" class="table-of-contents__link toc-highlight">LoadAverageResponse</a></li><li><a href="#loglevel" class="table-of-contents__link toc-highlight">LogLevel</a></li><li><a href="#memoryresponse" class="table-of-contents__link toc-highlight">MemoryResponse</a></li><li><a href="#networkinterfaceresponse" class="table-of-contents__link toc-highlight">NetworkInterfaceResponse</a></li><li><a href="#nodecondition" class="table-of-contents__link toc-highlight">NodeCondition</a></li><li><a href="#osinforesponse" class="table-of-contents__link toc-highlight">OSInfoResponse</a></li><li><a href="#routeresponse" class="table-of-contents__link toc-highlight">RouteResponse</a></li><li><a href="#timelineevent" class="table-of-contents__link toc-highlight">TimelineEvent</a></li></ul></li><li><a href="#example" class="table-of-contents__link toc-highlight">Example</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

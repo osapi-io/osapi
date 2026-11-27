@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">FIPS 140-3 mode | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="FIPS 140-3 mode | OSAPI"><meta data-rh="true" name="description" content="FIPS 140-3 is the US standard for cryptographic modules. Go has its own"><meta data-rh="true" property="og:description" content="FIPS 140-3 is the US standard for cryptographic modules. Go has its own"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"FIPS 140-3 Mode","item":"https://osapi-io.github.io/osapi/sidebar/operate/secure/fips"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.75a27548.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.81a907f5.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -92,10 +92,62 @@ algorithm. But the server makes the GCM with a nonce that it selects, which
 only mode refuses. Thus the server does not make an encrypted stream in only
 mode (osapi-io/osapi#1549). A store with no <code>key_file</code> is not encrypted, and
 operates in only mode.</li>
-<li class=""><strong>Facts from gohai.</strong> The SSH host key facts and the shard of a host use MD5
-(osapi-io/gohai#357).</li>
 </ul>
 <p>The <code>go-fips-test</code> recipe runs the tests of the seal, the NATS vault and the
-agent keys in only mode. CI runs it in the <code>fips140=only</code> job.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/operate/secure/authentication"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Authentication &amp; RBAC</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/operate/secure/secrets"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Secrets</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#the-seal-and-the-agent-keys" class="table-of-contents__link toc-highlight">The seal and the agent keys</a></li><li><a href="#the-fips-build" class="table-of-contents__link toc-highlight">The FIPS build</a></li><li><a href="#fips-140-3-only-mode" class="table-of-contents__link toc-highlight">FIPS 140-3 only mode</a></li></ul></div></div></div></div></main></div></div></div></div>
+agent keys in only mode. CI runs it in the <code>fips140=only</code> job.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-crypto-of-each-process">The crypto of each process<a href="#the-crypto-of-each-process" class="hash-link" aria-label="Direct link to The crypto of each process" title="Direct link to The crypto of each process" translate="no">​</a></h2>
+<p>FIPS 140-3 mode is a setting of each process, not of the fleet. <code>GODEBUG</code> sets
+it when the process starts. Thus each process reports its own crypto: the
+controller, the NATS server and each agent. The report goes in each heartbeat.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Where</th><th>What it shows</th></tr></thead><tbody><tr><td><code>osapi client health status</code></td><td>The FIPS column of the controller and NATS</td></tr><tr><td><code>osapi client health status --json</code></td><td>The <code>crypto</code> of each component</td></tr><tr><td><code>osapi client agent get --hostname &lt;name&gt;</code></td><td>The FIPS line and the crypto of the agent</td></tr><tr><td>The dashboard and the agent card in the UI</td><td>The FIPS line, with each gap in its tooltip</td></tr><tr><td><code>osapi pki list</code> and <code>osapi pki key list</code></td><td>Whether FIPS 140-3 approves each key</td></tr></tbody></table>
+<p>The report of a process has:</p>
+<ul>
+<li class=""><strong>The Go version and the module version</strong>, from <code>crypto/fips140.Version()</code>.</li>
+<li class=""><strong>The mode:</strong> <code>off</code>, <code>on</code>, or <code>only</code>.</li>
+<li class=""><strong>Each TLS listener</strong>, such as <code>api</code>, <code>nats</code> or <code>metrics</code>: its lowest TLS
+version, its suites and its groups. In FIPS 140-3 mode, crypto/tls negotiates
+only approved suites and groups. Out of the mode, a listener that sets no
+groups can negotiate X25519, which is not approved.</li>
+<li class=""><strong>Each algorithm that the process uses</strong>, with <code>approved</code> and <code>only_mode</code>. An
+approved algorithm can still fail in only mode, as NATS authentication does.
+<code>only_mode</code> says so, and <code>reason</code> names the issue.</li>
+<li class=""><strong>The gaps:</strong> each reason that the process is not in FIPS 140-3 mode with only
+approved algorithms. The FIPS line is the mode, then <code>approved</code> when there is
+no gap, or the number of gaps.</li>
+</ul>
+<p>A test holds <code>only_mode</code> to what the code does. Each algorithm that claims to
+operate in only mode is in a package that the <code>fips140=only</code> job tests. For NATS
+authentication and the JetStream store, the job runs the same call that nkeys
+and nats-server make, and expects it to fail. When a fix upstream makes that
+call operate, the test fails until the report says so.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/operate/secure/authentication"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Authentication &amp; RBAC</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/operate/secure/secrets"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Secrets</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#the-seal-and-the-agent-keys" class="table-of-contents__link toc-highlight">The seal and the agent keys</a></li><li><a href="#the-fips-build" class="table-of-contents__link toc-highlight">The FIPS build</a></li><li><a href="#fips-140-3-only-mode" class="table-of-contents__link toc-highlight">FIPS 140-3 only mode</a></li><li><a href="#the-crypto-of-each-process" class="table-of-contents__link toc-highlight">The crypto of each process</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
