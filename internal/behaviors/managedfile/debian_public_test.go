@@ -29,6 +29,7 @@ import (
 	providermocks "github.com/osapi-io/osapi/internal/provider/mocks"
 
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -142,7 +143,7 @@ func (s *DebianPublicTestSuite) TestWriteOfTheSameContent() {
 		record []byte
 		err    error
 	}{
-		{name: "when the path has no record, it does not change", err: errors.New("not found")},
+		{name: "when the path has no record, it does not change", err: jetstream.ErrKeyNotFound},
 		{name: "when the record cannot be read, it does not change", record: []byte("{")},
 		{name: "when the record is undeployed, it does not change", record: undeployed},
 	}
@@ -336,25 +337,96 @@ func (s *DebianPublicTestSuite) TestReadOfAnObjectChecksum() {
 func (s *DebianPublicTestSuite) TestRemove() {
 	tests := []struct {
 		name    string
+		record  []byte
+		getErr  error
+		marshal bool
 		wantErr string
+		wantIs  error
 	}{
-		{name: "when the record cannot be encoded", wantErr: "marshal state: cannot encode"},
+		{
+			name:    "when the record cannot be encoded",
+			marshal: true,
+			wantErr: "marshal state: cannot encode",
+		},
+		{
+			name:    "when the store cannot be read, the file stays and it fails",
+			getErr:  errors.New("nats: timeout"),
+			wantErr: "read state: nats: timeout",
+		},
+		{
+			name:   "when the record cannot be read, it fails",
+			record: []byte("{"),
+			wantIs: managedfile.ErrUnreadable,
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			record, _ := json.Marshal(managedfile.State{Path: path})
-			entry := jobmocks.NewMockKeyValueEntry(s.ctrl)
-			entry.EXPECT().Value().Return(record)
-			s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, nil)
-			managedfile.SetMarshalJSON(failMarshal)
-			p := managedfile.NewDebian(memfs.New(), s.state, "file-state", nil, "web-01")
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll("/etc/osapi", 0o755))
+			s.Require().NoError(fs.WriteFile(path, []byte("on\n"), 0o644))
+			record := tc.record
+			if record == nil {
+				record, _ = json.Marshal(managedfile.State{Path: path})
+			}
+			var entry *jobmocks.MockKeyValueEntry
+			if tc.getErr == nil {
+				entry = jobmocks.NewMockKeyValueEntry(s.ctrl)
+				entry.EXPECT().Value().Return(record)
+			}
+			s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+				Return(entry, tc.getErr)
+			if tc.marshal {
+				managedfile.SetMarshalJSON(failMarshal)
+			}
+			p := managedfile.NewDebian(fs, s.state, "file-state", nil, "web-01")
 
-			_, err := p.Remove(context.Background(), path)
+			changed, err := p.Remove(context.Background(), path)
 
-			s.EqualError(err, tc.wantErr)
+			s.False(changed)
+			if tc.wantIs != nil {
+				s.ErrorIs(err, tc.wantIs)
+			} else {
+				s.EqualError(err, tc.wantErr)
+			}
+			if !tc.marshal {
+				_, statErr := fs.Stat(path)
+				s.NoError(statErr)
+			}
 		})
 	}
+}
+
+// TestStoreOutage: a store that cannot be read is an error, not a file
+// that osapi does not manage.
+func (s *DebianPublicTestSuite) TestStoreOutage() {
+	outage := errors.New("nats: timeout")
+
+	s.Run("Read fails and does not report the file as not managed", func() {
+		s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(nil, outage)
+		p := managedfile.NewDebian(memfs.New(), s.state, "file-state", nil, "web-01")
+
+		_, err := p.Read(context.Background(), path)
+
+		s.ErrorIs(err, outage)
+		s.NotErrorIs(err, managedfile.ErrNotManaged)
+	})
+
+	s.Run("Write of the same content fails", func() {
+		fs := memfs.New()
+		s.Require().NoError(fs.MkdirAll("/etc/osapi", 0o755))
+		s.Require().NoError(fs.WriteFile(path, []byte("on\n"), 0o644))
+		s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(nil, outage)
+		p := managedfile.NewDebian(fs, s.state, "file-state", nil, "web-01")
+
+		changed, err := p.Write(
+			context.Background(),
+			managedfile.File{Path: path, Content: []byte("on\n")},
+		)
+
+		s.ErrorIs(err, outage)
+		s.False(changed)
+	})
 }
 
 func TestDebianPublicTestSuite(
