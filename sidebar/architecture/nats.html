@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">NATS subjects and roles | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="NATS subjects and roles | OSAPI"><meta data-rh="true" name="description" content="osapi uses NATS for each message between its processes, and keeps its state in"><meta data-rh="true" property="og:description" content="osapi uses NATS for each message between its processes, and keeps its state in"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"NATS subjects and roles","item":"https://osapi-io.github.io/osapi/sidebar/architecture/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.bad08aff.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.3cccedbe.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -76,15 +76,27 @@ agent sent at its join, and only while the machine is admitted.</p>
 <p>A shared user does not let one agent answer for another. The controller admits
 each agent by its own key, and checks the signature of each answer
 (<a class="" href="/osapi/sidebar/architecture/agent-identity">Agent identity</a>).</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-a-revocation-can-wait-for-a-jwt">Why a revocation can wait for a JWT<a href="#why-a-revocation-can-wait-for-a-jwt" class="hash-link" aria-label="Direct link to Why a revocation can wait for a JWT" title="Direct link to Why a revocation can wait for a JWT" translate="no">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-a-revocation-cuts-an-agent-from-nats">How a revocation cuts an agent from NATS<a href="#how-a-revocation-cuts-an-agent-from-nats" class="hash-link" aria-label="Direct link to How a revocation cuts an agent from NATS" title="Direct link to How a revocation cuts an agent from NATS" translate="no">​</a></h2>
 <p>In operator mode, the NATS server checks the JWT of an agent, not its admission.
-A revoked host keeps its connection until its JWT expires. The controller renews
-a JWT only for a host that is admitted, for a request that the host&#x27;s admitted
-key signed. Thus <code>controller.join.agent_ttl</code> is the longest time that a revoked
-host stays on NATS. Before that time, osapi refuses each answer and each
-registration that the revoked host signs.</p>
+Thus the controller tells the server when it removes a machine. A revocation, a
+rejection or a delete of an admitted machine adds the agent&#x27;s NATS user to the
+revocations of osapi&#x27;s account. The controller signs the account again with an
+operator signing key, and sends it to the server as a user of the system
+account. The server closes each connection of that user at once, and refuses
+each JWT of the user from before the revocation.</p>
+<p>The server keeps the account that it gets in memory only. Thus the controller
+records each revocation in the enrollment bucket, and sends the account again
+each minute while a revocation is left. A revocation older than
+<code>controller.join.agent_ttl</code> is removed, because each JWT that it refuses has
+expired. A machine that joins again gets a new NATS user, so the old revocation
+does not stop it.</p>
+<p>A setup with no <code>controller.join.revocation.account_jwt_file</code> file cuts a
+revoked host only when its JWT expires. The controller renews a JWT only for a
+host that is admitted. Thus <code>controller.join.agent_ttl</code> is then the longest time
+that a revoked host stays on NATS. In each setup, osapi refuses each answer and
+each registration that the revoked host signs.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="design">Design<a href="#design" class="hash-link" aria-label="Direct link to Design" title="Direct link to Design" translate="no">​</a></h2>
 <p><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/agent-join.md" target="_blank" rel="noopener noreferrer" class="">Agent join</a>
-in the specs has the design.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/observability"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Observability</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">UI architecture</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#the-roles" class="table-of-contents__link toc-highlight">The roles</a></li><li><a href="#why-the-join-has-its-own-user" class="table-of-contents__link toc-highlight">Why the join has its own user</a></li><li><a href="#why-a-revocation-can-wait-for-a-jwt" class="table-of-contents__link toc-highlight">Why a revocation can wait for a JWT</a></li><li><a href="#design" class="table-of-contents__link toc-highlight">Design</a></li></ul></div></div></div></div></main></div></div></div></div>
+in the specs has the design.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/architecture/observability"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Observability</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/architecture/ui"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">UI architecture</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#the-roles" class="table-of-contents__link toc-highlight">The roles</a></li><li><a href="#why-the-join-has-its-own-user" class="table-of-contents__link toc-highlight">Why the join has its own user</a></li><li><a href="#how-a-revocation-cuts-an-agent-from-nats" class="table-of-contents__link toc-highlight">How a revocation cuts an agent from NATS</a></li><li><a href="#design" class="table-of-contents__link toc-highlight">Design</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

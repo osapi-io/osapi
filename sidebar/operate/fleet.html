@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Run the fleet | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/fleet"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Run the fleet | OSAPI"><meta data-rh="true" name="description" content="This page tells how to see the fleet, and how to change it after the setup."><meta data-rh="true" property="og:description" content="This page tells how to see the fleet, and how to change it after the setup."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"Run the fleet","item":"https://osapi-io.github.io/osapi/sidebar/operate/fleet"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.bad08aff.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.3cccedbe.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -85,10 +85,20 @@ release say that a role has a new subject: <code>osapi nats auth operator create
 <code>controller.join.agent_ttl</code>, such as <code>24h</code>, the JWT expires. The agent renews it
 over NATS when a third of its life is left. The controller renews only a host
 that is admitted, for a request that its key signed.</p>
-<p>Thus <code>osapi client admission revoke</code> removes the host from NATS when its JWT
-expires. Select the TTL by how fast a revocation must apply, and how long a host
-can be off: a host that is off for longer than the TTL cannot renew, and must
-join again. An empty <code>agent_ttl</code> gives a JWT that does not expire.</p>
+<p><code>osapi client admission revoke</code>, <code>reject</code> and <code>delete</code> cut the host&#x27;s NATS user
+from the server at once. The controller adds the user to the revocations of
+osapi&#x27;s account, with the files that <code>osapi nats auth operator create</code> writes
+and <code>controller.join.revocation</code> names. The agent logs
+<code>nats: authentication revoked</code>. To join again, the host needs a new token or a
+new admission, and it gets a new NATS user.</p>
+<p>A setup from before these files has no <code>account.jwt</code>. osapi&#x27;s own NATS server
+adds the files at its next start. For another server, run
+<code>osapi nats auth operator update</code>, and merge its <code>osapi-nats.yaml</code>. Until then,
+the controller logs a warning, and a revoked host stays on NATS until its JWT
+expires.</p>
+<p>Select the TTL by how long a host can be off: a host that is off for longer than
+the TTL cannot renew, and must join again. An empty <code>agent_ttl</code> gives a JWT that
+does not expire.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rotate-an-agents-keys">Rotate an agent&#x27;s keys<a href="#rotate-an-agents-keys" class="hash-link" aria-label="Direct link to Rotate an agent&#x27;s keys" title="Direct link to Rotate an agent&#x27;s keys" translate="no">​</a></h2>
 <p>The agent sends the rotation on the NATS subject <code>join.rotate</code>. In operator
 mode, a setup that an older osapi made does not have that subject: run
