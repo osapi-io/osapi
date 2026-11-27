@@ -240,7 +240,7 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			a := tt.setupFunc()
-			a.Start()
+			s.Require().NoError(a.Start())
 			tt.stopFunc(a)
 		})
 	}
@@ -338,7 +338,7 @@ func (s *HeartbeatPublicTestSuite) TestStartOrder() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			a := tt.setupFunc()
-			a.Start()
+			s.Require().NoError(a.Start())
 			tt.stopFunc(a)
 			tt.validateFunc()
 		})

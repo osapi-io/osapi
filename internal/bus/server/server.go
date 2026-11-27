@@ -146,7 +146,7 @@ func New(
 
 // Start does nothing. New starts the server, because bus.Setup needs it to
 // run first.
-func (s *Server) Start() {}
+func (s *Server) Start() error { return nil }
 
 // Stop closes the connection of the server, then stops the server.
 func (s *Server) Stop(

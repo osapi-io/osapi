@@ -109,9 +109,11 @@ func (mr *MockAgentMockRecorder) SetVersion(version any) *gomock.Call {
 }
 
 // Start mocks base method.
-func (m *MockAgent) Start() {
+func (m *MockAgent) Start() error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Start")
+	ret := m.ctrl.Call(m, "Start")
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Start indicates an expected call of Start.

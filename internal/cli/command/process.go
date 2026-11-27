@@ -36,8 +36,10 @@ var ShutdownTimeout = 10 * time.Second
 
 // Component is a part of a process, such as the NATS server or the agent.
 type Component interface {
-	// Start starts the component, and does not block.
-	Start()
+	// Start starts the component, and does not block. An error is a start
+	// that did not work, and that left nothing running: Serve does not stop
+	// the component, and the process exits 1.
+	Start() error
 	// Stop stops the component, in the time that ctx gives.
 	Stop(ctx context.Context)
 }
@@ -71,8 +73,11 @@ func Then(
 // it, so a signal stops a setup that waits. Serve starts each component,
 // waits until the context ends, then stops the components together, and then
 // runs the cleanup. The stop and the cleanup get the context without its
-// cancel, which keeps its values, with ShutdownTimeout. An error of Setup is
-// the command's error. The generated command of each process calls it.
+// cancel, which keeps its values, with ShutdownTimeout. An error of Setup or
+// of a component's Start is the command's error: when a Start fails, Serve
+// stops the components that started, and runs the cleanup, at once. Thus a
+// supervisor such as systemd sees the exit and starts the process again. The
+// generated command of each process calls it.
 func Serve(
 	cmd *cobra.Command,
 	g *LocalGroup,
@@ -95,27 +100,37 @@ func Serve(
 	if err, _ := results[1].Interface().(error); err != nil {
 		return err
 	}
-	run(ctx, results[0].Interface().(Running))
 
-	return nil
+	return run(ctx, results[0].Interface().(Running))
 }
 
-// run starts r's components, waits until ctx ends, and stops them.
+// run starts r's components, waits until ctx ends, and stops them. When a
+// component does not start, run stops the ones that started before it at
+// once, and returns the error of its start.
 func run(
 	ctx context.Context,
 	r Running,
-) {
+) error {
+	started := make([]Component, 0, len(r.Components))
+	var startErr error
 	for _, c := range r.Components {
-		c.Start()
+		if err := c.Start(); err != nil {
+			startErr = err
+
+			break
+		}
+		started = append(started, c)
 	}
 
-	<-ctx.Done()
+	if startErr == nil {
+		<-ctx.Done()
+	}
 
 	stopCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), ShutdownTimeout)
 	defer cancel()
 
 	var wg sync.WaitGroup
-	for _, c := range r.Components {
+	for _, c := range started {
 		wg.Go(func() { c.Stop(stopCtx) })
 	}
 	wg.Wait()
@@ -123,4 +138,6 @@ func run(
 	if r.Cleanup != nil {
 		r.Cleanup(stopCtx)
 	}
+
+	return startErr
 }

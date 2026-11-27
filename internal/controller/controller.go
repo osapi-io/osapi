@@ -237,8 +237,10 @@ func newController(
 }
 
 // Start serves the REST API without blocking.
-func (c *Controller) Start() {
+func (c *Controller) Start() error {
 	c.api.Start()
+
+	return nil
 }
 
 // Stop asks the REST API to stop, ends the health metrics refresh, then

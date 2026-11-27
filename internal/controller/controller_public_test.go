@@ -393,7 +393,7 @@ func (s *ControllerPublicTestSuite) TestNew() {
 				return
 			}
 			s.Require().NoError(err)
-			c.Start()
+			s.Require().NoError(c.Start())
 			s.NoError(c.CheckHealth(context.Background()))
 			s.Contains(c.SubComponents(), "controller.api")
 			s.Equal(tc.wantVaults, c.Vaults().Names())

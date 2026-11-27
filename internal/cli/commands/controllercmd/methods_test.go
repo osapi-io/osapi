@@ -36,7 +36,7 @@ type MethodsTestSuite struct {
 
 type sick struct{}
 
-func (sick) Start()                                         {}
+func (sick) Start() error                                   { return nil }
 func (sick) Stop(context.Context)                           {}
 func (sick) CheckHealth(context.Context) error              { return errors.New("no KV") }
 func (sick) SubComponents() map[string]job.SubComponentInfo { return nil }

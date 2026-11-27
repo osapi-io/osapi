@@ -22,6 +22,8 @@ package agent
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -34,8 +36,11 @@ import (
 // Overridable in tests via export_test.go.
 var getIdentityFn = identity.GetIdentity
 
-// Start starts the agent without blocking. Call Stop to shut down.
-func (a *Agent) Start() {
+// Start starts the agent without blocking. Call Stop to shut down. An error
+// is a start that did not work: the identity, the PKI enrollment or a fatal
+// preflight check failed. The agent then runs nothing, and the process exits,
+// so that its supervisor starts it again.
+func (a *Agent) Start() error {
 	a.ctx, a.cancel = context.WithCancel(context.Background())
 	a.startedAt = time.Now()
 	a.setState(types.AgentReady)
@@ -45,13 +50,9 @@ func (a *Agent) Start() {
 	// Resolve agent identity (machine ID + hostname).
 	ident, err := getIdentityFn(a.appFs, a.appConfig.Agent.Hostname)
 	if err != nil {
-		a.logger.Error(
-			"failed to resolve agent identity",
-			slog.String("error", err.Error()),
-		)
 		a.cancel()
 
-		return
+		return fmt.Errorf("resolve the agent's identity: %w", err)
 	}
 	a.machineID = ident.MachineID
 	a.hostname = ident.Hostname
@@ -66,13 +67,9 @@ func (a *Agent) Start() {
 
 	// PKI enrollment: the agent is always admitted before it takes a job.
 	if err := a.handlePKIEnrollment(a.ctx); err != nil {
-		a.logger.Error(
-			"PKI enrollment failed",
-			slog.String("error", err.Error()),
-		)
 		a.cancel()
 
-		return
+		return fmt.Errorf("PKI enrollment: %w", err)
 	}
 
 	a.refreshPrograms()
@@ -105,10 +102,9 @@ func (a *Agent) Start() {
 		}
 
 		if !ok {
-			a.logger.Error("preflight failed, agent cannot start")
 			a.cancel()
 
-			return
+			return errors.New("a preflight check failed, so the agent cannot start")
 		}
 
 		a.logger.Info("preflight checks done")
@@ -143,7 +139,10 @@ func (a *Agent) Start() {
 		)
 	}
 
+	a.started = true
 	a.logger.Info("node agent started successfully")
+
+	return nil
 }
 
 // Stop gracefully shuts down the agent, waiting for in-flight jobs
@@ -152,7 +151,7 @@ func (a *Agent) Stop(
 	ctx context.Context,
 ) {
 	a.logger.Info("node agent shutting down")
-	if a.machineID != "" {
+	if a.started {
 		a.lifecycle(ctx, "stopped", "stopped")
 	}
 	a.cancel()

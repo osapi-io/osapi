@@ -32,7 +32,7 @@ import (
 
 // Server is the embedded NATS server, which server.New makes.
 type Server interface {
-	Start()
+	Start() error
 	Stop(ctx context.Context)
 	StartHeartbeat(
 		ctx context.Context,

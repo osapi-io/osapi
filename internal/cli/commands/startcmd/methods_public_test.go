@@ -47,7 +47,7 @@ type MethodsPublicTestSuite struct {
 
 type fake struct{}
 
-func (fake) Start()                                         {}
+func (fake) Start() error                                   { return nil }
 func (fake) Stop(context.Context)                           {}
 func (fake) IsReady() error                                 { return nil }
 func (fake) CheckHealth(context.Context) error              { return nil }
