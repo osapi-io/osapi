@@ -230,7 +230,7 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 		Return(nil)
 
 	msg := agentmocks.NewMockMsg(ctrl)
-	msg.EXPECT().Subject().Return("jobs.query.web-01").AnyTimes()
+	msg.EXPECT().Subject().Return("jobs.query.host.web-01").AnyTimes()
 	msg.EXPECT().Data().Return([]byte("trace-job")).AnyTimes()
 	msg.EXPECT().InProgress().Return(nil).AnyTimes()
 

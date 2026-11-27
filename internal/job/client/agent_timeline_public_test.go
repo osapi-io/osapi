@@ -214,8 +214,8 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{
-						"timeline.server1.drain.1000000000",
-						"timeline.server1.undrain.2000000000",
+						"timeline.machine_001.drain.1000000000",
+						"timeline.machine_001.undrain.2000000000",
 						"agents.server1",
 					}, nil)
 
@@ -228,7 +228,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.drain.1000000000").
 					Return(entry1, nil)
 
 				undrainEvent, _ := json.Marshal(job.TimelineEvent{
@@ -240,7 +240,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return(undrainEvent)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.undrain.2000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.undrain.2000000000").
 					Return(entry2, nil)
 			},
 			expectedCount: 2,
@@ -290,8 +290,8 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{
-						"timeline.server1.drain.1000000000",
-						"timeline.server1.undrain.2000000000",
+						"timeline.machine_001.drain.1000000000",
+						"timeline.machine_001.undrain.2000000000",
 					}, nil)
 
 				drainEvent, _ := json.Marshal(job.TimelineEvent{
@@ -303,11 +303,11 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.drain.1000000000").
 					Return(entry1, nil)
 
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.undrain.2000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.undrain.2000000000").
 					Return(nil, errors.New("key not found"))
 			},
 			expectedCount: 1,
@@ -323,8 +323,8 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{
-						"timeline.server1.drain.1000000000",
-						"timeline.server1.undrain.2000000000",
+						"timeline.machine_001.drain.1000000000",
+						"timeline.machine_001.undrain.2000000000",
 					}, nil)
 
 				drainEvent, _ := json.Marshal(job.TimelineEvent{
@@ -336,13 +336,13 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.drain.1000000000").
 					Return(entry1, nil)
 
 				entry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry2.EXPECT().Value().Return([]byte("invalid json"))
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.undrain.2000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.undrain.2000000000").
 					Return(entry2, nil)
 			},
 			expectedCount: 1,
@@ -358,7 +358,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
 					Return([]string{
-						"timeline.server1.drain.1000000000",
+						"timeline.machine_001.drain.1000000000",
 						"timeline.server2.drain.2000000000",
 						"agents.server1",
 					}, nil)
@@ -372,7 +372,7 @@ func (s *AgentTimelinePublicTestSuite) TestGetAgentTimeline() {
 				entry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				entry1.EXPECT().Value().Return(drainEvent)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
+					KVGet(gomock.Any(), "state", "timeline.machine_001.drain.1000000000").
 					Return(entry1, nil)
 			},
 			expectedCount: 1,

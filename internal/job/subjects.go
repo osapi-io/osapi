@@ -138,8 +138,8 @@ func ParseSubject(
 	remaining := parts[jobsIdx+2:]
 
 	switch {
-	case len(remaining) == 1:
-		// _any, _all, or legacy hostname
+	case len(remaining) == 1 && (remaining[0] == AnyHost || remaining[0] == BroadcastHost):
+		// [ns.]jobs.{type}._any or _all
 		hostname = remaining[0]
 	case len(remaining) == 2 && remaining[0] == "host":
 		// [ns.]jobs.{type}.host.{hostname}

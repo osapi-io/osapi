@@ -110,7 +110,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 					Type:  "ED25519 PUBLIC KEY",
 					Bytes: ctrlPub,
 				})
-				_ = fs.WriteFile("/keys/controller.pub", ctrlPEM, 0o644)
+				_ = fs.WriteFile("/keys/enrolled-controller.pub", ctrlPEM, 0o644)
 
 				return fs
 			},
@@ -187,7 +187,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				_ = fs.WriteFile("/keys/agent.pub", pubPEM, 0o644)
 
 				// Write corrupted controller public key.
-				_ = fs.WriteFile("/keys/controller.pub", []byte("not valid pem"), 0o644)
+				_ = fs.WriteFile("/keys/enrolled-controller.pub", []byte("not valid pem"), 0o644)
 
 				return fs
 			},
@@ -219,7 +219,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 					Type:  "RSA PUBLIC KEY",
 					Bytes: ctrlPub,
 				})
-				_ = fs.WriteFile("/keys/controller.pub", ctrlPEM, 0o644)
+				_ = fs.WriteFile("/keys/enrolled-controller.pub", ctrlPEM, 0o644)
 
 				return fs
 			},
