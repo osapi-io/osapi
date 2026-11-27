@@ -32,12 +32,15 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// rawResults runs one command and returns its exit code, its standard
-// error, and its result rows, which may have failed.
+// rawResults runs one command straight to the controller, not through
+// the spec proxy, and returns its exit code, its standard error, and its
+// result rows, which may have failed. A refusal can break the spec on
+// purpose, such as a name that the path's pattern refuses: the proxy would
+// count it against the run.
 func (s *BehaviorSmokeSuite) rawResults(
 	c call,
 ) (int, string, []map[string]any) {
-	stdout, stderr, code := runCLIStdin(c.stdin, c.args...)
+	stdout, stderr, code := runDirect(s.T().TempDir(), c.stdin, c.args...)
 	var body struct {
 		Results []map[string]any `json:"results"`
 	}
@@ -49,8 +52,9 @@ func (s *BehaviorSmokeSuite) rawResults(
 // TestRefusals runs each refusal of each behavior method that names only
 // an input, not a host that the fake host sets up, against the live target
 // (osapi-io/osapi#1538): the controller or the agent must refuse it. A
-// refusal of a write runs only with the writes, since a refusal that the
-// code lets through changes the host.
+// refusal of a write runs only with the writes, and only when the input's
+// validation refuses it, since a refusal that the code lets through changes
+// the host.
 func (s *BehaviorSmokeSuite) TestRefusals() {
 	writes := runWrites || os.Getenv("OSAPI_INTEGRATION_WRITE_BEHAVIORS") == "1"
 	count := 0
@@ -64,6 +68,14 @@ func (s *BehaviorSmokeSuite) TestRefusals() {
 			}
 			for _, r := range m.Refusals {
 				if len(r.Given) > 0 || r.NotLive != "" || !runsOn(r.Example, s.platform()) {
+					continue
+				}
+				// A write refusal runs only when the input's validation
+				// refuses it, as its error, a rule's name such as min, says:
+				// one whose error is the host's state, such as an interface
+				// that osapi does not configure, can change a host whose
+				// state differs from the fake one.
+				if m.Verb == types.VerbWrite && strings.ContainsAny(r.Error, " :") {
 					continue
 				}
 				count++
