@@ -30,7 +30,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
@@ -150,8 +152,10 @@ func Run[Out any](
 			return out, endpoint.Internal("the job could not be sent", err)
 		}
 		answer.JobID = jobID
-		for host, resp := range responses {
-			answer.Results = append(answer.Results, rows(m, host, resp)...)
+		// The hosts answer in the order of a map, so the rows go in
+		// hostname order: the same broadcast gives the same answer.
+		for _, host := range slices.Sorted(maps.Keys(responses)) {
+			answer.Results = append(answer.Results, rows(m, host, responses[host])...)
 		}
 	} else {
 		send := d.JobClient.Query
@@ -189,8 +193,11 @@ func Run[Out any](
 
 	// The rows are maps, and Out is the generated type with the same
 	// fields, so JSON carries one to the other.
+	// Each value in the rows came from JSON, so they encode again.
 	data, _ := json.Marshal(answer)
-	_ = json.Unmarshal(data, &out)
+	if err := json.Unmarshal(data, &out); err != nil {
+		return out, endpoint.Internal("the answer is not the method's output", err)
+	}
 
 	return out, nil
 }
@@ -210,14 +217,15 @@ func rows(
 		return []map[string]any{{"hostname": host, "status": s, "error": resp.Error}}
 	}
 
-	var outputs []map[string]any
-	if m.Out.Kind() == reflect.Slice {
-		_ = json.Unmarshal(resp.Data, &outputs)
-	} else {
-		var one map[string]any
-		if err := json.Unmarshal(resp.Data, &one); err == nil && one != nil {
-			outputs = []map[string]any{one}
-		}
+	outputs, err := decode(m, resp.Data)
+	if err != nil {
+		// The host answered, but not with the method's output: the row
+		// says so, and is not an ok row with no data.
+		return []map[string]any{{
+			"hostname": host,
+			"status":   types.RowStatusFailed,
+			"error":    "the answer of the host could not be read: " + err.Error(),
+		}}
 	}
 
 	if len(outputs) == 0 {
@@ -237,13 +245,40 @@ func rows(
 	return outputs
 }
 
+// decode reads a host's answer as the method's output: one row for each
+// element of a slice output, and one row for anything else. An empty answer
+// is no rows.
+func decode(
+	m *behavior.Method,
+	data json.RawMessage,
+) ([]map[string]any, error) {
+	if len(data) == 0 || string(data) == "null" {
+		return nil, nil
+	}
+	if m.Out.Kind() == reflect.Slice {
+		var outputs []map[string]any
+		if err := json.Unmarshal(data, &outputs); err != nil {
+			return nil, err
+		}
+
+		return outputs, nil
+	}
+	var one map[string]any
+	if err := json.Unmarshal(data, &one); err != nil {
+		return nil, err
+	}
+
+	return []map[string]any{one}, nil
+}
+
 // failureStatus is the row status of a host whose job did not succeed, or
 // empty for a host whose job did.
 func failureStatus(
 	s types.AgentJobStatus,
 ) types.RowStatus {
 	switch s {
-	case types.AgentJobStatusFailed:
+	case types.AgentJobStatusFailed, types.AgentJobStatusRefused:
+		// A refused host's result is not taken, so the row is not ok.
 		return types.RowStatusFailed
 	case types.AgentJobStatusSkipped:
 		return types.RowStatusSkipped

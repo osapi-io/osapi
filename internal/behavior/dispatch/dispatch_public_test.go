@@ -337,8 +337,8 @@ func (s *DispatchPublicTestSuite) TestRun() {
 	}
 }
 
-// sortedBody is a response with its rows in hostname order, as a broadcast
-// answers in the order of a map.
+// sortedBody is a response with its rows in hostname order, the order that a
+// broadcast gives them in.
 func sortedBody(
 	data []byte,
 ) string {
@@ -350,6 +350,91 @@ func sortedBody(
 	out, _ := json.Marshal(a)
 
 	return string(out)
+}
+
+// TestRunRows: a broadcast's rows are in hostname order on each call, a
+// host whose result the controller refused is not ok, and an answer that
+// does not fit the method's output is the host's failed row.
+func (s *DispatchPublicTestSuite) TestRunRows() {
+	op := job.OperationType("behavior.kv.")
+	responses := func() map[string]*job.Response {
+		out := map[string]*job.Response{}
+		for _, h := range []string{"web3", "web1", "web5", "web2", "web4", "web6", "web8", "web7"} {
+			out[h] = completed(h, `{"key":"a"}`, nil)
+		}
+
+		return out
+	}
+
+	s.Run("when a read is broadcast, the rows are in hostname order", func() {
+		var want string
+		for i := range 20 {
+			s.jobs.EXPECT().
+				QueryBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+"get", kvIn{}).
+				Return("job-1", responses(), nil)
+			got, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
+				kv, "get", "_all", kvIn{})
+			s.Require().NoError(err)
+			data, _ := json.Marshal(got)
+			if i == 0 {
+				want = sortedBody(data)
+			}
+			s.Require().JSONEq(want, string(data), "call %d", i)
+		}
+	})
+
+	s.Run("when the rows are not the generated type, it is an internal error", func() {
+		s.jobs.EXPECT().
+			Query(gomock.Any(), "server1", job.CategoryBehavior, op+"get", kvIn{}).
+			Return("job-1", completed("server1", `{"key":"a"}`, nil), nil)
+		_, err := dispatch.Run[struct {
+			Results []int `json:"results"`
+		}](context.Background(), dispatch.Deps{JobClient: s.jobs}, kv, "get", "server1", kvIn{})
+		var internal *endpoint.InternalError
+		s.ErrorAs(err, &internal)
+	})
+
+	tests := []struct {
+		name     string
+		method   string
+		resp     *job.Response
+		wantBody string
+	}{
+		{
+			name:   "when the controller refused a host's result, its row is failed",
+			method: "get",
+			resp: &job.Response{
+				Hostname: "server1",
+				Status:   types.AgentJobStatusRefused,
+				Error:    "refused the result",
+			},
+			wantBody: `{"job_id":"job-1","results":[{"error":"refused the result","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			name:     "when a host's answer is not the method's output, its row is failed",
+			method:   "get",
+			resp:     completed("server1", `["not","an","object"]`, nil),
+			wantBody: `{"job_id":"job-1","results":[{"error":"the answer of the host could not be read: json: cannot unmarshal array into Go value of type map[string]interface {}","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			name:     "when a host's list answer is not a list, its row is failed",
+			method:   "list",
+			resp:     completed("server1", `{"key":"a"}`, nil),
+			wantBody: `{"job_id":"job-1","results":[{"error":"the answer of the host could not be read: json: cannot unmarshal object into Go value of type []map[string]interface {}","hostname":"server1","status":"failed"}]}`,
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.jobs.EXPECT().
+				QueryBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+job.OperationType(tc.method), kvIn{}).
+				Return("job-1", map[string]*job.Response{"server1": tc.resp}, nil)
+			got, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
+				kv, tc.method, "_all", kvIn{})
+			s.Require().NoError(err)
+			data, _ := json.Marshal(got)
+			s.JSONEq(tc.wantBody, string(data))
+		})
+	}
 }
 
 // pwIn is the input of a write whose controller step hashes its password.
