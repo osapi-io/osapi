@@ -111,6 +111,18 @@ func (s *KeyRotationPublicTestSuite) raw(
 	return e
 }
 
+// rawAt is a KV entry that holds data at revision.
+func (s *KeyRotationPublicTestSuite) rawAt(
+	data []byte,
+	revision uint64,
+) jetstream.KeyValueEntry {
+	e := jobmocks.NewMockKeyValueEntry(s.ctrl)
+	e.EXPECT().Value().Return(data).AnyTimes()
+	e.EXPECT().Revision().Return(revision).AnyTimes()
+
+	return e
+}
+
 // next makes the next key on the suite's file system, as a Start makes it.
 func (s *KeyRotationPublicTestSuite) next() *pki.Manager {
 	next, err := s.keys.Next()
@@ -129,6 +141,16 @@ func (s *KeyRotationPublicTestSuite) rotating(
 	rec.Sign(s.keys.PrivateKey())
 
 	return rec
+}
+
+// halfway stops a switch to next between its renames, as at a crash, and
+// starts the controller again: it signs with next's private key, and gives
+// the current public key.
+func (s *KeyRotationPublicTestSuite) halfway() {
+	s.Require().NoError(s.fs.Rename("/ctl/controller.next.key", "/ctl/controller.key"))
+	s.keys = pki.New(s.fs, "/ctl", "controller")
+	s.Require().NoError(s.keys.LoadOrGenerate())
+	s.keys.SetControllerPublicKey(s.keys.PublicKey())
 }
 
 // foreign is a key that the controller does not have.
@@ -199,6 +221,86 @@ func (s *KeyRotationPublicTestSuite) TestStart() {
 				s.Equal(s.now.Add(time.Hour), st.SwitchBy)
 				s.Equal([]keyrotation.Agent{{MachineID: "m-1", Hostname: "web-01"}}, st.Agents)
 			},
+		},
+		{
+			name: "after a switch whose record did not write, it writes it, then starts from it",
+			setup: func() {
+				next := s.next()
+				rec := s.rotating(next.PublicKey())
+				first := rec.Current
+				s.Require().NoError(s.keys.Promote(next))
+				s.keys.RotateControllerKey(s.keys.PublicKey())
+				var written []byte
+				gomock.InOrder(
+					s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil),
+					s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(2)).
+						DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+							written = data
+
+							return 3, nil
+						}),
+					s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).
+						DoAndReturn(func(context.Context, string, string) (jetstream.KeyValueEntry, error) {
+							return s.rawAt(written, 3), nil
+						}),
+					s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(3)).
+						DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+							var got pki.ControllerKeyRecord
+							s.Require().NoError(json.Unmarshal(data, &got))
+							s.True(got.Rotating())
+							s.Equal(uint64(3), got.Serial)
+							s.Equal(first, got.Previous)
+
+							return 4, nil
+						}),
+				)
+				s.agents("")
+			},
+			validateFunc: func(st keyrotation.Status) {
+				s.NotEmpty(st.Next)
+			},
+		},
+		{
+			name: "after a switch that stopped between its renames, to a key that is not on the host",
+			setup: func() {
+				s.next()
+				other, _ := s.foreign()
+				rec := s.rotating(other)
+				s.halfway()
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+			},
+			wantErr: "finish the switch to the next controller key: ",
+		},
+		{
+			name: "after a switch whose record still does not write",
+			setup: func() {
+				next := s.next()
+				rec := s.rotating(next.PublicKey())
+				s.Require().NoError(s.keys.Promote(next))
+				s.keys.RotateControllerKey(s.keys.PublicKey())
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(2)).
+					Return(uint64(0), errors.New("full"))
+			},
+			wantErr: "write the controller key record: full",
+		},
+		{
+			name: "after a switch whose record wrote and then does not read",
+			setup: func() {
+				next := s.next()
+				rec := s.rotating(next.PublicKey())
+				s.Require().NoError(s.keys.Promote(next))
+				s.keys.RotateControllerKey(s.keys.PublicKey())
+				gomock.InOrder(
+					s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil),
+					s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(2)).
+						Return(uint64(3), nil),
+					s.kv.EXPECT().
+						KVGet(gomock.Any(), bucket, key).
+						Return(nil, errors.New("timeout")),
+				)
+			},
+			wantErr: "timeout",
 		},
 		{
 			name: "after a switch, it updates the record at its revision and keeps its retired keys",
@@ -554,6 +656,60 @@ func (s *KeyRotationPublicTestSuite) TestStep() {
 			},
 		},
 		{
+			name: "a switch whose record did not write is written at the next step",
+			setup: func() {
+				next := s.next()
+				rec := s.rotating(next.PublicKey())
+				// An earlier step moved the keys, and its write failed.
+				s.Require().NoError(s.keys.Promote(next))
+				s.keys.RotateControllerKey(s.keys.PublicKey())
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(2)).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+						var done pki.ControllerKeyRecord
+						s.Require().NoError(json.Unmarshal(data, &done))
+						s.True(done.SignedBy(next.PublicKey()))
+						s.Equal(next.PublicKey(), ed25519.PublicKey(done.Current))
+						s.Equal(rec.Current, done.Previous)
+						s.Equal(
+							ed25519.PublicKey(rec.Current),
+							s.keys.PreviousControllerPublicKey(),
+						)
+						s.False(done.Rotating())
+
+						return 3, nil
+					})
+			},
+			wantSwitched: true,
+			validateFunc: func(old ed25519.PublicKey) {
+				s.Equal(old, s.keys.PublicKey())
+			},
+		},
+		{
+			name: "a switch that stopped between its renames, to a key that is not on the host",
+			setup: func() {
+				s.next()
+				other, _ := s.foreign()
+				rec := s.rotating(other)
+				s.halfway()
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+			},
+			wantErr: "finish the switch to the next controller key: ",
+		},
+		{
+			name: "a switch whose record still does not write",
+			setup: func() {
+				next := s.next()
+				rec := s.rotating(next.PublicKey())
+				s.Require().NoError(s.keys.Promote(next))
+				s.keys.RotateControllerKey(s.keys.PublicKey())
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(2)).
+					Return(uint64(0), errors.New("full"))
+			},
+			wantErr: "write the controller key record: full",
+		},
+		{
 			name: "with no rotation, it does nothing",
 			setup: func() {
 				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(nil, jetstream.ErrKeyNotFound)
@@ -781,6 +937,45 @@ func (s *KeyRotationPublicTestSuite) TestLoad() {
 			validateFunc: func(want ed25519.PublicKey) {
 				s.Equal(want, s.keys.PreviousControllerPublicKey())
 			},
+		},
+		{
+			name: "a switch that stopped between its renames finishes them and writes its record",
+			setup: func() ed25519.PublicKey {
+				next := s.next()
+				rec := s.rotating(next.PublicKey())
+				s.halfway()
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(2)).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+						var done pki.ControllerKeyRecord
+						s.Require().NoError(json.Unmarshal(data, &done))
+						s.True(done.SignedBy(next.PublicKey()))
+
+						return 3, nil
+					})
+
+				return next.PublicKey()
+			},
+			validateFunc: func(want ed25519.PublicKey) {
+				s.Equal(want, s.keys.PublicKey())
+				s.Equal(want, ed25519.PublicKey(s.keys.PrivateKey().Public().(ed25519.PublicKey)))
+				s.Equal(want, s.keys.ControllerPublicKey())
+				data := []byte("signed")
+				s.True(ed25519.Verify(s.keys.PublicKey(), data, s.keys.Sign(data)))
+			},
+		},
+		{
+			name: "a switch that stopped between its renames, to a key that is not on the host",
+			setup: func() ed25519.PublicKey {
+				s.next()
+				other, _ := s.foreign()
+				rec := s.rotating(other)
+				s.halfway()
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 2), nil)
+
+				return nil
+			},
+			wantErr: "finish the switch to the next controller key: ",
 		},
 		{
 			name: "a record that does not read",

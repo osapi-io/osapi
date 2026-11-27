@@ -21,6 +21,8 @@
 package pki_test
 
 import (
+	"crypto/ed25519"
+	"crypto/rand"
 	"errors"
 	"strings"
 	"testing"
@@ -307,6 +309,119 @@ func (s *KeyRotatePublicTestSuite) TestPromote() {
 			s.Equal(next.Fingerprint(), loaded.Fingerprint())
 			_, err = base.Stat("/keys/agent.next.key")
 			s.Error(err)
+		})
+	}
+}
+
+func (s *KeyRotatePublicTestSuite) TestResume() {
+	moves := [][2]string{
+		{"/keys/agent.next.ekey", "/keys/agent.ekey"},
+		{"/keys/agent.next.key", "/keys/agent.key"},
+		{"/keys/agent.next.pub", "/keys/agent.pub"},
+	}
+	tests := []struct {
+		name      string
+		moved     []int
+		removed   string
+		noNext    bool
+		other     bool
+		fail      avfs.FnVFS
+		suffix    string
+		garbage   string
+		wantMoved bool
+		wantErr   string
+	}{
+		{name: "with no next keys, it does nothing", noNext: true},
+		{name: "with each next key beside the keys, it does nothing"},
+		{
+			name:  "after the encryption key moved, it moves the others",
+			moved: []int{0}, wantMoved: true,
+		},
+		{
+			name:  "after the private key moved, it moves the public key",
+			moved: []int{0, 1}, wantMoved: true,
+		},
+		{
+			name:    "a next key that is gone after one that is not is not a Promote",
+			removed: "/keys/agent.next.key",
+		},
+		{
+			name:  "keys that are not the pair of the next key",
+			moved: []int{0, 1}, other: true,
+			wantErr: "are halfway through a rotation, and are not the pair of the next key",
+		},
+		{
+			name: "a key that does not read",
+			fail: avfs.FnStat, wantErr: "read key /keys/agent.next.ekey",
+		},
+		{
+			name:  "a private key whose file does not read",
+			moved: []int{0}, fail: avfs.FnReadFile, suffix: "agent.next.key",
+			wantErr: "are not the pair of the next key",
+		},
+		{
+			name:  "a public key whose file does not read",
+			moved: []int{0}, fail: avfs.FnReadFile, suffix: "agent.next.pub",
+			wantErr: "are not the pair of the next key",
+		},
+		{
+			name:  "a public key that does not decode",
+			moved: []int{0}, garbage: "/keys/agent.next.pub",
+			wantErr: "are not the pair of the next key",
+		},
+		{
+			name:  "a key that does not move",
+			moved: []int{0}, fail: avfs.FnRename,
+			wantErr: "move /keys/agent.next.key to /keys/agent.key",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			base, m := made(s, pki.WithEncryptionKey())
+			want := m.PublicKey()
+			if !tt.noNext {
+				next, err := m.Next()
+				s.Require().NoError(err)
+				want = next.PublicKey()
+			}
+			for _, i := range tt.moved {
+				s.Require().NoError(base.Rename(moves[i][0], moves[i][1]))
+			}
+			if tt.removed != "" {
+				s.Require().NoError(base.Remove(tt.removed))
+			}
+			if tt.garbage != "" {
+				s.Require().NoError(base.WriteFile(tt.garbage, []byte("nope"), 0o600))
+			}
+			if tt.other {
+				pub, _, err := ed25519.GenerateKey(rand.Reader)
+				s.Require().NoError(err)
+				want = pub
+			}
+			fs := base
+			if tt.fail != 0 {
+				fs = failing(base, tt.fail, tt.suffix)
+			}
+			resumed := pki.New(fs, "/keys", "agent", pki.WithEncryptionKey())
+			moved, err := resumed.Resume(want)
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tt.wantMoved, moved)
+			if !tt.wantMoved {
+				return
+			}
+			s.Equal(want, resumed.PublicKey())
+			loaded := pki.New(base, "/keys", "agent", pki.WithEncryptionKey())
+			s.Require().NoError(loaded.Load())
+			s.Equal(want, loaded.PublicKey())
+			for _, mv := range moves {
+				_, err := base.Stat(mv[0])
+				s.Error(err)
+			}
 		})
 	}
 }
