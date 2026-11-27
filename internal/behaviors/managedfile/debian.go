@@ -26,6 +26,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 	"path/filepath"
@@ -36,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/provider"
 
 	"github.com/avfs/avfs"
+	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -131,8 +133,14 @@ func (d *debian) Write(
 	if err != nil {
 		return false, err
 	}
-	if !changed && !owned && !d.stale(ctx, f) {
-		return false, nil
+	if !changed && !owned {
+		stale, err := d.stale(ctx, f)
+		if err != nil {
+			return false, err
+		}
+		if !stale {
+			return false, nil
+		}
 	}
 
 	state := State{
@@ -166,18 +174,20 @@ func (d *debian) Write(
 // changed and renders the same file. The write then changes the record, so
 // that a read gives the new metadata and the stale check the new object. A
 // path that has no record, or an undeployed one, is not stale: a file with
-// the content that osapi did not deploy stays as it is.
+// the content that osapi did not deploy stays as it is. A record that
+// cannot be read is not stale either; Read reports it. A failed read of the
+// store is an error, so that a store outage does not pass for no record.
 func (d *debian) stale(
 	ctx context.Context,
 	f File,
-) bool {
-	entry, err := d.state.KVGet(ctx, d.bucket, StateKey(d.hostname, f.Path))
-	if err != nil {
-		return false
+) (bool, error) {
+	entry, err := d.record(ctx, f.Path)
+	if err != nil || entry == nil {
+		return false, err
 	}
 	var state State
 	if err := json.Unmarshal(entry.Value(), &state); err != nil {
-		return false
+		return false, nil
 	}
 
 	objectSHA := f.ObjectSHA256
@@ -187,7 +197,24 @@ func (d *debian) stale(
 
 	return state.UndeployedAt == "" && (!maps.Equal(state.Metadata, f.Metadata) ||
 		state.ObjectName != f.Object || state.ContentType != f.ContentType ||
-		state.ObjectSHA256 != objectSHA)
+		state.ObjectSHA256 != objectSHA), nil
+}
+
+// record is the stored entry of path, or nil when the store has no record of
+// it. Any other failure of the store is an error.
+func (d *debian) record(
+	ctx context.Context,
+	path string,
+) (jetstream.KeyValueEntry, error) {
+	entry, err := d.state.KVGet(ctx, d.bucket, StateKey(d.hostname, path))
+	if errors.Is(err, jetstream.ErrKeyNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read state: %w", err)
+	}
+
+	return entry, nil
 }
 
 // own gives f.Path f's owner and group when it does not have them, and
@@ -222,20 +249,25 @@ func (d *debian) own(
 }
 
 // Remove deletes path when its record says osapi manages it. A file osapi
-// has no record of, or has already stopped managing, is left alone.
+// has no record of, or has already stopped managing, is left alone. A record
+// that cannot be read, or a store that cannot be read, is an error: the file
+// may be managed, and a success would leave it in place.
 func (d *debian) Remove(
 	ctx context.Context,
 	path string,
 ) (bool, error) {
 	key := StateKey(d.hostname, path)
-	entry, err := d.state.KVGet(ctx, d.bucket, key)
+	entry, err := d.record(ctx, path)
 	if err != nil {
+		return false, err
+	}
+	if entry == nil {
 		return false, nil
 	}
 
 	var state State
 	if err := json.Unmarshal(entry.Value(), &state); err != nil {
-		return false, nil
+		return false, fmt.Errorf("%s: %w", path, ErrUnreadable)
 	}
 	if state.UndeployedAt != "" {
 		return false, nil
@@ -266,8 +298,11 @@ func (d *debian) Read(
 	ctx context.Context,
 	path string,
 ) (Record, error) {
-	entry, err := d.state.KVGet(ctx, d.bucket, StateKey(d.hostname, path))
+	entry, err := d.record(ctx, path)
 	if err != nil {
+		return Record{}, err
+	}
+	if entry == nil {
 		return Record{}, fmt.Errorf("%s: %w", path, ErrNotManaged)
 	}
 
