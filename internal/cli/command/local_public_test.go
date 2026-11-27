@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/settings"
 	"github.com/osapi-io/osapi/internal/validation/rule"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // localDeps is what the methods of a test group use.
@@ -223,18 +224,21 @@ func (s *LocalPublicTestSuite) TestRegistry() {
 		}
 	}
 	s.Less(ix, iy, "a tie of command path is by path")
-	s.PanicsWithValue(`command: group "zzregb" registered twice`, func() {
-		command.Register(command.Define("zzregb", "B again"))
-	})
+	_ = wiring.Take()
+	command.Register(command.Define("zzregb", "B again"))
+	s.EqualError(wiring.Take(), `command: group "zzregb" registered twice`)
 }
 
 func (s *LocalPublicTestSuite) TestProvide() {
 	g := command.Define("zzprovide", "Provided", command.Uses[localDeps]())
-	s.PanicsWithValue(
+	_ = wiring.Take()
+	command.Provide(g, func() int { return 1 })
+	s.EqualError(
+		wiring.Take(),
 		"command: zzprovide uses command_test.localDeps, and Provide gives int",
-		func() { command.Provide(g, func() int { return 1 }) },
 	)
-	s.NotPanics(func() { command.Provide(g, func() localDeps { return localDeps{} }) })
+	command.Provide(g, func() localDeps { return localDeps{} })
+	s.NoError(wiring.Take())
 }
 
 func (s *LocalPublicTestSuite) TestRun() {
@@ -449,17 +453,30 @@ func (s *LocalPublicTestSuite) TestReadBack() {
 	s.Empty(m.Examples()[1].Checks)
 	s.Equal("a reason that is long enough to say why no read shows it", m.Unchecked())
 
-	odd := []any{"name"}
 	tests := []struct {
-		name string
-		call func()
+		name  string
+		pairs []any
+		want  []command.Field
+		err   string
 	}{
-		{name: "an odd count", call: func() { command.Fields(odd...) }},
-		{name: "a path that is not a string", call: func() { command.Fields(1, "x") }},
+		{
+			name:  "an odd count leaves the last path out",
+			pairs: []any{"name", "ann", "count"},
+			want:  []command.Field{{Path: "name", Want: "ann"}},
+			err:   "command.Fields: an odd count of paths and wants",
+		},
+		{
+			name:  "a path that is not a string leaves its pair out",
+			pairs: []any{1, "x", "name", "ann"},
+			want:  []command.Field{{Path: "name", Want: "ann"}},
+			err:   "command.Fields: path 1 is not a string",
+		},
 	}
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.Panics(tt.call)
+			_ = wiring.Take()
+			s.Equal(tt.want, command.Fields(tt.pairs...))
+			s.EqualError(wiring.Take(), tt.err)
 		})
 	}
 	s.False(command.WithCheck(nil, command.ReadBack{}))

@@ -39,6 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // letter is a name of a test, a closed set for the enum rule.
@@ -411,9 +412,10 @@ func (s *EndpointPublicTestSuite) TestRegistry() {
 	s.Same(g, endpoint.Lookup("zzregistry"))
 	s.Nil(endpoint.Lookup("zznone"))
 	s.Contains(endpoint.All(), g)
-	s.PanicsWithValue(`endpoint: group "zzregistry" registered twice`, func() {
-		endpoint.Register(endpoint.Define("zzregistry", "Again"))
-	})
+	_ = wiring.Take()
+	endpoint.Register(endpoint.Define("zzregistry", "Again"))
+	s.EqualError(wiring.Take(), `endpoint: group "zzregistry" registered twice`)
+	s.Same(g, endpoint.Lookup("zzregistry"), "the first group stays")
 	endpoint.Register(endpoint.Define("zzaregistry", "Sorts first"))
 	all := endpoint.All()
 	for i := 1; i < len(all); i++ {
