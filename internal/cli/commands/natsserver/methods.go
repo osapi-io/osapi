@@ -73,9 +73,12 @@ func Components(
 	log := d.Logger.With("component", "nats")
 	// The metrics server is made before the NATS connection, so that
 	// nats-client records the calls of the bus on it.
-	ms := metrics.FromConfig(
+	ms, err := metrics.FromConfig(
 		n.Server.Metrics, n.Server.KeyDir, "nats.server.key_dir", "nats-metrics", log,
 	)
+	if err != nil {
+		return command.Running{}, err
+	}
 	s, err := d.NewServer(ctx, log, n, ms.MeterProvider())
 	if err != nil {
 		return command.Running{}, fmt.Errorf("start the NATS server: %w", err)

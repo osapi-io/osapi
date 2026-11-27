@@ -23,6 +23,7 @@ package metrics_test
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -76,7 +77,8 @@ func (s *ServerPublicTestSuite) TestNew() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			tc.validateFunc(srv)
 		})
 	}
@@ -84,7 +86,8 @@ func (s *ServerPublicTestSuite) TestNew() {
 
 func (s *ServerPublicTestSuite) TestStart() {
 	tests := []struct {
-		name string
+		wantErr string
+		name    string
 		// listen returns the port to serve on and a function releasing
 		// anything the row held open.
 		listen       func() (int, func())
@@ -125,7 +128,7 @@ func (s *ServerPublicTestSuite) TestStart() {
 			},
 		},
 		{
-			name: "logs error when port is already in use",
+			name: "a port in use is the error of Start",
 			listen: func() (int, func()) {
 				// Occupy a port on the same interface the server will bind to.
 				l, err := net.Listen("tcp", "127.0.0.1:0")
@@ -133,6 +136,7 @@ func (s *ServerPublicTestSuite) TestStart() {
 
 				return l.Addr().(*net.TCPAddr).Port, func() { _ = l.Close() }
 			},
+			wantErr:      "metrics server: listen on 127.0.0.1:",
 			validateFunc: func(_ int) {},
 		},
 	}
@@ -142,8 +146,15 @@ func (s *ServerPublicTestSuite) TestStart() {
 			port, release := tc.listen()
 			defer release()
 
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+
+			s.Require().NoError(err)
 			s.Require().NotNil(srv)
+			if tc.wantErr != "" {
+				s.ErrorContains(srv.Start(), tc.wantErr)
+
+				return
+			}
 			s.Require().NoError(srv.Start())
 
 			time.Sleep(100 * time.Millisecond)
@@ -211,7 +222,8 @@ func (s *ServerPublicTestSuite) TestStop() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			s.Require().NotNil(srv)
 
 			// A slow handler that holds a connection open, for the row
@@ -301,7 +313,8 @@ func (s *ServerPublicTestSuite) TestComponentUpGauge() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 
 			if tc.readinessFunc != nil {
 				srv.SetReadinessFunc(tc.readinessFunc)
@@ -364,7 +377,8 @@ func (s *ServerPublicTestSuite) TestRegisterSubsystems() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			srv.RegisterSubsystems(tc.subsystems)
 
 			s.Require().NoError(srv.Start())
@@ -427,7 +441,8 @@ func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			srv.RegisterHeartbeatAge(tc.timeFn)
 
 			s.Require().NoError(srv.Start())
@@ -451,7 +466,8 @@ func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
 // already gets it twice.
 func (s *ServerPublicTestSuite) TestBehaviorMetricNames() {
 	port := s.getFreePort()
-	srv := metrics.New("127.0.0.1", port, slog.Default())
+	srv, err := metrics.New("127.0.0.1", port, slog.Default())
+	s.Require().NoError(err)
 	meter := srv.MeterProvider().Meter("osapi-behavior")
 	for _, name := range []string{instruments.BehaviorCalls.Name, instruments.BehaviorChanges.Name} {
 		c, err := meter.Int64Counter(name)
@@ -491,7 +507,7 @@ func (s *ServerPublicTestSuite) TestNewPrometheusError() {
 		validateFunc func(*metrics.Server)
 	}{
 		{
-			name: "when prometheus exporter fails returns nil",
+			name: "when the prometheus exporter fails, it is the error",
 			validateFunc: func(srv *metrics.Server) {
 				s.Nil(srv)
 			},
@@ -508,7 +524,8 @@ func (s *ServerPublicTestSuite) TestNewPrometheusError() {
 			defer metrics.ResetPrometheusNewFn()
 
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.ErrorContains(err, "create the prometheus exporter: exporter error")
 			tc.validateFunc(srv)
 		})
 	}
@@ -562,7 +579,9 @@ func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
 			out := &lockedBuffer{}
 			logger := slog.New(slog.NewTextHandler(out, nil))
 
-			srv := metrics.New("127.0.0.1", s.getFreePort(), logger)
+			srv, err := metrics.New("127.0.0.1", s.getFreePort(), logger)
+
+			s.Require().NoError(err)
 			s.Require().NotNil(srv)
 			s.Require().NoError(srv.Start())
 
@@ -577,6 +596,60 @@ func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			srv.Stop(ctx)
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStartServes() {
+	tests := []struct {
+		name    string
+		tls     *tls.Config
+		closeLn bool
+		wantLog string
+	}{
+		{
+			name: "with TLS, it serves through a TLS listener",
+			tls:  &tls.Config{MinVersion: tls.VersionTLS12},
+		},
+		{
+			name:    "a listener that fails while it serves is logged",
+			closeLn: true,
+			wantLog: "metrics server error",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var ln net.Listener
+			metrics.SetListenFn(func(ctx context.Context, network, _ string) (net.Listener, error) {
+				l, err := (&net.ListenConfig{}).Listen(ctx, network, "127.0.0.1:0")
+				ln = l
+
+				return l, err
+			})
+			defer metrics.ResetListenFn()
+
+			var buf lockedBuffer
+			log := slog.New(slog.NewTextHandler(&buf, nil))
+			logged := func(msg string) func() bool {
+				return func() bool { return strings.Contains(buf.String(), msg) }
+			}
+
+			srv, err := metrics.New("127.0.0.1", 0, log)
+
+			s.Require().NoError(err)
+			s.Require().NotNil(srv)
+			if tt.tls != nil {
+				metrics.SetServerTLS(srv, tt.tls)
+			}
+			s.Require().NoError(srv.Start())
+			s.Eventually(logged("metrics server started"), 2*time.Second, 10*time.Millisecond)
+			if tt.closeLn {
+				_ = ln.Close()
+			}
+			if tt.wantLog != "" {
+				s.Eventually(logged(tt.wantLog), 2*time.Second, 10*time.Millisecond)
+			}
+			srv.Stop(context.Background())
 		})
 	}
 }

@@ -594,7 +594,8 @@ func (s *AgentPublicTestSuite) TestSetMeterProvider() {
 			a := s.buildAgent()
 
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			tt.validateFunc(srv, a)
 
 			ctx, cancel := context.WithTimeout(

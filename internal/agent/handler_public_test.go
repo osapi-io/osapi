@@ -116,7 +116,8 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 	if err == nil {
 		port := l.Addr().(*net.TCPAddr).Port
 		_ = l.Close()
-		srv := metrics.New("127.0.0.1", port, slog.Default())
+		srv, err := metrics.New("127.0.0.1", port, slog.Default())
+		s.Require().NoError(err)
 		s.testAgent.SetMeterProvider(srv.MeterProvider())
 	}
 }

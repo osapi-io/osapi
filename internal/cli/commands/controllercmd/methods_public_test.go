@@ -51,11 +51,12 @@ type result struct {
 
 func (s *MethodsPublicTestSuite) TestStart() {
 	tests := []struct {
-		name         string
-		metrics      bool
-		tracerErr    error
-		newErr       error
-		validateFunc func(got result)
+		name           string
+		metrics        bool
+		badMetricsCert bool
+		tracerErr      error
+		newErr         error
+		validateFunc   func(got result)
 	}{
 		{
 			name: "when it starts, the controller is the one component, and the cleanup stops the tracer",
@@ -65,6 +66,14 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				s.Equal(1, got.opts, "the version is the one option")
 				got.cleanup()
 				s.True(*got.stopped)
+			},
+		},
+		{
+			name:           "when the metrics server is on and its certificate does not load, it is the error",
+			metrics:        true,
+			badMetricsCert: true,
+			validateFunc: func(got result) {
+				s.ErrorContains(got.err, "metrics server: tls")
 			},
 		},
 		{
@@ -98,6 +107,13 @@ func (s *MethodsPublicTestSuite) TestStart() {
 			var opts int
 			cfg := config.Config{}
 			cfg.Controller.Metrics = config.MetricsServer{Enabled: tc.metrics, Host: "127.0.0.1"}
+			if tc.badMetricsCert {
+				cfg.Controller.Metrics.TLS = config.ServerTLS{
+					Enabled:  true,
+					CertFile: "/no/such.crt",
+					KeyFile:  "/no/such.key",
+				}
+			}
 			d := controllercmd.Deps{
 				Config:  cfg,
 				Logger:  slog.New(slog.DiscardHandler),

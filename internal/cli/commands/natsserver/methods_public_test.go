@@ -43,11 +43,20 @@ type MethodsPublicTestSuite struct {
 
 func (s *MethodsPublicTestSuite) TestStart() {
 	tests := []struct {
-		name         string
-		metrics      bool
-		newErr       error
-		validateFunc func(n int, version string, err error)
+		name           string
+		metrics        bool
+		badMetricsCert bool
+		newErr         error
+		validateFunc   func(n int, version string, err error)
 	}{
+		{
+			name:           "when the metrics server is on and its certificate does not load, it is the error",
+			metrics:        true,
+			badMetricsCert: true,
+			validateFunc: func(_ int, _ string, err error) {
+				s.ErrorContains(err, "metrics server: tls")
+			},
+		},
 		{
 			name: "when the metrics server is off, the NATS server is the one component",
 			validateFunc: func(n int, version string, err error) {
@@ -85,6 +94,13 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				AnyTimes()
 			cfg := config.Config{}
 			cfg.NATS.Server.Metrics = config.MetricsServer{Enabled: tc.metrics, Host: "127.0.0.1"}
+			if tc.badMetricsCert {
+				cfg.NATS.Server.Metrics.TLS = config.ServerTLS{
+					Enabled:  true,
+					CertFile: "/no/such.crt",
+					KeyFile:  "/no/such.key",
+				}
+			}
 			d := natsserver.Deps{
 				Config:  cfg,
 				Logger:  slog.New(slog.DiscardHandler),

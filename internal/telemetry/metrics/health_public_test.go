@@ -50,7 +50,8 @@ func (s *HealthPublicTestSuite) getFreePort() int {
 
 func (s *HealthPublicTestSuite) newStartedServer() (*metrics.Server, int, func()) {
 	port := s.getFreePort()
-	srv := metrics.New("127.0.0.1", port, slog.Default())
+	srv, err := metrics.New("127.0.0.1", port, slog.Default())
+	s.Require().NoError(err)
 	s.Require().NotNil(srv)
 
 	s.Require().NoError(srv.Start())
@@ -158,7 +159,8 @@ func (s *HealthPublicTestSuite) TestHandleReady() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			port := s.getFreePort()
-			srv := metrics.New("127.0.0.1", port, slog.Default())
+			srv, err := metrics.New("127.0.0.1", port, slog.Default())
+			s.Require().NoError(err)
 			s.Require().NotNil(srv)
 
 			if tc.readinessFunc != nil {

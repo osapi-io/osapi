@@ -21,11 +21,13 @@
 package metrics_test
 
 import (
-	"bytes"
+	"errors"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
+
+	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 
 	"github.com/stretchr/testify/suite"
 
@@ -43,32 +45,49 @@ type ConfigPublicTestSuite struct {
 func (s *ConfigPublicTestSuite) TestFromConfigNoCertificate() {
 	blocked := filepath.Join(s.T().TempDir(), "file")
 	s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
-	var logs bytes.Buffer
-	got := metrics.FromConfig(config.MetricsServer{
+	got, err := metrics.FromConfig(config.MetricsServer{
 		Enabled: true, Host: "127.0.0.1", TLS: config.ServerTLS{Enabled: true},
 	}, filepath.Join(blocked, "pki"), "nats.server.key_dir", "metrics",
-		slog.New(slog.NewTextHandler(&logs, nil)))
+		slog.New(slog.DiscardHandler))
 	s.Nil(got, "no fall back to plain HTTP")
-	s.Contains(logs.String(), "set nats.server.key_dir to a directory",
+	s.ErrorContains(err, "set nats.server.key_dir to a directory",
 		"the error names the config key of the key directory")
 
-	got = metrics.FromConfig(config.MetricsServer{
+	got, err = metrics.FromConfig(config.MetricsServer{
 		Enabled: true, Host: "127.0.0.1",
 		TLS: config.ServerTLS{Enabled: true, CertFile: "/no/such.crt", KeyFile: "/no/such.key"},
 	}, "", "nats.server.key_dir", "metrics", slog.New(slog.DiscardHandler))
 	s.Nil(got, "a certificate that does not load does not start it")
+	s.ErrorContains(err, "metrics server: tls")
+}
+
+// TestFromConfigNoExporter: a metrics server whose exporter cannot be made
+// is the error, not a process with no metrics.
+func (s *ConfigPublicTestSuite) TestFromConfigNoExporter() {
+	metrics.SetPrometheusNewFn(func(
+		_ ...prometheusExporter.Option,
+	) (*prometheusExporter.Exporter, error) {
+		return nil, errors.New("exporter error")
+	})
+	defer metrics.ResetPrometheusNewFn()
+
+	got, err := metrics.FromConfig(config.MetricsServer{Enabled: true, Host: "127.0.0.1"},
+		s.T().TempDir(), "agent.pki.key_dir", "metrics", slog.New(slog.DiscardHandler))
+	s.Nil(got)
+	s.ErrorContains(err, "exporter error")
 }
 
 func (s *ConfigPublicTestSuite) TestFromConfig() {
 	tests := []struct {
 		name         string
 		cfg          config.MetricsServer
-		validateFunc func(*metrics.Server)
+		validateFunc func(*metrics.Server, error)
 	}{
 		{
 			name: "when the config turns it off, there is no server, and no meter provider",
 			cfg:  config.MetricsServer{},
-			validateFunc: func(got *metrics.Server) {
+			validateFunc: func(got *metrics.Server, err error) {
+				s.Require().NoError(err)
 				s.Nil(got)
 				s.Nil(got.MeterProvider())
 			},
@@ -79,7 +98,8 @@ func (s *ConfigPublicTestSuite) TestFromConfig() {
 				Enabled: true, Host: "127.0.0.1",
 				TLS: config.ServerTLS{Enabled: true},
 			},
-			validateFunc: func(got *metrics.Server) {
+			validateFunc: func(got *metrics.Server, err error) {
+				s.Require().NoError(err)
 				s.NotNil(got)
 			},
 		},
@@ -93,14 +113,16 @@ func (s *ConfigPublicTestSuite) TestFromConfig() {
 					return config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}
 				}(),
 			},
-			validateFunc: func(got *metrics.Server) {
+			validateFunc: func(got *metrics.Server, err error) {
+				s.Require().NoError(err)
 				s.NotNil(got)
 			},
 		},
 		{
 			name: "when the config turns it on, it is made with a meter provider",
 			cfg:  config.MetricsServer{Enabled: true, Host: "127.0.0.1", Port: 0},
-			validateFunc: func(got *metrics.Server) {
+			validateFunc: func(got *metrics.Server, err error) {
+				s.Require().NoError(err)
 				s.Require().NotNil(got)
 				s.NotNil(got.MeterProvider())
 			},

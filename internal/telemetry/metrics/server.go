@@ -24,9 +24,11 @@ package metrics
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
@@ -49,12 +51,13 @@ import (
 var prometheusNewFn = prometheusExporter.New
 
 // New creates a new metrics server on the given port with an isolated
-// Prometheus registry and OTEL MeterProvider.
+// Prometheus registry and OTEL MeterProvider. An exporter that cannot be
+// made is the error.
 func New(
 	host string,
 	port int,
 	logger *slog.Logger,
-) *Server {
+) (*Server, error) {
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(collectors.NewGoCollector())
 	reg.MustRegister(collectors.NewProcessCollector(
@@ -66,12 +69,7 @@ func New(
 		prometheusExporter.WithNamespace(instruments.Namespace),
 	)
 	if err != nil {
-		logger.Error(
-			"failed to create prometheus exporter",
-			slog.String("error", err.Error()),
-		)
-
-		return nil
+		return nil, fmt.Errorf("metrics server: create the prometheus exporter: %w", err)
 	}
 
 	mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
@@ -117,7 +115,7 @@ func New(
 
 	srv.echo = e
 
-	return srv
+	return srv, nil
 }
 
 // SetReadinessFunc sets a function called by /health/ready to determine
@@ -198,8 +196,17 @@ func (s *Server) MeterProvider() *sdkmetric.MeterProvider {
 // shutdownGracePeriod bounds how long Stop waits for in-flight requests.
 const shutdownGracePeriod = 10 * time.Second
 
-// Start starts the HTTP server in a background goroutine.
+// Start listens on the server's address, then serves the metrics without
+// blocking. A listen that fails, such as on a port in use, is the error.
 func (s *Server) Start() error {
+	ln, err := listenFn(context.Background(), "tcp", s.addr)
+	if err != nil {
+		return fmt.Errorf("metrics server: listen on %s: %w", s.addr, err)
+	}
+	if s.tls != nil {
+		ln = tls.NewListener(ln, s.tls)
+	}
+
 	// v5 drives the listener from a context rather than a Shutdown method,
 	// so Stop cancels this one.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -212,8 +219,7 @@ func (s *Server) Start() error {
 		)
 
 		sc := echo.StartConfig{
-			Address:         s.addr,
-			TLSConfig:       s.tls,
+			Listener:        ln,
 			HideBanner:      true,
 			GracefulTimeout: shutdownGracePeriod,
 		}
@@ -227,6 +233,15 @@ func (s *Server) Start() error {
 	}()
 
 	return nil
+}
+
+// listenFn opens the metrics server's listener. A test replaces it.
+var listenFn = func(
+	ctx context.Context,
+	network string,
+	addr string,
+) (net.Listener, error) {
+	return (&net.ListenConfig{}).Listen(ctx, network, addr)
 }
 
 // Stop gracefully shuts down the HTTP server and meter provider.
