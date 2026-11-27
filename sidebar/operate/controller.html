@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">3. Controller | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/controller"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="3. Controller | OSAPI"><meta data-rh="true" name="description" content="The controller serves the API and the UI. It sends each job, checks each answer,"><meta data-rh="true" property="og:description" content="The controller serves the API and the UI. It sends each job, checks each answer,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/controller"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/controller" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/controller" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"3. Controller","item":"https://osapi-io.github.io/osapi/sidebar/operate/controller"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.bbcd52a2.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.15b80f70.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.0eac7fd0.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -32,9 +32,11 @@ setting. A CLI on another host needs it as <code>controller.client.tls.ca_file</
 certificate of a CA that it trusts. A join over HTTPS pins the certificate.</p>
 <p><code>osapi pki cert list</code> shows each certificate of osapi on the host: its source,
 its key and signature algorithms, whether FIPS approves them, and when it
-expires. <code>osapi pki cert rotate --name api</code> makes a new self-signed certificate;
-the controller serves it at its next start. Give the new <code>api.crt</code> to each CLI
-on another host.</p>
+expires. <code>osapi pki cert rotate --name api</code> makes a new self-signed certificate,
+and the controller serves it at its next handshake, with no restart. Join tokens
+made from then on carry its fingerprint, and a token made before it no longer
+joins. Give the new <code>api.crt</code> to each CLI on another host. A certificate of your
+own, in <code>cert_file</code>, is served the same way when you replace its files.</p>
 <p><code>osapi pki cert list</code> reads only the host that it runs on.
 <code>osapi client pki cert list</code> reads the fleet through the API, from any machine
 with a client config: the certificates of the controller&#x27;s host, and the ones

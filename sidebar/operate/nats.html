@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">2. NATS | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/nats"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="2. NATS | OSAPI"><meta data-rh="true" name="description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><meta data-rh="true" property="og:description" content="Each osapi process talks through NATS. The controller sends each job on NATS,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/nats"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/nats" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"2. NATS","item":"https://osapi-io.github.io/osapi/sidebar/operate/nats"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.bbcd52a2.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.15b80f70.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.0eac7fd0.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -114,10 +114,24 @@ run <code>osapi nats auth operator create --out /etc/osapi/nats</code> and merge
 <p>NATS serves TLS by default. With no <code>cert_file</code>, the server makes a
 self-signed certificate, <code>nats.crt</code>, in <code>nats.server.key_dir</code> at its first
 start. The controller and an agent on the same host trust it with no setting.
-<code>osapi pki cert get --name nats</code> shows it. Each join string pins it, so
-<code>osapi pki cert rotate --name nats</code> needs <code>--force</code>, then new join tokens and
-a join again of each agent on another host. To serve a certificate of your
-own:</p>
+<code>osapi pki cert get --name nats</code> shows it. Each joined agent pins it, so
+<code>osapi pki cert rotate --name nats</code>, on the controller&#x27;s host, rotates it
+with an overlap and no restart:</p>
+<ul>
+<li class="">It makes the next certificate, <code>nats.next.crt</code>, beside the current one, and
+writes a record to the state bucket that the controller&#x27;s key signs.</li>
+<li class="">At its next heartbeat, each agent adds the next certificate to the ones
+that it trusts, and <code>osapi client agent get</code> shows it as <code>nats_cert_next</code>.</li>
+<li class="">When each admitted agent trusts it, or
+<code>controller.pki.rotation_grace_period</code> ends, the controller renames it into
+place. NATS serves it at its next handshake, and the agents&#x27; connections
+stay up.</li>
+<li class="">An agent that was away for the whole overlap trusts the new certificate
+from the record at its next heartbeat, if it still has a connection.
+Otherwise, it joins again.</li>
+</ul>
+<p>A certificate of your own, in <code>cert_file</code>, is served the same way when you
+replace its files: NATS reads them again at its next handshake. To serve one:</p>
 <div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">nats</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">server</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">tls</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">cert_file</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> /etc/osapi/tls/nats.crt</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">key_file</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> /etc/osapi/tls/nats.key</span><br></div></code></pre></div></div>
 <p>Set <code>controller.join.url</code> to <code>tls://</code>. Then the join string has the
 fingerprint of the certificate, and an agent refuses a server with a
