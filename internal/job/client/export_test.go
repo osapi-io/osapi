@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
+
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -171,4 +173,15 @@ func TimeoutOf(
 	c *Client,
 ) time.Duration {
 	return c.timeout
+}
+
+// PurgeSubject purges subject from stream through the JetStream API js,
+// as the job client of a connection does when its bucket is full.
+func PurgeSubject(
+	ctx context.Context,
+	js jetstream.JetStream,
+	stream string,
+	subject string,
+) error {
+	return jsPurger{js: js}.PurgeSubject(ctx, stream, subject)
 }

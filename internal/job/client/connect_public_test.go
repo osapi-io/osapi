@@ -23,8 +23,10 @@ package client_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type ConnectPublicTestSuite struct {
@@ -222,4 +225,73 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 			s.Equal(tc.wantFacts, c.StateBucket != "")
 		})
 	}
+}
+
+// TestAFullJobStoreRemovesTheOldestFinishedJobs: a jobs bucket at its
+// max_bytes refuses each new write, until the 24h TTL removes old jobs.
+// The controller now purges the oldest finished jobs and writes again, so
+// it keeps taking jobs. Before, the job after the bucket filled failed.
+func (s *ConnectPublicTestSuite) TestAFullJobStoreRemovesTheOldestFinishedJobs() {
+	cfg := natsConfig(config.NATSServer{
+		Host:     "127.0.0.1",
+		Port:     s.freePort(),
+		StoreDir: s.T().TempDir(),
+		Auth:     config.NATSServerAuth{Type: "none"},
+	})
+	cfg.KV.MaxBytes = 16 * 1024
+	srv, err := server.New(context.Background(), slog.Default(), cfg, nil)
+	s.Require().NoError(err)
+	s.T().Cleanup(func() { srv.Stop(context.Background()) })
+	conn := config.NATSConnection{
+		Host:       "127.0.0.1",
+		Port:       cfg.Server.Port,
+		ClientName: "test",
+		Auth:       config.NATSAuth{Type: "none"},
+	}
+	c, err := client.Connect(context.Background(), slog.Default(), conn, cfg, time.Second, nil, nil)
+	s.Require().NoError(err)
+	defer c.NATS.Close()
+	trust(c.Jobs, nil)
+
+	ctx := context.Background()
+	done := map[string]bool{}
+	for i := range 200 {
+		_, err := c.Jobs.CreateJob(ctx, types.JobTypeQuery, map[string]interface{}{
+			"type": "node.hostname.get",
+			"data": map[string]interface{}{"padding": strings.Repeat("x", 256)},
+		}, "web-01")
+		s.Require().NoError(err, "job %d", i)
+		// The agent finished each job.
+		keys, err := c.NATS.KVKeys(ctx, c.JobsBucket, "jobs.>")
+		s.Require().NoError(err)
+		for _, key := range keys {
+			id := strings.TrimPrefix(key, "jobs.")
+			if done[id] {
+				continue
+			}
+			done[id] = true
+			_, err = c.NATS.KVPut(ctx, c.JobsBucket,
+				fmt.Sprintf("status.%s.completed.web-01.%d", id, i), []byte("{}"))
+			if err != nil {
+				s.Require().ErrorContains(err, "maximum bytes exceeded")
+			}
+		}
+	}
+
+	status, err := c.NATS.KVStatus(ctx, c.JobsBucket)
+	s.Require().NoError(err)
+	s.LessOrEqual(status.Bytes(), uint64(cfg.KV.MaxBytes))
+}
+
+// TestPurgeOfAMissingStream: a purge names the stream it could not find.
+func (s *ConnectPublicTestSuite) TestPurgeOfAMissingStream() {
+	cfg, conn := s.startServer()
+	c, err := client.Connect(context.Background(), slog.Default(), conn, cfg, time.Second, nil, nil)
+	s.Require().NoError(err)
+	defer c.NATS.Close()
+
+	js, err := c.NATS.JetStream()
+	s.Require().NoError(err)
+	err = client.PurgeSubject(context.Background(), js, "KV_missing", "$KV.missing.>")
+	s.ErrorContains(err, "stream KV_missing")
 }

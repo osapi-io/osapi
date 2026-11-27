@@ -72,10 +72,15 @@ export type getNodeCertificateResponse500 = {
   status: 500
 }
 
+export type getNodeCertificateResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeCertificateResponseSuccess = (getNodeCertificateResponse200) & {
   headers: Headers;
 };
-export type getNodeCertificateResponseError = (getNodeCertificateResponse400 | getNodeCertificateResponse401 | getNodeCertificateResponse403 | getNodeCertificateResponse404 | getNodeCertificateResponse409 | getNodeCertificateResponse500) & {
+export type getNodeCertificateResponseError = (getNodeCertificateResponse400 | getNodeCertificateResponse401 | getNodeCertificateResponse403 | getNodeCertificateResponse404 | getNodeCertificateResponse409 | getNodeCertificateResponse500 | getNodeCertificateResponse503) & {
   headers: Headers;
 };
 
@@ -140,10 +145,15 @@ export type postNodeCertificateResponse500 = {
   status: 500
 }
 
+export type postNodeCertificateResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeCertificateResponseSuccess = (postNodeCertificateResponse200) & {
   headers: Headers;
 };
-export type postNodeCertificateResponseError = (postNodeCertificateResponse400 | postNodeCertificateResponse401 | postNodeCertificateResponse403 | postNodeCertificateResponse404 | postNodeCertificateResponse409 | postNodeCertificateResponse500) & {
+export type postNodeCertificateResponseError = (postNodeCertificateResponse400 | postNodeCertificateResponse401 | postNodeCertificateResponse403 | postNodeCertificateResponse404 | postNodeCertificateResponse409 | postNodeCertificateResponse500 | postNodeCertificateResponse503) & {
   headers: Headers;
 };
 
@@ -209,10 +219,15 @@ export type deleteNodeCertificateResponse500 = {
   status: 500
 }
 
+export type deleteNodeCertificateResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeCertificateResponseSuccess = (deleteNodeCertificateResponse200) & {
   headers: Headers;
 };
-export type deleteNodeCertificateResponseError = (deleteNodeCertificateResponse400 | deleteNodeCertificateResponse401 | deleteNodeCertificateResponse403 | deleteNodeCertificateResponse404 | deleteNodeCertificateResponse409 | deleteNodeCertificateResponse500) & {
+export type deleteNodeCertificateResponseError = (deleteNodeCertificateResponse400 | deleteNodeCertificateResponse401 | deleteNodeCertificateResponse403 | deleteNodeCertificateResponse404 | deleteNodeCertificateResponse409 | deleteNodeCertificateResponse500 | deleteNodeCertificateResponse503) & {
   headers: Headers;
 };
 
@@ -279,10 +294,15 @@ export type getNodeCertificateByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeCertificateByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeCertificateByKeyResponseSuccess = (getNodeCertificateByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeCertificateByKeyResponseError = (getNodeCertificateByKeyResponse400 | getNodeCertificateByKeyResponse401 | getNodeCertificateByKeyResponse403 | getNodeCertificateByKeyResponse404 | getNodeCertificateByKeyResponse409 | getNodeCertificateByKeyResponse500) & {
+export type getNodeCertificateByKeyResponseError = (getNodeCertificateByKeyResponse400 | getNodeCertificateByKeyResponse401 | getNodeCertificateByKeyResponse403 | getNodeCertificateByKeyResponse404 | getNodeCertificateByKeyResponse409 | getNodeCertificateByKeyResponse500 | getNodeCertificateByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -349,10 +369,15 @@ export type putNodeCertificateResponse500 = {
   status: 500
 }
 
+export type putNodeCertificateResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeCertificateResponseSuccess = (putNodeCertificateResponse200) & {
   headers: Headers;
 };
-export type putNodeCertificateResponseError = (putNodeCertificateResponse400 | putNodeCertificateResponse401 | putNodeCertificateResponse403 | putNodeCertificateResponse404 | putNodeCertificateResponse409 | putNodeCertificateResponse500) & {
+export type putNodeCertificateResponseError = (putNodeCertificateResponse400 | putNodeCertificateResponse401 | putNodeCertificateResponse403 | putNodeCertificateResponse404 | putNodeCertificateResponse409 | putNodeCertificateResponse500 | putNodeCertificateResponse503) & {
   headers: Headers;
 };
 

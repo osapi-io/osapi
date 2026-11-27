@@ -148,7 +148,11 @@ func Run[Out any](
 			send = d.JobClient.ModifyBroadcast
 		}
 		jobID, responses, err := send(ctx, target, job.CategoryBehavior, op, input)
-		if err != nil {
+		switch {
+		case errors.Is(err, job.ErrStoreFull):
+			// The cause is in the controller's log; the caller gets 503.
+			return out, job.ErrStoreFull
+		case err != nil:
 			return out, endpoint.Internal("the job could not be sent", err)
 		}
 		answer.JobID = jobID
@@ -165,6 +169,8 @@ func Run[Out any](
 		jobID, resp, err := send(ctx, target, job.CategoryBehavior, op, input)
 		var failed *job.ResponseError
 		switch {
+		case errors.Is(err, job.ErrStoreFull):
+			return out, job.ErrStoreFull
 		case errors.Is(err, job.ErrNotFound):
 			return out, fmt.Errorf("%w: %s", behavior.ErrNotFound, err)
 		case errors.Is(err, job.ErrNotManaged):

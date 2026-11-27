@@ -46,10 +46,15 @@ export type getNodeUptimeResponse500 = {
   status: 500
 }
 
+export type getNodeUptimeResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeUptimeResponseSuccess = (getNodeUptimeResponse200) & {
   headers: Headers;
 };
-export type getNodeUptimeResponseError = (getNodeUptimeResponse400 | getNodeUptimeResponse401 | getNodeUptimeResponse403 | getNodeUptimeResponse404 | getNodeUptimeResponse409 | getNodeUptimeResponse500) & {
+export type getNodeUptimeResponseError = (getNodeUptimeResponse400 | getNodeUptimeResponse401 | getNodeUptimeResponse403 | getNodeUptimeResponse404 | getNodeUptimeResponse409 | getNodeUptimeResponse500 | getNodeUptimeResponse503) & {
   headers: Headers;
 };
 

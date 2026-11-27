@@ -72,5 +72,12 @@ type ConsumerStore interface {
 	DeleteConsumer(ctx context.Context, stream string, consumer string) error
 }
 
+// StorePurger removes each message of one subject from a stream. A purge
+// writes nothing, so it works on a bucket that is full, where a delete,
+// which writes a marker, is refused.
+type StorePurger interface {
+	PurgeSubject(ctx context.Context, stream string, subject string) error
+}
+
 // Ensure natsclient.Client implements NATSClient interface.
 var _ NATSClient = (*natsclient.Client)(nil)

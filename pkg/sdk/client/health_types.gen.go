@@ -121,6 +121,9 @@ type KVBucketInfo struct {
 	// Number of keys in the bucket.
 	Keys int `json:"keys"`
 
+	// The bucket's limit in bytes. -1 or 0 is no limit.
+	MaxBytes int `json:"max_bytes"`
+
 	// KV bucket name.
 	Name string `json:"name"`
 }
@@ -158,7 +161,7 @@ type StatusResponse struct {
 	Agents AgentStats `json:"agents,omitzero"`
 
 	// What the controller that answered checked for this answer: its connection to
-	// NATS and to the KV store.
+	// NATS and to the KV store, and whether the job store is near its limit.
 	Checks []Check `json:"checks"`
 
 	// Total number of JetStream consumers: the sum of the consumers of each

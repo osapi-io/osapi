@@ -72,10 +72,15 @@ export type getNodeScheduleResponse500 = {
   status: 500
 }
 
+export type getNodeScheduleResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeScheduleResponseSuccess = (getNodeScheduleResponse200) & {
   headers: Headers;
 };
-export type getNodeScheduleResponseError = (getNodeScheduleResponse400 | getNodeScheduleResponse401 | getNodeScheduleResponse403 | getNodeScheduleResponse404 | getNodeScheduleResponse409 | getNodeScheduleResponse500) & {
+export type getNodeScheduleResponseError = (getNodeScheduleResponse400 | getNodeScheduleResponse401 | getNodeScheduleResponse403 | getNodeScheduleResponse404 | getNodeScheduleResponse409 | getNodeScheduleResponse500 | getNodeScheduleResponse503) & {
   headers: Headers;
 };
 
@@ -140,10 +145,15 @@ export type postNodeScheduleResponse500 = {
   status: 500
 }
 
+export type postNodeScheduleResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeScheduleResponseSuccess = (postNodeScheduleResponse200) & {
   headers: Headers;
 };
-export type postNodeScheduleResponseError = (postNodeScheduleResponse400 | postNodeScheduleResponse401 | postNodeScheduleResponse403 | postNodeScheduleResponse404 | postNodeScheduleResponse409 | postNodeScheduleResponse500) & {
+export type postNodeScheduleResponseError = (postNodeScheduleResponse400 | postNodeScheduleResponse401 | postNodeScheduleResponse403 | postNodeScheduleResponse404 | postNodeScheduleResponse409 | postNodeScheduleResponse500 | postNodeScheduleResponse503) & {
   headers: Headers;
 };
 
@@ -209,10 +219,15 @@ export type deleteNodeScheduleResponse500 = {
   status: 500
 }
 
+export type deleteNodeScheduleResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeScheduleResponseSuccess = (deleteNodeScheduleResponse200) & {
   headers: Headers;
 };
-export type deleteNodeScheduleResponseError = (deleteNodeScheduleResponse400 | deleteNodeScheduleResponse401 | deleteNodeScheduleResponse403 | deleteNodeScheduleResponse404 | deleteNodeScheduleResponse409 | deleteNodeScheduleResponse500) & {
+export type deleteNodeScheduleResponseError = (deleteNodeScheduleResponse400 | deleteNodeScheduleResponse401 | deleteNodeScheduleResponse403 | deleteNodeScheduleResponse404 | deleteNodeScheduleResponse409 | deleteNodeScheduleResponse500 | deleteNodeScheduleResponse503) & {
   headers: Headers;
 };
 
@@ -279,10 +294,15 @@ export type getNodeScheduleByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeScheduleByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeScheduleByKeyResponseSuccess = (getNodeScheduleByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeScheduleByKeyResponseError = (getNodeScheduleByKeyResponse400 | getNodeScheduleByKeyResponse401 | getNodeScheduleByKeyResponse403 | getNodeScheduleByKeyResponse404 | getNodeScheduleByKeyResponse409 | getNodeScheduleByKeyResponse500) & {
+export type getNodeScheduleByKeyResponseError = (getNodeScheduleByKeyResponse400 | getNodeScheduleByKeyResponse401 | getNodeScheduleByKeyResponse403 | getNodeScheduleByKeyResponse404 | getNodeScheduleByKeyResponse409 | getNodeScheduleByKeyResponse500 | getNodeScheduleByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -349,10 +369,15 @@ export type putNodeScheduleResponse500 = {
   status: 500
 }
 
+export type putNodeScheduleResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeScheduleResponseSuccess = (putNodeScheduleResponse200) & {
   headers: Headers;
 };
-export type putNodeScheduleResponseError = (putNodeScheduleResponse400 | putNodeScheduleResponse401 | putNodeScheduleResponse403 | putNodeScheduleResponse404 | putNodeScheduleResponse409 | putNodeScheduleResponse500) & {
+export type putNodeScheduleResponseError = (putNodeScheduleResponse400 | putNodeScheduleResponse401 | putNodeScheduleResponse403 | putNodeScheduleResponse404 | putNodeScheduleResponse409 | putNodeScheduleResponse500 | putNodeScheduleResponse503) & {
   headers: Headers;
 };
 

@@ -69,6 +69,20 @@ Refer to [CLI Reference](../../usage/cli/client/job/job.mdx) for usage and
 examples, or the [API Reference](/gen/api/job-management-api-job-operations) for
 the REST endpoints.
 
+## When the job store is full
+
+`nats.kv.max_bytes` limits the job bucket, 1 GiB by default. When a new job does
+not fit, the controller removes the oldest finished jobs, a third of the jobs in
+the bucket, and stores the new job. It never removes a job that is submitted or
+processing. When the bucket has no finished job, the API answers 503 with the
+reason `job_store_full`.
+
+`osapi client health status` shows the limit of each bucket. Its `job_store`
+check is an error, and the status is `degraded`, at 80% of the limit. The
+metrics `osapi_job_store_bytes` and `osapi_job_store_max_bytes` give the size
+and the limit, for an alert. A fleet that makes more jobs than the bucket holds
+for one `nats.kv.ttl` sets a larger `nats.kv.max_bytes` or a shorter TTL.
+
 ## Configuration
 
 <!-- osapi:config nats.kv agent.max_jobs agent.hostname agent.labels -->
@@ -80,7 +94,7 @@ the REST endpoints.
 | `agent.labels`      | map    | none: the labels of the host, which the operator picks | `OSAPI_AGENT_LABELS`      | Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details. |
 | `nats.kv.bucket`    | string | `job-queue`                                            | `OSAPI_NATS_KV_BUCKET`    | KV bucket for job definitions, status events and each agent's result.                                                                                                                             |
 | `nats.kv.ttl`       | string | `1h`                                                   | `OSAPI_NATS_KV_TTL`       | How long a job's definition, status events and results stay in the bucket (Go duration), as nats setup sets it. Empty keeps them until max_bytes.                                                 |
-| `nats.kv.max_bytes` | int    | `104857600`                                            | `OSAPI_NATS_KV_MAX_BYTES` | Maximum total size of the bucket in bytes.                                                                                                                                                        |
+| `nats.kv.max_bytes` | int    | `1073741824`                                           | `OSAPI_NATS_KV_MAX_BYTES` | Maximum total size of the bucket in bytes.                                                                                                                                                        |
 | `nats.kv.storage`   | string | `file`                                                 | `OSAPI_NATS_KV_STORAGE`   | Storage backend: 'file' or 'memory'.                                                                                                                                                              |
 | `nats.kv.replicas`  | int    | `1`                                                    | `OSAPI_NATS_KV_REPLICAS`  | Number of KV replicas.                                                                                                                                                                            |
 

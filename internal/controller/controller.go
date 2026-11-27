@@ -132,6 +132,7 @@ func newController(
 ) (*Controller, error) {
 	if o.meterProvider != nil {
 		conn.Jobs.SetMeterProvider(o.meterProvider)
+		registerJobStoreMetrics(o.meterProvider.Meter("osapi"), conn.NATS, conn.JobsBucket)
 	}
 	registerTargetValidator(conn.Jobs)
 

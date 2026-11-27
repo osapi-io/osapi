@@ -72,10 +72,15 @@ export type deleteNodeInterfaceRouteResponse500 = {
   status: 500
 }
 
+export type deleteNodeInterfaceRouteResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeInterfaceRouteResponseSuccess = (deleteNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type deleteNodeInterfaceRouteResponseError = (deleteNodeInterfaceRouteResponse400 | deleteNodeInterfaceRouteResponse401 | deleteNodeInterfaceRouteResponse403 | deleteNodeInterfaceRouteResponse404 | deleteNodeInterfaceRouteResponse409 | deleteNodeInterfaceRouteResponse500) & {
+export type deleteNodeInterfaceRouteResponseError = (deleteNodeInterfaceRouteResponse400 | deleteNodeInterfaceRouteResponse401 | deleteNodeInterfaceRouteResponse403 | deleteNodeInterfaceRouteResponse404 | deleteNodeInterfaceRouteResponse409 | deleteNodeInterfaceRouteResponse500 | deleteNodeInterfaceRouteResponse503) & {
   headers: Headers;
 };
 
@@ -143,10 +148,15 @@ export type getNodeInterfaceRouteResponse500 = {
   status: 500
 }
 
+export type getNodeInterfaceRouteResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeInterfaceRouteResponseSuccess = (getNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type getNodeInterfaceRouteResponseError = (getNodeInterfaceRouteResponse400 | getNodeInterfaceRouteResponse401 | getNodeInterfaceRouteResponse403 | getNodeInterfaceRouteResponse404 | getNodeInterfaceRouteResponse409 | getNodeInterfaceRouteResponse500) & {
+export type getNodeInterfaceRouteResponseError = (getNodeInterfaceRouteResponse400 | getNodeInterfaceRouteResponse401 | getNodeInterfaceRouteResponse403 | getNodeInterfaceRouteResponse404 | getNodeInterfaceRouteResponse409 | getNodeInterfaceRouteResponse500 | getNodeInterfaceRouteResponse503) & {
   headers: Headers;
 };
 
@@ -213,10 +223,15 @@ export type postNodeInterfaceRouteResponse500 = {
   status: 500
 }
 
+export type postNodeInterfaceRouteResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeInterfaceRouteResponseSuccess = (postNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type postNodeInterfaceRouteResponseError = (postNodeInterfaceRouteResponse400 | postNodeInterfaceRouteResponse401 | postNodeInterfaceRouteResponse403 | postNodeInterfaceRouteResponse404 | postNodeInterfaceRouteResponse409 | postNodeInterfaceRouteResponse500) & {
+export type postNodeInterfaceRouteResponseError = (postNodeInterfaceRouteResponse400 | postNodeInterfaceRouteResponse401 | postNodeInterfaceRouteResponse403 | postNodeInterfaceRouteResponse404 | postNodeInterfaceRouteResponse409 | postNodeInterfaceRouteResponse500 | postNodeInterfaceRouteResponse503) & {
   headers: Headers;
 };
 
@@ -284,10 +299,15 @@ export type putNodeInterfaceRouteResponse500 = {
   status: 500
 }
 
+export type putNodeInterfaceRouteResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeInterfaceRouteResponseSuccess = (putNodeInterfaceRouteResponse200) & {
   headers: Headers;
 };
-export type putNodeInterfaceRouteResponseError = (putNodeInterfaceRouteResponse400 | putNodeInterfaceRouteResponse401 | putNodeInterfaceRouteResponse403 | putNodeInterfaceRouteResponse404 | putNodeInterfaceRouteResponse409 | putNodeInterfaceRouteResponse500) & {
+export type putNodeInterfaceRouteResponseError = (putNodeInterfaceRouteResponse400 | putNodeInterfaceRouteResponse401 | putNodeInterfaceRouteResponse403 | putNodeInterfaceRouteResponse404 | putNodeInterfaceRouteResponse409 | putNodeInterfaceRouteResponse500 | putNodeInterfaceRouteResponse503) & {
   headers: Headers;
 };
 

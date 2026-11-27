@@ -3055,6 +3055,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - certificate:read
@@ -3121,6 +3127,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - certificate:write
@@ -3185,6 +3197,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - certificate:write
@@ -3247,6 +3265,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - certificate:read
@@ -3319,6 +3343,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - certificate:write
@@ -3392,6 +3422,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - command:execute
@@ -3472,6 +3508,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - command:shell
@@ -3544,6 +3586,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - connectivity:execute
@@ -3610,6 +3658,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - disk:read
@@ -3672,6 +3726,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - dns:write
@@ -3734,6 +3794,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - dns:read
@@ -3806,6 +3872,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - dns:write
@@ -3891,6 +3963,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:read
@@ -3961,6 +4039,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:write
@@ -4028,6 +4112,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:write
@@ -4090,6 +4180,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:read
@@ -4159,6 +4255,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:exec
@@ -4225,6 +4327,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:execute
@@ -4294,6 +4402,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - docker:execute
@@ -4363,6 +4477,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - file:write
@@ -4433,6 +4553,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - file:read
@@ -4500,6 +4626,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - file:write
@@ -4570,6 +4702,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - group:read
@@ -4636,6 +4774,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - group:write
@@ -4705,6 +4849,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - group:write
@@ -4767,6 +4917,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - group:read
@@ -4835,6 +4991,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - group:write
@@ -4899,6 +5061,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - hostname:read
@@ -4965,6 +5133,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - hostname:write
@@ -5031,6 +5205,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - image:read
@@ -5099,6 +5279,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - image:write
@@ -5167,6 +5353,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - image:execute
@@ -5229,6 +5421,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:read
@@ -5291,6 +5489,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -5353,6 +5557,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:read
@@ -5425,6 +5635,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -5512,6 +5728,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -5583,6 +5805,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -5646,6 +5874,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:read
@@ -5722,6 +5956,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -5799,6 +6039,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -5864,6 +6110,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - load:read
@@ -5956,6 +6208,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - log:read
@@ -6024,6 +6282,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - log:read
@@ -6085,6 +6349,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - memory:read
@@ -6146,6 +6416,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - ntp:write
@@ -6206,6 +6482,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - ntp:read
@@ -6272,6 +6554,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - ntp:write
@@ -6346,6 +6634,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - ntp:write
@@ -6414,6 +6708,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - os:read
@@ -6475,6 +6775,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - package:read
@@ -6541,6 +6847,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - package:write
@@ -6604,6 +6916,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - package:write
@@ -6666,6 +6984,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - package:read
@@ -6732,6 +7056,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - package:read
@@ -6792,6 +7122,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - package:write
@@ -6859,6 +7195,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - power:execute
@@ -6931,6 +7273,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - power:execute
@@ -6997,6 +7345,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - process:read
@@ -7059,6 +7413,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - process:read
@@ -7128,6 +7488,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - process:execute
@@ -7191,6 +7557,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - schedule:read
@@ -7257,6 +7629,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - schedule:write
@@ -7338,6 +7716,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - schedule:write
@@ -7400,6 +7784,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - schedule:read
@@ -7468,6 +7858,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - schedule:write
@@ -7548,6 +7944,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:read
@@ -7614,6 +8016,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:write
@@ -7683,6 +8091,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:write
@@ -7749,6 +8163,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:read
@@ -7833,6 +8253,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:write
@@ -7902,6 +8328,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:execute
@@ -7965,6 +8397,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:execute
@@ -8032,6 +8470,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:execute
@@ -8095,6 +8539,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:execute
@@ -8158,6 +8608,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - service:execute
@@ -8220,6 +8676,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - status:read
@@ -8289,6 +8751,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - sysctl:read
@@ -8363,6 +8831,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - sysctl:write
@@ -8427,6 +8901,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - sysctl:write
@@ -8488,6 +8968,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - sysctl:read
@@ -8564,6 +9050,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - sysctl:write
@@ -8627,6 +9119,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - timezone:read
@@ -8693,6 +9191,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - timezone:write
@@ -8759,6 +9263,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - uptime:read
@@ -8820,6 +9330,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:read
@@ -8886,6 +9402,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:write
@@ -8965,6 +9487,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:write
@@ -9027,6 +9555,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:read
@@ -9095,6 +9629,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:write
@@ -9178,6 +9718,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:write
@@ -9248,6 +9794,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:write
@@ -9321,6 +9873,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:read
@@ -9389,6 +9947,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - user:write
@@ -9423,7 +9987,7 @@ components:
           example: Failed due to network timeout.
         reason:
           type: string
-          description: 'Why the request failed, as a word that a program can branch on. The HTTP status is the class of the problem; the reason is the cause, and the error is the message for a person, which can change between releases. invalid_request: the request breaks a rule, such as a missing field (400). unauthorized: no token, or a token that is not valid (401). forbidden: the token does not have the permission (403). not_found: the host or osapi does not have what the request names (404). not_managed: the item is there, but osapi did not deploy it, so osapi does not change it (409). not_installed: the host does not have a program that the request needs (409). conflict: the state of the item blocks the request, such as a create of one that exists (409). unavailable: a part that osapi depends on is down, such as NATS (503). server_error: the controller failed; its log has the cause (500).'
+          description: 'Why the request failed, as a word that a program can branch on. The HTTP status is the class of the problem; the reason is the cause, and the error is the message for a person, which can change between releases. invalid_request: the request breaks a rule, such as a missing field (400). unauthorized: no token, or a token that is not valid (401). forbidden: the token does not have the permission (403). not_found: the host or osapi does not have what the request names (404). not_managed: the item is there, but osapi did not deploy it, so osapi does not change it (409). not_installed: the host does not have a program that the request needs (409). conflict: the state of the item blocks the request, such as a create of one that exists (409). unavailable: a part that osapi depends on is down, such as NATS (503). job_store_full: the job store is at its max_bytes and has no finished job to remove (503). server_error: the controller failed; its log has the cause (500).'
           enum:
             - invalid_request
             - unauthorized
@@ -9433,6 +9997,7 @@ components:
             - not_installed
             - conflict
             - unavailable
+            - job_store_full
             - server_error
           example: not_found
     Admission:
@@ -11191,6 +11756,10 @@ components:
           description: Number of keys in the bucket.
           example: 10
           type: integer
+        max_bytes:
+          description: The bucket's limit in bytes. -1 or 0 is no limit.
+          example: 1073741824
+          type: integer
         name:
           description: KV bucket name.
           example: job-queue
@@ -11199,6 +11768,7 @@ components:
         - name
         - keys
         - bytes
+        - max_bytes
       type: object
     NATSInfo:
       properties:
@@ -11245,7 +11815,7 @@ components:
         agents:
           $ref: '#/components/schemas/AgentStats'
         checks:
-          description: 'What the controller that answered checked for this answer: its connection to NATS and to the KV store.'
+          description: 'What the controller that answered checked for this answer: its connection to NATS and to the KV store, and whether the job store is near its limit.'
           items:
             $ref: '#/components/schemas/Check'
           type: array

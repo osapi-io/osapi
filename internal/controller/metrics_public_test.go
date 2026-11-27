@@ -31,6 +31,8 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -501,4 +503,103 @@ func (s *MetricsPublicTestSuite) TestConfiguredBuckets() {
 	s.Run("when no bucket has a name returns none", func() {
 		s.Empty(controller.ExportConfiguredObjectBuckets("ns", config.NATS{}))
 	})
+}
+
+func (s *MetricsPublicTestSuite) TestStoreCheck() {
+	s.Run("when the bucket does not answer returns the error", func() {
+		s.nc.EXPECT().KVStatus(gomock.Any(), "jobs").Return(nil, errBoom)
+
+		err := controller.ExportNewHealthChecker(s.nc, "jobs").StoreCheck(context.Background())
+
+		s.ErrorContains(err, "kv bucket not accessible")
+	})
+
+	s.Run("when the status names no limit returns nil", func() {
+		status := mocks.NewMockKeyValueStatus(s.ctrl)
+		status.EXPECT().Bytes().Return(uint64(1 << 30))
+		s.nc.EXPECT().KVStatus(gomock.Any(), "jobs").Return(status, nil)
+
+		s.NoError(controller.ExportNewHealthChecker(s.nc, "jobs").StoreCheck(context.Background()))
+	})
+}
+
+func (s *MetricsPublicTestSuite) TestStoreWarning() {
+	tests := []struct {
+		name     string
+		used     uint64
+		maxBytes int64
+		wantErr  string
+	}{
+		{name: "a bucket with no limit is never near it", used: 1 << 40, maxBytes: -1},
+		{name: "a bucket under the warning is ok", used: 79, maxBytes: 100},
+		{
+			name: "a bucket at the warning says how full it is", used: 80, maxBytes: 100,
+			wantErr: "the job store is 80% full: 80 of 100 bytes",
+		},
+		{
+			name: "a full bucket says the oldest finished jobs go", used: 100, maxBytes: 100,
+			wantErr: "the oldest finished jobs are removed",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := controller.ExportStoreWarning(tc.used, tc.maxBytes)
+			if tc.wantErr == "" {
+				s.NoError(err)
+
+				return
+			}
+			s.ErrorContains(err, tc.wantErr)
+		})
+	}
+}
+
+func (s *MetricsPublicTestSuite) TestJobStoreMetrics() {
+	tests := []struct {
+		name  string
+		setup func()
+		want  map[string]int64
+	}{
+		{
+			name: "when the bucket answers reports its size and its limit",
+			setup: func() {
+				status := mocks.NewMockKeyValueStatus(s.ctrl)
+				status.EXPECT().Bytes().Return(uint64(2048))
+				s.nc.EXPECT().KVStatus(gomock.Any(), "jobs").Return(status, nil).Times(2)
+			},
+			want: map[string]int64{"job_store_bytes": 2048, "job_store_max_bytes": 0},
+		},
+		{
+			name: "when the bucket does not answer reports nothing",
+			setup: func() {
+				s.nc.EXPECT().KVStatus(gomock.Any(), "jobs").Return(nil, errBoom).Times(2)
+			},
+			want: map[string]int64{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.setup()
+			reader := sdkmetric.NewManualReader()
+			mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader))
+			controller.ExportRegisterJobStoreMetrics(mp.Meter("osapi"), s.nc, "jobs")
+
+			var rm metricdata.ResourceMetrics
+			s.Require().NoError(reader.Collect(context.Background(), &rm))
+
+			got := map[string]int64{}
+			for _, sm := range rm.ScopeMetrics {
+				for _, m := range sm.Metrics {
+					if g, ok := m.Data.(metricdata.Gauge[int64]); ok {
+						for _, dp := range g.DataPoints {
+							got[m.Name] = dp.Value
+						}
+					}
+				}
+			}
+			s.Equal(tc.want, got)
+		})
+	}
 }

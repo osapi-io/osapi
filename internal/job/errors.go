@@ -74,6 +74,10 @@ var (
 	// ErrUnknownQueue means a stored job's subject names neither the query
 	// nor the modify queue, so a retry cannot tell which one to use.
 	ErrUnknownQueue = errors.New("job subject names no queue")
+	// ErrStoreFull means the job bucket is at its max_bytes and holds no
+	// finished job to remove, so the controller cannot store a new job.
+	// The API answers 503 with the reason job_store_full.
+	ErrStoreFull = errors.New("the job store is full")
 )
 
 // sentinelFor maps a code to the error a handler tests against. A code this

@@ -73,10 +73,15 @@ export type getNodeSysctlResponse500 = {
   status: 500
 }
 
+export type getNodeSysctlResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeSysctlResponseSuccess = (getNodeSysctlResponse200) & {
   headers: Headers;
 };
-export type getNodeSysctlResponseError = (getNodeSysctlResponse400 | getNodeSysctlResponse401 | getNodeSysctlResponse403 | getNodeSysctlResponse404 | getNodeSysctlResponse409 | getNodeSysctlResponse500) & {
+export type getNodeSysctlResponseError = (getNodeSysctlResponse400 | getNodeSysctlResponse401 | getNodeSysctlResponse403 | getNodeSysctlResponse404 | getNodeSysctlResponse409 | getNodeSysctlResponse500 | getNodeSysctlResponse503) & {
   headers: Headers;
 };
 
@@ -150,10 +155,15 @@ export type postNodeSysctlResponse500 = {
   status: 500
 }
 
+export type postNodeSysctlResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeSysctlResponseSuccess = (postNodeSysctlResponse200) & {
   headers: Headers;
 };
-export type postNodeSysctlResponseError = (postNodeSysctlResponse400 | postNodeSysctlResponse401 | postNodeSysctlResponse403 | postNodeSysctlResponse404 | postNodeSysctlResponse409 | postNodeSysctlResponse500) & {
+export type postNodeSysctlResponseError = (postNodeSysctlResponse400 | postNodeSysctlResponse401 | postNodeSysctlResponse403 | postNodeSysctlResponse404 | postNodeSysctlResponse409 | postNodeSysctlResponse500 | postNodeSysctlResponse503) & {
   headers: Headers;
 };
 
@@ -219,10 +229,15 @@ export type deleteNodeSysctlResponse500 = {
   status: 500
 }
 
+export type deleteNodeSysctlResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeSysctlResponseSuccess = (deleteNodeSysctlResponse200) & {
   headers: Headers;
 };
-export type deleteNodeSysctlResponseError = (deleteNodeSysctlResponse400 | deleteNodeSysctlResponse401 | deleteNodeSysctlResponse403 | deleteNodeSysctlResponse404 | deleteNodeSysctlResponse409 | deleteNodeSysctlResponse500) & {
+export type deleteNodeSysctlResponseError = (deleteNodeSysctlResponse400 | deleteNodeSysctlResponse401 | deleteNodeSysctlResponse403 | deleteNodeSysctlResponse404 | deleteNodeSysctlResponse409 | deleteNodeSysctlResponse500 | deleteNodeSysctlResponse503) & {
   headers: Headers;
 };
 
@@ -289,10 +304,15 @@ export type getNodeSysctlByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeSysctlByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeSysctlByKeyResponseSuccess = (getNodeSysctlByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeSysctlByKeyResponseError = (getNodeSysctlByKeyResponse400 | getNodeSysctlByKeyResponse401 | getNodeSysctlByKeyResponse403 | getNodeSysctlByKeyResponse404 | getNodeSysctlByKeyResponse409 | getNodeSysctlByKeyResponse500) & {
+export type getNodeSysctlByKeyResponseError = (getNodeSysctlByKeyResponse400 | getNodeSysctlByKeyResponse401 | getNodeSysctlByKeyResponse403 | getNodeSysctlByKeyResponse404 | getNodeSysctlByKeyResponse409 | getNodeSysctlByKeyResponse500 | getNodeSysctlByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -358,10 +378,15 @@ export type putNodeSysctlResponse500 = {
   status: 500
 }
 
+export type putNodeSysctlResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeSysctlResponseSuccess = (putNodeSysctlResponse200) & {
   headers: Headers;
 };
-export type putNodeSysctlResponseError = (putNodeSysctlResponse400 | putNodeSysctlResponse401 | putNodeSysctlResponse403 | putNodeSysctlResponse404 | putNodeSysctlResponse409 | putNodeSysctlResponse500) & {
+export type putNodeSysctlResponseError = (putNodeSysctlResponse400 | putNodeSysctlResponse401 | putNodeSysctlResponse403 | putNodeSysctlResponse404 | putNodeSysctlResponse409 | putNodeSysctlResponse500 | putNodeSysctlResponse503) & {
   headers: Headers;
 };
 

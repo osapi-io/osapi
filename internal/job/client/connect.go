@@ -123,6 +123,7 @@ func Connect(
 		StreamName:     job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name),
 		TargetResolver: resolve,
 		Consumers:      js,
+		Purger:         jsPurger{js: js},
 	})
 	if err != nil {
 		bus.Close(nc)
@@ -156,4 +157,24 @@ func ensureBucket(
 	}
 
 	return nil
+}
+
+// jsPurger purges a stream's messages of one subject through the
+// JetStream API of a connection.
+type jsPurger struct {
+	js jetstream.JetStream
+}
+
+// PurgeSubject removes each message of subject from stream.
+func (p jsPurger) PurgeSubject(
+	ctx context.Context,
+	stream string,
+	subject string,
+) error {
+	st, err := p.js.Stream(ctx, stream)
+	if err != nil {
+		return fmt.Errorf("stream %s: %w", stream, err)
+	}
+
+	return st.Purge(ctx, jetstream.WithPurgeSubject(subject))
 }

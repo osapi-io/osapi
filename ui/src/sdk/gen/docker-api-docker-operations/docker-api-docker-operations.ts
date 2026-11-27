@@ -76,10 +76,15 @@ export type getNodeDockerResponse500 = {
   status: 500
 }
 
+export type getNodeDockerResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeDockerResponseSuccess = (getNodeDockerResponse200) & {
   headers: Headers;
 };
-export type getNodeDockerResponseError = (getNodeDockerResponse400 | getNodeDockerResponse401 | getNodeDockerResponse403 | getNodeDockerResponse404 | getNodeDockerResponse409 | getNodeDockerResponse500) & {
+export type getNodeDockerResponseError = (getNodeDockerResponse400 | getNodeDockerResponse401 | getNodeDockerResponse403 | getNodeDockerResponse404 | getNodeDockerResponse409 | getNodeDockerResponse500 | getNodeDockerResponse503) & {
   headers: Headers;
 };
 
@@ -153,10 +158,15 @@ export type postNodeDockerResponse500 = {
   status: 500
 }
 
+export type postNodeDockerResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeDockerResponseSuccess = (postNodeDockerResponse200) & {
   headers: Headers;
 };
-export type postNodeDockerResponseError = (postNodeDockerResponse400 | postNodeDockerResponse401 | postNodeDockerResponse403 | postNodeDockerResponse404 | postNodeDockerResponse409 | postNodeDockerResponse500) & {
+export type postNodeDockerResponseError = (postNodeDockerResponse400 | postNodeDockerResponse401 | postNodeDockerResponse403 | postNodeDockerResponse404 | postNodeDockerResponse409 | postNodeDockerResponse500 | postNodeDockerResponse503) & {
   headers: Headers;
 };
 
@@ -222,10 +232,15 @@ export type deleteNodeDockerResponse500 = {
   status: 500
 }
 
+export type deleteNodeDockerResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeDockerResponseSuccess = (deleteNodeDockerResponse200) & {
   headers: Headers;
 };
-export type deleteNodeDockerResponseError = (deleteNodeDockerResponse400 | deleteNodeDockerResponse401 | deleteNodeDockerResponse403 | deleteNodeDockerResponse404 | deleteNodeDockerResponse409 | deleteNodeDockerResponse500) & {
+export type deleteNodeDockerResponseError = (deleteNodeDockerResponse400 | deleteNodeDockerResponse401 | deleteNodeDockerResponse403 | deleteNodeDockerResponse404 | deleteNodeDockerResponse409 | deleteNodeDockerResponse500 | deleteNodeDockerResponse503) & {
   headers: Headers;
 };
 
@@ -292,10 +307,15 @@ export type getNodeDockerByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeDockerByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeDockerByKeyResponseSuccess = (getNodeDockerByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeDockerByKeyResponseError = (getNodeDockerByKeyResponse400 | getNodeDockerByKeyResponse401 | getNodeDockerByKeyResponse403 | getNodeDockerByKeyResponse404 | getNodeDockerByKeyResponse409 | getNodeDockerByKeyResponse500) & {
+export type getNodeDockerByKeyResponseError = (getNodeDockerByKeyResponse400 | getNodeDockerByKeyResponse401 | getNodeDockerByKeyResponse403 | getNodeDockerByKeyResponse404 | getNodeDockerByKeyResponse409 | getNodeDockerByKeyResponse500 | getNodeDockerByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -362,10 +382,15 @@ export type postNodeDockerExecResponse500 = {
   status: 500
 }
 
+export type postNodeDockerExecResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeDockerExecResponseSuccess = (postNodeDockerExecResponse200) & {
   headers: Headers;
 };
-export type postNodeDockerExecResponseError = (postNodeDockerExecResponse400 | postNodeDockerExecResponse401 | postNodeDockerExecResponse403 | postNodeDockerExecResponse404 | postNodeDockerExecResponse409 | postNodeDockerExecResponse500) & {
+export type postNodeDockerExecResponseError = (postNodeDockerExecResponse400 | postNodeDockerExecResponse401 | postNodeDockerExecResponse403 | postNodeDockerExecResponse404 | postNodeDockerExecResponse409 | postNodeDockerExecResponse500 | postNodeDockerExecResponse503) & {
   headers: Headers;
 };
 
@@ -433,10 +458,15 @@ export type postNodeDockerStartResponse500 = {
   status: 500
 }
 
+export type postNodeDockerStartResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeDockerStartResponseSuccess = (postNodeDockerStartResponse200) & {
   headers: Headers;
 };
-export type postNodeDockerStartResponseError = (postNodeDockerStartResponse400 | postNodeDockerStartResponse401 | postNodeDockerStartResponse403 | postNodeDockerStartResponse404 | postNodeDockerStartResponse409 | postNodeDockerStartResponse500) & {
+export type postNodeDockerStartResponseError = (postNodeDockerStartResponse400 | postNodeDockerStartResponse401 | postNodeDockerStartResponse403 | postNodeDockerStartResponse404 | postNodeDockerStartResponse409 | postNodeDockerStartResponse500 | postNodeDockerStartResponse503) & {
   headers: Headers;
 };
 
@@ -503,10 +533,15 @@ export type postNodeDockerStopResponse500 = {
   status: 500
 }
 
+export type postNodeDockerStopResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeDockerStopResponseSuccess = (postNodeDockerStopResponse200) & {
   headers: Headers;
 };
-export type postNodeDockerStopResponseError = (postNodeDockerStopResponse400 | postNodeDockerStopResponse401 | postNodeDockerStopResponse403 | postNodeDockerStopResponse404 | postNodeDockerStopResponse409 | postNodeDockerStopResponse500) & {
+export type postNodeDockerStopResponseError = (postNodeDockerStopResponse400 | postNodeDockerStopResponse401 | postNodeDockerStopResponse403 | postNodeDockerStopResponse404 | postNodeDockerStopResponse409 | postNodeDockerStopResponse500 | postNodeDockerStopResponse503) & {
   headers: Headers;
 };
 

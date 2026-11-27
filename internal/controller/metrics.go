@@ -31,12 +31,14 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 // natsStatus is the part of a NATS client that the health metrics read.
@@ -75,7 +77,55 @@ func newHealthChecker(
 
 			return nil
 		},
+		StoreCheck: func(ctx context.Context) error {
+			status, err := nc.KVStatus(ctx, jobsBucket)
+			if err != nil {
+				return fmt.Errorf("kv bucket not accessible: %w", err)
+			}
+
+			return storeWarning(status.Bytes(), kvMaxBytes(status))
+		},
 	}
+}
+
+// storeWarnPercent is how full the jobs bucket is when health status says
+// so. At max_bytes the controller removes the oldest finished jobs, so the
+// warning comes before that.
+const storeWarnPercent = 80
+
+// storeWarning is an error when used is at least storeWarnPercent of max,
+// or nil. A bucket with no limit has a max of zero or less.
+func storeWarning(
+	used uint64,
+	maxBytes int64,
+) error {
+	if maxBytes <= 0 {
+		return nil
+	}
+	percent := used * 100 / uint64(maxBytes)
+	if percent < storeWarnPercent {
+		return nil
+	}
+
+	return fmt.Errorf(
+		"the job store is %d%% full: %d of %d bytes; at the limit the oldest finished jobs are removed",
+		percent,
+		used,
+		maxBytes,
+	)
+}
+
+// kvMaxBytes is the max_bytes of a bucket's stream, or zero when its
+// status does not say.
+func kvMaxBytes(
+	status jetstream.KeyValueStatus,
+) int64 {
+	bs, ok := status.(*jetstream.KeyValueBucketStatus)
+	if !ok || bs.StreamInfo() == nil {
+		return 0
+	}
+
+	return bs.StreamInfo().Config.MaxBytes
 }
 
 // configuredKVBuckets returns the name of each KV bucket that cfg names.
@@ -157,9 +207,10 @@ func newMetricsProvider(
 					continue
 				}
 				results = append(results, health.KVMetrics{
-					Name:  status.Bucket(),
-					Keys:  int(status.Values()),
-					Bytes: status.Bytes(),
+					Name:     status.Bucket(),
+					Keys:     int(status.Values()),
+					Bytes:    status.Bytes(),
+					MaxBytes: kvMaxBytes(status),
 				})
 			}
 
@@ -342,4 +393,39 @@ func convertSubComponents(
 	}
 
 	return result
+}
+
+// registerJobStoreMetrics reports the size of the jobs bucket and its
+// max_bytes on each scrape, so an alert can fire before it is full. A
+// scrape that cannot read the bucket reports nothing.
+func registerJobStoreMetrics(
+	meter metric.Meter,
+	nc interface {
+		KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
+	},
+	jobsBucket string,
+) {
+	observe := func(value func(jetstream.KeyValueStatus) int64) metric.Int64Callback {
+		return func(ctx context.Context, o metric.Int64Observer) error {
+			if status, err := nc.KVStatus(ctx, jobsBucket); err == nil {
+				o.Observe(value(status))
+			}
+
+			return nil
+		}
+	}
+	_, _ = meter.Int64ObservableGauge(
+		instruments.JobStoreBytes.Name,
+		metric.WithDescription(instruments.JobStoreBytes.Doc),
+		metric.WithUnit(instruments.JobStoreBytes.Unit),
+		metric.WithInt64Callback(observe(func(s jetstream.KeyValueStatus) int64 {
+			return int64(s.Bytes()) //nolint:gosec // a bucket's size fits an int64
+		})),
+	)
+	_, _ = meter.Int64ObservableGauge(
+		instruments.JobStoreMaxBytes.Name,
+		metric.WithDescription(instruments.JobStoreMaxBytes.Doc),
+		metric.WithUnit(instruments.JobStoreMaxBytes.Unit),
+		metric.WithInt64Callback(observe(kvMaxBytes)),
+	)
 }

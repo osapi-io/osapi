@@ -39,18 +39,20 @@ process metrics (CPU, memory, file descriptors).
 
 <!-- osapi:metrics -->
 
-| Metric                            | Type      | Labels                                                                                  | Component  | Description                                             |
-| --------------------------------- | --------- | --------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------- |
-| `osapi_component_up`              | gauge     |                                                                                         | all        | Whether the component is ready (1) or not (0).          |
-| `osapi_subsystem_up`              | gauge     | subsystem                                                                               | all        | Whether the config turns a subsystem on (1) or off (0). |
-| `osapi_heartbeat_age_seconds`     | gauge     |                                                                                         | agent      | Seconds since last successful heartbeat write.          |
-| `osapi_jobs_created_total`        | counter   |                                                                                         | controller | Total jobs submitted via API.                           |
-| `osapi_jobs_processed_total`      | counter   | status                                                                                  | agent      | Total jobs processed.                                   |
-| `osapi_jobs_active`               | gauge     |                                                                                         | agent      | Currently executing jobs.                               |
-| `osapi_job_duration_seconds`      | histogram |                                                                                         | agent      | Job execution duration in seconds.                      |
-| `osapi_behavior_calls_total`      | counter   | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb, osapi_behavior_outcome | agent      | Behavior method calls, by behavior, method and outcome. |
-| `osapi_behavior_duration_seconds` | histogram | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb                         | agent      | Behavior method duration in seconds.                    |
-| `osapi_behavior_changes_total`    | counter   | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb                         | agent      | Behavior writes that changed the host.                  |
+| Metric                            | Type      | Labels                                                                                  | Component  | Description                                                                                     |
+| --------------------------------- | --------- | --------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------- |
+| `osapi_component_up`              | gauge     |                                                                                         | all        | Whether the component is ready (1) or not (0).                                                  |
+| `osapi_subsystem_up`              | gauge     | subsystem                                                                               | all        | Whether the config turns a subsystem on (1) or off (0).                                         |
+| `osapi_heartbeat_age_seconds`     | gauge     |                                                                                         | agent      | Seconds since last successful heartbeat write.                                                  |
+| `osapi_job_store_bytes`           | gauge     |                                                                                         | controller | Bytes that the jobs bucket holds.                                                               |
+| `osapi_job_store_max_bytes`       | gauge     |                                                                                         | controller | The max_bytes of the jobs bucket: at this size the controller removes the oldest finished jobs. |
+| `osapi_jobs_created_total`        | counter   |                                                                                         | controller | Total jobs submitted via API.                                                                   |
+| `osapi_jobs_processed_total`      | counter   | status                                                                                  | agent      | Total jobs processed.                                                                           |
+| `osapi_jobs_active`               | gauge     |                                                                                         | agent      | Currently executing jobs.                                                                       |
+| `osapi_job_duration_seconds`      | histogram |                                                                                         | agent      | Job execution duration in seconds.                                                              |
+| `osapi_behavior_calls_total`      | counter   | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb, osapi_behavior_outcome | agent      | Behavior method calls, by behavior, method and outcome.                                         |
+| `osapi_behavior_duration_seconds` | histogram | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb                         | agent      | Behavior method duration in seconds.                                                            |
+| `osapi_behavior_changes_total`    | counter   | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb                         | agent      | Behavior writes that changed the host.                                                          |
 
 <!-- /osapi:metrics -->
 

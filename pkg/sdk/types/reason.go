@@ -40,6 +40,7 @@ const (
 	ReasonNotInstalled   Reason = "not_installed"
 	ReasonConflict       Reason = "conflict"
 	ReasonUnavailable    Reason = "unavailable"
+	ReasonJobStoreFull   Reason = "job_store_full"
 	ReasonServerError    Reason = "server_error"
 )
 
@@ -48,7 +49,7 @@ func (Reason) Values() []Reason {
 	return []Reason{
 		ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
 		ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
-		ReasonServerError,
+		ReasonJobStoreFull, ReasonServerError,
 	}
 }
 

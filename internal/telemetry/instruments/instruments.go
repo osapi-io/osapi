@@ -77,6 +77,17 @@ var (
 		Name: "heartbeat_age_seconds", Kind: KindGauge, Unit: "s", Component: "agent",
 		Doc: "Seconds since last successful heartbeat write.",
 	}
+	JobStoreBytes = Instrument{
+		Name: "job_store_bytes", Kind: KindGauge, Unit: "By", Component: "controller",
+		Doc: "Bytes that the jobs bucket holds.",
+	}
+	JobStoreMaxBytes = Instrument{
+		Name:      "job_store_max_bytes",
+		Kind:      KindGauge,
+		Unit:      "By",
+		Component: "controller",
+		Doc:       "The max_bytes of the jobs bucket: at this size the controller removes the oldest finished jobs.",
+	}
 	JobsCreated = Instrument{
 		Name: "jobs_created_total", Kind: KindCounter, Component: "controller",
 		Doc: "Total jobs submitted via API.",
@@ -118,6 +129,7 @@ var (
 func All() []Instrument {
 	return []Instrument{
 		ComponentUp, SubsystemUp, HeartbeatAge,
+		JobStoreBytes, JobStoreMaxBytes,
 		JobsCreated, JobsProcessed, JobsActive, JobDuration,
 		BehaviorCalls, BehaviorDuration, BehaviorChanges,
 	}

@@ -68,10 +68,15 @@ export type getNodeTimezoneResponse500 = {
   status: 500
 }
 
+export type getNodeTimezoneResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeTimezoneResponseSuccess = (getNodeTimezoneResponse200) & {
   headers: Headers;
 };
-export type getNodeTimezoneResponseError = (getNodeTimezoneResponse400 | getNodeTimezoneResponse401 | getNodeTimezoneResponse403 | getNodeTimezoneResponse404 | getNodeTimezoneResponse409 | getNodeTimezoneResponse500) & {
+export type getNodeTimezoneResponseError = (getNodeTimezoneResponse400 | getNodeTimezoneResponse401 | getNodeTimezoneResponse403 | getNodeTimezoneResponse404 | getNodeTimezoneResponse409 | getNodeTimezoneResponse500 | getNodeTimezoneResponse503) & {
   headers: Headers;
 };
 
@@ -136,10 +141,15 @@ export type putNodeTimezoneResponse500 = {
   status: 500
 }
 
+export type putNodeTimezoneResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeTimezoneResponseSuccess = (putNodeTimezoneResponse200) & {
   headers: Headers;
 };
-export type putNodeTimezoneResponseError = (putNodeTimezoneResponse400 | putNodeTimezoneResponse401 | putNodeTimezoneResponse403 | putNodeTimezoneResponse404 | putNodeTimezoneResponse409 | putNodeTimezoneResponse500) & {
+export type putNodeTimezoneResponseError = (putNodeTimezoneResponse400 | putNodeTimezoneResponse401 | putNodeTimezoneResponse403 | putNodeTimezoneResponse404 | putNodeTimezoneResponse409 | putNodeTimezoneResponse500 | putNodeTimezoneResponse503) & {
   headers: Headers;
 };
 

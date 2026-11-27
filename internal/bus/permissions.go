@@ -107,6 +107,8 @@ func RolePermissions(
 			p.admin(s)
 		}
 		p.add("$JS.API.STREAM.PURGE.", objStream(n.objects), "")
+		// A full job bucket frees room by purging the oldest finished jobs.
+		p.add("$JS.API.STREAM.PURGE.", kvStream(n.jobs), "")
 		if cfg.Stream.Subjects != "" {
 			p.pub[job.ApplyNamespaceToSubjects(namespace, cfg.Stream.Subjects)] = true
 		}

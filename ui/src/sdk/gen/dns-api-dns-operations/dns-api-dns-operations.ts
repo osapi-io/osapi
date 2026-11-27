@@ -69,10 +69,15 @@ export type deleteNodeDnsResponse500 = {
   status: 500
 }
 
+export type deleteNodeDnsResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeDnsResponseSuccess = (deleteNodeDnsResponse200) & {
   headers: Headers;
 };
-export type deleteNodeDnsResponseError = (deleteNodeDnsResponse400 | deleteNodeDnsResponse401 | deleteNodeDnsResponse403 | deleteNodeDnsResponse404 | deleteNodeDnsResponse409 | deleteNodeDnsResponse500) & {
+export type deleteNodeDnsResponseError = (deleteNodeDnsResponse400 | deleteNodeDnsResponse401 | deleteNodeDnsResponse403 | deleteNodeDnsResponse404 | deleteNodeDnsResponse409 | deleteNodeDnsResponse500 | deleteNodeDnsResponse503) & {
   headers: Headers;
 };
 
@@ -139,10 +144,15 @@ export type getNodeDnsByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeDnsByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeDnsByKeyResponseSuccess = (getNodeDnsByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeDnsByKeyResponseError = (getNodeDnsByKeyResponse400 | getNodeDnsByKeyResponse401 | getNodeDnsByKeyResponse403 | getNodeDnsByKeyResponse404 | getNodeDnsByKeyResponse409 | getNodeDnsByKeyResponse500) & {
+export type getNodeDnsByKeyResponseError = (getNodeDnsByKeyResponse400 | getNodeDnsByKeyResponse401 | getNodeDnsByKeyResponse403 | getNodeDnsByKeyResponse404 | getNodeDnsByKeyResponse409 | getNodeDnsByKeyResponse500 | getNodeDnsByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -209,10 +219,15 @@ export type putNodeDnsResponse500 = {
   status: 500
 }
 
+export type putNodeDnsResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeDnsResponseSuccess = (putNodeDnsResponse200) & {
   headers: Headers;
 };
-export type putNodeDnsResponseError = (putNodeDnsResponse400 | putNodeDnsResponse401 | putNodeDnsResponse403 | putNodeDnsResponse404 | putNodeDnsResponse409 | putNodeDnsResponse500) & {
+export type putNodeDnsResponseError = (putNodeDnsResponse400 | putNodeDnsResponse401 | putNodeDnsResponse403 | putNodeDnsResponse404 | putNodeDnsResponse409 | putNodeDnsResponse500 | putNodeDnsResponse503) & {
   headers: Headers;
 };
 

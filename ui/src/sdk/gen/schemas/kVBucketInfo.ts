@@ -10,6 +10,8 @@ export interface KVBucketInfo {
   bytes: number;
   /** Number of keys in the bucket. */
   keys: number;
+  /** The bucket's limit in bytes. -1 or 0 is no limit. */
+  max_bytes: number;
   /** KV bucket name. */
   name: string;
 }

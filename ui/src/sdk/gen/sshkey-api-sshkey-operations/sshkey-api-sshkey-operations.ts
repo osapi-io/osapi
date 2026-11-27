@@ -70,10 +70,15 @@ export type deleteNodeUserSshkeyResponse500 = {
   status: 500
 }
 
+export type deleteNodeUserSshkeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeUserSshkeyResponseSuccess = (deleteNodeUserSshkeyResponse200) & {
   headers: Headers;
 };
-export type deleteNodeUserSshkeyResponseError = (deleteNodeUserSshkeyResponse400 | deleteNodeUserSshkeyResponse401 | deleteNodeUserSshkeyResponse403 | deleteNodeUserSshkeyResponse404 | deleteNodeUserSshkeyResponse409 | deleteNodeUserSshkeyResponse500) & {
+export type deleteNodeUserSshkeyResponseError = (deleteNodeUserSshkeyResponse400 | deleteNodeUserSshkeyResponse401 | deleteNodeUserSshkeyResponse403 | deleteNodeUserSshkeyResponse404 | deleteNodeUserSshkeyResponse409 | deleteNodeUserSshkeyResponse500 | deleteNodeUserSshkeyResponse503) & {
   headers: Headers;
 };
 
@@ -141,10 +146,15 @@ export type getNodeUserSshkeyResponse500 = {
   status: 500
 }
 
+export type getNodeUserSshkeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeUserSshkeyResponseSuccess = (getNodeUserSshkeyResponse200) & {
   headers: Headers;
 };
-export type getNodeUserSshkeyResponseError = (getNodeUserSshkeyResponse400 | getNodeUserSshkeyResponse401 | getNodeUserSshkeyResponse403 | getNodeUserSshkeyResponse404 | getNodeUserSshkeyResponse409 | getNodeUserSshkeyResponse500) & {
+export type getNodeUserSshkeyResponseError = (getNodeUserSshkeyResponse400 | getNodeUserSshkeyResponse401 | getNodeUserSshkeyResponse403 | getNodeUserSshkeyResponse404 | getNodeUserSshkeyResponse409 | getNodeUserSshkeyResponse500 | getNodeUserSshkeyResponse503) & {
   headers: Headers;
 };
 
@@ -211,10 +221,15 @@ export type postNodeUserSshkeyResponse500 = {
   status: 500
 }
 
+export type postNodeUserSshkeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeUserSshkeyResponseSuccess = (postNodeUserSshkeyResponse200) & {
   headers: Headers;
 };
-export type postNodeUserSshkeyResponseError = (postNodeUserSshkeyResponse400 | postNodeUserSshkeyResponse401 | postNodeUserSshkeyResponse403 | postNodeUserSshkeyResponse404 | postNodeUserSshkeyResponse409 | postNodeUserSshkeyResponse500) & {
+export type postNodeUserSshkeyResponseError = (postNodeUserSshkeyResponse400 | postNodeUserSshkeyResponse401 | postNodeUserSshkeyResponse403 | postNodeUserSshkeyResponse404 | postNodeUserSshkeyResponse409 | postNodeUserSshkeyResponse500 | postNodeUserSshkeyResponse503) & {
   headers: Headers;
 };
 

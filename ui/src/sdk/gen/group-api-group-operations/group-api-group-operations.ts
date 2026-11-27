@@ -72,10 +72,15 @@ export type getNodeGroupResponse500 = {
   status: 500
 }
 
+export type getNodeGroupResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeGroupResponseSuccess = (getNodeGroupResponse200) & {
   headers: Headers;
 };
-export type getNodeGroupResponseError = (getNodeGroupResponse400 | getNodeGroupResponse401 | getNodeGroupResponse403 | getNodeGroupResponse404 | getNodeGroupResponse409 | getNodeGroupResponse500) & {
+export type getNodeGroupResponseError = (getNodeGroupResponse400 | getNodeGroupResponse401 | getNodeGroupResponse403 | getNodeGroupResponse404 | getNodeGroupResponse409 | getNodeGroupResponse500 | getNodeGroupResponse503) & {
   headers: Headers;
 };
 
@@ -140,10 +145,15 @@ export type postNodeGroupResponse500 = {
   status: 500
 }
 
+export type postNodeGroupResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeGroupResponseSuccess = (postNodeGroupResponse200) & {
   headers: Headers;
 };
-export type postNodeGroupResponseError = (postNodeGroupResponse400 | postNodeGroupResponse401 | postNodeGroupResponse403 | postNodeGroupResponse404 | postNodeGroupResponse409 | postNodeGroupResponse500) & {
+export type postNodeGroupResponseError = (postNodeGroupResponse400 | postNodeGroupResponse401 | postNodeGroupResponse403 | postNodeGroupResponse404 | postNodeGroupResponse409 | postNodeGroupResponse500 | postNodeGroupResponse503) & {
   headers: Headers;
 };
 
@@ -209,10 +219,15 @@ export type deleteNodeGroupResponse500 = {
   status: 500
 }
 
+export type deleteNodeGroupResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeGroupResponseSuccess = (deleteNodeGroupResponse200) & {
   headers: Headers;
 };
-export type deleteNodeGroupResponseError = (deleteNodeGroupResponse400 | deleteNodeGroupResponse401 | deleteNodeGroupResponse403 | deleteNodeGroupResponse404 | deleteNodeGroupResponse409 | deleteNodeGroupResponse500) & {
+export type deleteNodeGroupResponseError = (deleteNodeGroupResponse400 | deleteNodeGroupResponse401 | deleteNodeGroupResponse403 | deleteNodeGroupResponse404 | deleteNodeGroupResponse409 | deleteNodeGroupResponse500 | deleteNodeGroupResponse503) & {
   headers: Headers;
 };
 
@@ -279,10 +294,15 @@ export type getNodeGroupByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeGroupByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeGroupByKeyResponseSuccess = (getNodeGroupByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeGroupByKeyResponseError = (getNodeGroupByKeyResponse400 | getNodeGroupByKeyResponse401 | getNodeGroupByKeyResponse403 | getNodeGroupByKeyResponse404 | getNodeGroupByKeyResponse409 | getNodeGroupByKeyResponse500) & {
+export type getNodeGroupByKeyResponseError = (getNodeGroupByKeyResponse400 | getNodeGroupByKeyResponse401 | getNodeGroupByKeyResponse403 | getNodeGroupByKeyResponse404 | getNodeGroupByKeyResponse409 | getNodeGroupByKeyResponse500 | getNodeGroupByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -349,10 +369,15 @@ export type putNodeGroupResponse500 = {
   status: 500
 }
 
+export type putNodeGroupResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeGroupResponseSuccess = (putNodeGroupResponse200) & {
   headers: Headers;
 };
-export type putNodeGroupResponseError = (putNodeGroupResponse400 | putNodeGroupResponse401 | putNodeGroupResponse403 | putNodeGroupResponse404 | putNodeGroupResponse409 | putNodeGroupResponse500) & {
+export type putNodeGroupResponseError = (putNodeGroupResponse400 | putNodeGroupResponse401 | putNodeGroupResponse403 | putNodeGroupResponse404 | putNodeGroupResponse409 | putNodeGroupResponse500 | putNodeGroupResponse503) & {
   headers: Headers;
 };
 

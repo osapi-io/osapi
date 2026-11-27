@@ -67,10 +67,15 @@ export type postNodeConnectivityPingResponse500 = {
   status: 500
 }
 
+export type postNodeConnectivityPingResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeConnectivityPingResponseSuccess = (postNodeConnectivityPingResponse200) & {
   headers: Headers;
 };
-export type postNodeConnectivityPingResponseError = (postNodeConnectivityPingResponse400 | postNodeConnectivityPingResponse401 | postNodeConnectivityPingResponse403 | postNodeConnectivityPingResponse404 | postNodeConnectivityPingResponse409 | postNodeConnectivityPingResponse500) & {
+export type postNodeConnectivityPingResponseError = (postNodeConnectivityPingResponse400 | postNodeConnectivityPingResponse401 | postNodeConnectivityPingResponse403 | postNodeConnectivityPingResponse404 | postNodeConnectivityPingResponse409 | postNodeConnectivityPingResponse500 | postNodeConnectivityPingResponse503) & {
   headers: Headers;
 };
 

@@ -69,10 +69,15 @@ export type getNodeProcessResponse500 = {
   status: 500
 }
 
+export type getNodeProcessResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeProcessResponseSuccess = (getNodeProcessResponse200) & {
   headers: Headers;
 };
-export type getNodeProcessResponseError = (getNodeProcessResponse400 | getNodeProcessResponse401 | getNodeProcessResponse403 | getNodeProcessResponse404 | getNodeProcessResponse409 | getNodeProcessResponse500) & {
+export type getNodeProcessResponseError = (getNodeProcessResponse400 | getNodeProcessResponse401 | getNodeProcessResponse403 | getNodeProcessResponse404 | getNodeProcessResponse409 | getNodeProcessResponse500 | getNodeProcessResponse503) & {
   headers: Headers;
 };
 
@@ -137,10 +142,15 @@ export type getNodeProcessByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeProcessByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeProcessByKeyResponseSuccess = (getNodeProcessByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeProcessByKeyResponseError = (getNodeProcessByKeyResponse400 | getNodeProcessByKeyResponse401 | getNodeProcessByKeyResponse403 | getNodeProcessByKeyResponse404 | getNodeProcessByKeyResponse409 | getNodeProcessByKeyResponse500) & {
+export type getNodeProcessByKeyResponseError = (getNodeProcessByKeyResponse400 | getNodeProcessByKeyResponse401 | getNodeProcessByKeyResponse403 | getNodeProcessByKeyResponse404 | getNodeProcessByKeyResponse409 | getNodeProcessByKeyResponse500 | getNodeProcessByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -207,10 +217,15 @@ export type postNodeProcessSignalResponse500 = {
   status: 500
 }
 
+export type postNodeProcessSignalResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeProcessSignalResponseSuccess = (postNodeProcessSignalResponse200) & {
   headers: Headers;
 };
-export type postNodeProcessSignalResponseError = (postNodeProcessSignalResponse400 | postNodeProcessSignalResponse401 | postNodeProcessSignalResponse403 | postNodeProcessSignalResponse404 | postNodeProcessSignalResponse409 | postNodeProcessSignalResponse500) & {
+export type postNodeProcessSignalResponseError = (postNodeProcessSignalResponse400 | postNodeProcessSignalResponse401 | postNodeProcessSignalResponse403 | postNodeProcessSignalResponse404 | postNodeProcessSignalResponse409 | postNodeProcessSignalResponse500 | postNodeProcessSignalResponse503) & {
   headers: Headers;
 };
 

@@ -69,10 +69,15 @@ export type postNodeCommandExecResponse500 = {
   status: 500
 }
 
+export type postNodeCommandExecResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeCommandExecResponseSuccess = (postNodeCommandExecResponse200) & {
   headers: Headers;
 };
-export type postNodeCommandExecResponseError = (postNodeCommandExecResponse400 | postNodeCommandExecResponse401 | postNodeCommandExecResponse403 | postNodeCommandExecResponse404 | postNodeCommandExecResponse409 | postNodeCommandExecResponse500) & {
+export type postNodeCommandExecResponseError = (postNodeCommandExecResponse400 | postNodeCommandExecResponse401 | postNodeCommandExecResponse403 | postNodeCommandExecResponse404 | postNodeCommandExecResponse409 | postNodeCommandExecResponse500 | postNodeCommandExecResponse503) & {
   headers: Headers;
 };
 
@@ -138,10 +143,15 @@ export type postNodeCommandShellResponse500 = {
   status: 500
 }
 
+export type postNodeCommandShellResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeCommandShellResponseSuccess = (postNodeCommandShellResponse200) & {
   headers: Headers;
 };
-export type postNodeCommandShellResponseError = (postNodeCommandShellResponse400 | postNodeCommandShellResponse401 | postNodeCommandShellResponse403 | postNodeCommandShellResponse404 | postNodeCommandShellResponse409 | postNodeCommandShellResponse500) & {
+export type postNodeCommandShellResponseError = (postNodeCommandShellResponse400 | postNodeCommandShellResponse401 | postNodeCommandShellResponse403 | postNodeCommandShellResponse404 | postNodeCommandShellResponse409 | postNodeCommandShellResponse500 | postNodeCommandShellResponse503) & {
   headers: Headers;
 };
 

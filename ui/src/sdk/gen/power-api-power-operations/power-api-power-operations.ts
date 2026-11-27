@@ -69,10 +69,15 @@ export type postNodePowerRebootResponse500 = {
   status: 500
 }
 
+export type postNodePowerRebootResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodePowerRebootResponseSuccess = (postNodePowerRebootResponse200) & {
   headers: Headers;
 };
-export type postNodePowerRebootResponseError = (postNodePowerRebootResponse400 | postNodePowerRebootResponse401 | postNodePowerRebootResponse403 | postNodePowerRebootResponse404 | postNodePowerRebootResponse409 | postNodePowerRebootResponse500) & {
+export type postNodePowerRebootResponseError = (postNodePowerRebootResponse400 | postNodePowerRebootResponse401 | postNodePowerRebootResponse403 | postNodePowerRebootResponse404 | postNodePowerRebootResponse409 | postNodePowerRebootResponse500 | postNodePowerRebootResponse503) & {
   headers: Headers;
 };
 
@@ -138,10 +143,15 @@ export type postNodePowerShutdownResponse500 = {
   status: 500
 }
 
+export type postNodePowerShutdownResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodePowerShutdownResponseSuccess = (postNodePowerShutdownResponse200) & {
   headers: Headers;
 };
-export type postNodePowerShutdownResponseError = (postNodePowerShutdownResponse400 | postNodePowerShutdownResponse401 | postNodePowerShutdownResponse403 | postNodePowerShutdownResponse404 | postNodePowerShutdownResponse409 | postNodePowerShutdownResponse500) & {
+export type postNodePowerShutdownResponseError = (postNodePowerShutdownResponse400 | postNodePowerShutdownResponse401 | postNodePowerShutdownResponse403 | postNodePowerShutdownResponse404 | postNodePowerShutdownResponse409 | postNodePowerShutdownResponse500 | postNodePowerShutdownResponse503) & {
   headers: Headers;
 };
 

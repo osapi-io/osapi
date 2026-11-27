@@ -47,7 +47,7 @@ var Defaults = config.NATS{
 		Storage: "file", Replicas: 1, Discard: "old",
 	},
 	KV: config.NATSKV{
-		Bucket: "job-queue", TTL: "1h", MaxBytes: 104857600, Storage: "file", Replicas: 1,
+		Bucket: "job-queue", TTL: "1h", MaxBytes: 1073741824, Storage: "file", Replicas: 1,
 	},
 	DLQ: config.NATSDLQ{MaxAge: "168h", MaxMsgs: 1000, Storage: "file", Replicas: 1},
 	Audit: config.NATSAudit{

@@ -124,6 +124,21 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 		},
 		{
+			name: "a job store near its limit degrades the status",
+			checker: &health.NATSChecker{
+				NATSCheck:  func(context.Context) error { return nil },
+				KVCheck:    func(context.Context) error { return nil },
+				StoreCheck: func(context.Context) error { return errors.New("the job store is 90 percent full") },
+			},
+			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
+				s.False(healthy)
+				s.Equal("degraded", r.Status)
+				s.Equal("ok", checkOf(r, "kv").Status)
+				s.Equal("error", checkOf(r, "job_store").Status)
+				s.Equal("the job store is 90 percent full", checkOf(r, "job_store").Error)
+			},
+		},
+		{
 			name: "both unhealthy returns 503",
 			checker: &health.NATSChecker{
 				NATSCheck: func(context.Context) error { return fmt.Errorf("nats down") },
@@ -156,6 +171,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				c := healthmocks.NewMockChecker(s.mockCtrl)
 				c.EXPECT().CheckNATS(gomock.Any()).Return(nil)
 				c.EXPECT().CheckKV(gomock.Any()).Return(fmt.Errorf("kv down"))
+				c.EXPECT().CheckStore(gomock.Any()).Return(nil)
 
 				return c
 			},
