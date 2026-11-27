@@ -427,6 +427,16 @@ func ResetGetAgentHostnameFn() {
 	getAgentHostnameFn = job.GetAgentHostname
 }
 
+// ExportLoadAgentKeys exposes loadAgentKeys for testing.
+func ExportLoadAgentKeys(
+	ctx context.Context,
+	log *slog.Logger,
+	keys *pki.Manager,
+	load func() error,
+) error {
+	return loadAgentKeys(ctx, log, keys, load)
+}
+
 // GetAgentHostname returns the agent's hostname field for testing.
 func GetAgentHostname(
 	a *Agent,
