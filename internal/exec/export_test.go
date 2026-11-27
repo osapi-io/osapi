@@ -20,6 +20,11 @@
 
 package exec
 
+import (
+	"syscall"
+	"time"
+)
+
 // SetExecutor replaces the CommandExecutor on an Exec instance.
 // Used by tests to inject a mock executor.
 func SetExecutor(
@@ -41,4 +46,17 @@ func SetSudoProgram(
 	sudoProgram = name
 
 	return func() { sudoProgram = old }
+}
+
+// SetKillGroup replaces the function that kills a command's process group
+// and the wait for its output after that, and returns a function that puts
+// both back.
+func SetKillGroup(
+	kill func(pid int, sig syscall.Signal) error,
+	delay time.Duration,
+) func() {
+	oldKill, oldDelay := killGroup, waitDelay
+	killGroup, waitDelay = kill, delay
+
+	return func() { killGroup, waitDelay = oldKill, oldDelay }
 }

@@ -91,7 +91,7 @@ func (s *RunPrivilegedCmdWithStdinPublicTestSuite) TestRunPrivilegedCmdWithStdin
 			stdin:   "john:secret\n",
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					ExecuteWithStdin(gomock.Any(), "sudo", []string{"chpasswd"}, "", "john:secret\n").
+					ExecuteWithStdin(gomock.Any(), "sudo", []string{"-n", "chpasswd"}, "", "john:secret\n").
 					Return("", nil)
 			},
 			validateFunc: func(output string, err error) {

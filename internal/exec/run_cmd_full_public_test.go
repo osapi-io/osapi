@@ -113,6 +113,21 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 			errorContains: "command timed out after 1s",
 		},
 		{
+			// The background sleep holds the output open after its shell is
+			// killed. The timeout kills the whole process group, so Run
+			// returns at the timeout, not when the sleep ends.
+			name:          "command timeout with a child that holds the output",
+			command:       "/bin/sh",
+			args:          []string{"-c", "sleep 30 & sleep 30"},
+			timeout:       1,
+			expectError:   true,
+			errorContains: "command timed out after 1s",
+			validateFunc: func(r *exec.CmdResult) {
+				suite.Less(r.DurationMs, int64(5000))
+				suite.Equal(-1, r.ExitCode)
+			},
+		},
+		{
 			name:          "command not found",
 			command:       "nonexistent-command-xyz",
 			args:          []string{},
@@ -139,10 +154,10 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 				suite.Require().Contains(err.Error(), tc.errorContains)
 			} else {
 				suite.Require().NoError(err)
-				suite.Require().NotNil(result)
-				if tc.validateFunc != nil {
-					tc.validateFunc(result)
-				}
+			}
+			suite.Require().NotNil(result)
+			if tc.validateFunc != nil {
+				tc.validateFunc(result)
 			}
 		})
 	}

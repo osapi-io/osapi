@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os/exec"
 	"strings"
 )
 
@@ -74,7 +73,7 @@ func (d *defaultExecutor) run(
 	ctx, cancel := context.WithTimeout(ctx, DefaultCommandTimeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, name, args...)
+	cmd := newCommand(ctx, name, args)
 	if cwd != "" {
 		cmd.Dir = cwd
 	}

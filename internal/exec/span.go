@@ -23,6 +23,7 @@ package exec
 import (
 	"context"
 	"os/exec"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -39,9 +40,15 @@ func startSpan(
 	args []string,
 ) (context.Context, trace.Span) {
 	program := name
-	sudo := name == "sudo" && len(args) > 0
-	if sudo {
-		program = args[0]
+	sudo := false
+	if name == "sudo" {
+		for _, a := range args {
+			if !strings.HasPrefix(a, "-") {
+				program, sudo = a, true
+
+				break
+			}
+		}
 	}
 
 	return otel.Tracer("osapi-exec").Start(ctx, "exec "+program,
