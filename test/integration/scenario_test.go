@@ -116,6 +116,10 @@ type step struct {
 	// skipIf skips the scenario when it matches the output: the host
 	// cannot run it, such as one with no docker.
 	skipIf *check
+	// ownServer is a step that reads what only the suite's own server
+	// makes, such as a join string of its own NATS: it is skipped against
+	// a deployment.
+	ownServer bool
 }
 
 // check is a relation of the values at a JSON path of a step's output.
@@ -313,11 +317,12 @@ func (c check) eval(
 }
 
 // placeholder is a word in braces: a name that a step captured, or one of
-// target, stamp, dir:<name> and wrongfp:<name>.
+// target, stamp, dir:<name>, wrongfp:<name> and urlq:<name>, the value of
+// name as a URL query escapes it.
 var placeholder = regexp.MustCompile(`\{([a-z][a-zA-Z0-9]*)(?::([a-zA-Z0-9-]+))?\}`)
 
 // builtins are the placeholders that the runner gives each scenario.
-var builtins = []string{"target", "stamp", "dir", "wrongfp"}
+var builtins = []string{"target", "stamp", "dir", "wrongfp", "urlq"}
 
 // expand fills each placeholder of s from vars, and the others with fn.
 func expand(

@@ -145,6 +145,8 @@ func (r *run) builtin(
 		return dir, true
 	case "wrongfp":
 		return wrongFingerprint(r.s.T(), r.vars[arg]), true
+	case "urlq":
+		return url.QueryEscape(r.vars[arg]), true
 	}
 
 	return "", false
@@ -177,6 +179,9 @@ func (r *run) step(
 	st step,
 ) string {
 	s := r.s
+	if st.ownServer && deployment() {
+		s.T().Skip("reads what only the suite's own server makes")
+	}
 	keyDir, err := r.expand(st.keyDir)
 	s.Require().NoError(err)
 	switch {

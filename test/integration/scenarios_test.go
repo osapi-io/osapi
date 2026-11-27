@@ -36,7 +36,9 @@ func scenarios() []scenario {
 
 	out = append(out, pkiScenarios()...)
 
-	return append(out, jobScenarios()...)
+	out = append(out, jobScenarios()...)
+
+	return append(out, natsCertScenarios()...)
 }
 
 // ready is a step that waits for a Ready agent in the fixture, and keeps
@@ -964,6 +966,78 @@ func jobScenarios() []scenario {
 				},
 				agentState("Ready"),
 				job("a job reaches the undrained agent", false, 0),
+			},
+		},
+	}
+}
+
+func natsCertScenarios() []scenario {
+	return []scenario{
+		{
+			name:    "rotate the NATS server's certificate with no restart and no new join",
+			writeOp: "NATS_CERT_ROTATE",
+			steps: []step{
+				{
+					name: "the NATS server serves its self-signed certificate",
+					cli:  []string{"client", "pki", "cert", "get", "--name", "nats", "--json"},
+					// A cert_file of the operator, as the lab's NATS serves, is
+					// refused: the suite's own server rotates its own.
+					skipIf: &check{path: "source", op: "!=", want: "self-signed"},
+				},
+				{
+					name:    "read the certificate",
+					cli:     []string{"client", "pki", "nats", "get", "--json"},
+					checks:  []check{{path: "current", op: "nonempty"}},
+					capture: map[string]string{"before": "current"},
+				},
+				{
+					name: "start a rotation",
+					cli:  []string{"client", "pki", "nats", "rotate", "--json"},
+					checks: []check{
+						{path: "next", op: "nonempty"},
+						{path: "next", op: "!=", want: "{before}"},
+						{path: "agents[*].hostname", op: "nonempty"},
+					},
+					capture: map[string]string{"next": "next"},
+				},
+				{
+					name: "the server switches when each agent trusts the next certificate",
+					wait: 90 * time.Second, pause: 2 * time.Second,
+					cli: []string{"client", "pki", "nats", "get", "--json"},
+					checks: []check{
+						{path: "current", op: "==", want: "{next}"},
+						{path: "next", op: "empty"},
+					},
+				},
+				{
+					name:   "each agent is Ready on the new certificate",
+					wait:   30 * time.Second,
+					pause:  time.Second,
+					cli:    []string{"client", "agent", "list", "--json"},
+					checks: []check{{path: "items[*].state", op: "==", want: "Ready"}},
+				},
+				{
+					name: "an agent runs a job after the switch",
+					cli: []string{
+						"client",
+						"node",
+						"hostname",
+						"get",
+						"--target",
+						"{target}",
+						"--json",
+					},
+					checks: []check{
+						{path: "results[*].error", op: "empty"},
+						{path: "results[*].name", op: "nonempty"},
+					},
+				},
+				{
+					name:      "a join string made after the switch pins the new certificate",
+					ownServer: true,
+					cli:       []string{"controller", "join", "token", "create", "--json"},
+					checks:    []check{{path: "join", op: "contains", want: "fp={urlq:next}"}},
+				},
 			},
 		},
 	}
