@@ -125,6 +125,13 @@ func (s *SpanPublicTestSuite) TestStartSpan() {
 			wantSudo: true,
 		},
 		{
+			name:     "when sudo -n runs a program names the span for the program",
+			program:  "sudo",
+			args:     []string{"-n", "sysctl", "-p"},
+			wantName: "exec sysctl",
+			wantSudo: true,
+		},
+		{
 			name:     "when a program runs without sudo names the span for it",
 			program:  "chronyc",
 			args:     []string{"reload", "sources"},

@@ -86,7 +86,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			args:    []string{"-n", "hello"},
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					Execute(gomock.Any(), "sudo", []string{"echo", "-n", "hello"}, "").
+					Execute(gomock.Any(), "sudo", []string{"-n", "echo", "-n", "hello"}, "").
 					Return("hello", nil)
 			},
 			validateFunc: func(output string, err error) {
@@ -101,7 +101,7 @@ func (s *RunPrivilegedCmdPublicTestSuite) TestRunPrivilegedCmd() {
 			args:    nil,
 			setupMock: func() {
 				s.mockExecutor.EXPECT().
-					Execute(gomock.Any(), "sudo", []string{"systemctl"}, "").
+					Execute(gomock.Any(), "sudo", []string{"-n", "systemctl"}, "").
 					Return("", nil)
 			},
 			validateFunc: func(output string, err error) {

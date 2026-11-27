@@ -23,14 +23,14 @@ package exec
 import "context"
 
 // RunPrivilegedCmd executes the provided command with arguments. When sudo is
-// enabled, the original command is passed as an argument to "sudo".
+// enabled, the original command is passed as an argument to "sudo -n".
 func (e *Exec) RunPrivilegedCmd(
 	ctx context.Context,
 	name string,
 	args []string,
 ) (string, error) {
 	if e.sudo {
-		args = append([]string{name}, args...)
+		args = sudoArgs(name, args)
 		name = "sudo"
 	}
 

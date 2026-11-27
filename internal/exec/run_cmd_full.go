@@ -58,10 +58,13 @@ func (e *Exec) runFull(
 		timeout = 30
 	}
 
+	ctx, span := startSpan(ctx, name, args)
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, name, args...)
+	cmd := newCommand(ctx, name, args)
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
@@ -81,9 +84,10 @@ func (e *Exec) runFull(
 	result := &CmdResult{
 		Stdout:     stdout.String(),
 		Stderr:     stderr.String(),
-		ExitCode:   0,
 		DurationMs: duration.Milliseconds(),
 	}
+	err = fullResult(ctx, result, err, timeout)
+	endSpan(span, cmd, err)
 
 	e.logger.Debug(
 		"exec full",
@@ -94,20 +98,33 @@ func (e *Exec) runFull(
 		slog.Any("error", err),
 	)
 
-	if err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			result.ExitCode = -1
-			return result, fmt.Errorf("command timed out after %ds", timeout)
-		}
+	return result, err
+}
 
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			result.ExitCode = exitErr.ExitCode()
-			return result, nil
-		}
+// fullResult sets the exit code of result from the error of Run, and gives
+// the error of the run: a timeout, a program that did not start, or nil for
+// a command that ran, with any exit code.
+func fullResult(
+	ctx context.Context,
+	result *CmdResult,
+	err error,
+	timeout int,
+) error {
+	if err == nil {
+		return nil
+	}
+	if ctx.Err() == context.DeadlineExceeded {
+		result.ExitCode = -1
 
-		return result, fmt.Errorf("failed to execute command: %w", err)
+		return fmt.Errorf("command timed out after %ds", timeout)
 	}
 
-	return result, nil
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		result.ExitCode = exitErr.ExitCode()
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to execute command: %w", err)
 }

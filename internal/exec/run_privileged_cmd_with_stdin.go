@@ -35,7 +35,7 @@ func (e *Exec) RunPrivilegedCmdWithStdin(
 	stdin string,
 ) (string, error) {
 	if e.sudo {
-		args = append([]string{name}, args...)
+		args = sudoArgs(name, args)
 		name = "sudo"
 	}
 

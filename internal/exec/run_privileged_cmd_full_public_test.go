@@ -23,6 +23,8 @@ package exec_test
 import (
 	"context"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -46,8 +48,13 @@ func (s *RunPrivilegedCmdFullPublicTestSuite) TestRunPrivilegedCmdFull() {
 		s.Equal("err\n", errOut)
 		s.Equal(3, code)
 	})
-	s.Run("with sudo, the command runs through it", func() {
-		defer exec.SetSudoProgram("env")()
+	s.Run("with sudo, the command runs through sudo -n", func() {
+		// The stand-in for sudo runs its command only when its first
+		// argument is -n, so a sudo that could ask for a password fails.
+		sudo := filepath.Join(s.T().TempDir(), "sudo")
+		s.Require().NoError(os.WriteFile(sudo,
+			[]byte("#!/bin/sh\n[ \"$1\" = -n ] || exit 9\nshift\nexec \"$@\"\n"), 0o700))
+		defer exec.SetSudoProgram(sudo)()
 		e := exec.New(slog.Default(), true)
 		out, _, code, err := e.RunPrivilegedCmdFull(ctx, "echo", []string{"hi"}, "")
 		s.Require().NoError(err)

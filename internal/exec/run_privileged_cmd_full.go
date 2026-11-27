@@ -40,7 +40,7 @@ func (e *Exec) RunPrivilegedCmdFull(
 	stdin string,
 ) (string, string, int, error) {
 	if e.sudo {
-		args = append([]string{name}, args...)
+		args = sudoArgs(name, args)
 		name = sudoProgram
 	}
 	// runFull gives a result also with an error.
