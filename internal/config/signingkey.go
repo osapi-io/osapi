@@ -28,6 +28,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // SigningKeyFile is the file in controller.pki.key_dir of the signing key
@@ -40,36 +42,91 @@ const SigningKeyID = "local"
 // randRead is rand.Read, for a test to replace.
 var randRead = rand.Read
 
+// ErrShortSigningKey is a signing key with fewer characters than
+// validation.MinSigningKeyLen. An empty key would let anybody sign a token.
+var ErrShortSigningKey = errors.New("the signing key is too short")
+
 // EnsureSigningKey gives c the signing key in controller.pki.key_dir when
 // its config has none, and makes the key first when it is not there. Thus a
 // controller with an empty config verifies tokens, and controller token
 // generate on its host signs them with the same key. A key in the config
 // wins: the file is used only when there is none.
+//
+// Each key, from the config, from a secret reference or from the file, has
+// at least validation.MinSigningKeyLen characters. The config check runs
+// before the references are resolved and before the file is read, so this is
+// the check that sees the key that signs.
 func EnsureSigningKey(
 	c *Config,
 ) error {
 	sec := &c.Controller.API.Security
-	if len(sec.SigningKeys) > 0 {
-		return nil
+	if len(sec.SigningKeys) == 0 {
+		key, err := readOrMakeSigningKey(
+			filepath.Join(c.Controller.PKI.KeyDir, SigningKeyFile),
+		)
+		if err != nil {
+			return err
+		}
+		sec.SigningKeys = []SigningKey{{ID: SigningKeyID, Key: key}}
 	}
-	path := filepath.Join(c.Controller.PKI.KeyDir, SigningKeyFile)
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		key := make([]byte, 32)
-		if _, err := randRead(key); err != nil {
-			return fmt.Errorf("make the signing key: %w", err)
+	for _, k := range sec.SigningKeys {
+		if len(k.Key) < validation.MinSigningKeyLen {
+			return fmt.Errorf(
+				"%w: key %q has %d characters, and needs %d",
+				ErrShortSigningKey, k.ID, len(k.Key), validation.MinSigningKeyLen,
+			)
 		}
-		data = []byte(hex.EncodeToString(key) + "\n")
-		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-			return fmt.Errorf("make the signing key: %w", err)
-		}
-		if err := os.WriteFile(path, data, 0o600); err != nil {
-			return fmt.Errorf("write the signing key: %w", err)
-		}
-	} else if err != nil {
-		return fmt.Errorf("read the signing key: %w", err)
 	}
-	sec.SigningKeys = []SigningKey{{ID: SigningKeyID, Key: strings.TrimSpace(string(data))}}
 
 	return nil
+}
+
+// readFile, writeFile and link are the os calls of readOrMakeSigningKey,
+// for a test to replace.
+var (
+	readFile  = os.ReadFile
+	writeFile = os.WriteFile
+	link      = os.Link
+)
+
+// readOrMakeSigningKey is the key in path, which it makes when path is not
+// there. The new key goes to a temporary file, which a link puts at path. A
+// link does not replace a file, so of two processes that make a key at the
+// same time, one key wins and both read it. A reader never sees a part of a
+// key.
+func readOrMakeSigningKey(
+	path string,
+) (string, error) {
+	data, err := readFile(path)
+	if err == nil {
+		return strings.TrimSpace(string(data)), nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("read the signing key: %w", err)
+	}
+	// 32 bytes of key, then 8 bytes that name the temporary file. The name
+	// shows no byte of the key.
+	b := make([]byte, 40)
+	if _, err := randRead(b); err != nil {
+		return "", fmt.Errorf("make the signing key: %w", err)
+	}
+	key, suffix := b[:32], b[32:]
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return "", fmt.Errorf("make the signing key: %w", err)
+	}
+	tmp := path + "." + hex.EncodeToString(suffix) + ".tmp"
+	defer func() { _ = os.Remove(tmp) }()
+	if err := writeFile(tmp, []byte(hex.EncodeToString(key)+"\n"), 0o600); err != nil {
+		return "", fmt.Errorf("write the signing key: %w", err)
+	}
+	if err := link(tmp, path); err != nil && !errors.Is(err, os.ErrExist) {
+		return "", fmt.Errorf("write the signing key: %w", err)
+	}
+	// The key at path: this one, or the one of a process that was first.
+	data, err = readFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read the signing key: %w", err)
+	}
+
+	return strings.TrimSpace(string(data)), nil
 }

@@ -25,6 +25,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -60,7 +61,9 @@ func (s *SigningKeyPublicTestSuite) TestEnsureSigningKey() {
 	s.Equal(made, again.Controller.API.Security.SigningKeys[0], "the key is made once, then read")
 
 	var own config.Config
-	own.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "main", Key: "k"}}
+	own.Controller.API.Security.SigningKeys = []config.SigningKey{
+		{ID: "main", Key: strings.Repeat("k", 32)},
+	}
 	s.Require().NoError(config.EnsureSigningKey(&own))
 	s.Equal("main", own.Controller.API.Security.SigningKeys[0].ID, "a key in the config wins")
 
@@ -85,6 +88,127 @@ func (s *SigningKeyPublicTestSuite) TestEnsureSigningKey() {
 	var noRand config.Config
 	noRand.Controller.PKI.KeyDir = filepath.Join(dir, "norand")
 	s.ErrorContains(config.EnsureSigningKey(&noRand), "make the signing key")
+}
+
+// TestShortSigningKey: a key that is empty or short is refused, from each
+// source (GHSA). A controller that signed with an empty key would accept a
+// token that anybody can sign.
+func (s *SigningKeyPublicTestSuite) TestShortSigningKey() {
+	tests := []struct {
+		name  string
+		setup func(c *config.Config)
+	}{
+		{
+			// A first start that made the file and failed to write it.
+			name: "an empty file in the key dir",
+			setup: func(c *config.Config) {
+				s.Require().NoError(os.MkdirAll(c.Controller.PKI.KeyDir, 0o700))
+				s.Require().NoError(os.WriteFile(
+					filepath.Join(c.Controller.PKI.KeyDir, config.SigningKeyFile), nil, 0o600))
+			},
+		},
+		{
+			name: "a short file in the key dir",
+			setup: func(c *config.Config) {
+				s.Require().NoError(os.MkdirAll(c.Controller.PKI.KeyDir, 0o700))
+				s.Require().NoError(os.WriteFile(
+					filepath.Join(
+						c.Controller.PKI.KeyDir,
+						config.SigningKeyFile,
+					),
+					[]byte("short\n"),
+					0o600,
+				))
+			},
+		},
+		{
+			// A secret reference resolves after the config check.
+			name: "a short key in the config",
+			setup: func(c *config.Config) {
+				c.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "main", Key: ""}}
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var c config.Config
+			c.Controller.PKI.KeyDir = filepath.Join(s.T().TempDir(), "pki")
+			tt.setup(&c)
+			s.ErrorIs(config.EnsureSigningKey(&c), config.ErrShortSigningKey)
+		})
+	}
+}
+
+// TestSigningKeyRace: two processes that make the key at the same time read
+// the same key.
+func (s *SigningKeyPublicTestSuite) TestSigningKeyRace() {
+	dir := filepath.Join(s.T().TempDir(), "pki")
+	const n = 8
+	keys := make(chan string, n)
+	errs := make(chan error, n)
+	for range n {
+		go func() {
+			var c config.Config
+			c.Controller.PKI.KeyDir = dir
+			err := config.EnsureSigningKey(&c)
+			errs <- err
+			if err == nil {
+				keys <- c.Controller.API.Security.SigningKeys[0].Key
+			}
+		}()
+	}
+	for range n {
+		s.Require().NoError(<-errs)
+	}
+	first := <-keys
+	for range n - 1 {
+		s.Equal(first, <-keys)
+	}
+	entries, err := os.ReadDir(dir)
+	s.Require().NoError(err)
+	s.Len(entries, 1, "no temporary file is left")
+}
+
+// TestSigningKeyWriteErrors: each failed step of the write is an error, and
+// leaves no key that a later start reads.
+func (s *SigningKeyPublicTestSuite) TestSigningKeyWriteErrors() {
+	boom := errors.New("boom")
+	notThere := func(string) ([]byte, error) { return nil, os.ErrNotExist }
+	tests := []struct {
+		name    string
+		read    func(string) ([]byte, error)
+		write   func(string, []byte, os.FileMode) error
+		link    func(string, string) error
+		wantErr string
+	}{
+		{
+			name:    "the temporary file cannot be written",
+			write:   func(string, []byte, os.FileMode) error { return boom },
+			wantErr: "write the signing key",
+		},
+		{
+			name:    "the link fails",
+			link:    func(string, string) error { return boom },
+			wantErr: "write the signing key",
+		},
+		{
+			name:    "the key cannot be read after the link",
+			read:    notThere,
+			wantErr: "read the signing key",
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			defer config.SetSigningKeyFS(tt.read, tt.write, tt.link)()
+			var c config.Config
+			c.Controller.PKI.KeyDir = filepath.Join(s.T().TempDir(), "pki")
+			s.ErrorContains(config.EnsureSigningKey(&c), tt.wantErr)
+			entries, _ := os.ReadDir(c.Controller.PKI.KeyDir)
+			for _, e := range entries {
+				s.NotContains(e.Name(), ".tmp", "no temporary file is left")
+			}
+		})
+	}
 }
 
 func TestSigningKeyPublicTestSuite(t *testing.T) {

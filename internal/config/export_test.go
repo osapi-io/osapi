@@ -22,6 +22,7 @@ package config
 
 import (
 	"crypto/x509"
+	"os"
 	"reflect"
 
 	"github.com/go-playground/validator/v10"
@@ -82,4 +83,25 @@ func SetSystemCertPoolFn(
 // ResetSystemCertPoolFn restores the systemCertPoolFn variable to its default.
 func ResetSystemCertPoolFn() {
 	systemCertPoolFn = x509.SystemCertPool
+}
+
+// SetSigningKeyFS replaces the os calls that read and write the signing key,
+// and returns a func that puts the real ones back.
+func SetSigningKeyFS(
+	read func(string) ([]byte, error),
+	write func(string, []byte, os.FileMode) error,
+	ln func(string, string) error,
+) func() {
+	r, w, l := readFile, writeFile, link
+	if read != nil {
+		readFile = read
+	}
+	if write != nil {
+		writeFile = write
+	}
+	if ln != nil {
+		link = ln
+	}
+
+	return func() { readFile, writeFile, link = r, w, l }
 }
