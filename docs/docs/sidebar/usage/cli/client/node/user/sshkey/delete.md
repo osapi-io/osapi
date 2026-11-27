@@ -5,7 +5,8 @@ Remove an authorized SSH key of a user.
 Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of
 the user, and keeps the other lines as they are. A key that the file does not
 have, a user with no file, or a user that the host does not have, changes
-nothing. It runs on the Debian family only, and elsewhere reports skipped.
+nothing. The file that it writes is owned by the user again, so that sshd reads
+it. It runs on the Debian family only, and elsewhere reports skipped.
 
 ```bash
 osapi client node user sshkey delete [flags]
@@ -154,9 +155,9 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example      | On the host                                                                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Remove a key | writes `/home/osapitest/.ssh/authorized_keys`: `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example` |
+| Example      | On the host                                                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Remove a key | writes `/home/osapitest/.ssh/authorized_keys`: `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example`; runs `chown 1001:1001 /home/osapitest/.ssh/authorized_keys` |
 
 The command fails in these cases:
 

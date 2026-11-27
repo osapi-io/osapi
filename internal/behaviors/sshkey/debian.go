@@ -123,13 +123,15 @@ func (d *debian) Add(
 }
 
 // Remove drops each line of the key with the fingerprint, and keeps the
-// others as they are.
+// others as they are. The file that it writes is new, so it gives the file
+// to the user again, as Add does: sshd refuses a file that the user does not
+// own.
 func (d *debian) Remove(
 	ctx context.Context,
 	name string,
 	fp string,
 ) (bool, error) {
-	_, p, content, err := d.file(ctx, name)
+	u, p, content, err := d.file(ctx, name)
 	if errors.Is(err, behavior.ErrNotFound) {
 		// A user that the host does not have has no key to remove.
 		return false, nil
@@ -149,5 +151,13 @@ func (d *debian) Remove(
 		return false, nil
 	}
 
-	return true, atomicfile.Write(ctx, d.fs, p, []byte(out), fileMode)
+	if err := atomicfile.Write(ctx, d.fs, p, []byte(out), fileMode); err != nil {
+		return false, err
+	}
+	owner := strconv.Itoa(u.UID) + ":" + strconv.Itoa(u.GID)
+	if _, err := d.exec.RunPrivilegedCmd(ctx, "chown", []string{owner, p}); err != nil {
+		return true, err
+	}
+
+	return true, nil
 }

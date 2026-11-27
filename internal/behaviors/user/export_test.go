@@ -41,3 +41,7 @@ func SetHashFn(fn func(string) (string, error)) func() {
 
 	return func() { hashFn = old }
 }
+
+// NewDebian is newDebian, for the tests of what the provider does when a
+// command fails.
+var NewDebian = newDebian

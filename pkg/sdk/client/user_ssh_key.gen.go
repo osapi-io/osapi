@@ -78,7 +78,8 @@ type UserSSHKeyDeleteInput struct {
 // Removes each line of the key with the fingerprint from
 // ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A
 // key that the file does not have, a user with no file, or a user that the
-// host does not have, changes nothing. It runs on the Debian family only, and
+// host does not have, changes nothing. The file that it writes is owned by the
+// user again, so that sshd reads it. It runs on the Debian family only, and
 // elsewhere reports skipped.
 //
 // It sends DELETE /api/node/{hostname}/user/{name}/sshkey, and needs the

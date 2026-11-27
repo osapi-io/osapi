@@ -53,7 +53,7 @@ var userCreateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Add a user\n  osapi client node user create --target web-01 --name osapitest\n\n  # Add a user with a shell, groups and a password\n  osapi client node user create --target web-01 --name osapitest --shell /bin/sh --groups root --password -\n\n  # Add a system user with its IDs and its home\n  osapi client node user create --target web-01 --name osapitest --uid 1999 --gid 100 --home /home/osapitest --system\n\n  # A user that the host has\n  osapi client node user create --target web-01 --name osapitest",
-	Long:    "Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.",
+	Long:    "Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. When chpasswd fails, the user is removed again with userdel -r, so a second run adds it with its password. It runs on the Debian family only, and elsewhere reports skipped.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
