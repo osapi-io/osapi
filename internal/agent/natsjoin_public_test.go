@@ -175,6 +175,27 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		s.Equal("/pki/nats-join-ca.pem", got.Agent.NATS.TLS.CAFile)
 	})
 
+	s.Run("an empty ns in the string wins over the config's namespace", func() {
+		cert := selfSigned(s.T())
+		sum := sha256.Sum256(cert.Raw)
+		s.cfg.Agent.NATS.Namespace = "osapi"
+		defer func() { s.cfg.Agent.NATS.Namespace = "" }()
+		s.cfg.Agent.Join = "tls://hub:4222?token=t&ns=&fp=SHA256:" + hex.EncodeToString(sum[:])
+		defer agent.SetJoinNATSFns(
+			id,
+			func(_ string, _ []nats.Option, subject string, _ []byte) ([]byte, error) {
+				s.Equal("join.request", subject)
+
+				return json.Marshal(pki.JoinReply{ControllerPublicKey: make([]byte, 32)})
+			},
+		)()
+
+		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
+
+		s.Require().NoError(err)
+		s.Empty(got.Agent.NATS.Namespace)
+	})
+
 	// joinTLS joins over tls with a server that shows chain, and returns the
 	// agent's config after.
 	joinTLS := func(chain []*x509.Certificate) config.Config {
