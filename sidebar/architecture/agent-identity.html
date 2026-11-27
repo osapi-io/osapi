@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.c4c97c8c.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.ea76a379.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -17,17 +17,20 @@ enrollment gives cryptographic trust between the agents and the controller.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="machine-identity">Machine identity<a href="#machine-identity" class="hash-link" aria-label="Direct link to Machine identity" title="Direct link to Machine identity" translate="no">​</a></h2>
 <p>Each agent has two identity values:</p>
 <ul>
-<li class=""><strong>Machine ID.</strong> A permanent identifier from <code>/etc/machine-id</code> (Linux) or
-<code>IOPlatformUUID</code> (macOS). It is the registry key. It does not change when the
-hostname changes.</li>
+<li class=""><strong>Machine ID.</strong> A permanent identifier, which the agent reads through gohai&#x27;s
+<code>machine_id</code> collector. On Linux it is the first of these files that has an
+ID, in lowercase: <code>/etc/machine-id</code>, <code>/var/lib/dbus/machine-id</code> and
+<code>/sys/class/dmi/id/product_uuid</code>. On macOS it is the <code>IOPlatformUUID</code> that
+<code>ioreg</code> gives. It is the registry key. It does not change when the hostname
+changes.</li>
 <li class=""><strong>Hostname.</strong> A display name from the OS or from the <code>agent.hostname</code> config.
 It can change. Use it to target hosts and to read the output.</li>
 </ul>
-<p>The agent reads its machine ID one time, when it starts. If it cannot read the
-machine ID, it does not start. NATS subjects use the machine ID
-(<code>jobs.query.host.&lt;machineID&gt;</code>). Thus the consumers do not subscribe again when
-the hostname changes. The agent reads the hostname again at each heartbeat (10s)
-and updates it in the registry.</p>
+<p>The agent reads its machine ID one time, when it starts, and waits at most 10
+seconds for it. If it cannot read the machine ID, or the host has none, it does
+not start. NATS subjects use the machine ID (<code>jobs.query.host.&lt;machineID&gt;</code>).
+Thus the consumers do not subscribe again when the hostname changes. The agent
+reads the hostname again at each heartbeat (10s) and updates it in the registry.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cli-targeting">CLI targeting<a href="#cli-targeting" class="hash-link" aria-label="Direct link to CLI targeting" title="Direct link to CLI targeting" translate="no">​</a></h3>
 <p>A hostname and a machine ID both work as targets. The controller changes a
 hostname to the machine ID for the NATS subject automatically:</p>
