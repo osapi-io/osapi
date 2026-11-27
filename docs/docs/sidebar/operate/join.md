@@ -221,9 +221,26 @@ its config with a token that has a use left.
 
 ## Move hosts to a different NATS server
 
-The controller does not push NATS settings to an agent. The agent keeps the NATS
-server and the TLS of its join in `nats-join.json`. Thus to move hosts to a
-different NATS server or address, each host joins again:
+Give NATS a DNS name, and set `controller.join.url` to that name before the
+hosts join. Each agent keeps the name of its join in `nats-join.json`. It
+reconnects to NATS with no limit, and it looks up the name again at each
+attempt. Thus NATS can move to a different host with no join, when the new host:
+
+- has the same DNS name,
+- serves the same certificate, or a certificate that a root of the agent's
+  system verifies for that name, and
+- has the JetStream store of the old host, from
+  `nats.server.jetstream.store_dir`.
+
+The certificate must have the DNS name in its subject alternative names. With a
+self-signed certificate, the agent pins that certificate, so the new host must
+serve it.
+
+osapi does not cluster NATS servers. Thus you cannot add the new server beside
+the old one and then remove the old one.
+
+A move to a different name, or to a different self-signed certificate, needs a
+join of each host. The controller does not push NATS settings to an agent:
 
 1. Set `controller.join.url` to the new address of NATS, and make a token with a
    use for each host, and the labels of the hosts:
