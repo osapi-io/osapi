@@ -21,6 +21,7 @@
 package config
 
 import (
+	"crypto/x509"
 	"reflect"
 
 	"github.com/go-playground/validator/v10"
@@ -69,4 +70,16 @@ func SetRandRead(
 	fn func([]byte) (int, error),
 ) {
 	randRead = fn
+}
+
+// SetSystemCertPoolFn overrides the systemCertPoolFn variable for testing.
+func SetSystemCertPoolFn(
+	fn func() (*x509.CertPool, error),
+) {
+	systemCertPoolFn = fn
+}
+
+// ResetSystemCertPoolFn restores the systemCertPoolFn variable to its default.
+func ResetSystemCertPoolFn() {
+	systemCertPoolFn = x509.SystemCertPool
 }

@@ -25,6 +25,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"log/slog"
 	"net"
 	"os"
@@ -49,6 +50,7 @@ func (s *TLSPublicTestSuite) TestClientConfig() {
 	tests := []struct {
 		name         string
 		c            config.ClientTLS
+		noSystem     bool
 		validateFunc func(*tls.Config, error)
 	}{
 		{
@@ -72,6 +74,19 @@ func (s *TLSPublicTestSuite) TestClientConfig() {
 				s.NotNil(got.RootCAs)
 				s.Len(got.Certificates, 1)
 				s.Equal("api.lab", got.ServerName)
+			},
+		},
+		{
+			name:     "when the system roots cannot be read, it trusts the CA alone",
+			c:        config.ClientTLS{CAFile: cert},
+			noSystem: true,
+			validateFunc: func(got *tls.Config, err error) {
+				s.Require().NoError(err)
+				pemData, err := os.ReadFile(cert)
+				s.Require().NoError(err)
+				want := x509.NewCertPool()
+				s.Require().True(want.AppendCertsFromPEM(pemData))
+				s.True(want.Equal(got.RootCAs))
 			},
 		},
 		{
@@ -107,6 +122,12 @@ func (s *TLSPublicTestSuite) TestClientConfig() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			if tc.noSystem {
+				config.SetSystemCertPoolFn(func() (*x509.CertPool, error) {
+					return nil, errors.New("no system roots")
+				})
+				defer config.ResetSystemCertPoolFn()
+			}
 			tc.validateFunc(tc.c.Config())
 		})
 	}
