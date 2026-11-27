@@ -782,6 +782,9 @@ func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
 		"nats: API error: code=400 err_code=10026 description=maximum consumers limit reached",
 	)
 	bindFailed := errors.New("failed to get consumer: nats: consumer not found")
+	// endNoError makes the mock consume return nil at once, while its
+	// context still runs.
+	endNoError := errors.New("end with no error")
 
 	tests := []struct {
 		name string
@@ -811,6 +814,13 @@ func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
 			consume:    func(int32) error { return bindFailed },
 			wantHolds:  true,
 			wantReason: []string{"3 job consumers do not run", "consumer not found"},
+		},
+		{
+			name:       "when a consume ends with no error while its set runs the condition holds",
+			create:     func(int32) error { return nil },
+			consume:    func(int32) error { return endNoError },
+			wantHolds:  true,
+			wantReason: []string{"3 job consumers do not run", "the consume ended"},
 		},
 		{
 			name: "when a failed consumer is created on a retry the condition clears",
@@ -853,6 +863,10 @@ func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
 					_ *natsclient.ConsumeOptions,
 				) error {
 					if err := tt.consume(consumes.Add(1) - 1); err != nil {
+						if errors.Is(err, endNoError) {
+							return nil
+						}
+
 						return err
 					}
 					running.Add(1)
@@ -904,6 +918,69 @@ func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
 				return !agent.ExportConsumersCondition(a).Status
 			}, 2*time.Second, 10*time.Millisecond, "the condition clears on cancel")
 			agent.ExportWaitConsumers(a)
+		})
+	}
+}
+
+// TestConsumerSetGenerations checks that a consumer of a set that stopped
+// late cannot clear or replace the failure of the set after it, which has
+// the same consumer names: a config apply starts the new set at once.
+func (s *ConsumerPublicTestSuite) TestConsumerSetGenerations() {
+	failed := errors.New("maximum consumers limit reached")
+	older := errors.New("an old set's error")
+
+	tests := []struct {
+		name       string
+		steps      func(a *agent.Agent)
+		wantHolds  bool
+		wantReason string
+	}{
+		{
+			name: "when the old set stops after the new set failed the condition holds",
+			steps: func(a *agent.Agent) {
+				agent.ExportConsumerFailed(a, "query_any", 2, failed)
+				agent.ExportConsumerRecovered(a, "query_any", 1)
+			},
+			wantHolds:  true,
+			wantReason: "maximum consumers limit reached",
+		},
+		{
+			name: "when the old set fails after the new set failed the new error stays",
+			steps: func(a *agent.Agent) {
+				agent.ExportConsumerFailed(a, "query_any", 2, failed)
+				agent.ExportConsumerFailed(a, "query_any", 1, older)
+			},
+			wantHolds:  true,
+			wantReason: "maximum consumers limit reached",
+		},
+		{
+			name: "when the set that failed recovers the condition clears",
+			steps: func(a *agent.Agent) {
+				agent.ExportConsumerFailed(a, "query_any", 2, failed)
+				agent.ExportConsumerRecovered(a, "query_any", 2)
+			},
+		},
+		{
+			name: "when a newer set recovers a name the old set failed the condition clears",
+			steps: func(a *agent.Agent) {
+				agent.ExportConsumerFailed(a, "query_any", 1, older)
+				agent.ExportConsumerRecovered(a, "query_any", 2)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			a := s.newAgent(ctrl, mocks.NewMockJobClient(ctrl))
+
+			tt.steps(a)
+
+			c := agent.ExportConsumersCondition(a)
+			s.Equal(tt.wantHolds, c.Status)
+			if tt.wantHolds {
+				s.Contains(c.Reason, tt.wantReason)
+			}
 		})
 	}
 }

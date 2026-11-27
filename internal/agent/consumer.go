@@ -178,9 +178,11 @@ func (a *Agent) startConsumer(
 	c consumerSpec,
 	kind types.JobType,
 ) {
+	// The caller holds lifecycleMu, or no set runs yet.
+	gen := a.consumerGen
 	err := a.createConsumer(ctx, streamName, c.name, c.filter)
 	if err != nil {
-		a.consumerFailed(c.name, "failed to create "+string(kind)+" consumer", err)
+		a.consumerFailed(c.name, gen, "failed to create "+string(kind)+" consumer", err)
 	}
 
 	opts := &natsclient.ConsumeOptions{
@@ -200,15 +202,21 @@ func (a *Agent) startConsumer(
 		}
 		// A consumer that stops is not a failed one: a drain or a stop
 		// clears it from the condition.
-		defer a.consumerRecovered(c.name)
+		defer a.consumerRecovered(c.name, gen)
 
 		for {
 			if err == nil {
 				err = a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
-				if err == nil || errors.Is(err, context.Canceled) {
+				if ctx.Err() != nil {
 					return
 				}
-				a.consumerFailed(c.name, "error consuming "+string(kind)+" messages", err)
+				// The set still runs, so the consumer must too: a consume
+				// that ended with no error is a failure, and it is tried
+				// again.
+				if err == nil {
+					err = errConsumeEnded
+				}
+				a.consumerFailed(c.name, gen, "error consuming "+string(kind)+" messages", err)
 			}
 
 			select {
@@ -219,19 +227,31 @@ func (a *Agent) startConsumer(
 
 			err = a.createConsumer(ctx, streamName, c.name, c.filter)
 			if err != nil {
-				a.consumerFailed(c.name, "failed to create "+string(kind)+" consumer", err)
+				a.consumerFailed(c.name, gen, "failed to create "+string(kind)+" consumer", err)
 
 				continue
 			}
-			a.consumerRecovered(c.name)
+			a.consumerRecovered(c.name, gen)
 		}
 	}()
 }
 
-// consumerFailed logs the failure of the consumer name and records it for
-// the ConsumersUnavailable condition.
+// errConsumeEnded is the failure of a consume that ended with no error
+// while its set still runs.
+var errConsumeEnded = errors.New("the consume ended")
+
+// consumerErr is the last failure of a job consumer, with the generation of
+// the set that it belongs to.
+type consumerErr struct {
+	gen uint64
+	msg string
+}
+
+// consumerFailed logs the failure of the consumer name of the set gen, and
+// records it for the ConsumersUnavailable condition.
 func (a *Agent) consumerFailed(
 	name string,
+	gen uint64,
 	msg string,
 	err error,
 ) {
@@ -244,18 +264,26 @@ func (a *Agent) consumerFailed(
 	a.consumerErrMu.Lock()
 	defer a.consumerErrMu.Unlock()
 	if a.consumerErrs == nil {
-		a.consumerErrs = make(map[string]string)
+		a.consumerErrs = make(map[string]consumerErr)
 	}
-	a.consumerErrs[name] = err.Error()
+	if prev, ok := a.consumerErrs[name]; ok && prev.gen > gen {
+		// A newer set owns the name.
+		return
+	}
+	a.consumerErrs[name] = consumerErr{gen: gen, msg: err.Error()}
 }
 
-// consumerRecovered removes the consumer name from the failed consumers.
+// consumerRecovered removes the consumer name of the set gen from the failed
+// consumers. A failure of a newer set with the same name stays.
 func (a *Agent) consumerRecovered(
 	name string,
+	gen uint64,
 ) {
 	a.consumerErrMu.Lock()
 	defer a.consumerErrMu.Unlock()
-	delete(a.consumerErrs, name)
+	if prev, ok := a.consumerErrs[name]; ok && prev.gen <= gen {
+		delete(a.consumerErrs, name)
+	}
 }
 
 // consumersCondition is the ConsumersUnavailable condition of the agent,
@@ -275,7 +303,7 @@ func (a *Agent) consumersCondition() job.Condition {
 	if failed > 0 {
 		reason = fmt.Sprintf(
 			"%d job consumers do not run; %s: %s",
-			failed, names[0], a.consumerErrs[names[0]],
+			failed, names[0], a.consumerErrs[names[0]].msg,
 		)
 	}
 	a.consumerErrMu.Unlock()
@@ -343,6 +371,7 @@ func (a *Agent) startConsumersLocked() {
 	}
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
 	a.consumerSetWg = &sync.WaitGroup{}
+	a.consumerGen++
 	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
 	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
 }
