@@ -54,22 +54,33 @@ func (c *Client) agentConfig(
 	ctx context.Context,
 	machineID string,
 ) (job.AgentConfig, error) {
+	cfg, _, err := c.agentConfigEntry(ctx, machineID)
+
+	return cfg, err
+}
+
+// agentConfigEntry reads the config of machineID and its revision. A
+// machine with no config has the zero config at revision 0.
+func (c *Client) agentConfigEntry(
+	ctx context.Context,
+	machineID string,
+) (job.AgentConfig, uint64, error) {
 	if c.stateBucket == "" {
-		return job.AgentConfig{}, fmt.Errorf("agent state bucket not configured")
+		return job.AgentConfig{}, 0, fmt.Errorf("agent state bucket not configured")
 	}
 	entry, err := c.natsClient.KVGet(ctx, c.stateBucket, job.AgentConfigKey(machineID))
 	if errors.Is(err, jetstream.ErrKeyNotFound) {
-		return job.AgentConfig{}, nil
+		return job.AgentConfig{}, 0, nil
 	}
 	if err != nil {
-		return job.AgentConfig{}, fmt.Errorf("read the config of %s: %w", machineID, err)
+		return job.AgentConfig{}, 0, fmt.Errorf("read the config of %s: %w", machineID, err)
 	}
 	var cfg job.AgentConfig
 	if err := json.Unmarshal(entry.Value(), &cfg); err != nil {
-		return job.AgentConfig{}, fmt.Errorf("the config of %s: %w", machineID, err)
+		return job.AgentConfig{}, 0, fmt.Errorf("the config of %s: %w", machineID, err)
 	}
 
-	return cfg, nil
+	return cfg, entry.Revision(), nil
 }
 
 // SetAgentConfig sets the labels, the max jobs, the log level and the facts
@@ -90,34 +101,51 @@ func (c *Client) SetAgentConfig(
 	return cfg, opspan.End(span, err)
 }
 
-// setAgentConfig writes the next version of the config of machineID.
+// configWriteAttempts is how many times setAgentConfig reads and writes
+// the config when a different write changes it at the same time.
+const configWriteAttempts = 3
+
+// setAgentConfig writes the next version of the config of machineID. It
+// writes only over the revision that it read, so two writes at the same
+// time cannot both make the same version: the one that loses reads the
+// config again and makes the version after it.
 func (c *Client) setAgentConfig(
 	ctx context.Context,
 	machineID string,
 	set job.AgentConfig,
 ) (job.AgentConfig, error) {
-	cfg, err := c.agentConfig(ctx, machineID)
-	if err != nil {
-		return job.AgentConfig{}, err
-	}
-	cfg.Version++
-	cfg.Labels = set.Labels
-	cfg.MaxJobs = set.MaxJobs
-	cfg.LogLevel = set.LogLevel
-	cfg.FactsInterval = set.FactsInterval
-	cfg.UpdatedAt = time.Now().UTC()
-	data, err := c.JSONMarshalFn(cfg)
-	if err != nil {
-		return job.AgentConfig{}, fmt.Errorf("marshal the config of %s: %w", machineID, err)
-	}
-	if _, err := c.natsClient.KVPut(
-		ctx,
-		c.stateBucket,
-		job.AgentConfigKey(machineID),
-		data,
-	); err != nil {
-		return job.AgentConfig{}, fmt.Errorf("write the config of %s: %w", machineID, err)
+	for range configWriteAttempts {
+		cfg, revision, err := c.agentConfigEntry(ctx, machineID)
+		if err != nil {
+			return job.AgentConfig{}, err
+		}
+		cfg.Version++
+		cfg.Labels = set.Labels
+		cfg.MaxJobs = set.MaxJobs
+		cfg.LogLevel = set.LogLevel
+		cfg.FactsInterval = set.FactsInterval
+		cfg.UpdatedAt = time.Now().UTC()
+		data, err := c.JSONMarshalFn(cfg)
+		if err != nil {
+			return job.AgentConfig{}, fmt.Errorf("marshal the config of %s: %w", machineID, err)
+		}
+		key := job.AgentConfigKey(machineID)
+		if revision == 0 {
+			_, err = c.natsClient.KVCreate(ctx, c.stateBucket, key, data)
+		} else {
+			_, err = c.natsClient.KVUpdate(ctx, c.stateBucket, key, data, revision)
+		}
+		if err == nil {
+			return cfg, nil
+		}
+		if !errors.Is(err, jetstream.ErrKeyExists) {
+			return job.AgentConfig{}, fmt.Errorf("write the config of %s: %w", machineID, err)
+		}
 	}
 
-	return cfg, nil
+	return job.AgentConfig{}, fmt.Errorf(
+		"write the config of %s: it changed %d times during the write",
+		machineID,
+		configWriteAttempts,
+	)
 }

@@ -2128,6 +2128,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Job not found, or its target is outside the token's target scope.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job holds secrets sealed to its own ID. Send the request again instead.
         "500":
           content:
             application/json:

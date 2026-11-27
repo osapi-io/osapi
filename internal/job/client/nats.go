@@ -47,6 +47,14 @@ type NATSClient interface {
 	) error
 	KVGet(ctx context.Context, bucket string, key string) (jetstream.KeyValueEntry, error)
 	KVPut(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
+	KVCreate(ctx context.Context, bucket string, key string, value []byte) (uint64, error)
+	KVUpdate(
+		ctx context.Context,
+		bucket string,
+		key string,
+		value []byte,
+		revision uint64,
+	) (uint64, error)
 	KVDelete(ctx context.Context, bucket string, key string) error
 	KVKeys(ctx context.Context, bucket string, filters ...string) ([]string, error)
 	KVWatch(

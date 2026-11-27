@@ -90,7 +90,7 @@ var jobRetryCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000",
-	Long:    "The new job has the same operation as the old job. The original job stays in\nthe history. Its timeline gets a `retried` event that links to the new job.",
+	Long:    "The new job has the same operation as the old job, on the same queue. The\noriginal job stays in the history. Its timeline gets a `retried` event that\nlinks to the new job. A job with secrets cannot run again, because its secrets\nare sealed to its own ID: send the request again.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 		targetHostname, _ := cmd.Flags().GetString("target")

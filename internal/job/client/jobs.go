@@ -37,13 +37,14 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// CreateJob creates a new job from operation data and stores it in the KV bucket.
+// CreateJob creates a new job of jobType from operation data and stores it
+// in the KV bucket. The type picks the queue: a query or a modify.
 func (c *Client) CreateJob(
 	ctx context.Context,
+	jobType types.JobType,
 	operationData map[string]interface{},
 	targetHostname string,
 ) (*CreateJobResult, error) {
-	// Extract operation type for semantic routing
 	operationType, ok := operationData["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid operation format: missing type field")
@@ -54,18 +55,14 @@ func (c *Client) CreateJob(
 		targetHostname = job.AnyHost
 	}
 
-	// Build the notification subject using semantic routing based on operation type.
-	// Route based on operation name - operations ending in common read patterns are queries.
 	var prefix string
-	if strings.HasSuffix(operationType, ".get") ||
-		strings.HasSuffix(operationType, ".query") ||
-		strings.HasSuffix(operationType, ".read") ||
-		strings.HasSuffix(operationType, ".status") ||
-		strings.HasSuffix(operationType, ".do") ||
-		strings.HasPrefix(operationType, "node.") {
+	switch jobType {
+	case types.JobTypeQuery:
 		prefix = job.JobsQueryPrefix
-	} else {
+	case types.JobTypeModify:
 		prefix = job.JobsModifyPrefix
+	default:
+		return nil, fmt.Errorf("invalid job type %q", jobType)
 	}
 
 	notificationSubject := job.BuildSubjectFromTarget(prefix, targetHostname)
@@ -215,7 +212,7 @@ func (c *Client) jobStatus(
 	)
 	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
-		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
+		return nil, readError("job", jobID, err)
 	}
 
 	jobData, err := c.jobRecord(entry.Value())
@@ -439,7 +436,7 @@ func (c *Client) getJobStatusFromKeys(
 ) (*job.QueuedJob, error) {
 	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
-		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
+		return nil, readError("job", jobID, err)
 	}
 
 	jobData, err := c.jobRecord(entry.Value())
@@ -723,7 +720,7 @@ func (c *Client) retryJob(
 
 	entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
-		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
+		return nil, readError("job", jobID, err)
 	}
 
 	jobData, err := c.jobRecord(entry.Value())
@@ -736,9 +733,21 @@ func (c *Client) retryJob(
 	if !ok {
 		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrNoOperationData)
 	}
+	// The secrets of a sealed job are sealed to its own job ID, and the
+	// controller does not keep their values, so a new job cannot carry
+	// them.
+	if _, sealed := operationData["sealed_keys"]; sealed {
+		return nil, fmt.Errorf("job %s: %w", jobID, job.ErrSealedJob)
+	}
+	// The new job goes to the queue of the old one, which its subject
+	// names, not to a queue that the operation's name suggests.
+	jobType, err := queueOf(getStringField(jobData, "subject"))
+	if err != nil {
+		return nil, fmt.Errorf("job %s: %w", jobID, err)
+	}
 
 	// Create new job with the same operation data
-	result, err := c.CreateJob(ctx, operationData, targetHostname)
+	result, err := c.CreateJob(ctx, jobType, operationData, targetHostname)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create retry job: %w", err)
 	}
@@ -786,7 +795,7 @@ func (c *Client) deleteJob(
 	)
 	_, err := c.natsClient.KVGet(ctx, c.jobsBucket, jobKey)
 	if err != nil {
-		return fmt.Errorf("job %s: %w", jobID, job.ErrNotFound)
+		return readError("job", jobID, err)
 	}
 
 	if err := c.natsClient.KVDelete(ctx, c.jobsBucket, jobKey); err != nil {
@@ -1041,5 +1050,19 @@ func unreadableJob(
 		ID:     id,
 		Status: status,
 		Error:  "the job's record cannot be read: " + err.Error(),
+	}
+}
+
+// queueOf is the job type of the queue that subject is on.
+func queueOf(
+	subject string,
+) (types.JobType, error) {
+	switch {
+	case strings.HasPrefix(subject, job.JobsQueryPrefix+"."):
+		return types.JobTypeQuery, nil
+	case strings.HasPrefix(subject, job.JobsModifyPrefix+"."):
+		return types.JobTypeModify, nil
+	default:
+		return "", fmt.Errorf("%q: %w", subject, job.ErrUnknownQueue)
 	}
 }

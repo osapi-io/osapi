@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -292,6 +293,9 @@ func (c *Client) getAgent(
 	// Try as machine ID first (direct KV lookup).
 	key := "agents." + target
 	entry, err := c.natsClient.KVGet(ctx, c.registryBucket, key)
+	if err != nil && !errors.Is(err, jetstream.ErrKeyNotFound) {
+		return nil, readError("agent", target, err)
+	}
 	if err == nil {
 		var reg job.AgentRegistration
 		if err := json.Unmarshal(entry.Value(), &reg); err != nil {
@@ -314,7 +318,7 @@ func (c *Client) getAgent(
 	// Fall back to hostname scan.
 	agents, listErr := c.ListAgents(ctx)
 	if listErr != nil {
-		return nil, fmt.Errorf("agent %s: %w", target, job.ErrNotFound)
+		return nil, fmt.Errorf("agent %s: %w", target, listErr)
 	}
 
 	for i := range agents {
@@ -562,13 +566,14 @@ func (c *Client) hostnameHolder(
 	return ""
 }
 
+// invalidKeyChars is each character that a NATS key token cannot hold.
+var invalidKeyChars = regexp.MustCompile(`[^a-zA-Z0-9_\-]`)
+
 // sanitizeKeyForNATS sanitizes a string for use as a NATS key.
 func sanitizeKeyForNATS(
 	input string,
 ) string {
-	// Replace invalid characters with underscores
-	reg := regexp.MustCompile(`[^a-zA-Z0-9_\-]`)
-	return reg.ReplaceAllString(input, "_")
+	return invalidKeyChars.ReplaceAllString(input, "_")
 }
 
 // ListAgents returns each agent in the registry, in an agent.list span.

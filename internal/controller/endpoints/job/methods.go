@@ -181,6 +181,10 @@ func Retry(
 		return CreateJobResponse{}, endpoint.Errorf(ErrNoOperation,
 			"job %s has no operation data to run again", in.ID)
 	}
+	if errors.Is(err, job.ErrSealedJob) {
+		return CreateJobResponse{}, endpoint.Errorf(ErrSealed,
+			"job %s holds secrets sealed to its own ID: send the request again", in.ID)
+	}
 	if err != nil {
 		return CreateJobResponse{}, endpoint.Internal("failed to retry job", err)
 	}
@@ -276,11 +280,17 @@ func DeadLetters(
 	if limit == 0 {
 		limit = 20
 	}
+	scoped := len(authtoken.TargetsFrom(ctx)) > 0
 	dls, total, err := d.Jobs.ListDeadLetters(ctx, limit)
+	// A scoped token sees only some of the dead letters, so the newest
+	// limit of them all can hold fewer than limit of its own, or none. It
+	// reads them all, and the scope filter then takes its newest limit.
+	if err == nil && scoped && total > len(dls) {
+		dls, total, err = d.Jobs.ListDeadLetters(ctx, total)
+	}
 	if err != nil {
 		return DeadLetterList{}, endpoint.Internal("failed to list the dead letters", err)
 	}
-	scoped := len(authtoken.TargetsFrom(ctx)) > 0
 	out := DeadLetterList{TotalItems: total, Items: []DeadLetter{}}
 	for _, dl := range dls {
 		item := DeadLetter{
@@ -300,6 +310,9 @@ func DeadLetters(
 	}
 	if scoped {
 		out.TotalItems = len(out.Items)
+		if len(out.Items) > limit {
+			out.Items = out.Items[:limit]
+		}
 	}
 
 	return out, nil
