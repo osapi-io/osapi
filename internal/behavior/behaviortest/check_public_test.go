@@ -764,3 +764,71 @@ func (s *CheckPublicTestSuite) TestCheckProgramState() {
 func TestCheckPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(CheckPublicTestSuite))
 }
+
+// fragile is a provider that panics on one input, so Check must report the
+// panic and keep the rest of its problems.
+type fragile struct {
+	// runs counts the calls, for a panic on the second.
+	runs *int
+}
+
+type fragileIn struct {
+	Key string `json:"key"`
+}
+
+type fragileOut struct {
+	Changed bool `json:"changed"`
+}
+
+func setFragile(
+	_ context.Context,
+	f fragile,
+	in fragileIn,
+) (fragileOut, error) {
+	*f.runs++
+	switch {
+	case strings.Contains(in.Key, ".."):
+		var keys []string
+		_ = keys[1]
+	case in.Key == "again" && *f.runs > 1:
+		var keys []string
+		_ = keys[1]
+	}
+
+	return fragileOut{}, nil
+}
+
+func (s *CheckPublicTestSuite) TestCheckReportsAPanic() {
+	tests := []struct {
+		name string
+		key  string
+		want string
+	}{
+		{
+			name: "when a probe makes the provider panic, it is a problem",
+			key:  "a",
+			want: "panicked",
+		},
+		{
+			name: "when the second run of a write panics, it is a problem",
+			key:  "again",
+			want: "running it again panicked",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			b := behavior.Define("fragile", "Panics on one input", behavior.Node,
+				behavior.Platform("debian", func(host.Host) (fragile, error) {
+					return fragile{runs: new(int)}, nil
+				}),
+				behavior.Write("set", setFragile).Describe("Set it").
+					Example("A set", fragileIn{Key: tc.key}, fragileOut{}),
+			)
+
+			var problems []string
+			s.NotPanics(func() { problems = behaviortest.Check(b) })
+			s.Contains(strings.Join(problems, "\n"), tc.want)
+		})
+	}
+}

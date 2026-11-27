@@ -46,7 +46,11 @@ type filesOut struct {
 	Changed bool `json:"changed"`
 }
 
-const filesPath = "/etc/w/x"
+const (
+	filesPath = "/etc/w/x"
+	// linkPath is where a link goes: a new path, so the link is made.
+	linkPath = "/etc/w/y"
+)
 
 func changeFile(
 	ctx context.Context,
@@ -72,6 +76,16 @@ func changeFile(
 		err = fs.Chmod(filesPath, 0o600)
 	case "truncate":
 		err = fs.Truncate(filesPath, 0)
+	case "symlink":
+		err = fs.Symlink(filesPath, linkPath)
+	case "link":
+		err = fs.Link(filesPath, linkPath)
+	case "chown":
+		err = fs.Chown(filesPath, 0, 0)
+	case "lchown":
+		err = fs.Lchown(filesPath, 0, 0)
+	case "chtimes":
+		err = fs.Chtimes(filesPath, behaviortest.Now, behaviortest.Now)
 	case "read":
 		_, err = fs.ReadFile(filesPath)
 	case "atomic":
@@ -107,6 +121,11 @@ func (s *WritesPublicTestSuite) TestWrites() {
 		{name: "a removal", op: "remove", want: []string{"writes /etc/w/x"}},
 		{name: "a mode change", op: "chmod", want: []string{"writes /etc/w/x"}},
 		{name: "a truncation", op: "truncate", want: []string{"writes /etc/w/x"}},
+		{name: "a symlink at a path", op: "symlink", want: []string{"writes /etc/w/y"}},
+		{name: "a hard link at a path", op: "link", want: []string{"writes /etc/w/y"}},
+		{name: "an owner change", op: "chown", want: []string{"writes /etc/w/x"}},
+		{name: "an owner change of a link", op: "lchown", want: []string{"writes /etc/w/x"}},
+		{name: "a time change", op: "chtimes", want: []string{"writes /etc/w/x"}},
 	}
 
 	for _, tc := range tests {
@@ -149,6 +168,8 @@ func (s *WritesPublicTestSuite) TestFileSpans() {
 		{name: "when a write goes through atomicfile it has its span", op: "atomic"},
 		{name: "when a write goes through h.FS it has none", op: "write", want: true},
 		{name: "when a removal goes through h.FS it has none", op: "remove", want: true},
+		{name: "when an owner change goes through h.FS it has none", op: "chown", want: true},
+		{name: "when a time change goes through h.FS it has none", op: "chtimes", want: true},
 		{name: "when a read goes through h.FS it needs none", op: "read"},
 	}
 

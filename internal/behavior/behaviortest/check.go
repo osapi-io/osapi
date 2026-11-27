@@ -23,6 +23,7 @@ package behaviortest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -162,6 +163,10 @@ func checkExample(
 				behavior.TestFailure(behavior.TestEffects, "a write declares no effects"))
 		}
 		again, err := call(m, p, ex.Input)
+		if msg := panicOf(err); msg != "" {
+			problems = append(problems,
+				behavior.TestFailure(behavior.TestIdempotent, "running it again "+msg))
+		}
 		if changed, _ := behavior.Changed(again); err == nil && changed && !m.AlwaysChanges {
 			problems = append(
 				problems,
@@ -325,15 +330,38 @@ func methodFor(
 	return nil
 }
 
-// call runs m with input.
+// panicked is the error of a call whose provider panicked. Check reports it
+// as a problem, so one panic keeps the rest of the problems.
+type panicked struct{ value any }
+
+func (p panicked) Error() string { return fmt.Sprintf("panicked: %v", p.value) }
+
+// call runs m with input. A panic in the provider is a panicked error.
 func call(
 	m *behavior.Method,
 	p any,
 	input any,
-) (any, error) {
+) (out any, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			out, err = nil, panicked{value: r}
+		}
+	}()
 	data, _ := json.Marshal(secret.Plain(input))
 
 	return m.Invoke(context.Background(), p, data)
+}
+
+// panicOf is the message of err when it is a panic, or "".
+func panicOf(
+	err error,
+) string {
+	var p panicked
+	if errors.As(err, &p) {
+		return p.Error()
+	}
+
+	return ""
 }
 
 // survives runs the method and reports a panic.
@@ -341,15 +369,10 @@ func survives(
 	m *behavior.Method,
 	p any,
 	input any,
-) (msg string) {
-	defer func() {
-		if r := recover(); r != nil {
-			msg = fmt.Sprintf("panicked: %v", r)
-		}
-	}()
-	_, _ = call(m, p, input)
+) string {
+	_, err := call(m, p, input)
 
-	return ""
+	return panicOf(err)
 }
 
 // effects checks each effect against the host.
