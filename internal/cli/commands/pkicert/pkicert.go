@@ -54,12 +54,13 @@ var Group = command.Register(command.Define(
 		Handle(Get),
 	command.Method[RotateInput, RotateOutput]("rotate").
 		Short("Make a new self-signed certificate in place of the old one").
-		Long("It replaces a self-signed certificate; the server serves the new one at\n"+
-			"its next start. It refuses a cert_file of the operator: replace that file.\n"+
+		Long("It replaces a self-signed certificate, and the running server serves the\n"+
+			"new one at once. It refuses a cert_file of the operator: replace that file.\n"+
 			"Each join string pins the NATS server's certificate, and each joined agent\n"+
 			"trusts it: a new one cuts those agents off, so it needs --force, then new\n"+
 			"join tokens and a join again of each agent.").
 		Example("--name api").
+		Check("pki cert get", "--name api", "state", "ok", "source", "self-signed").
 		Prints(SampleRotate).
 		Fails("no name", RotateInput{}).
 		Fails("a name of more than 64 characters", RotateInput{Name: strings.Repeat("a", 65)}).
