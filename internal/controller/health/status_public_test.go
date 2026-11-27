@@ -72,8 +72,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "all components healthy",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
 				ok := healthy
@@ -88,8 +88,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "NATS unhealthy returns 503",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("nats not connected") },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return fmt.Errorf("nats not connected") },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
 				ok := !healthy
@@ -107,8 +107,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "KV unhealthy returns 503",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return fmt.Errorf("kv bucket not accessible") },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return fmt.Errorf("kv bucket not accessible") },
 			},
 			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
 				ok := !healthy
@@ -126,8 +126,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "both unhealthy returns 503",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return fmt.Errorf("nats down") },
-				KVCheck:   func() error { return fmt.Errorf("kv down") },
+				NATSCheck: func(context.Context) error { return fmt.Errorf("nats down") },
+				KVCheck:   func(context.Context) error { return fmt.Errorf("kv down") },
 			},
 			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
 				ok := !healthy
@@ -140,8 +140,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "includes version and uptime",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
 				ok := healthy
@@ -151,25 +151,26 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			},
 		},
 		{
-			name: "non-NATSChecker returns ok with nil components",
+			name: "any Checker reports its own checks",
 			checkerFn: func() health.Checker {
-				// GetHealthStatus type-asserts to *NATSChecker; for any other
-				// implementation it short-circuits without calling CheckHealth.
-				return healthmocks.NewMockChecker(s.mockCtrl)
+				c := healthmocks.NewMockChecker(s.mockCtrl)
+				c.EXPECT().CheckNATS(gomock.Any()).Return(nil)
+				c.EXPECT().CheckKV(gomock.Any()).Return(fmt.Errorf("kv down"))
+
+				return c
 			},
-			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
-				ok := healthy
-				s.True(ok)
-				s.Equal("ok", r.Status)
+			validateFunc: func(r endpoints.StatusResponse, _ bool) {
+				s.Equal("degraded", r.Status)
 				s.Equal("ok", checkOf(r, "nats").Status)
-				s.Equal("ok", checkOf(r, "kv").Status)
+				s.Equal("error", checkOf(r, "kv").Status)
+				s.Equal("kv down", checkOf(r, "kv").Error)
 			},
 		},
 		{
 			name: "nil MetricsProvider omits metrics",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: nil,
 			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
@@ -184,8 +185,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "successful metrics populated",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -273,8 +274,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "registry populated from component entries",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -354,8 +355,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "registry sub-components merged into components",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -432,8 +433,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "registry failure degrades gracefully",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -468,8 +469,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "nil ComponentRegistryFn omits registry",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -502,8 +503,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "partial metric failures degrade gracefully",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -544,8 +545,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 		{
 			name: "all metric failures degrade gracefully",
 			checker: &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			},
 			metrics: &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {
@@ -644,8 +645,8 @@ func (s *HealthStatusGetPublicTestSuite) TestMetricsCache() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			checker := &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
+				NATSCheck: func(context.Context) error { return nil },
+				KVCheck:   func(context.Context) error { return nil },
 			}
 			metrics := &health.ClosureMetricsProvider{
 				NATSInfoFn: func(_ context.Context) (*health.NATSMetrics, error) {

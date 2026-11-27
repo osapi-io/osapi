@@ -32,9 +32,14 @@ import (
 	"github.com/osapi-io/osapi/internal/cryptoreport"
 )
 
-// Checker checks the health of a dependency.
+// Checker checks the dependencies of the controller.
 type Checker interface {
+	// CheckHealth runs each check and joins their errors.
 	CheckHealth(ctx context.Context) error
+	// CheckNATS tells whether NATS is connected.
+	CheckNATS(ctx context.Context) error
+	// CheckKV tells whether the jobs bucket answers.
+	CheckKV(ctx context.Context) error
 }
 
 // MetricsProvider retrieves system metrics for the status endpoint.

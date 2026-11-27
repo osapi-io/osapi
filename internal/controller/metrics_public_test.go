@@ -471,9 +471,9 @@ func (s *MetricsPublicTestSuite) TestHealthChecker() {
 			s.nc.EXPECT().KVStatus(gomock.Any(), "jobs").Return(nil, tc.kvErr).AnyTimes()
 			checker := controller.ExportNewHealthChecker(s.nc, "jobs")
 
-			err := checker.NATSCheck()
+			err := checker.NATSCheck(context.Background())
 			if err == nil {
-				err = checker.KVCheck()
+				err = checker.KVCheck(context.Background())
 			}
 
 			if tc.wantErr != "" {

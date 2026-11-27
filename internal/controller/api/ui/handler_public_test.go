@@ -184,6 +184,27 @@ func (s *HandlerPublicTestSuite) TestRegister() {
 			},
 		},
 		{
+			name:   "serves index.html, not a listing, for a directory such as /assets/",
+			distFS: populatedFS(),
+			method: http.MethodGet,
+			path:   "/assets/",
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusOK, rec.Code)
+				s.Contains(rec.Body.String(), "<html>app</html>")
+				s.NotContains(rec.Body.String(), "index.js")
+			},
+		},
+		{
+			name:   "serves index.html for a directory with no trailing slash",
+			distFS: populatedFS(),
+			method: http.MethodGet,
+			path:   "/assets",
+			validateFunc: func(rec *httptest.ResponseRecorder) {
+				s.Equal(http.StatusOK, rec.Code)
+				s.Contains(rec.Body.String(), "<html>app</html>")
+			},
+		},
+		{
 			name:   "returns 500 when index.html is missing from the filesystem",
 			distFS: emptyFS(),
 			method: http.MethodGet,
