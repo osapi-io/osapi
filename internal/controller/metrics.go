@@ -60,15 +60,15 @@ func newHealthChecker(
 	jobsBucket string,
 ) *health.NATSChecker {
 	return &health.NATSChecker{
-		NATSCheck: func() error {
+		NATSCheck: func(context.Context) error {
 			if nc.ConnectedURL() == "" {
 				return fmt.Errorf("nats not connected")
 			}
 
 			return nil
 		},
-		KVCheck: func() error {
-			_, err := nc.KVStatus(context.Background(), jobsBucket)
+		KVCheck: func(ctx context.Context) error {
+			_, err := nc.KVStatus(ctx, jobsBucket)
 			if err != nil {
 				return fmt.Errorf("kv bucket not accessible: %w", err)
 			}
@@ -78,8 +78,6 @@ func newHealthChecker(
 	}
 }
 
-// configuredKVBuckets returns the namespaced names of all KV buckets
-// declared in osapi.yaml. Only non-empty bucket configs are included.
 // configuredKVBuckets returns the name of each KV bucket that cfg names.
 func configuredKVBuckets(
 	namespace string,
@@ -95,8 +93,6 @@ func configuredKVBuckets(
 	return buckets
 }
 
-// configuredObjectBuckets returns the namespaced names of all Object Store
-// buckets declared in osapi.yaml.
 // configuredObjectBuckets returns the name of each Object Store bucket that
 // cfg names.
 func configuredObjectBuckets(

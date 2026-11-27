@@ -87,7 +87,7 @@ func New(
 	e.Use(echootel.NewMiddlewareWithConfig(otelConfig))
 	e.Use(traceResponse)
 	e.Use(respspan.Middleware)
-	e.Use(httplog.New(logger))
+	e.Use(httplog.New(s.logger))
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	// CORS is registered only when origins are configured.
@@ -120,7 +120,7 @@ func New(
 
 	// Register audit middleware if an audit store is configured.
 	if s.auditStore != nil {
-		e.Use(auditMiddleware(s.auditStore, logger))
+		e.Use(auditMiddleware(s.auditStore, s.logger))
 	}
 
 	return s

@@ -74,12 +74,13 @@ func Register(
 			return
 		}
 
-		f, err := distFS.Open(path)
-		if err != nil {
+		// A directory, such as /assets/, gets the index like any other
+		// route of the app, not a listing of its files.
+		info, err := fs.Stat(distFS, strings.TrimSuffix(path, "/"))
+		if err != nil || info.IsDir() {
 			serveIndex(w, r)
 			return
 		}
-		_ = f.Close()
 
 		fileServer.ServeHTTP(w, r)
 	})))

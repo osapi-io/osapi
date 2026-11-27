@@ -52,15 +52,7 @@ func (h *Health) Ready(
 func (h *Health) Status(
 	ctx context.Context,
 ) api.StatusResponse {
-	checker, ok := h.Checker.(*NATSChecker)
-	if !ok {
-		return h.buildStatusResponse(ctx, nil, nil)
-	}
-
-	natsErr := checker.CheckNATS()
-	kvErr := checker.CheckKV()
-
-	return h.buildStatusResponse(ctx, natsErr, kvErr)
+	return h.buildStatusResponse(ctx, h.Checker.CheckNATS(ctx), h.Checker.CheckKV(ctx))
 }
 
 // buildStatusResponse constructs the status response from component checks and metrics.
@@ -164,7 +156,6 @@ func (h *Health) populateMetrics(
 	)
 
 	collect := func(
-		name string,
 		fn func(ctx context.Context),
 	) {
 		wg.Add(1)
@@ -174,10 +165,9 @@ func (h *Health) populateMetrics(
 			defer cancel()
 			fn(metricCtx)
 		}()
-		_ = name
 	}
 
-	collect("nats", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		info, err := h.Metrics.GetNATSInfo(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get NATS info for status", slog.Any("error", err))
@@ -188,7 +178,7 @@ func (h *Health) populateMetrics(
 		mu.Unlock()
 	})
 
-	collect("streams", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		s, err := h.Metrics.GetStreamInfo(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get stream info for status", slog.Any("error", err))
@@ -199,7 +189,7 @@ func (h *Health) populateMetrics(
 		mu.Unlock()
 	})
 
-	collect("kv", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		b, err := h.Metrics.GetKVInfo(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get KV info for status", slog.Any("error", err))
@@ -210,7 +200,7 @@ func (h *Health) populateMetrics(
 		mu.Unlock()
 	})
 
-	collect("object-stores", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		o, err := h.Metrics.GetObjectStoreInfo(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get Object Store info for status", slog.Any("error", err))
@@ -221,7 +211,7 @@ func (h *Health) populateMetrics(
 		mu.Unlock()
 	})
 
-	collect("jobs", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		j, err := h.Metrics.GetJobStats(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get job stats for status", slog.Any("error", err))
@@ -232,7 +222,7 @@ func (h *Health) populateMetrics(
 		mu.Unlock()
 	})
 
-	collect("agents", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		a, err := h.Metrics.GetAgentStats(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get agent stats for status", slog.Any("error", err))
@@ -247,7 +237,7 @@ func (h *Health) populateMetrics(
 	// instead of enumerating individual consumers via ListConsumers.
 	// This avoids N sequential NATS API calls per consumer.
 
-	collect("registry", func(fnCtx context.Context) {
+	collect(func(fnCtx context.Context) {
 		entries, err := h.Metrics.GetComponentRegistry(fnCtx)
 		if err != nil {
 			h.logger.Warn("failed to get component registry for status", slog.Any("error", err))

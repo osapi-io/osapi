@@ -85,7 +85,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 		{
 			name: "when metrics is nil does not start goroutine",
 			validateFunc: func() {
-				handler := health.New(s.logger, nil, time.Now(), "0.1.0", nil)
+				handler := health.New(s.logger, &health.NATSChecker{}, time.Now(), "0.1.0", nil)
 				// Should not panic or start goroutine.
 				handler.StartMetricsRefresh(s.ctx)
 			},
@@ -99,7 +99,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				ctx, cancel := context.WithCancel(s.ctx)
 				defer cancel()
 
-				handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics)
+				handler := health.New(s.logger, &health.NATSChecker{}, time.Now(), "0.1.0", metrics)
 				handler.StartMetricsRefresh(ctx)
 
 				// Wait for initial fetch.
@@ -120,7 +120,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				ctx, cancel := context.WithCancel(s.ctx)
 				defer cancel()
 
-				handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics)
+				handler := health.New(s.logger, &health.NATSChecker{}, time.Now(), "0.1.0", metrics)
 				handler.MetricsRefreshInterval = 20 * time.Millisecond
 				handler.StartMetricsRefresh(ctx)
 
@@ -136,7 +136,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStartMetricsRefresh() {
 				metrics := s.newMetricsProvider(&callCount)
 
 				ctx, cancel := context.WithCancel(s.ctx)
-				handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics)
+				handler := health.New(s.logger, &health.NATSChecker{}, time.Now(), "0.1.0", metrics)
 				handler.MetricsRefreshInterval = 20 * time.Millisecond
 				handler.StartMetricsRefresh(ctx)
 
@@ -181,7 +181,7 @@ func (s *MetricsRefreshPublicTestSuite) TestStopMetricsRefresh() {
 			if tc.metrics {
 				metrics = s.newMetricsProvider(&callCount)
 			}
-			handler := health.New(s.logger, nil, time.Now(), "0.1.0", metrics)
+			handler := health.New(s.logger, &health.NATSChecker{}, time.Now(), "0.1.0", metrics)
 			handler.MetricsRefreshInterval = 5 * time.Millisecond
 
 			stop := handler.StartMetricsRefresh(s.ctx)

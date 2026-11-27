@@ -55,6 +55,34 @@ func (mr *MockCheckerMockRecorder) CheckHealth(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckHealth", reflect.TypeOf((*MockChecker)(nil).CheckHealth), ctx)
 }
 
+// CheckKV mocks base method.
+func (m *MockChecker) CheckKV(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckKV", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckKV indicates an expected call of CheckKV.
+func (mr *MockCheckerMockRecorder) CheckKV(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckKV", reflect.TypeOf((*MockChecker)(nil).CheckKV), ctx)
+}
+
+// CheckNATS mocks base method.
+func (m *MockChecker) CheckNATS(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckNATS", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckNATS indicates an expected call of CheckNATS.
+func (mr *MockCheckerMockRecorder) CheckNATS(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckNATS", reflect.TypeOf((*MockChecker)(nil).CheckNATS), ctx)
+}
+
 // MockMetricsProvider is a mock of MetricsProvider interface.
 type MockMetricsProvider struct {
 	ctrl     *gomock.Controller

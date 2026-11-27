@@ -23,51 +23,53 @@ package health
 import (
 	"context"
 	"errors"
+	"time"
 )
+
+// checkTimeout bounds one check, so a slow NATS can't hold a probe of
+// /health/ready, which anyone can call, for longer than this.
+const checkTimeout = 5 * time.Second
 
 // NATSChecker checks NATS and KV bucket connectivity.
 type NATSChecker struct {
 	// NATSCheck verifies NATS connectivity.
-	NATSCheck func() error
+	NATSCheck func(ctx context.Context) error
 	// KVCheck verifies KV bucket accessibility.
-	KVCheck func() error
+	KVCheck func(ctx context.Context) error
 }
 
 // CheckHealth runs all dependency checks and returns the first error.
 func (c *NATSChecker) CheckHealth(
-	_ context.Context,
+	ctx context.Context,
 ) error {
-	var errs []error
-
-	if c.NATSCheck != nil {
-		if err := c.NATSCheck(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if c.KVCheck != nil {
-		if err := c.KVCheck(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	return errors.Join(errs...)
+	return errors.Join(c.CheckNATS(ctx), c.CheckKV(ctx))
 }
 
 // CheckNATS runs only the NATS connectivity check.
-func (c *NATSChecker) CheckNATS() error {
-	if c.NATSCheck != nil {
-		return c.NATSCheck()
-	}
-
-	return nil
+func (c *NATSChecker) CheckNATS(
+	ctx context.Context,
+) error {
+	return run(ctx, c.NATSCheck)
 }
 
 // CheckKV runs only the KV bucket check.
-func (c *NATSChecker) CheckKV() error {
-	if c.KVCheck != nil {
-		return c.KVCheck()
+func (c *NATSChecker) CheckKV(
+	ctx context.Context,
+) error {
+	return run(ctx, c.KVCheck)
+}
+
+// run calls check, when it is set, with ctx bounded by checkTimeout.
+func run(
+	ctx context.Context,
+	check func(ctx context.Context) error,
+) error {
+	if check == nil {
+		return nil
 	}
 
-	return nil
+	checkCtx, cancel := context.WithTimeout(ctx, checkTimeout)
+	defer cancel()
+
+	return check(checkCtx)
 }
