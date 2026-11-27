@@ -21,6 +21,7 @@
 package agent
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -53,6 +54,9 @@ type hostEnv struct {
 	// objects are the objects of the object store, for behaviors; nil
 	// without an object store.
 	objects host.Objects
+	// reach is a round trip to the NATS server, for a change that can cut
+	// the host off, such as netplan's: nil when the server answers.
+	reach func(ctx context.Context) error
 }
 
 func (e hostEnv) host() nodeHost.Provider {

@@ -124,6 +124,7 @@ func Setup(
 		hostname:  hostname,
 	}
 	e.fileStateBucket, e.objects = openFiles(ctx, e, conn.NATS, namespace, cfg.NATS)
+	e.reach = reachOf(conn.NATS, conn.RegistryBucket)
 	if e.fileStateBucket != "" {
 		e.fileState = conn.NATS
 	}
@@ -158,6 +159,26 @@ func Setup(
 	a.SetSubComponents(subComponents(cfg))
 
 	return a, conn, nil
+}
+
+// kvStatus is the request that reachOf sends. A *natsclient.Client has it.
+type kvStatus interface {
+	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
+}
+
+// reachOf is a round trip to the NATS server: the status of bucket, a request
+// that the server answers. The client reconnects on its own, so after a
+// change that moves the host's address it answers once the connection is
+// back.
+func reachOf(
+	nc kvStatus,
+	bucket string,
+) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := nc.KVStatus(ctx, bucket)
+
+		return err
+	}
 }
 
 // SubComponents returns the parts of the agent that its heartbeat and its
@@ -304,6 +325,7 @@ func buildRegistry(
 		Objects:         e.objects,
 		Facts:           facts,
 		Now:             time.Now,
+		Reach:           e.reach,
 	}, e.log)
 	r.Register(job.CategoryBehavior, NewBehaviorProcessor(behaviorProviders, e.log))
 

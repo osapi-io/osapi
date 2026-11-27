@@ -22,8 +22,8 @@ package exec
 
 import "context"
 
-// sudoProgram is the program that RunPrivilegedCmdFull runs a command
-// through; a test replaces it.
+// sudoProgram is the program that RunPrivilegedCmdFull and
+// RunPrivilegedCmdInteractive run a command through; a test replaces it.
 var sudoProgram = "sudo"
 
 // RunPrivilegedCmdFull runs name with args as RunPrivilegedCmd does, through

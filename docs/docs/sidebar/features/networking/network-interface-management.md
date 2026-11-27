@@ -62,11 +62,22 @@ syntax before it applies the file. If validation fails, the agent puts back the
 content that the file had, or removes a new file, and the job returns an error.
 Thus a bad configuration does not stop the network connection.
 
-If `netplan apply` fails, the file stays, and the job returns an error. The
-record of the file has a mark that tells that the apply did not finish. Thus a
-retry with the same input reports a change and runs `netplan apply` again. A
-delete whose `netplan apply` fails puts back the file with the mark, so a retry
-removes it again.
+The agent then applies the change with `netplan try --timeout 60`, not
+`netplan apply`. When the change is applied, the agent sends a request to its
+NATS server. It confirms the change only when the server answers, in 45 seconds
+at most. Thus a change that cuts the host from NATS, such as a wrong gateway,
+stays for 60 seconds at most. netplan then reverts the files and the network,
+also when the agent stopped, and the job returns
+`netplan reverted the change: ...`. The record of the file goes back with the
+file, so a retry with the same input tries the change again. `netplan try`
+cannot revert a bridge or a bond with parameters of its own. The agent applies
+such a change with `netplan apply`, with no revert.
+
+If the apply fails in a different way, the file stays, and the job returns an
+error. The record of the file has a mark that tells that the apply did not
+finish. Thus a retry with the same input reports a change and applies again. A
+delete whose apply fails puts back the file with the mark, so a retry removes it
+again.
 
 ### DNS delete
 

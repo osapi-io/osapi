@@ -21,14 +21,17 @@
 package netplan_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"maps"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -145,6 +148,222 @@ func (s *DebianPublicTestSuite) TestOneChangeAtATime() {
 	wg.Wait()
 
 	s.Equal(int32(1), peak.Load(), "one netplan command at a time")
+}
+
+// TestTry: with a way to reach NATS, a change runs through netplan try, and
+// the agent confirms it only when it reaches NATS after the change. When it
+// does not, netplan reverts the change by itself, and the record of the file
+// goes back with it.
+func (s *DebianPublicTestSuite) TestTry() {
+	const (
+		path     = netplan.Dir + "/osapi-eth1.yaml"
+		previous = "network:\n  version: 2\n"
+		content  = "network:\n  version: 2\n  ethernets: {}\n"
+		ready    = "/run/netplan/netplan-try.ready"
+	)
+	try := []string{"try", "--timeout", "60"}
+	cut := errors.New("nats: timeout")
+	defer netplan.SetReachFor(1500 * time.Millisecond)()
+	// netplan answers as netplan try does: it writes the ready stamp, waits
+	// for the agent, and prints out.
+	netplanTry := func(fs avfs.VFS, stamp bool, wrote *string, out string, err error) any {
+		return func(
+			ctx context.Context, _ string, _ []string,
+			interact func(context.Context, io.Writer) error,
+		) (string, error) {
+			ictx := ctx
+			if stamp {
+				s.Require().NoError(fs.MkdirAll("/run/netplan", 0o700))
+				s.Require().NoError(fs.WriteFile(ready, nil, 0o600))
+			} else {
+				// netplan try refused and exited before it applied.
+				c, cancel := context.WithCancel(ctx)
+				cancel()
+				ictx = c
+			}
+			var stdin bytes.Buffer
+			ierr := interact(ictx, &stdin)
+			*wrote = stdin.String()
+
+			return out, errors.Join(ierr, err)
+		}
+	}
+	tests := []struct {
+		name      string
+		onDisk    bool
+		reach     func(n int) error
+		stamp     bool
+		out       string
+		runErr    error
+		expect    func(files *managedfilemocks.MockProvider, exec *hostmocks.MockExec)
+		wantWrote string
+		wantError string
+		changed   bool
+	}{
+		{
+			name:      "when the agent reaches NATS, it confirms, and the change stays",
+			reach:     func(int) error { return nil },
+			stamp:     true,
+			out:       "Do you want to keep these settings?\n\nConfiguration accepted.\n",
+			wantWrote: "\n",
+			changed:   true,
+		},
+		{
+			name:      "when the agent reaches NATS on a second try, after a reconnect, it confirms",
+			reach:     func(n int) error { return map[bool]error{true: cut}[n == 0] },
+			stamp:     true,
+			out:       "Configuration accepted.\n",
+			wantWrote: "\n",
+			changed:   true,
+		},
+		{
+			name:   "when the agent does not reach NATS, netplan reverts, and a new file's record goes",
+			reach:  func(int) error { return cut },
+			stamp:  true,
+			out:    "Changes will revert in 60 seconds\nReverting.\n",
+			runErr: nil,
+			expect: func(files *managedfilemocks.MockProvider, _ *hostmocks.MockExec) {
+				files.EXPECT().Remove(gomock.Any(), path).Return(true, nil)
+			},
+			wantError: "netplan reverted the change",
+		},
+		{
+			name:   "when the agent does not reach NATS, a file that was there gets its record back",
+			onDisk: true,
+			reach:  func(int) error { return cut },
+			stamp:  true,
+			out:    "Reverting.\n",
+			expect: func(files *managedfilemocks.MockProvider, _ *hostmocks.MockExec) {
+				files.EXPECT().Write(gomock.Any(), gomock.Cond(func(f managedfile.File) bool {
+					return string(f.Content) == previous
+				})).Return(true, nil)
+			},
+			wantError: "the agent did not reach NATS after the change: nats: timeout",
+		},
+		{
+			name:   "a change that netplan try cannot revert is applied with netplan apply",
+			reach:  func(int) error { return nil },
+			out:    "bond0: reverting custom parameters for bridges and bonds is not supported\n\nPlease carefully review the configuration and use 'netplan apply' directly.\n",
+			runErr: errors.New("exit status 78"),
+			expect: func(_ *managedfilemocks.MockProvider, exec *hostmocks.MockExec) {
+				exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"})
+			},
+			changed: true,
+		},
+		{
+			name:   "netplan try that does not run is the error",
+			reach:  func(int) error { return nil },
+			runErr: errors.New("sudo: a password is required"),
+			expect: func(files *managedfilemocks.MockProvider, _ *hostmocks.MockExec) {
+				files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+			wantError: "netplan try: sudo: a password is required",
+		},
+		{
+			name:  "an answer that netplan try does not give is the error",
+			reach: func(int) error { return nil },
+			stamp: true,
+			out:   "something else\n",
+			expect: func(files *managedfilemocks.MockProvider, _ *hostmocks.MockExec) {
+				files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+			wantWrote: "\n",
+			wantError: "netplan try: no answer it knows: something else",
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctrl := gomock.NewController(s.T())
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+			if tc.onDisk {
+				s.Require().NoError(fs.WriteFile(path, []byte(previous), 0o600))
+			}
+			files := managedfilemocks.NewMockProvider(ctrl)
+			files.EXPECT().Write(gomock.Any(), gomock.Cond(func(f managedfile.File) bool {
+				return string(f.Content) == content
+			})).Return(true, nil)
+			exec := hostmocks.NewMockExec(ctrl)
+			exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"})
+			var wrote string
+			exec.EXPECT().RunPrivilegedCmdInteractive(gomock.Any(), "netplan", try, gomock.Any()).
+				DoAndReturn(netplanTry(fs, tc.stamp, &wrote, tc.out, tc.runErr))
+			if tc.expect != nil {
+				tc.expect(files, exec)
+			}
+			calls := 0
+			p, err := netplan.ExportNewDebian(host.Host{
+				FS:       fs,
+				Exec:     exec,
+				Required: map[string]any{managedfile.Behavior.Name: files},
+				Reach: func(context.Context) error {
+					defer func() { calls++ }()
+
+					return tc.reach(calls)
+				},
+			})
+			s.Require().NoError(err)
+
+			changed, err := p.Apply(context.Background(),
+				netplan.UpdateInput{Path: path, Content: content})
+
+			s.Equal(tc.changed, changed)
+			s.Equal(tc.wantWrote, wrote)
+			if tc.wantError != "" {
+				s.ErrorContains(err, tc.wantError)
+
+				return
+			}
+			s.NoError(err)
+		})
+	}
+}
+
+// TestTryRemove: a removal that netplan reverts gets its record back, as the
+// file that netplan put back.
+func (s *DebianPublicTestSuite) TestTryRemove() {
+	const (
+		path    = netplan.Dir + "/osapi-eth1.yaml"
+		content = "network:\n  version: 2\n"
+	)
+	meta := map[string]string{"interface": "eth1"}
+	defer netplan.SetReachFor(200 * time.Millisecond)()
+	ctrl := gomock.NewController(s.T())
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+	s.Require().NoError(fs.WriteFile(path, []byte(content), 0o600))
+	files := managedfilemocks.NewMockProvider(ctrl)
+	files.EXPECT().Remove(gomock.Any(), path).Return(true, nil)
+	files.EXPECT().
+		Read(gomock.Any(), path).
+		Return(managedfile.Record{Path: path, Metadata: meta}, nil)
+	files.EXPECT().Write(gomock.Any(), gomock.Cond(func(f managedfile.File) bool {
+		return string(f.Content) == content && maps.Equal(f.Metadata, meta) &&
+			f.Metadata[managedfile.Unapplied] == ""
+	})).Return(true, nil)
+	exec := hostmocks.NewMockExec(ctrl)
+	exec.EXPECT().RunPrivilegedCmdInteractive(gomock.Any(), "netplan", gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, _ string, _ []string,
+			interact func(context.Context, io.Writer) error,
+		) (string, error) {
+			s.Require().NoError(fs.MkdirAll("/run/netplan", 0o700))
+			s.Require().NoError(fs.WriteFile("/run/netplan/netplan-try.ready", nil, 0o600))
+
+			return "Reverting.\n", interact(ctx, io.Discard)
+		})
+	p, err := netplan.ExportNewDebian(host.Host{
+		FS:       fs,
+		Exec:     exec,
+		Required: map[string]any{managedfile.Behavior.Name: files},
+		Reach:    func(context.Context) error { return errors.New("nats: no servers") },
+	})
+	s.Require().NoError(err)
+
+	changed, err := p.Remove(context.Background(), path)
+
+	s.False(changed)
+	s.ErrorContains(err, "netplan reverted the change")
+	s.ErrorContains(err, "so "+path+" was put back")
 }
 
 // TestFailedStepIsInTheTree is a chain that fails after a step changed the

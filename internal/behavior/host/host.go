@@ -28,6 +28,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"time"
 
@@ -95,6 +96,12 @@ type Host struct {
 	// agent gives none, which is the system resolver; a test gives one that
 	// answers without the network.
 	Resolver source.Resolver
+	// Reach is a round trip from the agent to NATS, and nil when it answers.
+	// A change that can cut the host off its network, such as netplan's,
+	// keeps the change only when Reach answers after it. The agent gives a
+	// request to its NATS server; a test gives none, which is a host whose
+	// change nothing checks.
+	Reach func(ctx context.Context) error
 }
 
 // Sources are the sources a gohai collector reads this host through: its
@@ -184,6 +191,17 @@ type Exec interface {
 		name string,
 		args []string,
 		stdin string,
+	) (string, error)
+	// RunPrivilegedCmdInteractive runs name with args, through sudo when
+	// privilege escalation is on, and calls interact with its standard input
+	// while it runs, for a command that waits for an answer that the caller
+	// gives later, such as the confirmation of netplan try. The standard
+	// input closes when interact returns. The result is the combined output.
+	RunPrivilegedCmdInteractive(
+		ctx context.Context,
+		name string,
+		args []string,
+		interact func(ctx context.Context, stdin io.Writer) error,
 	) (string, error)
 	// RunPrivilegedCmdFull is RunPrivilegedCmd with the standard output,
 	// the standard error and the exit code apart, for a command whose

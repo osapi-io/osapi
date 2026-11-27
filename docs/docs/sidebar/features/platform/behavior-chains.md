@@ -104,9 +104,9 @@ job.process
 ```
 
 The two `exec netplan` spans under `behavior.netplan.update` are
-`netplan generate` and `netplan apply`. A span does not record the arguments of
-a command. `osapi client telemetry trace get --id <trace>` prints the tree. A
-span of a step that failed has the error status.
+`netplan generate` and `netplan try`. A span does not record the arguments of a
+command. `osapi client telemetry trace get --id <trace>` prints the tree. A span
+of a step that failed has the error status.
 
 ### The audit log
 
@@ -128,11 +128,12 @@ fails, so the failed step and the writes before it are in the job.
 
 These are the failures of `dns update`:
 
-| Failure                                 | The host after the failure                                                                                      | The job error                                                                                         |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `managedfile update` cannot write       | No change. The write is atomic.                                                                                 | `write file: ...`                                                                                     |
-| `netplan generate` refuses the new file | No change. `netplan` puts back the content that the file had, or removes a new file, with a `managedfile` call. | `netplan generate refused <path>, so its content was put back: ...`, or `..., so it was removed: ...` |
-| `netplan apply` fails                   | The new file stays in `/etc/netplan`. netplan did not apply it. Its record has a mark, so a retry applies it.   | `netplan apply: ...`                                                                                  |
+| Failure                                        | The host after the failure                                                                                      | The job error                                                                                         |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `managedfile update` cannot write              | No change. The write is atomic.                                                                                 | `write file: ...`                                                                                     |
+| `netplan generate` refuses the new file        | No change. `netplan` puts back the content that the file had, or removes a new file, with a `managedfile` call. | `netplan generate refused <path>, so its content was put back: ...`, or `..., so it was removed: ...` |
+| `netplan apply` fails                          | The new file stays in `/etc/netplan`. netplan did not apply it. Its record has a mark, so a retry applies it.   | `netplan apply: ...`                                                                                  |
+| The agent does not reach NATS after the change | `netplan try` reverts the files and the network at its timeout. The record of the file goes back with the file. | `netplan reverted the change: the agent did not reach NATS after the change: ...`                     |
 
 Only a building block undoes its own change, as `netplan` does when
 `netplan generate` refuses a file. The caller of a step does not undo the work

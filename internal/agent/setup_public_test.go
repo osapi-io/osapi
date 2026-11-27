@@ -22,6 +22,7 @@ package agent_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"path/filepath"
@@ -30,6 +31,7 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/gohaitest"
 
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/require"
@@ -208,6 +210,41 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			defer bus.Close(conn.NATS)
 			s.NotNil(a)
 			s.Contains(a.SubComponents(), "agent.heartbeat")
+		})
+	}
+}
+
+// statusOf answers KVStatus with err, and records the bucket it was asked.
+type statusOf struct {
+	err    error
+	bucket *string
+}
+
+func (k statusOf) KVStatus(
+	_ context.Context,
+	bucket string,
+) (jetstream.KeyValueStatus, error) {
+	*k.bucket = bucket
+
+	return nil, k.err
+}
+
+// TestReachOf: the agent's round trip to NATS is the status of its registry
+// bucket, and its error is the server's.
+func (s *SetupPublicTestSuite) TestReachOf() {
+	for _, tc := range []struct {
+		name string
+		err  error
+	}{
+		{name: "when the server answers, it is nil"},
+		{name: "when it does not, it is the error", err: errors.New("nats: timeout")},
+	} {
+		s.Run(tc.name, func() {
+			var asked string
+			reach := agent.ExportReachOf(statusOf{err: tc.err, bucket: &asked}, "agent-registry")
+
+			s.Equal(tc.err, reach(context.Background()))
+			s.Equal("agent-registry", asked)
 		})
 	}
 }

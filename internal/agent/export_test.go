@@ -1288,3 +1288,6 @@ func ExportConsumerRecovered(
 ) {
 	a.consumerRecovered(name, gen)
 }
+
+// ExportReachOf is reachOf, for a test of the agent's round trip to NATS.
+var ExportReachOf = reachOf

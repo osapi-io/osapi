@@ -37,8 +37,9 @@ func SetExecutor(
 // ExportStartSpan exposes startSpan for testing.
 var ExportStartSpan = startSpan
 
-// SetSudoProgram replaces the program that RunPrivilegedCmdFull runs a
-// command through, and returns a function that puts it back.
+// SetSudoProgram replaces the program that RunPrivilegedCmdFull and
+// RunPrivilegedCmdInteractive run a command through, and returns a function
+// that puts it back.
 func SetSudoProgram(
 	name string,
 ) func() {

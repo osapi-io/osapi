@@ -596,6 +596,15 @@ and a logger that discards.
 Use: The resolver goes to gohai through h.Sources(). Log with h.Logger only what
 a span does not carry.
 
+### `h.Reach`
+
+A round trip from the agent to its NATS server: nil when the server answers. The
+agent gives a request to the server; the tests give none.
+
+Use: For a change that can cut the host off its network, such as netplan's: keep
+the change only when Reach answers after it. A nil Reach is a host that nothing
+checks.
+
 ## Calls in a provider
 
 ### `collector.NewWith(h.Sources())`
