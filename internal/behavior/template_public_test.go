@@ -198,6 +198,36 @@ func (s *TemplatePublicTestSuite) TestCheckTemplates() {
 				Vars:    vars,
 			},
 		},
+		{
+			name:    "when $ reads a var that is not given",
+			in:      deployIn{Content: "{{$.Vars.zone}}", Vars: vars},
+			wantMsg: "content reads .Vars.zone, which vars does not have",
+		},
+		{
+			name: "when $ reads a var inside range, it is checked",
+			in: deployIn{
+				Content: "{{range .Facts.interfaces}}{{$.Vars.zone}}{{end}}",
+				Vars:    vars,
+			},
+			wantMsg: "content reads .Vars.zone, which vars does not have",
+		},
+		{
+			name:    "when index reads a var through $ that is not given",
+			in:      deployIn{Content: `{{index $.Vars "zone"}}`, Vars: vars},
+			wantMsg: "content reads .Vars.zone, which vars does not have",
+		},
+		{
+			name:    "when $ reads another field",
+			in:      deployIn{Content: "{{$.Secret}}"},
+			wantMsg: "content reads .Secret; a template reads only .Facts, .Vars and .Hostname",
+		},
+		{
+			name: "when $ reads the data it has, or a declared variable is read",
+			in: deployIn{
+				Content: `{{$.Vars.region}}{{$.Hostname}}{{$x := .Vars.region}}{{$x}}{{range $i, $v := .Facts.interfaces}}{{$v.Name}}{{end}}`,
+				Vars:    vars,
+			},
+		},
 		{name: "when the template is empty it passes", in: deployIn{}},
 		{
 			name: "when the template only defines others it passes",
