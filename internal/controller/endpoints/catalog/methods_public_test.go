@@ -30,6 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -86,6 +87,54 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	s.Equal(cli.CountTones, got.CountTones)
 	s.Require().Len(got.HostFamilies, len(behavior.HostFamilies))
 	s.Equal(string(behavior.HostFamilies[0]), got.HostFamilies[0])
+}
+
+// TestGetRunsTheExamplesOnce: the examples of each behavior run on the
+// first Get only. A second Get has the same behaviors and runs none.
+func (s *MethodsPublicTestSuite) TestGetRunsTheExamplesOnce() {
+	var runs int
+	defer catalog.SetChains(func(b *behavior.Behavior) []behaviortest.ChainRun {
+		runs++
+
+		return behaviortest.Chains(b)
+	})()
+
+	first, err := catalog.Get(context.Background(), catalog.Deps{}, catalog.GetInput{})
+	s.Require().NoError(err)
+	once := runs
+	s.Positive(once, "the first Get runs the examples")
+
+	second, err := catalog.Get(context.Background(), catalog.Deps{}, catalog.GetInput{})
+	s.Require().NoError(err)
+	s.Equal(once, runs, "the second Get runs no example")
+	s.Equal(first.Behaviors, second.Behaviors)
+}
+
+// TestGetSeesALaterBehavior: a behavior registered after a Get is in the
+// next catalog.
+func (s *MethodsPublicTestSuite) TestGetSeesALaterBehavior() {
+	defer catalog.SetChains(behaviortest.Chains)()
+	before, err := catalog.Get(context.Background(), catalog.Deps{}, catalog.GetInput{})
+	s.Require().NoError(err)
+
+	saved := behavior.All()
+	defer func() {
+		behavior.Reset()
+		for _, b := range saved {
+			behavior.Register(b)
+		}
+	}()
+	behavior.Register(behavior.Define("later", "A behavior registered later",
+		behavior.Node, behavior.Internal))
+
+	after, err := catalog.Get(context.Background(), catalog.Deps{}, catalog.GetInput{})
+	s.Require().NoError(err)
+	s.Len(after.Behaviors, len(before.Behaviors)+1)
+	names := make([]string, 0, len(after.Behaviors))
+	for _, b := range after.Behaviors {
+		names = append(names, b.Name)
+	}
+	s.Contains(names, "later")
 }
 
 // TestSpecEnums: the spec's Permission is each permission, and its

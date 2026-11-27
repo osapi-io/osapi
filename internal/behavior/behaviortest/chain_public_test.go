@@ -26,6 +26,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
@@ -139,6 +142,22 @@ func (s *ChainPublicTestSuite) TestChains() {
 	s.Equal("echo", root.Steps[0].Behavior)
 	s.Equal("get", root.Steps[0].Method)
 	s.Empty(behaviortest.ChainProblems(b))
+}
+
+// TestChainsRecordNoTelemetry: a run of the examples runs on no host, so it
+// makes no span, also for the calls that it makes.
+func (s *ChainPublicTestSuite) TestChainsRecordNoTelemetry() {
+	spans := tracetest.NewSpanRecorder()
+	prev := otel.GetTracerProvider()
+	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(spans)))
+	defer otel.SetTracerProvider(prev)
+	b := behavior.Register(caller("user", true, behavior.Requires(echo)))
+
+	runs := behaviortest.Chains(b)
+
+	s.Require().Len(runs, 1)
+	s.Require().Len(runs[0].Root.Steps, 1, "the call is still recorded")
+	s.Empty(spans.Ended(), "no span for the method or for its call")
 }
 
 func (s *ChainPublicTestSuite) TestChainFails() {
