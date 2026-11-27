@@ -23,7 +23,6 @@ package timezone
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
@@ -52,7 +51,7 @@ func (r *reader) Timezone(
 }
 
 // SetTimezone sets the timezone with timedatectl set-timezone, unless
-// timedatectl shows that the host already has it.
+// gohai reads that the host already has it.
 func (r *reader) SetTimezone(
 	ctx context.Context,
 	name string,
@@ -61,11 +60,9 @@ func (r *reader) SetTimezone(
 	if len(name) > 64 || !validation.TimezonePattern.MatchString(name) {
 		return false, fmt.Errorf("%q is not a valid timezone name", name)
 	}
-	current, err := r.exec.RunCmd(ctx, "timedatectl", []string{"show", "-p", "Timezone", "--value"})
-	if err != nil {
-		return false, fmt.Errorf("read the timezone: %w", err)
-	}
-	if strings.TrimSpace(current) == name {
+	// gohai's timezone collector returns no error: a zone that it cannot
+	// read is empty, and an empty zone never matches a valid name.
+	if current, _ := read(ctx, r.src); current.Timezone == name {
 		return false, nil
 	}
 	if _, err := r.exec.RunPrivilegedCmd(

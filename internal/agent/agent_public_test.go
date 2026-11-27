@@ -37,6 +37,8 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+	sourcemocks "github.com/osapi-io/gohai/pkg/gohai/source/mocks"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -354,12 +356,13 @@ func (s *AgentPublicTestSuite) TestStart() {
 
 				// The kernel default permits no group a ping: the agent warns
 				// at each start, before the preflight.
-				rangePath := filepath.Join(s.T().TempDir(), "ping_group_range")
-				s.Require().NoError(os.WriteFile(rangePath, []byte("1\t0\n"), 0o600))
-				agent.SetPingRangePath(rangePath)
+				runner := sourcemocks.NewMockRunner(gomock.NewController(s.T()))
+				runner.EXPECT().Execute(gomock.Any(), "sysctl", "-a").
+					Return([]byte("net.ipv4.ping_group_range = 1\t0\n"), nil)
+				agent.SetPingSources(source.Sources{Exec: runner, Family: "debian"})
 				agent.SetProcessGroups(func() ([]int, error) { return []int{0}, nil })
 				s.T().Cleanup(func() {
-					agent.ResetPingRangePath()
+					agent.ResetPingSources()
 					agent.ResetProcessGroups()
 				})
 				s.startLog = &bytes.Buffer{}

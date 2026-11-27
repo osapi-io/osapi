@@ -92,18 +92,18 @@ None. The method takes no input; its command needs only --target.
 
 ## Method update
 
-|             |                                                                                                                                                                                                     |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | update                                                                                                                                                                                              |
-| Verb        | write                                                                                                                                                                                               |
-| Description | Set the timezone of the host                                                                                                                                                                        |
-| Detail      | Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP        | PUT                                                                                                                                                                                                 |
-| Route       | /api/node/&#123;hostname&#125;/timezone                                                                                                                                                             |
-| Permission  | timezone:write                                                                                                                                                                                      |
-| Command     | [osapi client node timezone update](../../../../usage/cli/client/node/timezone/update.md)                                                                                                           |
-| Input type  | UpdateInput                                                                                                                                                                                         |
-| Output type | Result                                                                                                                                                                                              |
+|             |                                                                                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | update                                                                                                                                                                                                                  |
+| Verb        | write                                                                                                                                                                                                                   |
+| Description | Set the timezone of the host                                                                                                                                                                                            |
+| Detail      | Sets the timezone with timedatectl set-timezone. A host that already has the timezone, as gohai reads it, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | PUT                                                                                                                                                                                                                     |
+| Route       | /api/node/&#123;hostname&#125;/timezone                                                                                                                                                                                 |
+| Permission  | timezone:write                                                                                                                                                                                                          |
+| Command     | [osapi client node timezone update](../../../../usage/cli/client/node/timezone/update.md)                                                                                                                               |
+| Input type  | UpdateInput                                                                                                                                                                                                             |
+| Output type | Result                                                                                                                                                                                                                  |
 
 ### Input (1)
 

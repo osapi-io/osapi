@@ -34,7 +34,7 @@ var timezoneUpdateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Set a new timezone\n  osapi client node timezone update --target web-01 --timezone America/New_York\n\n  # A host that already has the timezone\n  osapi client node timezone update --target web-01 --timezone UTC",
-	Long:    "Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.",
+	Long:    "Sets the timezone with timedatectl set-timezone. A host that already has the timezone, as gohai reads it, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 		timezoneFlag, _ := cmd.Flags().GetString("timezone")

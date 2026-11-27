@@ -23,7 +23,6 @@ package hostname
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
@@ -52,8 +51,8 @@ func (l *linux) Hostname(
 	return machineName(ctx, l.src)
 }
 
-// SetHostname runs hostnamectl set-hostname when hostnamectl reports a
-// different name. A container's runtime owns its hostname, so there it is
+// SetHostname runs hostnamectl set-hostname when gohai reads a different
+// name. A container's runtime owns its hostname, so there it is
 // unsupported.
 func (l *linux) SetHostname(
 	ctx context.Context,
@@ -62,11 +61,11 @@ func (l *linux) SetHostname(
 	if l.container {
 		return false, behavior.ErrUnsupported
 	}
-	current, err := l.exec.RunCmd(ctx, "hostnamectl", []string{"hostname"})
+	current, err := machineName(ctx, l.src)
 	if err != nil {
-		return false, fmt.Errorf("read the hostname: %w", err)
+		return false, err
 	}
-	if strings.TrimSpace(current) == name {
+	if current == name {
 		return false, nil
 	}
 	if _, err := l.exec.RunPrivilegedCmd(

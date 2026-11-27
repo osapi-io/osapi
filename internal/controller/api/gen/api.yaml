@@ -8640,7 +8640,7 @@ paths:
             hostname: web-01
       x-osapi-method: get
     put:
-      description: 'Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
+      description: 'Sets the timezone with timedatectl set-timezone. A host that already has the timezone, as gohai reads it, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeTimezone
       parameters:
         - $ref: '#/components/parameters/Hostname'

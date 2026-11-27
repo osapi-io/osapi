@@ -21,15 +21,23 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/sysctl"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 )
 
-// pingRangePath is the kernel setting that says which groups may send a
-// ping on an ICMP datagram socket. Overridable in tests via export_test.go.
-var pingRangePath = "/proc/sys/net/ipv4/ping_group_range"
+// pingRangeKey is the kernel setting that says which groups may send a
+// ping on an ICMP datagram socket.
+const pingRangeKey = "net.ipv4.ping_group_range"
+
+// pingSources are the sources that the start check reads the setting
+// through: the host. Overridable in tests via export_test.go.
+var pingSources = func() source.Sources { return source.Sources{} }
 
 // getgroups is os.Getgroups. Overridable in tests via export_test.go.
 var getgroups = os.Getgroups
@@ -52,10 +60,20 @@ func defaultProcessGroups() ([]int, error) {
 // one. On Linux the agent sends a ping on an ICMP datagram socket, also as
 // root, and the kernel permits that only for the groups in
 // net.ipv4.ping_group_range. Its default, "1 0", permits no group. A host
-// without the setting, such as macOS, has no problem to report.
-func PingProblem() string {
-	data, err := os.ReadFile(pingRangePath)
-	if err != nil {
+// without the setting, such as macOS, has no problem to report. gohai's
+// sysctl collector reads the setting through src.
+func PingProblem(
+	ctx context.Context,
+	src source.Sources,
+) string {
+	// The collector returns no error: a sysctl that cannot run gives no
+	// params, and a host with no setting has no problem to report.
+	got, _ := sysctl.NewWith(src).Collect(ctx, nil)
+	var data string
+	if info, ok := got.(*sysctl.Info); ok {
+		data = info.Params[pingRangeKey]
+	}
+	if data == "" {
 		return ""
 	}
 

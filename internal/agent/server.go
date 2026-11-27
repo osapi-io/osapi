@@ -76,7 +76,7 @@ func (a *Agent) Start() error {
 
 	// A ping needs the agent's group in net.ipv4.ping_group_range, whatever
 	// the privileges of the agent, so this runs on each start.
-	if problem := PingProblem(); problem != "" {
+	if problem := PingProblem(a.ctx, pingSources()); problem != "" {
 		a.logger.Warn("a ping from this agent fails", slog.String("error", problem))
 	}
 
