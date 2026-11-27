@@ -154,7 +154,7 @@ export const getPutNodeTimezoneUrl = (hostname: string,) => {
 }
 
 /**
- * Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.
+ * Sets the timezone with timedatectl set-timezone. A host that already has the timezone, as gohai reads it, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.
  * @summary Set the timezone of the host
  */
 export const putNodeTimezone = async (hostname: string,
