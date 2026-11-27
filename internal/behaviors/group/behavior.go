@@ -71,8 +71,10 @@ var Behavior = behavior.Register(behavior.Define(
 			"have is not found.").
 		Example("A group", GetInput{Name: "developers"}, developers,
 			behavior.Exists("/etc/group", etcGroup),
+			behavior.Live("name", behavior.FactAdminGroup),
 		).
-		Fails("A group that the host does not have", GetInput{Name: "nobody"}, "not found").
+		Fails("A group that the host does not have", GetInput{Name: "nobody"}, "not found",
+			behavior.NotLive("a real host can have a group nobody, as Fedora does")).
 		Fails("A name that is an option", GetInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",
 			GetInput{Name: strings.Repeat("a", 33)}, "max"),

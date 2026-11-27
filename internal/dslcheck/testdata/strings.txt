@@ -34,6 +34,8 @@ behavior.Given.Path string	fixture	what an example sets up or expects
 behavior.InputAttributes(fields []string)	checked	input fields by json name; the span rule checks them
 behavior.Links(path string)	path pattern	a path or a path.Match pattern
 behavior.Links(target string)	fixture	what an example sets up or expects
+behavior.Live(field string)	checked	an input field by json name; the integration test's unit gate checks that the input has it
+behavior.LiveField.Field string	checked	set only by Live, which the integration test's unit gate checks
 behavior.Lookup(name string)	identity	a name that the registry, the route or the command path holds
 behavior.Method.Describe(doc string)	free text	prose for a page or a message
 behavior.Method.Doc string	free text	prose for a page or a message

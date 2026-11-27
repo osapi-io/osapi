@@ -107,6 +107,7 @@ var Behavior = behavior.Register(behavior.Define(
 			GetInput{Key: "net.bridge.bridge-nf-call-iptables"},
 			Entry{Key: "net.bridge.bridge-nf-call-iptables", Value: "1", Managed: true},
 			behavior.After(CreateInput{Key: "net.bridge.bridge-nf-call-iptables", Value: "1"}),
+			behavior.NotLive("a real host without the module refuses the create (osapi-io/osapi#1566)"),
 		).
 		Fails("A parameter the kernel does not have", GetInput{Key: "vm.nosuch"}, "not found").
 		Fails("No key", GetInput{}, "key must not be empty").

@@ -171,9 +171,17 @@ var Behavior = behavior.Register(behavior.Define(
 			"on Linux, netstat on macOS. proto says where a route came from, such as dhcp, "+
 			"kernel or static. An interface with no routes has none; one the host does not "+
 			"have is not found.").
-		Example("An interface with routes", ListInput{Name: "eth0"}, eth0Routes, linuxHost...).
-		Example("An interface with no routes", ListInput{Name: "eth1"}, []Entry{}, linuxHost...).
-		Example("A Mac", ListInput{Name: "en0"}, en0Routes, darwinHost...).
+		Example("An interface with routes", ListInput{Name: "eth0"}, eth0Routes,
+			append(slices.Clone(linuxHost), behavior.Live("name", behavior.FactInterface))...).
+		Example("An interface with no routes", ListInput{Name: "eth1"}, []Entry{},
+			append(
+				slices.Clone(linuxHost),
+				behavior.NotLive(
+					"a second interface with no routes, which a real host may not have",
+				),
+			)...).
+		Example("A Mac", ListInput{Name: "en0"}, en0Routes,
+			append(slices.Clone(darwinHost), behavior.Live("name", behavior.FactInterface))...).
 		Fails("An interface the host does not have", ListInput{Name: "eth9"}, "not found",
 			linuxHost...).
 		Fails("A name that is not an interface name", ListInput{Name: "eth0;reboot"}, "Name"),

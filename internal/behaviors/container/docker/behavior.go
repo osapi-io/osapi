@@ -126,7 +126,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Get one container").
 		Explain("Reads one container by its name, its ID or the start of its ID. A container "+
 			"that the host does not have is not found.").
-		Example("A container", GetInput{Name: name}, web, answers, running, details).
+		Example("A container", GetInput{Name: name}, web, answers, running, details,
+			behavior.NotLive("the container is the one that the docker write examples make, "+
+				"and their reads back read it")).
 		Fails("A container that the host does not have", GetInput{Name: "nothere"}, "not found").
 		Fails("A name that is an option", GetInput{Name: "-f"}, "container_id"),
 	behavior.Write("create", Create).

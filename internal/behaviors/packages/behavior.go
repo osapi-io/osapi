@@ -106,7 +106,8 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.OnPlatform(behavior.PlatformLinux),
 			behavior.Prints(rpm, "curl\t8.6.0-7.fc40\tx86_64\n"),
 		).
-		Fails("A package that is not installed", GetInput{Name: "tree"}, "not found").
+		Fails("A package that is not installed", GetInput{Name: "tree"}, "not found",
+			behavior.NotLive("the suite installs tree on a live host, for the package examples")).
 		Fails("A name that is an option", GetInput{Name: "-oAPT::Get=x"}, "not a valid package name").
 		Fails("A name longer than 255 characters",
 			GetInput{Name: strings.Repeat("a", 256)}, "not a valid package name"),

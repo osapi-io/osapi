@@ -31,6 +31,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/behavior"
+	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -316,4 +318,53 @@ func (s *CLICasesTestSuite) TestRefusalsAreInputs() {
 
 func TestCLICasesTestSuite(t *testing.T) {
 	suite.Run(t, new(CLICasesTestSuite))
+}
+
+// TestEachLiveFieldIsAField is the gate of osapi-io/osapi#1541: each field
+// that an example marks Live is a field of its input, by its JSON name, of
+// a kind that a fact fills, with a fact that the suite knows.
+func (s *CLICasesTestSuite) TestEachLiveFieldIsAField() {
+	known := []behavior.Fact{
+		behavior.FactInterface, behavior.FactAdminGroup, behavior.FactUser, behavior.FactPID,
+		behavior.FactSSHService, behavior.FactSSHUnit,
+	}
+	count := 0
+	for _, b := range behavior.All() {
+		for _, m := range b.Methods {
+			examples := append([]behavior.Example{}, m.Examples...)
+			for _, r := range m.Refusals {
+				examples = append(examples, r.Example)
+			}
+			for _, ex := range examples {
+				for _, l := range ex.Live {
+					count++
+					where := b.Name + " " + m.Name + " " + ex.Doc
+					s.Contains(known, l.Fact, "%s: no value for the fact %s", where, l.Fact)
+					t := reflect.TypeOf(ex.Input)
+					found := false
+					for i := range t.NumField() {
+						f := t.Field(i)
+						if strings.Split(f.Tag.Get("json"), ",")[0] != l.Field {
+							continue
+						}
+						found = true
+						s.Contains(
+							[]reflect.Kind{
+								reflect.String,
+								reflect.Int,
+								reflect.Int32,
+								reflect.Int64,
+							},
+							f.Type.Kind(),
+							"%s: %s is not a string or an int",
+							where,
+							l.Field,
+						)
+					}
+					s.True(found, "%s: %T has no field %s", where, ex.Input, l.Field)
+				}
+			}
+		}
+	}
+	s.NotZero(count, "no example marks a field Live")
 }

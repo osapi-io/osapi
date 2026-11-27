@@ -431,12 +431,26 @@ read of the behavior names it.
 
 ### `NotLive("why")`
 
-Keeps a write example off the live host of the integration test, which skips it
-and says why. The provider tests still run it on the fake host.
+Keeps an example or a refusal off the live host of the integration test, which
+skips it and says why. The provider tests still run it on the fake host.
 
-Use: Only for a write whose starting state the behavior's own methods cannot
-make on a real host, such as the process that a signal stops. Test it in the lab
-by hand, and say how in the definition.
+Use: Only when a real host cannot be given the example's state through the
+behavior's own methods, such as the process that a signal stops, or when a real
+host differs from the fake one, such as a group nobody that Fedora has. Test it
+in the lab by hand, and say how in the definition.
+
+### `Live("field", fact)`
+
+On the live host of the integration test, puts the target's value of fact in the
+input's field, by its JSON name, in place of the example's value. The provider
+tests keep the example's value. FactInterface is the target's primary interface,
+FactAdminGroup root or wheel on macOS, FactUser root, FactPID 1, FactSSHService
+ssh on the Debian family or else sshd, and FactSSHUnit that service with
+.service.
+
+Use: For a read example whose item the fake host has but a real host names
+differently, such as eth0. A unit gate checks that the field exists and is a
+string or an int.
 
 ### `Links("path", "target")`
 
