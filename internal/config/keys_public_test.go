@@ -76,6 +76,14 @@ func (s *KeysPublicTestSuite) TestEnvName() {
 	s.Equal("OSAPI_CONTROLLER_API_PORT", config.EnvName("controller.api.port"))
 }
 
+// TestDocsHaveNoDash: osapi config default get prints each doc, so a doc
+// keeps to the plain punctuation of the project's pages, with no em dash.
+func (s *KeysPublicTestSuite) TestDocsHaveNoDash() {
+	for _, k := range config.Keys() {
+		s.NotContains(k.Doc, "\u2014", "the doc of %s", k.Name)
+	}
+}
+
 func (s *KeysPublicTestSuite) TestKeys() {
 	keys := config.Keys()
 	byName := map[string]config.Key{}
