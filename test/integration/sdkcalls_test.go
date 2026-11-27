@@ -28,15 +28,12 @@ package integration_test
 
 import (
 	"encoding"
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/url"
 	"path/filepath"
 	"reflect"
-	"strconv"
-	"strings"
 	"sync"
 	"testing"
 
@@ -269,151 +266,6 @@ func scalar(
 	default:
 		return reflect.PointerTo(t).Implements(reflect.TypeFor[encoding.TextUnmarshaler]())
 	}
-}
-
-// args is the arguments of fn, k's typed method, from req.
-func (k sdkCall) args(
-	fn reflect.Type,
-	req sdkRequest,
-) ([]reflect.Value, error) {
-	plan, err := k.plan()
-	if err != nil {
-		return nil, err
-	}
-	out := make([]reflect.Value, 0, len(plan))
-	for i, a := range plan {
-		v := reflect.New(fn.In(i + 1)).Elem()
-		switch a.kind {
-		case argPath:
-			err = setText(v, req.path[a.name])
-		case argQuery:
-			err = setText(v, req.query.Get(a.name))
-		case argParams:
-			for _, p := range k.method.OptionalQuery() {
-				if req.query.Has(p.Name) {
-					if err = setText(v.FieldByName(p.GoName), req.query.Get(p.Name)); err != nil {
-						break
-					}
-				}
-			}
-		case argInput:
-			err = k.input(v, req)
-		case argForm:
-			if req.form != nil && len(req.form.Value[a.name]) > 0 {
-				err = setText(v, req.form.Value[a.name][0])
-			}
-		case argFile:
-			err = setFile(v, req.form, a.name)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("%s, argument %d (%s): %w", k, i+1, a.name, err)
-		}
-		out = append(out, v)
-	}
-
-	return out, nil
-}
-
-// input fills v, the input of k's method, with the body of req and the keys
-// of its path. A field of the body that the input does not have is an
-// error: the SDK would not send it.
-func (k sdkCall) input(
-	v reflect.Value,
-	req sdkRequest,
-) error {
-	if len(strings.TrimSpace(string(req.body))) > 0 {
-		dec := json.NewDecoder(strings.NewReader(string(req.body)))
-		dec.DisallowUnknownFields()
-		if err := dec.Decode(v.Addr().Interface()); err != nil {
-			return fmt.Errorf("the body does not fit %s: %w", v.Type(), err)
-		}
-	}
-	for _, p := range k.method.Keys() {
-		if err := setText(v.FieldByName(p.GoName), req.path[p.Name]); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// setFile sets v, an io.Reader, to the file name of form.
-func setFile(
-	v reflect.Value,
-	form *multipart.Form,
-	name string,
-) error {
-	if form == nil || len(form.File[name]) == 0 {
-		return fmt.Errorf("the form has no file %s", name)
-	}
-	f, err := form.File[name][0].Open()
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-	data, err := io.ReadAll(f)
-	if err != nil {
-		return err
-	}
-	v.Set(reflect.ValueOf(strings.NewReader(string(data))))
-
-	return nil
-}
-
-// setText sets v to s, a value of a path, a query or a form.
-func setText(
-	v reflect.Value,
-	s string,
-) error {
-	if v.Kind() == reflect.Pointer {
-		if s == "" {
-			return nil
-		}
-		v.Set(reflect.New(v.Type().Elem()))
-		v = v.Elem()
-	}
-	if u, ok := v.Addr().Interface().(encoding.TextUnmarshaler); ok {
-		if s == "" {
-			return nil
-		}
-
-		return u.UnmarshalText([]byte(s))
-	}
-	switch v.Kind() {
-	case reflect.String:
-		v.SetString(s)
-	case reflect.Bool:
-		if s == "" {
-			return nil
-		}
-		b, err := strconv.ParseBool(s)
-		if err != nil {
-			return err
-		}
-		v.SetBool(b)
-	case reflect.Int, reflect.Int32, reflect.Int64:
-		if s == "" {
-			return nil
-		}
-		n, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return err
-		}
-		v.SetInt(n)
-	case reflect.Float32, reflect.Float64:
-		if s == "" {
-			return nil
-		}
-		n, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return err
-		}
-		v.SetFloat(n)
-	default:
-		return fmt.Errorf("a value of %s, not a scalar", v.Type())
-	}
-
-	return nil
 }
 
 // sdkSkips are the operations that the SDK suite does not send through a
