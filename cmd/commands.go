@@ -468,7 +468,7 @@ func waitForFile(
 	tick := time.NewTicker(500 * time.Millisecond)
 	defer tick.Stop()
 	for {
-		if _, err := os.Stat(file); err == nil {
+		if _, err := osfs.NewWithNoIdm().Stat(file); err == nil {
 			return true
 		}
 		select {

@@ -23,13 +23,22 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/osapi-io/osapi/internal/atomicfile"
+
 	"github.com/osapi-io/osapi/internal/cli"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
@@ -39,7 +48,13 @@ func main() {
 		cli.DocsPaletteCSSFile: cli.DocsPaletteCSS(),
 		cli.DocsPaletteTSFile:  cli.DocsPaletteTS(),
 	} {
-		if err := os.WriteFile(filepath.Join(*root, file), []byte(content), 0o644); err != nil {
+		if err := atomicfile.Write(
+			context.Background(),
+			hostFS,
+			filepath.Join(*root, file),
+			[]byte(content),
+			0o644,
+		); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

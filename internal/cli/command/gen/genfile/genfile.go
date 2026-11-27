@@ -32,15 +32,24 @@ package genfile
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/osapi-io/osapi/internal/atomicfile"
+
 	"github.com/dave/jennifer/jen"
 	"golang.org/x/tools/imports"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // module is the import path of the repository, the third group of imports.
 const module = "github.com/osapi-io/osapi"
@@ -64,7 +73,7 @@ type Writer struct {
 func (w *Writer) Clean(
 	dir string,
 ) error {
-	entries, err := os.ReadDir(filepath.Join(w.Root, dir))
+	entries, err := hostFS.ReadDir(filepath.Join(w.Root, dir))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
@@ -73,7 +82,7 @@ func (w *Writer) Clean(
 	}
 	for _, e := range entries {
 		p := filepath.Join(w.Root, dir, e.Name())
-		data, err := os.ReadFile(p)
+		data, err := avfs.ReadFile(hostFS, p)
 		if err != nil {
 			return err
 		}
@@ -173,7 +182,7 @@ func (w *Writer) Flush() error {
 	}
 	sort.Strings(stale)
 	for _, rel := range stale {
-		if err := os.Remove(filepath.Join(w.Root, rel)); err != nil &&
+		if err := hostFS.Remove(filepath.Join(w.Root, rel)); err != nil &&
 			!errors.Is(err, os.ErrNotExist) {
 			return err
 		}
@@ -184,36 +193,17 @@ func (w *Writer) Flush() error {
 }
 
 // writeFile writes data at rel under the root through a temporary file in
-// the same directory, which it renames over rel.
+// the same directory, which atomicfile renames over rel.
 func (w *Writer) writeFile(
 	rel string,
 	data []byte,
 ) error {
 	p := filepath.Join(w.Root, rel)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return err
-	}
-	tmp, err := os.CreateTemp(filepath.Dir(p), "."+filepath.Base(p)+".*")
-	if err != nil {
-		return err
-	}
-	_, err = tmp.Write(data)
-	if closeErr := tmp.Close(); err == nil {
-		err = closeErr
-	}
-	if err == nil {
-		err = os.Chmod(tmp.Name(), 0o644)
-	}
-	if err == nil {
-		err = os.Rename(tmp.Name(), p)
-	}
-	if err != nil {
-		_ = os.Remove(tmp.Name())
-
+	if err := hostFS.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 		return err
 	}
 
-	return nil
+	return atomicfile.Write(context.Background(), hostFS, p, data, 0o644)
 }
 
 // Registry is the file at dir/gen.go that imports each of pkgs for its init,

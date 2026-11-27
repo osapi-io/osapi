@@ -184,23 +184,13 @@ func (s *ScaffoldPublicTestSuite) TestScaffoldErrors() {
 			name: "when the registry cannot be written",
 			setup: func() string {
 				root := s.checkout(allGo)
-				s.Require().NoError(os.Chmod(
-					filepath.Join(
-						root,
-						"internal",
-						"controller",
-						"endpoints",
-						"all",
-						"all.go",
-					),
-					0o444,
-				))
+				s.T().Cleanup(endpoint.FailHostRename("all.go"))
 
 				return root
 			},
 			gname:   "widget",
 			doc:     "x",
-			wantErr: "permission denied",
+			wantErr: "injected rename error",
 		},
 	}
 

@@ -35,9 +35,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"reflect"
 	"strings"
+
+	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
@@ -656,7 +657,7 @@ func Strings[T ~string](
 func ReadFile(
 	path string,
 ) ([]byte, bool) {
-	data, err := os.ReadFile(path)
+	data, err := avfs.ReadFile(hostFS, path)
 	if err != nil {
 		deps.Error(fmt.Errorf("read %s: %w", path, err))
 

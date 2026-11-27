@@ -390,9 +390,10 @@ func (s *MethodsPublicTestSuite) TestWriteReferenceTables() {
 
 	s.Require().NoError(os.Chmod(metrics, 0o644))
 	s.Require().NoError(os.WriteFile(metrics, []byte("TABLE"), 0o644))
-	s.Require().NoError(os.Chmod(metrics, 0o444))
+	restore := clidocs.FailHostRename("metrics.md")
 	_, err = clidocs.WriteReference(context.Background(),
 		clidocs.Deps{Pages: none, Tables: tables}, clidocs.ReferenceInput{Root: root})
+	restore()
 	s.Error(err, "a page it cannot write")
 }
 

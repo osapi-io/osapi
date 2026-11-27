@@ -19,7 +19,15 @@
 // DEALINGS IN THE SOFTWARE.
 package endpoint
 
-import "github.com/dave/jennifer/jen"
+import (
+	"errors"
+	"strings"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/dave/jennifer/jen"
+)
 
 // groupScaffoldGo is the scaffold's real sources, put back after a test
 // swaps them.
@@ -39,4 +47,27 @@ func BreakScaffold() {
 // ResetScaffold puts the scaffold's real sources back.
 func ResetScaffold() {
 	scaffoldSources = groupScaffoldGo
+}
+
+// FailHostRename makes the filesystem of the generator fail each rename to a
+// path that ends with suffix, and returns a function that puts it back.
+func FailHostRename(
+	suffix string,
+) func() {
+	old := hostFS
+	vfs := failfs.New(osfs.NewWithNoIdm())
+	_ = vfs.SetFailFunc(func(
+		_ avfs.VFSBase,
+		fn avfs.FnVFS,
+		p *failfs.FailParam,
+	) error {
+		if fn == avfs.FnRename && strings.HasSuffix(p.NewPath, suffix) {
+			return errors.New("injected rename error")
+		}
+
+		return nil
+	})
+	hostFS = vfs
+
+	return func() { hostFS = old }
 }
