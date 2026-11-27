@@ -641,9 +641,24 @@ group:
 `cliPolicies` in `test/integration/clicases_test.go` has the commands that do
 not run as their kind: a process, a command that changes an admission or writes
 a checkout, each with its reason, and a command that reads the files of a
-component on its host, which runs against the suite's own server only. An API
-read runs always. An API write, or a local command that the policy marks as a
-write, runs with `OSAPI_INTEGRATION_WRITES=1`.
+component on its host (`host`). An API read runs always. An API write, or a
+local command that the policy marks as a write, runs with
+`OSAPI_INTEGRATION_WRITES=1`.
+
+A fixture server (`startFixture` in `test/integration/fixture_test.go`) is a
+second NATS server and controller of the suite's own, with its own ports, store
+and key directories. A test that spends an agent runs against it, so the suite's
+own agent stays as it is:
+
+- `JoinSuite` runs a join with a token and its refusals, and then a revoke, a
+  delete, a pending agent, an admit and a reject.
+- `AgentServiceSuite` installs and removes the agent's service with a join
+  string. It runs as root on Linux only.
+
+The fixture runs where the suite runs. Thus against a deployment such as the
+lab, the `host` commands and `SecurityDefaultsSuite` run against a fixture. Each
+agent of a fixture has the machine ID of the host, so a test starts one at a
+time.
 
 `TestEachCommandHasACase`, in the same file, has no build tag, so it runs with
 the unit tests. It fails for a command with no example and no refusal, for a

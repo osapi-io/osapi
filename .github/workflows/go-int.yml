@@ -65,4 +65,5 @@ jobs:
       # The suite prepares the runner through osapi, as it prepares a lab VM
       # (test/integration/prepare_test.go), so the job has no host setup.
       - name: Integration
-        run: sudo -E env "PATH=$PATH" "HOME=$HOME" OSAPI_INTEGRATION_WRITES=1 OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
+        # The suite with its fixture servers runs past go test's 10m default.
+        run: sudo -E env "PATH=$PATH" "HOME=$HOME" "GOFLAGS=-timeout=20m" OSAPI_INTEGRATION_WRITES=1 OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
