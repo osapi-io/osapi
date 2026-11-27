@@ -22,6 +22,7 @@ package behavior
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	gofmt "go/format"
@@ -31,6 +32,10 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/avfs/avfs/vfs/osfs"
+
+	"github.com/osapi-io/osapi/internal/atomicfile"
 )
 
 // module is the module a scaffold is written into.
@@ -48,6 +53,8 @@ var scaffoldName = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 // internal/behaviors/all. It returns the files written, relative to root, the
 // registration last. Everything is rendered and checked before anything is
 // written, so a taken name or a root that is not a checkout writes nothing.
+// A write that fails removes what the scaffold wrote, and writes no
+// registration.
 //
 // requires names registered behaviors that the new one is built on. The
 // scaffold writes the wiring of each one: behavior.Requires in the
@@ -96,6 +103,12 @@ func Scaffold(
 	if _, err := os.Stat(filepath.Join(root, dir)); err == nil {
 		return nil, fmt.Errorf("%s already exists", dir)
 	}
+	// A name is the behavior's name in the registry, apart from its
+	// package, so a free directory does not make a free name.
+	if Lookup(name) != nil {
+		return nil, fmt.Errorf(
+			"behavior %q is already registered: osapi dsl behavior list names each one", name)
+	}
 
 	all, err := os.ReadFile(filepath.Join(root, allFile))
 	if err != nil {
@@ -126,14 +139,22 @@ func Scaffold(
 	}
 	files = append(files, file{allFile, registered})
 
+	// Each file is written with atomicfile, so none is ever half written,
+	// all.go included. The behavior's files go in a directory that did not
+	// exist, and all.go last. Thus a failure removes the directory, and
+	// leaves no part of the behavior and no registration.
+	fsys := osfs.NewWithNoIdm()
 	written := make([]string, 0, len(files))
 	for _, f := range files {
 		p := filepath.Join(root, f.rel)
-		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-			return written, err
+		err := os.MkdirAll(filepath.Dir(p), 0o755)
+		if err == nil {
+			err = atomicfile.Write(context.Background(), fsys, p, f.data, 0o644)
 		}
-		if err := os.WriteFile(p, f.data, 0o644); err != nil {
-			return written, err
+		if err != nil {
+			_ = os.RemoveAll(filepath.Join(root, dir))
+
+			return nil, err
 		}
 		written = append(written, f.rel)
 	}
@@ -204,7 +225,13 @@ func register(
 	// The new line goes last in the block, after any comment that heads it,
 	// and formatting sorts it among the others.
 	end := i + bytes.Index(src[i:], []byte("\n)")) + 1
-	line := "\t_ \"" + module + "/internal/behaviors/" + path + "\"\n"
+	imp := `"` + module + "/internal/behaviors/" + path + `"`
+	// gofmt keeps a duplicate import, so the check is here: a stale line
+	// for a package whose directory was removed.
+	if bytes.Contains(src, []byte(imp)) {
+		return nil, fmt.Errorf("%s already imports %s", allFile, imp)
+	}
+	line := "\t_ " + imp + "\n"
 
 	out := make([]byte, 0, len(src)+len(line))
 	out = append(out, src[:end]...)

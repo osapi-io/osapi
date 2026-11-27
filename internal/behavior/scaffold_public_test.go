@@ -24,6 +24,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -298,17 +299,52 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			wantErr: "permission denied",
 		},
 		{
-			name: "when the registration cannot be written",
+			name: "when the registration cannot be written, nothing is left",
 			setup: func() string {
 				root := s.checkout(allGo)
-				s.Require().NoError(
-					os.Chmod(filepath.Join(root, "internal", "behaviors", "all", "all.go"), 0o444))
+				// all.go is written through a temp file in its directory,
+				// so the directory, not the file, is what refuses it.
+				dir := filepath.Join(root, "internal", "behaviors", "all")
+				s.Require().NoError(os.Chmod(dir, 0o555))
+				s.T().Cleanup(func() { _ = os.Chmod(dir, 0o755) })
 
 				return root
 			},
 			bname:   "motd",
 			doc:     "x",
 			wantErr: "permission denied",
+			validateFunc: func(root string, files []string) {
+				s.Nil(files)
+				s.NoDirExists(filepath.Join(root, "internal", "behaviors", "motd"),
+					"the behavior's files are removed")
+				all, err := os.ReadFile(
+					filepath.Join(root, "internal", "behaviors", "all", "all.go"))
+				s.Require().NoError(err)
+				s.Equal(allGo, string(all), "all.go is as it was")
+			},
+		},
+		{
+			name:      "when the name is registered under another package",
+			setup:     func() string { return s.checkout(allGo) },
+			bname:     "chained",
+			goPackage: "other",
+			doc:       "x",
+			wantErr:   `behavior "chained" is already registered`,
+			validateFunc: func(root string, _ []string) {
+				s.NoDirExists(filepath.Join(root, "internal", "behaviors", "other"))
+			},
+		},
+		{
+			name: "when all.go already imports the package",
+			setup: func() string {
+				return s.checkout(strings.Replace(allGo, "behaviors/sysctl", "behaviors/motd", 1))
+			},
+			bname:   "motd",
+			doc:     "x",
+			wantErr: "already imports",
+			validateFunc: func(root string, _ []string) {
+				s.NoDirExists(filepath.Join(root, "internal", "behaviors", "motd"))
+			},
 		},
 		{
 			name: "when a generated file is not Go",
@@ -332,6 +368,9 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
+				if tc.validateFunc != nil {
+					tc.validateFunc(root, files)
+				}
 
 				return
 			}
