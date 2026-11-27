@@ -166,7 +166,7 @@ func (s *DebianPublicTestSuite) TestTry() {
 	defer netplan.SetReachFor(1500 * time.Millisecond)()
 	// netplan answers as netplan try does: it writes the ready stamp, waits
 	// for the agent, and prints out.
-	netplanTry := func(fs avfs.VFS, stamp bool, wrote *string, out string, err error) any {
+	netplanTry := func(fs avfs.VFS, stamp, late bool, wrote *string, out string, err error) any {
 		return func(
 			ctx context.Context, _ string, _ []string,
 			interact func(context.Context, io.Writer) error,
@@ -175,6 +175,14 @@ func (s *DebianPublicTestSuite) TestTry() {
 			if stamp {
 				s.Require().NoError(fs.MkdirAll("/run/netplan", 0o700))
 				s.Require().NoError(fs.WriteFile(ready, nil, 0o600))
+			} else if late {
+				// netplan takes a while to apply: the stamp comes after the
+				// agent looked for it once.
+				s.Require().NoError(fs.MkdirAll("/run/netplan", 0o700))
+				go func() {
+					time.Sleep(400 * time.Millisecond)
+					_ = fs.WriteFile(ready, nil, 0o600)
+				}()
 			} else {
 				// netplan try refused and exited before it applied.
 				c, cancel := context.WithCancel(ctx)
@@ -193,6 +201,7 @@ func (s *DebianPublicTestSuite) TestTry() {
 		onDisk    bool
 		reach     func(n int) error
 		stamp     bool
+		late      bool
 		out       string
 		runErr    error
 		expect    func(files *managedfilemocks.MockProvider, exec *hostmocks.MockExec)
@@ -205,6 +214,14 @@ func (s *DebianPublicTestSuite) TestTry() {
 			reach:     func(int) error { return nil },
 			stamp:     true,
 			out:       "Do you want to keep these settings?\n\nConfiguration accepted.\n",
+			wantWrote: "\n",
+			changed:   true,
+		},
+		{
+			name:      "when netplan takes a while to apply, the agent waits for it, then confirms",
+			reach:     func(int) error { return nil },
+			late:      true,
+			out:       "Configuration accepted.\n",
 			wantWrote: "\n",
 			changed:   true,
 		},
@@ -287,7 +304,7 @@ func (s *DebianPublicTestSuite) TestTry() {
 			exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"})
 			var wrote string
 			exec.EXPECT().RunPrivilegedCmdInteractive(gomock.Any(), "netplan", try, gomock.Any()).
-				DoAndReturn(netplanTry(fs, tc.stamp, &wrote, tc.out, tc.runErr))
+				DoAndReturn(netplanTry(fs, tc.stamp, tc.late, &wrote, tc.out, tc.runErr))
 			if tc.expect != nil {
 				tc.expect(files, exec)
 			}
