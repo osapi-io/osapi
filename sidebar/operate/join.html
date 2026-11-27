@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">4. Join hosts | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/join"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="4. Join hosts | OSAPI"><meta data-rh="true" name="description" content="Each managed host runs an agent. An agent gets no job until the controller"><meta data-rh="true" property="og:description" content="Each managed host runs an agent. An agent gets no job until the controller"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/join"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/join" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/join" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"4. Join hosts","item":"https://osapi-io.github.io/osapi/sidebar/operate/join"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.9f9c9498.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.862ff1f3.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -151,9 +151,24 @@ string. On a host that you do not rebuild, stop the agent and empty its
 <code>agent.pki.key_dir</code> first. Then it makes new keys, and uses the join string of
 its config with a token that has a use left.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="move-hosts-to-a-different-nats-server">Move hosts to a different NATS server<a href="#move-hosts-to-a-different-nats-server" class="hash-link" aria-label="Direct link to Move hosts to a different NATS server" title="Direct link to Move hosts to a different NATS server" translate="no">​</a></h2>
-<p>The controller does not push NATS settings to an agent. The agent keeps the NATS
-server and the TLS of its join in <code>nats-join.json</code>. Thus to move hosts to a
-different NATS server or address, each host joins again:</p>
+<p>Give NATS a DNS name, and set <code>controller.join.url</code> to that name before the
+hosts join. Each agent keeps the name of its join in <code>nats-join.json</code>. It
+reconnects to NATS with no limit, and it looks up the name again at each
+attempt. Thus NATS can move to a different host with no join, when the new host:</p>
+<ul>
+<li class="">has the same DNS name,</li>
+<li class="">serves the same certificate, or a certificate that a root of the agent&#x27;s
+system verifies for that name, and</li>
+<li class="">has the JetStream store of the old host, from
+<code>nats.server.jetstream.store_dir</code>.</li>
+</ul>
+<p>The certificate must have the DNS name in its subject alternative names. With a
+self-signed certificate, the agent pins that certificate, so the new host must
+serve it.</p>
+<p>osapi does not cluster NATS servers. Thus you cannot add the new server beside
+the old one and then remove the old one.</p>
+<p>A move to a different name, or to a different self-signed certificate, needs a
+join of each host. The controller does not push NATS settings to an agent:</p>
 <ol>
 <li class="">
 <p>Set <code>controller.join.url</code> to the new address of NATS, and make a token with a
