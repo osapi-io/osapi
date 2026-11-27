@@ -120,7 +120,8 @@ func New(
 
 	// Register audit middleware if an audit store is configured.
 	if s.auditStore != nil {
-		e.Use(auditMiddleware(s.auditStore, s.logger))
+		s.audit = newAuditWriter(s.auditStore, s.logger)
+		e.Use(auditMiddleware(s.audit))
 	}
 
 	return s
@@ -188,18 +189,21 @@ var listenFn = func(
 // command then runs the cleanups within one shutdown budget. That budget bounds
 // the process, not this call.
 //
-// The context is unused for the same reason: there is nothing here to cancel.
+// Stop then writes the audit entries still queued, until ctx ends. A
+// request that finishes during the drain writes its own entry.
 func (s *Server) Stop(
-	_ context.Context,
+	ctx context.Context,
 ) {
 	s.logger.Info("stopping server")
 
-	if s.stop == nil {
-		return
+	if s.stop != nil {
+		s.stop()
+		s.stop = nil
 	}
 
-	s.stop()
-	s.stop = nil
+	if s.audit != nil {
+		s.audit.close(ctx)
+	}
 }
 
 // untraced tells which requests get no span and no HTTP metrics: the health

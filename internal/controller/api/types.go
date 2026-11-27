@@ -34,10 +34,12 @@ import (
 
 // Server implementation of the Server's API operations.
 type Server struct {
-	Echo          *echo.Echo
-	logger        *slog.Logger
-	appConfig     config.Config
-	auditStore    audit.Store
+	Echo       *echo.Echo
+	logger     *slog.Logger
+	appConfig  config.Config
+	auditStore audit.Store
+	// audit writes the audit entries of the requests; Stop drains it.
+	audit         *auditWriter
 	meterProvider *sdkmetric.MeterProvider
 	// tls, when set, makes Start serve HTTPS.
 	tls *tls.Config

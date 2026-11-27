@@ -29,9 +29,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel/trace"
 
@@ -296,7 +299,9 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			logger := slog.Default()
 
 			e := echo.New()
-			e.Use(api.ExportAuditMiddleware(store, logger))
+			mw, drain := api.ExportAuditMiddleware(store, logger)
+			defer drain(context.Background())
+			e.Use(mw)
 
 			method := tt.method
 			if method == "" {
@@ -366,6 +371,253 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 			if tt.validateBody != nil {
 				tt.validateBody(seenBody)
 			}
+		})
+	}
+}
+
+func (s *AuditMiddlewarePublicTestSuite) TestAuditStatus() {
+	tests := []struct {
+		name     string
+		handler  echo.HandlerFunc
+		wantCode int
+	}{
+		{
+			name: "a handler that writes its response records that status",
+			handler: func(c *echo.Context) error {
+				return c.String(http.StatusCreated, "made")
+			},
+			wantCode: http.StatusCreated,
+		},
+		{
+			name: "a handler that returns an HTTP error records its status",
+			handler: func(*echo.Context) error {
+				return echo.NewHTTPError(http.StatusNotFound, "no such file")
+			},
+			wantCode: http.StatusNotFound,
+		},
+		{
+			name: "a handler that returns a plain error records 500",
+			handler: func(*echo.Context) error {
+				return errors.New("store down")
+			},
+			wantCode: http.StatusInternalServerError,
+		},
+		{
+			name: "a handler that writes nothing records the default status",
+			handler: func(*echo.Context) error {
+				return nil
+			},
+			wantCode: http.StatusOK,
+		},
+		{
+			name: "a handler that swaps the response writer records no status",
+			handler: func(c *echo.Context) error {
+				c.SetResponse(httptest.NewRecorder())
+
+				return nil
+			},
+			wantCode: 0,
+		},
+		{
+			name: "a handler that panics records 500, and Recover answers",
+			handler: func(*echo.Context) error {
+				panic("half done")
+			},
+			wantCode: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			store := mocks.NewMockStore(ctrl)
+
+			written := make(chan audit.Entry, 1)
+			store.EXPECT().
+				Write(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, entry audit.Entry) error {
+					written <- entry
+
+					return nil
+				})
+
+			e := echo.New()
+			// The order of the server: Recover outside the audit middleware.
+			e.Use(middleware.Recover())
+			mw, drain := api.ExportAuditMiddleware(store, slog.Default())
+			defer drain(context.Background())
+			e.Use(mw)
+			e.POST("/api/file/f", func(c *echo.Context) error {
+				c.Set(api.ContextKeySubject, "ops@example.com")
+
+				return tt.handler(c)
+			})
+
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/file/f", nil))
+
+			entry := <-written
+			s.Equal(tt.wantCode, entry.ResponseCode)
+			if tt.wantCode != 0 {
+				s.Equal(tt.wantCode, rec.Code)
+			}
+		})
+	}
+}
+
+func (s *AuditMiddlewarePublicTestSuite) TestAuditDrain() {
+	tests := []struct {
+		name         string
+		requests     int
+		validateFunc func(written int)
+	}{
+		{
+			name:     "a drain writes each queued entry before it returns",
+			requests: 50,
+			validateFunc: func(written int) {
+				s.Equal(50, written)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			store := mocks.NewMockStore(ctrl)
+
+			release := make(chan struct{})
+			var mu sync.Mutex
+			written := 0
+			store.EXPECT().
+				Write(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(context.Context, audit.Entry) error {
+					<-release
+					mu.Lock()
+					written++
+					mu.Unlock()
+
+					return nil
+				}).
+				Times(tt.requests)
+
+			e := echo.New()
+			mw, drain := api.ExportAuditMiddleware(store, slog.Default())
+			e.Use(mw)
+			e.POST("/api/x", func(c *echo.Context) error {
+				c.Set(api.ContextKeySubject, "ops@example.com")
+
+				return c.NoContent(http.StatusNoContent)
+			})
+
+			for range tt.requests {
+				e.ServeHTTP(
+					httptest.NewRecorder(),
+					httptest.NewRequest(http.MethodPost, "/api/x", nil),
+				)
+			}
+
+			// The store holds each write until released, so the entries are
+			// still queued when the drain starts.
+			go func() { close(release) }()
+			drain(context.Background())
+
+			mu.Lock()
+			defer mu.Unlock()
+			tt.validateFunc(written)
+		})
+	}
+}
+
+func (s *AuditMiddlewarePublicTestSuite) TestAuditWriter() {
+	tests := []struct {
+		name string
+		run  func(store *mocks.MockStore)
+	}{
+		{
+			name: "after a drain, an entry is written before enqueue returns",
+			run: func(store *mocks.MockStore) {
+				w := api.ExportNewAuditWriter(store, slog.Default())
+				w.Close(context.Background())
+
+				done := false
+				store.EXPECT().
+					Write(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(context.Context, audit.Entry) error {
+						done = true
+
+						return nil
+					})
+				w.Enqueue(audit.Entry{ID: "late"})
+				s.True(done)
+
+				// A second drain does nothing.
+				w.Close(context.Background())
+			},
+		},
+		{
+			name: "a drain gives up when its context ends",
+			run: func(store *mocks.MockStore) {
+				release := make(chan struct{})
+				defer close(release)
+				store.EXPECT().
+					Write(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(context.Context, audit.Entry) error {
+						<-release
+
+						return nil
+					}).
+					AnyTimes()
+				w := api.ExportNewAuditWriter(store, slog.Default())
+				w.Enqueue(audit.Entry{ID: "held"})
+				w.Enqueue(audit.Entry{ID: "queued"})
+
+				ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+				defer cancel()
+				start := time.Now()
+				w.Close(ctx)
+				s.Less(time.Since(start), 2*time.Second)
+			},
+		},
+		{
+			name: "a full queue drops the entry after a wait, and the API goes on",
+			run: func(store *mocks.MockStore) {
+				release := make(chan struct{})
+				var mu sync.Mutex
+				written := 0
+				store.EXPECT().
+					Write(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(context.Context, audit.Entry) error {
+						<-release
+						mu.Lock()
+						written++
+						mu.Unlock()
+
+						return nil
+					}).
+					AnyTimes()
+				w := api.ExportNewAuditWriter(store, slog.Default())
+
+				// One entry is in the store's held write, the queue holds the
+				// rest, and the last one finds no room.
+				total := api.ExportAuditQueueSize + 2
+				for i := range total {
+					w.Enqueue(audit.Entry{ID: fmt.Sprintf("e%d", i)})
+				}
+
+				close(release)
+				w.Close(context.Background())
+
+				mu.Lock()
+				defer mu.Unlock()
+				s.Equal(total-1, written)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctrl := gomock.NewController(s.T())
+			tt.run(mocks.NewMockStore(ctrl))
 		})
 	}
 }

@@ -34,13 +34,19 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 )
 
-// ExportAuditMiddleware exposes the private auditMiddleware for testing.
+// ExportAuditMiddleware exposes the private auditMiddleware for testing,
+// with the function that drains its writer.
 func ExportAuditMiddleware(
 	store audit.Store,
 	logger *slog.Logger,
-) echo.MiddlewareFunc {
-	return auditMiddleware(store, logger)
+) (echo.MiddlewareFunc, func(ctx context.Context)) {
+	w := newAuditWriter(store, logger)
+
+	return auditMiddleware(w), w.close
 }
+
+// ExportAuditQueueSize is the size of the audit queue.
+const ExportAuditQueueSize = auditQueueSize
 
 // ExportScopeMiddleware exposes ScopeMiddleware for testing.
 func ExportScopeMiddleware(
@@ -96,3 +102,28 @@ func ResetListenFn() {
 // selfSignedWrite is config's write of a self-signed certificate, which
 // ResetTLSFns puts back.
 var selfSignedWrite = config.SelfSignedWrite
+
+// AuditWriter exposes the private auditWriter for testing.
+type AuditWriter struct{ w *auditWriter }
+
+// ExportNewAuditWriter starts an audit writer of store.
+func ExportNewAuditWriter(
+	store audit.Store,
+	logger *slog.Logger,
+) *AuditWriter {
+	return &AuditWriter{w: newAuditWriter(store, logger)}
+}
+
+// Enqueue gives entry to the writer.
+func (a *AuditWriter) Enqueue(
+	entry audit.Entry,
+) {
+	a.w.enqueue(entry)
+}
+
+// Close drains the writer until ctx ends.
+func (a *AuditWriter) Close(
+	ctx context.Context,
+) {
+	a.w.close(ctx)
+}

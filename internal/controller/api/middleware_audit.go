@@ -28,6 +28,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -50,14 +51,139 @@ var excludedAuditPaths = []string{
 	"/metrics",
 }
 
-// auditMiddleware returns Echo middleware that records audit entries for
-// authenticated requests. Writes are asynchronous to avoid adding latency.
-func auditMiddleware(
+const (
+	// auditQueueSize is how many entries wait for the writer. A slow store
+	// fills it, and then a request waits for room.
+	auditQueueSize = 1024
+	// auditEnqueueWait is how long a request waits for room in a full
+	// queue. Past it, the entry is dropped and the drop is logged, so a
+	// store that does not answer cannot hold the API.
+	auditEnqueueWait = time.Second
+	// auditWriteTimeout bounds one write to the store.
+	auditWriteTimeout = 5 * time.Second
+)
+
+// auditWriter writes audit entries from one goroutine, from a bounded
+// queue, so a slow store neither adds latency to a request nor makes the
+// count of goroutines grow. close drains the queue at shutdown.
+type auditWriter struct {
+	store  audit.Store
+	logger *slog.Logger
+	queue  chan audit.Entry
+	done   chan struct{}
+
+	// mu guards closed against a send on the closed queue: enqueue holds
+	// it to read, close holds it to write.
+	mu     sync.RWMutex
+	closed bool
+}
+
+// newAuditWriter starts the writer of store.
+func newAuditWriter(
 	store audit.Store,
 	logger *slog.Logger,
+) *auditWriter {
+	w := &auditWriter{
+		store:  store,
+		logger: logger,
+		queue:  make(chan audit.Entry, auditQueueSize),
+		done:   make(chan struct{}),
+	}
+	go w.run()
+
+	return w
+}
+
+// run writes each queued entry until close closes the queue.
+func (w *auditWriter) run() {
+	defer close(w.done)
+
+	for entry := range w.queue {
+		w.write(entry)
+	}
+}
+
+// write puts entry in the store, and logs a failure.
+func (w *auditWriter) write(
+	entry audit.Entry,
+) {
+	// Not the request's context: the response is sent by the time the
+	// entry is written, and the request's context is cancelled then.
+	ctx, cancel := context.WithTimeout(context.Background(), auditWriteTimeout)
+	defer cancel()
+
+	if err := w.store.Write(ctx, entry); err != nil {
+		w.logger.Warn(
+			"failed to write audit entry",
+			slog.String("error", err.Error()),
+			slog.String("entry_id", entry.ID),
+		)
+	}
+}
+
+// enqueue gives entry to the writer. After close, a request that the
+// server is still draining writes its entry itself.
+func (w *auditWriter) enqueue(
+	entry audit.Entry,
+) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	if w.closed {
+		w.write(entry)
+
+		return
+	}
+
+	timer := time.NewTimer(auditEnqueueWait)
+	defer timer.Stop()
+
+	select {
+	case w.queue <- entry:
+	case <-timer.C:
+		w.logger.Error(
+			"audit queue full, entry dropped",
+			slog.String("entry_id", entry.ID),
+			slog.String("path", entry.Path),
+		)
+	}
+}
+
+// close stops the queue and waits until the writer has written each
+// queued entry, or until ctx ends. A second close does nothing.
+func (w *auditWriter) close(
+	ctx context.Context,
+) {
+	w.mu.Lock()
+	if w.closed {
+		w.mu.Unlock()
+
+		return
+	}
+	w.closed = true
+	close(w.queue)
+	w.mu.Unlock()
+
+	select {
+	case <-w.done:
+	case <-ctx.Done():
+		w.logger.Warn(
+			"audit entries not written at shutdown",
+			slog.Int("count", len(w.queue)),
+		)
+	}
+}
+
+// auditMiddleware returns Echo middleware that records audit entries for
+// authenticated requests, through w. A handler that panics gets an entry
+// too, with status 500, before the panic goes on to the Recover middleware.
+func auditMiddleware(
+	w *auditWriter,
 ) echo.MiddlewareFunc {
+	logger := w.logger
+
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+		return func(c *echo.Context) (err error) {
 			path := c.Request().URL.Path
 
 			for _, prefix := range excludedAuditPaths {
@@ -83,64 +209,88 @@ func auditMiddleware(
 				audit.WithJobIDSink(c.Request().Context()),
 			))
 
-			err := next(c)
-
-			// Only audit authenticated requests.
-			subject, _ := c.Get(ContextKeySubject).(string)
-			if subject == "" {
-				return err
-			}
-
-			roles, _ := c.Get(ContextKeyRoles).([]types.Role)
-			targets, _ := c.Get(ContextKeyTargets).([]string)
-
-			// v5 returns the bare http.ResponseWriter from Response().
-			// UnwrapResponse recovers Echo's wrapper, which is what
-			// records the status actually written.
-			responseCode := 0
-			if resp, uerr := echo.UnwrapResponse(c.Response()); uerr == nil {
-				responseCode = resp.Status
-			}
-
-			entry := audit.Entry{
-				ID:           uuid.New().String(),
-				Timestamp:    start,
-				User:         subject,
-				Roles:        roles,
-				Targets:      targets,
-				Method:       c.Request().Method,
-				Path:         path,
-				SourceIP:     c.RealIP(),
-				ResponseCode: responseCode,
-				DurationMs:   time.Since(start).Milliseconds(),
-				JobID:        audit.JobIDFrom(c.Request().Context()),
-				Steps:        audit.StepsFrom(c.Request().Context()),
-
-				RequestSummary: summary,
-			}
-
-			spanCtx := trace.SpanContextFromContext(
-				c.Request().Context(),
-			)
-			if spanCtx.HasTraceID() {
-				entry.TraceID = spanCtx.TraceID().String()
-			}
-
-			// Use Background context because this goroutine runs after the HTTP
-			// response is sent, at which point the request context is canceled.
-			go func() {
-				if writeErr := store.Write(context.Background(), entry); writeErr != nil {
-					logger.Warn(
-						"failed to write audit entry",
-						slog.String("error", writeErr.Error()),
-						slog.String("entry_id", entry.ID),
-					)
+			defer func() {
+				if r := recover(); r != nil {
+					record(w, c, start, summary, http.StatusInternalServerError)
+					panic(r)
 				}
 			}()
+
+			err = next(c)
+			record(w, c, start, summary, statusOf(c, err))
 
 			return err
 		}
 	}
+}
+
+// statusOf is the status of the response to c. A handler that returns an
+// error has not written its response yet, because the error handler runs
+// after the chain, so the status is the one the error handler will write.
+func statusOf(
+	c *echo.Context,
+	err error,
+) int {
+	// v5 returns the bare http.ResponseWriter from Response().
+	// UnwrapResponse recovers Echo's wrapper, which is what records the
+	// status actually written.
+	resp, uerr := echo.UnwrapResponse(c.Response())
+	if uerr == nil && resp.Committed {
+		return resp.Status
+	}
+	if err != nil {
+		if code := echo.StatusCode(err); code != 0 {
+			return code
+		}
+
+		return http.StatusInternalServerError
+	}
+	if uerr == nil {
+		return resp.Status
+	}
+
+	return 0
+}
+
+// record queues the entry of the request c, when it is authenticated.
+func record(
+	w *auditWriter,
+	c *echo.Context,
+	start time.Time,
+	summary string,
+	responseCode int,
+) {
+	subject, _ := c.Get(ContextKeySubject).(string)
+	if subject == "" {
+		return
+	}
+
+	roles, _ := c.Get(ContextKeyRoles).([]types.Role)
+	targets, _ := c.Get(ContextKeyTargets).([]string)
+
+	entry := audit.Entry{
+		ID:           uuid.New().String(),
+		Timestamp:    start,
+		User:         subject,
+		Roles:        roles,
+		Targets:      targets,
+		Method:       c.Request().Method,
+		Path:         c.Request().URL.Path,
+		SourceIP:     c.RealIP(),
+		ResponseCode: responseCode,
+		DurationMs:   time.Since(start).Milliseconds(),
+		JobID:        audit.JobIDFrom(c.Request().Context()),
+		Steps:        audit.StepsFrom(c.Request().Context()),
+
+		RequestSummary: summary,
+	}
+
+	spanCtx := trace.SpanContextFromContext(c.Request().Context())
+	if spanCtx.HasTraceID() {
+		entry.TraceID = spanCtx.TraceID().String()
+	}
+
+	w.enqueue(entry)
 }
 
 // isMutatingMethod reports whether a request can change something, which is what

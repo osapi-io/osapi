@@ -225,6 +225,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 	tests := []struct {
 		name  string
 		start bool
+		opts  func() []api.Option
 	}{
 		{
 			name:  "starts and stops gracefully",
@@ -236,6 +237,13 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 			// is nothing to cancel here and Stop must not panic.
 			name:  "stops without having started",
 			start: false,
+		},
+		{
+			name:  "stops and drains its audit writer",
+			start: true,
+			opts: func() []api.Option {
+				return []api.Option{api.WithAuditStore(auditmocks.NewMockStore(s.mockCtrl))}
+			},
 		},
 	}
 
@@ -252,7 +260,11 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 				},
 			}
 
-			server := api.New(appConfig, slog.Default())
+			var opts []api.Option
+			if tt.opts != nil {
+				opts = tt.opts()
+			}
+			server := api.New(appConfig, slog.Default(), opts...)
 
 			if tt.start {
 				s.Require().NoError(server.Start())
