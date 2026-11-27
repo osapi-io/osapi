@@ -62,7 +62,14 @@ var (
 	ErrExpired = errors.New("join token has expired")
 	// ErrUsed is a token with no use left.
 	ErrUsed = errors.New("join token has no use left")
+	// ErrBounds is a token that would never admit: fewer than one use, or an
+	// expiry that is not in the future.
+	ErrBounds = errors.New("a join token needs at least one use and an expiry after now")
 )
+
+// consumeTries is how many times Consume reads the token again when a
+// different join took a use at the same time.
+const consumeTries = 5
 
 // KV is what the store needs of the enrollment bucket.
 type KV interface {
@@ -115,6 +122,9 @@ func (s Store) create(
 	uses int,
 	labels map[string]string,
 ) (string, Token, error) {
+	if uses < 1 || expires <= 0 {
+		return "", Token{}, fmt.Errorf("%w: uses %d, expires %s", ErrBounds, uses, expires)
+	}
 	id := make([]byte, 4)
 	secret := make([]byte, 32)
 	if _, err := randRead(id); err != nil {
@@ -178,22 +188,32 @@ func (s Store) revoke(
 
 // Consume checks token, and takes one of its uses: ErrInvalid, ErrExpired
 // or ErrUsed when it does not admit. Two joins at once cannot both take the
-// last use: the update is a compare and swap on the revision.
+// last use: the update is a compare and swap on the revision. The join that
+// loses the swap reads the token again, so it takes the next use, or gets
+// ErrUsed when none is left.
 func (s Store) consume(
 	ctx context.Context,
 	token string,
 ) (Token, error) {
-	t, rev, err := s.check(ctx, token)
-	if err != nil {
-		return Token{}, err
-	}
-	t.UsesLeft--
-	data, _ := json.Marshal(t)
-	if _, err := s.KV.KVUpdate(ctx, s.Bucket, prefix+t.ID, data, rev); err != nil {
-		return Token{}, fmt.Errorf("take a use of the join token: %w", err)
+	for range consumeTries {
+		t, rev, err := s.check(ctx, token)
+		if err != nil {
+			return Token{}, err
+		}
+		t.UsesLeft--
+		data, _ := json.Marshal(t)
+		_, err = s.KV.KVUpdate(ctx, s.Bucket, prefix+t.ID, data, rev)
+		if err == nil {
+			return t, nil
+		}
+		if !errors.Is(err, jetstream.ErrKeyExists) {
+			return Token{}, fmt.Errorf("take a use of the join token: %w", err)
+		}
 	}
 
-	return t, nil
+	return Token{}, fmt.Errorf(
+		"take a use of the join token: it changed %d times during the join",
+		consumeTries)
 }
 
 // check is the token, and its revision, when it admits now: ErrInvalid,

@@ -46,6 +46,19 @@ const Subject = "$SYS.REQ.USER.AUTH"
 // ErrRefused is a connection that the callout does not admit.
 var ErrRefused = errors.New("refused")
 
+// Undecided is the reason that the server gets for a connection that the
+// callout could not decide, such as when it could not read the enrollment
+// bucket. The cause can name a bucket or a NATS error, so it goes to the log
+// of the controller, not to the server.
+const Undecided = "the callout could not decide the connection"
+
+// maxInFlight is the most authorization requests that Serve answers at
+// once. A NATS subscription calls its handler for one message at a time.
+// Without this, each KV read of one decision holds up every connection that
+// waits behind it, and a reconnect of many agents at once can pass the
+// server's callout timeout.
+var maxInFlight = 32
+
 // Decision is who a connection is: its name, and what it may do until it
 // expires.
 type Decision struct {
@@ -57,8 +70,10 @@ type Decision struct {
 	Expires time.Time
 }
 
-// Decide is who the connection of req is, or an error that refuses it. Its
-// error message goes back to the server, so it must hold no secret.
+// Decide is who the connection of req is, or an error that refuses it. The
+// message of an ErrRefused error goes back to the server, so it must hold no
+// secret. Each other error goes to the log, and the server gets Undecided.
+// Serve calls Decide for many connections at once.
 type Decide func(ctx context.Context, req *jwt.AuthorizationRequest) (Decision, error)
 
 // Service answers the authorization requests of a NATS server.
@@ -87,9 +102,13 @@ func (s Service) Reply(
 	resp := jwt.NewAuthorizationResponseClaims(req.UserNkey)
 	resp.Audience = req.Server.ID
 	d, err := s.Decide(ctx, req)
-	if err != nil {
+	switch {
+	case errors.Is(err, ErrRefused):
 		resp.Error = err.Error()
-	} else {
+	case err != nil:
+		s.logger().Warn("could not decide a connection", slog.String("error", err.Error()))
+		resp.Error = Undecided
+	default:
 		uc := jwt.NewUserClaims(req.UserNkey)
 		uc.Name = d.Name
 		uc.Audience = s.Account
@@ -119,22 +138,33 @@ func (s Service) Reply(
 // connection.
 type Subscribe func(subject string, handler nats.MsgHandler) (*nats.Subscription, error)
 
-// Serve answers each authorization request until ctx ends. subscribe must
-// be of a connection of one of the server's auth_users, which the callout
-// does not decide.
+// logger is the Logger, or the default logger when it is nil.
+func (s Service) logger() *slog.Logger {
+	if s.Logger == nil {
+		return slog.Default()
+	}
+
+	return s.Logger
+}
+
+// Serve answers each authorization request until ctx ends, at most
+// maxInFlight at once. subscribe must be of a connection of one of the
+// server's auth_users, which the callout does not decide.
 func (s Service) Serve(
 	ctx context.Context,
 	subscribe Subscribe,
 ) error {
+	slots := make(chan struct{}, maxInFlight)
 	sub, err := subscribe(Subject, func(msg *nats.Msg) {
-		out, err := s.Reply(ctx, msg.Data)
-		if err != nil {
-			s.Logger.Warn("could not answer an authorization request",
-				slog.String("error", err.Error()))
-
+		select {
+		case slots <- struct{}{}:
+		case <-ctx.Done():
 			return
 		}
-		_ = msg.Respond(out)
+		go func() {
+			defer func() { <-slots }()
+			s.answer(ctx, msg)
+		}()
 	})
 	if err != nil {
 		return fmt.Errorf("subscribe to %s: %w", Subject, err)
@@ -143,6 +173,21 @@ func (s Service) Serve(
 	_ = sub.Unsubscribe()
 
 	return nil
+}
+
+// answer sends the reply to the authorization request msg.
+func (s Service) answer(
+	ctx context.Context,
+	msg *nats.Msg,
+) {
+	out, err := s.Reply(ctx, msg.Data)
+	if err != nil {
+		s.logger().Warn("could not answer an authorization request",
+			slog.String("error", err.Error()))
+
+		return
+	}
+	_ = msg.Respond(out)
 }
 
 // VerifyNkey is nil when the connection of req holds the seed of its nkey:
