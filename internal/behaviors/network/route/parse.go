@@ -35,7 +35,22 @@ type spec struct {
 func toSpec(
 	r Route,
 ) spec {
-	return spec{To: r.Destination, Via: r.Via, Metric: r.Metric}
+	return spec{To: canon(r.Destination), Via: r.Via, Metric: r.Metric}
+}
+
+// canon is the network of a destination, in one spelling: 10.0.0.5/8 is
+// 10.0.0.0/8, and an IPv6 network is in lower case and compressed. Thus two
+// spellings of one route are the same route. A destination that does not
+// parse stays as it is, for check and the validate tag to refuse.
+func canon(
+	destination string,
+) string {
+	_, n, err := net.ParseCIDR(destination)
+	if err != nil {
+		return destination
+	}
+
+	return n.String()
 }
 
 // check refuses a default route, which osapi does not write: a wrong one cuts

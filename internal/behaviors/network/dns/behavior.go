@@ -45,7 +45,7 @@ var linuxHost = []behavior.HostOption{
 const (
 	osapi0File = netplan.Dir + "/osapi-dns-osapi0.yaml"
 	osapi0YAML = "network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n" +
-		"        addresses:\n          - 9.9.9.9\n        search:\n          - example.com\n"
+		"        addresses:\n          - 9.9.9.9\n"
 )
 
 // Behavior is the DNS resolvers of each interface of the host. gohai reads
@@ -113,9 +113,10 @@ var Behavior = behavior.Register(behavior.Define(
 		Explain("Writes a netplan file of the interface's own, "+
 			"such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that "+
 			"matches the interface, and applies it. A definition that matches several "+
-			"interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps "+
-			"the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP "+
-			"gives. It runs on the Debian family, and elsewhere, and in a container, "+
+			"interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list writes "+
+			"nothing for that list, so the interface keeps what DHCP gives it. override_dhcp drops the servers and "+
+			"domains DHCP gives, and then an empty list keeps the interface's current ones in the file; "+
+			"an interface with no resolvers yet starts from none. It runs on the Debian family, and elsewhere, and in a container, "+
 			"reports skipped.").
 		Example("Set the servers of an interface", UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}},
 			Result{InterfaceName: "osapi0", Changed: true},
@@ -154,15 +155,16 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.Reads(GetInput{InterfaceName: "osapi0"}, Entry{SearchDomains: []string{"corp.example"}}),
 			)...,
 		).
-		Example("An interface with no resolvers yet",
-			UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}},
+		Example("An interface with no resolvers yet, with DHCP's dropped",
+			UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}, OverrideDHCP: true},
 			Result{InterfaceName: "osapi0", Changed: true},
 			behavior.Exists("/sys/class/net/osapi0/ifindex", "2"),
 			behavior.Prints("resolvectl dns", "Global:\nLink 3 (eth1): 1.1.1.1\n"),
 			behavior.Prints("resolvectl domain", "Global:\n"),
 			behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
 			behavior.Wrote(osapi0File, "network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n"+
-				"        addresses:\n          - 9.9.9.9\n"),
+				"        addresses:\n          - 9.9.9.9\n"+
+				"      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false\n"),
 			behavior.Ran("netplan", "generate"),
 			behavior.Ran("netplan", "apply"),
 			behavior.Reads(GetInput{InterfaceName: "osapi0"}, Entry{Servers: []string{"9.9.9.9"}}),

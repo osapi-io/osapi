@@ -69,12 +69,12 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
-			name: "when the example \"An interface with no resolvers yet\" is run",
-			args: []string{"node", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--servers", "9.9.9.9"},
+			name: "when the example \"An interface with no resolvers yet, with DHCP's dropped\" is run",
+			args: []string{"node", "dns", "update", "--target", "server1", "--interface-name", "osapi0", "--servers", "9.9.9.9", "--override-dhcp"},
 			want: commandtest.Request{
 				Method: "PUT",
 				Path:   "/api/node/server1/dns/osapi0",
-				Body:   "{\"servers\":[\"9.9.9.9\"]}",
+				Body:   "{\"servers\":[\"9.9.9.9\"],\"override_dhcp\":true}",
 			},
 		},
 		{

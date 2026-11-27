@@ -66,9 +66,11 @@ Writes a netplan file of the interface's own, such as
 /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that
 matches the interface, and applies it. A definition that matches several
 interfaces, such as cloud-init's all for en*, gives each of them the resolvers.
-An empty list keeps the interface's servers or domains, and an interface with no
-resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It
-runs on the Debian family, and elsewhere, and in a container, reports skipped.
+An empty list writes nothing for that list, so the interface keeps what DHCP
+gives it. override_dhcp drops the servers and domains DHCP gives, and then an
+empty list keeps the interface's current ones in the file; an interface with no
+resolvers yet starts from none. It runs on the Debian family, and elsewhere, and
+in a container, reports skipped.
 
 It sends `PUT /api/node/{hostname}/dns/{interface_name}`, and needs the
 permission `dns:write`.
@@ -91,6 +93,17 @@ resp, err := c.DNS.Update(ctx, target, client.DNSUpdateInput{
 	InterfaceName: "osapi0",
 	OverrideDHCP:  true,
 	SearchDomains: []string{"corp.example"},
+})
+```
+
+An interface with no resolvers yet, with DHCP's dropped,
+`go run dns.go update-3`:
+
+```go
+resp, err := c.DNS.Update(ctx, target, client.DNSUpdateInput{
+	InterfaceName: "osapi0",
+	OverrideDHCP:  true,
+	Servers:       []string{"9.9.9.9"},
 })
 ```
 

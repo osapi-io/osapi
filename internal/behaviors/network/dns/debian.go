@@ -58,8 +58,11 @@ func file(
 }
 
 // Set writes the netplan file of the interface's resolvers. An empty list
-// keeps the interface's own servers or domains. In a container the runtime
-// owns resolv.conf, so it reports skipped.
+// writes nothing for that list, so the interface keeps the servers or domains
+// that DHCP gives it, as they change. With overrideDHCP, DHCP gives none, so
+// an empty list keeps the interface's current servers or domains, written in
+// the file. In a container the runtime owns resolv.conf, so it reports
+// skipped.
 func (d *debian) Set(
 	ctx context.Context,
 	in UpdateInput,
@@ -74,9 +77,10 @@ func (d *debian) Set(
 		return false, err
 	}
 	servers, domains := in.Servers, in.SearchDomains
-	if len(servers) == 0 || len(domains) == 0 {
-		// The one error is an interface with no resolvers yet, such as one
-		// with a static address: it starts from none.
+	if in.OverrideDHCP && (len(servers) == 0 || len(domains) == 0) {
+		// Resolvers fails only with not found: an interface with no
+		// resolvers yet, such as one with a static address. It starts from
+		// none.
 		current, _ := d.Resolvers(ctx, in.InterfaceName)
 		if len(servers) == 0 {
 			servers = current.Servers

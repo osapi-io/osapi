@@ -228,7 +228,7 @@ export const getPutNodeDnsUrl = (hostname: string,
 }
 
 /**
- * Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
+ * Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list writes nothing for that list, so the interface keeps what DHCP gives it. override_dhcp drops the servers and domains DHCP gives, and then an empty list keeps the interface's current ones in the file; an interface with no resolvers yet starts from none. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
  * @summary Set the DNS resolvers of an interface
  */
 export const putNodeDns = async (hostname: string,

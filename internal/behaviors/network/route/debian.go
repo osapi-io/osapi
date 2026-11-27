@@ -22,7 +22,9 @@ package route
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"slices"
 	"strings"
 
@@ -117,7 +119,7 @@ func (d *debian) Remove(
 	if err != nil {
 		return false, err
 	}
-	i := slices.IndexFunc(have, func(s spec) bool { return s.To == destination })
+	i := slices.IndexFunc(have, func(s spec) bool { return s.To == canon(destination) })
 	if i < 0 {
 		return false, nil
 	}
@@ -137,8 +139,14 @@ func (d *debian) have(
 	name string,
 ) ([]spec, error) {
 	data, err := d.fs.ReadFile(file(name))
+	if errors.Is(err, fs.ErrNotExist) {
+		// No file is no routes.
+		return nil, nil
+	}
 	if err != nil {
-		return nil, nil //nolint:nilerr // no file is no routes
+		// Any other error, such as permission denied, is not "no routes": a
+		// write would drop the routes that the file has.
+		return nil, fmt.Errorf("read %s: %w", file(name), err)
 	}
 	var doc struct {
 		Network map[string]any `yaml:"network"`
@@ -158,6 +166,12 @@ func (d *debian) have(
 			return nil, fmt.Errorf("read %s: %w", file(name), err)
 		}
 		for _, def := range byID {
+			// A file from before canon has a destination in the spelling it
+			// was given: compare it in the one spelling.
+			for i := range def.Routes {
+				def.Routes[i].To = canon(def.Routes[i].To)
+			}
+
 			return def.Routes, nil
 		}
 	}
