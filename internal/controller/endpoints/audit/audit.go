@@ -110,6 +110,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleGet).
 		Example("--id 550e8400-e29b-41d4-a716-446655440000 --json").
+		Check("client audit get", "--id 550e8400-e29b-41d4-a716-446655440000",
+			"entry.id", "550e8400-e29b-41d4-a716-446655440000").
 		Errors(endpoint.NotFound(
 			ErrNotFound,
 			"Audit entry not found, or its target is outside the token's target scope.",

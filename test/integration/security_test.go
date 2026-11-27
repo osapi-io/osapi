@@ -43,6 +43,9 @@ import (
 // auth, and the API's tokens and roles. It runs against the suite's own
 // server, whose ports it knows, and against a fixture server of its own
 // when the suite runs against a deployment.
+//
+// It is not a scenario: it dials the ports with raw TLS, HTTP and NATS
+// clients, not the CLI, to see what a client that is not osapi gets.
 type SecurityDefaultsSuite struct {
 	suite.Suite
 

@@ -49,6 +49,15 @@ type specProxy struct {
 	router     routers.Router
 	mu         sync.Mutex
 	violations []string
+	// listeners are the proxy's own, which Close closes.
+	listeners []net.Listener
+}
+
+// Close stops the proxy's listeners.
+func (p *specProxy) Close() {
+	for _, l := range p.listeners {
+		_ = l.Close()
+	}
 }
 
 // startSpecProxy listens on a free port, forwards to the API at apiURL, and
@@ -83,6 +92,7 @@ func startSpecProxy(
 	if err != nil {
 		return nil, 0, err
 	}
+	p.listeners = append(p.listeners, l)
 	go func() {
 		_ = http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if sdkMode {
@@ -99,8 +109,11 @@ func startSpecProxy(
 		// spec, which a refusal can break.
 		direct, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
+			p.Close()
+
 			return nil, 0, err
 		}
+		p.listeners = append(p.listeners, direct)
 		directPort = direct.Addr().(*net.TCPAddr).Port
 		go func() {
 			_ = http.Serve(direct, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

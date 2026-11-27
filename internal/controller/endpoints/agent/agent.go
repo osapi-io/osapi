@@ -98,6 +98,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.").
 		Example("").
 		Prints(sampleList).
+		Check("client agent list", "", "items.[hostname=web-01].state", types.AgentReady).
 		Handle(List).
 		ID("GetAgents").
 		Describe("List active agents").
@@ -109,6 +110,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"This command reads the agent heartbeat registry directly. It makes no job.\nThe data comes from the last heartbeat of the agent. `node status` runs a\nfull inspection through the job system, with disk usage and more metrics.").
 		Example("--hostname web-01").
 		Prints(sampleWeb01).
+		Check("client agent get", "--hostname web-01", "hostname", "web-01", "state", types.AgentReady).
 		Handle(Get).
 		ID("GetAgentDetails").
 		Describe("Get agent details").

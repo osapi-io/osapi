@@ -108,6 +108,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Get job details and status", "").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleDetail).
+		Check("client job get", "--id 550e8400-e29b-41d4-a716-446655440000",
+			"id", "550e8400-e29b-41d4-a716-446655440000", "status", "completed").
 		Errors(endpoint.NotFound(ErrNotFound,
 			"Job not found, or its target is outside the token's target scope.")),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
