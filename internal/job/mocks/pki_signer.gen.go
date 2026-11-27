@@ -81,3 +81,17 @@ func (mr *MockPKISignerMockRecorder) Sign(data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sign", reflect.TypeOf((*MockPKISigner)(nil).Sign), data)
 }
+
+// StoredRecordKeys mocks base method.
+func (m *MockPKISigner) StoredRecordKeys() []ed25519.PublicKey {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoredRecordKeys")
+	ret0, _ := ret[0].([]ed25519.PublicKey)
+	return ret0
+}
+
+// StoredRecordKeys indicates an expected call of StoredRecordKeys.
+func (mr *MockPKISignerMockRecorder) StoredRecordKeys() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoredRecordKeys", reflect.TypeOf((*MockPKISigner)(nil).StoredRecordKeys))
+}

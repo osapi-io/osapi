@@ -52,6 +52,10 @@ func (testSigner) Fingerprint() string { return "SHA256:test-controller" }
 
 func (testSigner) ControllerPublicKey() ed25519.PublicKey { return testControllerPub }
 
+func (testSigner) StoredRecordKeys() []ed25519.PublicKey {
+	return []ed25519.PublicKey{testControllerPub}
+}
+
 // testAgentKeys is the admission store of the tests: each machine ID
 // m-<hostname> is an agent admitted as <hostname>, with testAgentPub.
 type testAgentKeys struct{}

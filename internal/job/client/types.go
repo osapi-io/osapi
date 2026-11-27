@@ -47,6 +47,10 @@ type PKISigner interface {
 	// ControllerPublicKey returns the controller's public key for verifying
 	// controller-signed messages. Returns nil if not set.
 	ControllerPublicKey() ed25519.PublicKey
+	// StoredRecordKeys returns each controller key that verifies a record
+	// the controller stored, such as a job: the current one and each one a
+	// rotation replaced.
+	StoredRecordKeys() []ed25519.PublicKey
 }
 
 // AgentKey is what the controller holds for an accepted agent: the key its

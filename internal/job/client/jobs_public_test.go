@@ -22,6 +22,7 @@ package client_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1142,7 +1143,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 		},
 		{
-			name: "getJobStatusFromKeys error skipped",
+			name: "a job that cannot be read is listed with its error",
 			setupMocks: func() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "jobs").
@@ -1154,9 +1155,11 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
-				s.NotNil(result)
-				s.Len(result.Jobs, 0)
+				s.Require().Len(result.Jobs, 1)
 				s.Equal(1, result.TotalCount)
+				s.Equal("job-bad", result.Jobs[0].ID)
+				s.Equal(types.JobStatusSubmitted, result.Jobs[0].Status)
+				s.Contains(result.Jobs[0].Error, "the job's record cannot be read")
 			},
 		},
 		{
@@ -1328,7 +1331,27 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 		},
 		{
-			name:         "filter skips jobs with get error",
+			name:         "a failed job that no key verifies is listed as failed, with its error",
+			statusFilter: "failed",
+			setupMocks: func() {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
+					Return([]string{"jobs.job-old", "status.job-old.failed.agent1.200"}, nil)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-old").
+					Return(nil, errors.New("kv error"))
+			},
+			validateFunc: func(result *client.ListJobsResult, err error) {
+				s.NoError(err)
+				s.Require().Len(result.Jobs, 1)
+				s.Equal(1, result.TotalCount)
+				s.Equal("job-old", result.Jobs[0].ID)
+				s.Equal(types.JobStatusFailed, result.Jobs[0].Status)
+				s.Contains(result.Jobs[0].Error, "the job's record cannot be read")
+			},
+		},
+		{
+			name:         "the filter lists a job that cannot be read, with its error",
 			statusFilter: "submitted",
 			setupMocks: func() {
 				// No status keys → both default "submitted"
@@ -1352,13 +1375,12 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
-				s.NotNil(result)
-				s.Len(result.Jobs, 1)
+				s.Require().Len(result.Jobs, 2)
 				s.Equal(2, result.TotalCount)
 			},
 		},
 		{
-			name: "getJobStatusFromKeys with invalid JSON",
+			name: "a job whose record is not JSON is listed with its error",
 			setupMocks: func() {
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "jobs").
@@ -1372,9 +1394,9 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
-				s.NotNil(result)
-				s.Len(result.Jobs, 0)
+				s.Require().Len(result.Jobs, 1)
 				s.Equal(1, result.TotalCount)
+				s.Contains(result.Jobs[0].Error, "the job's record cannot be read")
 			},
 		},
 		{
@@ -2605,6 +2627,91 @@ func (s *JobsPublicTestSuite) TestSignedJobRecord() {
 				AnyTimes()
 
 			c, err := newTrusted(s.mockNATSClient, &client.Options{
+				Timeout:    30 * time.Second,
+				JobsBucket: "jobs",
+				StreamName: "JOBS",
+				PKISigner:  signer,
+			})
+			s.Require().NoError(err)
+
+			tt.validateFunc(c.GetJobStatus(s.ctx, jobID))
+		})
+	}
+}
+
+// TestJobSignedBeforeARotation reads a job that a controller key signed
+// before a rotation: each key that the controller still holds for its stored
+// records verifies it, and a key that it no longer holds does not.
+func (s *JobsPublicTestSuite) TestJobSignedBeforeARotation() {
+	old, oldPub := newSignerWithControllerKey(gomock.NewController(s.T()))
+	_, currentPub := newSignerWithControllerKey(gomock.NewController(s.T()))
+	jobID := "rotated-job-1"
+	record := []byte(fmt.Sprintf(
+		`{"id":"%s","created":"2026-11-18T20:57:13Z","target":"_all","operation":{"type":"node.hostname.get"}}`,
+		jobID,
+	))
+	signedByOld, err := client.ExportWrapInSignedEnvelope(old, "", record)
+	s.Require().NoError(err)
+
+	tests := []struct {
+		name         string
+		value        []byte
+		keys         []ed25519.PublicKey
+		validateFunc func(qj *job.QueuedJob, err error)
+	}{
+		{
+			name:  "when a key that a rotation replaced signed it, it reads",
+			value: signedByOld,
+			keys:  []ed25519.PublicKey{currentPub, oldPub},
+			validateFunc: func(qj *job.QueuedJob, err error) {
+				s.Require().NoError(err)
+				s.Equal("_all", qj.Target)
+			},
+		},
+		{
+			name:  "when no key that the controller holds signed it, it is an error",
+			value: signedByOld,
+			keys:  []ed25519.PublicKey{currentPub},
+			validateFunc: func(_ *job.QueuedJob, err error) {
+				s.ErrorContains(err, "invalid signature on signed envelope")
+			},
+		},
+		{
+			name:  "when the controller holds no key, it is an error",
+			value: signedByOld,
+			validateFunc: func(_ *job.QueuedJob, err error) {
+				s.ErrorIs(err, client.ErrNoSigner)
+			},
+		},
+		{
+			name:  "when the record is not signed, no key is tried",
+			value: record,
+			keys:  []ed25519.PublicKey{currentPub, oldPub},
+			validateFunc: func(_ *job.QueuedJob, err error) {
+				s.ErrorIs(err, client.ErrNotSigned)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			signer := jobmocks.NewMockPKISigner(s.mockCtrl)
+			signer.EXPECT().StoredRecordKeys().Return(tt.keys).AnyTimes()
+			signer.EXPECT().ControllerPublicKey().Return(currentPub).AnyTimes()
+			signer.EXPECT().Fingerprint().Return("SHA256:current").AnyTimes()
+			entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+			entry.EXPECT().Value().Return(tt.value)
+			s.mockNATSClient.EXPECT().
+				KVGet(gomock.Any(), "jobs", "jobs."+jobID).
+				Return(entry, nil)
+			s.mockNATSClient.EXPECT().
+				KVKeys(gomock.Any(), "jobs", gomock.Any()).
+				Return([]string{}, nil).
+				AnyTimes()
+
+			// client.New, not newTrusted: newTrusted signs each value that
+			// is not signed, and this test reads one that is not.
+			c, err := client.New(slog.Default(), s.mockNATSClient, &client.Options{
 				Timeout:    30 * time.Second,
 				JobsBucket: "jobs",
 				StreamName: "JOBS",

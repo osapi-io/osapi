@@ -52,6 +52,7 @@ func newSigner(
 		AnyTimes()
 	m.EXPECT().Fingerprint().Return("SHA256:test-fingerprint").AnyTimes()
 	m.EXPECT().ControllerPublicKey().Return(nil).AnyTimes()
+	m.EXPECT().StoredRecordKeys().Return(nil).AnyTimes()
 
 	return m, pub
 }
@@ -73,6 +74,7 @@ func newSignerWithControllerKey(
 		AnyTimes()
 	m.EXPECT().Fingerprint().Return("SHA256:test-fingerprint").AnyTimes()
 	m.EXPECT().ControllerPublicKey().Return(pub).AnyTimes()
+	m.EXPECT().StoredRecordKeys().Return([]ed25519.PublicKey{pub}).AnyTimes()
 
 	return m, pub
 }

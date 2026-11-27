@@ -610,6 +610,53 @@ func (s *KeyRotationPublicTestSuite) TestLoad() {
 			},
 		},
 		{
+			name: "after a switch, each retired key verifies the stored records again",
+			setup: func() ed25519.PublicKey {
+				old, _ := s.foreign()
+				retired, _ := s.foreign()
+				rec := pki.ControllerKeyRecord{
+					Serial:   3,
+					Current:  s.keys.PublicKey(),
+					Previous: old,
+					Retired:  [][]byte{retired},
+				}
+				rec.Sign(s.keys.PrivateKey())
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 3), nil)
+
+				return retired
+			},
+			validateFunc: func(want ed25519.PublicKey) {
+				s.Contains(s.keys.StoredRecordKeys(), want)
+			},
+		},
+		{
+			name: "a stopped switch retires the previous key in its record",
+			setup: func() ed25519.PublicKey {
+				oldPub, oldPriv := s.foreign()
+				previous, _ := s.foreign()
+				rec := pki.ControllerKeyRecord{
+					Serial: 2, Current: oldPub, Next: s.keys.PublicKey(),
+					Previous: previous, StartedAt: s.now,
+				}
+				rec.Sign(oldPriv)
+				s.kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(s.entry(rec, 6), nil)
+				s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, key, gomock.Any(), uint64(6)).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte, _ uint64) (uint64, error) {
+						var done pki.ControllerKeyRecord
+						s.Require().NoError(json.Unmarshal(data, &done))
+						s.True(done.SignedBy(s.keys.PublicKey()))
+						s.Equal([][]byte{previous}, done.Retired)
+
+						return 7, nil
+					})
+
+				return previous
+			},
+			validateFunc: func(want ed25519.PublicKey) {
+				s.Contains(s.keys.StoredRecordKeys(), want)
+			},
+		},
+		{
 			name: "a switch that stopped after its renames writes its record",
 			setup: func() ed25519.PublicKey {
 				oldPub, oldPriv := s.foreign()

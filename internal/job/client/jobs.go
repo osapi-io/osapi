@@ -380,23 +380,22 @@ func (c *Client) listJobs(
 	)
 
 	// Pass 2: Heavy — kv.Get() only for the page
-	var jobs []*job.QueuedJob
+	jobs := make([]*job.QueuedJob, 0, len(matchingIDs))
 	for _, id := range matchingIDs {
 		jobKey := "jobs." + id
 		jobInfo, err := c.getJobStatusFromKeys(ctx, allKeys, jobKey, id)
 		if err != nil {
-			c.logger.Debug(
-				"failed to get job status during list",
+			// The page shows each job that it counts: a job that cannot be
+			// read is listed with its status from the key names and the
+			// reason, so it can be seen and deleted.
+			c.logger.Warn(
+				"failed to read a job for the list",
 				slog.String("job_id", id),
 				slog.String("error", err.Error()),
 			)
-			continue
+			jobInfo = unreadableJob(id, jobStatuses, err)
 		}
 		jobs = append(jobs, jobInfo)
-	}
-
-	if jobs == nil {
-		jobs = []*job.QueuedJob{}
 	}
 
 	return &ListJobsResult{
@@ -948,7 +947,7 @@ func (c *Client) jobRecord(
 	if c.pkiSigner == nil {
 		return nil, fmt.Errorf("failed to verify job data: %w", ErrNoSigner)
 	}
-	payload, err := unwrapSignedEnvelope(value, c.pkiSigner.ControllerPublicKey())
+	payload, err := unwrapStoredEnvelope(value, c.pkiSigner.StoredRecordKeys())
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify job data: %w", err)
 	}
@@ -1024,4 +1023,23 @@ func (c *Client) DeleteJob(
 	ctx, span := opspan.Start(ctx, tracerName, "job.delete", attribute.String("job.id", jobID))
 
 	return opspan.End(span, c.deleteJob(ctx, jobID))
+}
+
+// unreadableJob is the entry of a job that the list counts but cannot
+// read: its ID, its status from the key names, and why it cannot be read.
+func unreadableJob(
+	id string,
+	statuses map[string]lightJobInfo,
+	err error,
+) *job.QueuedJob {
+	status := types.JobStatusSubmitted
+	if info, ok := statuses[id]; ok {
+		status = info.Status
+	}
+
+	return &job.QueuedJob{
+		ID:     id,
+		Status: status,
+		Error:  "the job's record cannot be read: " + err.Error(),
+	}
 }
