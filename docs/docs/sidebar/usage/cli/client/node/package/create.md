@@ -64,9 +64,9 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example           | On the host                       |
-| ----------------- | --------------------------------- |
-| Install a package | runs `apt-get install -y -- tree` |
+| Example           | On the host                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| Install a package | runs `apt-get install -y -o DPkg::Lock::Timeout=300 -- tree` |
 
 The command fails in these cases:
 

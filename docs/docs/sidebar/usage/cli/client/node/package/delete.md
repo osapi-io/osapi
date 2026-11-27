@@ -108,9 +108,9 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example          | On the host                      |
-| ---------------- | -------------------------------- |
-| Remove a package | runs `apt-get remove -y -- tree` |
+| Example          | On the host                                                 |
+| ---------------- | ----------------------------------------------------------- |
+| Remove a package | runs `apt-get remove -y -o DPkg::Lock::Timeout=300 -- tree` |
 
 The command fails in these cases:
 

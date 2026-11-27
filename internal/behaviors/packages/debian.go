@@ -63,13 +63,19 @@ func (d *debian) Install(
 	if _, err := d.exec.RunPrivilegedCmd(
 		ctx,
 		"apt-get",
-		[]string{"install", "-y", "--", target},
+		[]string{"install", "-y", "-o", lockTimeout, "--", target},
 	); err != nil {
 		return false, fmt.Errorf("install %s: %w", target, err)
 	}
 
 	return true, nil
 }
+
+// lockTimeout makes apt-get wait for the lock of dpkg, which another apt run
+// holds, such as unattended-upgrades or a refresh of the index from another
+// job, before it fails: without it, apt-get fails at once with "Could not get
+// lock".
+const lockTimeout = "DPkg::Lock::Timeout=300"
 
 // Remove runs apt-get remove, unless the package is not installed.
 func (d *debian) Remove(
@@ -82,7 +88,7 @@ func (d *debian) Remove(
 	if _, err := d.exec.RunPrivilegedCmd(
 		ctx,
 		"apt-get",
-		[]string{"remove", "-y", "--", name},
+		[]string{"remove", "-y", "-o", lockTimeout, "--", name},
 	); err != nil {
 		return false, fmt.Errorf("remove %s: %w", name, err)
 	}
