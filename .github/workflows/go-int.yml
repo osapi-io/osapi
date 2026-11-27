@@ -43,6 +43,14 @@ jobs:
   integration:
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'integration')
     runs-on: ubuntu-latest
+    # The suite runs one time for each client: the CLI, and the SDK, which
+    # gets each request of the CLI through its typed method for the
+    # operation (test/integration/sdkreplay_test.go).
+    strategy:
+      fail-fast: false
+      matrix:
+        client: [cli, sdk]
+    name: integration (${{ matrix.client }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Go
@@ -66,4 +74,4 @@ jobs:
       # (test/integration/prepare_test.go), so the job has no host setup.
       - name: Integration
         # The suite with its fixture servers runs past go test's 10m default.
-        run: sudo -E env "PATH=$PATH" "HOME=$HOME" "GOFLAGS=-timeout=20m" OSAPI_INTEGRATION_WRITES=1 OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
+        run: sudo -E env "PATH=$PATH" "HOME=$HOME" "GOFLAGS=-timeout=20m" OSAPI_INTEGRATION_CLIENT=${{ matrix.client }} OSAPI_INTEGRATION_WRITES=1 OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int

@@ -143,7 +143,14 @@ func TestMain(
 	// The API serves TLS by default, with its self-signed api.crt in the
 	// controller's key directory (osapi-io/osapi#1413).
 	controllerURL = fmt.Sprintf("https://127.0.0.1:%d", apiPort)
-	fmt.Fprintf(os.Stderr, "integration: api=%d nats=%d dir=%s\n", apiPort, natsPort, tempDir)
+	fmt.Fprintf(
+		os.Stderr,
+		"integration: api=%d nats=%d dir=%s client=%s\n",
+		apiPort,
+		natsPort,
+		tempDir,
+		clientName(),
+	)
 
 	serverCmd = exec.Command(binaryPath, "start", "-f", configPath)
 	serverCmd.Env = serverEnv()
@@ -180,6 +187,9 @@ func TestMain(
 
 	// Each request and response went through the spec: one that broke it
 	// fails the run, even when its own test passed.
+	if reportSDK() != 0 {
+		code = 1
+	}
 	if v := proxy.Violations(); len(v) > 0 {
 		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the full spec:\n", len(v))
 		for _, line := range v {
@@ -527,7 +537,13 @@ func runAgainst(
 		fmt.Fprintf(os.Stderr, "%s has no controller.client url or bearer_token\n", file)
 		return 1
 	}
-	fmt.Fprintf(os.Stderr, "integration: against %s, target %s\n", controllerURL, target)
+	fmt.Fprintf(
+		os.Stderr,
+		"integration: against %s, target %s, client %s\n",
+		controllerURL,
+		target,
+		clientName(),
+	)
 
 	if err := waitForReady(15 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "wait for ready: %v\n", err)
@@ -544,6 +560,9 @@ func runAgainst(
 	}
 
 	code := runPrepared(m)
+	if reportSDK() != 0 {
+		code = 1
+	}
 	if v := proxy.Violations(); len(v) > 0 {
 		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the full spec:\n", len(v))
 		for _, line := range v {

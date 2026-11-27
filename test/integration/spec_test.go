@@ -85,10 +85,29 @@ func startSpecProxy(
 	}
 	go func() {
 		_ = http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if sdkMode {
+				p.replay(w, r, true)
+
+				return
+			}
 			p.checkRequest(r)
 			forward.ServeHTTP(w, r)
 		}))
 	}()
+	if sdkMode {
+		// runDirect's refusals go through the SDK too, with no check of the
+		// spec, which a refusal can break.
+		direct, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return nil, 0, err
+		}
+		directPort = direct.Addr().(*net.TCPAddr).Port
+		go func() {
+			_ = http.Serve(direct, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				p.replay(w, r, false)
+			}))
+		}()
+	}
 
 	return p, l.Addr().(*net.TCPAddr).Port, nil
 }
