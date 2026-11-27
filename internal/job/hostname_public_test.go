@@ -85,6 +85,19 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
 			},
 		},
 		{
+			name:               "falls back to unknown when the provider gives no name",
+			configuredHostname: "",
+			setup: func() {
+				mockProvider := hostnamemocks.NewMockHostnameProvider(s.mockCtrl)
+				mockProvider.EXPECT().Hostname().Return("", nil)
+				job.SetDefaultHostnameProvider(mockProvider)
+			},
+			validateFunc: func(hostname string, err error) {
+				s.ErrorContains(err, "it is empty")
+				s.Equal("unknown", hostname)
+			},
+		},
+		{
 			name:               "falls back to unknown when provider errors",
 			configuredHostname: "",
 			setup: func() {
@@ -93,7 +106,7 @@ func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
 				job.SetDefaultHostnameProvider(mockProvider)
 			},
 			validateFunc: func(hostname string, err error) {
-				s.NoError(err)
+				s.ErrorContains(err, "provider error")
 				s.Equal("unknown", hostname)
 			},
 		},

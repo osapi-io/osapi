@@ -55,12 +55,12 @@ func (a *Agent) Start() error {
 		return fmt.Errorf("resolve the agent's identity: %w", err)
 	}
 	a.machineID = ident.MachineID
-	a.hostname = ident.Hostname
+	a.setHostname(ident.Hostname)
 
 	a.logger.Info(
 		"agent configuration",
 		slog.String("machine_id", a.machineID),
-		slog.String("hostname", a.hostname),
+		slog.String("hostname", a.currentHostname()),
 		slog.Int("max_jobs", a.appConfig.Agent.MaxJobs),
 		slog.Any("labels", a.appConfig.Agent.Labels),
 	)
@@ -122,14 +122,14 @@ func (a *Agent) Start() error {
 
 	// Register in agent registry and start heartbeat keepalive.
 	// Heartbeats run even in Pending state so the agent is visible.
-	a.startHeartbeat(a.ctx, a.machineID, a.hostname)
+	a.startHeartbeat(a.ctx, a.machineID, a.currentHostname())
 	a.lifecycle(a.ctx, "started", "started, version "+a.versionOrUnknown())
 
 	// In operator mode, renew the JWT of the agent's NATS user.
 	a.startRenewal(a.ctx)
 
 	// Collect and publish system facts.
-	a.startFacts(a.ctx, a.machineID, a.hostname)
+	a.startFacts(a.ctx, a.machineID, a.currentHostname())
 
 	if pending {
 		a.logger.Info(
@@ -179,7 +179,7 @@ func (a *Agent) lifecycle(
 	message string,
 ) {
 	if err := a.jobClient.WriteAgentTimelineEvent(
-		context.WithoutCancel(ctx), a.machineID, a.hostname, event, message,
+		context.WithoutCancel(ctx), a.machineID, a.currentHostname(), event, message,
 	); err != nil {
 		a.logger.Warn("failed to write a timeline event",
 			slog.String("event", event),

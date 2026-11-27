@@ -36,7 +36,7 @@ import (
 // next.
 func (a *Agent) identityAttrs() []attribute.KeyValue {
 	attrs := []attribute.KeyValue{
-		attribute.String("osapi.agent.hostname", a.hostname),
+		attribute.String("osapi.agent.hostname", a.currentHostname()),
 		attribute.String("osapi.agent.machine_id", a.machineID),
 	}
 	if facts := a.cachedFacts.Load(); facts != nil && facts.Architecture != "" {

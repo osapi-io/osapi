@@ -171,24 +171,36 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			},
 		},
 		{
-			name: "when gohai fails the entry is still written, empty",
+			name: "when gohai fails the last facts stay, in the cache and in the bucket",
 			setupMock: func() {
+				last := &job.FactsRegistration{Architecture: "arm64", CPUCount: 8}
+				agent.SetAgentCachedFacts(s.testAgent, last)
 				agent.SetCollectFactsFn(func() (*gohai.Facts, error) {
 					return nil, errors.New("collect failed")
 				})
-				s.mockFactsKV.EXPECT().
-					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
-					DoAndReturn(func(
-						_ context.Context,
-						_ string,
-						_ string,
-						data []byte,
-					) (uint64, error) {
-						var reg job.FactsRegistration
-						s.NoError(json.Unmarshal(data, &reg))
-						s.Equal(job.FactsRegistration{}, reg)
-						return uint64(1), nil
-					})
+				// No KVPut: the bucket keeps the last facts.
+			},
+			validateFunc: func() {
+				got := agent.GetAgentCachedFacts(s.testAgent)
+				s.Require().NotNil(got)
+				s.Equal("arm64", got.Architecture)
+				s.Equal(8, got.CPUCount)
+			},
+		},
+		{
+			name: "when there is no facts bucket the facts are cached and put nowhere",
+			setupMock: func() {
+				agent.SetAgentCachedFacts(s.testAgent, nil)
+				agent.SetFactsBucket(s.testAgent, "")
+				agent.SetCollectFactsFn(func() (*gohai.Facts, error) {
+					return &gohai.Facts{}, nil
+				})
+			},
+			teardownMock: func() {
+				agent.SetFactsBucket(s.testAgent, "facts")
+			},
+			validateFunc: func() {
+				s.NotNil(agent.GetAgentCachedFacts(s.testAgent))
 			},
 		},
 		{
@@ -226,6 +238,9 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 				"test-machine-id",
 				"test-agent",
 			)
+			if tt.validateFunc != nil {
+				tt.validateFunc()
+			}
 		})
 	}
 }

@@ -123,7 +123,7 @@ func (a *Agent) join(
 	req := pki.JoinRequest{
 		Token:         j.token,
 		MachineID:     a.machineID,
-		Hostname:      a.hostname,
+		Hostname:      a.currentHostname(),
 		PublicKey:     a.pkiManager.PublicKey(),
 		EncryptionKey: a.pkiManager.EncryptionPublicKey(),
 	}

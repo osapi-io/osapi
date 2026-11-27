@@ -110,20 +110,48 @@ func (a *Agent) startHeartbeat(
 	}()
 }
 
+// currentHostname is the host's name as the agent last read it, or "" before
+// Start reads it.
+func (a *Agent) currentHostname() string {
+	if h := a.hostname.Load(); h != nil {
+		return *h
+	}
+
+	return ""
+}
+
+// setHostname keeps hostname as the host's name.
+func (a *Agent) setHostname(
+	hostname string,
+) {
+	a.hostname.Store(&hostname)
+}
+
 // refreshHostname is the host's hostname now, and logs and keeps it when it
 // is not hostname. Consumers use the machine ID, which does not change, so
-// nothing resubscribes: only the registry and the logs take the new name.
+// nothing resubscribes: only the registry and the logs take the new name. A
+// failed read keeps hostname, so a host does not answer as "unknown" for a
+// moment.
 func (a *Agent) refreshHostname(
 	hostname string,
 ) string {
-	newHostname, _ := getAgentHostnameFn(a.appConfig.Agent.Hostname)
+	newHostname, err := getAgentHostnameFn(a.appConfig.Agent.Hostname)
+	if err != nil {
+		a.heartbeatLogger.Warn(
+			"failed to read the hostname, keeping the last one",
+			slog.String("hostname", hostname),
+			slog.String("error", err.Error()),
+		)
+
+		return hostname
+	}
 	if newHostname != hostname {
 		a.heartbeatLogger.Info(
 			"hostname changed",
 			slog.String("old_hostname", hostname),
 			slog.String("new_hostname", newHostname),
 		)
-		a.hostname = newHostname
+		a.setHostname(newHostname)
 	}
 
 	return newHostname
@@ -200,7 +228,7 @@ func (a *Agent) writeRegistration(
 		),
 		evaluateHighLoad(
 			loadAvg,
-			a.cpuCount,
+			int(a.cpuCount.Load()),
 			a.appConfig.Agent.Conditions.HighLoadMultiplier,
 			a.prevConditions,
 		),
