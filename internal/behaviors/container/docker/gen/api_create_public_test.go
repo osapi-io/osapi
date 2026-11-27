@@ -34,7 +34,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"docker.create",
@@ -55,7 +55,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"docker.create",
@@ -78,7 +78,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"docker.create",
@@ -99,7 +99,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"docker.create",
@@ -122,7 +122,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"docker.create",
@@ -143,7 +143,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"docker.create",
@@ -164,7 +164,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"docker.create",
@@ -185,7 +185,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"docker.create",
@@ -204,7 +204,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"docker.create",
@@ -230,7 +230,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/nowhere/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -240,7 +240,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node//docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -250,7 +250,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -260,7 +260,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"","command":["sleep","300"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -270,7 +270,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -280,7 +280,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":[]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -290,7 +290,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"-f","image":"alpine:3.20"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -300,7 +300,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":""}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -310,7 +310,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"--privileged"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -320,7 +320,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","container_hostname":"-x"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -330,7 +330,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","container_hostname":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -340,7 +340,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","dns":["nameserver"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -350,7 +350,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","ports":["80"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -360,7 +360,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","volumes":["data:/data"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -370,7 +370,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"","image":"alpine:3.20"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -407,6 +407,16 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

@@ -54,7 +54,7 @@ var dockerCreateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Create a container\n  osapi client node docker create --target web-01 --name osapitest --image alpine:3.20 --command sleep --command 300\n\n  # A container that the host has\n  osapi client node docker create --target web-01 --name osapitest --image alpine:3.20 --command sleep --command 300",
-	Long:    "Runs docker create, which pulls the image when the host does not have it. The environment goes on docker's standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false.",
+	Long:    "Runs docker create, which pulls the image when the host does not have it. Its permission is docker:write, which only the admin role gets: a container that names a command and a bind mount of / runs as root on the host. An agent with agent.command.enabled false refuses a create with a command or a bind mount, as it refuses a command. The environment goes on docker's standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")

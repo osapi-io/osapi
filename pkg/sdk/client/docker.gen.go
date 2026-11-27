@@ -82,10 +82,13 @@ type DockerCreateInput struct {
 // Create is the operation PostNodeDocker: create a container.
 //
 // Runs docker create, which pulls the image when the host does not have it.
-// The environment goes on docker's standard input, not in its arguments, which
-// each user of the host can read. auto_start starts the container once it is
-// made. A container of the name that the host has already is not made again,
-// and reports changed: false.
+// Its permission is docker:write, which only the admin role gets: a container
+// that names a command and a bind mount of / runs as root on the host. An
+// agent with agent.command.enabled false refuses a create with a command or a
+// bind mount, as it refuses a command. The environment goes on docker's
+// standard input, not in its arguments, which each user of the host can read.
+// auto_start starts the container once it is made. A container of the name
+// that the host has already is not made again, and reports changed: false.
 //
 // It sends POST /api/node/{hostname}/docker, and needs the permission
 // docker:write.
