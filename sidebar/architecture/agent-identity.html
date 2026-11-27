@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.16e3d3f9.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.be18b3a4.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.f6cdeb73.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.15b80f70.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -202,8 +202,9 @@ this job&quot;.</li>
 <li class=""><strong>Missing or malformed signature.</strong> The job data is not in a signed envelope,
 or the envelope has no value in a required field.</li>
 <li class=""><strong>Invalid signature.</strong> The signature of the envelope does not verify with the
-controller key of the agent, or with the previous key during a rotation grace
-period. Refer to <a href="#key-rotation" class="">Key rotation</a>.</li>
+controller key of the agent, with the next key during a rotation of the
+controller&#x27;s key, or with the previous key after it. Refer to
+<a href="#key-rotation" class="">Key rotation</a>.</li>
 </ul>
 <p>The controller also verifies the signature on the job response of an agent
 before it uses it as a result. A response that fails verification is a failed or
@@ -322,22 +323,45 @@ Thus a rotation whose reply did not arrive completes when you run it again. A
 replay of an old request cannot move the admission back, because the old key no
 longer matches the admission.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-controllers-key">The controller&#x27;s key<a href="#the-controllers-key" class="hash-link" aria-label="Direct link to The controller&#x27;s key" title="Direct link to The controller&#x27;s key" translate="no">​</a></h3>
-<p>The controller can change its Ed25519 key pair. During a grace period (<code>24h</code> by
-default), agents accept signatures from the old key and from the new key of the
-controller. You can configure the grace period.</p>
-<p>To rotate the key:</p>
+<p>The controller&#x27;s Ed25519 key signs each job, and each admitted agent verifies
+the job with it. The controller rotates this key with no new admission of the
+agents. The state bucket holds a record of the rotation at the key
+<code>pki.controller</code>. Each agent reads the record at each heartbeat.</p>
 <ol>
-<li class="">Make a new controller key pair. Replace the files in
-<code>controller.pki.key_dir</code>.</li>
-<li class="">Restart the controller. It loads the new key and starts to sign with it.</li>
-<li class="">The enrolled agents still have the old public key of the controller. The
-<code>VerifyWithGrace</code> method checks the signature with the current key and with
-the previous key of the controller.</li>
-<li class="">During the grace period (<code>controller.pki.rotation_grace_period</code>), the agents
-get the new public key of the controller in an updated enrollment response.
-Then they change to the new key.</li>
-<li class="">After the grace period, osapi accepts only the new key.</li>
+<li class=""><code>osapi client pki key rotate</code> (<code>POST /api/pki/key</code>), or
+<code>osapi pki key rotate --name controller</code> on the controller&#x27;s host, starts the
+rotation. The controller makes the next key, <code>controller.next.key</code> and
+<code>controller.next.pub</code> in <code>controller.pki.key_dir</code>. It then writes a record
+with the current key and the next key. The current key signs the record.</li>
+<li class="">At its next heartbeat, each agent reads the record. When the controller key
+that the agent has signed it, the agent keeps the next key in
+<code>enrolled-controller.next.pub</code>. From then on, it also accepts a job that the
+next key signs. Its signed registration reports the fingerprint of the next
+key, as <code>controller_key_next</code>.</li>
+<li class="">The controller switches when each admitted agent that reported within
+<code>controller.pki.rotation_grace_period</code> (<code>24h</code>) has the next key, or when that
+period ends. It moves the next key in place of its key and signs with it. It
+then writes a record with the new key as the current key and the old key as
+the previous key. The new key signs this record.</li>
+<li class="">At its next heartbeat, each agent reads the record. The key that signed it is
+the next key that the agent has. Thus the agent makes the next key its
+controller key, in <code>enrolled-controller.pub</code>, and keeps the old key as the
+previous key. The previous key still verifies the jobs that the old key
+signed before the switch.</li>
 </ol>
+<p><code>osapi client pki key get</code> (<code>GET /api/pki/key</code>) shows the rotation: the current
+key, the next key, when the controller switches at the latest, and each agent
+that the switch waits for, with <code>has_next</code>. <code>agent get</code> shows the
+<code>controller_key</code> and the <code>controller_key_next</code> of each agent.</p>
+<p>An agent that is away for the whole grace period does not get the next key. It
+does not trust the record of the switch, and the log of the agent says so. Admit
+the machine again. A join after the switch gives the new key.</p>
+<p>The controller takes a record only when its own key signed it, because an agent
+can write the state bucket. A record from an agent cannot start a rotation or
+cause a switch. But an agent can remove the record, and that stops the rotation
+until the next <code>rotate</code>. The controller does a rotation only in the controller
+that has the key files. Two controllers that share a store must not rotate
+together.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="upgrade-a-fleet">Upgrade a fleet<a href="#upgrade-a-fleet" class="hash-link" aria-label="Direct link to Upgrade a fleet" title="Direct link to Upgrade a fleet" translate="no">​</a></h2>
 <p>PKI is always on, and the settings <code>controller.pki.enabled</code> and
 <code>agent.pki.enabled</code> do not exist. Remove them from <code>osapi.yaml</code>: the config

@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><meta data-rh="true" property="og:description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Behavior DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.16e3d3f9.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.be18b3a4.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.f6cdeb73.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.15b80f70.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -1235,7 +1235,7 @@ package:read, package:write, power:execute, process:read, process:execute,
 schedule:read, schedule:write, service:read, service:write, service:execute,
 status:read, sysctl:read, sysctl:write, timezone:read, timezone:write,
 uptime:read, user:read, user:write, admission:read, admission:write, agent:read,
-agent:write, audit:read, catalog:read, job:read, job:write, pki:read,
+agent:write, audit:read, catalog:read, job:read, job:write, pki:read, pki:write,
 secret:read, secret:write.</p>
 <p>Use: A field that takes one of these values: types.Permission with
 validate:&quot;enum&quot;. A closed set that pkg/sdk/types does not have is a named type

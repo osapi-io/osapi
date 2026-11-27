@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Run the fleet | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/fleet"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Run the fleet | OSAPI"><meta data-rh="true" name="description" content="This page tells how to see the fleet, and how to change it after the setup."><meta data-rh="true" property="og:description" content="This page tells how to see the fleet, and how to change it after the setup."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/fleet" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"Run the fleet","item":"https://osapi-io.github.io/osapi/sidebar/operate/fleet"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.16e3d3f9.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.be18b3a4.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.f6cdeb73.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.15b80f70.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -116,13 +116,26 @@ the command removes the new keys, and the agent keeps its keys. When the
 controller does not answer, the new keys stay. Run the command again: it sends
 the same keys. The audit log records each rotation as <code>agent.key.rotate</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="rotate-the-controllers-key">Rotate the controller&#x27;s key<a href="#rotate-the-controllers-key" class="hash-link" aria-label="Direct link to Rotate the controller&#x27;s key" title="Direct link to Rotate the controller&#x27;s key" translate="no">​</a></h2>
+<p>The controller&#x27;s key rotates with no restart and no new admission of the agents:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client pki key rotate</span><br></div></code></pre></div></div>
 <ol>
-<li class="">Put a new key pair in <code>controller.pki.key_dir</code>.</li>
-<li class="">Restart the controller. It signs with the new key.</li>
-<li class="">During <code>controller.pki.rotation_grace_period</code> (<code>24h</code>), each agent accepts the
-old key and the new key, and gets the new key.</li>
-<li class="">After the grace period, only the new key is accepted.</li>
+<li class="">The controller makes the next key, and gives it to the agents in a record
+that its current key signs.</li>
+<li class="">Each agent takes the next key at its next heartbeat.</li>
+<li class="">The controller switches to the next key when each admitted agent has it, or
+when <code>controller.pki.rotation_grace_period</code> (<code>24h</code>) ends. Normally that takes
+one or two heartbeats.</li>
+<li class="">Each agent then takes the new key at its next heartbeat. The old key still
+verifies the jobs that it signed before the switch.</li>
 </ol>
+<p>Watch the progress:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi client pki key get</span><br></div></code></pre></div></div>
+<p>It shows the next key, and each agent that the switch waits for, with whether it
+has the next key. On the controller&#x27;s host,
+<code>osapi pki key rotate --name controller</code> does the same as
+<code>client pki key rotate</code>. A rotation in progress is not started again. An agent
+that is away for the whole grace period needs a new admission. Refer to
+<a class="" href="/osapi/sidebar/architecture/agent-identity#the-controllers-key">Key rotation</a>.</p>
 <p>To change the key that signs the API tokens, see
 <a class="" href="/osapi/sidebar/operate/controller#1-make-a-signing-key">3. Controller</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="remove-a-host">Remove a host<a href="#remove-a-host" class="hash-link" aria-label="Direct link to Remove a host" title="Direct link to Remove a host" translate="no">​</a></h2>
