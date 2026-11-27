@@ -45,7 +45,7 @@ together with the Go runtime and process metrics. Watch these metrics first:
 | Metric                                         | From       | Watch for                                  |
 | ---------------------------------------------- | ---------- | ------------------------------------------ |
 | `osapi_component_up`                           | All        | 0: the process is not ready                |
-| `osapi_subsystem_up`                           | All        | 0 on a subsystem, for example the notifier |
+| `osapi_subsystem_up`                           | All        | 0: the config turns a subsystem off        |
 | `osapi_jobs_created_total`                     | Controller | The request rate                           |
 | `osapi_jobs_processed_total`                   | Agent      | The `failed` part, by status               |
 | `osapi_job_duration_seconds`                   | Agent      | Slow operations                            |

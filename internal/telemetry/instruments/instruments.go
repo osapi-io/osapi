@@ -71,7 +71,7 @@ var (
 	SubsystemUp = Instrument{
 		Name: "subsystem_up", Kind: KindGauge, Component: "all",
 		Labels: []string{"subsystem"},
-		Doc:    "Whether a subsystem is healthy (1) or not (0).",
+		Doc:    "Whether the config turns a subsystem on (1) or off (0).",
 	}
 	HeartbeatAge = Instrument{
 		Name: "heartbeat_age_seconds", Kind: KindGauge, Unit: "s", Component: "agent",
