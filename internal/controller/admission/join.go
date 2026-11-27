@@ -53,6 +53,11 @@ var ErrNoJoinTokens = errors.New("this controller takes no join")
 // which its old key signs, or the operator deletes the machine first.
 var ErrMachineAdmitted = errors.New("the machine is admitted with a different key")
 
+// ErrHostnameHeld is a rename to the hostname of a different admitted
+// machine. Jobs and sealed secrets go to a hostname, so a machine does not
+// take the name of a different one, also when that one is offline.
+var ErrHostnameHeld = errors.New("the hostname is the name of a different admitted machine")
+
 // JoinTokens takes a use of a join token: the store of join tokens.
 type JoinTokens interface {
 	Consume(ctx context.Context, token string) (jointoken.Token, error)

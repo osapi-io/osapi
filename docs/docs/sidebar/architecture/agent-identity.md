@@ -325,8 +325,10 @@ sequenceDiagram
     O->>C: a request to --target web-02 finds the host
 ```
 
-The controller refuses the new hostname when another admitted machine holds it.
-Then the registration is not verified, and the host gets no work by that name.
+The controller refuses the new hostname when another admitted machine holds it,
+also when that machine is offline. Then the registration is not verified, and
+the host gets no work by that name. To give the name to a different machine,
+delete the admission of the machine that holds it first.
 
 ### What the controller checks
 
