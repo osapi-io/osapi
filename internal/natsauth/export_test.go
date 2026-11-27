@@ -85,3 +85,9 @@ func ExportSystemAccount(
 
 	return m[1]
 }
+
+// RealNewCreds is how a create mints credentials, so a test can fail one
+// call and keep the others.
+func RealNewCreds() func(*natsjwt.Signer, string, bus.Permissions, time.Time) ([]byte, error) {
+	return newCreds
+}

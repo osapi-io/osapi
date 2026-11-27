@@ -71,7 +71,7 @@ func (s *MethodsPublicTestSuite) TestCreateAudited() {
 	s.Equal(audit.ActorLocal, entries[0].Actor)
 	s.Equal("natsauth.create", entries[0].Action)
 	s.Equal(out, entries[0].Target)
-	s.Equal("type=operator files=10", entries[0].RequestSummary)
+	s.Equal("type=operator files=14", entries[0].RequestSummary)
 }
 
 // TestOperatorUpdate: an update signs the files of an operator setup again,
@@ -93,13 +93,13 @@ func (s *MethodsPublicTestSuite) TestOperatorUpdate() {
 
 		got, err := natsauth.OperatorUpdate(ctx, d, natsauth.UpdateInput{Out: out, Print: true})
 		s.Require().NoError(err)
-		s.Len(got.Files, 10)
+		s.Len(got.Files, 14)
 		s.Contains(got.Server, "resolver_preload")
 		after, _ := os.ReadFile(filepath.Join(out, "account.nk"))
 		s.Equal(seed, after, "the account keeps its key")
 		s.Require().Len(entries, 2)
 		s.Equal("natsauth.update", entries[1].Action)
-		s.Equal("type=operator files=10", entries[1].RequestSummary)
+		s.Equal("type=operator files=14", entries[1].RequestSummary)
 	})
 	s.Run("a directory with no operator setup", func() {
 		_, err := natsauth.OperatorUpdate(ctx, s.deps(), natsauth.UpdateInput{Out: s.T().TempDir()})
@@ -124,7 +124,7 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	s.Run("operator: no server part without --print", func() {
 		got, err := natsauth.Operator(ctx, s.deps(), natsauth.CreateInput{Out: s.T().TempDir()})
 		s.Require().NoError(err)
-		s.Len(got.Files, 10)
+		s.Len(got.Files, 14)
 		s.Empty(got.Server)
 	})
 

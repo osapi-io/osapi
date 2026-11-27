@@ -342,6 +342,101 @@ func (s *KeyStorePublicTestSuite) TestRemoveAgentKey() {
 	}
 }
 
+// TestRemoveAgentKeyRevokesNATSUser: with a revoker, a removal cuts the NATS
+// user that the machine joined with before it deletes the record, so a
+// revocation that fails leaves the record for the removal to run again.
+func (s *KeyStorePublicTestSuite) TestRemoveAgentKeyRevokesNATSUser() {
+	const userKey = "UAUSER"
+	withUser := func(natsUser string) []byte {
+		data, err := json.Marshal(admission.AcceptedAgent{
+			MachineID:   "machine-001",
+			Hostname:    "web-01",
+			PublicKey:   s.pubKey,
+			NATSUserKey: natsUser,
+		})
+		s.Require().NoError(err)
+
+		return data
+	}
+	lookup := func(value []byte, err error) {
+		var e jetstream.KeyValueEntry
+		if value != nil {
+			m := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+			m.EXPECT().Value().Return(value)
+			e = m
+		}
+		s.mockKV.EXPECT().
+			KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+			Return(e, err)
+	}
+	deleted := func() {
+		s.mockKV.EXPECT().
+			KVDelete(gomock.Any(), "enrollment", "accepted.machine-001").
+			Return(nil)
+	}
+
+	tests := []struct {
+		name    string
+		setup   func(r *admissionMocks.MockRevoker)
+		wantErr string
+	}{
+		{
+			name: "revokes the machine's NATS user, then removes the record",
+			setup: func(r *admissionMocks.MockRevoker) {
+				lookup(withUser(userKey), nil)
+				r.EXPECT().Revoke(gomock.Any(), userKey).Return(nil)
+				deleted()
+			},
+		},
+		{
+			name: "a machine with no NATS user of its own revokes nothing",
+			setup: func(*admissionMocks.MockRevoker) {
+				lookup(withUser(""), nil)
+				deleted()
+			},
+		},
+		{
+			name: "a machine that is not admitted revokes nothing",
+			setup: func(*admissionMocks.MockRevoker) {
+				lookup(nil, jetstream.ErrKeyNotFound)
+				deleted()
+			},
+		},
+		{
+			name: "a lookup that fails keeps the record",
+			setup: func(*admissionMocks.MockRevoker) {
+				lookup(nil, errors.New("kv down"))
+			},
+			wantErr: "kv down",
+		},
+		{
+			name: "a revocation that fails keeps the record",
+			setup: func(r *admissionMocks.MockRevoker) {
+				lookup(withUser(userKey), nil)
+				r.EXPECT().Revoke(gomock.Any(), userKey).Return(errors.New("no record"))
+			},
+			wantErr: "revoke the NATS user of machine-001: no record",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := admissionMocks.NewMockRevoker(s.mockCtrl)
+			s.watcher.SetRevoker(r)
+			tc.setup(r)
+
+			err := s.watcher.RemoveAgentKey(s.ctx, "machine-001")
+			if tc.wantErr != "" {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.wantErr)
+
+				return
+			}
+			s.NoError(err)
+		})
+	}
+}
+
 // TestRemoveAgentKeyInvalidatesCache proves a removed agent stops verifying
 // immediately rather than when a cache entry would have expired: the store is
 // read again after the removal.

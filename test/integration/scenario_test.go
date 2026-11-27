@@ -58,6 +58,10 @@ type scenario struct {
 	// fixtureAgent replaces keys of the fixture's agent config, such as
 	// command: {enabled: false}.
 	fixtureAgent map[string]any
+	// fixtureOperator runs the fixture's NATS server in operator mode, with
+	// the credentials that it makes at its first start: each agent that
+	// joins gets a NATS user of its own.
+	fixtureOperator bool
 	// ownServer is a scenario that changes the host that runs the suite,
 	// such as the keys of its agent: it skips against a deployment.
 	ownServer bool
@@ -110,6 +114,9 @@ type step struct {
 	// kill stops the fixture's agent with that name with SIGKILL, so it
 	// acks nothing that it runs.
 	kill string
+	// logs is the fixture's agent with that name: its output so far is the
+	// step's output, for the checks, and the step tries again within wait.
+	logs string
 	// background, with cli on the fixture, starts the command and goes on
 	// at once: a job whose agent the next steps kill. The scenario's end
 	// stops it.
@@ -420,12 +427,20 @@ func (s *ScenarioTestSuite) checkStep(
 ) {
 	s.NotEmpty(st.name, "%s: each step has a name", sc.name)
 	kinds := 0
-	for _, set := range []bool{len(st.cli) > 0, st.start != "", st.stop != "", st.kill != "", len(st.exec) > 0} {
+	for _, set := range []bool{
+		len(st.cli) > 0, st.start != "", st.stop != "", st.kill != "", st.logs != "", len(st.exec) > 0,
+	} {
 		if set {
 			kinds++
 		}
 	}
-	s.Equal(1, kinds, "%s: %s: a step is one of cli, start, stop, kill and exec", sc.name, st.name)
+	s.Equal(
+		1,
+		kinds,
+		"%s: %s: a step is one of cli, start, stop, kill, logs and exec",
+		sc.name,
+		st.name,
+	)
 	if len(st.cli) > 0 {
 		c, flags, err := commandOf(root, st.cli)
 		if s.NoError(err, "%s: %s", sc.name, st.name) {
@@ -445,7 +460,7 @@ func (s *ScenarioTestSuite) checkStep(
 		s.Equal(onFixture, st.on, "%s: %s: a background step runs on the fixture", sc.name, st.name)
 	}
 	if st.on == onFixture || st.on == onFixtureHost || st.start != "" || st.stop != "" ||
-		st.kill != "" {
+		st.kill != "" || st.logs != "" {
 		s.True(sc.fixture, "%s: %s: a fixture step in a scenario with no fixture", sc.name, st.name)
 	}
 	if len(st.exec) > 0 {

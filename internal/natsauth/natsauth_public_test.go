@@ -100,7 +100,8 @@ func (s *NatsAuthPublicTestSuite) TestOperator() {
 	s.ElementsMatch([]string{
 		"agent.creds", "controller.creds", "setup.creds", "resolver.conf",
 		"operator.nk", "account.nk", "agent-signing.nk", "join-signing.nk", natsauth.OsapiConfig,
-		natsauth.AccountPubFile,
+		natsauth.AccountPubFile, natsauth.AccountJWTFile, natsauth.OperatorSigningKeyFile,
+		natsauth.SystemSigningKeyFile, natsauth.SystemCredsFile,
 	}, names)
 
 	opts, err := natsserver.ProcessConfigFile(filepath.Join(s.dir, "resolver.conf"))
@@ -183,6 +184,22 @@ func (s *NatsAuthPublicTestSuite) TestUpdateOperator() {
 		s.Contains(uc.Sub.Allow, "osapi.join.rotate", "the controller has the permissions of now")
 	})
 
+	s.Run("a setup from before the revocation gets its keys", func() {
+		_, err := natsauth.Operator(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
+		s.Require().NoError(err)
+		for _, f := range []string{natsauth.OperatorSigningKeyFile, natsauth.SystemSigningKeyFile} {
+			s.Require().NoError(os.Remove(filepath.Join(s.dir, f)))
+		}
+
+		_, err = natsauth.UpdateOperator(context.Background(), osfs.New(), s.dir, "osapi", s.cfg)
+		s.Require().NoError(err)
+		for _, f := range []string{
+			natsauth.OperatorSigningKeyFile, natsauth.SystemSigningKeyFile, natsauth.SystemCredsFile,
+		} {
+			s.FileExists(filepath.Join(s.dir, f))
+		}
+	})
+
 	tests := []struct {
 		name    string
 		edit    func()
@@ -200,6 +217,16 @@ func (s *NatsAuthPublicTestSuite) TestUpdateOperator() {
 					NoError(os.WriteFile(filepath.Join(s.dir, "join-signing.nk"), []byte("no"), 0o600))
 			},
 			wantErr: "join-signing.nk",
+		},
+		{
+			name: "an operator signing key that cannot be read",
+			edit: func() {
+				p := filepath.Join(s.dir, natsauth.OperatorSigningKeyFile)
+				s.Require().NoError(os.Remove(p))
+				s.Require().NoError(os.MkdirAll(filepath.Join(p, "x"), 0o700))
+				s.T().Cleanup(func() { _ = os.RemoveAll(p) })
+			},
+			wantErr: natsauth.OperatorSigningKeyFile,
 		},
 		{
 			name:    "no resolver file",
@@ -343,6 +370,45 @@ func (s *NatsAuthPublicTestSuite) TestFailures() {
 			wantErr: "boom",
 		},
 		{
+			name: "an operator signing key that cannot be made",
+			run: func() error {
+				calls := 0
+				defer natsauth.SetKeyMakers(
+					func() (nkeys.KeyPair, error) {
+						if calls++; calls > 1 {
+							return nil, boom
+						}
+
+						return nkeys.CreateOperator()
+					},
+					nkeys.CreateAccount,
+				)()
+				_, err := natsauth.Operator(ctx, osfs.New(), s.dir, "osapi", s.cfg)
+				return err
+			},
+			wantErr: "boom",
+		},
+		{
+			name: "system credentials that cannot be minted",
+			run: func() error {
+				mint := natsauth.RealNewCreds()
+				defer natsauth.SetFns(
+					nil,
+					nil,
+					func(sg *natsjwt.Signer, name string, p bus.Permissions, t time.Time) ([]byte, error) {
+						if name == "osapi-revocation" {
+							return nil, boom
+						}
+
+						return mint(sg, name, p, t)
+					},
+				)()
+				_, err := natsauth.Operator(ctx, osfs.New(), s.dir, "osapi", s.cfg)
+				return err
+			},
+			wantErr: "boom",
+		},
+		{
 			name: "operator files that cannot be written",
 			run: func() error {
 				_, err := natsauth.Operator(ctx, osfs.New(), file, "osapi", s.cfg)
@@ -384,6 +450,10 @@ func (s *NatsAuthPublicTestSuite) TestBlockedFiles() {
 		}},
 		{natsauth.OsapiConfig, func(dir string) error {
 			_, err := natsauth.NKey(ctx, osfs.New(), dir, "osapi", s.cfg)
+			return err
+		}},
+		{natsauth.SystemCredsFile, func(dir string) error {
+			_, err := natsauth.Operator(ctx, osfs.New(), dir, "osapi", s.cfg)
 			return err
 		}},
 		{"resolver.conf", func(dir string) error {

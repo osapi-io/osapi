@@ -108,6 +108,18 @@ func (s *ScenarioSuite) runScenario(
 			for k, v := range sc.fixtureAgent {
 				agent[k] = v
 			}
+			if sc.fixtureOperator {
+				// With no auth of their own, the controller and the
+				// fixture's host agent connect with the credentials that the
+				// server makes, as on a host where osapi runs its NATS.
+				nats, _ := cfg["nats"].(map[string]any)
+				server, _ := nats["server"].(map[string]any)
+				server["auth"] = map[string]any{"type": "operator"}
+				for _, c := range []map[string]any{cfg["controller"].(map[string]any), agent} {
+					n, _ := c["nats"].(map[string]any)
+					n["auth"] = map[string]any{"type": "none"}
+				}
+			}
 		})
 		r.base = r.f.dir
 	}
@@ -267,7 +279,15 @@ func (r *run) step(
 	deadline := time.Now().Add(st.wait)
 	var why string
 	for {
-		stdout, stderr, code := r.command(st, args, keyDir, stdin)
+		var stdout, stderr string
+		var code int
+		if st.logs != "" {
+			p := r.procs[st.logs]
+			s.Require().NotNil(p, "no agent %s to read", st.logs)
+			stdout = p.out.String()
+		} else {
+			stdout, stderr, code = r.command(st, args, keyDir, stdin)
+		}
 		why = r.judge(st, stdout, stderr, code)
 		if why == "" && st.skipIf != nil {
 			if skip := r.holds(*st.skipIf, stdout, stderr) == ""; skip {

@@ -91,6 +91,17 @@ type Watcher struct {
 	// audit is the audit log of the changes the watcher makes on its own,
 	// or nil.
 	audit audit.Writer
+	// revoker cuts the NATS user of a machine that the watcher removes, or
+	// nil, when the NATS setup has no revocation.
+	revoker Revoker
+}
+
+// SetRevoker sets what cuts the NATS user of each machine that the watcher
+// removes: a revocation, a rejection or a delete.
+func (w *Watcher) SetRevoker(
+	r Revoker,
+) {
+	w.revoker = r
 }
 
 // SetRotationGracePeriod sets how long a replaced key keeps verifying after a

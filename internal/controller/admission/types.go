@@ -112,6 +112,12 @@ type NATSSubscriber interface {
 	PublishCore(ctx context.Context, subject string, data []byte) error
 }
 
+// Revoker cuts the NATS user with the public key userKey from the NATS
+// server.
+type Revoker interface {
+	Revoke(ctx context.Context, userKey string) error
+}
+
 // PKIProvider defines the PKI operations needed by the enrollment watcher
 // to provide the controller's public key in acceptance responses.
 type PKIProvider interface {

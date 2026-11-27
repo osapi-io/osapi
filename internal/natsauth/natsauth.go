@@ -31,6 +31,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	iofs "io/fs"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -45,6 +46,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/natsjwt"
+	"github.com/osapi-io/osapi/internal/natsrevoke"
 )
 
 // OsapiConfig is the file of the osapi config that a create writes: the
@@ -67,6 +69,21 @@ type Result struct {
 // AccountPubFile is the file of the account's public key (A...), beside
 // the signing keys, that Operator writes.
 const AccountPubFile = "account.pub"
+
+// AccountJWTFile is the file of the account's JWT, as the resolver file
+// preloads it, that Operator writes: the controller adds the revocations
+// of the NATS users of the machines that it removes to it.
+const AccountJWTFile = "account.jwt"
+
+// The files of the revocation of an agent's NATS user, beside the others
+// of Operator: the operator signing key, which signs the account again
+// with its revocations, the system account's signing key, and the system
+// account user that sends the account to the server.
+const (
+	OperatorSigningKeyFile = "operator-signing.nk"
+	SystemSigningKeyFile   = "system-signing.nk"
+	SystemCredsFile        = "system.creds"
+)
 
 // staticRoles are the roles of a user or a credential that osapi keeps:
 // the join's bootstrap user is static only with passwords.
@@ -207,7 +224,11 @@ func Operator(
 	namespace string,
 	cfg config.NATS,
 ) (Result, error) {
-	keys, err := newKeys(5)
+	keys, err := newKeys(6)
+	if err != nil {
+		return Result{}, err
+	}
+	opSigning, err := createOperator()
 	if err != nil {
 		return Result{}, err
 	}
@@ -215,18 +236,22 @@ func Operator(
 
 	return writeOperator(ctx, fs, dir, namespace, cfg, operatorKeys{
 		operator: keys[0], systemPub: sysPub, account: keys[2], agent: keys[3], join: keys[4],
+		systemSigning: keys[5], operatorSigning: opSigning,
 	})
 }
 
 // operatorKeys are the keys of an operator setup: the operator, the public
-// key of its system account, the account of osapi, and the two scoped
-// signing keys of a join.
+// key of its system account, the account of osapi, the two scoped signing
+// keys of a join, and the signing keys of the operator and of the system
+// account that the revocation of an agent's NATS user needs.
 type operatorKeys struct {
-	operator  nkeys.KeyPair
-	systemPub string
-	account   nkeys.KeyPair
-	agent     nkeys.KeyPair
-	join      nkeys.KeyPair
+	operator        nkeys.KeyPair
+	systemPub       string
+	account         nkeys.KeyPair
+	agent           nkeys.KeyPair
+	join            nkeys.KeyPair
+	operatorSigning nkeys.KeyPair
+	systemSigning   nkeys.KeyPair
 }
 
 // UpdateOperator signs the account of osapi and the credentials of each
@@ -235,7 +260,9 @@ type operatorKeys struct {
 // permission to a role needs it: the account's JWT holds the agent's
 // permissions as the template of its scoped signing key, and each
 // credentials file holds the permissions of its role. The keys do not
-// change, so each agent keeps its user and no agent joins again. The NATS
+// change, so each agent keeps its user and no agent joins again. A setup
+// with no operator signing key or no signing key of the system account,
+// from before the revocation of an agent's NATS user, gets them. The NATS
 // server reads the new resolver file at its next start.
 func UpdateOperator(
 	ctx context.Context,
@@ -268,6 +295,20 @@ func UpdateOperator(
 		}
 		*f.to = kp
 	}
+	for _, f := range []struct {
+		name string
+		to   *nkeys.KeyPair
+		make func() (nkeys.KeyPair, error)
+	}{
+		{OperatorSigningKeyFile, &k.operatorSigning, createOperator},
+		{SystemSigningKeyFile, &k.systemSigning, createAccount},
+	} {
+		kp, err := readOrMake(fs, filepath.Join(dir, f.name), f.make)
+		if err != nil {
+			return Result{}, fmt.Errorf("%s: %w", f.name, err)
+		}
+		*f.to = kp
+	}
 	resolver, err := fs.ReadFile(filepath.Join(dir, "resolver.conf"))
 	if err != nil {
 		return Result{}, fmt.Errorf("read resolver.conf: %w", err)
@@ -279,6 +320,24 @@ func UpdateOperator(
 	k.systemPub = string(m[1])
 
 	return writeOperator(ctx, fs, dir, namespace, cfg, k)
+}
+
+// readOrMake is the key of the seed in path, or a new key from newKey when
+// path does not exist.
+func readOrMake(
+	fs avfs.VFS,
+	path string,
+	newKey func() (nkeys.KeyPair, error),
+) (nkeys.KeyPair, error) {
+	seed, err := fs.ReadFile(path)
+	if errors.Is(err, iofs.ErrNotExist) {
+		return newKey()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return nkeys.FromSeed(bytes.TrimSpace(seed))
 }
 
 // systemAccount is the system account's line of a resolver file.
@@ -298,13 +357,21 @@ func writeOperator(
 	sysPub := k.systemPub
 	acctPub, _ := account.PublicKey()
 
+	opSigningPub, _ := k.operatorSigning.PublicKey()
+	sysSigningPub, _ := k.systemSigning.PublicKey()
+
 	oc := jwt.NewOperatorClaims(opPub)
 	oc.Name = "osapi"
 	oc.SystemAccount = sysPub
+	// The controller signs osapi's account again with this key, to add the
+	// revocation of an agent's NATS user: the operator's own key stays with
+	// the administrator.
+	oc.SigningKeys.Add(opSigningPub)
 	opJWT, _ := oc.Encode(operator)
 
 	sc := jwt.NewAccountClaims(sysPub)
 	sc.Name = "SYS"
+	sc.SigningKeys.Add(sysSigningPub)
 	sysJWT, _ := sc.Encode(operator)
 
 	ac := jwt.NewAccountClaims(acctPub)
@@ -350,10 +417,29 @@ func writeOperator(
 			return Result{}, err
 		}
 	}
+	// The system account's user of the controller can send only the new
+	// JWT of osapi's account, and take the reply.
+	sysCreds, err := newCreds(
+		natsjwt.NewSigner(k.systemSigning, sysPub),
+		"osapi-revocation",
+		bus.Permissions{
+			Publish:   []string{natsrevoke.ClaimsUpdateSubject(acctPub)},
+			Subscribe: []string{"_INBOX.>"},
+		},
+		time0,
+	)
+	if err != nil {
+		return Result{}, err
+	}
+	if err := r.write(ctx, fs, dir, "controller", SystemCredsFile, sysCreds); err != nil {
+		return Result{}, err
+	}
 	opSeed, _ := operator.Seed()
 	acctSeed, _ := account.Seed()
 	agentSeed, _ := agentKey.Seed()
 	joinSeed, _ := joinKey.Seed()
+	opSigningSeed, _ := k.operatorSigning.Seed()
+	sysSigningSeed, _ := k.systemSigning.Seed()
 	for _, f := range []struct {
 		role, name string
 		data       []byte
@@ -366,6 +452,9 @@ func writeOperator(
 		{"controller", AccountPubFile, []byte(acctPub)},
 		{"controller", "agent-signing.nk", agentSeed},
 		{"controller", "join-signing.nk", joinSeed},
+		{"controller", AccountJWTFile, []byte(acctJWT)},
+		{"controller", OperatorSigningKeyFile, opSigningSeed},
+		{"operator", SystemSigningKeyFile, sysSigningSeed},
 	} {
 		if err := r.write(ctx, fs, dir, f.role, f.name, f.data); err != nil {
 			return Result{}, err
@@ -377,10 +466,13 @@ func writeOperator(
 			"nats:\n  server:\n    auth:\n      type: operator\n      resolver_file: %s\n      creds_file: %s\n"+
 			"controller:\n  nats:\n    auth:\n      type: creds\n      creds_file: %s\n"+
 			"  join:\n    scoped: true\n    signing_key_file: %s\n    join_signing_key_file: %s\n    account: %s\n"+
+			"    revocation:\n      account_jwt_file: %s\n      operator_signing_key_file: %s\n      system_creds_file: %s\n"+
 			"agent:\n  nats:\n    auth:\n      type: creds\n      creds_file: %s\n",
 		filepath.Join(dir, "resolver.conf"), filepath.Join(dir, "setup.creds"),
 		filepath.Join(dir, "controller.creds"), filepath.Join(dir, "agent-signing.nk"),
 		filepath.Join(dir, "join-signing.nk"), acctPub,
+		filepath.Join(dir, AccountJWTFile), filepath.Join(dir, OperatorSigningKeyFile),
+		filepath.Join(dir, SystemCredsFile),
 		filepath.Join(dir, "agent.creds"),
 	)
 	if err := r.write(ctx, fs, dir, "osapi", OsapiConfig, []byte(y)); err != nil {

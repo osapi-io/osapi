@@ -25,6 +25,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -202,16 +203,51 @@ func (w *Watcher) RenameAgentKey(
 }
 
 // RemoveAgentKey deletes an agent's stored record. After it returns, nothing
-// signed by the removed key verifies.
+// signed by the removed key verifies. With a revoker, the NATS user that the
+// agent joined with is cut from the NATS server first: a revocation that is
+// not recorded leaves the record, so the removal can run again.
 func (w *Watcher) RemoveAgentKey(
 	ctx context.Context,
 	machineID string,
 ) error {
+	if err := w.revokeNATSUser(ctx, machineID); err != nil {
+		return err
+	}
 	if err := w.enrollmentKV.KVDelete(ctx, w.enrollmentBucket, acceptedKey(machineID)); err != nil {
 		return fmt.Errorf("remove accepted agent %s: %w", machineID, err)
 	}
 
 	w.invalidateAgentKey(machineID)
+
+	return nil
+}
+
+// revokeNATSUser revokes the NATS user of an admitted machine, when the
+// watcher has a revoker and the machine joined with a user of its own. A
+// machine that is not admitted has no user to revoke.
+func (w *Watcher) revokeNATSUser(
+	ctx context.Context,
+	machineID string,
+) error {
+	if w.revoker == nil {
+		return nil
+	}
+	record, err := w.LookupAgentKey(ctx, machineID)
+	switch {
+	case errors.Is(err, ErrAgentKeyNotFound):
+		return nil
+	case err != nil:
+		return err
+	case record.NATSUserKey == "":
+		return nil
+	}
+	if err := w.revoker.Revoke(ctx, record.NATSUserKey); err != nil {
+		return fmt.Errorf("revoke the NATS user of %s: %w", machineID, err)
+	}
+	w.logger.Info("revoked the NATS user of a machine",
+		slog.String("machine_id", machineID),
+		slog.String("hostname", record.Hostname),
+	)
 
 	return nil
 }
