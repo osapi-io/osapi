@@ -36,6 +36,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 )
 
 type TLSPublicTestSuite struct {
@@ -270,23 +271,23 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 }
 
 func (s *TLSPublicTestSuite) TestNegotiation() {
-	tests := []struct {
-		name string
-		tls  config.ServerTLS
-		want *tls.Config
-	}{
-		{name: "when TLS is off, it negotiates nothing", tls: config.ServerTLS{}},
-		{
-			name: "when TLS is on, it is TLS 1.2 or later with crypto/tls's suites",
-			tls:  config.ServerTLS{Enabled: true},
-			want: &tls.Config{MinVersion: tls.VersionTLS12},
-		},
-	}
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.Equal(tc.want, tc.tls.Negotiation())
-		})
-	}
+	s.Nil(config.ServerTLS{}.Negotiation(), "when TLS is off, it negotiates nothing")
+
+	got := config.ServerTLS{Enabled: true}.Negotiation()
+	s.True(
+		tlspolicy.Approved(got, true),
+		"when TLS is on, it negotiates only approved suites and groups",
+	)
+}
+
+func (s *TLSPublicTestSuite) TestPolicy() {
+	got, err := config.ClientTLS{Enabled: true}.Config()
+	s.Require().NoError(err)
+	s.True(tlspolicy.Approved(got, false), "a client offers only approved suites and groups")
+	s.True(
+		tlspolicy.Approved(config.SelfClient(&tls.Config{}), false),
+		"so does a server's client of itself",
+	)
 }
 
 func (s *TLSPublicTestSuite) TestDial() {

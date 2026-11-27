@@ -34,6 +34,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -79,15 +80,14 @@ func pinned(
 	fingerprint string,
 ) http.RoundTripper {
 	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.TLSClientConfig = &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		// The fingerprint, which VerifyConnection checks, takes the place of
-		// the roots: the controller's certificate can be self-signed.
-		InsecureSkipVerify: true, //nolint:gosec // VerifyConnection pins the certificate
-		VerifyConnection: func(cs tls.ConnectionState) error {
-			return verifyPin(fingerprint, cs.PeerCertificates)
-		},
+	c := tlspolicy.Client()
+	// The fingerprint, which VerifyConnection checks, takes the place of the
+	// roots: the controller's certificate can be self-signed.
+	c.InsecureSkipVerify = true //nolint:gosec // VerifyConnection pins the certificate
+	c.VerifyConnection = func(cs tls.ConnectionState) error {
+		return verifyPin(fingerprint, cs.PeerCertificates)
 	}
+	t.TLSClientConfig = c
 
 	return t
 }

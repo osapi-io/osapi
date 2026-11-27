@@ -34,7 +34,17 @@ func cryptoScenarios() []scenario {
 					cli:  []string{"client", "health", "status", "--json"},
 					checks: []check{
 						{path: "registry[type=controller].crypto.mode", op: "==", want: "off"},
-						{path: "registry[type=controller].fips", op: "prefix", want: "off"},
+						// Each listener negotiates only approved suites and
+						// groups (#1719), so the mode is the only gap.
+						{path: "registry[type=controller].fips", op: "==", want: "off"},
+						{
+							path: "registry[type=controller].crypto.listeners[*].approved",
+							op:   "lacks", want: "false",
+						},
+						{
+							path: "registry[type=nats].crypto.listeners[*].approved",
+							op:   "lacks", want: "false",
+						},
 						{path: "registry[type=controller].crypto.module", op: "nonempty"},
 						{
 							path: "registry[type=controller].crypto.listeners[*].name",
@@ -86,7 +96,8 @@ func cryptoScenarios() []scenario {
 					cli:  []string{"client", "agent", "get", "--hostname", "{host}", "--json"},
 					checks: []check{
 						{path: "crypto.mode", op: "==", want: "off"},
-						{path: "fips", op: "prefix", want: "off"},
+						{path: "fips", op: "==", want: "off"},
+						{path: "crypto.listeners[*].approved", op: "lacks", want: "false"},
 						{
 							path: "crypto.algorithms[*].name",
 							op:   "has",

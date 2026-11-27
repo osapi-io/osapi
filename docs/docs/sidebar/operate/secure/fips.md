@@ -98,9 +98,17 @@ The report of a process has:
 - **The Go version and the module version**, from `crypto/fips140.Version()`.
 - **The mode:** `off`, `on`, or `only`.
 - **Each TLS listener**, such as `api`, `nats` or `metrics`: its lowest TLS
-  version, its suites and its groups. In FIPS 140-3 mode, crypto/tls negotiates
-  only approved suites and groups. Out of the mode, a listener that sets no
-  groups can negotiate X25519, which is not approved.
+  version, its suites and its groups. Each listener and each client of osapi
+  uses only approved suites and groups, also out of FIPS 140-3 mode: the AES-GCM
+  suites, and P-256, P-384, P-521 and P-256 with ML-KEM-768. Thus a listener is
+  approved in each mode.
+
+  crypto/tls has no setting for the suites of TLS 1.3. Out of FIPS 140-3 mode,
+  it can select ChaCha20-Poly1305 for TLS 1.3, which is not approved: when the
+  client prefers it, offers no AES-GCM, or when the CPU has no AES in hardware.
+  For such a client, a listener of osapi offers TLS 1.2 only, with the approved
+  suites. A client that has no approved suite or group cannot connect.
+
 - **Each algorithm that the process uses**, with `approved` and `only_mode`. An
   approved algorithm can still fail in only mode, as NATS authentication does.
   `only_mode` says so, and `reason` names the issue.

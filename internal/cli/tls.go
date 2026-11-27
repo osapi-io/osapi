@@ -27,14 +27,11 @@ import (
 )
 
 // TLSTransport is the transport of the CLI's client, with the TLS config of
-// c: its CA, its client certificate and its server name. With nothing set
-// it is the default transport.
+// c: its CA, its client certificate and its server name, and tlspolicy's
+// suites and groups, also with nothing set.
 func TLSTransport(
 	c config.ClientTLS,
 ) (http.RoundTripper, error) {
-	if c == (config.ClientTLS{}) {
-		return http.DefaultTransport, nil
-	}
 	tlsConfig, err := c.Config()
 	if err != nil {
 		return nil, err

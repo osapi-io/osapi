@@ -47,6 +47,7 @@ import (
 	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 )
 
 // NATSJoinFile is the file in agent.pki.key_dir where an agent keeps what a
@@ -309,17 +310,16 @@ func joinNow(
 		opts = append(opts, nats.Token(j.token))
 	}
 	if j.scheme == "tls" {
-		opts = append(opts, nats.Secure(&tls.Config{
-			MinVersion: tls.VersionTLS12,
-			// The fingerprint of the join string, which VerifyConnection
-			// checks, takes the place of the roots.
-			InsecureSkipVerify: true, //nolint:gosec // VerifyConnection pins the certificate
-			VerifyConnection: func(cs tls.ConnectionState) error {
-				seen = cs.PeerCertificates
+		c := tlspolicy.Client()
+		// The fingerprint of the join string, which VerifyConnection checks,
+		// takes the place of the roots.
+		c.InsecureSkipVerify = true //nolint:gosec // VerifyConnection pins the certificate
+		c.VerifyConnection = func(cs tls.ConnectionState) error {
+			seen = cs.PeerCertificates
 
-				return verifyPin(j.fingerprint, cs.PeerCertificates)
-			},
-		}))
+			return verifyPin(j.fingerprint, cs.PeerCertificates)
+		}
+		opts = append(opts, nats.Secure(c))
 	}
 	subject := pki.JoinRequestSuffix
 	if j.namespace != "" {

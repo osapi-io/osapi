@@ -29,6 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/tlspolicy"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -40,7 +41,7 @@ func (s *ReportPublicTestSuite) TearDownTest() {
 	cryptoreport.ResetMode()
 }
 
-// approvedTLS sets only approved suites and groups.
+// approvedTLS sets only approved suites and groups, with no TLS 1.3 guard.
 var approvedTLS = &tls.Config{
 	MinVersion:       tls.VersionTLS13,
 	CipherSuites:     []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256},
@@ -130,16 +131,38 @@ func (s *ReportPublicTestSuite) TestNew() {
 			},
 		},
 		{
-			name:      "when a listener sets approved suites and groups, it is approved",
+			name:      "when a listener has tlspolicy's server config, it is approved",
+			mode:      types.FIPSOff,
+			listeners: []cryptoreport.TLS{{Name: "api", Config: tlspolicy.Server()}},
+			validateFunc: func(r cryptoreport.Report) {
+				l := r.Listeners[0]
+				s.Equal("TLS 1.2", l.MinVersion)
+				s.Equal([]string{
+					"TLS_AES_128_GCM_SHA256",
+					"TLS_AES_256_GCM_SHA384",
+					"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+					"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+					"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+					"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+				}, l.Suites)
+				s.Equal(
+					[]string{"SecP256r1MLKEM768", "CurveP256", "CurveP384", "CurveP521"},
+					l.Groups,
+				)
+				s.True(l.Approved)
+				s.Len(r.Gaps, 1, "only the mode")
+			},
+		},
+		{
+			name:      "when a listener sets approved suites and groups with no TLS 1.3 guard, ChaCha20 is a gap",
 			mode:      types.FIPSOff,
 			listeners: []cryptoreport.TLS{{Name: "api", Config: approvedTLS}},
 			validateFunc: func(r cryptoreport.Report) {
 				l := r.Listeners[0]
 				s.Equal("TLS 1.3", l.MinVersion)
-				s.Equal([]string{"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"}, l.Suites)
-				s.Equal([]string{"CurveP256"}, l.Groups)
-				s.True(l.Approved)
-				s.Len(r.Gaps, 1, "only the mode")
+				s.Contains(l.Suites, "TLS_CHACHA20_POLY1305_SHA256")
+				s.False(l.Approved)
+				s.Len(r.Gaps, 2)
 			},
 		},
 		{

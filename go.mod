@@ -44,6 +44,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.47.0
 	go.opentelemetry.io/proto/otlp v1.11.1
 	go.uber.org/mock v0.6.0
+	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.48.0
 	golang.org/x/tools v0.53.0
 	google.golang.org/grpc v1.85.0
@@ -271,7 +272,6 @@ require (
 	golang.org/x/mod v0.43.0 // indirect
 	golang.org/x/net v0.63.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
-	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/telemetry v0.0.0-20261116191925-e77a43154acb // indirect
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
