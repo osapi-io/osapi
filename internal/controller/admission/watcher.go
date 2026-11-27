@@ -23,6 +23,7 @@ package admission
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -218,11 +219,29 @@ func (w *Watcher) handleEnrollmentRequest(
 		return
 	}
 
+	// A request with a different key for an admitted machine is pending for
+	// the operator, who compares its fingerprint with the host. It is never
+	// admitted by auto_admit: a request carries no proof that it comes from
+	// the machine, so auto_admit would let it replace the admitted key.
+	rekey := false
+	if err := w.refuseOtherKey(ctx, req.MachineID, req.PublicKey, req.EncryptionKey); err != nil {
+		if !errors.Is(err, ErrMachineAdmitted) {
+			w.logger.Warn(
+				"failed to read the admitted key of an enrollment request",
+				slog.String("machine_id", req.MachineID),
+				slog.String("error", err.Error()),
+			)
+
+			return
+		}
+		rekey = true
+	}
+
 	w.logger.Info(
 		"received enrollment request",
 		slog.String("machine_id", req.MachineID),
 		slog.String("hostname", req.Hostname),
-		slog.String("fingerprint", req.Fingerprint),
+		slog.String("fingerprint", pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey)),
 	)
 
 	pending := PendingAgent{
@@ -230,8 +249,10 @@ func (w *Watcher) handleEnrollmentRequest(
 		Hostname:      req.Hostname,
 		PublicKey:     req.PublicKey,
 		EncryptionKey: req.EncryptionKey,
-		Fingerprint:   req.Fingerprint,
-		RequestedAt:   nowFn(),
+		// The fingerprint that the operator admits is of the keys of the
+		// request, not the fingerprint that the request reports.
+		Fingerprint: pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey),
+		RequestedAt: nowFn(),
 	}
 
 	data, err := marshalFn(pending)
@@ -270,6 +291,16 @@ func (w *Watcher) handleEnrollmentRequest(
 		w.record(ctx, audit.Change(ctx, audit.ActorAgent, req.MachineID,
 			"agent.enroll.request", req.MachineID, http.StatusAccepted,
 			"hostname="+req.Hostname+" fingerprint="+pending.Fingerprint))
+	}
+
+	if rekey {
+		w.logger.Warn(
+			"enrollment request for an admitted machine with a different key; an operator must admit it",
+			slog.String("machine_id", req.MachineID),
+			slog.String("hostname", req.Hostname),
+		)
+
+		return
 	}
 
 	if w.autoAdmit {

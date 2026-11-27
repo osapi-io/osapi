@@ -755,15 +755,18 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
+				agent.SetAgentState(a, types.AgentPending)
+
 				return a
 			},
 			msg: &nats.Msg{Data: []byte("not valid json")},
 			validateFunc: func(a *agent.Agent) {
 				// Invalid JSON should not change agent state.
-				assert.Empty(
+				assert.Equal(
 					suite.T(),
+					types.AgentPending,
 					agent.GetAgentState(a),
-					"agent state should remain empty after invalid JSON",
+					"agent state should remain pending after invalid JSON",
 				)
 			},
 		},
@@ -785,16 +788,44 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
+				agent.SetAgentState(a, types.AgentPending)
+
 				return a
 			},
 			msg: &nats.Msg{Data: []byte(`{"accepted":false,"reason":"denied by admin"}`)},
 			validateFunc: func(a *agent.Agent) {
 				// Rejection should leave agent state unchanged (empty).
-				assert.Empty(
+				assert.Equal(
 					suite.T(),
+					types.AgentPending,
 					agent.GetAgentState(a),
-					"agent state should remain empty after rejection",
+					"agent state should remain pending after rejection",
 				)
+			},
+		},
+		{
+			name: "when the agent is not pending the response changes nothing",
+			setupAgent: func() *agent.Agent {
+				a := agent.New(
+					memfs.New(), config.Config{}, slog.Default(),
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+				)
+				agent.SetAgentState(a, types.AgentCordoned)
+
+				return a
+			},
+			msg: func() *nats.Msg {
+				ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
+				data, _ := json.Marshal(pki.EnrollmentResponse{
+					Accepted:            true,
+					ControllerPublicKey: ctrlPub,
+				})
+
+				return &nats.Msg{Data: data}
+			}(),
+			validateFunc: func(a *agent.Agent) {
+				assert.Equal(suite.T(), types.AgentCordoned, agent.GetAgentState(a),
+					"a response does not admit an agent that is not pending")
 			},
 		},
 		{
@@ -840,6 +871,8 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				ctx, cancel := context.WithCancel(context.Background())
 				suite.T().Cleanup(cancel)
 				agent.SetAgentLifecycle(ctx, ctx, a, cancel, cancel)
+
+				agent.SetAgentState(a, types.AgentPending)
 
 				return a
 			},
@@ -900,6 +933,8 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				// Use the manager created from the base FS (keys already loaded).
 				agent.SetAgentPKIManager(a, m)
+
+				agent.SetAgentState(a, types.AgentPending)
 
 				return a
 			},

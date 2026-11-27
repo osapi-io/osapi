@@ -152,6 +152,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Forbidden(admission.ErrJoinSignature, "The request is not signed by the key that it asks to admit."),
 			endpoint.Invalid(admission.ErrJoinEncryptionKey, "The encryption key is not a public P-256 key. An agent with an older key makes a new one and joins again."),
 			endpoint.Unavailable(admission.ErrNoJoinTokens, "This controller takes no join."),
+			endpoint.Conflict(admission.ErrMachineAdmitted, "The machine is admitted with a different key. Delete its admission with `osapi client admission delete`, then join again."),
 		),
 	endpoint.Post[DrainInput, struct{}]("drain").
 		AdminOnly().

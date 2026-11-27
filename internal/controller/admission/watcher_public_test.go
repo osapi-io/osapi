@@ -83,6 +83,7 @@ func (s *WatcherPublicTestSuite) TearDownTest() {
 }
 
 func (s *WatcherPublicTestSuite) TearDownSubTest() {
+	admission.ResetKeyCache(s.watcher)
 	admission.ResetMarshalFn()
 	admission.ResetUnmarshalFn()
 	admission.ResetNowFn()
@@ -99,6 +100,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			name: "stores pending agent in KV",
 			setupMock: func() {
 				// A new request: no pending record yet.
+				// The machine is not admitted with a different key.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil, jetstream.ErrKeyNotFound)
@@ -114,7 +119,11 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 						s.Require().NoError(err, "stored value must be valid JSON")
 						s.Equal("machine-001", stored.MachineID)
 						s.Equal("web-01", stored.Hostname)
-						s.Equal("SHA256:abc123", stored.Fingerprint)
+						s.Equal(
+							testFingerprint,
+							stored.Fingerprint,
+							"the fingerprint of the keys, not the one the request reports",
+						)
 						s.Equal(testEncryptionKey, stored.EncryptionKey)
 						s.False(
 							stored.RequestedAt.IsZero(),
@@ -161,8 +170,51 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			}(),
 		},
 		{
+			name: "a request with a different key for an admitted machine is pending for the operator",
+			setupMock: func() {
+				other := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				other.EXPECT().Value().Return(func() []byte {
+					b, _ := json.Marshal(admission.AcceptedAgent{
+						MachineID: "machine-001",
+						PublicKey: []byte("victim-pubkey"),
+						Fingerprint: pki.FingerprintOfKeys(
+							[]byte("victim-pubkey"),
+							testEncryptionKey,
+						),
+					})
+
+					return b
+				}())
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(other, nil)
+				// It is pending, so that an operator compares its fingerprint
+				// with the host and admits it.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockKV.EXPECT().
+					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
+					Return(uint64(1), nil)
+			},
+			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
+		},
+		{
+			name: "refuses a request when the accepted record cannot be read",
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, errors.New("kv down"))
+			},
+			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
+		},
+		{
 			name: "logs warning on marshal failure",
 			setupMock: func() {
+				// The machine is not admitted with a different key.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				admission.SetMarshalFn(func(_ any) ([]byte, error) {
 					return nil, errors.New("marshal error")
 				})
@@ -173,6 +225,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			name: "logs warning on KV put failure",
 			setupMock: func() {
 				// A new request: no pending record yet.
+				// The machine is not admitted with a different key.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil, jetstream.ErrKeyNotFound)
@@ -214,6 +270,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 
 				// Store in KV.
 				// A new request: no pending record yet.
+				// The machine is not admitted with a different key.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockKV.EXPECT().
 					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 					Return(nil, jetstream.ErrKeyNotFound)
@@ -263,8 +323,44 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
 		},
 		{
+			// A request carries no proof that it comes from the machine, so
+			// auto_admit does not let it replace an admitted key.
+			name: "auto_admit does not admit a different key for an admitted machine",
+			setupMock: func() {
+				other := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				other.EXPECT().Value().Return(func() []byte {
+					b, _ := json.Marshal(admission.AcceptedAgent{
+						MachineID: "machine-001",
+						PublicKey: []byte("victim-pubkey"),
+						Fingerprint: pki.FingerprintOfKeys(
+							[]byte("victim-pubkey"),
+							testEncryptionKey,
+						),
+					})
+
+					return b
+				}())
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(other, nil)
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
+				s.mockKV.EXPECT().
+					KVPut(gomock.Any(), "enrollment", "enrollment.machine-001", gomock.Any()).
+					Return(uint64(1), nil)
+				// No response is published and the accepted record is not
+				// written: the mocks fail on a call that is not expected.
+			},
+			msg: s.makeEnrollmentMsg("machine-001", "web-01", "SHA256:abc123"),
+		},
+		{
 			name: "logs warning when auto-admit fails",
 			setupMock: func() {
+				// The machine is not admitted with a different key.
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-002").
+					Return(nil, jetstream.ErrKeyNotFound)
 				// Store in KV.
 				// A new request: no pending record yet.
 				s.mockKV.EXPECT().
@@ -319,7 +415,7 @@ func (s *WatcherPublicTestSuite) TestEnrollmentRequestRepeats() {
 		audited bool
 	}{
 		{name: "the same key again is not audited", entry: func() jetstream.KeyValueEntry {
-			return stored("SHA256:abc123")
+			return stored(testFingerprint)
 		}, audited: false},
 		{name: "a new key is audited", entry: func() jetstream.KeyValueEntry {
 			return stored("SHA256:old")
@@ -336,6 +432,10 @@ func (s *WatcherPublicTestSuite) TestEnrollmentRequestRepeats() {
 			log := &joinLog{}
 			s.watcher.SetAudit(log)
 			defer s.watcher.SetAudit(nil)
+			// The machine is not admitted with a different key.
+			s.mockKV.EXPECT().
+				KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+				Return(nil, jetstream.ErrKeyNotFound)
 			s.mockKV.EXPECT().
 				KVGet(gomock.Any(), "enrollment", "enrollment.machine-001").
 				Return(tc.entry(), nil)
@@ -871,6 +971,9 @@ func (s *WatcherPublicTestSuite) TestKVPrefix() {
 
 // testEncryptionKey is a public P-256 key in pki.EncryptionKeyEncoding.
 const testEncryptionKey = "BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs"
+
+// testFingerprint is the fingerprint of the keys of makeEnrollmentMsg.
+var testFingerprint = pki.FingerprintOfKeys([]byte("test-pubkey"), testEncryptionKey)
 
 // makeEnrollmentMsg creates a *nats.Msg with a serialized EnrollmentRequest.
 func (s *WatcherPublicTestSuite) makeEnrollmentMsg(

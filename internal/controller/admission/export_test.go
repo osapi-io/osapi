@@ -125,3 +125,11 @@ func SetRespond(
 
 	return func() { respond = old }
 }
+
+// ResetKeyCache forgets the cached accepted record of each machine.
+func ResetKeyCache(w *Watcher) {
+	w.keyCacheMu.Lock()
+	defer w.keyCacheMu.Unlock()
+	clear(w.keyCache)
+	w.keyCacheGen++
+}

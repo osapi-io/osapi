@@ -263,6 +263,18 @@ func (a *Agent) startEnrollmentListener(
 func (a *Agent) handleEnrollmentResponse(
 	msg *nats.Msg,
 ) {
+	// Only an agent that waits for admission takes a response. A response
+	// to an agent that is admitted, cordoned or draining does not change
+	// its controller key or its state.
+	if a.State() != types.AgentPending {
+		a.pkiLogger.Warn(
+			"ignored an enrollment response: the agent is not pending",
+			slog.String("state", string(a.State())),
+		)
+
+		return
+	}
+
 	var resp pki.EnrollmentResponse
 	if err := json.Unmarshal(msg.Data, &resp); err != nil {
 		a.pkiLogger.Warn(

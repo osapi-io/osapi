@@ -185,6 +185,15 @@ At its first start, an agent with a join string for NATS does these steps:
    starts to take jobs. Each later start reads `nats-join.json`, and does not
    join again.
 
+A join does not replace the keys of an admitted machine. When the controller
+admitted the machine ID with different keys, it refuses the join with a 409 and
+takes no use of the token. Delete the admission with
+`osapi client admission delete`, then join again. A join of a machine that is
+revoked or rejected is permitted, because the token is the decision of the
+operator. An enrollment request with different keys for an admitted machine is
+pending, and `auto_admit` does not admit it: a request has no proof that it
+comes from the machine. Compare its fingerprint with the host, then admit it.
+
 ```mermaid
 sequenceDiagram
     participant A as Agent

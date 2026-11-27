@@ -201,6 +201,9 @@ func (s *StorePublicTestSuite) TestCallout() {
 			name: "an old key of a machine that joined again is refused",
 			setup: func() {
 				s.joinWithUserKey(user)
+				// The operator deletes the machine, and it joins again.
+				delete(s.kv.data, admission.AcceptedKVPrefix()+"m-1")
+				admission.ResetKeyCache(s.watcher)
 				s.joinWithUserKey(other)
 			},
 			roles:   func() admission.CalloutRoles { return roles(time.Time{}, 0) },
