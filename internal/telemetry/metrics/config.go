@@ -29,9 +29,13 @@ import (
 // FromConfig makes the metrics server that cfg turns on, and does not start
 // it. It is nil when cfg turns it off. With TLS on and no cert_file, it
 // serves the self-signed certificate name in keyDir, which it makes.
+// keyDirKey is the config key of keyDir, such as nats.server.key_dir: the
+// error names it when the certificate cannot be made there
+// (osapi-io/osapi#1551).
 func FromConfig(
 	cfg config.MetricsServer,
 	keyDir string,
+	keyDirKey string,
 	name string,
 	log *slog.Logger,
 ) *Server {
@@ -44,7 +48,13 @@ func FromConfig(
 	// for its new name (osapi-io/osapi#1493).
 	t, err := cfg.TLS.WithCurrentSelfSigned(keyDir, name)
 	if err != nil {
-		log.Error("metrics server: tls", slog.String("error", err.Error()))
+		log.Error(
+			"metrics server: tls",
+			slog.String("error", err.Error()),
+			slog.String("key_dir", keyDir),
+			slog.String("fix", "set "+keyDirKey+" to a directory that this user can write, "+
+				"or give the metrics server a tls.cert_file"),
+		)
 
 		return nil
 	}

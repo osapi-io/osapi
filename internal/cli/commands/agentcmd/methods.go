@@ -81,6 +81,7 @@ func Components(
 	ms := metrics.FromConfig(
 		d.Config.Agent.Metrics,
 		d.Config.Agent.PKI.KeyDir,
+		"agent.pki.key_dir",
 		"agent-metrics",
 		log,
 	)
