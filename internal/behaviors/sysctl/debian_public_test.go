@@ -161,7 +161,7 @@ func (suite *DebianPublicTestSuite) TestWithDir() {
 				KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 				Return(uint64(1), nil)
 			suite.mockExec.EXPECT().
-				RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", tc.wantPath}).
+				RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", tc.wantPath}).
 				Return("", nil)
 
 			_, err := p.Create(
@@ -195,7 +195,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -260,7 +260,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -296,7 +296,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -326,7 +326,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -590,7 +590,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 					"/proc/sys/net/ipv4/ip_forward", []byte("0\n"), 0o644,
 				))
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(
@@ -659,7 +659,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
 					Return(uint64(1), nil)
 				suite.mockExec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
 					Return("", nil)
 			},
 			validateFunc: func(

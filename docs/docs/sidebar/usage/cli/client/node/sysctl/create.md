@@ -65,9 +65,9 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example               | On the host                                                                                                                                     |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Turn on IP forwarding | writes `/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf`: `net.ipv4.ip_forward = 1`; runs `sysctl -p /etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` |
+| Example               | On the host                                                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Turn on IP forwarding | writes `/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf`: `net.ipv4.ip_forward = 1`; runs `sysctl -e -p /etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` |
 
 The command fails in these cases:
 

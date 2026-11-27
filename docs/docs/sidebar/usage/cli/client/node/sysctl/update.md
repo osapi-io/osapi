@@ -108,10 +108,10 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example                          | On the host                                                                                                                    |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Lower swappiness                 | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -p /etc/sysctl.d/osapi-vm.swappiness.conf` |
-| A parameter osapi did not manage | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -p /etc/sysctl.d/osapi-vm.swappiness.conf` |
+| Example                          | On the host                                                                                                                       |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Lower swappiness                 | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -e -p /etc/sysctl.d/osapi-vm.swappiness.conf` |
+| A parameter osapi did not manage | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -e -p /etc/sysctl.d/osapi-vm.swappiness.conf` |
 
 The command fails in these cases:
 

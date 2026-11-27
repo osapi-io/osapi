@@ -220,11 +220,15 @@ func (d *Debian) deploy(
 		}, nil
 	}
 
-	// A file the kernel did not take is a failure: the value is not set.
+	// A file the kernel did not take is a failure: the value is not set. A
+	// parameter the kernel does not have right now, such as one whose module
+	// is not loaded, is not: -e skips it, and the file sets it when the module
+	// loads, as a file in sysctl.d does at boot. List and Get report it as
+	// managed, with the value of the file.
 	if _, execErr := d.execManager.RunPrivilegedCmd(
 		ctx,
 		"sysctl",
-		[]string{"-p", confPath},
+		[]string{"-e", "-p", confPath},
 	); execErr != nil {
 		return nil, fmt.Errorf("sysctl %s: apply %s: %w", opName, confPath, execErr)
 	}
