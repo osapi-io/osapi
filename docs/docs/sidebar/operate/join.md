@@ -219,6 +219,31 @@ string. On a host that you do not rebuild, stop the agent and empty its
 `agent.pki.key_dir` first. Then it makes new keys, and uses the join string of
 its config with a token that has a use left.
 
+## Move hosts to a different NATS server
+
+The controller does not push NATS settings to an agent. The agent keeps the NATS
+server and the TLS of its join in `nats-join.json`. Thus to move hosts to a
+different NATS server or address, each host joins again:
+
+1. Set `controller.join.url` to the new address of NATS, and make a token with a
+   use for each host, and the labels of the hosts:
+
+   ```bash
+   osapi controller join token create --uses 10 --labels group=web
+   ```
+
+2. On each host, stop the agent.
+3. Remove `nats-join.json` from `agent.pki.key_dir`. Do not remove the other
+   files: with its keys, the host stays the same machine to osapi.
+4. Set `agent.join` to the new join string, and start the agent.
+
+The agent finds no `nats-join.json`, so it joins with the new string and the
+keys that it has. The controller admits it again, and the token gives its
+labels.
+
+A new certificate on the same address does not need a join.
+`osapi client pki nats rotate` gives it to each agent.
+
 ## Check it
 
 ```bash
