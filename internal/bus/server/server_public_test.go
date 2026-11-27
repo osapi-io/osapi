@@ -255,7 +255,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				return
 			}
 			s.Require().NoError(err)
-			srv.Start()
+			s.Require().NoError(srv.Start())
 			srv.Stop(context.Background())
 		})
 	}

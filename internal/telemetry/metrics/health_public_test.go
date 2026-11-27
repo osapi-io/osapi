@@ -53,7 +53,7 @@ func (s *HealthPublicTestSuite) newStartedServer() (*metrics.Server, int, func()
 	srv := metrics.New("127.0.0.1", port, slog.Default())
 	s.Require().NotNil(srv)
 
-	srv.Start()
+	s.Require().NoError(srv.Start())
 	time.Sleep(100 * time.Millisecond)
 
 	stop := func() {
@@ -165,7 +165,7 @@ func (s *HealthPublicTestSuite) TestHandleReady() {
 				srv.SetReadinessFunc(tc.readinessFunc)
 			}
 
-			srv.Start()
+			s.Require().NoError(srv.Start())
 			time.Sleep(100 * time.Millisecond)
 
 			defer func() {

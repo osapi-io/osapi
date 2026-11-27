@@ -134,6 +134,6 @@ func (s *CalloutPublicTestSuite) TestCalloutConnectFails() {
 	defer cancel()
 	c, err := controller.New(ctx, slog.Default(), cfg)
 	s.Require().NoError(err)
-	c.Start()
+	s.Require().NoError(c.Start())
 	c.Stop(context.Background())
 }

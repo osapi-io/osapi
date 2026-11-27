@@ -56,10 +56,12 @@ func (s *ProcessPublicTestSuite) component(
 	p *seen,
 ) command.Component {
 	c := mocks.NewMockComponent(gomock.NewController(s.T()))
-	c.EXPECT().Start().Do(func() {
+	c.EXPECT().Start().DoAndReturn(func() error {
 		p.mu.Lock()
 		defer p.mu.Unlock()
 		p.started = true
+
+		return nil
 	}).AnyTimes()
 	c.EXPECT().Stop(gomock.Any()).Do(func(ctx context.Context) {
 		p.mu.Lock()
@@ -157,6 +159,49 @@ func (s *ProcessPublicTestSuite) TestServe() {
 			tc.validateFunc(command.Serve(cmd, g, tc.method), setupCtx, p, cleaned)
 		})
 	}
+}
+
+// TestServeStartFails holds that a component that does not start ends the
+// process at once: Serve does not wait for the context, it stops the
+// components that started before it but not the one that failed, it runs the
+// cleanup, and the start's error is the command's.
+func (s *ProcessPublicTestSuite) TestServeStartFails() {
+	first := &seen{}
+	ok := s.component(first)
+	failed := mocks.NewMockComponent(gomock.NewController(s.T()))
+	failed.EXPECT().Start().Return(errors.New("no machine ID"))
+	// No Stop: a Start that fails leaves nothing running.
+	after := mocks.NewMockComponent(gomock.NewController(s.T()))
+
+	cleaned := false
+	g := command.Define("zzprocfail", "Process", command.Uses[struct{}](),
+		command.Process("start").Short("Start it").
+			Setup(func(context.Context, struct{}) (command.Running, error) {
+				return command.Running{
+					Components: []command.Component{ok, failed, after},
+					Cleanup:    func(context.Context) { cleaned = true },
+				}, nil
+			}))
+	command.Provide(g, func() struct{} { return struct{}{} })
+
+	// The context never ends: Serve must return on the failed start.
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	done := make(chan error, 1)
+	go func() { done <- command.Serve(cmd, g, "start") }()
+
+	select {
+	case err := <-done:
+		s.EqualError(err, "no machine ID")
+	case <-time.After(5 * time.Second):
+		s.Fail("Serve waited after a component did not start")
+	}
+	first.mu.Lock()
+	defer first.mu.Unlock()
+	s.True(first.started)
+	s.NotNil(first.stopCtx, "the component that started is stopped")
+	s.True(cleaned)
 }
 
 // TestServeNoContext runs a process whose command has no context: Serve

@@ -171,6 +171,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 	tests := []struct {
 		name      string
 		setupFunc func() *agent.Agent
+		wantErr   string
 		stopFunc  func(a *agent.Agent)
 	}{
 		{
@@ -241,10 +242,18 @@ func (s *AgentPublicTestSuite) TestStart() {
 
 				return s.buildAgent()
 			},
+			wantErr: "resolve the agent's identity: machine-id not found",
 			stopFunc: func(a *agent.Agent) {
 				// Agent should not have started — identity failed.
 				err := a.IsReady()
 				s.Error(err)
+
+				// No stopped event: the mock job client has no
+				// WriteAgentTimelineEvent expectation, so a write fails the
+				// test.
+				stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				a.Stop(stopCtx)
 			},
 		},
 		{
@@ -281,6 +290,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 				})
 			},
+			wantErr: "PKI enrollment:",
 			stopFunc: func(a *agent.Agent) {
 				// Agent should not have started — PKI enrollment failed.
 				err := a.IsReady()
@@ -368,6 +378,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 					execManager:     mockExecMgr,
 				})
 			},
+			wantErr: "a preflight check failed, so the agent cannot start",
 			stopFunc: func(a *agent.Agent) {
 				// Agent should not have started consumers, so IsReady fails.
 				err := a.IsReady()
@@ -491,7 +502,12 @@ func (s *AgentPublicTestSuite) TestStart() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			a := tt.setupFunc()
-			a.Start()
+			err := a.Start()
+			if tt.wantErr != "" {
+				s.ErrorContains(err, tt.wantErr)
+			} else {
+				s.NoError(err)
+			}
 			tt.stopFunc(a)
 		})
 	}
@@ -532,7 +548,7 @@ func (s *AgentPublicTestSuite) TestIsReady() {
 					Times(6)
 
 				a := s.buildAgent()
-				a.Start()
+				s.Require().NoError(a.Start())
 				s.T().Cleanup(func() {
 					stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 					defer cancel()

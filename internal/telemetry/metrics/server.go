@@ -199,7 +199,7 @@ func (s *Server) MeterProvider() *sdkmetric.MeterProvider {
 const shutdownGracePeriod = 10 * time.Second
 
 // Start starts the HTTP server in a background goroutine.
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	// v5 drives the listener from a context rather than a Shutdown method,
 	// so Stop cancels this one.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -225,6 +225,8 @@ func (s *Server) Start() {
 			)
 		}
 	}()
+
+	return nil
 }
 
 // Stop gracefully shuts down the HTTP server and meter provider.

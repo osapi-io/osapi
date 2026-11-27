@@ -116,7 +116,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindMethod,
 			Name: `.Setup(fn)`,
-			Does: "Is func(ctx context.Context, d D) (command.Running, error): it makes the process's components with ctx, the command's context, so a signal stops a setup that waits. Running is the components, each with Start() and Stop(ctx), and a Cleanup. command.Serve starts them, waits until ctx ends, stops them together, then runs Cleanup; the stop and the cleanup get context.WithoutCancel(ctx), which keeps its values, with command.ShutdownTimeout, 10 seconds. An error is the command's error, and it exits 1.",
+			Does: "Is func(ctx context.Context, d D) (command.Running, error): it makes the process's components with ctx, the command's context, so a signal stops a setup that waits. Running is the components, each with Start() error and Stop(ctx), and a Cleanup. command.Serve starts them, waits until ctx ends, stops them together, then runs Cleanup; the stop and the cleanup get context.WithoutCancel(ctx), which keeps its values, with command.ShutdownTimeout, 10 seconds. When a Start fails, Serve stops the components that started before it, and runs Cleanup, at once. An error of the setup or of a Start is the command's error, and it exits 1.",
 			When: "On each Process, in place of .Handle. Make each component in Setup and start nothing: Serve starts them.",
 		},
 		{

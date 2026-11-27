@@ -174,6 +174,10 @@ type Agent struct {
 	// machineID is the permanent host identifier resolved at startup.
 	machineID string
 
+	// started is true after a Start that worked. Stop writes the stopped
+	// event only then. Start and Stop run on one goroutine.
+	started bool
+
 	// hostname cached from Start for drain/undrain resubscribe.
 	hostname string
 

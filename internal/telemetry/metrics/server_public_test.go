@@ -144,7 +144,7 @@ func (s *ServerPublicTestSuite) TestStart() {
 
 			srv := metrics.New("127.0.0.1", port, slog.Default())
 			s.Require().NotNil(srv)
-			srv.Start()
+			s.Require().NoError(srv.Start())
 
 			time.Sleep(100 * time.Millisecond)
 
@@ -234,7 +234,7 @@ func (s *ServerPublicTestSuite) TestStop() {
 				},
 			)
 
-			srv.Start()
+			s.Require().NoError(srv.Start())
 			time.Sleep(100 * time.Millisecond)
 
 			tc.setup(srv, port)
@@ -307,7 +307,7 @@ func (s *ServerPublicTestSuite) TestComponentUpGauge() {
 				srv.SetReadinessFunc(tc.readinessFunc)
 			}
 
-			srv.Start()
+			s.Require().NoError(srv.Start())
 			time.Sleep(100 * time.Millisecond)
 
 			tc.validateFunc(scrapeMetrics(port))
@@ -367,7 +367,7 @@ func (s *ServerPublicTestSuite) TestRegisterSubsystems() {
 			srv := metrics.New("127.0.0.1", port, slog.Default())
 			srv.RegisterSubsystems(tc.subsystems)
 
-			srv.Start()
+			s.Require().NoError(srv.Start())
 			time.Sleep(100 * time.Millisecond)
 
 			tc.validateFunc(scrapeMetrics(port))
@@ -430,7 +430,7 @@ func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
 			srv := metrics.New("127.0.0.1", port, slog.Default())
 			srv.RegisterHeartbeatAge(tc.timeFn)
 
-			srv.Start()
+			s.Require().NoError(srv.Start())
 			time.Sleep(100 * time.Millisecond)
 
 			tc.validateFunc(scrapeMetrics(port))
@@ -461,7 +461,7 @@ func (s *ServerPublicTestSuite) TestBehaviorMetricNames() {
 	h, err := meter.Float64Histogram(instruments.BehaviorDuration.Name)
 	s.Require().NoError(err)
 	h.Record(context.Background(), 0.1)
-	srv.Start()
+	s.Require().NoError(srv.Start())
 	time.Sleep(100 * time.Millisecond)
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -564,7 +564,7 @@ func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
 
 			srv := metrics.New("127.0.0.1", s.getFreePort(), logger)
 			s.Require().NotNil(srv)
-			srv.Start()
+			s.Require().NoError(srv.Start())
 
 			s.Eventually(func() bool {
 				return strings.Contains(out.String(), "http(s) server started")
