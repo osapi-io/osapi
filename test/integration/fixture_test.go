@@ -139,6 +139,10 @@ func startFixture(
 		fmt.Sprintf("OSAPI_CONTROLLER_NATS_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_AGENT_NATS_PORT=%d", natsPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_PKI_KEY_DIR=%s", filepath.Join(dir, "pki", "controller")),
+		// The key directory of the fixture's host agent; startAgent gives
+		// each other agent its own, which the last value in the environment
+		// sets.
+		fmt.Sprintf("OSAPI_AGENT_PKI_KEY_DIR=%s", filepath.Join(dir, "pki", "agent")),
 		fmt.Sprintf("OSAPI_CONTROLLER_PKI_AUTO_ADMIT=%t", autoAdmit),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=https://127.0.0.1:%d", apiPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", tok),

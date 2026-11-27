@@ -67,6 +67,14 @@ func (s *CommandSmokeSuite) SetupSuite() {
 func (s *CommandSmokeSuite) hostFixture() *fixtureServer {
 	if s.host == nil {
 		s.host = startFixture(s.t, true)
+		// The pki commands read the keys of the host's agent.
+		keyDir := filepath.Join(s.host.dir, "pki", "agent")
+		agent := s.host.startAgent(keyDir, "")
+		s.Require().True(waitFor(30*time.Second, func() bool {
+			_, err := os.Stat(filepath.Join(keyDir, "agent.key"))
+
+			return err == nil
+		}), "the fixture's agent made no key:\n%s", tail(agent.out.String(), 20))
 	}
 
 	return s.host
@@ -483,6 +491,12 @@ func (f *fixtures) stdin(
 	c cliCase,
 ) string {
 	if c.group == "controller token" {
+		// A host command against a deployment runs against a fixture,
+		// which signs with the suite's key, not the deployment's.
+		if hostTarget != nil {
+			return hostTarget.token
+		}
+
 		return token
 	}
 
