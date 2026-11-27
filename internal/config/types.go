@@ -162,7 +162,7 @@ type NATSSecrets struct {
 }
 
 // NATSEnrollment configuration for the PKI enrollment KV bucket.
-// No TTL — pending enrollment requests persist until accepted or rejected.
+// No TTL. Pending enrollment requests persist until accepted or rejected.
 type NATSEnrollment struct {
 	// Bucket is the KV bucket name for pending enrollment entries.
 	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for pending enrollment entries."`
@@ -203,7 +203,7 @@ type NATSFacts struct {
 // NATSState configuration for the agent state KV bucket (drain flags, timeline events).
 type NATSState struct {
 	// Bucket is the KV bucket name for persistent agent state.
-	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for persistent agent state (drain flags, timeline events). No TTL — operator actions persist indefinitely."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for persistent agent state (drain flags, timeline events). No TTL, so operator actions persist until removed."`
 	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
 }
@@ -218,10 +218,10 @@ type NATSObjects struct {
 }
 
 // NATSFileState configuration for the file deployment state KV bucket.
-// No TTL — deployed file state persists until explicitly removed.
+// No TTL. Deployed file state persists until it is removed.
 type NATSFileState struct {
 	// Bucket is the KV bucket name for file deployment SHA tracking.
-	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for file deploy state tracking. No TTL — state persists until explicitly removed."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for file deploy state tracking. No TTL, so state persists until it is removed."`
 	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
 	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
 }
@@ -677,7 +677,7 @@ type AgentConfig struct {
 	// MaxJobs maximum number of concurrent jobs to process.
 	MaxJobs int `mapstructure:"max_jobs" doc:"Maximum number of concurrent jobs to process." validate:"min=1"`
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
-	// Maximum 5 labels per agent — each label creates multiple NATS consumers
+	// Maximum 5 labels per agent. Each label creates multiple NATS consumers
 	// for hierarchical prefix matching.
 	Labels map[string]string `mapstructure:"labels" doc:"Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details." validate:"max=5" choice:"the labels of the host, which the operator picks"`
 	// Conditions holds threshold settings for node condition evaluation.
