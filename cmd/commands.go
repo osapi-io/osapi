@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"os/exec"
 	"runtime"
 	"strings"
 	"time"
@@ -34,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
 	"github.com/osapi-io/osapi/internal/cli/commands/pkikey"
 	"github.com/osapi-io/osapi/internal/cli/commands/pkilist"
+	osapiexec "github.com/osapi-io/osapi/internal/exec"
 
 	"github.com/osapi-io/osapi/internal/audit"
 
@@ -442,9 +442,9 @@ func runCommand(
 	name string,
 	args ...string,
 ) error {
-	out, err := exec.CommandContext(ctx, name, args...).CombinedOutput()
+	out, err := osapiexec.New(logger, false).RunCmd(ctx, name, args)
 	if err != nil {
-		return fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
+		return fmt.Errorf("%w: %s", err, strings.TrimSpace(out))
 	}
 
 	return nil

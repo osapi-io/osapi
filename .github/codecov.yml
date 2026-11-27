@@ -16,6 +16,15 @@
 # .coverignore and applied by `just go-unit-cov` before the profile is
 # uploaded, so excluded files never reach Codecov. A second list here would be
 # free to drift from that one.
+
+# Each of the ten unit shards of go.yml sends its own profile. Codecov
+# reports only when all ten are in, so its status is never green from the
+# shards that were fast. The gate is each shard's own check (go-unit-shard).
+# Change the number with the shards.
+codecov:
+  notify:
+    after_n_builds: 10
+
 coverage:
   precision: 2
   round: down
@@ -31,6 +40,7 @@ coverage:
         threshold: 0.05%
 
 comment:
+  after_n_builds: 10
   layout: "reach,diff,flags,files,footer"
   behavior: default
   require_changes: false
