@@ -679,6 +679,13 @@ lab, the `host` commands and `SecurityDefaultsSuite` run against a fixture. Each
 agent of a fixture has the machine ID of the host, so a test starts one at a
 time.
 
+`AuthorizationSuite` sends each route of the API contract
+(`internal/apicontract/testdata/joined.golden`) with no token, which must be
+401, and with a token of a built-in role that does not grant the route's
+permission, which must be 403 with an `ErrorResponse`. Neither request changes
+anything, so each write route runs too. A new route needs no case of its own:
+its line in the contract is its case.
+
 `TestEachCommandHasACase`, in the same file, has no build tag, so it runs with
 the unit tests. It fails for a command with no example and no refusal, for a
 process with no skip, for a policy that names no command, and for an example of
