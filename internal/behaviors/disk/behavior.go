@@ -46,8 +46,11 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Get the disk usage of the host").
 		Explain("Reads the size, the used space and the free space of each local "+
 			"filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on "+
-			"macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and "+
-			"apfs and hfs on macOS. Network and special filesystems are left out.").
+			"macOS, with their sizes from df. Local is ext2, ext3, ext4, xfs, btrfs, zfs, "+
+			"f2fs and bcachefs on Linux, and apfs and hfs on macOS. Network and special "+
+			"filesystems are left out. A device that is mounted at more than one path, "+
+			"such as a btrfs filesystem with a subvolume at / and at /home, is one disk, "+
+			"at its shortest path.").
 		Example("A host with one local filesystem", GetInput{},
 			Entry{
 				Disks: []Disk{
@@ -64,5 +67,22 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Prints("df -ki",
 				"Filesystem 1024-blocks Used Available Capacity iused ifree %iused Mounted on\n"+
 					"/dev/disk3s1 51200000 20480000 30720000 40% 100 200 1% /\n"),
+		).
+		Example("A btrfs filesystem with subvolumes at /home, / and /var", GetInput{},
+			Entry{
+				Disks: []Disk{
+					{Name: "/", Total: 52428800000, Used: 20971520000, Free: 31457280000},
+				},
+			},
+			behavior.OnPlatform(behavior.PlatformLinux),
+			behavior.Exists("/proc/mounts",
+				"/dev/vda3 /home btrfs rw,relatime,subvol=/home 0 0\n"+
+					"/dev/vda3 / btrfs rw,relatime,subvol=/root 0 0\n"+
+					"/dev/vda3 /var btrfs rw,relatime,subvol=/var 0 0\n"),
+			behavior.Prints("df -akP",
+				"Filesystem 1024-blocks Used Available Capacity Mounted on\n"+
+					"/dev/vda3 51200000 20480000 30720000 40% /home\n"+
+					"/dev/vda3 51200000 20480000 30720000 40% /\n"+
+					"/dev/vda3 51200000 20480000 30720000 40% /var\n"),
 		),
 ))

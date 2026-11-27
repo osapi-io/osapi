@@ -64,7 +64,7 @@ export const getGetNodeDiskUrl = (hostname: string,) => {
 }
 
 /**
- * Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.
+ * Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext2, ext3, ext4, xfs, btrfs, zfs, f2fs and bcachefs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out. A device that is mounted at more than one path, such as a btrfs filesystem with a subvolume at / and at /home, is one disk, at its shortest path.
  * @summary Get the disk usage of the host
  */
 export const getNodeDisk = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeDiskResponse> => {

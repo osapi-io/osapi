@@ -31,9 +31,11 @@ import (
 )
 
 // localTypes are the filesystem types of local disks. Network, virtual and
-// container mounts, such as nfs, tmpfs and overlay, are left out.
+// container mounts, such as nfs, tmpfs and overlay, are left out, and so is
+// the vfat of an EFI system partition.
 var localTypes = map[string]bool{
-	"ext4": true, "xfs": true, "btrfs": true, "apfs": true, "hfs": true,
+	"ext2": true, "ext3": true, "ext4": true, "xfs": true, "btrfs": true,
+	"zfs": true, "f2fs": true, "bcachefs": true, "apfs": true, "hfs": true,
 }
 
 // reader reads the local filesystems with gohai's filesystem collector,
@@ -49,7 +51,9 @@ func newReader(
 }
 
 // Disks is the size, the used and the free bytes of each local
-// filesystem. A mount without sizes is left out.
+// filesystem. A mount without sizes is left out. A device that is mounted
+// at more than one path, such as btrfs subvolumes, is one disk, at its
+// shortest path, so its size counts once.
 func (r *reader) Disks(
 	ctx context.Context,
 ) ([]Disk, error) {
@@ -58,14 +62,21 @@ func (r *reader) Disks(
 		return nil, fmt.Errorf("read filesystems: %w", err)
 	}
 	disks := []Disk{}
+	at := map[string]int{}
 	for _, m := range got.(*filesystem.Info).Mounts {
 		if m.Device == "" || !localTypes[m.Type] || m.Total == 0 {
 			continue
 		}
-		disks = append(
-			disks,
-			Disk{Name: m.Mountpoint, Total: int(m.Total), Used: int(m.Used), Free: int(m.Free)},
-		)
+		d := Disk{Name: m.Mountpoint, Total: int(m.Total), Used: int(m.Used), Free: int(m.Free)}
+		if i, ok := at[m.Device]; ok {
+			if len(d.Name) < len(disks[i].Name) {
+				disks[i] = d
+			}
+
+			continue
+		}
+		at[m.Device] = len(disks)
+		disks = append(disks, d)
 	}
 
 	return disks, nil

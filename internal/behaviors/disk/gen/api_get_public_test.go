@@ -62,6 +62,40 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"A btrfs filesystem with subvolumes at /home, / and /var\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/disk",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"disk.get",
+				disk.GetInput{},
+				servertest.Completed("server1", `{"disks":[{"name":"/","total":52428800000,"used":20971520000,"free":31457280000}]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A btrfs filesystem with subvolumes at /home, / and /var\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/disk",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"disk.get",
+				disk.GetInput{},
+				servertest.Completed("server1", `{"disks":[{"name":"/","total":52428800000,"used":20971520000,"free":31457280000}]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
