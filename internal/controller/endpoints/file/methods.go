@@ -121,6 +121,9 @@ func Upload(
 	w := write{name: in.Name, contentType: in.ContentType, data: in.File}
 
 	existing, err := d.Objects.Info(ctx, in.Name)
+	if err != nil && !errors.Is(err, jetstream.ErrObjectNotFound) {
+		return UploadResponse{}, endpoint.Internal("failed to get file info", err)
+	}
 	if err == nil && existing != nil {
 		if existing.Digest == w.digest() {
 			return w.result(false), endpoint.Answer(200)
@@ -154,6 +157,9 @@ func Update(
 	w := write{name: in.Name, contentType: in.ContentType, data: in.File}
 
 	existing, err := d.Objects.Info(ctx, in.Name)
+	if err != nil && !errors.Is(err, jetstream.ErrObjectNotFound) {
+		return UploadResponse{}, endpoint.Internal("failed to get file info", err)
+	}
 	existed := err == nil && existing != nil
 	if existed && existing.Digest == w.digest() {
 		return w.result(false), endpoint.Answer(200)
@@ -231,11 +237,18 @@ func Stale(
 		}
 
 		// The object's checksum, not the file's: the file of a template is
-		// the object rendered, and its checksum is never the object's.
+		// the object rendered, and its checksum is never the object's. The
+		// Object Store keeps the SHA-256 of each object in its info, so the
+		// check reads no content. An object that is gone is stale with no
+		// current checksum. A store that cannot be read is the error, not a
+		// stale deploy.
 		current := ""
-		if content, err := d.Objects.GetBytes(ctx, state.ObjectName); err == nil {
-			sum := sha256.Sum256(content)
-			current = hex.EncodeToString(sum[:])
+		obj, err := d.Objects.Info(ctx, state.ObjectName)
+		if err != nil && !errors.Is(err, jetstream.ErrObjectNotFound) {
+			return StaleDeploymentsResponse{}, endpoint.Internal("failed to get file info", err)
+		}
+		if err == nil {
+			current = hexDigest(obj.Digest)
 			if current == state.ObjectSHA256 {
 				continue
 			}
