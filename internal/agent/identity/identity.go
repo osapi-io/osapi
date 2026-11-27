@@ -21,13 +21,24 @@
 package identity
 
 import (
+	"context"
 	"fmt"
 	"runtime"
+	"strings"
+	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/machineid"
+	"github.com/osapi-io/gohai/pkg/gohai/family"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
+
+// machineIDTimeout bounds the read of the machine ID. Identity resolution
+// runs before the agent starts, with no deadline of its own. On macOS the
+// read runs ioreg, and gohai's runner bounds each command as well.
+var machineIDTimeout = 10 * time.Second
 
 // getMachineIDFn dispatches to the platform-specific machine ID resolver.
 // Overridable in tests via export_test.go.
@@ -37,18 +48,39 @@ var getMachineIDFn = defaultGetMachineID
 // Overridable in tests via export_test.go to cover all platform branches.
 var osPlatform = runtime.GOOS
 
-// defaultGetMachineID selects the machine ID reader based on osPlatform.
+// machineIDRunner runs the commands of the read, such as ioreg on macOS. Nil
+// is gohai's runner; a test replaces it.
+var machineIDRunner source.Runner
+
+// defaultGetMachineID reads the machine ID through gohai's machine_id
+// collector: /etc/machine-id, then /var/lib/dbus/machine-id, then the DMI
+// product UUID on Linux, and the IOPlatformUUID of ioreg on macOS. The agent
+// must not start without one, so an empty ID is an error.
 func defaultGetMachineID(
 	fs avfs.VFS,
 ) (string, error) {
+	src := source.Sources{FS: fs, Exec: machineIDRunner}
 	switch osPlatform {
 	case "linux":
-		return GetMachineIDFromFS(fs)
 	case "darwin":
-		return GetDarwinMachineID()
+		src.Family = family.Darwin
 	default:
 		return "", fmt.Errorf("unsupported platform: %s", osPlatform)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), machineIDTimeout)
+	defer cancel()
+
+	got, err := machineid.NewWith(src).Collect(ctx, nil)
+	if err != nil {
+		return "", fmt.Errorf("read the machine ID: %w", err)
+	}
+	info, _ := got.(*machineid.Info)
+	if info == nil || strings.TrimSpace(info.ID) == "" {
+		return "", fmt.Errorf("read the machine ID: the host has none")
+	}
+
+	return strings.TrimSpace(info.ID), nil
 }
 
 // GetIdentity resolves the machine identity by reading the machine ID and

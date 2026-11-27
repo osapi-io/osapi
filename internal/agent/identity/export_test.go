@@ -22,34 +22,10 @@ package identity
 
 import (
 	"runtime"
-	"time"
 
 	"github.com/avfs/avfs"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 )
-
-// SetIoregFn overrides the ioregFn function for testing.
-func SetIoregFn(
-	fn func() (string, error),
-) {
-	ioregFn = fn
-}
-
-// ResetIoregFn restores the default ioregFn function.
-func ResetIoregFn() {
-	ioregFn = defaultIoregFn
-}
-
-// SetExecCommandFn overrides the execCommandFn function for testing.
-func SetExecCommandFn(
-	fn func() ([]byte, error),
-) {
-	execCommandFn = fn
-}
-
-// ResetExecCommandFn restores the default execCommandFn function.
-func ResetExecCommandFn() {
-	execCommandFn = defaultExecCommandFn
-}
 
 // SetGetMachineIDFn overrides the getMachineIDFn function for testing.
 func SetGetMachineIDFn(
@@ -61,11 +37,6 @@ func SetGetMachineIDFn(
 // ResetGetMachineIDFn restores the default getMachineIDFn function.
 func ResetGetMachineIDFn() {
 	getMachineIDFn = defaultGetMachineID
-}
-
-// ExportDefaultIoregFn exposes defaultIoregFn for testing.
-func ExportDefaultIoregFn() (string, error) {
-	return defaultIoregFn()
 }
 
 // ExportDefaultGetMachineID exposes defaultGetMachineID for testing.
@@ -87,14 +58,13 @@ func ResetOSPlatform() {
 	osPlatform = runtime.GOOS
 }
 
-// SetIoreg replaces the program that runs as ioreg and its timeout, and
-// returns a function that puts both back.
-func SetIoreg(
-	program string,
-	timeout time.Duration,
+// SetMachineIDRunner replaces the runner of the commands of the read, and
+// returns a function that puts it back.
+func SetMachineIDRunner(
+	r source.Runner,
 ) func() {
-	oldProgram, oldTimeout := ioregProgram, ioregTimeout
-	ioregProgram, ioregTimeout = program, timeout
+	old := machineIDRunner
+	machineIDRunner = r
 
-	return func() { ioregProgram, ioregTimeout = oldProgram, oldTimeout }
+	return func() { machineIDRunner = old }
 }
