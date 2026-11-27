@@ -42,7 +42,7 @@ process metrics (CPU, memory, file descriptors).
 | Metric                            | Type      | Labels                                                                                  | Component  | Description                                             |
 | --------------------------------- | --------- | --------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------- |
 | `osapi_component_up`              | gauge     |                                                                                         | all        | Whether the component is ready (1) or not (0).          |
-| `osapi_subsystem_up`              | gauge     | subsystem                                                                               | all        | Whether a subsystem is healthy (1) or not (0).          |
+| `osapi_subsystem_up`              | gauge     | subsystem                                                                               | all        | Whether the config turns a subsystem on (1) or off (0). |
 | `osapi_heartbeat_age_seconds`     | gauge     |                                                                                         | agent      | Seconds since last successful heartbeat write.          |
 | `osapi_jobs_created_total`        | counter   |                                                                                         | controller | Total jobs submitted via API.                           |
 | `osapi_jobs_processed_total`      | counter   | status                                                                                  | agent      | Total jobs processed.                                   |
@@ -56,8 +56,11 @@ process metrics (CPU, memory, file descriptors).
 
 The `osapi_subsystem_up` gauge has a `subsystem` label that names its internal
 service, for example `api`, `heartbeat`, `metrics`, `notifier`, `tracing` or
-`facts`. A value of 1 means that the status of the subsystem is `ok`. A value of
-0 means `disabled` or `error`.
+`facts`. The process sets the value at start, from its config. A value of 1
+means that the config turns the subsystem on. A value of 0 means that the config
+turns it off. The gauge does not change when a subsystem fails while the process
+runs. For the health of the process, use `osapi_component_up` and the health
+probes. For the heartbeat of an agent, use `osapi_heartbeat_age_seconds`.
 
 The controller also has HTTP request metrics from the OTEL middleware, with the
 standard `http.server.*` names, for example `http.server.request.duration` and
