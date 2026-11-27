@@ -152,6 +152,25 @@ func (s *SecurityDefaultsSuite) TestNATS() {
 		_, err := nats.Connect(url, secure, nats.Timeout(5*time.Second), nats.MaxReconnects(0))
 		s.ErrorContains(err, "Authorization Violation")
 	})
+	s.Run("the controller cannot read the answers that agents get", func() {
+		s.violates("controller", "integration-controller", secure, url, func(nc *nats.Conn) error {
+			_, err := nc.SubscribeSync("enroll.response.integration-nosuch")
+
+			return err
+		})
+	})
+	s.Run("a join user can send no job", func() {
+		s.violates("join", "integration-join", secure, url, func(nc *nats.Conn) error {
+			return nc.Publish("jobs.query._any", []byte("{}"))
+		})
+	})
+	s.Run("a join user cannot read the answers that agents get", func() {
+		s.violates("join", "integration-join", secure, url, func(nc *nats.Conn) error {
+			_, err := nc.SubscribeSync("enroll.response.integration-nosuch")
+
+			return err
+		})
+	})
 	s.Run("an agent cannot send a job", func() {
 		nc, err := nats.Connect(url, secure, nats.UserInfo("agent", "integration-agent"),
 			nats.Timeout(5*time.Second), nats.MaxReconnects(0))
@@ -168,6 +187,36 @@ func (s *SecurityDefaultsSuite) TestNATS() {
 			s.Fail("the server let an agent publish a job")
 		}
 	})
+}
+
+// violates connects as user and runs do, which the server must refuse with
+// a permission violation.
+func (s *SecurityDefaultsSuite) violates(
+	user string,
+	password string,
+	secure nats.Option,
+	url string,
+	do func(nc *nats.Conn) error,
+) {
+	nc, err := nats.Connect(url, secure, nats.UserInfo(user, password),
+		nats.Timeout(5*time.Second), nats.MaxReconnects(0))
+	s.Require().NoError(err)
+	defer nc.Close()
+	errs := make(chan error, 1)
+	nc.SetErrorHandler(func(_ *nats.Conn, _ *nats.Subscription, err error) {
+		select {
+		case errs <- err:
+		default:
+		}
+	})
+	s.Require().NoError(do(nc))
+	_ = nc.Flush()
+	select {
+	case err := <-errs:
+		s.ErrorIs(err, nats.ErrPermissionViolation)
+	case <-time.After(3 * time.Second):
+		s.Failf("no permission violation", "the server let %s do it", user)
+	}
 }
 
 func TestSecurityDefaultsSuite(
