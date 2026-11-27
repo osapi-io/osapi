@@ -68,10 +68,15 @@ export type getNodeHostnameResponse500 = {
   status: 500
 }
 
+export type getNodeHostnameResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeHostnameResponseSuccess = (getNodeHostnameResponse200) & {
   headers: Headers;
 };
-export type getNodeHostnameResponseError = (getNodeHostnameResponse400 | getNodeHostnameResponse401 | getNodeHostnameResponse403 | getNodeHostnameResponse404 | getNodeHostnameResponse409 | getNodeHostnameResponse500) & {
+export type getNodeHostnameResponseError = (getNodeHostnameResponse400 | getNodeHostnameResponse401 | getNodeHostnameResponse403 | getNodeHostnameResponse404 | getNodeHostnameResponse409 | getNodeHostnameResponse500 | getNodeHostnameResponse503) & {
   headers: Headers;
 };
 
@@ -136,10 +141,15 @@ export type putNodeHostnameResponse500 = {
   status: 500
 }
 
+export type putNodeHostnameResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeHostnameResponseSuccess = (putNodeHostnameResponse200) & {
   headers: Headers;
 };
-export type putNodeHostnameResponseError = (putNodeHostnameResponse400 | putNodeHostnameResponse401 | putNodeHostnameResponse403 | putNodeHostnameResponse404 | putNodeHostnameResponse409 | putNodeHostnameResponse500) & {
+export type putNodeHostnameResponseError = (putNodeHostnameResponse400 | putNodeHostnameResponse401 | putNodeHostnameResponse403 | putNodeHostnameResponse404 | putNodeHostnameResponse409 | putNodeHostnameResponse500 | putNodeHostnameResponse503) & {
   headers: Headers;
 };
 

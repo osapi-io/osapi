@@ -15,7 +15,7 @@ import type { StreamInfo } from './streamInfo';
 
 export interface StatusResponse {
   agents?: AgentStats;
-  /** What the controller that answered checked for this answer: its connection to NATS and to the KV store. */
+  /** What the controller that answered checked for this answer: its connection to NATS and to the KV store, and whether the job store is near its limit. */
   checks: Check[];
   /** Total number of JetStream consumers: the sum of the consumers of each stream. */
   consumers: number;

@@ -67,10 +67,15 @@ export type putNodeUserPasswordResponse500 = {
   status: 500
 }
 
+export type putNodeUserPasswordResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeUserPasswordResponseSuccess = (putNodeUserPasswordResponse200) & {
   headers: Headers;
 };
-export type putNodeUserPasswordResponseError = (putNodeUserPasswordResponse400 | putNodeUserPasswordResponse401 | putNodeUserPasswordResponse403 | putNodeUserPasswordResponse404 | putNodeUserPasswordResponse409 | putNodeUserPasswordResponse500) & {
+export type putNodeUserPasswordResponseError = (putNodeUserPasswordResponse400 | putNodeUserPasswordResponse401 | putNodeUserPasswordResponse403 | putNodeUserPasswordResponse404 | putNodeUserPasswordResponse409 | putNodeUserPasswordResponse500 | putNodeUserPasswordResponse503) & {
   headers: Headers;
 };
 

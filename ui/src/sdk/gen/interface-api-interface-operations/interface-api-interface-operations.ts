@@ -72,10 +72,15 @@ export type getNodeInterfaceResponse500 = {
   status: 500
 }
 
+export type getNodeInterfaceResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeInterfaceResponseSuccess = (getNodeInterfaceResponse200) & {
   headers: Headers;
 };
-export type getNodeInterfaceResponseError = (getNodeInterfaceResponse400 | getNodeInterfaceResponse401 | getNodeInterfaceResponse403 | getNodeInterfaceResponse404 | getNodeInterfaceResponse409 | getNodeInterfaceResponse500) & {
+export type getNodeInterfaceResponseError = (getNodeInterfaceResponse400 | getNodeInterfaceResponse401 | getNodeInterfaceResponse403 | getNodeInterfaceResponse404 | getNodeInterfaceResponse409 | getNodeInterfaceResponse500 | getNodeInterfaceResponse503) & {
   headers: Headers;
 };
 
@@ -140,10 +145,15 @@ export type deleteNodeInterfaceResponse500 = {
   status: 500
 }
 
+export type deleteNodeInterfaceResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeInterfaceResponseSuccess = (deleteNodeInterfaceResponse200) & {
   headers: Headers;
 };
-export type deleteNodeInterfaceResponseError = (deleteNodeInterfaceResponse400 | deleteNodeInterfaceResponse401 | deleteNodeInterfaceResponse403 | deleteNodeInterfaceResponse404 | deleteNodeInterfaceResponse409 | deleteNodeInterfaceResponse500) & {
+export type deleteNodeInterfaceResponseError = (deleteNodeInterfaceResponse400 | deleteNodeInterfaceResponse401 | deleteNodeInterfaceResponse403 | deleteNodeInterfaceResponse404 | deleteNodeInterfaceResponse409 | deleteNodeInterfaceResponse500 | deleteNodeInterfaceResponse503) & {
   headers: Headers;
 };
 
@@ -210,10 +220,15 @@ export type getNodeInterfaceByKeyResponse500 = {
   status: 500
 }
 
+export type getNodeInterfaceByKeyResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeInterfaceByKeyResponseSuccess = (getNodeInterfaceByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeInterfaceByKeyResponseError = (getNodeInterfaceByKeyResponse400 | getNodeInterfaceByKeyResponse401 | getNodeInterfaceByKeyResponse403 | getNodeInterfaceByKeyResponse404 | getNodeInterfaceByKeyResponse409 | getNodeInterfaceByKeyResponse500) & {
+export type getNodeInterfaceByKeyResponseError = (getNodeInterfaceByKeyResponse400 | getNodeInterfaceByKeyResponse401 | getNodeInterfaceByKeyResponse403 | getNodeInterfaceByKeyResponse404 | getNodeInterfaceByKeyResponse409 | getNodeInterfaceByKeyResponse500 | getNodeInterfaceByKeyResponse503) & {
   headers: Headers;
 };
 
@@ -280,10 +295,15 @@ export type postNodeInterfaceResponse500 = {
   status: 500
 }
 
+export type postNodeInterfaceResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeInterfaceResponseSuccess = (postNodeInterfaceResponse200) & {
   headers: Headers;
 };
-export type postNodeInterfaceResponseError = (postNodeInterfaceResponse400 | postNodeInterfaceResponse401 | postNodeInterfaceResponse403 | postNodeInterfaceResponse404 | postNodeInterfaceResponse409 | postNodeInterfaceResponse500) & {
+export type postNodeInterfaceResponseError = (postNodeInterfaceResponse400 | postNodeInterfaceResponse401 | postNodeInterfaceResponse403 | postNodeInterfaceResponse404 | postNodeInterfaceResponse409 | postNodeInterfaceResponse500 | postNodeInterfaceResponse503) & {
   headers: Headers;
 };
 
@@ -351,10 +371,15 @@ export type putNodeInterfaceResponse500 = {
   status: 500
 }
 
+export type putNodeInterfaceResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeInterfaceResponseSuccess = (putNodeInterfaceResponse200) & {
   headers: Headers;
 };
-export type putNodeInterfaceResponseError = (putNodeInterfaceResponse400 | putNodeInterfaceResponse401 | putNodeInterfaceResponse403 | putNodeInterfaceResponse404 | putNodeInterfaceResponse409 | putNodeInterfaceResponse500) & {
+export type putNodeInterfaceResponseError = (putNodeInterfaceResponse400 | putNodeInterfaceResponse401 | putNodeInterfaceResponse403 | putNodeInterfaceResponse404 | putNodeInterfaceResponse409 | putNodeInterfaceResponse500 | putNodeInterfaceResponse503) & {
   headers: Headers;
 };
 

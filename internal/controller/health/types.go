@@ -40,6 +40,8 @@ type Checker interface {
 	CheckNATS(ctx context.Context) error
 	// CheckKV tells whether the jobs bucket answers.
 	CheckKV(ctx context.Context) error
+	// CheckStore tells whether the jobs bucket is near its max_bytes.
+	CheckStore(ctx context.Context) error
 }
 
 // MetricsProvider retrieves system metrics for the status endpoint.
@@ -72,6 +74,8 @@ type KVMetrics struct {
 	Name  string
 	Keys  int
 	Bytes uint64
+	// MaxBytes is the bucket's limit, or zero when it has none.
+	MaxBytes int64
 }
 
 // ObjectStoreMetrics holds Object Store bucket statistics.

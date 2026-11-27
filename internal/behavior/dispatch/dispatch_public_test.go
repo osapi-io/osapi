@@ -235,6 +235,28 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			},
 		},
 		{
+			name:   "when the job store is full, a broadcast is ErrStoreFull",
+			method: "get",
+			target: "_all",
+			setup: func() {
+				s.jobs.EXPECT().
+					QueryBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+"get", kvIn{}).
+					Return("", nil, fmt.Errorf("store: %w", job.ErrStoreFull))
+			},
+			wantErr: func(err error) { s.Equal(job.ErrStoreFull, err) },
+		},
+		{
+			name:   "when the job store is full, a job is ErrStoreFull",
+			method: "get",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"get", kvIn{}).
+					Return("", nil, fmt.Errorf("store: %w", job.ErrStoreFull))
+			},
+			wantErr: func(err error) { s.Equal(job.ErrStoreFull, err) },
+		},
+		{
 			name:   "when the host does not have it, it is ErrNotFound",
 			method: "get",
 			target: "server1",

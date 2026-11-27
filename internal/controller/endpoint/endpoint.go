@@ -1076,6 +1076,7 @@ var ReasonDocs = map[types.Reason]string{
 	types.ReasonNotInstalled:   "the host does not have a program that the request needs (409).",
 	types.ReasonConflict:       "the state of the item blocks the request, such as a create of one that exists (409).",
 	types.ReasonUnavailable:    "a part that osapi depends on is down, such as NATS (503).",
+	types.ReasonJobStoreFull:   "the job store is at its max_bytes and has no finished job to remove (503).",
 	types.ReasonServerError:    "the controller failed; its log has the cause (500).",
 }
 

@@ -108,7 +108,7 @@ func (c *Client) CreateJob(
 		slog.String("job_id", jobID),
 	)
 
-	revision, err := c.natsClient.KVPut(ctx, c.jobsBucket, kvKey, kvPayload)
+	revision, err := c.putJob(ctx, kvKey, kvPayload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store job in KV: %w", err)
 	}

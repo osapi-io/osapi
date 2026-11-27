@@ -47,10 +47,15 @@ export type getNodePackageUpdatesResponse500 = {
   status: 500
 }
 
+export type getNodePackageUpdatesResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodePackageUpdatesResponseSuccess = (getNodePackageUpdatesResponse200) & {
   headers: Headers;
 };
-export type getNodePackageUpdatesResponseError = (getNodePackageUpdatesResponse400 | getNodePackageUpdatesResponse401 | getNodePackageUpdatesResponse403 | getNodePackageUpdatesResponse404 | getNodePackageUpdatesResponse409 | getNodePackageUpdatesResponse500) & {
+export type getNodePackageUpdatesResponseError = (getNodePackageUpdatesResponse400 | getNodePackageUpdatesResponse401 | getNodePackageUpdatesResponse403 | getNodePackageUpdatesResponse404 | getNodePackageUpdatesResponse409 | getNodePackageUpdatesResponse500 | getNodePackageUpdatesResponse503) & {
   headers: Headers;
 };
 
@@ -115,10 +120,15 @@ export type putNodePackageUpdatesResponse500 = {
   status: 500
 }
 
+export type putNodePackageUpdatesResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodePackageUpdatesResponseSuccess = (putNodePackageUpdatesResponse200) & {
   headers: Headers;
 };
-export type putNodePackageUpdatesResponseError = (putNodePackageUpdatesResponse400 | putNodePackageUpdatesResponse401 | putNodePackageUpdatesResponse403 | putNodePackageUpdatesResponse404 | putNodePackageUpdatesResponse409 | putNodePackageUpdatesResponse500) & {
+export type putNodePackageUpdatesResponseError = (putNodePackageUpdatesResponse400 | putNodePackageUpdatesResponse401 | putNodePackageUpdatesResponse403 | putNodePackageUpdatesResponse404 | putNodePackageUpdatesResponse409 | putNodePackageUpdatesResponse500 | putNodePackageUpdatesResponse503) & {
   headers: Headers;
 };
 

@@ -52,9 +52,9 @@ $ osapi client health status
   [1mJOBS[0m  128       256.0 KB  2
 
 [1;38;2;0;213;255mKV buckets (2):[0m
-  [38;2;10;143;176mNAME            [0m[38;2;10;143;176mKEYS  [0m[38;2;10;143;176mBYTES[0m
-  [1mjob-queue[0m       128   512.0 KB
-  [1magent-registry[0m  2     4.0 KB
+  [38;2;10;143;176mNAME            [0m[38;2;10;143;176mKEYS  [0m[38;2;10;143;176mBYTES     [0m[38;2;10;143;176mMAX BYTES[0m
+  [1mjob-queue[0m       128   512.0 KB  0 B
+  [1magent-registry[0m  2     4.0 KB    0 B
 
 [1;38;2;255;0;255mObject stores (1):[0m
   [38;2;176;48;176mNAME          [0m[38;2;176;48;176mSIZE[0m
@@ -131,12 +131,14 @@ With `--json`, the API's response:
     {
       "name": "job-queue",
       "keys": 128,
-      "bytes": 524288
+      "bytes": 524288,
+      "max_bytes": 0
     },
     {
       "name": "agent-registry",
       "keys": 2,
-      "bytes": 4096
+      "bytes": 4096,
+      "max_bytes": 0
     }
   ],
   "object_stores": [

@@ -71,10 +71,15 @@ export type deleteNodeFileResponse500 = {
   status: 500
 }
 
+export type deleteNodeFileResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeFileResponseSuccess = (deleteNodeFileResponse200) & {
   headers: Headers;
 };
-export type deleteNodeFileResponseError = (deleteNodeFileResponse400 | deleteNodeFileResponse401 | deleteNodeFileResponse403 | deleteNodeFileResponse404 | deleteNodeFileResponse409 | deleteNodeFileResponse500) & {
+export type deleteNodeFileResponseError = (deleteNodeFileResponse400 | deleteNodeFileResponse401 | deleteNodeFileResponse403 | deleteNodeFileResponse404 | deleteNodeFileResponse409 | deleteNodeFileResponse500 | deleteNodeFileResponse503) & {
   headers: Headers;
 };
 
@@ -140,10 +145,15 @@ export type getNodeFileResponse500 = {
   status: 500
 }
 
+export type getNodeFileResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeFileResponseSuccess = (getNodeFileResponse200) & {
   headers: Headers;
 };
-export type getNodeFileResponseError = (getNodeFileResponse400 | getNodeFileResponse401 | getNodeFileResponse403 | getNodeFileResponse404 | getNodeFileResponse409 | getNodeFileResponse500) & {
+export type getNodeFileResponseError = (getNodeFileResponse400 | getNodeFileResponse401 | getNodeFileResponse403 | getNodeFileResponse404 | getNodeFileResponse409 | getNodeFileResponse500 | getNodeFileResponse503) & {
   headers: Headers;
 };
 
@@ -217,10 +227,15 @@ export type putNodeFileResponse500 = {
   status: 500
 }
 
+export type putNodeFileResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type putNodeFileResponseSuccess = (putNodeFileResponse200) & {
   headers: Headers;
 };
-export type putNodeFileResponseError = (putNodeFileResponse400 | putNodeFileResponse401 | putNodeFileResponse403 | putNodeFileResponse404 | putNodeFileResponse409 | putNodeFileResponse500) & {
+export type putNodeFileResponseError = (putNodeFileResponse400 | putNodeFileResponse401 | putNodeFileResponse403 | putNodeFileResponse404 | putNodeFileResponse409 | putNodeFileResponse500 | putNodeFileResponse503) & {
   headers: Headers;
 };
 

@@ -33,7 +33,7 @@ components:
           example: Failed to retrieve status.
           type: string
         reason:
-          description: 'Why the request failed, as a word that a program can branch on. The HTTP status is the class of the problem; the reason is the cause, and the error is the message for a person, which can change between releases. invalid_request: the request breaks a rule, such as a missing field (400). unauthorized: no token, or a token that is not valid (401). forbidden: the token does not have the permission (403). not_found: the host or osapi does not have what the request names (404). not_managed: the item is there, but osapi did not deploy it, so osapi does not change it (409). not_installed: the host does not have a program that the request needs (409). conflict: the state of the item blocks the request, such as a create of one that exists (409). unavailable: a part that osapi depends on is down, such as NATS (503). server_error: the controller failed; its log has the cause (500).'
+          description: 'Why the request failed, as a word that a program can branch on. The HTTP status is the class of the problem; the reason is the cause, and the error is the message for a person, which can change between releases. invalid_request: the request breaks a rule, such as a missing field (400). unauthorized: no token, or a token that is not valid (401). forbidden: the token does not have the permission (403). not_found: the host or osapi does not have what the request names (404). not_managed: the item is there, but osapi did not deploy it, so osapi does not change it (409). not_installed: the host does not have a program that the request needs (409). conflict: the state of the item blocks the request, such as a create of one that exists (409). unavailable: a part that osapi depends on is down, such as NATS (503). job_store_full: the job store is at its max_bytes and has no finished job to remove (503). server_error: the controller failed; its log has the cause (500).'
           enum:
             - invalid_request
             - unauthorized
@@ -43,6 +43,7 @@ components:
             - not_installed
             - conflict
             - unavailable
+            - job_store_full
             - server_error
           example: not_found
           type: string
@@ -302,6 +303,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -365,6 +372,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:read
@@ -441,6 +454,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write
@@ -518,6 +537,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: An error on the controller.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The job store is at its max_bytes, and it has no finished job to remove to make room.
       security:
         - BearerAuth:
             - interface:write

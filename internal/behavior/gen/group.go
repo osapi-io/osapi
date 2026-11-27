@@ -40,6 +40,7 @@ const (
 	behaviorPkg    = module + "/internal/behavior"
 	dispatchPath   = module + "/internal/behavior/dispatch"
 	typesPath      = module + "/pkg/sdk/types"
+	jobPath        = module + "/internal/job"
 )
 
 // hostnameDoc is the description of the target of each behavior method.
@@ -158,6 +159,8 @@ func groupFile(
 			"or the host does not have a program that the method needs."
 		invalid := "The request is not valid, or the host refuses the input, " +
 			"such as a path that is a directory."
+		storeFull := "The job store is at its max_bytes, and it has no finished " +
+			"job to remove to make room."
 		if len(behavior.TemplateFields(m.In)) > 0 {
 			invalid = "The request is not valid, a template reads a var that the " +
 				"behavior does not have, or the host refuses the input."
@@ -175,6 +178,10 @@ func groupFile(
 				Call(jen.Qual(typesPath, "ReasonNotInstalled")),
 			jen.Qual(endpointPath, "Invalid").
 				Call(jen.Qual(dispatchPath, "ErrInvalid"), jen.Lit(invalid)),
+			jen.Qual(endpointPath, "Unavailable").
+				Call(jen.Qual(jobPath, "ErrStoreFull"), jen.Lit(storeFull)).
+				Dot("Because").
+				Call(jen.Qual(typesPath, "ReasonJobStoreFull")),
 		)
 		methods = append(methods, def)
 	}

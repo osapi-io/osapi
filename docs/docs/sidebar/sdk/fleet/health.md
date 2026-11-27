@@ -211,11 +211,12 @@ A `string`, one of `off`, `on`, `only`.
 
 ### KVBucketInfo
 
-| Field   | Type     | Description                   |
-| ------- | -------- | ----------------------------- |
-| `Bytes` | `int`    | Total bytes in the bucket.    |
-| `Keys`  | `int`    | Number of keys in the bucket. |
-| `Name`  | `string` | KV bucket name.               |
+| Field      | Type     | Description                                       |
+| ---------- | -------- | ------------------------------------------------- |
+| `Bytes`    | `int`    | Total bytes in the bucket.                        |
+| `Keys`     | `int`    | Number of keys in the bucket.                     |
+| `MaxBytes` | `int`    | The bucket's limit in bytes. -1 or 0 is no limit. |
+| `Name`     | `string` | KV bucket name.                                   |
 
 ### NATSInfo
 
@@ -240,20 +241,20 @@ A `string`, one of `off`, `on`, `only`.
 
 ### StatusResponse
 
-| Field          | Type                | Description                                                                                            |
-| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `Agents`       | `AgentStats`        |                                                                                                        |
-| `Checks`       | `[]Check`           | What the controller that answered checked for this answer: its connection to NATS and to the KV store. |
-| `Consumers`    | `int`               | Total number of JetStream consumers: the sum of the consumers of each stream.                          |
-| `Jobs`         | `JobStats`          |                                                                                                        |
-| `KVBuckets`    | `[]KVBucketInfo`    | KV bucket statistics.                                                                                  |
-| `NATS`         | `NATSInfo`          |                                                                                                        |
-| `ObjectStores` | `[]ObjectStoreInfo` | Object Store statistics.                                                                               |
-| `Registry`     | `[]ComponentEntry`  | All registered components with health details, each with its sub-components.                           |
-| `Status`       | `string`            | Overall health status.                                                                                 |
-| `Streams`      | `[]StreamInfo`      | JetStream stream statistics.                                                                           |
-| `Uptime`       | `string`            | Time since server started.                                                                             |
-| `Version`      | `string`            | Application version.                                                                                   |
+| Field          | Type                | Description                                                                                                                                         |
+| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Agents`       | `AgentStats`        |                                                                                                                                                     |
+| `Checks`       | `[]Check`           | What the controller that answered checked for this answer: its connection to NATS and to the KV store, and whether the job store is near its limit. |
+| `Consumers`    | `int`               | Total number of JetStream consumers: the sum of the consumers of each stream.                                                                       |
+| `Jobs`         | `JobStats`          |                                                                                                                                                     |
+| `KVBuckets`    | `[]KVBucketInfo`    | KV bucket statistics.                                                                                                                               |
+| `NATS`         | `NATSInfo`          |                                                                                                                                                     |
+| `ObjectStores` | `[]ObjectStoreInfo` | Object Store statistics.                                                                                                                            |
+| `Registry`     | `[]ComponentEntry`  | All registered components with health details, each with its sub-components.                                                                        |
+| `Status`       | `string`            | Overall health status.                                                                                                                              |
+| `Streams`      | `[]StreamInfo`      | JetStream stream statistics.                                                                                                                        |
+| `Uptime`       | `string`            | Time since server started.                                                                                                                          |
+| `Version`      | `string`            | Application version.                                                                                                                                |
 
 ### StreamInfo
 

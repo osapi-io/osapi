@@ -46,10 +46,15 @@ export type getNodeLogSourceResponse500 = {
   status: 500
 }
 
+export type getNodeLogSourceResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeLogSourceResponseSuccess = (getNodeLogSourceResponse200) & {
   headers: Headers;
 };
-export type getNodeLogSourceResponseError = (getNodeLogSourceResponse400 | getNodeLogSourceResponse401 | getNodeLogSourceResponse403 | getNodeLogSourceResponse404 | getNodeLogSourceResponse409 | getNodeLogSourceResponse500) & {
+export type getNodeLogSourceResponseError = (getNodeLogSourceResponse400 | getNodeLogSourceResponse401 | getNodeLogSourceResponse403 | getNodeLogSourceResponse404 | getNodeLogSourceResponse409 | getNodeLogSourceResponse500 | getNodeLogSourceResponse503) & {
   headers: Headers;
 };
 

@@ -52,7 +52,12 @@ func (h *Health) Ready(
 func (h *Health) Status(
 	ctx context.Context,
 ) api.StatusResponse {
-	return h.buildStatusResponse(ctx, h.Checker.CheckNATS(ctx), h.Checker.CheckKV(ctx))
+	return h.buildStatusResponse(
+		ctx,
+		h.Checker.CheckNATS(ctx),
+		h.Checker.CheckKV(ctx),
+		h.Checker.CheckStore(ctx),
+	)
 }
 
 // buildStatusResponse constructs the status response from component checks and metrics.
@@ -60,11 +65,12 @@ func (h *Health) buildStatusResponse(
 	ctx context.Context,
 	natsErr error,
 	kvErr error,
+	storeErr error,
 ) api.StatusResponse {
 	uptime := time.Since(h.StartTime).Round(time.Second).String()
 
 	overall := "ok"
-	if natsErr != nil || kvErr != nil {
+	if natsErr != nil || kvErr != nil || storeErr != nil {
 		overall = "degraded"
 	}
 
@@ -72,7 +78,11 @@ func (h *Health) buildStatusResponse(
 		Status:  overall,
 		Version: h.Version,
 		Uptime:  uptime,
-		Checks:  []api.Check{check("nats", natsErr), check("kv", kvErr)},
+		Checks: []api.Check{
+			check("nats", natsErr),
+			check("kv", kvErr),
+			check("job_store", storeErr),
+		},
 	}
 
 	if h.Metrics != nil {
@@ -273,9 +283,10 @@ func (h *Health) populateMetrics(
 		resp.KVBuckets = make([]api.KVBucketInfo, 0, len(kvBuckets))
 		for _, b := range kvBuckets {
 			resp.KVBuckets = append(resp.KVBuckets, api.KVBucketInfo{
-				Name:  b.Name,
-				Keys:  b.Keys,
-				Bytes: int(b.Bytes), //nolint:gosec // a bucket's size fits an int
+				Name:     b.Name,
+				Keys:     b.Keys,
+				Bytes:    int(b.Bytes), //nolint:gosec // a bucket's size fits an int
+				MaxBytes: int(b.MaxBytes),
 			})
 		}
 	}

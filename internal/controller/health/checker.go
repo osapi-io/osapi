@@ -36,6 +36,10 @@ type NATSChecker struct {
 	NATSCheck func(ctx context.Context) error
 	// KVCheck verifies KV bucket accessibility.
 	KVCheck func(ctx context.Context) error
+	// StoreCheck says when the jobs bucket is near its max_bytes. It is
+	// not part of CheckHealth: a controller with a nearly full store still
+	// takes traffic, and frees room by removing finished jobs.
+	StoreCheck func(ctx context.Context) error
 }
 
 // CheckHealth runs all dependency checks and returns the first error.
@@ -57,6 +61,13 @@ func (c *NATSChecker) CheckKV(
 	ctx context.Context,
 ) error {
 	return run(ctx, c.KVCheck)
+}
+
+// CheckStore runs only the job store check.
+func (c *NATSChecker) CheckStore(
+	ctx context.Context,
+) error {
+	return run(ctx, c.StoreCheck)
 }
 
 // run calls check, when it is set, with ctx bounded by checkTimeout.

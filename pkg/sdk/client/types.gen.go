@@ -120,9 +120,11 @@ type ErrorResponse struct {
 	// the host does not have a program that the request needs (409). conflict: the
 	// state of the item blocks the request, such as a create of one that exists
 	// (409). unavailable: a part that osapi depends on is down, such as NATS
-	// (503). server_error: the controller failed; its log has the cause (500). It
-	// is one of: invalid_request, unauthorized, forbidden, not_found, not_managed,
-	// not_installed, conflict, unavailable, server_error.
+	// (503). job_store_full: the job store is at its max_bytes and has no finished
+	// job to remove (503). server_error: the controller failed; its log has the
+	// cause (500). It is one of: invalid_request, unauthorized, forbidden,
+	// not_found, not_managed, not_installed, conflict, unavailable,
+	// job_store_full, server_error.
 	Reason ErrorResponseReason `json:"reason,omitzero"`
 }
 
@@ -137,8 +139,9 @@ type ErrorResponse struct {
 // not_installed: the host does not have a program that the request needs
 // (409). conflict: the state of the item blocks the request, such as a create
 // of one that exists (409). unavailable: a part that osapi depends on is down,
-// such as NATS (503). server_error: the controller failed; its log has the
-// cause (500).
+// such as NATS (503). job_store_full: the job store is at its max_bytes and
+// has no finished job to remove (503). server_error: the controller failed;
+// its log has the cause (500).
 type ErrorResponseReason string
 
 // The values of ErrorResponseReason.
@@ -151,6 +154,7 @@ const (
 	ErrorResponseReasonNotInstalled   ErrorResponseReason = "not_installed"
 	ErrorResponseReasonConflict       ErrorResponseReason = "conflict"
 	ErrorResponseReasonUnavailable    ErrorResponseReason = "unavailable"
+	ErrorResponseReasonJobStoreFull   ErrorResponseReason = "job_store_full"
 	ErrorResponseReasonServerError    ErrorResponseReason = "server_error"
 )
 

@@ -867,7 +867,7 @@ with Values and Valid in the package's types.go; validate refuses oneof.
 Reason is the reason of an error answer, one of its Values. A program branches
 on it, so a reason outside the list breaks the contract of the spec's
 ErrorResponse. Values: invalid_request, unauthorized, forbidden, not_found,
-not_managed, not_installed, conflict, unavailable, server_error.
+not_managed, not_installed, conflict, unavailable, job_store_full, server_error.
 
 Use: A field that takes one of these values: types.Reason with validate:"enum".
 A closed set that pkg/sdk/types does not have is a named type with Values and

@@ -65,6 +65,12 @@ type Client struct {
 	// consumers looks up and removes a consumer whose deliver policy
 	// changed. Nil when the client does not make consumers.
 	consumers ConsumerStore
+	// purger removes the messages of finished jobs when the jobs bucket is
+	// full. Nil when nothing frees room, so a full bucket is ErrStoreFull.
+	purger StorePurger
+	// evictMu lets one write at a time free room in a full bucket, so
+	// writes that fail at once do not each remove jobs.
+	evictMu sync.Mutex
 	// agentKeyStore verifies agent responses against the key recorded when
 	// the agent was accepted. Nil when the controller is not enforcing, in
 	// which case responses are handled exactly as they were before
@@ -105,6 +111,10 @@ type Options struct {
 	// can make again a consumer whose deliver policy changed. When nil, a
 	// refused update is returned as is.
 	Consumers ConsumerStore
+	// Purger removes the messages of the oldest finished jobs when the
+	// jobs bucket is full, so a new job has room. When nil, a full bucket
+	// is ErrStoreFull.
+	Purger StorePurger
 }
 
 // DefaultTimeout is how long a job client waits for job responses when its
@@ -142,6 +152,7 @@ func New(
 		pkiSigner:      opts.PKISigner,
 		targetResolver: opts.TargetResolver,
 		consumers:      opts.Consumers,
+		purger:         opts.Purger,
 	}, nil
 }
 
@@ -341,7 +352,7 @@ func (c *Client) publishAndWait(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.natsClient.KVPut(pubCtx, c.jobsBucket, kvKey, kvPayload); err != nil {
+	if _, err := c.putJob(pubCtx, kvKey, kvPayload); err != nil {
 		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to store job in KV: %w", err))
 	}
 
@@ -479,7 +490,7 @@ func (c *Client) publishAndCollect(
 		slog.String("job_id", jobID),
 	)
 
-	if _, err := c.natsClient.KVPut(pubCtx, c.jobsBucket, kvKey, kvPayload); err != nil {
+	if _, err := c.putJob(pubCtx, kvKey, kvPayload); err != nil {
 		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to store job in KV: %w", err))
 	}
 

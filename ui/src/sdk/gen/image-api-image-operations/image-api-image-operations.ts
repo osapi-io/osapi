@@ -70,10 +70,15 @@ export type getNodeImageResponse500 = {
   status: 500
 }
 
+export type getNodeImageResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type getNodeImageResponseSuccess = (getNodeImageResponse200) & {
   headers: Headers;
 };
-export type getNodeImageResponseError = (getNodeImageResponse400 | getNodeImageResponse401 | getNodeImageResponse403 | getNodeImageResponse404 | getNodeImageResponse409 | getNodeImageResponse500) & {
+export type getNodeImageResponseError = (getNodeImageResponse400 | getNodeImageResponse401 | getNodeImageResponse403 | getNodeImageResponse404 | getNodeImageResponse409 | getNodeImageResponse500 | getNodeImageResponse503) & {
   headers: Headers;
 };
 
@@ -138,10 +143,15 @@ export type deleteNodeImageResponse500 = {
   status: 500
 }
 
+export type deleteNodeImageResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type deleteNodeImageResponseSuccess = (deleteNodeImageResponse200) & {
   headers: Headers;
 };
-export type deleteNodeImageResponseError = (deleteNodeImageResponse400 | deleteNodeImageResponse401 | deleteNodeImageResponse403 | deleteNodeImageResponse404 | deleteNodeImageResponse409 | deleteNodeImageResponse500) & {
+export type deleteNodeImageResponseError = (deleteNodeImageResponse400 | deleteNodeImageResponse401 | deleteNodeImageResponse403 | deleteNodeImageResponse404 | deleteNodeImageResponse409 | deleteNodeImageResponse500 | deleteNodeImageResponse503) & {
   headers: Headers;
 };
 
@@ -209,10 +219,15 @@ export type postNodeImagePullResponse500 = {
   status: 500
 }
 
+export type postNodeImagePullResponse503 = {
+  data: ErrorResponse
+  status: 503
+}
+
 export type postNodeImagePullResponseSuccess = (postNodeImagePullResponse200) & {
   headers: Headers;
 };
-export type postNodeImagePullResponseError = (postNodeImagePullResponse400 | postNodeImagePullResponse401 | postNodeImagePullResponse403 | postNodeImagePullResponse404 | postNodeImagePullResponse409 | postNodeImagePullResponse500) & {
+export type postNodeImagePullResponseError = (postNodeImagePullResponse400 | postNodeImagePullResponse401 | postNodeImagePullResponse403 | postNodeImagePullResponse404 | postNodeImagePullResponse409 | postNodeImagePullResponse500 | postNodeImagePullResponse503) & {
   headers: Headers;
 };
 

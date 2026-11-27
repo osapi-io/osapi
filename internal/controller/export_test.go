@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	"go.opentelemetry.io/otel/metric"
+
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/osapi-io/osapi/internal/controller/admission"
@@ -308,4 +310,21 @@ func SetRevocationConnect(
 	revocationConnect = fn
 
 	return func() { revocationConnect = was }
+}
+
+// ExportStoreWarning calls storeWarning.
+func ExportStoreWarning(
+	used uint64,
+	maxBytes int64,
+) error {
+	return storeWarning(used, maxBytes)
+}
+
+// ExportRegisterJobStoreMetrics calls registerJobStoreMetrics.
+func ExportRegisterJobStoreMetrics(
+	meter metric.Meter,
+	nc natsStatus,
+	jobsBucket string,
+) {
+	registerJobStoreMetrics(meter, nc, jobsBucket)
 }

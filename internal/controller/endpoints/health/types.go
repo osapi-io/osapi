@@ -53,18 +53,18 @@ type ReadyResponse struct {
 // system.
 type StatusResponse struct {
 	_            struct{}          `title:"Controller"`
-	Status       string            `                   json:"status"                  doc:"Overall health status."                                                                                 example:"ok"    render:"status"`
-	Version      string            `                   json:"version"                 doc:"Application version."                                                                                   example:"0.1.0"`
-	Uptime       string            `                   json:"uptime"                  doc:"Time since server started."                                                                             example:"2h30m"`
-	Checks       []Check           `                   json:"checks"                  doc:"What the controller that answered checked for this answer: its connection to NATS and to the KV store."`
-	Registry     []ComponentEntry  `                   json:"registry,omitempty"      doc:"All registered components with health details, each with its sub-components."                                                           label:"Components"`
+	Status       string            `                   json:"status"                  doc:"Overall health status."                                                                                                                              example:"ok"    render:"status"`
+	Version      string            `                   json:"version"                 doc:"Application version."                                                                                                                                example:"0.1.0"`
+	Uptime       string            `                   json:"uptime"                  doc:"Time since server started."                                                                                                                          example:"2h30m"`
+	Checks       []Check           `                   json:"checks"                  doc:"What the controller that answered checked for this answer: its connection to NATS and to the KV store, and whether the job store is near its limit."`
+	Registry     []ComponentEntry  `                   json:"registry,omitempty"      doc:"All registered components with health details, each with its sub-components."                                                                                                        label:"Components"`
 	Jobs         *JobStats         `                   json:"jobs,omitempty"`
 	Streams      []StreamInfo      `                   json:"streams,omitempty"       doc:"JetStream stream statistics."`
-	KVBuckets    []KVBucketInfo    `                   json:"kv_buckets,omitempty"    doc:"KV bucket statistics."                                                                                                                  label:"KV buckets"`
+	KVBuckets    []KVBucketInfo    `                   json:"kv_buckets,omitempty"    doc:"KV bucket statistics."                                                                                                                                                               label:"KV buckets"`
 	ObjectStores []ObjectStoreInfo `                   json:"object_stores,omitempty" doc:"Object Store statistics."`
-	Consumers    int               `                   json:"consumers"               doc:"Total number of JetStream consumers: the sum of the consumers of each stream."                                          render:"-"`
-	NATS         *NATSInfo         `                   json:"nats,omitempty"                                                                                                                                       render:"-"`
-	Agents       *AgentStats       `                   json:"agents,omitempty"                                                                                                                                     render:"-"`
+	Consumers    int               `                   json:"consumers"               doc:"Total number of JetStream consumers: the sum of the consumers of each stream."                                                                                       render:"-"`
+	NATS         *NATSInfo         `                   json:"nats,omitempty"                                                                                                                                                                                    render:"-"`
+	Agents       *AgentStats       `                   json:"agents,omitempty"                                                                                                                                                                                  render:"-"`
 }
 
 // Check is one check that the controller made for its answer, such as its
@@ -94,6 +94,8 @@ type KVBucketInfo struct {
 	Name  string `json:"name"  doc:"KV bucket name."               example:"job-queue"`
 	Keys  int    `json:"keys"  doc:"Number of keys in the bucket." example:"10"`
 	Bytes int    `json:"bytes" doc:"Total bytes in the bucket."    example:"2048"      render:"bytes"`
+	// MaxBytes is the limit of the bucket, so a reader sees how full it is.
+	MaxBytes int `json:"max_bytes" doc:"The bucket's limit in bytes. -1 or 0 is no limit." example:"1073741824" render:"bytes"`
 }
 
 // ObjectStoreInfo is one Object Store bucket.

@@ -83,6 +83,20 @@ func (mr *MockCheckerMockRecorder) CheckNATS(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckNATS", reflect.TypeOf((*MockChecker)(nil).CheckNATS), ctx)
 }
 
+// CheckStore mocks base method.
+func (m *MockChecker) CheckStore(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckStore", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckStore indicates an expected call of CheckStore.
+func (mr *MockCheckerMockRecorder) CheckStore(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckStore", reflect.TypeOf((*MockChecker)(nil).CheckStore), ctx)
+}
+
 // MockMetricsProvider is a mock of MetricsProvider interface.
 type MockMetricsProvider struct {
 	ctrl     *gomock.Controller
