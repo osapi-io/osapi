@@ -319,6 +319,41 @@ func (s *DebianPublicTestSuite) TestTry() {
 	}
 }
 
+// TestTryOutlivesTheJob: netplan try runs to its end when the job's context
+// ends, as it does when the change cuts NATS and the agent restarts its
+// consumers. A netplan try that was killed then reverted nothing, and the
+// change that cut the host stayed (found on the lab, osapi-io/osapi#1670).
+func (s *DebianPublicTestSuite) TestTryOutlivesTheJob() {
+	const path = netplan.Dir + "/osapi-eth1.yaml"
+	ctrl := gomock.NewController(s.T())
+	files := managedfilemocks.NewMockProvider(ctrl)
+	files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil)
+	exec := hostmocks.NewMockExec(ctrl)
+	exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"})
+	exec.EXPECT().RunPrivilegedCmdInteractive(gomock.Any(), "netplan", gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, _ string, _ []string,
+			_ func(context.Context, io.Writer) error,
+		) (string, error) {
+			s.NoError(ctx.Err(), "the job's context ended, and netplan try must not")
+
+			return "Configuration accepted.\n", nil
+		})
+	p, err := netplan.ExportNewDebian(host.Host{
+		FS:       memfs.New(),
+		Exec:     exec,
+		Required: map[string]any{managedfile.Behavior.Name: files},
+		Reach:    func(context.Context) error { return nil },
+	})
+	s.Require().NoError(err)
+	job, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	changed, err := p.Apply(job, netplan.UpdateInput{Path: path, Content: "network: {}\n"})
+
+	s.NoError(err)
+	s.True(changed)
+}
+
 // TestTryRemove: a removal that netplan reverts gets its record back, as the
 // file that netplan put back.
 func (s *DebianPublicTestSuite) TestTryRemove() {

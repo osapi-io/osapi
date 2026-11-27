@@ -204,7 +204,7 @@ var errReverted = errors.New("netplan reverted the change")
 // apply applies the files of Dir. With reach, it runs netplan try: netplan
 // applies the change, and keeps it only when the agent confirms, which it
 // does when it still reaches NATS. Otherwise netplan reverts the files and
-// the network by itself at the timeout, also when the agent stops. A
+// the network by itself at the timeout, also when the job ends first. A
 // change that netplan try cannot revert, such as a bond with parameters of
 // its own, is applied with netplan apply, as with no reach.
 func (d *debian) apply(
@@ -213,7 +213,11 @@ func (d *debian) apply(
 	if d.reach == nil {
 		return d.applyDirect(ctx)
 	}
-	out, err := d.exec.RunPrivilegedCmdInteractive(ctx, "netplan",
+	// netplan try runs to its end whatever happens to the job: when the
+	// change cuts NATS, the agent restarts its consumers, which ends the
+	// job's context, and a netplan try killed then reverts nothing. It ends
+	// on its own, at its timeout at the latest.
+	out, err := d.exec.RunPrivilegedCmdInteractive(context.WithoutCancel(ctx), "netplan",
 		[]string{"try", "--timeout", strconv.Itoa(tryTimeout)},
 		func(ctx context.Context, stdin io.Writer) error {
 			if !d.waitFor(ctx, tryReady) {

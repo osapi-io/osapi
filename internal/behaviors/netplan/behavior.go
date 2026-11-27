@@ -55,7 +55,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Explain("Writes the file with mode 0600, validates the whole config with netplan "+
 			"generate, and applies it with netplan try. The agent confirms the change only "+
 			"when it still reaches NATS after it; otherwise netplan reverts the change "+
-			"after 60 seconds, also when the agent stops. A change that netplan try cannot "+
+			"after 60 seconds. A change that netplan try cannot "+
 			"revert, such as a bond with parameters of its own, is applied with netplan "+
 			"apply. When netplan generate refuses the file, the file gets back the content "+
 			"it had, or a new file is removed, because netplan reads every file in the "+
