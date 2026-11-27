@@ -30,13 +30,17 @@ import (
 
 // StartMetricsRefresh starts a background goroutine that refreshes the
 // metrics cache on a fixed interval. This ensures the health endpoint
-// always serves from cache and never blocks on NATS queries.
+// always serves from cache and never blocks on NATS queries. It returns
+// stop, which ends the refresh and waits until the goroutine returned: call
+// it before the NATS connection that the metrics read closes.
 func (h *Health) StartMetricsRefresh(
 	ctx context.Context,
-) {
+) (stop func()) {
 	if h.Metrics == nil {
-		return
+		return func() {}
 	}
+	ctx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
 
 	interval := h.MetricsRefreshInterval
 	if interval == 0 {
@@ -49,6 +53,7 @@ func (h *Health) StartMetricsRefresh(
 	)
 
 	go func() {
+		defer close(done)
 		h.refreshMetricsCache(ctx)
 		h.logger.Info(
 			"metrics cache initialized",
@@ -73,6 +78,11 @@ func (h *Health) StartMetricsRefresh(
 			}
 		}
 	}()
+
+	return func() {
+		cancel()
+		<-done
+	}
 }
 
 // refreshMetricsCache fetches fresh metrics and updates the cache.

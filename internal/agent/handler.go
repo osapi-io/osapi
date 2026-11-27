@@ -39,6 +39,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/secret/seal"
@@ -146,6 +147,29 @@ const defaultAckWait = 2 * time.Minute
 // tests via export_test.go.
 var inProgressInterval time.Duration
 
+// keepAliveInterval is half the time the server waits for an ack of a job
+// before it delivers the job again. With a back_off, the server waits
+// back_off[0] for the first ack, not ack_wait, and each entry after it for
+// each later delivery. Thus the wait is the shortest of ack_wait and the
+// entries of back_off. A keepalive at ack_wait / 2 alone lets a job that runs
+// longer than back_off[0] be delivered a second time while it runs, and then
+// run twice at once.
+func keepAliveInterval(
+	c config.AgentConsumer,
+) time.Duration {
+	wait, err := time.ParseDuration(c.AckWait)
+	if err != nil || wait <= 0 {
+		wait = defaultAckWait
+	}
+	for _, b := range c.BackOff {
+		if d, err := time.ParseDuration(b); err == nil && d > 0 && d < wait {
+			wait = d
+		}
+	}
+
+	return wait / 2
+}
+
 // startInProgressKeepAlive periodically calls msg.InProgress() to reset the
 // server's redelivery timer while a long-running operation executes. It
 // returns a stop function that must be called exactly once when the
@@ -157,11 +181,7 @@ func (a *Agent) startInProgressKeepAlive(
 ) func() {
 	interval := inProgressInterval
 	if interval <= 0 {
-		ackWait, err := time.ParseDuration(a.appConfig.Agent.Consumer.AckWait)
-		if err != nil || ackWait <= 0 {
-			ackWait = defaultAckWait
-		}
-		interval = ackWait / 2
+		interval = keepAliveInterval(a.appConfig.Agent.Consumer)
 	}
 
 	done := make(chan struct{})

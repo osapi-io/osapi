@@ -48,6 +48,8 @@ type Controller struct {
 	checker       *health.NATSChecker
 	subComponents map[string]job.SubComponentInfo
 	vaults        *vault.Set
+	// stopMetrics ends the health metrics refresh, which reads NATS.
+	stopMetrics func()
 }
 
 // Option changes how New makes the controller.
@@ -187,6 +189,11 @@ func newController(
 		conn.RegistryBucket,
 	)
 
+	// The controller's sub-components come to the health answer with its
+	// registry entry, from its heartbeat.
+	reporter := health.New(log, checker, time.Now(), o.version, metricsProvider)
+	stopMetrics := reporter.StartMetricsRefresh(ctx)
+
 	srv := api.New(cfg, log, apiOpts...)
 	srv.RegisterHandlers(handlers(handlerDeps{
 		log:             log,
@@ -201,6 +208,7 @@ func newController(
 		admission:       watcher,
 		vaults:          vaults,
 		version:         o.version,
+		health:          reporter,
 	}))
 
 	subs := subComponents(cfg)
@@ -221,6 +229,7 @@ func newController(
 		checker:       checker,
 		subComponents: subs,
 		vaults:        vaults,
+		stopMetrics:   stopMetrics,
 	}, nil
 }
 
@@ -229,11 +238,13 @@ func (c *Controller) Start() {
 	c.api.Start()
 }
 
-// Stop asks the REST API to stop, then closes the NATS connection.
+// Stop asks the REST API to stop, ends the health metrics refresh, then
+// closes the NATS connection: nothing reads NATS after it closes.
 func (c *Controller) Stop(
 	ctx context.Context,
 ) {
 	c.api.Stop(ctx)
+	c.stopMetrics()
 	bus.Close(c.conn.NATS)
 }
 
