@@ -144,8 +144,9 @@ type Agent struct {
 	// time; it writes it at most once each seenInterval.
 	seenWrittenAt time.Time
 
-	// cpuCount cached from facts for HighLoad evaluation.
-	cpuCount int
+	// cpuCount cached from facts for HighLoad evaluation. The facts
+	// goroutine writes it and the heartbeat reads it.
+	cpuCount atomic.Int64
 
 	// cachedFacts holds the latest collected facts for @fact.X resolution.
 	// The refresh goroutine replaces it while job goroutines read it, so it is
@@ -178,8 +179,10 @@ type Agent struct {
 	// event only then. Start and Stop run on one goroutine.
 	started bool
 
-	// hostname cached from Start for drain/undrain resubscribe.
-	hostname string
+	// hostname is the host's name now. Start sets it, the heartbeat changes
+	// it on a rename, and the job goroutines read it. Read it with
+	// currentHostname.
+	hostname atomic.Pointer[string]
 
 	// Lifecycle management.
 	ctx    context.Context

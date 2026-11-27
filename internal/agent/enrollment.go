@@ -196,7 +196,7 @@ func (a *Agent) publishEnrollmentRequest() error {
 
 	req := pki.EnrollmentRequest{
 		MachineID:     a.machineID,
-		Hostname:      a.hostname,
+		Hostname:      a.currentHostname(),
 		PublicKey:     a.pkiManager.PublicKey(),
 		EncryptionKey: a.pkiManager.EncryptionPublicKey(),
 		Fingerprint:   a.pkiManager.Fingerprint(),

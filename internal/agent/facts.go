@@ -73,16 +73,14 @@ func (a *Agent) currentFactsInterval() time.Duration {
 }
 
 // startFacts writes the initial facts, spawns a goroutine that
-// refreshes the entry on a ticker, and stops on ctx.Done().
+// refreshes the entry on a ticker, and stops on ctx.Done(). With no facts
+// bucket, the agent still collects its facts, for @fact references and
+// templates, and only puts them nowhere.
 func (a *Agent) startFacts(
 	ctx context.Context,
 	machineID string,
 	hostname string,
 ) {
-	if a.factsBucket == "" {
-		return
-	}
-
 	a.writeFacts(ctx, machineID, hostname)
 
 	a.lifecycleMu.Lock()
@@ -110,29 +108,35 @@ func (a *Agent) startFacts(
 	}()
 }
 
-// writeFacts collects system facts from providers and writes them to the
-// facts KV bucket. Provider errors are non-fatal; the facts entry is still
-// written with whatever data was gathered.
+// writeFacts collects system facts from providers, caches them and writes
+// them to the facts KV bucket. A failed collection keeps the facts of the
+// last one that worked, in the cache and in the bucket: an empty set would
+// make each @fact reference resolve empty until the next collection.
 func (a *Agent) writeFacts(
 	ctx context.Context,
 	machineID string,
 	hostname string,
 ) {
-	reg := job.FactsRegistration{}
-	if f, err := collectFactsFn(); err == nil {
-		reg = factsFromGohai(f)
-		a.cpuCount = reg.CPUCount
-	} else {
+	f, err := collectFactsFn()
+	if err != nil {
 		a.factsLogger.Warn(
-			"failed to collect facts",
+			"failed to collect facts, keeping the last ones",
 			slog.String("machine_id", machineID),
 			slog.String("error", err.Error()),
 		)
+
+		return
 	}
 
+	reg := factsFromGohai(f)
+	a.cpuCount.Store(int64(reg.CPUCount))
 	a.cachedFacts.Store(&reg)
 	// A change of the primary address is an event of the timeline.
 	a.noteFacts(ctx, machineID, reg)
+
+	if a.factsBucket == "" {
+		return
+	}
 
 	data, err := marshalJSON(reg)
 	if err != nil {

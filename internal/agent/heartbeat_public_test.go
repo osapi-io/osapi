@@ -762,6 +762,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 		name            string
 		initialHostname string
 		hostnameReply   string
+		hostnameErr     error
 		expectChanged   bool
 		validateFunc    func(any)
 	}{
@@ -772,6 +773,15 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 			expectChanged:   true,
 			validateFunc: func(got any) {
 				s.Equal("new-host", got)
+			},
+		},
+		{
+			name:            "when the hostname read fails keeps the last hostname",
+			initialHostname: "old-host",
+			hostnameReply:   "unknown",
+			hostnameErr:     errors.New("read the hostname: provider error"),
+			validateFunc: func(got any) {
+				s.Equal("old-host", got)
 			},
 		},
 		{
@@ -836,9 +846,9 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 				Return(false).
 				AnyTimes()
 
-			reply := tt.hostnameReply
+			reply, replyErr := tt.hostnameReply, tt.hostnameErr
 			agent.SetGetAgentHostnameFn(func(_ string) (string, error) {
-				return reply, nil
+				return reply, replyErr
 			})
 			defer agent.ResetGetAgentHostnameFn()
 
@@ -863,9 +873,20 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 			ctx, cancel := context.WithCancel(context.Background())
 			agent.ExportStartHeartbeat(ctx, testAgent, "test-machine-id", tt.initialHostname)
 
+			// A job goroutine reads the hostname while the heartbeat may
+			// change it. -race finds an unguarded field here.
+			readerDone := make(chan struct{})
+			go func() {
+				defer close(readerDone)
+				for ctx.Err() == nil {
+					_ = agent.GetAgentHostname(testAgent)
+				}
+			}()
+
 			// Wait for at least one ticker refresh
 			time.Sleep(50 * time.Millisecond)
 			cancel()
+			<-readerDone
 
 			// Wait for goroutine to finish
 			agent.WaitAgentWG(testAgent)

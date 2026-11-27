@@ -22,6 +22,8 @@ package job
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/hostname"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
@@ -63,7 +65,8 @@ var defaultHostnameProvider HostnameProvider = gohaiHostnameProvider{}
 
 // GetAgentHostname returns the hostname that should be used by agents.
 // It first checks the configured hostname, then falls back to the host's
-// name from gohai.
+// name from gohai. When gohai gives no name, it returns "unknown" with the
+// reason, so that a caller that has a name already can keep it.
 func GetAgentHostname(
 	configuredHostname string,
 ) (string, error) {
@@ -74,8 +77,11 @@ func GetAgentHostname(
 
 	// Use gohai to get the host's name
 	hostname, err := defaultHostnameProvider.Hostname()
-	if err != nil || hostname == "" {
-		return "unknown", nil
+	if err != nil {
+		return "unknown", fmt.Errorf("read the hostname: %w", err)
+	}
+	if hostname == "" {
+		return "unknown", errors.New("read the hostname: it is empty")
 	}
 
 	return hostname, nil

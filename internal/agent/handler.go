@@ -134,7 +134,7 @@ func (a *Agent) writeStatusEvent(
 	data map[string]interface{},
 ) error {
 	// Use cached hostname resolved at startup.
-	return a.jobClient.WriteStatusEvent(ctx, jobID, event, a.hostname, data)
+	return a.jobClient.WriteStatusEvent(ctx, jobID, event, a.currentHostname(), data)
 }
 
 // defaultAckWait is used to size the InProgress keepalive interval when the
@@ -271,7 +271,7 @@ func (a *Agent) handleJobMessage(
 	// (where every targeted agent answers independently) are unaffected.
 	// A failed check fails open: proceed with execution rather than risk
 	// silently dropping a job this agent has not actually answered.
-	if answered, err := a.jobClient.HasJobResponse(ctx, jobKey, a.hostname); err != nil {
+	if answered, err := a.jobClient.HasJobResponse(ctx, jobKey, a.currentHostname()); err != nil {
 		a.logger.Warn(
 			"failed to check for existing job response; proceeding with execution",
 			slog.String("job_id", jobKey),
@@ -281,7 +281,7 @@ func (a *Agent) handleJobMessage(
 		a.logger.Debug(
 			"job already answered by this agent; skipping redelivered execution",
 			slog.String("job_id", jobKey),
-			slog.String("hostname", a.hostname),
+			slog.String("hostname", a.currentHostname()),
 		)
 		span.AddEvent("job.already_answered")
 		return nil
@@ -414,7 +414,7 @@ func (a *Agent) handleJobMessage(
 	if len(jobRequest.Data) > 0 {
 		var dataMap map[string]any
 		if err := json.Unmarshal(jobRequest.Data, &dataMap); err == nil {
-			resolved, err := ResolveFacts(dataMap, a.cachedFacts.Load(), a.hostname)
+			resolved, err := ResolveFacts(dataMap, a.cachedFacts.Load(), a.currentHostname())
 			if err != nil {
 				resolveFactsErr = fmt.Errorf("failed to resolve fact references: %w", err)
 			} else if resolved != nil {
@@ -465,7 +465,7 @@ func (a *Agent) handleJobMessage(
 	}
 
 	// Create job response using cached hostname resolved at startup.
-	hostname := a.hostname
+	hostname := a.currentHostname()
 	response := job.Response{
 		JobID:     jobRequest.JobID,
 		Hostname:  hostname,

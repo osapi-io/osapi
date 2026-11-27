@@ -431,7 +431,7 @@ func ResetGetAgentHostnameFn() {
 func GetAgentHostname(
 	a *Agent,
 ) string {
-	return a.hostname
+	return a.currentHostname()
 }
 
 // SetAgentHostname sets the agent's hostname field for testing.
@@ -439,7 +439,7 @@ func SetAgentHostname(
 	a *Agent,
 	hostname string,
 ) {
-	a.hostname = hostname
+	a.setHostname(hostname)
 }
 
 // SetProcStatusPath overrides the procStatusPath for testing.
@@ -841,7 +841,7 @@ func ExportIdentityAttrs(
 	machineID string,
 	facts *job.FactsRegistration,
 ) []attribute.KeyValue {
-	a.hostname = hostname
+	a.setHostname(hostname)
 	a.machineID = machineID
 	a.cachedFacts.Store(facts)
 
@@ -1020,7 +1020,8 @@ func ExportLifecycle(
 	event string,
 	message string,
 ) {
-	a.machineID, a.hostname = machineID, hostname
+	a.machineID = machineID
+	a.setHostname(hostname)
 	a.lifecycle(context.Background(), event, message)
 }
 
@@ -1245,4 +1246,13 @@ func ExportFollowNATSCert(
 	a.followNATSCert(ctx)
 
 	return a.natsCertNext
+}
+
+// SetFactsBucket sets the facts bucket of a for testing. An empty bucket is
+// an agent that keeps its facts only in memory.
+func SetFactsBucket(
+	a *Agent,
+	bucket string,
+) {
+	a.factsBucket = bucket
 }
