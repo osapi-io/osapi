@@ -402,10 +402,16 @@ agents. The state bucket holds a record of the rotation at the key
    period ends. It moves the next key in place of its key and signs with it. It
    then writes a record with the new key as the current key and the old key as
    the previous key. The record also keeps each key that an earlier switch
-   replaced, as a retired key. The new key signs this record. The controller
-   verifies a job that it stored with its current key, its previous key or a
-   retired key, so a job from before each rotation still shows in `job list` and
-   `job get`. A retired key verifies no message from an agent.
+   replaced, as a retired key, with the time of the switch that made it the
+   previous key. The new key signs this record. The controller verifies a job
+   that it stored with its current key, its previous key or a retired key, so a
+   job from before a rotation still shows in `job list` and `job get`. A retired
+   key verifies no message from an agent. It verifies a stored job only for
+   `controller.pki.retired_key_lifetime` (`168h`) after it stopped signing.
+   After that, `job list` shows a job that it signed as unreadable, and the next
+   record drops the key. Thus a leaked old key cannot sign a job in the queue
+   that the controller accepts. Set the lifetime to the `ttl` of the jobs
+   bucket, or longer, to keep each job readable until NATS deletes it.
 1. At its next heartbeat, each agent reads the record. The key that signed it is
    the next key that the agent has. Thus the agent makes the next key its
    controller key, in `enrolled-controller.pub`, and keeps the old key as the
@@ -468,12 +474,13 @@ that host and no job ran. An agent admitted before then still reads its
 
 <!-- osapi:config controller.pki -->
 
-| Key                                    | Type   | Default                                          | Environment                                  | Description                                                                                                       |
-| -------------------------------------- | ------ | ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `controller.pki.key_dir`               | string | `/etc/osapi/pki`                                 | `OSAPI_CONTROLLER_PKI_KEY_DIR`               | Directory for controller keypair storage.                                                                         |
-| `controller.pki.auto_admit`            | bool   | `false`                                          | `OSAPI_CONTROLLER_PKI_AUTO_ADMIT`            | Admit each machine that asks to join, with no operator (dev/test only).                                           |
-| `controller.pki.rotation_grace_period` | string | `24h`                                            | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD` | Grace period during key rotation where both old and new keys are accepted. Go duration format.                    |
-| `controller.pki.delete_after`          | string | none: empty keeps a machine that stops reporting | `OSAPI_CONTROLLER_PKI_DELETE_AFTER`          | Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format. |
+| Key                                    | Type   | Default                                          | Environment                                  | Description                                                                                                                                                                                                                        |
+| -------------------------------------- | ------ | ------------------------------------------------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `controller.pki.key_dir`               | string | `/etc/osapi/pki`                                 | `OSAPI_CONTROLLER_PKI_KEY_DIR`               | Directory for controller keypair storage.                                                                                                                                                                                          |
+| `controller.pki.auto_admit`            | bool   | `false`                                          | `OSAPI_CONTROLLER_PKI_AUTO_ADMIT`            | Admit each machine that asks to join, with no operator (dev/test only).                                                                                                                                                            |
+| `controller.pki.rotation_grace_period` | string | `24h`                                            | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD` | Grace period during key rotation where both old and new keys are accepted. Go duration format.                                                                                                                                     |
+| `controller.pki.retired_key_lifetime`  | string | `168h`                                           | `OSAPI_CONTROLLER_PKI_RETIRED_KEY_LIFETIME`  | How long after a rotation of the controller's key replaced it a retired key still verifies the jobs that it signed, such as 168h. After it, job list and job get show such a job as unreadable. Empty is 168h. Go duration format. |
+| `controller.pki.delete_after`          | string | none: empty keeps a machine that stops reporting | `OSAPI_CONTROLLER_PKI_DELETE_AFTER`          | Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format.                                                                                                                  |
 
 <!-- /osapi:config -->
 

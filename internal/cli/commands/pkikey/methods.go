@@ -30,6 +30,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/audit"
@@ -254,8 +255,10 @@ func rotateController(
 	}
 	defer closeKV()
 	bucket := bus.StateKV(d.Config.Controller.NATS.Namespace, d.Config.NATS.State).Bucket
-	status, err := keyrotation.New(keyrotation.Config{KV: kv, Bucket: bucket, Keys: keys}).
-		Start(ctx)
+	lifetime, _ := time.ParseDuration(d.Config.Controller.PKI.RetiredKeyLifetime)
+	status, err := keyrotation.New(keyrotation.Config{
+		KV: kv, Bucket: bucket, Keys: keys, RetiredKeyLifetime: lifetime,
+	}).Start(ctx)
 	if err != nil {
 		return RotateOutput{}, err
 	}

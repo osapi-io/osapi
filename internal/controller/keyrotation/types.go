@@ -68,6 +68,11 @@ type Seen interface {
 	AgentsLastSeen(ctx context.Context) (map[string]time.Time, error)
 }
 
+// DefaultRetiredKeyLifetime is how long a retired controller key verifies
+// the records that it signed when controller.pki.retired_key_lifetime is
+// empty.
+const DefaultRetiredKeyLifetime = 7 * 24 * time.Hour
+
 // Config is what a Rotation uses.
 type Config struct {
 	// KV and Bucket are the state bucket, which holds the record.
@@ -83,6 +88,10 @@ type Config struct {
 	Seen     Seen
 	// Grace is how long a rotation waits for the agents before it switches.
 	Grace time.Duration
+	// RetiredKeyLifetime is how long after a key retired it still verifies
+	// a record that the controller stored. Zero is
+	// DefaultRetiredKeyLifetime.
+	RetiredKeyLifetime time.Duration
 	// Logger logs the start and the switch.
 	Logger *slog.Logger
 	// Now is the clock. Nil is time.Now.

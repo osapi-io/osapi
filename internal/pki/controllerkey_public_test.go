@@ -103,7 +103,11 @@ func (s *ControllerKeyPublicTestSuite) TestRecord() {
 		{
 			name: "a record with retired keys verifies with them",
 			record: func() pki.ControllerKeyRecord {
-				r := pki.ControllerKeyRecord{Serial: 4, Current: pub, Retired: [][]byte{otherPub}}
+				r := pki.ControllerKeyRecord{
+					Serial:  4,
+					Current: pub,
+					Retired: []pki.RetiredKey{{Key: otherPub, RetiredAt: started}},
+				}
 				r.Sign(priv)
 
 				return r
@@ -115,12 +119,27 @@ func (s *ControllerKeyPublicTestSuite) TestRecord() {
 			name: "a retired key added after the signature does not verify",
 			record: func() pki.ControllerKeyRecord {
 				r := signed()
-				r.Retired = [][]byte{otherPub}
+				r.Retired = []pki.RetiredKey{{Key: otherPub, RetiredAt: started}}
 
 				return r
 			},
 			key:         pub,
 			wantRotates: true,
+		},
+		{
+			name: "a retired time changed after the signature does not verify",
+			record: func() pki.ControllerKeyRecord {
+				r := pki.ControllerKeyRecord{
+					Serial:  4,
+					Current: pub,
+					Retired: []pki.RetiredKey{{Key: otherPub, RetiredAt: started}},
+				}
+				r.Sign(priv)
+				r.Retired[0].RetiredAt = started.Add(time.Hour)
+
+				return r
+			},
+			key: pub,
 		},
 		{
 			name: "no signature does not verify",
@@ -234,7 +253,10 @@ func (s *ControllerKeyPublicTestSuite) TestNextAndPreviousKeys() {
 				current, _ := keyOf()
 				retired, retiredPriv := keyOf()
 				m.SetControllerPublicKey(current)
-				m.SetRetiredControllerPublicKeys([]ed25519.PublicKey{retired})
+				m.SetRetiredControllerKeys(
+					[]pki.RetiredKey{{Key: retired, RetiredAt: time.Now()}},
+					time.Hour,
+				)
 
 				return ed25519.Sign(retiredPriv, data)
 			},
@@ -270,8 +292,8 @@ func (s *ControllerKeyPublicTestSuite) TestNextAndPreviousKeys() {
 }
 
 // TestStoredRecordKeys reads the keys that verify a record the controller
-// stored: the current, the next, the previous and each retired key, in that
-// order, and no key that is not set.
+// stored: the current, the next, the previous and each retired key that has
+// not expired, in that order, and no key that is not set.
 func (s *ControllerKeyPublicTestSuite) TestStoredRecordKeys() {
 	keyOf := func() ed25519.PublicKey {
 		pub, _, err := ed25519.GenerateKey(rand.Reader)
@@ -279,7 +301,7 @@ func (s *ControllerKeyPublicTestSuite) TestStoredRecordKeys() {
 
 		return pub
 	}
-	current, next, previous, retired := keyOf(), keyOf(), keyOf(), keyOf()
+	current, next, previous, retired, expired := keyOf(), keyOf(), keyOf(), keyOf(), keyOf()
 
 	tests := []struct {
 		name     string
@@ -292,15 +314,42 @@ func (s *ControllerKeyPublicTestSuite) TestStoredRecordKeys() {
 				m.SetControllerPublicKey(current)
 				m.SetNextControllerPublicKey(next)
 				m.SetPreviousControllerPublicKey(previous)
-				m.SetRetiredControllerPublicKeys([]ed25519.PublicKey{retired})
+				m.SetRetiredControllerKeys(
+					[]pki.RetiredKey{{Key: retired, RetiredAt: time.Now()}},
+					time.Hour,
+				)
 			},
 			wantKeys: []ed25519.PublicKey{current, next, previous, retired},
+		},
+		{
+			name: "a retired key past its lifetime is left out",
+			setup: func(m *pki.Manager) {
+				m.SetControllerPublicKey(current)
+				m.SetRetiredControllerKeys([]pki.RetiredKey{
+					{Key: expired, RetiredAt: time.Now().Add(-2 * time.Hour)},
+					{Key: retired, RetiredAt: time.Now()},
+				}, time.Hour)
+			},
+			wantKeys: []ed25519.PublicKey{current, retired},
+		},
+		{
+			name: "with no lifetime, a retired key does not expire",
+			setup: func(m *pki.Manager) {
+				m.SetControllerPublicKey(current)
+				m.SetRetiredControllerKeys([]pki.RetiredKey{
+					{Key: expired, RetiredAt: time.Now().Add(-1000 * time.Hour)},
+				}, 0)
+			},
+			wantKeys: []ed25519.PublicKey{current, expired},
 		},
 		{
 			name: "a key that is not set, or of the wrong size, is left out",
 			setup: func(m *pki.Manager) {
 				m.SetControllerPublicKey(current)
-				m.SetRetiredControllerPublicKeys([]ed25519.PublicKey{{1, 2, 3}, retired})
+				m.SetRetiredControllerKeys([]pki.RetiredKey{
+					{Key: []byte{1, 2, 3}, RetiredAt: time.Now()},
+					{Key: retired, RetiredAt: time.Now()},
+				}, time.Hour)
 			},
 			wantKeys: []ed25519.PublicKey{current, retired},
 		},
@@ -322,4 +371,75 @@ func (s *ControllerKeyPublicTestSuite) TestStoredRecordKeys() {
 
 func TestControllerKeyPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(ControllerKeyPublicTestSuite))
+}
+
+// TestExpiredRetiredKeyRefusesForgedRecord signs a record with a retired key
+// past its lifetime, as a leaked old key would: no stored record key
+// verifies it.
+func (s *ControllerKeyPublicTestSuite) TestExpiredRetiredKeyRefusesForgedRecord() {
+	current, _, err := ed25519.GenerateKey(rand.Reader)
+	s.Require().NoError(err)
+	leaked, leakedPriv, err := ed25519.GenerateKey(rand.Reader)
+	s.Require().NoError(err)
+	data := []byte("a forged stored job")
+	sig := ed25519.Sign(leakedPriv, data)
+
+	tests := []struct {
+		name      string
+		retiredAt time.Time
+		want      bool
+	}{
+		{name: "within its lifetime, it verifies", retiredAt: time.Now(), want: true},
+		{name: "past its lifetime, it is refused", retiredAt: time.Now().Add(-169 * time.Hour)},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			m := pki.New(memfs.New(), "/keys", "controller")
+			m.SetControllerPublicKey(current)
+			m.SetRetiredControllerKeys(
+				[]pki.RetiredKey{{Key: leaked, RetiredAt: tc.retiredAt}},
+				168*time.Hour,
+			)
+			got := false
+			for _, k := range m.StoredRecordKeys() {
+				got = got || ed25519.Verify(k, data, sig)
+			}
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+// TestRetiredKeyExpired reads when a retired key stops verifying.
+func (s *ControllerKeyPublicTestSuite) TestRetiredKeyExpired() {
+	at := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	k := pki.RetiredKey{RetiredAt: at}
+
+	tests := []struct {
+		name     string
+		now      time.Time
+		lifetime time.Duration
+		want     bool
+	}{
+		{name: "before the end of its lifetime", now: at.Add(time.Hour), lifetime: 2 * time.Hour},
+		{
+			name:     "at the end of its lifetime",
+			now:      at.Add(2 * time.Hour),
+			lifetime: 2 * time.Hour,
+			want:     true,
+		},
+		{
+			name:     "after the end of its lifetime",
+			now:      at.Add(3 * time.Hour),
+			lifetime: 2 * time.Hour,
+			want:     true,
+		},
+		{name: "no lifetime never expires", now: at.Add(1000 * time.Hour)},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, k.Expired(tc.now, tc.lifetime))
+		})
+	}
 }

@@ -57,12 +57,15 @@ func New(
 	if cfg.Logger == nil {
 		cfg.Logger = slog.Default()
 	}
+	if cfg.RetiredKeyLifetime <= 0 {
+		cfg.RetiredKeyLifetime = DefaultRetiredKeyLifetime
+	}
 
 	return &Rotation{cfg: cfg}
 }
 
 // read is the record and its revision, or the zero record and 0 when there
-// is none.
+// is none, or the zero record and its revision when it does not unmarshal.
 func (r *Rotation) read(
 	ctx context.Context,
 ) (pki.ControllerKeyRecord, uint64, error) {
@@ -73,9 +76,15 @@ func (r *Rotation) read(
 	if err != nil {
 		return pki.ControllerKeyRecord{}, 0, fmt.Errorf("read the controller key record: %w", err)
 	}
+	// An agent can write the state bucket, so a record that does not
+	// unmarshal is not the controller's, as one that its key did not sign:
+	// it is the zero record at its revision, which the next Start replaces.
 	var rec pki.ControllerKeyRecord
 	if err := json.Unmarshal(entry.Value(), &rec); err != nil {
-		return pki.ControllerKeyRecord{}, 0, fmt.Errorf("the controller key record: %w", err)
+		r.cfg.Logger.Warn("the controller key record does not read, and the next "+
+			"rotation replaces it", slog.String("error", err.Error()))
+
+		return pki.ControllerKeyRecord{}, entry.Revision(), nil
 	}
 
 	return rec, entry.Revision(), nil
@@ -136,11 +145,11 @@ func (r *Rotation) Load(
 		if len(rec.Previous) > 0 {
 			r.cfg.Keys.SetPreviousControllerPublicKey(rec.Previous)
 		}
-		r.cfg.Keys.SetRetiredControllerPublicKeys(publicKeys(rec.Retired))
+		r.cfg.Keys.SetRetiredControllerKeys(rec.Retired, r.cfg.RetiredKeyLifetime)
 	case rec.Rotating() && bytes.Equal(rec.Next, pub) && rec.SignedBy(rec.Current):
 		// The keys moved, and the record of the switch was not written.
 		r.cfg.Keys.SetPreviousControllerPublicKey(rec.Current)
-		r.cfg.Keys.SetRetiredControllerPublicKeys(publicKeys(retire(rec)))
+		r.cfg.Keys.SetRetiredControllerKeys(r.retire(rec), r.cfg.RetiredKeyLifetime)
 
 		return r.writeSwitch(ctx, rec, revision)
 	}
@@ -172,7 +181,7 @@ func (r *Rotation) Start(
 			Current:    r.cfg.Keys.PublicKey(),
 			Next:       next.PublicKey(),
 			Previous:   rec.Previous,
-			Retired:    rec.Retired,
+			Retired:    r.unexpired(rec.Retired),
 			StartedAt:  r.cfg.Now().UTC(),
 			SwitchedAt: rec.SwitchedAt,
 		}
@@ -310,7 +319,7 @@ func (r *Rotation) Step(
 	}
 	r.cfg.Keys.RotateControllerKey(r.cfg.Keys.PublicKey())
 	r.cfg.Keys.SetPreviousControllerPublicKey(old)
-	r.cfg.Keys.SetRetiredControllerPublicKeys(publicKeys(retire(rec)))
+	r.cfg.Keys.SetRetiredControllerKeys(r.retire(rec), r.cfg.RetiredKeyLifetime)
 	if err := r.writeSwitch(ctx, rec, revision); err != nil {
 		return false, err
 	}
@@ -329,7 +338,7 @@ func (r *Rotation) writeSwitch(
 		Serial:     rec.Serial + 1,
 		Current:    rec.Next,
 		Previous:   rec.Current,
-		Retired:    retire(rec),
+		Retired:    r.retire(rec),
 		SwitchedAt: r.cfg.Now().UTC(),
 	}
 	if err := r.write(ctx, done, r.cfg.Keys.PrivateKey(), revision); err != nil {
@@ -369,25 +378,34 @@ func (r *Rotation) Run(
 }
 
 // retire is the retired keys of the record that a switch from rec writes:
-// rec's retired keys, then its previous key, which the switch replaces.
-func retire(
+// rec's retired keys that have not expired, then its previous key, which the
+// switch replaces. The previous key stopped signing at rec's switch, the
+// one that made it the previous key.
+func (r *Rotation) retire(
 	rec pki.ControllerKeyRecord,
-) [][]byte {
-	retired := append([][]byte{}, rec.Retired...)
+) []pki.RetiredKey {
+	retired := r.unexpired(rec.Retired)
 	if len(rec.Previous) > 0 {
-		retired = append(retired, rec.Previous)
+		retired = append(retired, pki.RetiredKey{Key: rec.Previous, RetiredAt: rec.SwitchedAt})
 	}
 
 	return retired
 }
 
-// publicKeys is keys as Ed25519 public keys.
-func publicKeys(
-	keys [][]byte,
-) []ed25519.PublicKey {
-	out := make([]ed25519.PublicKey, 0, len(keys))
+// unexpired is each key of keys that still verifies a stored record now.
+// The record drops an expired key: it verifies nothing.
+func (r *Rotation) unexpired(
+	keys []pki.RetiredKey,
+) []pki.RetiredKey {
+	now := r.cfg.Now()
+	out := []pki.RetiredKey{}
 	for _, k := range keys {
-		out = append(out, ed25519.PublicKey(k))
+		if !k.Expired(now, r.cfg.RetiredKeyLifetime) {
+			out = append(out, k)
+		}
+	}
+	if len(out) == 0 {
+		return nil
 	}
 
 	return out

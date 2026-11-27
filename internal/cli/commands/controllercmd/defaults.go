@@ -62,6 +62,7 @@ var Defaults = config.Controller{
 	PKI: config.ControllerPKI{
 		KeyDir:              "/etc/osapi/pki",
 		RotationGracePeriod: "24h",
+		RetiredKeyLifetime:  "168h",
 	},
 	// The vault that secret://default/<key> names. The controller makes its
 	// key at its first start.

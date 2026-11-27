@@ -54,15 +54,35 @@ type ControllerKeyRecord struct {
 	// Previous is the public key that the last switch replaced.
 	Previous []byte `json:"previous,omitempty"`
 	// Retired is each key that a switch before the last one replaced, oldest
-	// first. The controller still verifies the records that they signed,
-	// such as the jobs in the queue.
-	Retired [][]byte `json:"retired,omitempty"`
+	// first, with when it stopped signing. The controller still verifies the
+	// records that they signed, such as the jobs in the queue, until
+	// controller.pki.retired_key_lifetime after RetiredAt.
+	Retired []RetiredKey `json:"retired,omitempty"`
 	// StartedAt is when the rotation in progress started.
 	StartedAt time.Time `json:"started_at,omitzero"`
 	// SwitchedAt is when the last switch was.
 	SwitchedAt time.Time `json:"switched_at,omitzero"`
 	// Signature is the Ed25519 signature of the record by its signer.
 	Signature []byte `json:"signature"`
+}
+
+// RetiredKey is a controller key that a switch before the last one
+// replaced.
+type RetiredKey struct {
+	// Key is the Ed25519 public key.
+	Key []byte `json:"key"`
+	// RetiredAt is when the key stopped signing: the switch that replaced
+	// it as the current key. It signed no record after this time.
+	RetiredAt time.Time `json:"retired_at"`
+}
+
+// Expired reports whether the key no longer verifies a stored record at
+// now: lifetime after RetiredAt. A lifetime of zero or less never expires.
+func (k RetiredKey) Expired(
+	now time.Time,
+	lifetime time.Duration,
+) bool {
+	return lifetime > 0 && !now.Before(k.RetiredAt.Add(lifetime))
 }
 
 // signed is the bytes that Signature signs: each field but the signature,
@@ -80,9 +100,9 @@ func (r ControllerKeyRecord) signed() []byte {
 	} {
 		b.WriteString("\n" + f[0] + "=" + f[1])
 	}
-	// A record with no retired key signs the same bytes as before the field.
 	for _, k := range r.Retired {
-		b.WriteString("\nretired=" + base64.StdEncoding.EncodeToString(k))
+		b.WriteString("\nretired=" + base64.StdEncoding.EncodeToString(k.Key) +
+			"@" + stamp(k.RetiredAt))
 	}
 
 	return []byte(b.String())
