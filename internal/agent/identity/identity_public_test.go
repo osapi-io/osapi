@@ -21,180 +21,21 @@
 package identity_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"testing"
-	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/agent/identity"
 )
-
-// defaultGetMachineID uses the injectable osPlatform variable, so all
-// platform branches (linux, darwin, unsupported) can be tested on any
-// host by swapping osPlatform via SetOSPlatform/ResetOSPlatform.
-
-type GetMachineIDFromFSPublicTestSuite struct {
-	suite.Suite
-}
-
-func (suite *GetMachineIDFromFSPublicTestSuite) TestGetMachineIDFromFS() {
-	tests := []struct {
-		name         string
-		setupFS      func(fs avfs.VFS)
-		validateFunc func(string, error)
-	}{
-		{
-			name: "when valid machine-id file exists",
-			setupFS: func(fs avfs.VFS) {
-				_ = fs.MkdirAll("/etc", 0o755)
-				_ = fs.WriteFile("/etc/machine-id", []byte("abc123def456\n"), 0o444)
-			},
-			validateFunc: func(got string, err error) {
-				require.NoError(suite.T(), err)
-				assert.Equal(suite.T(), "abc123def456", got)
-			},
-		},
-		{
-			name: "when machine-id has leading and trailing whitespace",
-			setupFS: func(fs avfs.VFS) {
-				_ = fs.MkdirAll("/etc", 0o755)
-				_ = fs.WriteFile("/etc/machine-id", []byte("  abc123def456  \n"), 0o444)
-			},
-			validateFunc: func(got string, err error) {
-				require.NoError(suite.T(), err)
-				assert.Equal(suite.T(), "abc123def456", got)
-			},
-		},
-		{
-			name: "when machine-id file does not exist",
-			setupFS: func(_ avfs.VFS) {
-				// no file created
-			},
-			validateFunc: func(got string, err error) {
-				require.Error(suite.T(), err)
-				assert.Contains(suite.T(), err.Error(), "read machine-id")
-				assert.Empty(suite.T(), got)
-			},
-		},
-		{
-			name: "when machine-id file is empty",
-			setupFS: func(fs avfs.VFS) {
-				_ = fs.MkdirAll("/etc", 0o755)
-				_ = fs.WriteFile("/etc/machine-id", []byte(""), 0o444)
-			},
-			validateFunc: func(got string, err error) {
-				require.Error(suite.T(), err)
-				assert.Contains(suite.T(), err.Error(), "empty machine-id")
-				assert.Empty(suite.T(), got)
-			},
-		},
-		{
-			name: "when machine-id file contains only whitespace",
-			setupFS: func(fs avfs.VFS) {
-				_ = fs.MkdirAll("/etc", 0o755)
-				_ = fs.WriteFile("/etc/machine-id", []byte("   \n\t\n"), 0o444)
-			},
-			validateFunc: func(got string, err error) {
-				require.Error(suite.T(), err)
-				assert.Contains(suite.T(), err.Error(), "empty machine-id")
-				assert.Empty(suite.T(), got)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			fs := memfs.New()
-			tc.setupFS(fs)
-
-			tc.validateFunc(identity.GetMachineIDFromFS(fs))
-		})
-	}
-}
-
-func TestGetMachineIDFromFSPublicTestSuite(
-	t *testing.T,
-) {
-	t.Parallel()
-	suite.Run(t, new(GetMachineIDFromFSPublicTestSuite))
-}
-
-type GetDarwinMachineIDPublicTestSuite struct {
-	suite.Suite
-}
-
-func (suite *GetDarwinMachineIDPublicTestSuite) TearDownSubTest() {
-	identity.ResetIoregFn()
-}
-
-func (suite *GetDarwinMachineIDPublicTestSuite) TestGetDarwinMachineID() {
-	tests := []struct {
-		name         string
-		ioregOutput  string
-		ioregErr     error
-		validateFunc func(string, error)
-	}{
-		{
-			name: "when ioreg returns valid UUID",
-			ioregOutput: `+-o Root  <class IORegistryEntry, id 0x100000100, retain 22>
-    {
-      "IOPlatformUUID" = "12345678-ABCD-EFGH-IJKL-123456789ABC"
-    }
-`,
-			validateFunc: func(got string, err error) {
-				require.NoError(suite.T(), err)
-				assert.Equal(suite.T(), "12345678-ABCD-EFGH-IJKL-123456789ABC", got)
-			},
-		},
-		{
-			name:     "when ioreg command fails",
-			ioregErr: fmt.Errorf("command not found"),
-			validateFunc: func(got string, err error) {
-				require.Error(suite.T(), err)
-				assert.Contains(suite.T(), err.Error(), "run ioreg")
-				assert.Empty(suite.T(), got)
-			},
-		},
-		{
-			name: "when ioreg output has no UUID",
-			ioregOutput: `+-o Root  <class IORegistryEntry, id 0x100000100, retain 22>
-    {
-      "SomeOtherKey" = "value"
-    }
-`,
-			validateFunc: func(got string, err error) {
-				require.Error(suite.T(), err)
-				assert.Contains(suite.T(), err.Error(), "IOPlatformUUID not found")
-				assert.Empty(suite.T(), got)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			identity.SetIoregFn(func() (string, error) {
-				return tc.ioregOutput, tc.ioregErr
-			})
-
-			tc.validateFunc(identity.GetDarwinMachineID())
-		})
-	}
-}
-
-func TestGetDarwinMachineIDPublicTestSuite(
-	t *testing.T,
-) {
-	t.Parallel()
-	suite.Run(t, new(GetDarwinMachineIDPublicTestSuite))
-}
 
 type GetIdentityPublicTestSuite struct {
 	suite.Suite
@@ -271,163 +112,130 @@ func TestGetIdentityPublicTestSuite(
 	suite.Run(t, new(GetIdentityPublicTestSuite))
 }
 
-// PlatformPublicTestSuite tests the real platform-specific functions.
-// These run the actual OS commands so they only pass on their target platform.
+// runner is a gohai command runner that answers ioreg with out and err.
+type runner struct {
+	out []byte
+	err error
+}
+
+func (r runner) Execute(
+	_ context.Context,
+	name string,
+	args ...string,
+) ([]byte, error) {
+	if name != "ioreg" || len(args) == 0 {
+		return nil, fmt.Errorf("unexpected command %s %v", name, args)
+	}
+
+	return r.out, r.err
+}
+
+// PlatformPublicTestSuite tests the read of the machine ID through gohai.
 type PlatformPublicTestSuite struct {
 	suite.Suite
 }
 
 func (suite *PlatformPublicTestSuite) TearDownSubTest() {
-	identity.ResetExecCommandFn()
-	identity.ResetIoregFn()
 	identity.ResetOSPlatform()
 }
 
-func (suite *PlatformPublicTestSuite) TestDefaultIoregFn() {
-	var started time.Time
-	tests := []struct {
-		name         string
-		setupFn      func()
-		skipUnless   string
-		validateFunc func(string, error)
-	}{
-		{
-			name:       "when ioreg command succeeds on macOS",
-			skipUnless: "darwin",
-			validateFunc: func(out string, err error) {
-				require.NoError(suite.T(), err)
-				assert.Contains(suite.T(), out, "IOPlatformUUID")
-			},
-		},
-		{
-			name: "when the real command runs it returns its output or an error",
-			setupFn: func() {
-				identity.ResetExecCommandFn()
-			},
-			validateFunc: func(out string, err error) {
-				if err != nil {
-					assert.Empty(suite.T(), out)
-				}
-			},
-		},
-		{
-			name: "when ioreg does not answer it is stopped at the timeout",
-			setupFn: func() {
-				// The stand-in ignores its arguments and runs for 30 s.
-				prog := filepath.Join(suite.T().TempDir(), "ioreg")
-				require.NoError(suite.T(), os.WriteFile(prog,
-					[]byte("#!/bin/sh\nexec sleep 30\n"), 0o700))
-				restore := identity.SetIoreg(prog, 100*time.Millisecond)
-				suite.T().Cleanup(restore)
-				identity.ResetExecCommandFn()
-				started = time.Now()
-			},
-			validateFunc: func(out string, err error) {
-				require.ErrorContains(suite.T(), err, "ioreg did not answer in 100ms")
-				assert.Empty(suite.T(), out)
-				assert.Less(suite.T(), time.Since(started), 5*time.Second)
-			},
-		},
-		{
-			name: "when exec command succeeds returns its output",
-			setupFn: func() {
-				identity.SetExecCommandFn(func() ([]byte, error) {
-					return []byte(`"IOPlatformUUID" = "abc"`), nil
-				})
-			},
-			validateFunc: func(out string, err error) {
-				require.NoError(suite.T(), err)
-				assert.Equal(suite.T(), `"IOPlatformUUID" = "abc"`, out)
-			},
-		},
-		{
-			name: "when exec command fails returns error",
-			setupFn: func() {
-				identity.SetExecCommandFn(func() ([]byte, error) {
-					return nil, fmt.Errorf("exec: command not found")
-				})
-			},
-			validateFunc: func(out string, err error) {
-				require.Error(suite.T(), err)
-				assert.Empty(suite.T(), out)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			if tc.skipUnless != "" && runtime.GOOS != tc.skipUnless {
-				suite.T().Skipf("only runs on %s", tc.skipUnless)
-			}
-
-			if tc.setupFn != nil {
-				tc.setupFn()
-			}
-
-			tc.validateFunc(identity.ExportDefaultIoregFn())
-		})
-	}
-}
-
 func (suite *PlatformPublicTestSuite) TestDefaultGetMachineID() {
+	const uuid = "4C4C4544-0042-3110-8030-B4C04F333232"
+	ioreg := []byte(`+-o J316sAP  <class IOPlatformExpertDevice>
+    {
+      "IOPlatformUUID" = "` + uuid + `"
+    }
+`)
+
 	tests := []struct {
-		name         string
-		platform     string
-		setupFS      func(fs avfs.VFS)
-		setupFn      func()
-		validateFunc func(string, error)
+		name     string
+		platform string
+		files    map[string]string
+		runner   runner
+		wantID   string
+		wantErr  string
 	}{
-		{
-			name:     "when platform is darwin returns machine ID",
-			platform: "darwin",
-			setupFS:  func(_ avfs.VFS) {},
-			setupFn: func() {
-				identity.SetIoregFn(func() (string, error) {
-					return `"IOPlatformUUID" = "FAKE-UUID-1234"`, nil
-				})
-			},
-			validateFunc: func(got string, err error) {
-				require.NoError(suite.T(), err)
-				assert.NotEmpty(suite.T(), got)
-			},
-		},
 		{
 			name:     "when platform is linux reads /etc/machine-id",
 			platform: "linux",
-			setupFS: func(fs avfs.VFS) {
-				_ = fs.MkdirAll("/etc", 0o755)
-				_ = fs.WriteFile("/etc/machine-id", []byte("abc123\n"), 0o444)
-			},
-			setupFn: func() {},
-			validateFunc: func(got string, err error) {
-				require.NoError(suite.T(), err)
-				assert.NotEmpty(suite.T(), got)
-			},
+			files:    map[string]string{"/etc/machine-id": "abc123def456\n"},
+			wantID:   "abc123def456",
+		},
+		{
+			name:     "when /etc/machine-id has white space around the ID",
+			platform: "linux",
+			files:    map[string]string{"/etc/machine-id": "  abc123def456  \n"},
+			wantID:   "abc123def456",
+		},
+		{
+			name:     "when /etc/machine-id is missing reads the dbus machine ID",
+			platform: "linux",
+			files:    map[string]string{"/var/lib/dbus/machine-id": "fedcba987654\n"},
+			wantID:   "fedcba987654",
+		},
+		{
+			name:     "when the host has no machine ID",
+			platform: "linux",
+			files:    map[string]string{"/etc/machine-id": "   \n"},
+			wantErr:  "read the machine ID: the host has none",
+		},
+		{
+			name:     "when platform is darwin reads the IOPlatformUUID",
+			platform: "darwin",
+			runner:   runner{out: ioreg},
+			wantID:   uuid,
+		},
+		{
+			name:     "when ioreg fails",
+			platform: "darwin",
+			runner:   runner{err: errors.New("exec: ioreg: not found")},
+			wantErr:  "read the machine ID: ioreg IOPlatformExpertDevice: exec: ioreg: not found",
+		},
+		{
+			name:     "when the ioreg output has no IOPlatformUUID",
+			platform: "darwin",
+			runner:   runner{out: []byte("no uuid here")},
+			wantErr:  "read the machine ID: the host has none",
 		},
 		{
 			name:     "when platform is unsupported returns error",
 			platform: "windows",
-			setupFS:  func(_ avfs.VFS) {},
-			setupFn:  func() {},
-			validateFunc: func(_ string, err error) {
-				require.Error(suite.T(), err)
-				assert.Contains(suite.T(), err.Error(), "unsupported platform: windows")
-			},
+			wantErr:  "unsupported platform: windows",
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			fs := memfs.New()
-			tc.setupFS(fs)
 			identity.SetOSPlatform(tc.platform)
-			if tc.setupFn != nil {
-				tc.setupFn()
+			defer identity.SetMachineIDRunner(tc.runner)()
+			fs := memfs.New()
+			for path, data := range tc.files {
+				require.NoError(suite.T(), fs.MkdirAll("/etc", 0o755))
+				require.NoError(suite.T(), fs.MkdirAll("/var/lib/dbus", 0o755))
+				require.NoError(suite.T(), avfs.WriteFile(fs, path, []byte(data), 0o644))
 			}
 
-			tc.validateFunc(identity.ExportDefaultGetMachineID(fs))
+			got, err := identity.ExportDefaultGetMachineID(fs)
+			if tc.wantErr != "" {
+				assert.EqualError(suite.T(), err, tc.wantErr)
+
+				return
+			}
+			require.NoError(suite.T(), err)
+			assert.Equal(suite.T(), tc.wantID, got)
 		})
 	}
+}
+
+func (suite *PlatformPublicTestSuite) TestThisHost() {
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		suite.T().Skipf("osapi runs on linux and darwin, not %s", runtime.GOOS)
+	}
+	identity.ResetOSPlatform()
+
+	got, err := identity.ExportDefaultGetMachineID(osfs.NewWithNoIdm())
+	require.NoError(suite.T(), err, "gohai reads this host's machine ID")
+	assert.NotEmpty(suite.T(), got)
 }
 
 func TestPlatformPublicTestSuite(

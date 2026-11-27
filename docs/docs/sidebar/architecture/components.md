@@ -68,10 +68,10 @@ needs no privileges on a host. It runs these parts:
 The agent runs on each managed host and does the work. When it starts, it does
 these steps:
 
-1. It reads its **machine ID** from `/etc/machine-id`, or the platform UUID on
-   macOS. If it has no machine ID, it does not start. The machine ID is the
-   identity of the agent. The hostname is only a display name, and it can
-   change.
+1. It reads its **machine ID** through gohai: `/etc/machine-id` on Linux, or the
+   platform UUID on macOS. If it has no machine ID, it does not start. The
+   machine ID is the identity of the agent. The hostname is only a display name,
+   and it can change.
 1. It makes or loads its key pair and **enrolls** with the controller. It waits
    until an administrator accepts it.
 1. If privilege escalation is on, it runs a **preflight**. If sudo needs a

@@ -11,17 +11,20 @@ enrollment gives cryptographic trust between the agents and the controller.
 
 Each agent has two identity values:
 
-- **Machine ID.** A permanent identifier from `/etc/machine-id` (Linux) or
-  `IOPlatformUUID` (macOS). It is the registry key. It does not change when the
-  hostname changes.
+- **Machine ID.** A permanent identifier, which the agent reads through gohai's
+  `machine_id` collector. On Linux it is the first of these files that has an
+  ID, in lowercase: `/etc/machine-id`, `/var/lib/dbus/machine-id` and
+  `/sys/class/dmi/id/product_uuid`. On macOS it is the `IOPlatformUUID` that
+  `ioreg` gives. It is the registry key. It does not change when the hostname
+  changes.
 - **Hostname.** A display name from the OS or from the `agent.hostname` config.
   It can change. Use it to target hosts and to read the output.
 
-The agent reads its machine ID one time, when it starts. If it cannot read the
-machine ID, it does not start. NATS subjects use the machine ID
-(`jobs.query.host.<machineID>`). Thus the consumers do not subscribe again when
-the hostname changes. The agent reads the hostname again at each heartbeat (10s)
-and updates it in the registry.
+The agent reads its machine ID one time, when it starts, and waits at most 10
+seconds for it. If it cannot read the machine ID, or the host has none, it does
+not start. NATS subjects use the machine ID (`jobs.query.host.<machineID>`).
+Thus the consumers do not subscribe again when the hostname changes. The agent
+reads the hostname again at each heartbeat (10s) and updates it in the registry.
 
 ### CLI targeting
 
