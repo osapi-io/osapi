@@ -162,7 +162,7 @@ var Behavior = behavior.Register(behavior.Define(
 			},
 			behavior.Prints("netplan status --format json", status),
 			behavior.Exists("/sys/class/net/wlan0/type", "1\n"),
-			behavior.Exists("/sys/class/net/wlan0/wireless/.keep", ""),
+			behavior.Exists("/sys/class/net/wlan0/phy80211", ""),
 		).
 		Example("A VLAN on a netplan without status", GetInput{Name: "eth0.10"},
 			Interface{
