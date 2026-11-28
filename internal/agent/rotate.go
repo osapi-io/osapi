@@ -86,7 +86,7 @@ func RotateKey(
 			return "", err
 		}
 	}
-	addr, opts, err := natsDialOptions(cfg.Agent.NATS)
+	addr, opts, err := natsDialOptions("osapi-agent-rotate", cfg.Agent.NATS)
 	if err != nil {
 		return "", err
 	}
@@ -152,9 +152,10 @@ func loadAgentKeys(
 	return load()
 }
 
-// natsDialOptions is the URL and the options of a connection to NATS from
-// conn, as nats-client makes them.
+// natsDialOptions is the URL and the options of a connection named name
+// to NATS from conn, as nats-client makes them.
 func natsDialOptions(
+	name string,
 	conn config.NATSConnection,
 ) (string, []nats.Option, error) {
 	tlsConfig, err := conn.TLS.Dial(conn.Host)
@@ -162,7 +163,7 @@ func natsDialOptions(
 		return "", nil, fmt.Errorf("nats tls: %w", err)
 	}
 	scheme := "nats"
-	opts := []nats.Option{nats.Name("osapi-agent-rotate"), nats.Timeout(10 * time.Second)}
+	opts := []nats.Option{nats.Name(name), nats.Timeout(10 * time.Second)}
 	if tlsConfig != nil {
 		scheme = "tls"
 		opts = append(opts, nats.Secure(tlsConfig))

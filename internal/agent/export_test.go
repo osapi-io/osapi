@@ -1012,6 +1012,27 @@ func SetJoinNATSFns(
 	return func() { getIdentity, natsRequest = oldID, oldReq }
 }
 
+// The functions of a join and a renewal before a test swaps them.
+var (
+	origGetIdentity = getIdentity
+	origNATSRequest = natsRequest
+	origRenewNow    = renewNow
+	origRenewCheck  = renewCheck
+	origWriteCreds  = writeCreds
+)
+
+// ResetJoinNATSFns puts back how a join over NATS finds the host's identity
+// and sends its request.
+func ResetJoinNATSFns() {
+	getIdentity, natsRequest = origGetIdentity, origNATSRequest
+}
+
+// ResetRenewFns puts back the time, the check interval and the write of a
+// renewal.
+func ResetRenewFns() {
+	renewNow, renewCheck, writeCreds = origRenewNow, origRenewCheck, origWriteCreds
+}
+
 // SetNewNATSUser swaps how the agent makes its NATS user nkey, and returns a
 // func that puts it back.
 func SetNewNATSUser(
@@ -1203,11 +1224,11 @@ func SendFactsReset(
 	a.factsReset <- d
 }
 
-// ExportNATSDialOptions calls natsDialOptions.
+// ExportNATSDialOptions calls natsDialOptions with the name of a rotation.
 func ExportNATSDialOptions(
 	conn config.NATSConnection,
 ) (string, []nats.Option, error) {
-	return natsDialOptions(conn)
+	return natsDialOptions("osapi-agent-rotate", conn)
 }
 
 // ExportOpenJob calls openJob.

@@ -26,9 +26,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
-	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/avfs/avfs"
@@ -36,6 +33,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/pki"
 )
@@ -89,7 +87,7 @@ func (a *Agent) renewIfDue(
 ) error {
 	creds, err := avfs.ReadFile(a.appFs, s.CredsFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("read the NATS creds: %w", err)
 	}
 	// ParseDecoratedJWT gives text that is not a creds file as it is: the
 	// decode below refuses it.
@@ -113,19 +111,21 @@ func (a *Agent) renewIfDue(
 	req := pki.RenewRequest{MachineID: a.machineID, NATSUserKey: userKey, At: now}
 	req.Sign(a.pkiManager.PrivateKey())
 	data, _ := json.Marshal(req)
-	opts := []nats.Option{
-		nats.Name("osapi-agent-renew"),
-		nats.Timeout(10 * time.Second),
-		nats.UserCredentialBytes(creds),
+	cfg, err := applyJoin(a.appFs, a.appConfig, s)
+	if err != nil {
+		return fmt.Errorf("the NATS settings of the join: %w", err)
 	}
-	if s.Scheme == "tls" {
-		opts = append(opts, nats.RootCAs(filepath.Join(a.appConfig.Agent.PKI.KeyDir, natsJoinCA)))
+	// The renewal connects with the creds that it read, not the file.
+	cfg.Agent.NATS.Auth = config.NATSAuth{Type: "none"}
+	addr, opts, err := natsDialOptions("osapi-agent-renew", cfg.Agent.NATS)
+	if err != nil {
+		return fmt.Errorf("the NATS connection of the renewal: %w", err)
 	}
+	opts = append(opts, nats.UserCredentialBytes(creds))
 	subject := pki.RenewRequestSuffix
 	if s.Namespace != "" {
 		subject = s.Namespace + "." + subject
 	}
-	addr := fmt.Sprintf("%s://%s", s.Scheme, net.JoinHostPort(s.Host, strconv.Itoa(s.Port)))
 	raw, err := natsRequest(addr, opts, subject, data)
 	if err != nil {
 		return fmt.Errorf("%s: %w", addr, err)
@@ -136,6 +136,13 @@ func (a *Agent) renewIfDue(
 	}
 	if reply.Error != "" {
 		return errors.New(reply.Error)
+	}
+	nc, err := jwt.DecodeUserClaims(reply.NATS.JWT)
+	if err != nil {
+		return fmt.Errorf("the JWT of the renewal: %w", err)
+	}
+	if nc.Expires != 0 && nc.Expires <= now {
+		return errors.New("the JWT of the renewal has expired")
 	}
 	next, err := natsjwt.Creds(reply.NATS.JWT, seed)
 	if err != nil {
@@ -148,7 +155,7 @@ func (a *Agent) renewIfDue(
 		next,
 		0o600,
 	); err != nil {
-		return err
+		return fmt.Errorf("write the renewed NATS creds: %w", err)
 	}
 	a.logger.Info("renewed the NATS user")
 

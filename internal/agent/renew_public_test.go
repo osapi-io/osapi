@@ -23,8 +23,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"maps"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/avfs/avfs"
@@ -36,13 +36,15 @@ import (
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
-// renewSetup gives the agent keys, a saved join of scheme, and nats.creds
+// renewSetup gives the agent keys, a saved join of scheme with the fields
+// of join, and nats.creds
 // with a JWT of the user key that expires in expiresIn seconds (0 never).
 // Encode sets the JWT's issue time to the clock, so the tests move the
 // agent's clock ahead with SetRenewFns. It returns the account that signs,
 // and the user key.
 func (s *AgentPublicTestSuite) renewSetup(
 	scheme string,
+	join map[string]any,
 	expiresIn int64,
 ) (*agent.Agent, nkeys.KeyPair, string, *pki.Manager) {
 	s.appConfig.Agent.PKI.KeyDir = "/pki"
@@ -63,194 +65,364 @@ func (s *AgentPublicTestSuite) renewSetup(
 	token, _ := uc.Encode(acct)
 	creds, _ := jwt.FormatUserConfig(token, seed)
 	s.Require().NoError(avfs.WriteFile(s.appFs, "/pki/nats.creds", creds, 0o600))
-	saved, _ := json.Marshal(map[string]any{
+	fields := map[string]any{
 		"scheme": scheme, "host": "hub", "port": 4222, "namespace": "osapi",
 		"creds_file": "/pki/nats.creds",
-	})
+	}
+	maps.Copy(fields, join)
+	saved, _ := json.Marshal(fields)
 	s.Require().NoError(avfs.WriteFile(s.appFs, "/pki/"+agent.NATSJoinFile, saved, 0o600))
 
 	return a, acct, userKey, m
 }
 
 func (s *AgentPublicTestSuite) TestRenewIfDue() {
-	// The agent's clock is 50 seconds ahead: a JWT of 60 seconds has a
-	// sixth left, and one of an hour most of it.
-	defer agent.SetRenewFns(func() time.Time { return time.Now().Add(50 * time.Second) }, 0, nil)()
+	signed := func(
+		acct nkeys.KeyPair,
+		userKey string,
+		mod func(*jwt.UserClaims),
+	) ([]byte, error) {
+		uc := jwt.NewUserClaims(userKey)
+		uc.Name = "renewed"
+		if mod != nil {
+			mod(uc)
+		}
+		token, _ := uc.Encode(acct)
 
-	s.Run("a JWT with a third of its life left is renewed, for the same user key", func() {
-		a, acct, userKey, m := s.renewSetup("tls", 60)
-		defer agent.SetJoinNATSFns(
-			nil,
-			func(url string, _ []nats.Option, subject string, data []byte) ([]byte, error) {
-				s.Equal("tls://hub:4222", url)
-				s.Equal("osapi.join.renew", subject)
-				var req pki.RenewRequest
-				s.Require().NoError(json.Unmarshal(data, &req))
-				s.Equal("m-1", req.MachineID)
-				s.Equal(userKey, req.NATSUserKey)
-				s.True(req.Verify(m.PublicKey()), "signed with the agent's key")
-				next := jwt.NewUserClaims(userKey)
-				next.Name = "renewed"
-				token, _ := next.Encode(acct)
-
-				return json.Marshal(pki.JoinReply{NATS: pki.JoinNATS{JWT: token}})
-			},
-		)()
-
-		s.Require().NoError(agent.ExportRenewIfDue(a, "m-1"))
-		creds, _ := avfs.ReadFile(s.appFs, "/pki/nats.creds")
-		token, _ := jwt.ParseDecoratedJWT(creds)
-		uc, _ := jwt.DecodeUserClaims(token)
-		s.Equal("renewed", uc.Name)
-	})
-
-	noCall := func(string, []nats.Option, string, []byte) ([]byte, error) {
-		s.Fail("no renewal is due")
-
-		return nil, nil
+		return json.Marshal(pki.JoinReply{NATS: pki.JoinNATS{JWT: token}})
 	}
-	s.Run("a JWT with more than a third left is kept", func() {
-		a, _, _, _ := s.renewSetup("nats", 3600)
-		defer agent.SetJoinNATSFns(nil, noCall)()
-		s.NoError(agent.ExportRenewIfDue(a, "m-1"))
-	})
-	s.Run("a JWT that never expires is kept", func() {
-		a, _, _, _ := s.renewSetup("nats", 0)
-		defer agent.SetJoinNATSFns(nil, noCall)()
-		s.NoError(agent.ExportRenewIfDue(a, "m-1"))
-	})
-
-	failures := []struct {
-		name    string
-		reply   func(acct nkeys.KeyPair) ([]byte, error)
-		creds   []byte
-		write   error
-		wantErr string
+	tests := []struct {
+		name         string
+		scheme       string
+		join         map[string]any
+		caDir        bool
+		expiresIn    int64
+		creds        []byte
+		seedless     bool
+		gone         bool
+		reply        func(acct nkeys.KeyPair, userKey string) ([]byte, error)
+		write        error
+		wantCall     bool
+		validateFunc func(
+			a *agent.Agent,
+			calls []renewCall,
+			userKey string,
+			m *pki.Manager,
+			err error,
+		)
 	}{
-		{name: "a controller that refuses", reply: func(nkeys.KeyPair) ([]byte, error) {
-			return json.Marshal(pki.JoinReply{Error: "the machine is not admitted"})
-		}, wantErr: "the machine is not admitted"},
-		{name: "a server that does not answer", reply: func(nkeys.KeyPair) ([]byte, error) {
-			return nil, nats.ErrTimeout
-		}, wantErr: "nats://hub:4222: nats: timeout"},
-		{name: "a reply that is not JSON", reply: func(nkeys.KeyPair) ([]byte, error) {
-			return []byte("{"), nil
-		}, wantErr: "the reply of the renewal"},
-		{name: "a JWT for another key", reply: func(acct nkeys.KeyPair) ([]byte, error) {
-			other, _ := nkeys.CreateUser()
-			pub, _ := other.PublicKey()
-			token, _ := jwt.NewUserClaims(pub).Encode(acct)
-
-			return json.Marshal(pki.JoinReply{NATS: pki.JoinNATS{JWT: token}})
-		}, wantErr: "the JWT of the renewal"},
 		{
-			name:    "creds that are not a file of creds",
-			creds:   []byte("nothing"),
-			wantErr: "/pki/nats.creds",
+			name:      "a JWT with a third of its life left is renewed, for the same user key",
+			scheme:    "tls",
+			join:      map[string]any{"server_name": "nats.example.com"},
+			expiresIn: 60,
+			reply: func(acct nkeys.KeyPair, userKey string) ([]byte, error) {
+				return signed(acct, userKey, nil)
+			},
+			wantCall: true,
+			validateFunc: func(
+				_ *agent.Agent,
+				calls []renewCall,
+				userKey string,
+				m *pki.Manager,
+				err error,
+			) {
+				s.Require().NoError(err)
+				s.Require().Len(calls, 1)
+				s.Equal("tls://hub:4222", calls[0].url)
+				s.Equal("osapi.join.renew", calls[0].subject)
+				s.NoError(calls[0].optsErr)
+				s.Equal("nats.example.com", calls[0].opts.TLSConfig.ServerName)
+				s.Equal(userKey, calls[0].req.NATSUserKey)
+				s.Equal("m-1", calls[0].req.MachineID)
+				s.True(calls[0].req.Verify(m.PublicKey()))
+				creds, _ := avfs.ReadFile(s.appFs, "/pki/nats.creds")
+				token, _ := jwt.ParseDecoratedJWT(creds)
+				uc, _ := jwt.DecodeUserClaims(token)
+				s.Equal("renewed", uc.Name)
+			},
 		},
 		{
-			name: "creds whose JWT is not a user's",
+			name:      "a JWT with more than a third left is kept",
+			scheme:    "nats",
+			expiresIn: 3600,
+			validateFunc: func(
+				_ *agent.Agent,
+				calls []renewCall,
+				_ string,
+				_ *pki.Manager,
+				err error,
+			) {
+				s.NoError(err)
+				s.Empty(calls)
+			},
+		},
+		{
+			name:   "a JWT that never expires is kept",
+			scheme: "nats",
+			validateFunc: func(
+				_ *agent.Agent,
+				calls []renewCall,
+				_ string,
+				_ *pki.Manager,
+				err error,
+			) {
+				s.NoError(err)
+				s.Empty(calls)
+			},
+		},
+		{
+			name:         "a saved CA that is not a certificate",
+			scheme:       "tls",
+			join:         map[string]any{"ca": "not a certificate"},
+			expiresIn:    60,
+			validateFunc: wantRenewErr(s, "nats tls"),
+		},
+		{
+			name:         "a saved CA that cannot be kept",
+			scheme:       "tls",
+			join:         map[string]any{"ca": "not a certificate"},
+			caDir:        true,
+			expiresIn:    60,
+			validateFunc: wantRenewErr(s, "nats-join-ca.pem"),
+		},
+		{
+			name:      "a controller that refuses",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(nkeys.KeyPair, string) ([]byte, error) {
+				return json.Marshal(pki.JoinReply{Error: "the machine is not admitted"})
+			},
+			validateFunc: wantRenewErr(s, "the machine is not admitted"),
+		},
+		{
+			name:      "a server that does not answer",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(nkeys.KeyPair, string) ([]byte, error) {
+				return nil, nats.ErrTimeout
+			},
+			validateFunc: wantRenewErr(s, "nats://hub:4222: nats: timeout"),
+		},
+		{
+			name:      "a reply that is not JSON",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(nkeys.KeyPair, string) ([]byte, error) {
+				return []byte("{"), nil
+			},
+			validateFunc: wantRenewErr(s, "the reply of the renewal"),
+		},
+		{
+			name:      "a reply with no JWT",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(nkeys.KeyPair, string) ([]byte, error) {
+				return json.Marshal(pki.JoinReply{})
+			},
+			validateFunc: wantRenewErr(s, "the JWT of the renewal"),
+		},
+		{
+			name:      "a JWT for another key",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(acct nkeys.KeyPair, _ string) ([]byte, error) {
+				other, _ := nkeys.CreateUser()
+				pub, _ := other.PublicKey()
+
+				return signed(acct, pub, nil)
+			},
+			validateFunc: wantRenewErr(s, "the JWT of the renewal"),
+		},
+		{
+			name:      "a JWT that has expired",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(acct nkeys.KeyPair, userKey string) ([]byte, error) {
+				return signed(acct, userKey, func(uc *jwt.UserClaims) {
+					uc.Expires = time.Now().Add(-time.Hour).Unix()
+				})
+			},
+			validateFunc: wantRenewErr(s, "the JWT of the renewal has expired"),
+		},
+		{
+			name:         "creds that are not a file of creds",
+			scheme:       "nats",
+			expiresIn:    60,
+			creds:        []byte("nothing"),
+			validateFunc: wantRenewErr(s, "/pki/nats.creds"),
+		},
+		{
+			name:      "creds whose JWT is not a user's",
+			scheme:    "nats",
+			expiresIn: 60,
 			creds: []byte(
 				"-----BEGIN NATS USER JWT-----\nnot.a.jwt\n------END NATS USER JWT------\n",
 			),
-			wantErr: "/pki/nats.creds",
+			validateFunc: wantRenewErr(s, "/pki/nats.creds"),
 		},
 		{
-			name:    "a renewal that cannot be kept",
-			write:   errors.New("disk full"),
-			wantErr: "disk full",
+			name:         "creds with a JWT and no seed",
+			scheme:       "nats",
+			expiresIn:    60,
+			seedless:     true,
+			validateFunc: wantRenewErr(s, "/pki/nats.creds"),
+		},
+		{
+			name:         "creds that are gone",
+			scheme:       "nats",
+			expiresIn:    60,
+			gone:         true,
+			validateFunc: wantRenewErr(s, "/pki/nats.creds"),
+		},
+		{
+			name:      "a renewal that cannot be kept",
+			scheme:    "nats",
+			expiresIn: 60,
+			reply: func(acct nkeys.KeyPair, userKey string) ([]byte, error) {
+				return signed(acct, userKey, nil)
+			},
+			write:        errors.New("disk full"),
+			validateFunc: wantRenewErr(s, "disk full"),
 		},
 	}
-	for _, tt := range failures {
+	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			a, acct, userKey, _ := s.renewSetup("nats", 60)
-			if tt.creds != nil {
-				s.Require().NoError(avfs.WriteFile(s.appFs, "/pki/nats.creds", tt.creds, 0o600))
+			// The agent's clock is 50 seconds ahead: a JWT of 60 seconds has
+			// a sixth left, and one of an hour most of it. TearDownSubTest
+			// puts back each function that the row swaps.
+			agent.SetRenewFns(func() time.Time { return time.Now().Add(50 * time.Second) }, 0, nil)
+			a, acct, userKey, m := s.renewSetup(tt.scheme, tt.join, tt.expiresIn)
+			if tt.caDir {
+				s.Require().NoError(s.appFs.RemoveAll("/pki/nats-join-ca.pem"))
+				s.Require().NoError(s.appFs.MkdirAll("/pki/nats-join-ca.pem/x", 0o700))
 			}
-			reply := tt.reply
-			if reply == nil {
-				reply = func(acct nkeys.KeyPair) ([]byte, error) {
-					token, _ := jwt.NewUserClaims(userKey).Encode(acct)
-
-					return json.Marshal(pki.JoinReply{NATS: pki.JoinNATS{JWT: token}})
-				}
+			creds := tt.creds
+			if tt.seedless {
+				uc := jwt.NewUserClaims(userKey)
+				uc.Expires = time.Now().Unix() + 60
+				token, _ := uc.Encode(acct)
+				creds = []byte(
+					"-----BEGIN NATS USER JWT-----\n" + token + "\n------END NATS USER JWT------\n",
+				)
 			}
-			defer agent.SetJoinNATSFns(
+			if creds != nil {
+				s.Require().NoError(avfs.WriteFile(s.appFs, "/pki/nats.creds", creds, 0o600))
+			}
+			if tt.gone {
+				s.Require().NoError(s.appFs.Remove("/pki/nats.creds"))
+			}
+			var calls []renewCall
+			agent.SetJoinNATSFns(
 				nil,
-				func(string, []nats.Option, string, []byte) ([]byte, error) {
-					return reply(acct)
+				func(url string, opts []nats.Option, subject string, data []byte) ([]byte, error) {
+					call := renewCall{url: url, subject: subject}
+					for _, o := range opts {
+						if err := o(&call.opts); err != nil {
+							call.optsErr = err
+						}
+					}
+					_ = json.Unmarshal(data, &call.req)
+					calls = append(calls, call)
+					if tt.reply == nil {
+						return nil, errors.New("no reply")
+					}
+
+					return tt.reply(acct, userKey)
 				},
-			)()
+			)
 			if tt.write != nil {
-				defer agent.SetRenewFns(
+				agent.SetRenewFns(
 					nil,
 					0,
 					func(context.Context, avfs.VFS, string, []byte, os.FileMode) error {
 						return tt.write
 					},
-				)()
+				)
 			}
 
-			s.ErrorContains(agent.ExportRenewIfDue(a, "m-1"), tt.wantErr)
+			tt.validateFunc(a, calls, userKey, m, agent.ExportRenewIfDue(a, "m-1"))
 		})
 	}
+}
 
-	s.Run("creds with a JWT and no seed", func() {
-		a, acct, userKey, _ := s.renewSetup("nats", 60)
-		uc := jwt.NewUserClaims(userKey)
-		uc.Expires = time.Now().Unix() + 60
-		token, _ := uc.Encode(acct)
-		s.Require().NoError(avfs.WriteFile(
-			s.appFs,
-			"/pki/nats.creds",
-			[]byte(
-				"-----BEGIN NATS USER JWT-----\n"+token+"\n------END NATS USER JWT------\n",
-			),
-			0o600,
-		))
-		err := agent.ExportRenewIfDue(a, "m-1")
-		s.Error(err)
-		s.True(strings.Contains(err.Error(), "/pki/nats.creds"))
-	})
+// renewCall is one request of a renewal: its URL, its subject, the options
+// applied to a nats.Options, and the request that it sent.
+type renewCall struct {
+	url     string
+	subject string
+	opts    nats.Options
+	optsErr error
+	req     pki.RenewRequest
+}
 
-	s.Run("creds that are gone", func() {
-		a, _, _, _ := s.renewSetup("nats", 60)
-		s.Require().NoError(s.appFs.Remove("/pki/nats.creds"))
-		s.Error(agent.ExportRenewIfDue(a, "m-1"))
-	})
+// wantRenewErr is a validateFunc of TestRenewIfDue that wants an error with
+// text.
+func wantRenewErr(
+	s *AgentPublicTestSuite,
+	text string,
+) func(*agent.Agent, []renewCall, string, *pki.Manager, error) {
+	return func(
+		_ *agent.Agent,
+		_ []renewCall,
+		_ string,
+		_ *pki.Manager,
+		err error,
+	) {
+		s.ErrorContains(err, text)
+	}
 }
 
 func (s *AgentPublicTestSuite) TestStartRenewal() {
-	defer agent.SetRenewFns(
-		func() time.Time { return time.Now().Add(50 * time.Second) },
-		5*time.Millisecond,
-		nil,
-	)()
+	tests := []struct {
+		name  string
+		setup func() (*agent.Agent, context.Context)
+	}{
+		{
+			name: "an agent with no join renews nothing",
+			setup: func() (*agent.Agent, context.Context) {
+				s.appConfig.Agent.PKI.KeyDir = "/none"
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
 
-	s.Run("an agent with no join renews nothing", func() {
-		s.appConfig.Agent.PKI.KeyDir = "/none"
-		a := s.buildAgent()
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
-		agent.ExportStartRenewal(ctx, a)
-	})
-
-	s.Run("an agent with creds checks them until it stops, and logs a failure", func() {
-		a, _, _, _ := s.renewSetup("nats", 60)
-		calls := make(chan struct{}, 10)
-		defer agent.SetJoinNATSFns(
-			nil,
-			func(string, []nats.Option, string, []byte) ([]byte, error) {
-				calls <- struct{}{}
-
-				return nil, nats.ErrTimeout
+				return s.buildAgent(), ctx
 			},
-		)()
-		ctx, cancel := context.WithCancel(context.Background())
-		go func() {
-			<-calls
-			cancel()
-		}()
-		agent.ExportStartRenewal(ctx, a)
-	})
+		},
+		{
+			name: "an agent with creds checks them until it stops, and logs a failure",
+			setup: func() (*agent.Agent, context.Context) {
+				a, _, _, _ := s.renewSetup("nats", nil, 60)
+				calls := make(chan struct{}, 10)
+				agent.SetJoinNATSFns(
+					nil,
+					func(string, []nats.Option, string, []byte) ([]byte, error) {
+						calls <- struct{}{}
+
+						return nil, nats.ErrTimeout
+					},
+				)
+				ctx, cancel := context.WithCancel(context.Background())
+				go func() {
+					<-calls
+					cancel()
+				}()
+
+				return a, ctx
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Check each 5 ms, with the agent's clock ahead so that
+			// a JWT of 60 seconds is due. TearDownSubTest puts both back.
+			agent.SetRenewFns(
+				func() time.Time { return time.Now().Add(50 * time.Second) },
+				5*time.Millisecond,
+				nil,
+			)
+			a, ctx := tt.setup()
+
+			agent.ExportStartRenewal(ctx, a)
+		})
+	}
 }
