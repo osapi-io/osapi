@@ -535,6 +535,16 @@ func (suite *SubjectsPublicTestSuite) TestParseSubjectWithNamespace() {
 			},
 		},
 		{
+			name:      "when the namespace holds a jobs token of its own",
+			namespace: "team.jobs",
+			subject:   "team.jobs.jobs.query._any",
+			validateFunc: func(gotPrefix string, gotHostname string, err error) {
+				suite.NoError(err)
+				suite.Equal("team.jobs.jobs.query", gotPrefix)
+				suite.Equal("_any", gotHostname)
+			},
+		},
+		{
 			name:      "when parsing invalid namespaced subject with too few parts",
 			namespace: "osapi",
 			subject:   "osapi.jobs",
