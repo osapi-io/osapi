@@ -181,10 +181,16 @@ func (s *AuthorizationSuite) TestAuditOfAWrite() {
 	s.Require().NoError(err)
 	key := fmt.Sprintf("authz-%d", time.Now().UnixNano())
 	value := "authz-value-" + key
-	put := route{method: http.MethodPut, path: "/api/secret/default/" + key}
-	code, data := s.sendBody(put, admin, `{"value":"`+value+`"}`)
+	put := route{method: http.MethodPost, path: "/api/secret/default"}
+	code, data := s.sendBody(put, admin, `{"key":"`+key+`","value":"`+value+`"}`)
 	s.Require().Less(code, 300, "%s", data)
-	defer func() { _, _ = s.sendBody(route{method: http.MethodDelete, path: put.path}, admin, "") }()
+	defer func() {
+		_, _ = s.sendBody(
+			route{method: http.MethodDelete, path: put.path + "/" + key},
+			admin,
+			"",
+		)
+	}()
 
 	var log struct {
 		Items []map[string]any `json:"items"`
@@ -203,11 +209,11 @@ func (s *AuthorizationSuite) TestAuditOfAWrite() {
 	s.Require().NotEmpty(log.Items, "the write is in the audit log")
 	found := false
 	for _, e := range log.Items {
-		if e["method"] == http.MethodPut && e["path"] == put.path {
+		if e["method"] == http.MethodPost && e["path"] == put.path {
 			found = true
 			s.Equal(user, e["user"])
 		}
 	}
-	s.True(found, "an entry has PUT %s", put.path)
+	s.True(found, "an entry has POST %s", put.path)
 	s.NotContains(string(data), value, "the audit log has no secret value")
 }

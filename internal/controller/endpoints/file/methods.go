@@ -140,8 +140,9 @@ func Upload(
 	return w.result(true), nil
 }
 
-// Update replaces a file, or creates it when the name is new. The same
-// content answers 200 and writes nothing.
+// Update replaces a file that exists. A name that is not there is
+// ErrNotFound: upload creates it. The same content answers with changed
+// false and writes nothing.
 func Update(
 	ctx context.Context,
 	d Deps,
@@ -157,19 +158,19 @@ func Update(
 	w := write{name: in.Name, contentType: in.ContentType, data: in.File}
 
 	existing, err := d.Objects.Info(ctx, in.Name)
-	if err != nil && !errors.Is(err, jetstream.ErrObjectNotFound) {
+	if errors.Is(err, jetstream.ErrObjectNotFound) || (err == nil && existing == nil) {
+		return UploadResponse{}, endpoint.Errorf(ErrNotFound,
+			"no file %s; upload it with file upload", in.Name)
+	}
+	if err != nil {
 		return UploadResponse{}, endpoint.Internal("failed to get file info", err)
 	}
-	existed := err == nil && existing != nil
-	if existed && existing.Digest == w.digest() {
-		return w.result(false), endpoint.Answer(200)
+	if existing.Digest == w.digest() {
+		return w.result(false), nil
 	}
 
 	if err := w.store(ctx, d.Objects); err != nil {
 		return UploadResponse{}, err
-	}
-	if existed {
-		return w.result(true), endpoint.Answer(200)
 	}
 
 	return w.result(true), nil

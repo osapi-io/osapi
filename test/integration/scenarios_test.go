@@ -622,7 +622,7 @@ func sealScenarios() []scenario {
 					cli: []string{
 						"client",
 						"secret",
-						"update",
+						"create",
 						"--vault",
 						"default",
 						"--key",

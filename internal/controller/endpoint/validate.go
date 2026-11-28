@@ -372,9 +372,11 @@ func Validate(
 				))
 			}
 		}
-		if l := m.location; l != "" && !hasField(m.Out, l) {
-			add(m.Name, RuleField, fmt.Sprintf(
-				"Location names %s, which is not a json field of %s.", l, m.Out))
+		for _, l := range m.location {
+			if !hasField(m.Out, l) {
+				add(m.Name, RuleField, fmt.Sprintf(
+					"Location names %s, which is not a json field of %s.", l, m.Out))
+			}
 		}
 
 		paths := map[string]reflect.StructField{}

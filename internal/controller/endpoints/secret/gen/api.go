@@ -39,6 +39,12 @@ func Routes(
 			Handler:    server.Serve(s, secret.Group, "reveal", secret.Reveal, decodeReveal),
 		},
 		{
+			Method:     http.MethodPost,
+			Path:       "/api/secret/:vault",
+			Permission: "secret:write",
+			Handler:    server.Serve(s, secret.Group, "create", secret.Create, decodeCreate),
+		},
+		{
 			Method:     http.MethodPut,
 			Path:       "/api/secret/:vault/:key",
 			Permission: "secret:write",

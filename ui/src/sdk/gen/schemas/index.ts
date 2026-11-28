@@ -262,6 +262,7 @@ export * from './scheduleResult';
 export * from './scheduleUpdateRequest';
 export * from './scheduleUpdateRequestVars';
 export * from './scheduleUpdateResponse';
+export * from './secretCreateRequest';
 export * from './secretInfo';
 export * from './secretListResponse';
 export * from './secretUpdateRequest';

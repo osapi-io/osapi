@@ -294,11 +294,6 @@ export type putFileByNameResponse200 = {
   status: 200
 }
 
-export type putFileByNameResponse201 = {
-  data: FileUploadResponse
-  status: 201
-}
-
 export type putFileByNameResponse400 = {
   data: ErrorResponse
   status: 400
@@ -314,6 +309,11 @@ export type putFileByNameResponse403 = {
   status: 403
 }
 
+export type putFileByNameResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
 export type putFileByNameResponse500 = {
   data: ErrorResponse
   status: 500
@@ -324,10 +324,10 @@ export type putFileByNameResponse503 = {
   status: 503
 }
 
-export type putFileByNameResponseSuccess = (putFileByNameResponse200 | putFileByNameResponse201) & {
+export type putFileByNameResponseSuccess = (putFileByNameResponse200) & {
   headers: Headers;
 };
-export type putFileByNameResponseError = (putFileByNameResponse400 | putFileByNameResponse401 | putFileByNameResponse403 | putFileByNameResponse500 | putFileByNameResponse503) & {
+export type putFileByNameResponseError = (putFileByNameResponse400 | putFileByNameResponse401 | putFileByNameResponse403 | putFileByNameResponse404 | putFileByNameResponse500 | putFileByNameResponse503) & {
   headers: Headers;
 };
 
@@ -342,7 +342,7 @@ export const getPutFileByNameUrl = (name: string,) => {
 }
 
 /**
- * Replace a file in the Object Store, or create it when the name is new.
+ * Replace a file that exists in the Object Store. A name that is not there is 404: upload creates it.
  * @summary Replace a file
  */
 export const putFileByName = async (name: string,

@@ -31,7 +31,8 @@ osapi client file upload --name nginx.conf --file ./nginx.conf --content-type te
 osapi client file list --json
 osapi client file stale list --json             # deployments whose file changed since
 osapi client secret vault list --json
-osapi client secret update --vault default --key registry-token --value - --json   # the value on standard input
+osapi client secret create --vault default --key registry-token --value - --json   # the value on standard input
+osapi client secret update --vault default --key registry-token --value - --json   # a new value for a key that exists
 osapi client secret list --vault default --json # names and metadata, never a value
 ```
 

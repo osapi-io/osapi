@@ -91,6 +91,10 @@ func (s *MethodsPublicTestSuite) TestNoVault() {
 				return err
 			},
 			func() error {
+				_, err := secret.Create(ctx, d, secret.CreateInput{Vault: "default", Body: secret.CreateRequest{Key: "k", Value: "v"}})
+				return err
+			},
+			func() error {
 				_, err := secret.Update(ctx, d, secret.UpdateInput{Vault: "default", Key: "k", Body: secret.UpdateRequest{Value: "v"}})
 				return err
 			},
@@ -276,19 +280,109 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	}
 }
 
-func (s *MethodsPublicTestSuite) TestUpdate() {
+func (s *MethodsPublicTestSuite) TestCreate() {
 	tests := []struct {
-		name    string
-		setup   func()
-		wantErr string
+		name         string
+		setup        func()
+		validateFunc func(got secret.Info, err error)
 	}{
 		{
-			name: "when the vault writes the value, the answer is the metadata, with the subject as who",
+			name: "when the key is new, the vault writes version 1, with the subject as who",
 			setup: func() {
+				s.vault.EXPECT().List(gomock.Any()).Return(nil, nil)
 				s.vault.EXPECT().Put(gomock.Any(), "registry-token", []byte("s3cret")).
 					DoAndReturn(func(ctx context.Context, key string, _ []byte) (vault.Meta, error) {
-						s.Equal("ops@example.com", vault.Actor(ctx), "the vault records who")
+						return vault.Meta{
+							Key:     key,
+							Version: 1,
+							Changed: changed,
+							By:      vault.Actor(ctx),
+						}, nil
+					})
+			},
+			validateFunc: func(got secret.Info, err error) {
+				s.Require().NoError(err)
+				s.Equal(secret.Info{
+					Vault:   "default",
+					Key:     "registry-token",
+					Version: 1,
+					Changed: changed,
+					By:      "ops@example.com",
+				}, got)
+			},
+		},
+		{
+			name: "when the key exists with the same value, it is ErrExists, and no value is read or written",
+			setup: func() {
+				s.vault.EXPECT().List(gomock.Any()).Return([]vault.Meta{meta}, nil)
+			},
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorIs(err, secret.ErrExists)
+				s.ErrorContains(err, "change it with secret update")
+				s.NotContains(err.Error(), "s3cret")
+			},
+		},
+		{
+			name: "when the key exists with a different value, it is ErrExists, and no value is read or written",
+			setup: func() {
+				s.vault.EXPECT().List(gomock.Any()).Return([]vault.Meta{meta}, nil)
+			},
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorIs(err, secret.ErrExists)
+				s.NotContains(err.Error(), "s3cret")
+			},
+		},
+		{
+			name: "when the vault cannot list its keys, it is a failure of the controller",
+			setup: func() {
+				s.vault.EXPECT().List(gomock.Any()).Return(nil, errBoom)
+			},
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorContains(err, "failed to list the keys of the vault")
+				s.NotContains(err.Error(), "s3cret")
+			},
+		},
+		{
+			name: "when the vault cannot write, it is a failure of the controller",
+			setup: func() {
+				s.vault.EXPECT().List(gomock.Any()).Return(nil, nil)
+				s.vault.EXPECT().Put(gomock.Any(), "registry-token", gomock.Any()).
+					Return(vault.Meta{}, errBoom)
+			},
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorContains(err, "failed to write the key")
+				s.NotContains(err.Error(), "s3cret")
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.hasDefault()
+			tc.setup()
+			ctx := authtoken.WithSubject(context.Background(), "ops@example.com")
+			got, err := secret.Create(ctx, s.deps(), secret.CreateInput{
+				Vault: "default",
+				Body:  secret.CreateRequest{Key: "registry-token", Value: "s3cret"},
+			})
+			tc.validateFunc(got, err)
+		})
+	}
+}
 
+func (s *MethodsPublicTestSuite) TestUpdate() {
+	tests := []struct {
+		name         string
+		setup        func()
+		validateFunc func(got secret.Info, err error)
+	}{
+		{
+			name: "when the key exists, the vault writes the next version, with the subject as who",
+			setup: func() {
+				s.vault.EXPECT().
+					Get(gomock.Any(), "registry-token").
+					Return([]byte("old"), meta, nil)
+				s.vault.EXPECT().Put(gomock.Any(), "registry-token", []byte("s3cret")).
+					DoAndReturn(func(ctx context.Context, key string, _ []byte) (vault.Meta, error) {
 						return vault.Meta{
 							Key:     key,
 							Version: 4,
@@ -297,14 +391,53 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 						}, nil
 					})
 			},
+			validateFunc: func(got secret.Info, err error) {
+				s.Require().NoError(err)
+				s.Equal(secret.Info{
+					Vault:   "default",
+					Key:     "registry-token",
+					Version: 4,
+					Changed: changed,
+					By:      "ops@example.com",
+				}, got)
+			},
 		},
 		{
-			name: "when the vault fails, it is a failure of the controller",
+			name: "when the key is not there, it is ErrNoKey, and nothing is written",
 			setup: func() {
+				s.vault.EXPECT().Get(gomock.Any(), "registry-token").
+					Return(nil, vault.Meta{}, vault.ErrNotFound)
+			},
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorIs(err, secret.ErrNoKey)
+				s.ErrorContains(err, "make it with secret create")
+				s.NotContains(err.Error(), "s3cret")
+			},
+		},
+		{
+			name: "when the vault cannot read the key, it is a failure of the controller",
+			setup: func() {
+				s.vault.EXPECT().Get(gomock.Any(), "registry-token").
+					Return(nil, vault.Meta{}, errBoom)
+			},
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorContains(err, "failed to read the key")
+				s.NotContains(err.Error(), "s3cret")
+			},
+		},
+		{
+			name: "when the vault cannot write, it is a failure of the controller",
+			setup: func() {
+				s.vault.EXPECT().
+					Get(gomock.Any(), "registry-token").
+					Return([]byte("old"), meta, nil)
 				s.vault.EXPECT().Put(gomock.Any(), "registry-token", gomock.Any()).
 					Return(vault.Meta{}, errBoom)
 			},
-			wantErr: "failed to write the key",
+			validateFunc: func(_ secret.Info, err error) {
+				s.ErrorContains(err, "failed to write the key")
+				s.NotContains(err.Error(), "s3cret")
+			},
 		},
 	}
 	for _, tc := range tests {
@@ -312,29 +445,12 @@ func (s *MethodsPublicTestSuite) TestUpdate() {
 			s.hasDefault()
 			tc.setup()
 			ctx := authtoken.WithSubject(context.Background(), "ops@example.com")
-			got, err := secret.Update(
-				ctx,
-				s.deps(),
-				secret.UpdateInput{
-					Vault: "default",
-					Key:   "registry-token",
-					Body:  secret.UpdateRequest{Value: "s3cret"},
-				},
-			)
-			if tc.wantErr != "" {
-				s.ErrorContains(err, tc.wantErr)
-				s.NotContains(err.Error(), "s3cret")
-
-				return
-			}
-			s.Require().NoError(err)
-			s.Equal(secret.Info{
-				Vault:   "default",
-				Key:     "registry-token",
-				Version: 4,
-				Changed: changed,
-				By:      "ops@example.com",
-			}, got)
+			got, err := secret.Update(ctx, s.deps(), secret.UpdateInput{
+				Vault: "default",
+				Key:   "registry-token",
+				Body:  secret.UpdateRequest{Value: "s3cret"},
+			})
+			tc.validateFunc(got, err)
 		})
 	}
 }
@@ -488,11 +604,58 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			token:  token("secret:write"),
 			setup: func() {
 				s.hasDefault()
+				s.vault.EXPECT().
+					Get(gomock.Any(), "registry-token").
+					Return([]byte("old"), meta, nil)
 				s.vault.EXPECT().Put(gomock.Any(), "registry-token", []byte("s3cret")).
-					Return(vault.Meta{Key: "registry-token", Version: 1, Changed: changed, By: "test"}, nil)
+					Return(vault.Meta{Key: "registry-token", Version: 4, Changed: changed, By: "test"}, nil)
 			},
 			wantCode: http.StatusOK,
 			wantBody: `"by":"test"`,
+			notBody:  "s3cret",
+		},
+		{
+			name:   "when a caller updates a key that is not there, it is a 404",
+			method: http.MethodPut,
+			path:   "/api/secret/default/registry-token",
+			body:   `{"value":"s3cret"}`,
+			token:  token("secret:write"),
+			setup: func() {
+				s.hasDefault()
+				s.vault.EXPECT().Get(gomock.Any(), "registry-token").
+					Return(nil, vault.Meta{}, vault.ErrNotFound)
+			},
+			wantCode: http.StatusNotFound,
+			wantBody: "make it with secret create",
+			notBody:  "s3cret",
+		},
+		{
+			name:   "when a caller creates a key, it is a 201 with no value",
+			method: http.MethodPost,
+			path:   "/api/secret/default",
+			body:   `{"key":"registry-token","value":"s3cret"}`,
+			token:  token("secret:write"),
+			setup: func() {
+				s.hasDefault()
+				s.vault.EXPECT().List(gomock.Any()).Return(nil, nil)
+				s.vault.EXPECT().Put(gomock.Any(), "registry-token", []byte("s3cret")).
+					Return(vault.Meta{Key: "registry-token", Version: 1, Changed: changed, By: "test"}, nil)
+			},
+			wantCode: http.StatusCreated,
+			wantBody: `"version":1`,
+			notBody:  "s3cret",
+		},
+		{
+			name:   "when a caller creates a key that exists, it is a 409",
+			method: http.MethodPost,
+			path:   "/api/secret/default",
+			body:   `{"key":"registry-token","value":"s3cret"}`,
+			token:  token("secret:write"),
+			setup: func() {
+				s.hasDefault()
+				s.vault.EXPECT().List(gomock.Any()).Return([]vault.Meta{meta}, nil)
+			},
+			wantCode: http.StatusConflict,
 			notBody:  "s3cret",
 		},
 		{

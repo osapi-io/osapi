@@ -15,8 +15,9 @@ metadata of their keys. No operation gives a value.
 | ------------------------------------ | ------------------------------- | --------------- | -------------------------- |
 | [`Vaults(ctx)`](#vaults)             | `*Response[VaultListResponse]`  | `secret:read`   | List the vaults.           |
 | [`List(ctx, vault)`](#list)          | `*Response[SecretListResponse]` | `secret:read`   | List the keys of a vault.  |
+| [`Create(ctx, input)`](#create)      | `*Response[SecretInfo]`         | `secret:write`  | Create a key.              |
 | [`Get(ctx, vault, key)`](#get)       | `*Response[SecretInfo]`         | `secret:read`   | Get the metadata of a key. |
-| [`Update(ctx, input)`](#update)      | `*Response[SecretInfo]`         | `secret:write`  | Write the value of a key.  |
+| [`Update(ctx, input)`](#update)      | `*Response[SecretInfo]`         | `secret:write`  | Change the value of a key. |
 | [`Delete(ctx, vault, key)`](#delete) | `error`                         | `secret:write`  | Delete a key.              |
 | [`Reveal(ctx, vault, key)`](#reveal) | `*Response[SecretValue]`        | `secret:reveal` | Reveal the value of a key. |
 
@@ -67,6 +68,35 @@ List the keys of a vault, `go run secret.go list`:
 resp, err := c.Secret.List(ctx, "default")
 ```
 
+### Create
+
+```go
+func (s *SecretService) Create(
+	ctx context.Context,
+	input SecretCreateInput,
+) (*Response[SecretInfo], error)
+```
+
+Create a key.
+
+Write a value as version 1 of a new key. A key that exists is 409, whatever its
+value: update changes it. The answer is the metadata of the key. The API never
+gives the value back.
+
+It sends `POST /api/secret/{vault}`, and needs the permission `secret:write`.
+
+The examples of the method's definition:
+
+Read the value from standard input, `go run secret.go create`:
+
+```go
+resp, err := c.Secret.Create(ctx, client.SecretCreateInput{
+	Key:   "registry-token",
+	Value: "-",
+	Vault: "default",
+})
+```
+
 ### Get
 
 ```go
@@ -102,10 +132,11 @@ func (s *SecretService) Update(
 ) (*Response[SecretInfo], error)
 ```
 
-Write the value of a key.
+Change the value of a key.
 
-Write a value as the next version of a key, or as version 1 of a new key. The
-answer is the metadata of the key. The API never gives the value back.
+Write a value as the next version of a key that exists. A key that is not there
+is 404: create makes it. The answer is the metadata of the key. The API never
+gives the value back.
 
 It sends `PUT /api/secret/{vault}/{key}`, and needs the permission
 `secret:write`.
@@ -178,6 +209,14 @@ resp, err := c.Secret.Reveal(ctx, "default", "registry-token")
 ## Types
 
 The fields of each type are the properties of its schema in the API's spec.
+
+### SecretCreateInput
+
+| Field   | Type     | Description                                                                                                    |
+| ------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `Vault` | `string` | The vault of the path. The name of the vault, such as default.                                                 |
+| `Key`   | `string` | The name of the key, such as registry-token.                                                                   |
+| `Value` | `string` | The value of the key, which no method gives back. A secret: a reference, secret://<vault>/<key>, or the value. |
 
 ### SecretInfo
 

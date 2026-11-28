@@ -60,14 +60,30 @@ type DeleteInput struct {
 	Key   string `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
 }
 
-// UpdateInput is the key to write, and its new value.
+// CreateInput is the vault of the new key, and the key with its first
+// value.
+type CreateInput struct {
+	Vault string        `json:"vault" in:"path" validate:"required,resource_name,max=64" doc:"The name of the vault, such as default." example:"default"`
+	Body  CreateRequest `json:"body"  in:"body" validate:"required"`
+}
+
+// CreateRequest is the name of the new key and its first value. The API
+// never gives the value back.
+type CreateRequest struct {
+	_ struct{} `schema:"SecretCreateRequest"`
+
+	Key   string            `json:"key"   validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token."     example:"registry-token"`
+	Value secretvalue.Value `json:"value" validate:"required,max=65536"             doc:"The value of the key, which no method gives back"`
+}
+
+// UpdateInput is the key to change, and its new value.
 type UpdateInput struct {
 	Vault string        `json:"vault" in:"path" validate:"required,resource_name,max=64"  doc:"The name of the vault, such as default."      example:"default"`
 	Key   string        `json:"key"   in:"path" validate:"required,resource_name,max=128" doc:"The name of the key, such as registry-token." example:"registry-token"`
 	Body  UpdateRequest `json:"body"  in:"body" validate:"required"`
 }
 
-// UpdateRequest is the value of a key. The API never gives it back.
+// UpdateRequest is the new value of a key. The API never gives it back.
 type UpdateRequest struct {
 	_ struct{} `schema:"SecretUpdateRequest"`
 
@@ -104,6 +120,6 @@ type Info struct {
 // ListResponse is the metadata of each key of a vault.
 type ListResponse struct {
 	_          struct{} `title:"Keys" schema:"SecretListResponse"`
-	Items      []Info   `                                         json:"items"       doc:"The keys of the vault, sorted by key." empty:"The vault has no key. Add one with osapi client secret update."`
+	Items      []Info   `                                         json:"items"       doc:"The keys of the vault, sorted by key." empty:"The vault has no key. Add one with osapi client secret create."`
 	TotalItems int      `                                         json:"total_items" doc:"The number of keys."                                                                                          example:"1"`
 }

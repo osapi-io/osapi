@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -227,8 +228,13 @@ func Serve[D, In, Out any](
 		}
 
 		respspan.Handled(c)
-		if f := m.LocationField(); f != "" {
-			c.Response().Header().Set("Location", "/api/"+g.Name+"/"+field(out, f))
+		if fs := m.LocationFields(); len(fs) > 0 {
+			parts := make([]string, 0, len(fs)+1)
+			parts = append(parts, "/api/"+g.Name)
+			for _, f := range fs {
+				parts = append(parts, url.PathEscape(field(out, f)))
+			}
+			c.Response().Header().Set("Location", strings.Join(parts, "/"))
 		}
 		if m.SuccessStatus() == http.StatusNoContent {
 			return c.NoContent(http.StatusNoContent)

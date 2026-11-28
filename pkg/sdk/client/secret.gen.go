@@ -39,6 +39,34 @@ func (s *SecretService) List(
 	return send[SecretListResponse](ctx, s.client, http.MethodGet, "/api/secret/"+url.PathEscape(vault), nil, nil)
 }
 
+// SecretCreateInput is the input of SecretService.Create. A field of the path
+// goes in the path, and each other field in the body.
+type SecretCreateInput struct {
+	// The vault of the path: the name of the vault, such as default.
+	Vault string `json:"-"`
+
+	// The name of the key, such as registry-token.
+	Key string `json:"key"`
+
+	// The value of the key, which no method gives back. A secret: a reference,
+	// secret://<vault>/<key>, or the value.
+	Value string `json:"value"`
+}
+
+// Create is the operation PostSecret: create a key.
+//
+// Write a value as version 1 of a new key. A key that exists is 409, whatever
+// its value: update changes it. The answer is the metadata of the key. The API
+// never gives the value back.
+//
+// It sends POST /api/secret/{vault}, and needs the permission secret:write.
+func (s *SecretService) Create(
+	ctx context.Context,
+	input SecretCreateInput,
+) (*Response[SecretInfo], error) {
+	return send[SecretInfo](ctx, s.client, http.MethodPost, "/api/secret/"+url.PathEscape(input.Vault), nil, input)
+}
+
 // Get is the operation GetSecret: get the metadata of a key.
 //
 // Get the version of a key, when it changed and who changed it. The answer has
@@ -68,10 +96,11 @@ type SecretUpdateInput struct {
 	Value string `json:"value"`
 }
 
-// Update is the operation PutSecret: write the value of a key.
+// Update is the operation PutSecret: change the value of a key.
 //
-// Write a value as the next version of a key, or as version 1 of a new key.
-// The answer is the metadata of the key. The API never gives the value back.
+// Write a value as the next version of a key that exists. A key that is not
+// there is 404: create makes it. The answer is the metadata of the key. The
+// API never gives the value back.
 //
 // It sends PUT /api/secret/{vault}/{key}, and needs the permission
 // secret:write.

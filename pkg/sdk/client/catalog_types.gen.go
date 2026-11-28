@@ -390,6 +390,7 @@ const (
 	OperationIDPostNodeSysctl           OperationID = "PostNodeSysctl"
 	OperationIDPostNodeUser             OperationID = "PostNodeUser"
 	OperationIDPostNodeUserSshkey       OperationID = "PostNodeUserSshkey"
+	OperationIDPostSecret               OperationID = "PostSecret"
 	OperationIDPutAgentConfig           OperationID = "PutAgentConfig"
 	OperationIDPutFileByName            OperationID = "PutFileByName"
 	OperationIDPutNodeCertificate       OperationID = "PutNodeCertificate"

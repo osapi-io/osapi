@@ -80,6 +80,29 @@ var secretRevealCmd = &cobra.Command{
 	Use:   "reveal",
 }
 
+var secretCreateCmd = &cobra.Command{
+	Annotations: map[string]string{
+		reference.Permission: "secret:write",
+		reference.Result:     "Read the value from standard input:\n\n```ansi\n$ osapi client secret create --vault default --key registry-token --value -\n\x1b[1;38;2;0;213;255mSecret:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mVault:\x1b[0m    default\n  \x1b[38;2;10;143;176mKey:\x1b[0m      registry-token\n  \x1b[38;2;10;143;176mVersion:\x1b[0m  1\n  \x1b[38;2;10;143;176mChanged:\x1b[0m  2026-01-15 10:00:00\n  \x1b[38;2;10;143;176mBy:\x1b[0m       ops@example.com\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"vault\": \"default\",\n  \"key\": \"registry-token\",\n  \"version\": 1,\n  \"changed\": \"2026-01-15T10:00:00Z\",\n  \"by\": \"ops@example.com\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # Read the value from standard input\n  osapi client secret create --vault default --key registry-token --value -",
+	Long:    "The command reads the value from standard input with --value -, so the\nvalue is not in the shell history. A key that exists is refused with 409\nConflict: secret update changes it. A request then uses the key as\nsecret://<vault>/<key>.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		vault, _ := cmd.Flags().GetString("vault")
+		key, _ := cmd.Flags().GetString("key")
+		value, _ := cmd.Flags().GetString("value")
+		valueValue, ok := clicommand.Secret(cmd, "value", value)
+		if !ok {
+			return
+		}
+
+		endpointcommand.Run(cmd, secret.Group, "create", secret.CreateInput{Vault: vault, Body: secret.CreateRequest{Key: key, Value: valueValue}})
+	},
+	Short: "Create a key in a vault",
+	Use:   "create",
+}
+
 var secretUpdateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "secret:write",
@@ -87,7 +110,7 @@ var secretUpdateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Read the value from standard input\n  osapi client secret update --vault default --key registry-token --value -",
-	Long:    "The command reads the value from standard input with --value -, so the\nvalue is not in the shell history. A request then uses the key as\nsecret://<vault>/<key>.",
+	Long:    "The command reads the value from standard input with --value -, so the\nvalue is not in the shell history. A key that is not there is refused\nwith 404: secret create makes it.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		vault, _ := cmd.Flags().GetString("vault")
 		key, _ := cmd.Flags().GetString("key")
@@ -99,7 +122,7 @@ var secretUpdateCmd = &cobra.Command{
 
 		endpointcommand.Run(cmd, secret.Group, "update", secret.UpdateInput{Vault: vault, Key: key, Body: secret.UpdateRequest{Value: valueValue}})
 	},
-	Short: "Write the value of a key",
+	Short: "Change the value of a key",
 	Use:   "update",
 }
 
@@ -132,6 +155,12 @@ func init() {
 	_ = secretRevealCmd.MarkFlagRequired("vault")
 	secretRevealCmd.Flags().String("key", "", "The name of the key, such as registry-token")
 	_ = secretRevealCmd.MarkFlagRequired("key")
+	secretCreateCmd.Flags().String("vault", "", "The name of the vault, such as default")
+	_ = secretCreateCmd.MarkFlagRequired("vault")
+	secretCreateCmd.Flags().String("key", "", "The name of the key, such as registry-token")
+	_ = secretCreateCmd.MarkFlagRequired("key")
+	secretCreateCmd.Flags().String("value", "", "The value of the key, which no method gives back (a secret: secret://<vault>/<key>, or - to read it from standard input)")
+	_ = secretCreateCmd.MarkFlagRequired("value")
 	secretUpdateCmd.Flags().String("vault", "", "The name of the vault, such as default")
 	_ = secretUpdateCmd.MarkFlagRequired("vault")
 	secretUpdateCmd.Flags().String("key", "", "The name of the key, such as registry-token")
@@ -142,5 +171,5 @@ func init() {
 	_ = secretDeleteCmd.MarkFlagRequired("vault")
 	secretDeleteCmd.Flags().String("key", "", "The name of the key, such as registry-token")
 	_ = secretDeleteCmd.MarkFlagRequired("key")
-	clicommand.AddCommands(secret.Group, secretVaultsCmd, secretListCmd, secretGetCmd, secretRevealCmd, secretUpdateCmd, secretDeleteCmd)
+	clicommand.AddCommands(secret.Group, secretVaultsCmd, secretListCmd, secretGetCmd, secretRevealCmd, secretCreateCmd, secretUpdateCmd, secretDeleteCmd)
 }

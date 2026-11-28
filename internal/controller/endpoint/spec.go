@@ -264,9 +264,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
-			Name: `.Location("field")`,
-			Does: "Gives a 201 the Location header: the group's path and the value of the output's field with that json name.",
-			When: "For each method that creates a resource and answers 201, such as job retry with job_id.",
+			Name: `.Location("field", ...)`,
+			Does: "Gives a 201 the Location header: the group's path, then the value of each output field with that json name, joined by / and escaped.",
+			When: "For each method that creates a resource and answers 201, such as job retry with job_id, or secret create with vault and key.",
 		},
 		{
 			Kind: KindRefine,

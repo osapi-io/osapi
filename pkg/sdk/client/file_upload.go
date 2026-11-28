@@ -75,8 +75,8 @@ func (s *FileService) Upload(
 	return s.sendForm(ctx, http.MethodPost, "/api/file", formType, body)
 }
 
-// Update replaces a file in the Object Store, or creates it when the name
-// is new.
+// Update replaces a file that exists in the Object Store. A name that is
+// not there is a NotFoundError: Upload creates it.
 func (s *FileService) Update(
 	ctx context.Context,
 	name string,

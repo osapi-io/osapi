@@ -124,6 +124,7 @@ export const OperationID = {
   PostNodeSysctl: 'PostNodeSysctl',
   PostNodeUser: 'PostNodeUser',
   PostNodeUserSshkey: 'PostNodeUserSshkey',
+  PostSecret: 'PostSecret',
   PutAgentConfig: 'PutAgentConfig',
   PutFileByName: 'PutFileByName',
   PutNodeCertificate: 'PutNodeCertificate',

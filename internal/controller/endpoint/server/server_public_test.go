@@ -70,6 +70,20 @@ func get(
 	return thing{Name: in.Name + d.result}, d.err
 }
 
+// pair is an output whose ID is two fields, such as a vault and a key.
+type pair struct {
+	Vault string `json:"vault"`
+	Key   string `json:"key"`
+}
+
+func makePair(
+	_ context.Context,
+	d deps,
+	in getInput,
+) (pair, error) {
+	return pair{Vault: "default", Key: in.Name + d.result}, d.err
+}
+
 func remove(
 	_ context.Context,
 	d deps,
@@ -103,6 +117,8 @@ var group = endpoint.Define("thing", "Things",
 	endpoint.Delete[getInput, struct{}]("remove").Handle(remove).Status(http.StatusNoContent),
 	endpoint.Post[getInput, thing]("make").Sub("make").Handle(get).Public().
 		Status(http.StatusCreated).Location("name"),
+	endpoint.Post[getInput, pair]("pair").Sub("pair").Handle(makePair).Public().
+		Status(http.StatusCreated).Location("vault", "key"),
 	endpoint.Get[getInput, thing]("open").Sub("open").Handle(get).Public().
 		Answers(http.StatusServiceUnavailable, "Not ready."),
 )
@@ -140,6 +156,8 @@ func (s *ServerPublicTestSuite) serve(
 		switch m.Name {
 		case "remove":
 			r.Handler = server.Serve(srv, group, m.Name, remove, decodeGet)
+		case "pair":
+			r.Handler = server.Serve(srv, group, m.Name, makePair, decodeGet)
 		default:
 			r.Handler = server.Serve(srv, group, m.Name, get, decodeGet)
 		}
@@ -176,6 +194,15 @@ func (s *ServerPublicTestSuite) TestServe() {
 			wantCode: http.StatusCreated,
 			wantBody: `{"name":"web7"}`,
 			wantLoc:  "/api/thing/web7",
+		},
+		{
+			name:     "when the ID of a resource is two fields, the Location header joins them, escaped",
+			deps:     deps{result: " x"},
+			method:   http.MethodPost,
+			path:     "/api/thing/pair/web",
+			wantCode: http.StatusCreated,
+			wantBody: `{"vault":"default","key":"web x"}`,
+			wantLoc:  "/api/thing/default/web%20x",
 		},
 		{
 			name:     "when the token grants the permission, the handler's output is the body",

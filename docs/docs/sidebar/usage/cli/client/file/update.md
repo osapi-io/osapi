@@ -2,8 +2,9 @@
 
 Replace a file in the Object Store.
 
-The command replaces the content of a stored file, or stores it when the name is
-new. The same content changes nothing (`Changed: false`).
+The command replaces the content of a stored file. The same content changes
+nothing (`Changed: false`). A name that is not there is refused with 404:
+`file upload` creates it.
 
 ```bash
 osapi client file update [flags]

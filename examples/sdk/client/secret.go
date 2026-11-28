@@ -30,6 +30,7 @@ var examples = []struct {
 }{
 	{"vaults", "List the vaults", runVaults},
 	{"list", "List the keys of a vault", runList},
+	{"create", "Read the value from standard input", runCreate},
 	{"get", "Get the metadata of a key", runGet},
 	{"update", "Read the value from standard input", runUpdate},
 	{"delete", "Delete a key", runDelete},
@@ -55,6 +56,23 @@ func runList(
 	c *client.Client,
 ) error {
 	resp, err := c.Secret.List(ctx, "default")
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runCreate runs the example create: read the value from standard input.
+func runCreate(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Secret.Create(ctx, client.SecretCreateInput{
+		Key:   "registry-token",
+		Value: "-",
+		Vault: "default",
+	})
 	if err != nil {
 		return err
 	}

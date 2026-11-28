@@ -1146,6 +1146,13 @@ const sidebar: SidebarsConfig = {
             },
             {
               type: "doc",
+              id: "gen/api/post-secret",
+              label: "Create a key",
+              className: "api-method post",
+              key: "secrets-secret-management-api-secret-operations-gen-api-post-secret",
+            },
+            {
+              type: "doc",
               id: "gen/api/delete-secret",
               label: "Delete a key",
               className: "api-method delete",
@@ -1161,7 +1168,7 @@ const sidebar: SidebarsConfig = {
             {
               type: "doc",
               id: "gen/api/put-secret",
-              label: "Write the value of a key",
+              label: "Change the value of a key",
               className: "api-method put",
               key: "secrets-secret-management-api-secret-operations-gen-api-put-secret",
             },

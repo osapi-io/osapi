@@ -963,6 +963,14 @@ func Services() []ServiceSpec {
 			Permission: "secret:read",
 			Result:     "SecretListResponse",
 		}, {
+			Doc:        "Create a key",
+			Examples:   1,
+			HTTP:       "POST /api/secret/{vault}",
+			Input:      "SecretCreateInput",
+			Name:       "Create",
+			Permission: "secret:write",
+			Result:     "SecretInfo",
+		}, {
 			Doc:        "Get the metadata of a key",
 			Examples:   1,
 			HTTP:       "GET /api/secret/{vault}/{key}",
@@ -970,7 +978,7 @@ func Services() []ServiceSpec {
 			Permission: "secret:read",
 			Result:     "SecretInfo",
 		}, {
-			Doc:        "Write the value of a key",
+			Doc:        "Change the value of a key",
 			Examples:   1,
 			HTTP:       "PUT /api/secret/{vault}/{key}",
 			Input:      "SecretUpdateInput",
