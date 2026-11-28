@@ -267,7 +267,8 @@ func s(
 func (sc scaffold) behaviorFile() *jen.File {
 	f := sc.newFile()
 	f.PackageComment(
-		fmt.Sprintf("Package %s is the %s behavior: %s.", sc.goPackage, sc.name, sc.doc),
+		fmt.Sprintf("Package %s is the %s behavior: %s.", sc.goPackage, sc.name,
+			strings.TrimSuffix(sc.doc, ".")),
 	)
 	b := func(name string) *jen.Statement { return jen.Qual(behaviorPath, name) }
 	// next breaks a method chain after its dot, one method to a line.
