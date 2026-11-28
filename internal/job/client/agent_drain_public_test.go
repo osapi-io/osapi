@@ -329,7 +329,7 @@ func (s *AgentDrainPublicTestSuite) TestOverlayDrainState() {
 				opts.StateBucket = "state"
 				// GetAgent also calls GetAgentTimeline which uses stateKV
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 			}
 

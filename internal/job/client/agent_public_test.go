@@ -1134,7 +1134,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 
 				return s.newClientWithAllKVs("registry", "", "state")
@@ -1182,7 +1182,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					Return(nil, jetstream.ErrKeyNotFound)
 				// GetAgentTimeline for hostname fallback
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 
 				return s.newClientWithAllKVs("registry", "", "state")
@@ -1267,7 +1267,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					Return(nil, jetstream.ErrKeyNotFound)
 				// GetAgentTimeline: returns one key
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{"timeline.abc123.drain.1000000000"}, nil)
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "timeline.abc123.drain.1000000000").
@@ -1296,7 +1296,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(jobmocks.NewMockKeyValueEntry(s.mockCtrl), nil)
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 
 				return s.newClientWithAllKVs("registry", "", "state")
@@ -1326,7 +1326,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 
 				return s.newClientWithAllKVs("registry", "facts", "state")
@@ -1372,7 +1372,7 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 					Return(nil, jetstream.ErrKeyNotFound)
 				// GetAgentTimeline for hostname fallback.
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{"timeline.abc123.drain.1000000000"}, nil)
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "timeline.abc123.drain.1000000000").
@@ -1431,7 +1431,7 @@ func (s *AgentPublicTestSuite) TestMergeFacts() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 				return s.newClientWithAllKVs("registry", "", "state")
 			},
@@ -1459,7 +1459,7 @@ func (s *AgentPublicTestSuite) TestMergeFacts() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 
 				return s.newClientWithAllKVs("registry", "facts", "state")
@@ -1489,7 +1489,7 @@ func (s *AgentPublicTestSuite) TestMergeFacts() {
 					KVGet(gomock.Any(), "state", "drain.abc123").
 					Return(nil, jetstream.ErrKeyNotFound)
 				s.mockNATSClient.EXPECT().
-					KVKeys(gomock.Any(), "state").
+					KVKeys(gomock.Any(), "state", "timeline.abc123.>").
 					Return([]string{}, nil)
 
 				return s.newClientWithAllKVs("registry", "facts", "state")
