@@ -861,8 +861,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				return &nats.Msg{Data: data}
 			}(),
 			validateFunc: func(a *agent.Agent) {
-				assert.Equal(suite.T(), types.AgentCordoned, agent.GetAgentState(a),
-					"a response does not admit an agent that is not pending")
+				assert.Equal(suite.T(), types.AgentCordoned, agent.GetAgentState(a))
 			},
 		},
 		{
