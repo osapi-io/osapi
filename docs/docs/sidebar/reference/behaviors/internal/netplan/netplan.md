@@ -24,7 +24,7 @@ its examples make.
 | Next        | no                                                                                                                                           |
 | Platforms   | debian                                                                                                                                       |
 | Sudo        | netplan                                                                                                                                      |
-| Runs        | netplan                                                                                                                                      |
+| Runs        | netplan, ip                                                                                                                                  |
 | Writes      | /etc/netplan/osapi-\*.yaml                                                                                                                   |
 | Keeps state | no                                                                                                                                           |
 | Uses        | [managedfile](../../internal/managedfile/managedfile.md)                                                                                     |
@@ -52,13 +52,13 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-|                 |                                                                                                                               |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Span            | behavior.netplan.&lt;method&gt;                                                                                               |
-| Child spans     | behavior.managedfile.&lt;method&gt;, exec netplan, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
-| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                     |
-| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed               |
-| Recorded inputs | path (update, delete), name (get)                                                                                             |
+|                 |                                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.netplan.&lt;method&gt;                                                                                                                      |
+| Child spans     | behavior.managedfile.&lt;method&gt;, exec netplan, exec ip, exec ethtool, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                            |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                      |
+| Recorded inputs | path (update, delete), name (get)                                                                                                                    |
 
 ## Method update
 
@@ -126,15 +126,15 @@ None. Declare them with behavior.Config.
 
 ## Method get
 
-|             |                                                                                                                                                                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | get                                                                                                                                                                                                                                                                                                |
-| Verb        | read                                                                                                                                                                                                                                                                                               |
-| Description | Get what netplan status reports for an interface                                                                                                                                                                                                                                                   |
-| Detail      | Reads netplan status: the interface's type, its section and the ID of the definition that matches it, which a write goes under, and each interface that definition matches. netplan lists only the interfaces it manages, so an interface that it does not list is an ethernet under its own name. |
-| Route       | other behaviors only; it is not served                                                                                                                                                                                                                                                             |
-| Input type  | GetInput                                                                                                                                                                                                                                                                                           |
-| Output type | Interface                                                                                                                                                                                                                                                                                          |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name        | get                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Verb        | read                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Description | Get what netplan status reports for an interface                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Detail      | Reads netplan status: the interface's type, its section and the ID of the definition that matches it, which a write goes under, and each interface that definition matches. netplan lists only the interfaces it manages, and an older netplan has no status. An interface that status does not list goes under its own name, with the type of its kind as gohai reads it from sysfs: a bridge, a bond, a Wi-Fi card, a VLAN or a tunnel. One of no other kind is an ethernet. |
+| Route       | other behaviors only; it is not served                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Input type  | GetInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Output type | Interface                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### Input (1)
 
@@ -152,13 +152,16 @@ None. Declare them with behavior.Config.
 | id      | string | The netplan ID of the definition that matches it, such as all for a match on en\*; the interface's name when netplan does not define it |
 | matches | array  | Each interface that the definition matches, this one too, in name order                                                                 |
 
-### Examples (6)
+### Examples (9)
 
-| EXAMPLE                                                    | INPUT       | OUTPUT                                                                              |
-| ---------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------- |
-| A bond                                                     | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                    |
-| A dummy                                                    | name=osapi0 | name=osapi0, type=dummy-device, section=dummy-devices, id=osapi0, matches=\[osapi0] |
-| An interface a match defines, as cloud-init's all for en\* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2]     |
-| An interface netplan does not define                       | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                     |
-| A netplan without status                                   | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                       |
-| An interface netplan does not manage                       | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                       |
+| EXAMPLE                                                    | INPUT        | OUTPUT                                                                              |
+| ---------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------- |
+| A bond                                                     | name=bond0   | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                    |
+| A dummy                                                    | name=osapi0  | name=osapi0, type=dummy-device, section=dummy-devices, id=osapi0, matches=\[osapi0] |
+| An interface a match defines, as cloud-init's all for en\* | name=enp0s1  | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2]     |
+| An interface netplan does not define                       | name=lo      | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                     |
+| A netplan without status                                   | name=eth0    | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                       |
+| An interface netplan does not manage                       | name=eth9    | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                       |
+| A bridge on a netplan without status                       | name=br0     | name=br0, type=bridge, section=bridges, id=br0, matches=\[br0]                      |
+| A Wi-Fi card that netplan does not list                    | name=wlan0   | name=wlan0, type=wifi, section=wifis, id=wlan0, matches=\[wlan0]                    |
+| A VLAN on a netplan without status                         | name=eth0.10 | name=eth0.10, type=vlan, section=vlans, id=eth0.10, matches=\[eth0.10]              |

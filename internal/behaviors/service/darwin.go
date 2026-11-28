@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/avfs/avfs"
+	gohaisvc "github.com/osapi-io/gohai/pkg/gohai/collectors/services"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -266,17 +267,25 @@ func (d *darwin) Act(
 	return action == "restart" || done(action, after), nil
 }
 
-// loaded is whether launchd has the daemon label loaded: launchctl print
-// prints its block, system/<label> = {. gohai cannot say: it reads a daemon that is loaded and does not
-// run, and one that is not loaded and has an override, as dead. Only a write
-// asks, so a read runs launchctl only through gohai.
+// loaded is whether launchd has the daemon label loaded, as gohai reads it:
+// a label of the services block of launchctl print system is loaded, and a
+// label only of the disabled block is not. A state of dead cannot say, because
+// a daemon that is loaded and does not run is dead too. gohai reads launchctl
+// that fails as no daemons, so a read that fails is not loaded.
 func (d *darwin) loaded(
 	ctx context.Context,
 	label string,
 ) bool {
-	out, err := d.exec.RunCmd(ctx, "launchctl", []string{"print", "system/" + label})
+	out, _ := gohaisvc.NewWith(d.reader.src).Collect(ctx, nil)
+	if info, ok := out.(*gohaisvc.Info); ok {
+		for _, s := range info.Services {
+			if s.Name == label {
+				return s.Loaded
+			}
+		}
+	}
 
-	return err == nil && strings.HasPrefix(out, "system/"+label+" = {")
+	return false
 }
 
 // owned reports whether osapi deployed the plist path: managedfile has a
