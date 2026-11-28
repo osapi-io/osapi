@@ -22,6 +22,7 @@ package notify
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -118,6 +119,32 @@ func ExportResolveDisplayName(
 	value []byte,
 ) string {
 	return resolveDisplayName(componentType, identifier, value)
+}
+
+// SetNowFn replaces the clock of the watchers, and returns the function
+// that puts time.Now back.
+func SetNowFn(
+	fn func() time.Time,
+) func() {
+	nowFn = fn
+
+	return func() { nowFn = time.Now }
+}
+
+// WatcherTracked is the keys that w keeps a name or an unreachable mark
+// for.
+func WatcherTracked(
+	w *Watcher,
+) []string {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	keys := make([]string, 0, len(w.seen))
+	for k := range w.seen {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	return keys
 }
 
 // WatcherHandleDelete exposes the private handleDelete method for testing.

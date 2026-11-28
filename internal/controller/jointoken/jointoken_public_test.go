@@ -159,6 +159,18 @@ func (s *JoinTokenPublicTestSuite) TestCreate() {
 	s.kv.createErr = errors.New("kv down")
 	_, _, err = s.store.Create(context.Background(), time.Hour, 1, nil)
 	s.ErrorContains(err, "store the join token")
+	s.kv.createErr = nil
+
+	// A create prunes the tokens that admit no one, and a prune that
+	// fails fails the create.
+	s.now = s.now.Add(2 * time.Hour)
+	_, _, err = s.store.Create(context.Background(), time.Hour, 1, nil)
+	s.Require().NoError(err)
+	s.NotContains(s.kv.data, "jointoken."+t.ID, "the expired token is pruned")
+	s.kv.keysErr = errors.New("kv down")
+	_, _, err = s.store.Create(context.Background(), time.Hour, 1, nil)
+	s.ErrorContains(err, "list the join tokens")
+	s.kv.keysErr = nil
 
 	for _, bad := range []struct {
 		expires time.Duration
@@ -369,6 +381,30 @@ func (s *JoinTokenPublicTestSuite) TestListAndRevoke() {
 		[]string{got[0].ID, got[1].ID},
 		"by when it was made; a bad one is left out",
 	)
+
+	// A token with no use left, and one that expired, admit no one: a
+	// list deletes them, and a delete that fails is the error.
+	usedToken, used, err := s.store.Create(ctx, 2*time.Hour, 1, nil)
+	s.Require().NoError(err)
+	_, err = s.store.Consume(ctx, usedToken)
+	s.Require().NoError(err)
+	s.now = s.now.Add(90 * time.Minute)
+	got, err = s.store.List(ctx)
+	s.Require().NoError(err)
+	s.Empty(got)
+	s.NotContains(s.kv.data, "jointoken."+used.ID)
+	s.NotContains(s.kv.data, "jointoken."+first.ID)
+	s.now = s.now.Add(-90 * time.Minute)
+	_, first, err = s.store.Create(ctx, time.Hour, 1, nil)
+	s.Require().NoError(err)
+	_, second, err = s.store.Create(ctx, 2*time.Hour, 1, nil)
+	s.Require().NoError(err)
+	s.now = s.now.Add(90 * time.Minute)
+	s.kv.delErr = errors.New("kv down")
+	_, err = s.store.List(ctx)
+	s.ErrorContains(err, "prune the join token "+first.ID+": kv down")
+	s.kv.delErr = nil
+	s.now = s.now.Add(-90 * time.Minute)
 
 	s.Require().NoError(s.store.Revoke(ctx, first.ID))
 	s.ErrorIs(s.store.Revoke(ctx, first.ID), jointoken.ErrInvalid, "a revoked token is gone")

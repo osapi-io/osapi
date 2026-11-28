@@ -188,7 +188,7 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 
 	s.kv.err = errors.New("kv down")
 	_, err = join.Create(ctx, s.deps(), in)
-	s.ErrorContains(err, "store the join token")
+	s.ErrorContains(err, "kv down")
 }
 
 // TestAudit: a token that a local command makes or revokes is audited, by

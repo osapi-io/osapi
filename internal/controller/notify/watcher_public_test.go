@@ -908,14 +908,17 @@ func (s *WatcherPublicTestSuite) TestStartWatchesAgain() {
 }
 
 func (s *WatcherPublicTestSuite) TestUnreachable() {
-	put := func(ctrl *gomock.Controller, hostname string) *jobmocks.MockKeyValueEntry {
+	putKey := func(ctrl *gomock.Controller, key, hostname string) *jobmocks.MockKeyValueEntry {
 		b, _ := json.Marshal(job.AgentRegistration{Hostname: hostname})
 		entry := jobmocks.NewMockKeyValueEntry(ctrl)
-		entry.EXPECT().Key().Return("agents.m-1").AnyTimes()
+		entry.EXPECT().Key().Return(key).AnyTimes()
 		entry.EXPECT().Operation().Return(jetstream.KeyValuePut).AnyTimes()
 		entry.EXPECT().Value().Return(b).AnyTimes()
 
 		return entry
+	}
+	put := func(ctrl *gomock.Controller, hostname string) *jobmocks.MockKeyValueEntry {
+		return putKey(ctrl, "agents.m-1", hostname)
 	}
 	expire := func(ctrl *gomock.Controller) *jobmocks.MockKeyValueEntry {
 		entry := jobmocks.NewMockKeyValueEntry(ctrl)
@@ -925,17 +928,22 @@ func (s *WatcherPublicTestSuite) TestUnreachable() {
 		return entry
 	}
 	tests := []struct {
-		name         string
-		steps        func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry
-		notifyErr    error
-		validateFunc func(events []notify.ConditionEvent)
+		name  string
+		steps func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry
+		// at is when each step happens, after the start; a row with none
+		// runs each step at the start.
+		at        []time.Duration
+		notifyErr error
+		// validateFunc gets the events and the keys that the watcher still
+		// tracks.
+		validateFunc func(events []notify.ConditionEvent, tracked []string)
 	}{
 		{
 			name: "an expired agent is named by the hostname of its last heartbeat",
 			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
 				return []*jobmocks.MockKeyValueEntry{put(ctrl, "web-01"), expire(ctrl)}
 			},
-			validateFunc: func(events []notify.ConditionEvent) {
+			validateFunc: func(events []notify.ConditionEvent, _ []string) {
 				s.Require().Len(events, 1)
 				s.Equal("web-01", events[0].Hostname)
 				s.Equal(notify.ConditionComponentUnreachable, events[0].Condition)
@@ -947,7 +955,7 @@ func (s *WatcherPublicTestSuite) TestUnreachable() {
 			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
 				return []*jobmocks.MockKeyValueEntry{expire(ctrl)}
 			},
-			validateFunc: func(events []notify.ConditionEvent) {
+			validateFunc: func(events []notify.ConditionEvent, _ []string) {
 				s.Require().Len(events, 1)
 				s.Equal("m-1", events[0].Hostname)
 			},
@@ -959,7 +967,7 @@ func (s *WatcherPublicTestSuite) TestUnreachable() {
 					put(ctrl, "web-01"), expire(ctrl), put(ctrl, "web-01"), put(ctrl, "web-01"),
 				}
 			},
-			validateFunc: func(events []notify.ConditionEvent) {
+			validateFunc: func(events []notify.ConditionEvent, _ []string) {
 				s.Require().Len(events, 2)
 				s.True(events[0].Active)
 				s.Equal(notify.ConditionComponentUnreachable, events[1].Condition)
@@ -973,13 +981,57 @@ func (s *WatcherPublicTestSuite) TestUnreachable() {
 				return []*jobmocks.MockKeyValueEntry{expire(ctrl), put(ctrl, "web-01")}
 			},
 			notifyErr: errors.New("webhook down"),
-			validateFunc: func(events []notify.ConditionEvent) {
+			validateFunc: func(events []notify.ConditionEvent, _ []string) {
 				s.Len(events, 2)
 			},
 		},
+		{
+			name: "a key unseen for a day is forgotten at the next write",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{
+					put(ctrl, "web-01"), expire(ctrl), putKey(ctrl, "agents.m-2", "web-02"),
+					put(ctrl, "web-01"),
+				}
+			},
+			at: []time.Duration{0, time.Minute, 25 * time.Hour, 25 * time.Hour},
+			validateFunc: func(events []notify.ConditionEvent, tracked []string) {
+				// The expiry of m-1 is sent; its return after a day is not
+				// "resumed", because the watcher forgot it.
+				s.Require().Len(events, 1)
+				s.True(events[0].Active)
+				s.Equal([]string{"agents.m-1", "agents.m-2"}, tracked)
+			},
+		},
+		{
+			name: "a key seen within a day is kept",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{
+					expire(ctrl), putKey(ctrl, "agents.m-2", "web-02"),
+				}
+			},
+			at: []time.Duration{0, 23 * time.Hour},
+			validateFunc: func(_ []notify.ConditionEvent, tracked []string) {
+				s.Equal([]string{"agents.m-1", "agents.m-2"}, tracked)
+			},
+		},
+		{
+			name: "a stale key with no later write of its own is forgotten",
+			steps: func(ctrl *gomock.Controller) []*jobmocks.MockKeyValueEntry {
+				return []*jobmocks.MockKeyValueEntry{
+					expire(ctrl), putKey(ctrl, "agents.m-2", "web-02"),
+				}
+			},
+			at: []time.Duration{0, 25 * time.Hour},
+			validateFunc: func(_ []notify.ConditionEvent, tracked []string) {
+				s.Equal([]string{"agents.m-2"}, tracked)
+			},
+		},
 	}
+	start := time.Date(2026, 11, 27, 0, 0, 0, 0, time.UTC)
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			now := start
+			defer notify.SetNowFn(func() time.Time { return now })()
 			ctrl := gomock.NewController(s.T())
 			defer ctrl.Finish()
 			var events []notify.ConditionEvent
@@ -993,10 +1045,13 @@ func (s *WatcherPublicTestSuite) TestUnreachable() {
 				}).
 				AnyTimes()
 			w := notify.NewWatcher(nil, "registry", notifier, slog.Default(), 0)
-			for _, entry := range tt.steps(ctrl) {
+			for i, entry := range tt.steps(ctrl) {
+				if i < len(tt.at) {
+					now = start.Add(tt.at[i])
+				}
 				notify.WatcherHandleEntry(context.Background(), w, entry)
 			}
-			tt.validateFunc(events)
+			tt.validateFunc(events, notify.WatcherTracked(w))
 		})
 	}
 }
