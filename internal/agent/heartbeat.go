@@ -87,7 +87,7 @@ func (a *Agent) startHeartbeat(
 		for {
 			select {
 			case <-ctx.Done():
-				a.deregister(machineID)
+				a.deregister(ctx, machineID)
 				return
 			case done := <-a.renamed:
 				hostname = a.refreshHostname(hostname)
@@ -302,12 +302,22 @@ func (a *Agent) writeRegistration(
 	}
 }
 
+// deregisterTimeout is the longest that the delete of the agent's
+// registration takes when the agent stops.
+const deregisterTimeout = 5 * time.Second
+
 // deregister deletes the agent's registration key on clean shutdown.
 func (a *Agent) deregister(
+	ctx context.Context,
 	machineID string,
 ) {
+	// The agent's context has ended, so the delete gets a context of its
+	// own that keeps its values. Its deadline keeps a NATS that is gone
+	// from holding Stop to the whole shutdown timeout.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), deregisterTimeout)
+	defer cancel()
 	key := registryKey(machineID)
-	if err := a.natsClient.KVDelete(context.Background(), a.registryBucket, key); err != nil {
+	if err := a.natsClient.KVDelete(ctx, a.registryBucket, key); err != nil {
 		a.heartbeatLogger.Warn(
 			"failed to deregister agent",
 			slog.String("machine_id", machineID),

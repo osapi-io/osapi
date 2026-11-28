@@ -94,7 +94,10 @@ func New(
 // IsReady returns nil when the agent is ready to process jobs,
 // or an error describing why it is not.
 func (a *Agent) IsReady() error {
-	if a.ctx == nil || a.ctx.Err() != nil {
+	a.lifecycleMu.Lock()
+	ctx := a.ctx
+	a.lifecycleMu.Unlock()
+	if ctx == nil || ctx.Err() != nil {
 		return fmt.Errorf("agent not started")
 	}
 

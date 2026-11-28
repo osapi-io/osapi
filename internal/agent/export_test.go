@@ -268,7 +268,7 @@ func ExportDeregister(
 	a *Agent,
 	machineID string,
 ) {
-	a.deregister(machineID)
+	a.deregister(context.Background(), machineID)
 }
 
 // ExportStartHeartbeat exposes the private startHeartbeat method for testing.

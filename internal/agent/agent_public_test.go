@@ -565,6 +565,46 @@ func (s *AgentPublicTestSuite) TestIsReady() {
 				s.NoError(err)
 			},
 		},
+		{
+			// A health check reads IsReady from its own goroutine while the
+			// agent starts. With -race, a read of the context with no lock
+			// fails the row.
+			name: "returns nil when read while the agent starts",
+			setupFunc: func() *agent.Agent {
+				s.mockJobClient.EXPECT().
+					WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					AnyTimes()
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Return(nil).
+					Times(6)
+				s.mockJobClient.EXPECT().
+					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(context.Canceled).
+					Times(6)
+
+				a := s.buildAgent()
+				read := make(chan struct{})
+				go func() {
+					defer close(read)
+					_ = a.IsReady()
+				}()
+				s.Require().NoError(a.Start())
+				<-read
+				s.T().Cleanup(func() {
+					stopCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+
+					a.Stop(stopCtx)
+				})
+
+				return a
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
 	}
 
 	for _, tt := range tests {

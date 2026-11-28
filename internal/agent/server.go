@@ -41,7 +41,10 @@ var getIdentityFn = identity.GetIdentity
 // preflight check failed. The agent then runs nothing, and the process exits,
 // so that its supervisor starts it again.
 func (a *Agent) Start() error {
+	// IsReady reads the context from the health server's goroutine.
+	a.lifecycleMu.Lock()
 	a.ctx, a.cancel = context.WithCancel(context.Background())
+	a.lifecycleMu.Unlock()
 	a.startedAt = time.Now()
 	a.setState(types.AgentReady)
 
