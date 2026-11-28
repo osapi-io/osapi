@@ -22,6 +22,8 @@ package admission_test
 import (
 	"context"
 	"errors"
+
+	"go.uber.org/mock/gomock"
 )
 
 // timelineLog keeps the events that the watcher writes.
@@ -54,7 +56,7 @@ func (s *StorePublicTestSuite) TestTimeline() {
 	s.Require().NoError(s.watcher.Reject(ctx, "m-2", "unknown host"))
 	s.pending("m-3", "web-03")
 	s.Require().NoError(s.watcher.Delete(ctx, "m-3"))
-	s.watcher.SetJoinTokens(fakeTokens{})
+	s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 	_, err := s.watcher.Join(ctx, joinRequest("osapi_jt_t1.secret"))
 	s.Require().NoError(err)
 

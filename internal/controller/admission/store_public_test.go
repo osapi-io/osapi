@@ -31,8 +31,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -41,10 +39,13 @@ import (
 	admissionMocks "github.com/osapi-io/osapi/internal/controller/admission/mocks"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // fakeKV is an in-memory enrollment bucket, so a test checks what the store
-// leaves in it rather than the calls it makes.
+// leaves in it rather than the calls it makes. It is the second exception of
+// CONTRIBUTING's Test doubles: a double with a real implementation of the
+// behavior under test, a key-value store.
 type fakeKV struct {
 	ctrl    *gomock.Controller
 	data    map[string][]byte

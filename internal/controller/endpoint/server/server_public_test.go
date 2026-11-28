@@ -29,17 +29,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	servermocks "github.com/osapi-io/osapi/internal/controller/endpoint/server/mocks"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/vault"
+	vaultmocks "github.com/osapi-io/osapi/internal/secret/vault/mocks"
 	"github.com/osapi-io/osapi/internal/wiring"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-endpoint-server"}
@@ -297,59 +299,55 @@ type loginInput struct {
 	Env      map[string]secret.Value `json:"env,omitempty"`
 }
 
-// fakeVault is a vault of keys, with an error for each Get when err is
-// set.
-type fakeVault struct {
-	name string
+// vaultOf is a vault for the tests: a generated MockVault whose Get
+// answers from keys, or with err when err is set.
+type vaultOf struct {
+	spec vault.Spec
 	keys map[string]string
 	err  error
 }
 
-func (v fakeVault) Name() string { return v.name }
+// newVaults is a configured mock of server.Vaults: each name answers with
+// its spec and a generated MockVault that reads its keys.
+func newVaults(
+	ctrl *gomock.Controller,
+	byName map[string]vaultOf,
+) *servermocks.MockVaults {
+	vaults := servermocks.NewMockVaults(ctrl)
+	vaults.EXPECT().Spec(gomock.Any()).DoAndReturn(
+		func(name string) (vault.Spec, bool) {
+			v, ok := byName[name]
 
-func (v fakeVault) Get(
-	_ context.Context,
-	key string,
-) ([]byte, vault.Meta, error) {
-	if v.err != nil {
-		return nil, vault.Meta{}, v.err
-	}
-	value, ok := v.keys[key]
-	if !ok {
-		return nil, vault.Meta{}, vault.ErrNotFound
-	}
+			return v.spec, ok
+		},
+	).AnyTimes()
+	vaults.EXPECT().Get(gomock.Any()).DoAndReturn(
+		func(name string) (vault.Vault, bool) {
+			v, ok := byName[name]
+			if !ok {
+				return nil, false
+			}
+			m := vaultmocks.NewMockVault(ctrl)
+			m.EXPECT().Name().Return(name).AnyTimes()
+			m.EXPECT().Get(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ context.Context, key string) ([]byte, vault.Meta, error) {
+					if v.err != nil {
+						return nil, vault.Meta{}, v.err
+					}
+					value, found := v.keys[key]
+					if !found {
+						return nil, vault.Meta{}, vault.ErrNotFound
+					}
 
-	return []byte(value), vault.Meta{Key: key, Version: 1}, nil
-}
+					return []byte(value), vault.Meta{Key: key, Version: 1}, nil
+				},
+			).AnyTimes()
 
-func (fakeVault) Put(context.Context, string, []byte) (vault.Meta, error) {
-	return vault.Meta{}, nil
-}
+			return m, true
+		},
+	).AnyTimes()
 
-func (fakeVault) Delete(context.Context, string) error { return nil }
-
-func (fakeVault) List(context.Context) ([]vault.Meta, error) { return nil, nil }
-
-// fakeVaults are vaults by name, each with its spec.
-type fakeVaults map[string]struct {
-	spec  vault.Spec
-	vault fakeVault
-}
-
-func (f fakeVaults) Get(
-	name string,
-) (vault.Vault, bool) {
-	v, ok := f[name]
-
-	return v.vault, ok
-}
-
-func (f fakeVaults) Spec(
-	name string,
-) (vault.Spec, bool) {
-	v, ok := f[name]
-
-	return v.spec, ok
+	return vaults
 }
 
 // TestServeResolvesAReference: the route resolves each reference from its
@@ -361,13 +359,10 @@ func (s *ServerPublicTestSuite) TestServeResolvesAReference() {
 		endpoint.Post[loginInput, thing]("make").Public().
 			Handle(func(context.Context, deps, loginInput) (thing, error) { return thing{}, nil }),
 	)
-	vaults := fakeVaults{
+	vaults := newVaults(gomock.NewController(s.T()), map[string]vaultOf{
 		"default": {
 			spec: vault.Spec{Name: "default", Type: "nats"},
-			vault: fakeVault{
-				name: "default",
-				keys: map[string]string{"pw": "hunter2", "nl": "a\nb"},
-			},
+			keys: map[string]string{"pw": "hunter2", "nl": "a\nb"},
 		},
 		"prod": {
 			spec: vault.Spec{
@@ -375,13 +370,13 @@ func (s *ServerPublicTestSuite) TestServeResolvesAReference() {
 				Type:    "nats",
 				Targets: []string{"web-01", "group:prod"},
 			},
-			vault: fakeVault{name: "prod", keys: map[string]string{"pw": "prod-pw"}},
+			keys: map[string]string{"pw": "prod-pw"},
 		},
 		"down": {
-			spec:  vault.Spec{Name: "down", Type: "nats"},
-			vault: fakeVault{name: "down", err: errors.New("nats: timeout")},
+			spec: vault.Spec{Name: "down", Type: "nats"},
+			err:  errors.New("nats: timeout"),
 		},
-	}
+	})
 	user := token("login:write", "secret:use")
 	tests := []struct {
 		name     string

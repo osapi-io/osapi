@@ -30,12 +30,14 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/audit"
-
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// fakeSeen is the registry and the last reports that DeleteStale reads.
+// fakeSeen is the registry and the last reports that DeleteStale reads. It
+// is a recorder, the third exception of CONTRIBUTING's Test doubles: the
+// loop of StartDeleteStale calls ListAgents from its own goroutine, and the
+// test cannot wait for that goroutine, so it reads the count of calls.
 type fakeSeen struct {
 	online  []string
 	last    map[string]time.Time
