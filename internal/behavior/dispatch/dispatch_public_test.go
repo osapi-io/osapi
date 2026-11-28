@@ -63,6 +63,39 @@ var kv = behavior.Define("kv", "Keys",
 	behavior.Write("set", set),
 )
 
+// slowKV declares a JobWait, and aboveKV requires it, so a write of either
+// waits that long for its answer.
+var (
+	slowKV = behavior.Define("slowkv", "Keys that take long to write",
+		behavior.JobWait(90*time.Second),
+		behavior.Read("get", get).Key("key"),
+		behavior.Write("set", set),
+	)
+	aboveKV = behavior.Define("abovekv", "Keys on slowkv",
+		behavior.Requires(slowKV),
+		behavior.Read("get", get).Key("key"),
+		behavior.Write("set", set),
+	)
+)
+
+// waits answers a job as the job client does, and checks the wait that the
+// job's context gives it, against the client's timeout of 30 s.
+func (s *DispatchPublicTestSuite) waits(
+	want time.Duration,
+) func(context.Context, string, string, job.OperationType, any) (string, *job.Response, error) {
+	return func(
+		ctx context.Context,
+		target string,
+		_ string,
+		_ job.OperationType,
+		_ any,
+	) (string, *job.Response, error) {
+		s.Equal(want, job.Wait(ctx, 30*time.Second))
+
+		return "job-1", completed(target, `{"key":"a"}`, nil), nil
+	}
+}
+
 // answer is a method's response as the generated type has it.
 type answer struct {
 	JobID   string           `json:"job_id"`
@@ -104,76 +137,12 @@ func yes() *bool {
 	return &b
 }
 
-// TestJobWait: a write of a behavior that requires one with a JobWait waits
-// that long for its answer, on one host and on a broadcast; a read and a
-// behavior with none keep the job client's timeout.
-func (s *DispatchPublicTestSuite) TestJobWait() {
-	slow := behavior.Define("slowkv", "Keys that take long to write",
-		behavior.JobWait(90*time.Second),
-		behavior.Read("get", get).Key("key"),
-		behavior.Write("set", set),
-	)
-	above := behavior.Define("abovekv", "Keys on slowkv",
-		behavior.Requires(slow),
-		behavior.Read("get", get).Key("key"),
-		behavior.Write("set", set),
-	)
-	waitOf := func(want *time.Duration) any {
-		return func(ctx context.Context, target, _ string, _ job.OperationType, _ any) (string, *job.Response, error) {
-			*want = job.Wait(ctx, 30*time.Second)
-
-			return "job-1", completed(target, `{"key":"a"}`, nil), nil
-		}
-	}
-	for _, tc := range []struct {
-		name   string
-		b      *behavior.Behavior
-		method string
-		want   time.Duration
-	}{
-		{name: "a write of the behavior", b: slow, method: "set", want: 90 * time.Second},
-		{name: "a write of a behavior that requires it", b: above, method: "set", want: 90 * time.Second},
-		{name: "a read", b: above, method: "get", want: 30 * time.Second},
-		{name: "a write with no wait", b: kv, method: "set", want: 30 * time.Second},
-	} {
-		s.Run(tc.name, func() {
-			var got time.Duration
-			if tc.method == "set" {
-				s.jobs.EXPECT().
-					Modify(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(waitOf(&got))
-			} else {
-				s.jobs.EXPECT().
-					Query(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(waitOf(&got))
-			}
-			_, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
-				tc.b, tc.method, "server1", kvIn{})
-			s.Require().NoError(err)
-			s.Equal(tc.want, got)
-		})
-	}
-	s.Run("a broadcast write", func() {
-		var got time.Duration
-		s.jobs.EXPECT().
-			ModifyBroadcast(gomock.Any(), "_all", gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, _, _ string, _ job.OperationType, _ any) (string, map[string]*job.Response, error) {
-				got = job.Wait(ctx, 30*time.Second)
-
-				return "job-1", map[string]*job.Response{}, nil
-			})
-		_, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
-			above, "set", "_all", kvIn{})
-		s.Require().NoError(err)
-		s.Equal(90*time.Second, got)
-	})
-}
-
 func (s *DispatchPublicTestSuite) TestRun() {
 	errBoom := errors.New("boom")
 	op := job.OperationType("behavior.kv.")
 	tests := []struct {
 		name     string
+		b        *behavior.Behavior
 		method   string
 		target   string
 		input    kvIn
@@ -181,6 +150,64 @@ func (s *DispatchPublicTestSuite) TestRun() {
 		wantErr  func(error)
 		wantBody string
 	}{
+		{
+			name:   "when a behavior declares a JobWait, a write of it waits that long",
+			b:      slowKV,
+			method: "set",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Modify(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(s.waits(90 * time.Second))
+			},
+			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"a","status":"ok"}]}`,
+		},
+		{
+			name:   "when a behavior requires one with a JobWait, a write of it waits that long",
+			b:      aboveKV,
+			method: "set",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Modify(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(s.waits(90 * time.Second))
+			},
+			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"a","status":"ok"}]}`,
+		},
+		{
+			name:   "when a broadcast write requires a JobWait, it waits that long",
+			b:      aboveKV,
+			method: "set",
+			target: "_all",
+			setup: func() {
+				s.jobs.EXPECT().
+					ModifyBroadcast(gomock.Any(), "_all", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						ctx context.Context,
+						_ string,
+						_ string,
+						_ job.OperationType,
+						_ any,
+					) (string, map[string]*job.Response, error) {
+						s.Equal(90*time.Second, job.Wait(ctx, 30*time.Second))
+
+						return "job-1", map[string]*job.Response{}, nil
+					})
+			},
+			wantBody: `{"job_id":"job-1","results":[]}`,
+		},
+		{
+			name:   "when a read's behavior requires a JobWait, the read keeps the client's timeout",
+			b:      aboveKV,
+			method: "get",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Query(gomock.Any(), "server1", gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(s.waits(30 * time.Second))
+			},
+			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"a","status":"ok"}]}`,
+		},
 		{
 			name:   "when a list on one host returns a row per element",
 			method: "list",
@@ -383,10 +410,14 @@ func (s *DispatchPublicTestSuite) TestRun() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
+			b := tc.b
+			if b == nil {
+				b = kv
+			}
 			got, err := dispatch.Run[answer](
 				context.Background(),
 				dispatch.Deps{JobClient: s.jobs},
-				kv,
+				b,
 				tc.method,
 				tc.target,
 				tc.input,

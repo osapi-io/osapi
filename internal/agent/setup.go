@@ -161,17 +161,12 @@ func Setup(
 	return a, conn, nil
 }
 
-// kvStatus is the request that reachOf sends. A *natsclient.Client has it.
-type kvStatus interface {
-	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
-}
-
 // reachOf is a round trip to the NATS server: the status of bucket, a request
 // that the server answers. The client reconnects on its own, so after a
 // change that moves the host's address it answers once the connection is
 // back.
 func reachOf(
-	nc kvStatus,
+	nc BucketStatus,
 	bucket string,
 ) func(ctx context.Context) error {
 	return func(ctx context.Context) error {

@@ -31,13 +31,14 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/gohaitest"
 
 	"github.com/avfs/avfs/vfs/memfs"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	"github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
@@ -214,37 +215,23 @@ func (s *SetupPublicTestSuite) TestSetup() {
 	}
 }
 
-// statusOf answers KVStatus with err, and records the bucket it was asked.
-type statusOf struct {
-	err    error
-	bucket *string
-}
-
-func (k statusOf) KVStatus(
-	_ context.Context,
-	bucket string,
-) (jetstream.KeyValueStatus, error) {
-	*k.bucket = bucket
-
-	return nil, k.err
-}
-
 // TestReachOf: the agent's round trip to NATS is the status of its registry
 // bucket, and its error is the server's.
 func (s *SetupPublicTestSuite) TestReachOf() {
-	for _, tc := range []struct {
+	tests := []struct {
 		name string
 		err  error
 	}{
 		{name: "when the server answers, it is nil"},
 		{name: "when it does not, it is the error", err: errors.New("nats: timeout")},
-	} {
+	}
+	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			var asked string
-			reach := agent.ExportReachOf(statusOf{err: tc.err, bucket: &asked}, "agent-registry")
+			nc := mocks.NewMockBucketStatus(gomock.NewController(s.T()))
+			nc.EXPECT().KVStatus(gomock.Any(), "agent-registry").Return(nil, tc.err)
+			reach := agent.ExportReachOf(nc, "agent-registry")
 
 			s.Equal(tc.err, reach(context.Background()))
-			s.Equal("agent-registry", asked)
 		})
 	}
 }

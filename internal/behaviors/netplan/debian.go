@@ -189,9 +189,12 @@ func (d *debian) Remove(
 // within reachFor of the change.
 const tryTimeout = 60
 
-// reachFor is how long the agent tries to reach NATS after a change before it
-// lets netplan revert it. It is a variable for a test.
-var reachFor = 45 * time.Second
+// defaultReachFor is how long the agent tries to reach NATS after a change
+// before it lets netplan revert it, and reachFor is that time, which a test
+// sets shorter.
+const defaultReachFor = 45 * time.Second
+
+var reachFor = defaultReachFor
 
 // tryReady is the file that netplan try writes when it has applied the
 // change and waits for the confirmation.

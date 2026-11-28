@@ -61,3 +61,9 @@ func SetKillGroup(
 
 	return func() { killGroup, waitDelay = oldKill, oldDelay }
 }
+
+// ResetSudoProgram puts back sudo as the program that a privileged command
+// runs through.
+func ResetSudoProgram() {
+	sudoProgram = "sudo"
+}

@@ -302,12 +302,25 @@ func (s *ChainPublicTestSuite) TestWriteWait() {
 	middle := behavior.Define("waitmiddle", "On the leaf", behavior.Requires(leaf))
 	top := behavior.Define("waittop", "On the middle",
 		behavior.JobWait(time.Minute), behavior.Requires(middle))
-	none := behavior.Define("waitnone", "No wait")
-
-	s.Equal(90*time.Second, behavior.WriteWait(leaf))
-	s.Equal(90*time.Second, behavior.WriteWait(middle), "from what it requires")
-	s.Equal(90*time.Second, behavior.WriteWait(top), "the longest, two deep")
-	s.Zero(behavior.WriteWait(none))
+	tests := []struct {
+		name string
+		b    *behavior.Behavior
+		want time.Duration
+	}{
+		{name: "when the behavior declares one, its own", b: leaf, want: 90 * time.Second},
+		{
+			name: "when a behavior that it requires declares one, that one",
+			b:    middle,
+			want: 90 * time.Second,
+		},
+		{name: "when several do, the longest, at each depth", b: top, want: 90 * time.Second},
+		{name: "when none does, zero", b: behavior.Define("waitnone", "No wait")},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, behavior.WriteWait(tc.b))
+		})
+	}
 }
 
 func (s *ChainPublicTestSuite) TestRequiredBy() {

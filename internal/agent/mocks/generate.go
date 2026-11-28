@@ -22,4 +22,4 @@
 package mocks
 
 //go:generate go tool go.uber.org/mock/mockgen -destination=jetstream_msg.gen.go -package=mocks github.com/nats-io/nats.go/jetstream Msg
-//go:generate go tool go.uber.org/mock/mockgen -destination=nats_client.gen.go -package=mocks github.com/osapi-io/osapi/internal/agent NATSClient,ObjectReader
+//go:generate go tool go.uber.org/mock/mockgen -destination=nats_client.gen.go -package=mocks github.com/osapi-io/osapi/internal/agent NATSClient,ObjectReader,BucketStatus

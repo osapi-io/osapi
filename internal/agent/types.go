@@ -49,6 +49,13 @@ import (
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
 
+// BucketStatus is the request that the agent's round trip to NATS sends: the
+// status of a KV bucket, which the server answers. A *natsclient.Client has
+// it.
+type BucketStatus interface {
+	KVStatus(ctx context.Context, bucket string) (jetstream.KeyValueStatus, error)
+}
+
 // NATSClient is the access to NATS that the agent uses itself: the core
 // messages of enrollment, and the writes of its registration and its facts.
 // A *natsclient.Client is one.

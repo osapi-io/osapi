@@ -26,12 +26,15 @@ import "time"
 var ExportNewDebian = newDebian
 
 // SetReachFor sets how long a change waits for the agent to reach NATS, for
-// a test, and gives the function that puts it back.
+// a test.
 func SetReachFor(
 	d time.Duration,
-) func() {
-	old := reachFor
+) {
 	reachFor = d
+}
 
-	return func() { reachFor = old }
+// ResetReachFor puts back how long a change waits for the agent to reach
+// NATS.
+func ResetReachFor() {
+	reachFor = defaultReachFor
 }
