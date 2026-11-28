@@ -85,14 +85,13 @@ func ResetSystemCertPoolFn() {
 	systemCertPoolFn = x509.SystemCertPool
 }
 
-// SetSigningKeyFS replaces the os calls that read and write the signing key,
-// and returns a func that puts the real ones back.
-func SetSigningKeyFS(
+// SetSigningKeyFSFn replaces the os calls that read and write the signing
+// key. A nil func keeps the real call.
+func SetSigningKeyFSFn(
 	read func(string) ([]byte, error),
 	write func(string, []byte, os.FileMode) error,
 	ln func(string, string) error,
-) func() {
-	r, w, l := readFile, writeFile, link
+) {
 	if read != nil {
 		readFile = read
 	}
@@ -102,6 +101,10 @@ func SetSigningKeyFS(
 	if ln != nil {
 		link = ln
 	}
+}
 
-	return func() { readFile, writeFile, link = r, w, l }
+// ResetSigningKeyFSFn restores the os calls that read and write the signing
+// key.
+func ResetSigningKeyFSFn() {
+	readFile, writeFile, link = os.ReadFile, os.WriteFile, os.Link
 }

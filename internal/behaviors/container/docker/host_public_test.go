@@ -229,6 +229,49 @@ func (s *HostPublicTestSuite) TestCreate() {
 		_, err := p.Create(ctx, docker.CreateInput{Name: "web", Image: "nginx", AutoStart: true})
 		s.ErrorIs(err, boom)
 	})
+	// A create with a command or a bind mount runs a command on the host as
+	// root, so an agent that runs no caller's command refuses it
+	// (GHSA-5wjc-r9cp-cx5x).
+	commandsOff := []struct {
+		name         string
+		in           docker.CreateInput
+		expect       func(m *hostmocks.MockExec)
+		validateFunc func(docker.Result, error)
+	}{
+		{
+			name: "with commands off, a create with a command is refused",
+			in:   docker.CreateInput{Name: "new", Image: "alpine", Command: []string{"id"}},
+			validateFunc: func(_ docker.Result, err error) {
+				s.ErrorIs(err, host.ErrCommandDisabled)
+			},
+		},
+		{
+			name: "with commands off, a create with a bind mount is refused",
+			in:   docker.CreateInput{Name: "new", Image: "alpine", Volumes: []string{"/:/host"}},
+			validateFunc: func(_ docker.Result, err error) {
+				s.ErrorIs(err, host.ErrCommandDisabled)
+			},
+		},
+		{
+			name: "with commands off, a create with neither is made",
+			in:   docker.CreateInput{Name: "new", Image: "alpine"},
+			expect: func(m *hostmocks.MockExec) {
+				m.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "docker", []string{"create", "--name", "new", "alpine"}).
+					Return("abc\n", nil)
+			},
+			validateFunc: func(got docker.Result, err error) {
+				s.Require().NoError(err)
+				s.True(got.Changed)
+			},
+		},
+	}
+	for _, tt := range commandsOff {
+		s.Run(tt.name, func() {
+			// With no expect, a privileged call fails the mock.
+			tt.validateFunc(s.provider("", false, tt.expect).Create(ctx, tt.in))
+		})
+	}
 	s.Run("a host whose docker does not answer is skipped", func() {
 		_, err := s.provider("down", true, nil).
 			Create(ctx, docker.CreateInput{Name: "web", Image: "nginx"})
@@ -268,43 +311,6 @@ func (s *HostPublicTestSuite) TestChanges() {
 		})
 		_, err = p.Stop(ctx, "web", 0)
 		s.ErrorIs(err, boom)
-	})
-}
-
-// TestCreateCommandsOff: a create with a command or a bind mount runs a
-// command on the host as root, so an agent that runs no caller's command
-// refuses it (GHSA-5wjc-r9cp-cx5x).
-func (s *HostPublicTestSuite) TestCreateCommandsOff() {
-	ctx := context.Background()
-	tests := []struct {
-		name string
-		in   docker.CreateInput
-	}{
-		{
-			name: "a command is refused",
-			in:   docker.CreateInput{Name: "new", Image: "alpine", Command: []string{"id"}},
-		},
-		{
-			name: "a bind mount is refused",
-			in:   docker.CreateInput{Name: "new", Image: "alpine", Volumes: []string{"/:/host"}},
-		},
-	}
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			// No privileged call is expected: the mock fails on one.
-			_, err := s.provider("", false, nil).Create(ctx, tt.in)
-			s.ErrorIs(err, host.ErrCommandDisabled)
-		})
-	}
-	s.Run("a create with neither is made", func() {
-		p := s.provider("", false, func(m *hostmocks.MockExec) {
-			m.EXPECT().
-				RunPrivilegedCmd(gomock.Any(), "docker", []string{"create", "--name", "new", "alpine"}).
-				Return("abc\n", nil)
-		})
-		got, err := p.Create(ctx, docker.CreateInput{Name: "new", Image: "alpine"})
-		s.Require().NoError(err)
-		s.True(got.Changed)
 	})
 }
 
