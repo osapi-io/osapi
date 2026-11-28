@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	group "github.com/osapi-io/osapi/internal/behaviors/group"
 	"github.com/osapi-io/osapi/internal/behaviors/group/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/group/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -67,4 +75,1367 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/group and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A host with a group\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.list",
+				group.ListInput{},
+				servertest.Completed("server1", `[{"name":"developers","gid":1500,"members":["alice","bob"]},{"name":"root","gid":0}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"gid":1500,"hostname":"server1","members":["alice","bob"],"name":"developers","status":"ok"},{"gid":0,"hostname":"server1","name":"root","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A host with a group\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"group.list",
+				group.ListInput{},
+				servertest.Completed("server1", `[{"name":"developers","gid":1500,"members":["alice","bob"]},{"name":"root","gid":0}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"gid":1500,"hostname":"server1","members":["alice","bob"],"name":"developers","status":"ok"},{"gid":0,"hostname":"server1","name":"root","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.list",
+				group.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.list",
+				group.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.list",
+				group.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.list",
+				group.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/group",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"group.list",
+				group.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/group",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//group",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant group:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks group:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"group.list",
+				group.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/group/{name} and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A group\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+				servertest.Completed("server1", `{"name":"developers","gid":1500,"members":["alice","bob"]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"gid":1500,"hostname":"server1","members":["alice","bob"],"name":"developers","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A group\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"group.get",
+				group.GetInput{Name: "developers"},
+				servertest.Completed("server1", `{"name":"developers","gid":1500,"members":["alice","bob"]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"gid":1500,"hostname":"server1","members":["alice","bob"],"name":"developers","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"group.get",
+				group.GetInput{Name: "developers"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/group/developers",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//group/developers",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/-r",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 32 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant group:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks group:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/group/developers",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"group.get",
+				group.GetInput{Name: "developers"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/group and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Add a group\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Add a group\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Add a system group with its ID\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest","gid":1999,"system":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{
+					GID:    1999,
+					Name:   "osapitest",
+					System: true,
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Add a system group with its ID\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/group",
+				Body:   `{"name":"osapitest","gid":1999,"system":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.create",
+				group.CreateInput{
+					GID:    1999,
+					Name:   "osapitest",
+					System: true,
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A group that the host has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A group that the host has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"-r"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 32 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a negative ID, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest","gid":-1}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant group:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks group:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/group",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"group.create",
+				group.CreateInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/group/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Set the members\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Set the members\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"The members it has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"The members it has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when members has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"members":"one"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/-r",
+				Body:   `{"name":"-r"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 32 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a member that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/developers",
+				Body:   `{"name":"developers","members":["-r"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a member longer than 32 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/developers",
+				Body:   `{"name":"developers","members":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant group:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks group:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest","members":["root"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"group.update",
+				group.UpdateInput{
+					Members: []string{"root"},
+					Name:    "osapitest",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/group/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove a group\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a group\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A group that the host does not have\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A group that the host does not have\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/-r",
+				Body:   `{"name":"-r"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 32 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant group:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks group:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"group.delete",
+				group.DeleteInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

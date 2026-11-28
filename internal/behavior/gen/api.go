@@ -31,13 +31,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // statusNames are the net/http names of the codes a behavior answers.
@@ -51,7 +50,8 @@ var statusNames = map[int]string{
 }
 
 // apiTestFile is gen/api.go's test: Routes lists every method with its
-// HTTP method, path and permission.
+// HTTP method, path and permission. apiMethodTests adds the methods of
+// each behavior method to the same suite.
 func apiTestFile(
 	b *behavior.Behavior,
 ) *jen.File {
@@ -66,7 +66,19 @@ func apiTestFile(
 		))
 	}
 
-	f.Type().Id("APIPublicTestSuite").Struct(jen.Qual(suitePath, "Suite"))
+	f.Type().Id("APIPublicTestSuite").Struct(
+		jen.Qual(suitePath, "Suite"),
+		jen.Line(),
+		jen.Id("api").Op("*").Qual(servertestPath, "Harness"),
+	)
+	f.Line()
+	f.Func().Params(jen.Id("s").Op("*").Id("APIPublicTestSuite")).Id("SetupSuite").Params().Block(
+		jen.Id("s").Dot("api").Op("=").Qual(servertestPath, "New").Call(
+			jen.Id("s").Dot("T").Call(),
+			jen.Lit(strings.TrimPrefix(pkgPath(b), module+"/")+"/gen/api.yaml"),
+			jen.Qual(pkgPath(b)+"/gen", "Routes"),
+		),
+	)
 	f.Line()
 	f.Func().Params(jen.Id("s").Op("*").Id("APIPublicTestSuite")).Id("TestRoutes").Params().Block(
 		jen.Id("routes").Op(":=").Qual(pkgPath(b)+"/gen", "Routes").Call(
@@ -123,43 +135,30 @@ type httpCase struct {
 	wantBody string
 }
 
-// apiMethodTestFile is gen/api_<method>.go's test: each example on one host
-// and across hosts, each way a host or the job client can answer, each way
-// the request can be wrong, and each token that must be refused, sent
-// through the real handler and middleware and checked against the spec.
-func apiMethodTestFile(
+// apiMethodTests adds m's methods to f's APIPublicTestSuite, gen/api.go's
+// test: each example on one host and across hosts, each way a host or the
+// job client can answer, each way the request can be wrong, and each token
+// that must be refused, sent through the real handler and middleware and
+// checked against the spec.
+func apiMethodTests(
+	f *jen.File,
 	b *behavior.Behavior,
 	m *behavior.Method,
-) (*jen.File, error) {
-	f := genTestFile(b)
-	name := "API" + title(m.Name) + "PublicTestSuite"
+) error {
+	name := "APIPublicTestSuite"
 
 	responses, err := responseCases(b, m)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	validations, err := validationCases(b, m)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	rbac, err := rbacCases(b, m)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	f.Type().Id(name).Struct(
-		jen.Qual(suitePath, "Suite"),
-		jen.Line(),
-		jen.Id("api").Op("*").Qual(servertestPath, "Harness"),
-	)
-	f.Line()
-	f.Func().Params(jen.Id("s").Op("*").Id(name)).Id("SetupSuite").Params().Block(
-		jen.Id("s").Dot("api").Op("=").Qual(servertestPath, "New").Call(
-			jen.Id("s").Dot("T").Call(),
-			jen.Lit(strings.TrimPrefix(pkgPath(b), module+"/")+"/gen/api.yaml"),
-			jen.Qual(pkgPath(b)+"/gen", "Routes"),
-		),
-	)
 
 	method := func(test string, doc string, cases []httpCase) {
 		f.Line()
@@ -181,9 +180,7 @@ func apiMethodTestFile(
 	method("Test"+title(m.Name)+"RBACHTTP",
 		fmt.Sprintf("Test%sRBACHTTP sends tokens that do not grant %s.",
 			title(m.Name), b.Permission(m.PermissionVerb())), rbac)
-	suiteRunner(f, name)
-
-	return f, nil
+	return nil
 }
 
 // responseCases are the requests that reach a host: each example on one

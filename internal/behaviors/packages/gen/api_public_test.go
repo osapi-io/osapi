@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	packages "github.com/osapi-io/osapi/internal/behaviors/packages"
 	"github.com/osapi-io/osapi/internal/behaviors/packages/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/packages/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -62,4 +70,1085 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/package and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A Debian host\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.Completed("server1", `[{"name":"curl","version":"8.5.0-2ubuntu10","architecture":"amd64","manager":"dpkg","description":"command line tool for transferring data with URL syntax","size":512000}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"amd64","description":"command line tool for transferring data with URL syntax","hostname":"server1","manager":"dpkg","name":"curl","size":512000,"status":"ok","version":"8.5.0-2ubuntu10"}]}`,
+		},
+		{
+			Name: "when the example \"A Debian host\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.list",
+				packages.ListInput{},
+				servertest.Completed("server1", `[{"name":"curl","version":"8.5.0-2ubuntu10","architecture":"amd64","manager":"dpkg","description":"command line tool for transferring data with URL syntax","size":512000}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"amd64","description":"command line tool for transferring data with URL syntax","hostname":"server1","manager":"dpkg","name":"curl","size":512000,"status":"ok","version":"8.5.0-2ubuntu10"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Fedora host\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.Completed("server1", `[{"name":"curl","version":"8.6.0-7.fc40","architecture":"x86_64","manager":"rpm","description":"A utility for getting files from remote servers","size":790000}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"x86_64","description":"A utility for getting files from remote servers","hostname":"server1","manager":"rpm","name":"curl","size":790000,"status":"ok","version":"8.6.0-7.fc40"}]}`,
+		},
+		{
+			Name: "when the example \"A Fedora host\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.list",
+				packages.ListInput{},
+				servertest.Completed("server1", `[{"name":"curl","version":"8.6.0-7.fc40","architecture":"x86_64","manager":"rpm","description":"A utility for getting files from remote servers","size":790000}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"x86_64","description":"A utility for getting files from remote servers","hostname":"server1","manager":"rpm","name":"curl","size":790000,"status":"ok","version":"8.6.0-7.fc40"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.Completed("server1", `[{"name":"jq","version":"1.7.1","manager":"brew"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","manager":"brew","name":"jq","status":"ok","version":"1.7.1"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.list",
+				packages.ListInput{},
+				servertest.Completed("server1", `[{"name":"jq","version":"1.7.1","manager":"brew"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","manager":"brew","name":"jq","status":"ok","version":"1.7.1"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.list",
+				packages.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/package",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//package",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant package:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks package:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"package.list",
+				packages.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/package/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An installed package\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Completed("server1", `{"name":"curl","version":"8.5.0-2ubuntu10","architecture":"amd64","manager":"dpkg","description":"command line tool for transferring data with URL syntax","size":512000}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"amd64","description":"command line tool for transferring data with URL syntax","hostname":"server1","manager":"dpkg","name":"curl","size":512000,"status":"ok","version":"8.5.0-2ubuntu10"}]}`,
+		},
+		{
+			Name: "when the example \"An installed package\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Completed("server1", `{"name":"curl","version":"8.5.0-2ubuntu10","architecture":"amd64","manager":"dpkg","description":"command line tool for transferring data with URL syntax","size":512000}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"amd64","description":"command line tool for transferring data with URL syntax","hostname":"server1","manager":"dpkg","name":"curl","size":512000,"status":"ok","version":"8.5.0-2ubuntu10"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An installed formula\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/jq",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "jq"},
+				servertest.Completed("server1", `{"name":"jq","version":"1.7.1","manager":"brew"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","manager":"brew","name":"jq","status":"ok","version":"1.7.1"}]}`,
+		},
+		{
+			Name: "when the example \"An installed formula\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package/jq",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.get",
+				packages.GetInput{Name: "jq"},
+				servertest.Completed("server1", `{"name":"jq","version":"1.7.1","manager":"brew"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","manager":"brew","name":"jq","status":"ok","version":"1.7.1"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An installed RPM\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Completed("server1", `{"name":"curl","version":"8.6.0-7.fc40","architecture":"x86_64","manager":"rpm"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"x86_64","hostname":"server1","manager":"rpm","name":"curl","status":"ok","version":"8.6.0-7.fc40"}]}`,
+		},
+		{
+			Name: "when the example \"An installed RPM\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Completed("server1", `{"name":"curl","version":"8.6.0-7.fc40","architecture":"x86_64","manager":"rpm"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"architecture":"x86_64","hostname":"server1","manager":"rpm","name":"curl","status":"ok","version":"8.6.0-7.fc40"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/package/curl",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//package/curl",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/-oAPT::Get=x",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant package:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks package:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/package/curl",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"package.get",
+				packages.GetInput{Name: "curl"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/package and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Install a package\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+				servertest.Completed("server1", `{"name":"tree","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"tree","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Install a package\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+				servertest.Completed("server1", `{"name":"tree","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"tree","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"-oAPT::Get=x"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a version that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree","version":"-x"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a version longer than 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree","version":"1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant package:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks package:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/package",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"package.create",
+				packages.CreateInput{Name: "tree"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/package/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove a package\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Completed("server1", `{"name":"tree","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"tree","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a package\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Completed("server1", `{"name":"tree","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"tree","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A package that is not installed\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Completed("server1", `{"name":"tree","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"tree","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A package that is not installed\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Completed("server1", `{"name":"tree","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"tree","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/-oAPT::Get=x",
+				Body:   `{"name":"-oAPT::Get=x"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant package:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks package:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/package/tree",
+				Body:   `{"name":"tree"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"package.delete",
+				packages.DeleteInput{Name: "tree"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

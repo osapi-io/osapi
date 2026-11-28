@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	ntp "github.com/osapi-io/osapi/internal/behaviors/ntp"
 	"github.com/osapi-io/osapi/internal/behaviors/ntp/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/ntp/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -62,4 +70,1080 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestGet sends GET /api/node/{hostname}/ntp and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A host synchronized to time.cloudflare.com\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Completed("server1", `{"synchronized":true,"stratum":3,"offset":"+0.000003422s","current_source":"time.cloudflare.com","servers":["time.cloudflare.com","0.pool.ntp.org"]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"current_source":"time.cloudflare.com","hostname":"server1","offset":"+0.000003422s","servers":["time.cloudflare.com","0.pool.ntp.org"],"status":"ok","stratum":3,"synchronized":true}]}`,
+		},
+		{
+			Name: "when the example \"A host synchronized to time.cloudflare.com\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Completed("server1", `{"synchronized":true,"stratum":3,"offset":"+0.000003422s","current_source":"time.cloudflare.com","servers":["time.cloudflare.com","0.pool.ntp.org"]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"current_source":"time.cloudflare.com","hostname":"server1","offset":"+0.000003422s","servers":["time.cloudflare.com","0.pool.ntp.org"],"status":"ok","stratum":3,"synchronized":true},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A host that chrony does not synchronize\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Completed("server1", `{"synchronized":false,"offset":"-0.000001834s"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","offset":"-0.000001834s","status":"ok","synchronized":false}]}`,
+		},
+		{
+			Name: "when the example \"A host that chrony does not synchronize\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Completed("server1", `{"synchronized":false,"offset":"-0.000001834s"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","offset":"-0.000001834s","status":"ok","synchronized":false},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/ntp",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"ntp.get",
+				ntp.GetInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/ntp",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//ntp",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant ntp:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks ntp:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/ntp",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"ntp.get",
+				ntp.GetInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/ntp and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Set two servers\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+				servertest.Completed("server1", `{"changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Set two servers\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+				servertest.Completed("server1", `{"changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"The servers that the host has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org"}},
+				servertest.Completed("server1", `{"changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"The servers that the host has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{"servers":["0.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org"}},
+				servertest.Completed("server1", `{"changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when servers is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":null}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when servers has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":"one"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":null}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an empty list of servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a server with a directive after it, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org iburst\nallow all"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent more than 16 servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant ntp:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks ntp:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","1.pool.ntp.org"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.create",
+				ntp.CreateInput{Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"}},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/ntp and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Replace the servers\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+				servertest.Completed("server1", `{"changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Replace the servers\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+				servertest.Completed("server1", `{"changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"The servers that the file has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"0.pool.ntp.org"}},
+				servertest.Completed("server1", `{"changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"The servers that the file has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{"servers":["0.pool.ntp.org"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"0.pool.ntp.org"}},
+				servertest.Completed("server1", `{"changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when servers is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":null}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when servers has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":"one"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":null}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an empty list of servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a server with a directive after it, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org iburst\nallow all"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent more than 16 servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org","0.pool.ntp.org"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant ntp:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks ntp:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{"servers":["time.cloudflare.com"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.update",
+				ntp.UpdateInput{Servers: []string{"time.cloudflare.com"}},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/ntp and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove the servers\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Completed("server1", `{"changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove the servers\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Completed("server1", `{"changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"When osapi set no servers\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Completed("server1", `{"changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"When osapi set no servers\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Completed("server1", `{"changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"ntp.delete",
+				ntp.DeleteInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/ntp",
+				Body:   `{}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//ntp",
+				Body:   `{}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant ntp:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks ntp:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/ntp",
+				Body:   `{}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"ntp.delete",
+				ntp.DeleteInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

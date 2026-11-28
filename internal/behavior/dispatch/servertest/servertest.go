@@ -18,11 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package servertest runs the HTTP cases each behavior's generated
-// gen/api_<method>_public_test.go lists. Each case is one request to the
-// real handler and middleware with the job client mocked, the way the
-// hand-written domains' handler tests run; the response is checked for its
-// status, its body when the case gives one, and against the generated spec.
+// Package servertest runs the HTTP cases that each behavior's generated
+// gen/api_public_test.go lists, in its one APIPublicTestSuite. Each case
+// is one request to the real handler and middleware with the job client
+// mocked, the way the hand-written domains' handler tests run. The
+// response is checked for its status, its body when the case gives one,
+// and against the generated spec.
 package servertest
 
 import (

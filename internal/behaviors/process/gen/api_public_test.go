@@ -10,12 +10,21 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	process "github.com/osapi-io/osapi/internal/behaviors/process"
 	"github.com/osapi-io/osapi/internal/behaviors/process/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/process/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -57,4 +66,755 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/process and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A Linux host that runs sleep\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+				servertest.Completed("server1", `[{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300","start_time":"2026-01-02T02:55:45Z"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"start_time":"2026-01-02T02:55:45Z","state":"sleep","status":"ok","user":"alice"}]}`,
+		},
+		{
+			Name: "when the example \"A Linux host that runs sleep\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"process.list",
+				process.ListInput{},
+				servertest.Completed("server1", `[{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300","start_time":"2026-01-02T02:55:45Z"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"start_time":"2026-01-02T02:55:45Z","state":"sleep","status":"ok","user":"alice"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac that runs sleep\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+				servertest.Completed("server1", `[{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"state":"sleep","status":"ok","user":"alice"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac that runs sleep\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"process.list",
+				process.ListInput{},
+				servertest.Completed("server1", `[{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"state":"sleep","status":"ok","user":"alice"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/process",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"process.list",
+				process.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/process",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//process",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant process:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks process:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"process.list",
+				process.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/process/{pid} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A process of a Linux host\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Completed("server1", `{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300","start_time":"2026-01-02T02:55:45Z"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"start_time":"2026-01-02T02:55:45Z","state":"sleep","status":"ok","user":"alice"}]}`,
+		},
+		{
+			Name: "when the example \"A process of a Linux host\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Completed("server1", `{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300","start_time":"2026-01-02T02:55:45Z"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"start_time":"2026-01-02T02:55:45Z","state":"sleep","status":"ok","user":"alice"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A process of a Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Completed("server1", `{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"state":"sleep","status":"ok","user":"alice"}]}`,
+		},
+		{
+			Name: "when the example \"A process of a Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Completed("server1", `{"pid":1234,"name":"sleep","user":"alice","state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,"command":"sleep 300"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"command":"sleep 300","cpu_percent":5,"hostname":"server1","mem_percent":1,"mem_rss":20971520,"name":"sleep","pid":1234,"state":"sleep","status":"ok","user":"alice"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"process.get",
+				process.GetInput{PID: 1234},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/process/1234",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//process/1234",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a process ID below 1, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/-1",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant process:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks process:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/1234",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"process.get",
+				process.GetInput{PID: 1234},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestSignal sends POST /api/node/{hostname}/process/{pid}/signal and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestSignal() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Stop a process\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+				servertest.Completed("server1", `{"pid":1234,"signal":"TERM","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","pid":1234,"signal":"TERM","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Stop a process\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+				servertest.Completed("server1", `{"pid":1234,"signal":"TERM","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","pid":1234,"signal":"TERM","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestSignalValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestSignalValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when signal is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when signal has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"signal":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a process ID below 1, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/-1/signal",
+				Body:   `{"pid":-1,"signal":"TERM"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a signal that osapi does not send, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"STOP"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestSignalRBACHTTP sends tokens that do not grant process:execute.
+func (s *APIPublicTestSuite) TestSignalRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks process:execute, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/1234/signal",
+				Body:   `{"pid":1234,"signal":"TERM"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"process.signal",
+				process.SignalInput{
+					PID:    1234,
+					Signal: types.Signal("TERM"),
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	image "github.com/osapi-io/osapi/internal/behaviors/container/image"
 	"github.com/osapi-io/osapi/internal/behaviors/container/image/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/container/image/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -57,4 +65,725 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/image and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A host with an image\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"image.list",
+				image.ListInput{},
+				servertest.Completed("server1", `[{"id":"91ef0af61f39","repository":"alpine","tag":"3.20","size":"7.8MB"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","id":"91ef0af61f39","repository":"alpine","size":"7.8MB","status":"ok","tag":"3.20"}]}`,
+		},
+		{
+			Name: "when the example \"A host with an image\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"image.list",
+				image.ListInput{},
+				servertest.Completed("server1", `[{"id":"91ef0af61f39","repository":"alpine","tag":"3.20","size":"7.8MB"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","id":"91ef0af61f39","repository":"alpine","size":"7.8MB","status":"ok","tag":"3.20"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"image.list",
+				image.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"image.list",
+				image.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"image.list",
+				image.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"image.list",
+				image.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/image",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"image.list",
+				image.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/image",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//image",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant image:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks image:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/image",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"image.list",
+				image.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestPull sends POST /api/node/{hostname}/image/pull and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestPull() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Pull an image\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+				servertest.Completed("server1", `{"image":"alpine:3.20","image_id":"sha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b","size":3634816,"changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","image":"alpine:3.20","image_id":"sha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b","size":3634816,"status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Pull an image\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+				servertest.Completed("server1", `{"image":"alpine:3.20","image_id":"sha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b","size":3634816,"changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","image":"alpine:3.20","image_id":"sha256:91ef0af61f39ece4d6710e465df5ed6ca12112358344fd51ae6a3b886634148b","size":3634816,"status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestPullValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestPullValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when image is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when image has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an image that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"--all-tags"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no image, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestPullRBACHTTP sends tokens that do not grant image:execute.
+func (s *APIPublicTestSuite) TestPullRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks image:execute, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/image/pull",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"image.pull",
+				image.PullInput{Image: "alpine:3.20"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/image/{image} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove an image\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Completed("server1", `{"image":"alpine:3.20","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","image":"alpine:3.20","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove an image\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Completed("server1", `{"image":"alpine:3.20","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","image":"alpine:3.20","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An image that the host does not have\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Completed("server1", `{"image":"alpine:3.20","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","image":"alpine:3.20","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An image that the host does not have\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Completed("server1", `{"image":"alpine:3.20","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","image":"alpine:3.20","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when force has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"force":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an image that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/-f",
+				Body:   `{"image":"-f"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant image:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks image:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/image/alpine:3.20",
+				Body:   `{"image":"alpine:3.20"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"image.delete",
+				image.DeleteInput{Image: "alpine:3.20"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

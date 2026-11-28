@@ -10,12 +10,21 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	docker "github.com/osapi-io/osapi/internal/behaviors/container/docker"
 	"github.com/osapi-io/osapi/internal/behaviors/container/docker/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -77,4 +86,2058 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/docker and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A host with a container\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{},
+				servertest.Completed("server1", `[{"id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","image":"alpine:3.20","state":"running","summary":"Up 2 minutes","created":"2026-11-22T10:00:00Z","ports":["0.0.0.0:8080-\u003e80/tcp"],"mounts":["/srv/data:/data:ro"],"networks":["bridge 172.17.0.2 via 172.17.0.1"],"env_names":["PATH","APP_TOKEN"]}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"created":"2026-11-22T10:00:00Z","env_names":["PATH","APP_TOKEN"],"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","image":"alpine:3.20","mounts":["/srv/data:/data:ro"],"name":"osapitest","networks":["bridge 172.17.0.2 via 172.17.0.1"],"ports":["0.0.0.0:8080-\u003e80/tcp"],"state":"running","status":"ok","summary":"Up 2 minutes"}]}`,
+		},
+		{
+			Name: "when the example \"A host with a container\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"docker.list",
+				docker.ListInput{},
+				servertest.Completed("server1", `[{"id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","image":"alpine:3.20","state":"running","summary":"Up 2 minutes","created":"2026-11-22T10:00:00Z","ports":["0.0.0.0:8080-\u003e80/tcp"],"mounts":["/srv/data:/data:ro"],"networks":["bridge 172.17.0.2 via 172.17.0.1"],"env_names":["PATH","APP_TOKEN"]}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"created":"2026-11-22T10:00:00Z","env_names":["PATH","APP_TOKEN"],"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","image":"alpine:3.20","mounts":["/srv/data:/data:ro"],"name":"osapitest","networks":["bridge 172.17.0.2 via 172.17.0.1"],"ports":["0.0.0.0:8080-\u003e80/tcp"],"state":"running","status":"ok","summary":"Up 2 minutes"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Only the stopped ones\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker?state=stopped",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{State: types.ContainerState("stopped")},
+				servertest.Completed("server1", `[]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Only the stopped ones\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/docker?state=stopped",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"docker.list",
+				docker.ListInput{State: types.ContainerState("stopped")},
+				servertest.Completed("server1", `[]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/docker",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"docker.list",
+				docker.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/docker",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//docker",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a state that is not one, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker?state=paused",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant docker:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"docker.list",
+				docker.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/docker/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A container\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","image":"alpine:3.20","state":"running","summary":"Up 2 minutes","created":"2026-11-22T10:00:00Z","ports":["0.0.0.0:8080-\u003e80/tcp"],"mounts":["/srv/data:/data:ro"],"networks":["bridge 172.17.0.2 via 172.17.0.1"],"env_names":["PATH","APP_TOKEN"]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"created":"2026-11-22T10:00:00Z","env_names":["PATH","APP_TOKEN"],"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","image":"alpine:3.20","mounts":["/srv/data:/data:ro"],"name":"osapitest","networks":["bridge 172.17.0.2 via 172.17.0.1"],"ports":["0.0.0.0:8080-\u003e80/tcp"],"state":"running","status":"ok","summary":"Up 2 minutes"}]}`,
+		},
+		{
+			Name: "when the example \"A container\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","image":"alpine:3.20","state":"running","summary":"Up 2 minutes","created":"2026-11-22T10:00:00Z","ports":["0.0.0.0:8080-\u003e80/tcp"],"mounts":["/srv/data:/data:ro"],"networks":["bridge 172.17.0.2 via 172.17.0.1"],"env_names":["PATH","APP_TOKEN"]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"created":"2026-11-22T10:00:00Z","env_names":["PATH","APP_TOKEN"],"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","image":"alpine:3.20","mounts":["/srv/data:/data:ro"],"name":"osapitest","networks":["bridge 172.17.0.2 via 172.17.0.1"],"ports":["0.0.0.0:8080-\u003e80/tcp"],"state":"running","status":"ok","summary":"Up 2 minutes"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/docker/osapitest",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//docker/osapitest",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/-f",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant docker:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/docker/osapitest",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"docker.get",
+				docker.GetInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/docker and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Create a container\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Create a container\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A container that the host has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A container that the host has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","id":"3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when image is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":[]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"-f","image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no image, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":""}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an image that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"--privileged"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a hostname that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","container_hostname":"-x"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a hostname longer than 253 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","container_hostname":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a DNS server that is not an address, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","dns":["nameserver"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a port that is not host:container, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","ports":["80"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a bind mount that is not two absolute paths, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","volumes":["data:/data"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"","image":"alpine:3.20"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant docker:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker",
+				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.create",
+				docker.CreateInput{
+					Command: []string{"sleep", "300"},
+					Image:   "alpine:3.20",
+					Name:    "osapitest",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/docker/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove a container\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a container\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A container that the host does not have\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A container that the host does not have\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/-f",
+				Body:   `{"name":"-f"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant docker:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/docker/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.delete",
+				docker.DeleteInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestStart sends POST /api/node/{hostname}/docker/{name}/start and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestStart() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Start a container\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Start a container\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A container that runs already\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A container that runs already\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestStartValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestStartValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/-f/start",
+				Body:   `{"name":"-f"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestStartRBACHTTP sends tokens that do not grant docker:execute.
+func (s *APIPublicTestSuite) TestStartRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:execute, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/start",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.start",
+				docker.StartInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestStop sends POST /api/node/{hostname}/docker/{name}/stop and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestStop() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Stop a container\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Stop a container\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A container that does not run\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A container that does not run\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestStopValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestStopValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when timeout has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"timeout":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/-f/stop",
+				Body:   `{"name":"-f"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a timeout longer than 300 seconds, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":301}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a negative timeout, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":-1}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestStopRBACHTTP sends tokens that do not grant docker:execute.
+func (s *APIPublicTestSuite) TestStopRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:execute, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/stop",
+				Body:   `{"name":"osapitest","timeout":1}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.stop",
+				docker.StopInput{
+					Name:    "osapitest",
+					Timeout: 1,
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestExec sends POST /api/node/{hostname}/docker/{name}/exec and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestExec() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Run a command\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"stdout":"hello\n","stderr":"","exit_code":0,"changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"exit_code":0,"hostname":"server1","status":"ok","stderr":"","stdout":"hello\n"}]}`,
+		},
+		{
+			Name: "when the example \"Run a command\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+				servertest.Completed("server1", `{"stdout":"hello\n","stderr":"","exit_code":0,"changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"exit_code":0,"hostname":"server1","status":"ok","stderr":"","stdout":"hello\n"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestExecValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestExecValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when command is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":null}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when command has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"command":"one"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an empty command, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":[]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no command, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":null}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/-f/exec",
+				Body:   `{"name":"-f","command":["true"]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a working directory that is not absolute, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["pwd"],"working_dir":"tmp"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestExecRBACHTTP sends tokens that do not grant docker:exec.
+func (s *APIPublicTestSuite) TestExecRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks docker:exec, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/docker/osapitest/exec",
+				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"docker.exec",
+				docker.ExecInput{
+					Command: []string{"echo", "hello"},
+					Name:    "osapitest",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

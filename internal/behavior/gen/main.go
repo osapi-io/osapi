@@ -35,13 +35,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
 	_ "github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -125,17 +124,16 @@ func writeBehavior(
 		// The routes and the decoders, gen/api.go and gen/decode.go, come
 		// from the group too: internal/behavior/gen/group writes them with the
 		// endpoint layer's route writer.
-		if err := w.Go(filepath.Join(gen, "api_public_test.go"), apiTestFile(b)); err != nil {
-			return err
-		}
+		// gen/api.go's test is one file, named for it, with one suite: the
+		// routes, then the tests of each method.
+		t := apiTestFile(b)
 		for _, m := range b.Methods {
-			t, err := apiMethodTestFile(b, m)
-			if err != nil {
+			if err := apiMethodTests(t, b, m); err != nil {
 				return err
 			}
-			if err := w.Go(filepath.Join(gen, "api_"+m.Name+"_public_test.go"), t); err != nil {
-				return err
-			}
+		}
+		if err := w.Go(filepath.Join(gen, "api_public_test.go"), t); err != nil {
+			return err
 		}
 	}
 

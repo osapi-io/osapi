@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	timezone "github.com/osapi-io/osapi/internal/behaviors/timezone"
 	"github.com/osapi-io/osapi/internal/behaviors/timezone/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/timezone/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -52,4 +60,520 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestGet sends GET /api/node/{hostname}/timezone and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A Linux host on UTC\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Completed("server1", `{"timezone":"UTC","utc_offset":"+00:00"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok","timezone":"UTC","utc_offset":"+00:00"}]}`,
+		},
+		{
+			Name: "when the example \"A Linux host on UTC\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Completed("server1", `{"timezone":"UTC","utc_offset":"+00:00"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok","timezone":"UTC","utc_offset":"+00:00"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac on UTC\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Completed("server1", `{"timezone":"UTC","utc_offset":"+00:00"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok","timezone":"UTC","utc_offset":"+00:00"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac on UTC\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Completed("server1", `{"timezone":"UTC","utc_offset":"+00:00"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok","timezone":"UTC","utc_offset":"+00:00"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/timezone",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"timezone.get",
+				timezone.GetInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/timezone",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//timezone",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant timezone:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks timezone:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/timezone",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"timezone.get",
+				timezone.GetInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/timezone and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Set a new timezone\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+				servertest.Completed("server1", `{"timezone":"America/New_York","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok","timezone":"America/New_York"}]}`,
+		},
+		{
+			Name: "when the example \"Set a new timezone\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+				servertest.Completed("server1", `{"timezone":"America/New_York","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","status":"ok","timezone":"America/New_York"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A host that already has the timezone\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"UTC"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "UTC"},
+				servertest.Completed("server1", `{"timezone":"UTC","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok","timezone":"UTC"}]}`,
+		},
+		{
+			Name: "when the example \"A host that already has the timezone\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/timezone",
+				Body:   `{"timezone":"UTC"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "UTC"},
+				servertest.Completed("server1", `{"timezone":"UTC","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok","timezone":"UTC"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when timezone is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when timezone has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is not a timezone, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"../../etc/passwd"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that starts with a dash, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"-UTC"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name longer than 64 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant timezone:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks timezone:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/timezone",
+				Body:   `{"timezone":"America/New_York"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"timezone.update",
+				timezone.UpdateInput{Timezone: "America/New_York"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }
