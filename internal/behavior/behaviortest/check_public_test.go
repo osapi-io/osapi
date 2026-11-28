@@ -577,6 +577,29 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 			want: []string{"failing: panicked: unchecked failure"},
 		},
+		{
+			name:     "when a probe makes the provider panic, it is a problem, and Check goes on",
+			platform: behavior.Platform("debian", newFragile),
+			programs: []behavior.Option{},
+			methods: []behavior.Option{
+				behavior.Write("set", setFragile).Describe("Set it").
+					Example("A set", fragileIn{Key: "a"}, fragileOut{}),
+			},
+			want: []string{`with path traversal in Key, "../../../../osapi-probe": panicked`},
+		},
+		{
+			name:     "when the second run of a write panics, it is a problem",
+			platform: behavior.Platform("debian", newFragile),
+			programs: []behavior.Option{},
+			methods: []behavior.Option{
+				behavior.Write("set", setFragile).Describe("Set it").
+					Example("A set", fragileIn{Key: "again"}, fragileOut{}),
+			},
+			want: []string{
+				"running it again panicked",
+				`with path traversal in Key, "../../../../osapi-probe": panicked`,
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -798,37 +821,9 @@ func setFragile(
 	return fragileOut{}, nil
 }
 
-func (s *CheckPublicTestSuite) TestCheckReportsAPanic() {
-	tests := []struct {
-		name string
-		key  string
-		want string
-	}{
-		{
-			name: "when a probe makes the provider panic, it is a problem",
-			key:  "a",
-			want: "panicked",
-		},
-		{
-			name: "when the second run of a write panics, it is a problem",
-			key:  "again",
-			want: "running it again panicked",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			b := behavior.Define("fragile", "Panics on one input", behavior.Node,
-				behavior.Platform("debian", func(host.Host) (fragile, error) {
-					return fragile{runs: new(int)}, nil
-				}),
-				behavior.Write("set", setFragile).Describe("Set it").
-					Example("A set", fragileIn{Key: tc.key}, fragileOut{}),
-			)
-
-			var problems []string
-			s.NotPanics(func() { problems = behaviortest.Check(b) })
-			s.Contains(strings.Join(problems, "\n"), tc.want)
-		})
-	}
+// newFragile is the provider of fragile, with its own count of calls.
+func newFragile(
+	host.Host,
+) (fragile, error) {
+	return fragile{runs: new(int)}, nil
 }
