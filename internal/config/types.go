@@ -44,7 +44,7 @@ type NotificationsConfig struct {
 	// Enabled activates the condition watcher and notifier.
 	Enabled bool `mapstructure:"enabled" doc:"Enable the condition watcher and notifier."`
 	// Notifier selects the notification backend: "log" (default).
-	Notifier string `mapstructure:"notifier" doc:"Notifier backend: 'log' (default)."`
+	Notifier string `mapstructure:"notifier" doc:"Notifier backend: 'log' (default)." validate:"omitempty,oneof=log"`
 	// RenotifyInterval is how often to re-fire active conditions.
 	// Uses Go duration format (e.g., "1m", "5m", "1h"). Zero disables.
 	RenotifyInterval string `mapstructure:"renotify_interval" doc:"How often to re-fire active conditions (Go duration). Zero disables re-notification." validate:"omitempty,go_duration"`
@@ -62,7 +62,7 @@ type MetricsServer struct {
 	// Host the metrics server binds to.
 	Host string `mapstructure:"host" doc:"Host the metrics server binds to."`
 	// Port the metrics server listens on.
-	Port int `mapstructure:"port" doc:"Port the metrics server listens on." validate:"omitempty,min=1,max=65535"`
+	Port int `mapstructure:"port" doc:"Port the metrics server listens on." validate:"required_if=Enabled true,omitempty,min=1,max=65535"`
 	// URL is where a person opens the metrics endpoint. Health shows it
 	// beside the bind address; osapi never requests it.
 	URL string `mapstructure:"url" doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url" choice:"where a person reaches it; empty shows the bind address"`
@@ -75,7 +75,7 @@ type TracingConfig struct {
 	// Enabled enables or disables tracing.
 	Enabled bool `mapstructure:"enabled" doc:"Enable distributed tracing."`
 	// Exporter selects the trace exporter: "stdout" or "otlp".
-	Exporter string `mapstructure:"exporter" doc:"Trace exporter: 'stdout' or 'otlp'." choice:"empty sends no trace"`
+	Exporter string `mapstructure:"exporter" doc:"Trace exporter: 'stdout' or 'otlp'." choice:"empty sends no trace" validate:"omitempty,oneof=stdout otlp"`
 	// OTLPEndpoint is the gRPC endpoint for the OTLP exporter (e.g., "localhost:4317").
 	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'." choice:"the collector of the operator; set with exporter otlp"`
 	// URL is where a person views the traces, such as a Jaeger UI. Health
@@ -90,7 +90,7 @@ type TracingConfig struct {
 // NATSAuth holds client-side authentication settings for connecting to NATS.
 type NATSAuth struct {
 	// Type is the auth method: "none", "user_pass", "nkey", or "creds".
-	Type string `mapstructure:"type" doc:"Authentication type: 'none', 'user_pass', 'nkey', or 'creds'."`
+	Type string `mapstructure:"type" doc:"Authentication type: 'none', 'user_pass', 'nkey', or 'creds'." validate:"omitempty,oneof=none user_pass nkey creds"`
 	// Username for user_pass auth.
 	Username string `mapstructure:"username" doc:"Username for user_pass auth." choice:"set for the auth type that uses it"`
 	// Password for user_pass auth.
@@ -105,7 +105,7 @@ type NATSAuth struct {
 // NATSServerAuth holds server-side authentication settings for the embedded NATS server.
 type NATSServerAuth struct {
 	// Type is the auth method: "none", "user_pass", "nkey", or "operator".
-	Type string `mapstructure:"type" doc:"Auth method: 'none', 'user_pass', 'nkey' or 'operator'."`
+	Type string `mapstructure:"type" doc:"Auth method: 'none', 'user_pass', 'nkey' or 'operator'." validate:"omitempty,oneof=none user_pass nkey operator"`
 	// ResolverFile is, for operator auth, the server's half of an operator:
 	// its JWT, the system account and each account's JWT, as
 	// `nsc generate config --mem-resolver` writes it.
@@ -117,19 +117,19 @@ type NATSServerAuth struct {
 	// and heartbeat connect with: a user in an account with JetStream.
 	CredsFile string `mapstructure:"creds_file" doc:"For operator auth: a credentials file the server's own setup and heartbeat connect with." choice:"set for the auth type that uses it"`
 	// Users allowed to connect (for user_pass auth).
-	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)." choice:"set for the auth type that uses it"`
+	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)." choice:"set for the auth type that uses it" validate:"dive"`
 	// NKeys is a list of allowed public NKeys (for nkey auth).
 	NKeys []string `mapstructure:"nkeys" doc:"Allowed public NKeys, for nkey auth." choice:"set for the auth type that uses it"`
 	// NKeyRoles is the osapi role of each nkey of NKeys, by its public key.
-	NKeyRoles map[string]string `mapstructure:"nkey_roles" doc:"The osapi role of each nkey, by its public key: controller, agent, setup or join. The nkey can then use only the subjects of that role. An nkey with no role can use each subject." choice:"empty: each nkey can use each subject"`
+	NKeyRoles map[string]string `mapstructure:"nkey_roles" doc:"The osapi role of each nkey, by its public key: controller, agent, setup or join. The nkey can then use only the subjects of that role. An nkey with no role can use each subject." choice:"empty: each nkey can use each subject" validate:"dive,oneof=controller agent setup join"`
 }
 
 // NATSServerUser represents an allowed username/password pair for the NATS server.
 type NATSServerUser struct {
 	// Username for the user.
-	Username string `mapstructure:"username"`
+	Username string `mapstructure:"username" validate:"required"`
 	// Password for the user.
-	Password string `mapstructure:"password" mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
+	Password string `mapstructure:"password" validate:"required" mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
 	// Role limits the user to the subjects of one osapi process.
 	Role string `mapstructure:"role" validate:"omitempty,oneof=controller agent setup join" doc:"The osapi process that the user is: controller, agent, setup, or join, the bootstrap user of a join over NATS. The user can then use only the subjects of that process. Empty lets the user use each subject."`
 }
@@ -156,74 +156,74 @@ type NATSSecrets struct {
 	// Bucket is the KV bucket name for the values of the nats vaults.
 	Bucket string `mapstructure:"bucket" validate:"omitempty,nats_name" doc:"KV bucket for the encrypted values of each nats vault."`
 	// History is how many versions of each key the bucket keeps.
-	History  int    `mapstructure:"history"  validate:"omitempty,min=1,max=64" doc:"How many versions of each secret the bucket keeps, from 1 to 64."`
-	Storage  string `mapstructure:"storage"                                    doc:"Storage backend: 'file' or 'memory'."`
-	Replicas int    `mapstructure:"replicas"                                   doc:"Number of KV replicas."`
+	History  int    `mapstructure:"history"  validate:"omitempty,min=1,max=64"      doc:"How many versions of each secret the bucket keeps, from 1 to 64."`
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."`
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of KV replicas."`
 }
 
 // NATSEnrollment configuration for the PKI enrollment KV bucket.
 // No TTL. Pending enrollment requests persist until accepted or rejected.
 type NATSEnrollment struct {
 	// Bucket is the KV bucket name for pending enrollment entries.
-	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for pending enrollment entries."`
-	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                doc:"Number of replicas for the enrollment KV bucket."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name"         doc:"KV bucket for pending enrollment entries."`
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of replicas for the enrollment KV bucket."`
 }
 
 // NATSAudit configuration for the audit log stream.
 type NATSAudit struct {
 	// Stream is the JetStream stream name for audit log entries.
-	Stream string `mapstructure:"stream" doc:"JetStream stream name for audit log entries."`
+	Stream string `mapstructure:"stream" doc:"JetStream stream name for audit log entries." validate:"omitempty,nats_name"`
 	// Subject is the base subject prefix for audit messages.
 	Subject  string `mapstructure:"subject"   doc:"Base subject prefix for audit messages."`
 	MaxAge   string `mapstructure:"max_age"   doc:"Maximum age of audit entries (Go duration). Default 30 days." validate:"omitempty,go_duration"` // e.g. "720h" (30 days)
-	MaxBytes int64  `mapstructure:"max_bytes" doc:"Maximum total size of the audit stream in bytes."`
-	Storage  string `mapstructure:"storage"   doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"  doc:"Number of stream replicas."`
+	MaxBytes int64  `mapstructure:"max_bytes" doc:"Maximum total size of the audit stream in bytes."             validate:"min=-1"`
+	Storage  string `mapstructure:"storage"   doc:"Storage backend: 'file' or 'memory'."                         validate:"omitempty,oneof=file memory"` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"  doc:"Number of stream replicas."                                   validate:"omitempty,min=1,max=5"`
 }
 
 // NATSRegistry configuration for the agent registry KV bucket.
 type NATSRegistry struct {
 	// Bucket is the KV bucket name for agent registration entries.
-	Bucket   string `mapstructure:"bucket"   validate:"required,nats_name"    doc:"KV bucket for agent heartbeat registration."`
-	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration" doc:"TTL for registry entries (Go duration). Agents refresh every 10s; the TTL acts as a liveness timeout."` // e.g. "30s"
-	Storage  string `mapstructure:"storage"                                   doc:"Storage backend: 'file' or 'memory'."`                                                                  // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                  doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"required,nats_name"          doc:"KV bucket for agent heartbeat registration."`
+	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration"       doc:"TTL for registry entries (Go duration). Agents refresh every 10s; the TTL acts as a liveness timeout."` // e.g. "30s"
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."`                                                                  // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of KV replicas."`
 }
 
 // NATSFacts configuration for the agent facts KV bucket.
 type NATSFacts struct {
 	// Bucket is the KV bucket name for agent facts entries.
-	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name"   doc:"KV bucket for agent facts entries."`
-	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration" doc:"TTL for facts entries (Go duration)."` // e.g. "1h"
-	Storage  string `mapstructure:"storage"                                   doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                  doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name"         doc:"KV bucket for agent facts entries."`
+	TTL      string `mapstructure:"ttl"      validate:"omitempty,go_duration"       doc:"TTL for facts entries (Go duration)."` // e.g. "1h"
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of KV replicas."`
 }
 
 // NATSState configuration for the agent state KV bucket (drain flags, timeline events).
 type NATSState struct {
 	// Bucket is the KV bucket name for persistent agent state.
-	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for persistent agent state (drain flags, timeline events). No TTL, so operator actions persist until removed."`
-	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name"         doc:"KV bucket for persistent agent state (drain flags, timeline events). No TTL, so operator actions persist until removed."`
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of KV replicas."`
 }
 
 // NATSObjects configuration for the NATS Object Store bucket.
 type NATSObjects struct {
 	// Bucket is the Object Store bucket name for file content.
-	Bucket   string `mapstructure:"bucket"    validate:"omitempty,nats_name" doc:"Object Store bucket for uploaded file content."`
-	MaxBytes int64  `mapstructure:"max_bytes"                                doc:"Maximum total size of the bucket in bytes."`
-	Storage  string `mapstructure:"storage"                                  doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                 doc:"Number of Object Store replicas."`
+	Bucket   string `mapstructure:"bucket"    validate:"omitempty,nats_name"         doc:"Object Store bucket for uploaded file content."`
+	MaxBytes int64  `mapstructure:"max_bytes" validate:"min=-1"                      doc:"Maximum total size of the bucket in bytes."`
+	Storage  string `mapstructure:"storage"   validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"  validate:"omitempty,min=1,max=5"       doc:"Number of Object Store replicas."`
 }
 
 // NATSFileState configuration for the file deployment state KV bucket.
 // No TTL. Deployed file state persists until it is removed.
 type NATSFileState struct {
 	// Bucket is the KV bucket name for file deployment SHA tracking.
-	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name" doc:"KV bucket for file deploy state tracking. No TTL, so state persists until it is removed."`
-	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"   validate:"omitempty,nats_name"         doc:"KV bucket for file deploy state tracking. No TTL, so state persists until it is removed."`
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of KV replicas."`
 }
 
 // NATSServer configuration settings for the embedded NATS server.
@@ -261,25 +261,25 @@ type NATSServerJetStream struct {
 // NATSStream configuration for JetStream stream settings.
 type NATSStream struct {
 	// Name is the JetStream stream name.
-	Name string `mapstructure:"name" validate:"required" doc:"JetStream stream name for job notifications."`
+	Name string `mapstructure:"name" validate:"required,nats_name" doc:"JetStream stream name for job notifications."`
 	// Subjects is the subject filter for the stream.
-	Subjects string `mapstructure:"subjects" validate:"required"              doc:"Subject filter for the stream."`
-	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration" doc:"Maximum age of messages in the stream (Go duration)."` // e.g. "24h", "1h30m"
-	MaxMsgs  int64  `mapstructure:"max_msgs"                                  doc:"Maximum number of messages retained."`
-	Storage  string `mapstructure:"storage"                                   doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                  doc:"Number of stream replicas (1 for single-node)."`
-	Discard  string `mapstructure:"discard"                                   doc:"Discard policy when limits are reached: 'old' or 'new'."` // "old" or "new"
+	Subjects string `mapstructure:"subjects" validate:"required"                    doc:"Subject filter for the stream."`
+	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration"       doc:"Maximum age of messages in the stream (Go duration)."` // e.g. "24h", "1h30m"
+	MaxMsgs  int64  `mapstructure:"max_msgs" validate:"min=-1"                      doc:"Maximum number of messages retained."`
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of stream replicas (1 for single-node)."`
+	Discard  string `mapstructure:"discard"  validate:"omitempty,oneof=old new"     doc:"Discard policy when limits are reached: 'old' or 'new'."` // "old" or "new"
 }
 
 // NATSKV configuration for KeyValue bucket settings.
 type NATSKV struct {
 	// Bucket is the KV bucket name for job definitions, status events and
 	// agent results.
-	Bucket   string `mapstructure:"bucket"    validate:"required,nats_name" doc:"KV bucket for job definitions, status events and each agent's result."`
-	TTL      string `mapstructure:"ttl"                                     doc:"How long a job's definition, status events and results stay in the bucket (Go duration), as nats setup sets it. Empty keeps them until max_bytes."` // e.g. "24h"
-	MaxBytes int64  `mapstructure:"max_bytes"                               doc:"Maximum total size of the bucket in bytes."`
-	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
+	Bucket   string `mapstructure:"bucket"    validate:"required,nats_name"          doc:"KV bucket for job definitions, status events and each agent's result."`
+	TTL      string `mapstructure:"ttl"       validate:"omitempty,go_duration"       doc:"How long a job's definition, status events and results stay in the bucket (Go duration), as nats setup sets it. Empty keeps them until max_bytes."` // e.g. "24h"
+	MaxBytes int64  `mapstructure:"max_bytes" validate:"min=-1"                      doc:"Maximum total size of the bucket in bytes."`
+	Storage  string `mapstructure:"storage"   validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"  validate:"omitempty,min=1,max=5"       doc:"Number of KV replicas."`
 }
 
 // KVBucketInfo holds a KV bucket's human-readable name and its configured
@@ -309,10 +309,10 @@ type ObjectStoreBucketInfo struct {
 
 // NATSDLQ configuration for Dead Letter Queue stream settings.
 type NATSDLQ struct {
-	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration" doc:"Maximum age of messages in the DLQ."` // e.g. "7d", "24h"
-	MaxMsgs  int64  `mapstructure:"max_msgs"                                  doc:"Maximum number of messages retained."`
-	Storage  string `mapstructure:"storage"                                   doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas int    `mapstructure:"replicas"                                  doc:"Number of DLQ replicas."`
+	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration"       doc:"Maximum age of messages in the DLQ."` // e.g. "168h" (7 days), "24h"
+	MaxMsgs  int64  `mapstructure:"max_msgs" validate:"min=-1"                      doc:"Maximum number of messages retained."`
+	Storage  string `mapstructure:"storage"  validate:"omitempty,oneof=file memory" doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas" validate:"omitempty,min=1,max=5"       doc:"Number of DLQ replicas."`
 }
 
 // NATSConnection is a reusable NATS connection configuration block.
@@ -580,7 +580,7 @@ type CORS struct {
 // AgentConsumer configuration for the agent's JetStream consumer settings.
 type AgentConsumer struct {
 	// Name is the durable consumer name.
-	Name string `mapstructure:"name" doc:"Durable consumer name."`
+	Name string `mapstructure:"name" doc:"Durable consumer name." validate:"omitempty,nats_name"`
 	// MaxDeliver is the maximum number of redelivery attempts before sending to DLQ.
 	MaxDeliver int `mapstructure:"max_deliver" doc:"Maximum redelivery attempts before sending to DLQ."`
 	// AckWait is the time to wait for an ACK before redelivering.
@@ -588,9 +588,9 @@ type AgentConsumer struct {
 	// MaxAckPending is the maximum outstanding unacknowledged messages.
 	MaxAckPending int `mapstructure:"max_ack_pending" doc:"Maximum outstanding unacknowledged messages."`
 	// ReplayPolicy is "instant" or "original".
-	ReplayPolicy string `mapstructure:"replay_policy" doc:"Replay policy: 'instant' or 'original'."`
+	ReplayPolicy string `mapstructure:"replay_policy" doc:"Replay policy: 'instant' or 'original'." validate:"omitempty,oneof=instant original"`
 	// BackOff durations between redelivery attempts.
-	BackOff []string `mapstructure:"back_off" doc:"Backoff durations between redelivery attempts."` // e.g. ["30s", "2m", "5m"]
+	BackOff []string `mapstructure:"back_off" doc:"Backoff durations between redelivery attempts." validate:"dive,go_duration"` // e.g. ["30s", "2m", "5m"]
 	// InactiveThreshold is how long a consumer can be idle before NATS
 	// removes it.
 	InactiveThreshold string `mapstructure:"inactive_threshold" doc:"How long a job consumer can be idle before NATS removes it (Go duration). Empty keeps it." validate:"omitempty,go_duration"` // e.g. "24h"
@@ -612,9 +612,9 @@ type AgentConditions struct {
 // ProcessConditions holds threshold configuration for process-level conditions.
 type ProcessConditions struct {
 	// MemoryPressureBytes is the RSS threshold in bytes (0 = disabled).
-	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes" doc:"Process RSS threshold in bytes (0 = disabled)." choice:"0 turns the condition off"`
+	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes" doc:"Process RSS threshold in bytes (0 = disabled)." choice:"0 turns the condition off" validate:"min=0"`
 	// HighCPUPercent is the CPU usage threshold as a percentage (0 = disabled).
-	HighCPUPercent float64 `mapstructure:"high_cpu_percent" doc:"Process CPU threshold as percentage (0 = disabled)." choice:"0 turns the condition off"`
+	HighCPUPercent float64 `mapstructure:"high_cpu_percent" doc:"Process CPU threshold as percentage (0 = disabled)." choice:"0 turns the condition off" validate:"min=0"`
 }
 
 // PrivilegeEscalation configuration for least-privilege agent mode.

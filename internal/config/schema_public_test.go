@@ -23,6 +23,7 @@ package config_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
@@ -528,4 +529,161 @@ func TestConfigPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ConfigPublicTestSuite))
+}
+
+func (s *ConfigPublicTestSuite) TestValidateClosedSets() {
+	base := func() config.NATS {
+		return config.NATS{
+			Stream:    config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
+			KV:        config.NATSKV{Bucket: "job-queue"},
+			Registry:  config.NATSRegistry{Bucket: "agent-registry"},
+			Facts:     config.NATSFacts{Bucket: "agent-facts"},
+			State:     config.NATSState{Bucket: "agent-state"},
+			FileState: config.NATSFileState{Bucket: "file-state"},
+			Objects:   config.NATSObjects{Bucket: "file-objects"},
+		}
+	}
+
+	tests := []struct {
+		name    string
+		set     func(c *config.Config)
+		wantErr string
+	}{
+		{
+			name: "when every closed-set value is one of its set passes",
+			set: func(c *config.Config) {
+				c.NATS.Server.Auth.Type = "user_pass"
+				c.NATS.Server.Auth.Users = []config.NATSServerUser{
+					{Username: "a", Password: "b", Role: "controller"},
+				}
+				c.NATS.Server.Auth.NKeyRoles = map[string]string{"UABC": "agent"}
+				c.NATS.Stream.Storage = "file"
+				c.NATS.Stream.Discard = "old"
+				c.NATS.KV.TTL = "24h"
+				c.NATS.DLQ.MaxAge = "168h"
+				c.Controller.NATS.Auth.Type = "nkey"
+				c.Agent.NATS.Auth.Type = "creds"
+				c.Telemetry.Tracing.Exporter = "otlp"
+				c.Agent.Consumer.ReplayPolicy = "instant"
+				c.Agent.Consumer.BackOff = []string{"30s", "2m"}
+				c.Controller.Notifications.Notifier = "log"
+				c.NATS.Server.Metrics.Enabled = true
+				c.NATS.Server.Metrics.Port = 9091
+			},
+		},
+		{
+			name: "when a NATS server user has a role outside the set fails",
+			set: func(c *config.Config) {
+				c.NATS.Server.Auth.Users = []config.NATSServerUser{
+					{Username: "a", Password: "b", Role: "contoller"},
+				}
+			},
+			wantErr: "role",
+		},
+		{
+			name: "when a NATS server user has no username fails",
+			set: func(c *config.Config) {
+				c.NATS.Server.Auth.Users = []config.NATSServerUser{{Password: "b"}}
+			},
+			wantErr: "username",
+		},
+		{
+			name:    "when an nkey role is outside the set fails",
+			set:     func(c *config.Config) { c.NATS.Server.Auth.NKeyRoles = map[string]string{"UABC": "bogus"} },
+			wantErr: "nkey_roles",
+		},
+		{
+			name:    "when the server auth type is outside the set fails",
+			set:     func(c *config.Config) { c.NATS.Server.Auth.Type = "bogus" },
+			wantErr: "type",
+		},
+		{
+			name:    "when a client auth type is outside the set fails",
+			set:     func(c *config.Config) { c.Agent.NATS.Auth.Type = "bogus" },
+			wantErr: "type",
+		},
+		{
+			name:    "when a storage is outside the set fails",
+			set:     func(c *config.Config) { c.NATS.Stream.Storage = "bogus" },
+			wantErr: "storage",
+		},
+		{
+			name:    "when a KV storage is outside the set fails",
+			set:     func(c *config.Config) { c.NATS.Registry.Storage = "disk" },
+			wantErr: "storage",
+		},
+		{
+			name:    "when the discard policy is outside the set fails",
+			set:     func(c *config.Config) { c.NATS.Stream.Discard = "bogus" },
+			wantErr: "discard",
+		},
+		{
+			name:    "when the tracing exporter is outside the set fails",
+			set:     func(c *config.Config) { c.Telemetry.Tracing.Exporter = "bogus" },
+			wantErr: "exporter",
+		},
+		{
+			name:    "when the replay policy is outside the set fails",
+			set:     func(c *config.Config) { c.Agent.Consumer.ReplayPolicy = "bogus" },
+			wantErr: "replay_policy",
+		},
+		{
+			name:    "when a back off is not a Go duration fails",
+			set:     func(c *config.Config) { c.Agent.Consumer.BackOff = []string{"x"} },
+			wantErr: "back_off",
+		},
+		{
+			name:    "when the notifier is outside the set fails",
+			set:     func(c *config.Config) { c.Controller.Notifications.Notifier = "bogus" },
+			wantErr: "notifier",
+		},
+		{
+			name:    "when the job KV ttl is not a Go duration fails",
+			set:     func(c *config.Config) { c.NATS.KV.TTL = "7d" },
+			wantErr: "ttl",
+		},
+		{
+			name:    "when a replica count is negative fails",
+			set:     func(c *config.Config) { c.NATS.KV.Replicas = -1 },
+			wantErr: "replicas",
+		},
+		{
+			name:    "when max bytes is below -1, the unlimited value, fails",
+			set:     func(c *config.Config) { c.NATS.KV.MaxBytes = -2 },
+			wantErr: "max_bytes",
+		},
+		{
+			name:    "when the high CPU percent is negative fails",
+			set:     func(c *config.Config) { c.Agent.ProcessConditions.HighCPUPercent = -1 },
+			wantErr: "high_cpu_percent",
+		},
+		{
+			name:    "when the audit stream name has a space fails",
+			set:     func(c *config.Config) { c.NATS.Audit.Stream = "AUDIT LOG" },
+			wantErr: "stream",
+		},
+		{
+			name: "when metrics is on with port 0 fails",
+			set: func(c *config.Config) {
+				c.NATS.Server.Metrics.Enabled = true
+				c.NATS.Server.Metrics.Port = 0
+			},
+			wantErr: "port",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			c := s.validConfig(base())
+			tt.set(&c)
+
+			err := config.Validate(&c)
+			if tt.wantErr == "" {
+				s.NoError(err)
+				return
+			}
+			s.Require().Error(err)
+			s.Contains(strings.ToLower(err.Error()), tt.wantErr)
+		})
+	}
 }
