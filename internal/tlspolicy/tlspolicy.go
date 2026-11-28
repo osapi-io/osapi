@@ -51,8 +51,14 @@ var tls13AESGCM = []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA38
 // aesHardware is whether crypto/tls takes this CPU to have AES-GCM in
 // hardware. With none, a server of crypto/tls prefers ChaCha20-Poly1305 for
 // TLS 1.3. A var, so a test can take the other branch.
-var aesHardware = cpu.X86.HasAES && cpu.X86.HasPCLMULQDQ ||
-	cpu.ARM64.HasAES && cpu.ARM64.HasPMULL
+var aesHardware = cpuAESHardware()
+
+// cpuAESHardware is whether this CPU has AES-GCM in hardware, as crypto/tls
+// decides it.
+func cpuAESHardware() bool {
+	return cpu.X86.HasAES && cpu.X86.HasPCLMULQDQ ||
+		cpu.ARM64.HasAES && cpu.ARM64.HasPMULL
+}
 
 // Client is the TLS config of a connection that osapi makes: TLS 1.2 or
 // later, the approved suites and the approved groups. crypto/tls offers its
