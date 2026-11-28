@@ -24,10 +24,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/osapi-io/osapi/internal/pki"
@@ -52,6 +54,10 @@ var (
 	// ErrNotFound is the answer to a get for a machine that osapi has no
 	// record of.
 	ErrNotFound = errors.New("no admission record")
+
+	// errUnreadable is a record whose value does not decode. List leaves
+	// it out; a read of the one machine is an error.
+	errUnreadable = errors.New("the admission record does not decode")
 )
 
 // statePrecedence orders the records of one machine: a request waiting for
@@ -195,7 +201,16 @@ func (w *Watcher) list(
 
 	byMachine := map[string][]Record{}
 	for _, key := range keys {
-		r, ok := w.read(ctx, key)
+		r, ok, err := w.read(ctx, key)
+		if errors.Is(err, errUnreadable) {
+			w.logger.Warn("admission record left out of the list",
+				slog.String("key", key), slog.String("error", err.Error()))
+
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
 		if !ok {
 			continue
 		}
@@ -224,7 +239,11 @@ func (w *Watcher) get(
 ) (Record, error) {
 	var rs []Record
 	for _, prefix := range []string{kvPrefix, acceptedKVPrefix, rejectedKVPrefix, revokedKVPrefix} {
-		if r, ok := w.read(ctx, prefix+machineID); ok {
+		r, ok, err := w.read(ctx, prefix+machineID)
+		if err != nil {
+			return Record{}, err
+		}
+		if ok {
 			rs = append(rs, r)
 		}
 	}
@@ -254,11 +273,13 @@ func merge(
 }
 
 // read reads one key of the bucket as a record. A key of no known prefix,
-// or a value that does not read, is no record.
+// or a key that is not there, is no record. A read that fails, and a value
+// that does not decode (errUnreadable), are errors: an outage is not an
+// answer that the machine has no record.
 func (w *Watcher) read(
 	ctx context.Context,
 	key string,
-) (Record, bool) {
+) (Record, bool, error) {
 	var state types.AdmissionState
 	switch {
 	case strings.HasPrefix(key, kvPrefix):
@@ -270,19 +291,23 @@ func (w *Watcher) read(
 	case strings.HasPrefix(key, revokedKVPrefix):
 		state = types.AdmissionRevoked
 	default:
-		return Record{}, false
+		return Record{}, false, nil
 	}
 
 	entry, err := w.enrollmentKV.KVGet(ctx, w.enrollmentBucket, key)
-	if err != nil {
-		return Record{}, false
+	if errors.Is(err, jetstream.ErrKeyNotFound) {
+		return Record{}, false, nil
 	}
+	if err != nil {
+		return Record{}, false, fmt.Errorf("read the admission record %s: %w", key, err)
+	}
+	unreadable := fmt.Errorf("%w: %s", errUnreadable, key)
 
 	switch state {
 	case types.AdmissionPending:
 		var p PendingAgent
 		if unmarshalFn(entry.Value(), &p) != nil {
-			return Record{}, false
+			return Record{}, false, unreadable
 		}
 
 		// The fingerprint of the keys the request carries, which are the
@@ -295,11 +320,11 @@ func (w *Watcher) read(
 			EncryptionKey: p.EncryptionKey,
 			State:         types.AdmissionPending,
 			RequestedAt:   p.RequestedAt,
-		}, true
+		}, true, nil
 	case types.AdmissionAdmitted:
 		var a AcceptedAgent
 		if unmarshalFn(entry.Value(), &a) != nil {
-			return Record{}, false
+			return Record{}, false, unreadable
 		}
 
 		return Record{
@@ -311,15 +336,15 @@ func (w *Watcher) read(
 			AdmittedAt:    a.AcceptedAt,
 			JoinToken:     a.JoinToken,
 			JoinLabels:    a.JoinLabels,
-		}, true
+		}, true, nil
 	default:
 		var r Record
 		if unmarshalFn(entry.Value(), &r) != nil {
-			return Record{}, false
+			return Record{}, false, unreadable
 		}
 		r.State = state
 
-		return r, true
+		return r, true, nil
 	}
 }
 
@@ -330,7 +355,10 @@ func (w *Watcher) admit(
 	machineID string,
 	fingerprint string,
 ) error {
-	r, ok := w.read(ctx, kvPrefix+machineID)
+	r, ok, err := w.read(ctx, kvPrefix+machineID)
+	if err != nil {
+		return err
+	}
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrNoPendingAgent, machineID)
 	}
@@ -353,7 +381,10 @@ func (w *Watcher) reject(
 	machineID string,
 	reason string,
 ) error {
-	r, ok := w.read(ctx, kvPrefix+machineID)
+	r, ok, err := w.read(ctx, kvPrefix+machineID)
+	if err != nil {
+		return err
+	}
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrNoPendingAgent, machineID)
 	}
@@ -377,7 +408,10 @@ func (w *Watcher) revoke(
 	ctx context.Context,
 	machineID string,
 ) error {
-	r, ok := w.read(ctx, acceptedKVPrefix+machineID)
+	r, ok, err := w.read(ctx, acceptedKVPrefix+machineID)
+	if err != nil {
+		return err
+	}
 	if !ok {
 		return fmt.Errorf("%w: %s", ErrNoAcceptedAgent, machineID)
 	}
