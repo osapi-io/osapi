@@ -185,11 +185,26 @@ func JSONName(
 // tag are set on.
 type target struct{ s *Schema }
 
-func (t target) Enum(values []string) { t.s.Enum = values }
+// Enum sets the values that the target allows.
+func (t target) Enum(
+	values []string,
+) {
+	t.s.Enum = values
+}
 
-func (t target) Pattern(re string) { t.s.Pattern = re }
+// Pattern sets the pattern that the target matches.
+func (t target) Pattern(
+	re string,
+) {
+	t.s.Pattern = re
+}
 
-func (t target) Format(format string) { t.s.Format = format }
+// Format sets the format of the target.
+func (t target) Format(
+	format string,
+) {
+	t.s.Format = format
+}
 
 // Items is the target of the array's items. A schema with no items has
 // nothing to constrain, so the rules go to a schema nobody reads.

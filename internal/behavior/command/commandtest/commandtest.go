@@ -51,6 +51,7 @@ type caller struct {
 	sent *Request
 }
 
+// Send records the request instead of sending it.
 func (c caller) Send(
 	_ context.Context,
 	method string,

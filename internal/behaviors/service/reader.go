@@ -87,17 +87,28 @@ func (r *reader) Service(
 }
 
 // Deploy cannot write here.
-func (r *reader) Deploy(context.Context, Unit, bool) (bool, error) {
+func (r *reader) Deploy(
+	context.Context,
+	Unit,
+	bool,
+) (bool, error) {
 	return false, errReadOnly
 }
 
 // Remove cannot write here.
-func (r *reader) Remove(context.Context, string) (bool, error) {
+func (r *reader) Remove(
+	context.Context,
+	string,
+) (bool, error) {
 	return false, errReadOnly
 }
 
 // Act cannot write here.
-func (r *reader) Act(context.Context, string, string) (bool, error) {
+func (r *reader) Act(
+	context.Context,
+	string,
+	string,
+) (bool, error) {
 	return false, errReadOnly
 }
 

@@ -42,8 +42,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
@@ -61,6 +59,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // signingKey signs every token a case sends.
@@ -303,6 +302,7 @@ type beforeInput struct {
 	want reflect.Value
 }
 
+// Matches reports whether x is the job input that m wants.
 func (m beforeInput) Matches(
 	x any,
 ) bool {
@@ -329,6 +329,7 @@ func (m beforeInput) Matches(
 	return true
 }
 
+// String describes what m matches, for a mock failure.
 func (m beforeInput) String() string {
 	return fmt.Sprintf("is %v after its controller step", m.want.Interface())
 }

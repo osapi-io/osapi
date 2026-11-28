@@ -94,7 +94,10 @@ func Format(
 
 // None is the schema of a rule that the spec cannot show more of than the
 // field's type, such as a target that the controller resolves.
-func None(Target) {}
+func None(
+	Target,
+) {
+}
 
 // flags change how validation runs, not what a value may be.
 var flags = map[string]bool{
@@ -245,14 +248,33 @@ func Options(
 // options is a Target that keeps only the enum.
 type options struct{ values []string }
 
-func (o *options) Enum(values []string) { o.values = values }
+// Enum sets the values that the target allows.
+func (o *options) Enum(
+	values []string,
+) {
+	o.values = values
+}
 
-func (*options) Pattern(string) {}
+// Pattern sets the pattern that the target matches.
+func (*options) Pattern(
+	string,
+) {
+}
 
-func (*options) Format(string) {}
+// Format sets the format of the target.
+func (*options) Format(
+	string,
+) {
+}
 
-func (*options) Bound(string, float64) {}
+// Bound sets a limit of the target.
+func (*options) Bound(
+	string,
+	float64,
+) {
+}
 
+// Items is the target of each item of a list.
 func (o *options) Items() Target { return o }
 
 // Has reports whether the validate tag has the rule.

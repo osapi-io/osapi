@@ -29,8 +29,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -38,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // PermSecretUse is the permission that a request needs for each
@@ -65,6 +64,7 @@ type refusal struct {
 	resp endpoint.ErrorResponse
 }
 
+// Error is the message of the error.
 func (r *refusal) Error() string {
 	return r.resp.Error
 }

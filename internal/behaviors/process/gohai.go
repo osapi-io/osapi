@@ -26,13 +26,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/process"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // gohai reads the processes through gohai's process collector, and sends a
@@ -48,6 +47,7 @@ func newGohai(
 	return &gohai{src: h.Sources(), exec: h.Exec}, nil
 }
 
+// List is each process that gohai reads.
 func (g *gohai) List(
 	ctx context.Context,
 ) ([]Entry, error) {
@@ -64,6 +64,7 @@ func (g *gohai) List(
 	return out, nil
 }
 
+// Get is the process with the PID, read through gohai.
 func (g *gohai) Get(
 	ctx context.Context,
 	pid int,
@@ -76,6 +77,7 @@ func (g *gohai) Get(
 	return entry(*p), nil
 }
 
+// Signal sends a signal to the process with the PID.
 func (g *gohai) Signal(
 	ctx context.Context,
 	pid int,

@@ -40,8 +40,7 @@ var StartLogs = []command.LogLine{
 		Msg:   "embedded NATS server running",
 		Attrs: []slog.Attr{
 			slog.String("component", "nats"),
-			slog.String("host", "localhost"),
-			slog.Int("port", 4222),
+			slog.String("addr", "localhost:4222"),
 			slog.String("store_dir", ".nats/jetstream/"),
 			slog.String("namespace", "osapi"),
 			slog.String("auth.type", "none"),

@@ -195,7 +195,9 @@ func (n infra) allStreams() []string {
 }
 
 // kvStream is the stream of a bucket, or "" for no bucket.
-func kvStream(bucket string) string {
+func kvStream(
+	bucket string,
+) string {
 	if bucket == "" {
 		return ""
 	}
@@ -204,7 +206,9 @@ func kvStream(bucket string) string {
 }
 
 // objStream is the stream of an object store, or "" for none.
-func objStream(bucket string) string {
+func objStream(
+	bucket string,
+) string {
 	if bucket == "" {
 		return ""
 	}
@@ -230,7 +234,11 @@ type perms struct {
 }
 
 // add lets the role publish prefix+name+suffix, when name is not "".
-func (p perms) add(prefix, name, suffix string) {
+func (p perms) add(
+	prefix string,
+	name string,
+	suffix string,
+) {
 	if name != "" {
 		p.pub[prefix+name+suffix] = true
 	}
@@ -238,7 +246,9 @@ func (p perms) add(prefix, name, suffix string) {
 
 // consume lets the role read stream: its info, its consumers, their
 // messages and acks, and a direct get.
-func (p perms) consume(stream string) {
+func (p perms) consume(
+	stream string,
+) {
 	if stream == "" {
 		return
 	}
@@ -257,7 +267,9 @@ func (p perms) consume(stream string) {
 }
 
 // kv lets the role read and write bucket.
-func (p perms) kv(bucket string) {
+func (p perms) kv(
+	bucket string,
+) {
 	if bucket == "" {
 		return
 	}
@@ -266,12 +278,16 @@ func (p perms) kv(bucket string) {
 }
 
 // readObjects lets the role read the object store bucket.
-func (p perms) readObjects(bucket string) {
+func (p perms) readObjects(
+	bucket string,
+) {
 	p.consume(objStream(bucket))
 }
 
 // writeObjects lets the role write the object store bucket.
-func (p perms) writeObjects(bucket string) {
+func (p perms) writeObjects(
+	bucket string,
+) {
 	if bucket == "" {
 		return
 	}
@@ -279,7 +295,9 @@ func (p perms) writeObjects(bucket string) {
 }
 
 // admin lets the role make and update stream.
-func (p perms) admin(stream string) {
+func (p perms) admin(
+	stream string,
+) {
 	if stream == "" {
 		return
 	}

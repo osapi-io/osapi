@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/dsl"
-
 	"github.com/osapi-io/osapi/internal/validation/rule"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
@@ -145,7 +144,9 @@ var roleDescriptions = map[Role]string{
 
 // RoleDescription is what a built-in role is for, in one line, or "" for a
 // custom role.
-func RoleDescription(r Role) string {
+func RoleDescription(
+	r Role,
+) string {
 	return roleDescriptions[r]
 }
 
