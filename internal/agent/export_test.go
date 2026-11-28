@@ -102,22 +102,29 @@ func ExportExtractChanged(
 	return extractChanged(data)
 }
 
-// ExportConsumeQueryJobs exposes the private consumeQueryJobs method for testing.
-func ExportConsumeQueryJobs(
+// ExportConsumeJobs exposes the private consumeJobs method for testing.
+func ExportConsumeJobs(
 	ctx context.Context,
 	a *Agent,
-	hostname string,
-) error {
-	return a.consumeQueryJobs(ctx, hostname)
+	machineID string,
+	kind types.JobType,
+) {
+	a.consumeJobs(ctx, machineID, kind)
 }
 
-// ExportConsumeModifyJobs exposes the private consumeModifyJobs method for testing.
-func ExportConsumeModifyJobs(
-	ctx context.Context,
+// ExportJobConsumers exposes the private jobConsumers method for testing.
+func ExportJobConsumers(
 	a *Agent,
-	hostname string,
-) error {
-	return a.consumeModifyJobs(ctx, hostname)
+	machineID string,
+	kind types.JobType,
+) []string {
+	consumers := a.jobConsumers(machineID, kind)
+	names := make([]string, 0, len(consumers))
+	for _, c := range consumers {
+		names = append(names, c.name)
+	}
+
+	return names
 }
 
 // ExportCreateConsumer exposes the private createConsumer method for testing.
