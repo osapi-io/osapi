@@ -85,13 +85,14 @@ FIPS 140-3 mode is a setting of each process, not of the fleet. `GODEBUG` sets
 it when the process starts. Thus each process reports its own crypto: the
 controller, the NATS server and each agent. The report goes in each heartbeat.
 
-| Where                                      | What it shows                               |
-| ------------------------------------------ | ------------------------------------------- |
-| `osapi client health status`               | The FIPS column of the controller and NATS  |
-| `osapi client health status --json`        | The `crypto` of each component              |
-| `osapi client agent get --hostname <name>` | The FIPS line and the crypto of the agent   |
-| The dashboard and the agent card in the UI | The FIPS line, with each gap in its tooltip |
-| `osapi pki list` and `osapi pki key list`  | Whether FIPS 140-3 approves each key        |
+| Where                                      | What it shows                                                      |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `osapi client pki tls list`                | The TLS section of each component, one line each, with its summary |
+| `osapi client pki tls get --component <c>` | One section in full: the reasons, certificates, listeners, crypto  |
+| `osapi client health status`               | The FIPS column of the controller and NATS                         |
+| `osapi client agent get --hostname <name>` | The FIPS line and the crypto of the agent                          |
+| The dashboard and the agent card in the UI | The TLS summary, which opens the section                           |
+| `osapi pki list` and `osapi pki key list`  | Whether FIPS 140-3 approves each key                               |
 
 The report of a process has:
 
@@ -113,8 +114,49 @@ The report of a process has:
   approved algorithm can still fail in only mode, as NATS authentication does.
   `only_mode` says so, and `reason` names the issue.
 - **The gaps:** each reason that the process is not in FIPS 140-3 mode with only
-  approved algorithms. The FIPS line is the mode, then `approved` when there is
-  no gap, or the number of gaps.
+  approved algorithms.
+
+The FIPS line is the mode, then what is not approved, by kind. With nothing that
+is not approved, it is the mode alone (`off`), or the mode with `approved`:
+
+```text
+off
+on · approved
+off · 1 TLS listener not approved
+only · 2 TLS listeners and 1 algorithm not approved
+```
+
+## The TLS section of a component
+
+`osapi client pki tls` shows one section for each component: the controller, the
+NATS server and each agent. The UI shows the same section when you click the
+summary on the dashboard or on the card of an agent.
+
+```bash
+osapi client pki tls list
+osapi client pki tls get --component nats
+osapi client pki tls get --component agent --hostname web-01
+```
+
+A section has these parts:
+
+- **The summary:** the FIPS line and the days left of the certificate that
+  expires first, such as `FIPS off · cert 62d`. The summary goes yellow when a
+  certificate has 30 days or less, and red when a certificate is expired.
+- **FIPS 140-3:** the mode, and each reason as a sentence, with what closes it.
+  A reason can name an issue. In FIPS 140-3 only mode, the NATS server refuses
+  two algorithms that FIPS 140-3 approves. The nkeys library signs NATS JWTs
+  (osapi-io/osapi#1527), and nats-server makes its own GCM nonce for the
+  JetStream store (osapi-io/osapi#1549). Thus the section of the NATS server
+  shows both as reasons until those issues close.
+- **Certificates:** each certificate that the component serves, from
+  `pki cert list`. Each has its subject, its names, its issuer, its validity and
+  the days left. Its expiry is `ok`, `soon` (30 days or less), `expired`, or
+  `unknown` when the component could not read it.
+- **Listeners:** each TLS listener, with its lowest version, its suites and its
+  groups, and whether FIPS 140-3 approves them.
+- **Versions and algorithms:** the Go version, the version of the Go
+  Cryptographic Module, and each algorithm with whether FIPS 140-3 approves it.
 
 A test holds `only_mode` to what the code does. Each algorithm that claims to
 operate in only mode is in a package that the `fips140=only` job tests. For NATS

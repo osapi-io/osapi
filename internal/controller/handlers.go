@@ -21,6 +21,7 @@
 package controller
 
 import (
+	"context"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -119,7 +120,7 @@ func handlers(
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			secretsDeps(d),
 			secretDeps(d),
-			pkiDeps(d),
+			pkiDeps(d, reporter.Status),
 			// Each behavior's endpoint group, which the gen packages that
 			// internal/behaviors/all/gen imports register.
 			dispatch.Deps{JobClient: d.jobs},
@@ -183,6 +184,7 @@ func agentDeps(
 // the NATS server on this host, read from its files at each request.
 func pkiDeps(
 	d handlerDeps,
+	status func(ctx context.Context) healthEndpoint.StatusResponse,
 ) pkiEndpoint.Deps {
 	host, _ := os.Hostname()
 	fsys := osfs.NewWithNoIdm()
@@ -192,9 +194,28 @@ func pkiDeps(
 		Agents:       d.jobs,
 		Hostname:     host,
 		Local:        func() []pki.Cert { return pki.ReadCerts(fsys, srcs, time.Now()) },
+		Processes:    func(ctx context.Context) []pkiEndpoint.Process { return processes(ctx, status) },
 		Rotation:     d.keyRotation,
 		CertRotation: d.certRotation,
 	}
+}
+
+// processes are the controller and the NATS server that the registry of
+// status, health status, has, each with its crypto, for the TLS sections of the pki group.
+func processes(
+	ctx context.Context,
+	status func(ctx context.Context) healthEndpoint.StatusResponse,
+) []pkiEndpoint.Process {
+	var out []pkiEndpoint.Process
+	for _, e := range status(ctx).Registry {
+		c := pkiEndpoint.Component(e.Type)
+		if c != pkiEndpoint.ComponentController && c != pkiEndpoint.ComponentNATS {
+			continue
+		}
+		out = append(out, pkiEndpoint.Process{Component: c, Hostname: e.Hostname, Crypto: e.Crypto})
+	}
+
+	return out
 }
 
 // admissionDeps is what the admission group's handlers use: the watcher of

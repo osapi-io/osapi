@@ -29,6 +29,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
 	"net"
@@ -49,6 +50,9 @@ func TestCertPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(CertPublicTestSuite))
 }
 
+// certNotBefore is when the certificates of certPEM start to be valid.
+var certNotBefore = time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+
 // certPEM is a self-signed certificate of key, signed with alg, valid for
 // a day from now, for web-01 and 10.0.0.1. FIPS 140-3 mode does not make a
 // certificate with an algorithm that it does not approve, so a test that
@@ -59,6 +63,8 @@ func (s *CertPublicTestSuite) certPEM(
 ) []byte {
 	tmpl := &x509.Certificate{
 		SerialNumber: big.NewInt(1), NotAfter: time.Now().Add(49 * time.Hour),
+		NotBefore:          certNotBefore,
+		Subject:            pkix.Name{CommonName: "web-01"},
 		SignatureAlgorithm: alg, DNSNames: []string{"web-01"},
 		IPAddresses: []net.IP{net.ParseIP("10.0.0.1")},
 	}
@@ -106,6 +112,9 @@ func (s *CertPublicTestSuite) TestReadCert() {
 			s.Equal(tt.fips, *got.FIPS)
 			s.Equal("self-signed", got.Source)
 			s.Equal([]string{"web-01", "10.0.0.1"}, got.Names)
+			s.Equal("CN=web-01", got.Subject)
+			s.Equal("CN=web-01", got.Issuer)
+			s.Equal(certNotBefore, got.NotBefore)
 			s.Equal(2, *got.DaysLeft)
 			s.Contains(got.Fingerprint, "SHA256:")
 		})

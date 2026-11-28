@@ -25,6 +25,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"runtime"
+	"slices"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/tlspolicy"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -165,22 +167,82 @@ func minVersion(
 // config sets none.
 const defaultGroups = "crypto/tls default"
 
-// Verdict is r in one line, for a table: its mode, then approved when it has
-// no gap, or the number of its gaps. FIPS 140-3 mode off, with no other gap,
-// is off.
+// Verdict is r in one line, for a table: its mode, then what is not
+// approved, by kind. With nothing that is not approved it is the mode
+// alone, off, or on or only with approved.
+//
+//	off
+//	on · approved
+//	off · 1 TLS listener not approved
+//	only · 2 TLS listeners and 1 algorithm not approved
 func (r Report) Verdict() string {
-	gaps := len(r.Gaps)
-	if r.Mode == types.FIPSOff {
-		gaps--
+	var parts []string
+	if n := r.notApprovedListeners(); n > 0 {
+		parts = append(parts, count(n, "TLS listener"))
+	}
+	if n := r.notApprovedAlgorithms(); n > 0 {
+		parts = append(parts, count(n, "algorithm"))
 	}
 	switch {
-	case gaps == 0 && r.Mode == types.FIPSOff:
+	case len(parts) > 0:
+		return string(r.Mode) + " · " + strings.Join(parts, " and ") + " not approved"
+	case r.Mode == types.FIPSOff:
 		return string(r.Mode)
-	case gaps == 0:
-		return string(r.Mode) + ", approved"
-	case gaps == 1:
-		return string(r.Mode) + ", 1 gap"
 	default:
-		return fmt.Sprintf("%s, %d gaps", r.Mode, gaps)
+		return string(r.Mode) + " · approved"
 	}
+}
+
+// Reasons are, as sentences, each reason that r is not in FIPS 140-3 mode
+// with only approved algorithms, with what closes it: the gaps, then each
+// approved algorithm that FIPS 140-3 only mode still refuses, with the
+// issue that tracks it.
+func (r Report) Reasons() []string {
+	out := slices.Clone(r.Gaps)
+	for _, a := range r.Algorithms {
+		if a.Approved && !a.OnlyMode && a.Reason != "" {
+			out = append(out, "FIPS 140-3 only mode refuses "+a.Name+": "+a.Reason)
+		}
+	}
+
+	return out
+}
+
+// notApprovedListeners are the TLS listeners of r that negotiate a suite or
+// a group that FIPS 140-3 does not approve.
+func (r Report) notApprovedListeners() int {
+	n := 0
+	for _, l := range r.Listeners {
+		if l.TLS && !l.Approved {
+			n++
+		}
+	}
+
+	return n
+}
+
+// notApprovedAlgorithms are the algorithms of r that FIPS 140-3 does not
+// approve.
+func (r Report) notApprovedAlgorithms() int {
+	n := 0
+	for _, a := range r.Algorithms {
+		if !a.Approved {
+			n++
+		}
+	}
+
+	return n
+}
+
+// count is n of what, as a person reads it: 1 TLS listener, 2 TLS
+// listeners.
+func count(
+	n int,
+	what string,
+) string {
+	if n == 1 {
+		return "1 " + what
+	}
+
+	return fmt.Sprintf("%d %ss", n, what)
 }

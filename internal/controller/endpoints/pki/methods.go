@@ -27,6 +27,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/certrotation"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
+	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
@@ -86,15 +87,24 @@ func certs(
 	ctx context.Context,
 	d Deps,
 ) ([]Cert, error) {
+	agents, err := d.Agents.ListAgents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return certsOf(d, agents), nil
+}
+
+// certsOf are the controller's certificates, then those of each of agents.
+func certsOf(
+	d Deps,
+	agents []job.AgentInfo,
+) []Cert {
 	var out []Cert
 	if d.Local != nil {
 		for _, c := range d.Local() {
 			out = append(out, of(d.Hostname, c))
 		}
-	}
-	agents, err := d.Agents.ListAgents(ctx)
-	if err != nil {
-		return nil, err
 	}
 	for _, a := range agents {
 		for _, c := range a.Certificates {
@@ -102,7 +112,7 @@ func certs(
 		}
 	}
 
-	return out, nil
+	return out
 }
 
 // of is c, a certificate of host, in the response.
@@ -112,7 +122,8 @@ func of(
 ) Cert {
 	return Cert{
 		Hostname: host, Name: c.Name, State: c.State, Component: c.Component,
-		Source: c.Source, File: c.File, Names: c.Names, Expires: c.Expires,
+		Source: c.Source, File: c.File, Names: c.Names, Subject: c.Subject,
+		Issuer: c.Issuer, NotBefore: c.NotBefore, Expires: c.Expires,
 		DaysLeft: c.DaysLeft, Fingerprint: c.Fingerprint, Key: c.Key,
 		Signature: c.Signature, FIPS: c.FIPS,
 	}

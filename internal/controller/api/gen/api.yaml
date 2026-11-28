@@ -2513,6 +2513,150 @@ paths:
         - doc: Rotate the NATS server's certificate
           input: {}
       x-osapi-method: natscertrotate
+  /api/pki/tls:
+    get:
+      description: 'Lists the TLS section of the controller, of the NATS server and of each agent: the FIPS 140-3 mode, with each reason that the component is not approved as a sentence; each certificate that it serves, from pki cert list, with its subject, its issuer, its validity and the days that are left; each TLS listener, with its lowest version, its suites and its groups, and whether FIPS 140-3 approves them; and the Go version, the module and the algorithms of its crypto. A certificate within 30 days of its end is soon, and one past its end is expired.'
+      operationId: ListPKITLS
+      parameters:
+        - description: 'Only the components of this host: the controller''s hostname, or an agent''s.'
+          in: query
+          name: hostname
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+        - description: 'Only this component: controller, nats or agent.'
+          in: query
+          name: component
+          schema:
+            $ref: '#/components/schemas/Component'
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,enum
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKITLSList'
+          description: The TLS section of each component.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:read
+      summary: List the TLS of each component
+      tags:
+        - PKI_API_pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: List the TLS of each component
+          input:
+            component: nats
+        - doc: List the TLS of each component, with --hostname web-01
+          input:
+            hostname: web-01
+        - doc: 'List the TLS of each component, with '
+          input: {}
+      x-osapi-method: tls
+  /api/pki/tls/{component}:
+    get:
+      description: 'Reads the TLS section of one component of one host in full: the controller or the NATS server of the controller''s host when the hostname is empty, or the agent of the hostname. It has the reasons, each certificate, each listener and each algorithm.'
+      operationId: GetPKITLS
+      parameters:
+        - description: 'The component: controller, nats or agent.'
+          in: path
+          name: component
+          required: true
+          schema:
+            $ref: '#/components/schemas/Component'
+          x-oapi-codegen-extra-tags:
+            validate: required,enum
+        - description: The host of the component. Empty is the controller's host, which an agent's section must name.
+          in: query
+          name: hostname
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=255
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PKITLSSection'
+          description: The TLS section of the component.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no such component.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - pki:read
+      summary: Get the TLS of one component
+      tags:
+        - PKI_API_pki_operations
+      x-osapi-area: fleet
+      x-osapi-examples:
+        - doc: Get the TLS of one component
+          input:
+            component: agent
+            hostname: web-01
+        - doc: Get the TLS of one component, with --component controller
+          input:
+            component: controller
+      x-osapi-method: tlsget
   /api/secret:
     get:
       description: List each vault of controller.secrets.vaults, with its type, its targets and whether it answers.
@@ -9720,7 +9864,7 @@ components:
           description: The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys.
           type: string
         fips:
-          description: The FIPS 140-3 mode of the agent's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail.
+          description: The FIPS 140-3 mode of the agent's process, then what is not approved, by kind, such as off · 1 TLS listener not approved, or approved. pki tls has the section, with each reason.
           type: string
         fqdn:
           description: Fully qualified domain name.
@@ -10830,6 +10974,7 @@ components:
         - GetPKICert
         - GetPKIKeyRotation
         - GetPKINATSCertRotation
+        - GetPKITLS
         - GetSecret
         - GetSecretValue
         - GetSecretVaults
@@ -10837,6 +10982,7 @@ components:
         - GetTrace
         - ListDeadLetters
         - ListPKICerts
+        - ListPKITLS
         - PostFile
         - PostNodeCertificate
         - PostNodeCommandExec
@@ -11188,7 +11334,7 @@ components:
         crypto:
           $ref: '#/components/schemas/CryptoReport'
         fips:
-          description: The FIPS 140-3 mode of the component's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail.
+          description: The FIPS 140-3 mode of the component's process, then what is not approved, by kind, such as off · 1 TLS listener not approved, or approved. pki tls has the section, with each reason.
           example: "off"
           type: string
         hostname:
@@ -11648,6 +11794,19 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,valid_target
       type: object
+    Component:
+      enum:
+        - controller
+        - nats
+        - agent
+      type: string
+    Expiry:
+      enum:
+        - ok
+        - soon
+        - expired
+        - unknown
+      type: string
     PKICert:
       properties:
         component:
@@ -11674,6 +11833,9 @@ components:
           description: The host that serves the certificate.
           example: web-01
           type: string
+        issuer:
+          description: The issuer of the certificate, as a distinguished name. The subject again for a self-signed one.
+          type: string
         key:
           description: The algorithm and size of the public key, such as ECDSA P-256.
           type: string
@@ -11686,6 +11848,10 @@ components:
           items:
             type: string
           type: array
+        not_before:
+          description: When the certificate starts to be valid.
+          format: date-time
+          type: string
         signature:
           description: The algorithm that signed the certificate, such as ECDSA-SHA256.
           type: string
@@ -11696,6 +11862,9 @@ components:
         state:
           description: ok; not made, when the component has not started on the host; or unreadable, with the reason.
           example: ok
+          type: string
+        subject:
+          description: The subject of the certificate, as a distinguished name.
           type: string
       required:
         - hostname
@@ -11805,6 +11974,125 @@ components:
         - hostname
         - machine_id
         - has_next
+      type: object
+    PKITLSCert:
+      properties:
+        days_left:
+          description: The days that are left until it expires.
+          type: integer
+        expires:
+          description: When the certificate expires.
+          format: date-time
+          type: string
+        expiry:
+          $ref: '#/components/schemas/Expiry'
+        fips_approved:
+          description: Whether FIPS 186-5 and SP 800-131A approve the key and the signature algorithms.
+          type: boolean
+        issuer:
+          description: The issuer of the certificate. The subject again for a self-signed one.
+          example: CN=osapi-controller
+          type: string
+        key:
+          description: The algorithm and size of the public key, such as ECDSA P-256.
+          example: ECDSA P-256
+          type: string
+        name:
+          description: The name of the certificate, such as api or agent-metrics.
+          example: api
+          type: string
+        names:
+          description: 'The DNS names and the IP addresses that the certificate is for: its subject alternative names.'
+          items:
+            type: string
+          type: array
+        not_before:
+          description: When the certificate starts to be valid.
+          format: date-time
+          type: string
+        source:
+          description: self-signed, which osapi made, or cert_file, the operator's.
+          example: self-signed
+          type: string
+        state:
+          description: ok; not made, when the component has not started on the host; or unreadable, with the reason.
+          example: ok
+          type: string
+        subject:
+          description: The subject of the certificate, as a distinguished name.
+          example: CN=osapi-controller
+          type: string
+      required:
+        - name
+        - state
+        - source
+        - expiry
+      type: object
+    PKITLSList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PKITLSSection'
+          type: array
+        total_items:
+          description: The number of components.
+          type: integer
+      required:
+        - items
+        - total_items
+      type: object
+    PKITLSSection:
+      properties:
+        algorithms:
+          description: Each algorithm that the component uses, with whether FIPS 140-3 approves it.
+          items:
+            $ref: '#/components/schemas/CryptoAlgorithm'
+          type: array
+        certificates:
+          description: Each certificate that the component serves, from the certificates of pki cert list.
+          items:
+            $ref: '#/components/schemas/PKITLSCert'
+          type: array
+        component:
+          $ref: '#/components/schemas/Component'
+        expiry:
+          $ref: '#/components/schemas/Expiry'
+        fips:
+          description: The FIPS 140-3 mode, then what is not approved, by kind, or approved.
+          example: "off"
+          type: string
+        go:
+          description: The Go version that built the component.
+          example: go1.27.3
+          type: string
+        hostname:
+          description: The host of the component.
+          example: osapi-controller
+          type: string
+        listeners:
+          description: Each TLS listener of the component, with its lowest TLS version, its suites and its groups, and whether FIPS 140-3 approves them.
+          items:
+            $ref: '#/components/schemas/CryptoListener'
+          type: array
+        module:
+          description: The version of the Go Cryptographic Module in the component.
+          example: v1.0.0
+          type: string
+        reasons:
+          description: Each reason that the component is not in FIPS 140-3 mode with only approved algorithms, as a sentence with what closes it, or with the issue that tracks it.
+          items:
+            type: string
+          type: array
+        summary:
+          description: 'The section in one line, for a table: the FIPS 140-3 verdict, then the days left of the certificate that expires first.'
+          example: FIPS off · cert 62d
+          type: string
+      required:
+        - component
+        - hostname
+        - summary
+        - fips
+        - expiry
       type: object
     SecretCreateRequest:
       properties:

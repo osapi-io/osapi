@@ -26,6 +26,9 @@ import (
 	"log/slog"
 	"testing"
 
+	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
+	pkiEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/pki"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
 
 	"github.com/stretchr/testify/suite"
@@ -68,7 +71,18 @@ func (s *HandlersPublicTestSuite) TestPKIDeps() {
 	var cfg config.Config
 	cfg.Controller.PKI.KeyDir = s.T().TempDir()
 	cfg.NATS.Server.KeyDir = s.T().TempDir()
-	d := controller.ExportPKIDeps(cfg)
+	report := &cryptoreport.Report{Mode: types.FIPSOff}
+	d := controller.ExportPKIDeps(cfg, func(context.Context) healthEndpoint.StatusResponse {
+		return healthEndpoint.StatusResponse{Registry: []healthEndpoint.ComponentEntry{
+			{Type: "controller", Hostname: "hub", Crypto: report},
+			{Type: "nats", Hostname: "hub"},
+			{Type: "agent", Hostname: "web-01"},
+		}}
+	})
+	s.Equal([]pkiEndpoint.Process{
+		{Component: pkiEndpoint.ComponentController, Hostname: "hub", Crypto: report},
+		{Component: pkiEndpoint.ComponentNATS, Hostname: "hub"},
+	}, d.Processes(context.Background()))
 
 	s.NotEmpty(d.Hostname)
 	got := d.Local()

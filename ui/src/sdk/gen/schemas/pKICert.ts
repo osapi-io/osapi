@@ -20,16 +20,22 @@ export interface PKICert {
   fips_approved?: boolean;
   /** The host that serves the certificate. */
   hostname: string;
+  /** The issuer of the certificate, as a distinguished name. The subject again for a self-signed one. */
+  issuer?: string;
   /** The algorithm and size of the public key, such as ECDSA P-256. */
   key?: string;
   /** The name of the certificate, such as api or agent-metrics. */
   name: string;
   /** The DNS names and the IP addresses that the certificate is for. */
   names?: string[];
+  /** When the certificate starts to be valid. */
+  not_before?: string;
   /** The algorithm that signed the certificate, such as ECDSA-SHA256. */
   signature?: string;
   /** self-signed, which osapi made, or cert_file, the operator's. */
   source: string;
   /** ok; not made, when the component has not started on the host; or unreadable, with the reason. */
   state: string;
+  /** The subject of the certificate, as a distinguished name. */
+  subject?: string;
 }

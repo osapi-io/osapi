@@ -122,21 +122,21 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ComponentEntry
 
-| Field        | Type               | Description                                                                                                                                                           |
-| ------------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Address`    | `string`           | Listen address of a sub-component, such as :8080.                                                                                                                     |
-| `Age`        | `string`           | Time since component started.                                                                                                                                         |
-| `Components` | `[]ComponentEntry` | The sub-components of the component, such as its api and its metrics server, sorted by name.                                                                          |
-| `Conditions` | `[]ConditionType`  | Active conditions.                                                                                                                                                    |
-| `CPUPercent` | `float64`          | Process CPU usage percentage.                                                                                                                                         |
-| `Crypto`     | `CryptoReport`     |                                                                                                                                                                       |
-| `Fips`       | `string`           | The FIPS 140-3 mode of the component's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail. |
-| `Hostname`   | `string`           | Component hostname.                                                                                                                                                   |
-| `MemBytes`   | `int64`            | Process RSS memory in bytes.                                                                                                                                          |
-| `Status`     | `string`           | Component status.                                                                                                                                                     |
-| `Type`       | `string`           | Component type (agent, controller, nats), or the name of a sub-component, such as api.                                                                                |
-| `URL`        | `string`           | Where a person opens a sub-component, from its url config key.                                                                                                        |
-| `Version`    | `string`           | Build version of the component's binary.                                                                                                                              |
+| Field        | Type               | Description                                                                                                                                                                            |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Address`    | `string`           | Listen address of a sub-component, such as :8080.                                                                                                                                      |
+| `Age`        | `string`           | Time since component started.                                                                                                                                                          |
+| `Components` | `[]ComponentEntry` | The sub-components of the component, such as its api and its metrics server, sorted by name.                                                                                           |
+| `Conditions` | `[]ConditionType`  | Active conditions.                                                                                                                                                                     |
+| `CPUPercent` | `float64`          | Process CPU usage percentage.                                                                                                                                                          |
+| `Crypto`     | `CryptoReport`     |                                                                                                                                                                                        |
+| `Fips`       | `string`           | The FIPS 140-3 mode of the component's process, then what is not approved, by kind, such as off · 1 TLS listener not approved, or approved. pki tls has the section, with each reason. |
+| `Hostname`   | `string`           | Component hostname.                                                                                                                                                                    |
+| `MemBytes`   | `int64`            | Process RSS memory in bytes.                                                                                                                                                           |
+| `Status`     | `string`           | Component status.                                                                                                                                                                      |
+| `Type`       | `string`           | Component type (agent, controller, nats), or the name of a sub-component, such as api.                                                                                                 |
+| `URL`        | `string`           | Where a person opens a sub-component, from its url config key.                                                                                                                         |
+| `Version`    | `string`           | Build version of the component's binary.                                                                                                                                               |
 
 ### ComponentType
 

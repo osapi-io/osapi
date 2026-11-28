@@ -461,6 +461,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindDeps,
+			Name: "Processes",
+			Does: "The controller and the NATS server, each with the crypto of its registration, which handlers.go takes from the registry of health status at each call. A test gives a func that returns fixed ones, or nil for none.",
+			When: "For the pki group, whose TLS sections have the crypto of each component.",
+		},
+		{
+			Kind: KindDeps,
 			Name: "Hostname",
 			Does: "The hostname of the controller's host, from os.Hostname, which names the host of the controller's own certificates. A test gives a fixed name.",
 			When: "For the pki group, whose get takes a certificate of the controller's host when the hostname is empty.",

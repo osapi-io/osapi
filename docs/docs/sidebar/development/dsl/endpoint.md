@@ -575,6 +575,14 @@ test gives a func that returns fixed ones, or nil for none.
 
 Use: For the pki group.
 
+### `Processes`
+
+The controller and the NATS server, each with the crypto of its registration,
+which handlers.go takes from the registry of health status at each call. A test
+gives a func that returns fixed ones, or nil for none.
+
+Use: For the pki group, whose TLS sections have the crypto of each component.
+
 ### `Hostname`
 
 The hostname of the controller's host, from os.Hostname, which names the host of

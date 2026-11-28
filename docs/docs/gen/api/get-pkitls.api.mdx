@@ -1,0 +1,69 @@
+---
+id: get-pkitls
+title: "Get the TLS of one component"
+description: "Reads the TLS section of one component of one host in full: the controller or the NATS server of the controller's host when the hostname is empty, or the agent of the hostname. It has the reasons, each certificate, each listener and each algorithm."
+sidebar_label: "Get the TLS of one component"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get the TLS of one component"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/pki/tls/{component}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads the TLS section of one component of one host in full: the controller or the NATS server of the controller's host when the hostname is empty, or the agent of the hostname. It has the reasons, each certificate, each listener and each algorithm.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-pkitls.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-pkitls.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-pkitls.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

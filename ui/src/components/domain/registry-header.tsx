@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import type { ComponentEntry } from "@/sdk/gen/schemas";
+import type { ComponentEntry, PKITLSSection } from "@/sdk/gen/schemas";
+import { TLSSummary } from "@/components/domain/tls-section";
 import { useStatus } from "@/hooks/use-status";
 import { formatBytes } from "@/lib/format";
 
@@ -9,10 +10,13 @@ import { formatBytes } from "@/lib/format";
 export function RegistryHeader({
   entry,
   reference,
+  tls,
 }: {
   entry?: ComponentEntry;
   // reference is the controller's version, which the page header shows.
   reference?: string;
+  // tls is the component's TLS section, which its summary opens.
+  tls?: PKITLSSection;
 }) {
   const statusColor = useStatus();
   if (!entry) return null;
@@ -57,8 +61,13 @@ export function RegistryHeader({
           {entry.version}
         </p>
       )}
-      {/* FIPS 140-3 mode and the gaps of the process, in the title. */}
-      {entry.fips && <FIPSLine fips={entry.fips} gaps={entry.crypto?.gaps} />}
+      {/* The TLS summary, which opens the section; FIPS alone when the
+          token cannot read the sections. */}
+      {tls ? (
+        <TLSSummary section={tls} />
+      ) : (
+        entry.fips && <FIPSLine fips={entry.fips} gaps={entry.crypto?.gaps} />
+      )}
     </div>
   );
 }
@@ -68,7 +77,7 @@ export function RegistryHeader({
 export function FIPSLine({ fips, gaps }: { fips: string; gaps?: string[] }) {
   return (
     <p
-      className={`mt-0.5 truncate text-[10px] ${fips.endsWith("approved") ? "text-text-muted" : "text-status-pending"}`}
+      className={`mt-0.5 truncate text-[10px] ${fips.endsWith(" · approved") ? "text-text-muted" : "text-status-pending"}`}
       title={gaps?.join("\n")}
     >
       FIPS {fips}

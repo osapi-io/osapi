@@ -16,6 +16,7 @@ import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
 import { useCerts } from "@/hooks/use-certs";
+import { useTLS } from "@/hooks/use-tls";
 import { CERT_WARN_DAYS, certSummary } from "@/lib/certs";
 import { Activity } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
@@ -40,6 +41,7 @@ export function Dashboard() {
     refresh: refreshAgents,
   } = useAgents();
   const certs = useCerts();
+  const tls = useTLS();
   const expiry = certSummary(certs.certs);
 
   // Filter out pending agents — they're managed in Admin > Admission.
@@ -190,6 +192,7 @@ export function Dashboard() {
                     <RegistryHeader
                       entry={controllerEntry}
                       reference={health.version}
+                      tls={tls.find("controller", controllerEntry?.hostname)}
                     />
                     {grouped.controller.map((row, i) => (
                       <ComponentRow
@@ -214,6 +217,7 @@ export function Dashboard() {
                       <RegistryHeader
                         entry={natsEntry}
                         reference={health.version}
+                        tls={tls.find("nats", natsEntry?.hostname)}
                       />
                       {health.nats && (
                         <p className="truncate border-b border-border/20 px-3 py-1.5 text-xs text-text-muted">
@@ -307,6 +311,7 @@ export function Dashboard() {
                   key={agent.hostname}
                   agent={agent}
                   controllerVersion={health.version}
+                  tls={tls.find("agent", agent.hostname)}
                   components={
                     health?.registry?.find(
                       (r) =>

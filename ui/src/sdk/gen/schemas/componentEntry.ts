@@ -19,7 +19,7 @@ export interface ComponentEntry {
   /** Process CPU usage percentage. */
   cpu_percent?: number;
   crypto?: CryptoReport;
-  /** The FIPS 140-3 mode of the component's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail. */
+  /** The FIPS 140-3 mode of the component's process, then what is not approved, by kind, such as off · 1 TLS listener not approved, or approved. pki tls has the section, with each reason. */
   fips?: string;
   /** Component hostname. */
   hostname?: string;

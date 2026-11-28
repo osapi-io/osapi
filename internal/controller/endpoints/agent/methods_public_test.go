@@ -194,7 +194,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 			},
 			validateFunc: func(got agent.Info) {
 				s.Equal("m-1", got.MachineID)
-				s.Equal("on, approved", got.FIPS, "the verdict of the agent's crypto")
+				s.Equal("on · approved", got.FIPS)
 				s.Equal(types.FIPSOn, got.Crypto.Mode)
 				s.Equal("v1.4.0", got.Version)
 				s.Equal(map[string]string{"role": "web"}, got.Labels)

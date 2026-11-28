@@ -37,6 +37,11 @@ var examples = []struct {
 	{"rotate", "Rotate the controller's key", runRotate},
 	{"natscertrotation", "Show the rotation of the NATS server's certificate", runNatscertrotation},
 	{"natscertrotate", "Rotate the NATS server's certificate", runNatscertrotate},
+	{"tls", "List the TLS of each component", runTls},
+	{"tls-2", "List the TLS of each component, with --hostname web-01", runTls2},
+	{"tls-3", "List the TLS of each component, with ", runTls3},
+	{"tlsget", "Get the TLS of one component", runTlsget},
+	{"tlsget-2", "Get the TLS of one component, with --component controller", runTlsget2},
 }
 
 // runList runs the example list: list the certificates of the fleet.
@@ -136,6 +141,71 @@ func runNatscertrotate(
 	c *client.Client,
 ) error {
 	resp, err := c.Pki.Natscertrotate(ctx)
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runTls runs the example tls: list the TLS of each component.
+func runTls(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Tls(ctx, client.PkiTlsParams{Component: client.Component("nats")})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runTls2 runs the example tls-2: list the TLS of each component, with --hostname web-01.
+func runTls2(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Tls(ctx, client.PkiTlsParams{Hostname: "web-01"})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runTls3 runs the example tls-3: list the TLS of each component, with.
+func runTls3(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Tls(ctx, client.PkiTlsParams{})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runTlsget runs the example tlsget: get the TLS of one component.
+func runTlsget(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Tlsget(ctx, client.Component("agent"), client.PkiTlsgetParams{Hostname: "web-01"})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runTlsget2 runs the example tlsget-2: get the TLS of one component, with --component controller.
+func runTlsget2(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Pki.Tlsget(ctx, client.Component("controller"), client.PkiTlsgetParams{})
 	if err != nil {
 		return err
 	}

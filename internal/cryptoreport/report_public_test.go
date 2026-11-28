@@ -231,35 +231,86 @@ func (s *ReportPublicTestSuite) TestCertificates() {
 }
 
 func (s *ReportPublicTestSuite) TestVerdict() {
+	open := cryptoreport.Listener{Name: "api", TLS: true}
+	pinned := cryptoreport.Listener{Name: "api", TLS: true, Approved: true}
+	md5 := cryptoreport.Algorithm{Name: "ssh", Algorithm: "MD5"}
 	tests := []struct {
 		name   string
 		report cryptoreport.Report
 		want   string
 	}{
 		{
-			name:   "when the mode is off and it is the one gap",
-			report: cryptoreport.Report{Mode: types.FIPSOff, Gaps: []string{"off"}},
-			want:   "off",
+			name: "when the mode is off and the rest is approved, it is the mode",
+			report: cryptoreport.Report{
+				Mode:      types.FIPSOff,
+				Listeners: []cryptoreport.Listener{pinned},
+			},
+			want: "off",
 		},
 		{
-			name:   "when the mode is off with one other gap",
-			report: cryptoreport.Report{Mode: types.FIPSOff, Gaps: []string{"off", "md5"}},
-			want:   "off, 1 gap",
+			name: "when a listener is not approved, it says so",
+			report: cryptoreport.Report{
+				Mode:      types.FIPSOff,
+				Listeners: []cryptoreport.Listener{open},
+			},
+			want: "off · 1 TLS listener not approved",
 		},
 		{
-			name:   "when the mode is on with no gap",
+			name: "when a listener serves no TLS, it is not counted",
+			report: cryptoreport.Report{
+				Mode:      types.FIPSOff,
+				Listeners: []cryptoreport.Listener{{Name: "metrics"}},
+			},
+			want: "off",
+		},
+		{
+			name:   "when the mode is on with nothing not approved, it is approved",
 			report: cryptoreport.Report{Mode: types.FIPSOn},
-			want:   "on, approved",
+			want:   "on · approved",
 		},
 		{
-			name:   "when the mode is only with two gaps",
-			report: cryptoreport.Report{Mode: types.FIPSOnly, Gaps: []string{"a", "b"}},
-			want:   "only, 2 gaps",
+			name: "when listeners and an algorithm are not approved, it counts each kind",
+			report: cryptoreport.Report{
+				Mode:       types.FIPSOnly,
+				Listeners:  []cryptoreport.Listener{open, open},
+				Algorithms: []cryptoreport.Algorithm{md5},
+			},
+			want: "only · 2 TLS listeners and 1 algorithm not approved",
 		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.Equal(tc.want, tc.report.Verdict())
+		})
+	}
+}
+
+func (s *ReportPublicTestSuite) TestReasons() {
+	tests := []struct {
+		name   string
+		report cryptoreport.Report
+		want   []string
+	}{
+		{
+			name: "when an approved algorithm fails in only mode, it follows the gaps, with its issue",
+			report: cryptoreport.Report{
+				Gaps:       []string{"FIPS 140-3 mode is off: set GODEBUG=fips140=on"},
+				Algorithms: []cryptoreport.Algorithm{cryptoreport.Seal, cryptoreport.NATSAuth},
+			},
+			want: []string{
+				"FIPS 140-3 mode is off: set GODEBUG=fips140=on",
+				"FIPS 140-3 only mode refuses NATS operator, account and user JWTs: " +
+					cryptoreport.NATSAuth.Reason,
+			},
+		},
+		{
+			name:   "when there is no gap and each algorithm works in only mode, there is no reason",
+			report: cryptoreport.Report{Algorithms: []cryptoreport.Algorithm{cryptoreport.Seal}},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.report.Reasons())
 		})
 	}
 }

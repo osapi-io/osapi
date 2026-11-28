@@ -39,6 +39,8 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Area(area.Fleet),
 	endpoint.SubDoc("cert", "Read the certificates of the controller and of each agent"),
 	endpoint.SubDoc("key", "Rotate the controller's key with no new admission of the agents"),
+	endpoint.SubDoc("tls",
+		"Show the TLS of each component: FIPS, certificates, listeners and crypto"),
 	endpoint.SubDoc("nats",
 		"Rotate the NATS server's certificate with no restart and no new join of the agents"),
 	endpoint.Title("PKI API"),
@@ -68,6 +70,56 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--hostname web-01").
 		Prints(sampleList).
 		Fails("a hostname over 255 characters", ListInput{Hostname: strings.Repeat("a", 256)}),
+	endpoint.Get[TLSListInput, TLSList]("tls").
+		Handle(TLSSections).
+		Sub("tls").
+		Use("list").
+		ID("ListPKITLS").
+		Describe("List the TLS of each component").
+		Explain("Lists the TLS section of the controller, of the NATS server and of "+
+			"each agent: the FIPS 140-3 mode, with each reason that the component is "+
+			"not approved as a sentence; each certificate that it serves, from pki cert "+
+			"list, with its subject, its issuer, its validity and the days that are "+
+			"left; each TLS listener, with its lowest version, its suites and its "+
+			"groups, and whether FIPS 140-3 approves them; and the Go version, the "+
+			"module and the algorithms of its crypto. A certificate within 30 days of "+
+			"its end is soon, and one past its end is expired.").
+		Returns("The TLS section of each component.").
+		Command("List the TLS of each component",
+			"Shows for the controller, the NATS server and each agent its FIPS 140-3\n"+
+				"mode and the reasons it is not approved, its certificates with the days\n"+
+				"left, its TLS listeners with their suites and groups, and its crypto.\n"+
+				"The summary is the line that the tables of health status and agent\n"+
+				"list link to.").
+		Example("--component nats").
+		Example("--hostname web-01").
+		Example("").
+		Prints(sampleTLS).
+		Fails("a hostname over 255 characters", TLSListInput{Hostname: strings.Repeat("a", 256)}).
+		Fails("a component that is not one", TLSListInput{Component: "ui"}),
+	endpoint.Get[TLSGetInput, TLS]("tlsget").
+		Handle(TLSSection).
+		Sub("tls").
+		Use("get").
+		Key("component").
+		ID("GetPKITLS").
+		Describe("Get the TLS of one component").
+		Explain("Reads the TLS section of one component of one host in full: the "+
+			"controller or the NATS server of the controller's host when the hostname "+
+			"is empty, or the agent of the hostname. It has the reasons, each "+
+			"certificate, each listener and each algorithm.").
+		Returns("The TLS section of the component.").
+		Command("Get the TLS of one component",
+			"Shows one component's TLS in full: its FIPS 140-3 mode and why it is\n"+
+				"not approved, each certificate with its names, issuer and validity,\n"+
+				"each TLS listener with its suites and groups, and its algorithms.").
+		Example("--component agent --hostname web-01").
+		Example("--component controller").
+		Prints(sampleTLS.Items[0]).
+		Errors(endpoint.NotFound(ErrNoComponent, "The host has no such component.")).
+		Fails("a component that is not one", TLSGetInput{Component: "ui"}).
+		Fails("a hostname over 255 characters",
+			TLSGetInput{Component: ComponentAgent, Hostname: strings.Repeat("a", 256)}),
 	endpoint.Get[GetInput, Cert]("get").
 		Handle(Get).
 		Sub("cert").

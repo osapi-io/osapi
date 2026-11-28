@@ -73,9 +73,9 @@ type AgentInfo struct {
 	// loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
 
-	// The FIPS 140-3 mode of the agent's process, then approved, or the number of
-	// gaps that keep it from the mode with only approved algorithms. crypto has
-	// the detail.
+	// The FIPS 140-3 mode of the agent's process, then what is not approved, by
+	// kind, such as off · 1 TLS listener not approved, or approved. pki tls has
+	// the section, with each reason.
 	Fips string `json:"fips,omitempty"`
 
 	// Fully qualified domain name.

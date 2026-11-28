@@ -35,6 +35,7 @@ import (
 
 	"github.com/avfs/avfs"
 
+	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	pkiEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/pki"
 	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	"github.com/osapi-io/osapi/internal/secret/vault"
@@ -128,11 +129,12 @@ func ExportSecretDeps(
 	return secretDeps(handlerDeps{vaults: vaults})
 }
 
-// ExportPKIDeps calls pkiDeps with cfg.
+// ExportPKIDeps calls pkiDeps with cfg, and the health of status.
 func ExportPKIDeps(
 	cfg config.Config,
+	status func(ctx context.Context) healthEndpoint.StatusResponse,
 ) pkiEndpoint.Deps {
-	return pkiDeps(handlerDeps{cfg: cfg})
+	return pkiDeps(handlerDeps{cfg: cfg}, status)
 }
 
 // ExportMakeVaultKeys calls makeVaultKeys.

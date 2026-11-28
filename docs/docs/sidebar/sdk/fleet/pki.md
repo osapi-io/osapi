@@ -19,6 +19,8 @@ rotation of the controller's key and of the NATS server's certificate.
 | [`Rotate(ctx)`](#rotate)                     | `*Response[PKIKeyRotation]`      | `pki:write` | Rotate the controller's key.                        |
 | [`Natscertrotation(ctx)`](#natscertrotation) | `*Response[PKINATSCertRotation]` | `pki:read`  | Show the rotation of the NATS server's certificate. |
 | [`Natscertrotate(ctx)`](#natscertrotate)     | `*Response[PKINATSCertRotation]` | `pki:write` | Rotate the NATS server's certificate.               |
+| [`Tls(ctx, params)`](#tls)                   | `*Response[PKITLSList]`          | `pki:read`  | List the TLS of each component.                     |
+| [`Tlsget(ctx, component, params)`](#tlsget)  | `*Response[PKITLSSection]`       | `pki:read`  | Get the TLS of one component.                       |
 
 ### List
 
@@ -193,27 +195,136 @@ Rotate the NATS server's certificate, `go run pki.go natscertrotate`:
 resp, err := c.Pki.Natscertrotate(ctx)
 ```
 
+### Tls
+
+```go
+func (s *PkiService) Tls(
+	ctx context.Context,
+	params PkiTlsParams,
+) (*Response[PKITLSList], error)
+```
+
+List the TLS of each component.
+
+Lists the TLS section of the controller, of the NATS server and of each agent:
+the FIPS 140-3 mode, with each reason that the component is not approved as a
+sentence; each certificate that it serves, from pki cert list, with its subject,
+its issuer, its validity and the days that are left; each TLS listener, with its
+lowest version, its suites and its groups, and whether FIPS 140-3 approves them;
+and the Go version, the module and the algorithms of its crypto. A certificate
+within 30 days of its end is soon, and one past its end is expired.
+
+It sends `GET /api/pki/tls`, and needs the permission `pki:read`.
+
+The examples of the method's definition:
+
+List the TLS of each component, `go run pki.go tls`:
+
+```go
+resp, err := c.Pki.Tls(ctx, client.PkiTlsParams{Component: client.Component("nats")})
+```
+
+List the TLS of each component, with --hostname web-01, `go run pki.go tls-2`:
+
+```go
+resp, err := c.Pki.Tls(ctx, client.PkiTlsParams{Hostname: "web-01"})
+```
+
+List the TLS of each component, with, `go run pki.go tls-3`:
+
+```go
+resp, err := c.Pki.Tls(ctx, client.PkiTlsParams{})
+```
+
+### Tlsget
+
+```go
+func (s *PkiService) Tlsget(
+	ctx context.Context,
+	component Component,
+	params PkiTlsgetParams,
+) (*Response[PKITLSSection], error)
+```
+
+Get the TLS of one component.
+
+Reads the TLS section of one component of one host in full: the controller or
+the NATS server of the controller's host when the hostname is empty, or the
+agent of the hostname. It has the reasons, each certificate, each listener and
+each algorithm.
+
+It sends `GET /api/pki/tls/{component}`, and needs the permission `pki:read`.
+
+The examples of the method's definition:
+
+Get the TLS of one component, `go run pki.go tlsget`:
+
+```go
+resp, err := c.Pki.Tlsget(ctx, client.Component("agent"), client.PkiTlsgetParams{Hostname: "web-01"})
+```
+
+Get the TLS of one component, with --component controller,
+`go run pki.go tlsget-2`:
+
+```go
+resp, err := c.Pki.Tlsget(ctx, client.Component("controller"), client.PkiTlsgetParams{})
+```
+
 ## Types
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### Component
+
+Only this component: controller, nats or agent.
+
+A `string`, one of `controller`, `nats`, `agent`.
+
+### CryptoAlgorithm
+
+| Field       | Type     | Description                                                                                                                                          |
+| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Algorithm` | `string` | The algorithm, with its key size or curve.                                                                                                           |
+| `Approved`  | `bool`   | Whether FIPS 140-3 approves the algorithm.                                                                                                           |
+| `Name`      | `string` | What the process uses it for.                                                                                                                        |
+| `OnlyMode`  | `bool`   | Whether it works in FIPS 140-3 only mode. An approved algorithm can still fail there, when its code calls the module in a way that the mode refuses. |
+| `Reason`    | `string` | Why it is not approved, or why it fails in FIPS 140-3 only mode.                                                                                     |
+
+### CryptoListener
+
+| Field        | Type       | Description                                                                                                                          |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Approved`   | `bool`     | Whether the listener negotiates only approved versions, suites and groups: true in FIPS 140-3 mode, where crypto/tls restricts them. |
+| `Groups`     | `[]string` | The key exchange groups that the listener can negotiate: the configured ones, or those of crypto/tls for the process's mode.         |
+| `MinVersion` | `string`   | The lowest TLS version that the listener accepts.                                                                                    |
+| `Name`       | `string`   | The listener, such as api, nats or metrics.                                                                                          |
+| `Suites`     | `[]string` | The cipher suites that the listener can negotiate: the configured ones, or those of crypto/tls for the process's mode.               |
+| `Tls`        | `bool`     | Whether the listener serves TLS. A listener with no TLS has no other fields.                                                         |
+
+### Expiry
+
+A `string`, one of `ok`, `soon`, `expired`, `unknown`.
+
 ### PKICert
 
-| Field          | Type        | Description                                                                                   |
-| -------------- | ----------- | --------------------------------------------------------------------------------------------- |
-| `Component`    | `string`    | The component that serves it: controller, nats or agent.                                      |
-| `DaysLeft`     | `int`       | The days that are left until it expires.                                                      |
-| `Expires`      | `time.Time` | When the certificate expires.                                                                 |
-| `File`         | `string`    | The certificate's file on the host.                                                           |
-| `Fingerprint`  | `string`    | The SHA-256 fingerprint of the certificate.                                                   |
-| `FipsApproved` | `bool`      | Whether FIPS 186-5 and SP 800-131A approve the key and the signature algorithms.              |
-| `Hostname`     | `string`    | The host that serves the certificate.                                                         |
-| `Key`          | `string`    | The algorithm and size of the public key, such as ECDSA P-256.                                |
-| `Name`         | `string`    | The name of the certificate, such as api or agent-metrics.                                    |
-| `Names`        | `[]string`  | The DNS names and the IP addresses that the certificate is for.                               |
-| `Signature`    | `string`    | The algorithm that signed the certificate, such as ECDSA-SHA256.                              |
-| `Source`       | `string`    | self-signed, which osapi made, or cert_file, the operator's.                                  |
-| `State`        | `string`    | ok; not made, when the component has not started on the host; or unreadable, with the reason. |
+| Field          | Type        | Description                                                                                      |
+| -------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `Component`    | `string`    | The component that serves it: controller, nats or agent.                                         |
+| `DaysLeft`     | `int`       | The days that are left until it expires.                                                         |
+| `Expires`      | `time.Time` | When the certificate expires.                                                                    |
+| `File`         | `string`    | The certificate's file on the host.                                                              |
+| `Fingerprint`  | `string`    | The SHA-256 fingerprint of the certificate.                                                      |
+| `FipsApproved` | `bool`      | Whether FIPS 186-5 and SP 800-131A approve the key and the signature algorithms.                 |
+| `Hostname`     | `string`    | The host that serves the certificate.                                                            |
+| `Issuer`       | `string`    | The issuer of the certificate, as a distinguished name. The subject again for a self-signed one. |
+| `Key`          | `string`    | The algorithm and size of the public key, such as ECDSA P-256.                                   |
+| `Name`         | `string`    | The name of the certificate, such as api or agent-metrics.                                       |
+| `Names`        | `[]string`  | The DNS names and the IP addresses that the certificate is for.                                  |
+| `NotBefore`    | `time.Time` | When the certificate starts to be valid.                                                         |
+| `Signature`    | `string`    | The algorithm that signed the certificate, such as ECDSA-SHA256.                                 |
+| `Source`       | `string`    | self-signed, which osapi made, or cert_file, the operator's.                                     |
+| `State`        | `string`    | ok; not made, when the component has not started on the host; or unreadable, with the reason.    |
+| `Subject`      | `string`    | The subject of the certificate, as a distinguished name.                                         |
 
 ### PKICertList
 
@@ -257,6 +368,46 @@ The fields of each type are the properties of its schema in the API's spec.
 | `HasNext`   | `bool`   | Whether the agent reports that it trusts the next certificate. |
 | `Hostname`  | `string` | The hostname of the agent.                                     |
 | `MachineID` | `string` | The machine ID of the agent.                                   |
+
+### PKITLSCert
+
+| Field          | Type        | Description                                                                                    |
+| -------------- | ----------- | ---------------------------------------------------------------------------------------------- |
+| `DaysLeft`     | `int`       | The days that are left until it expires.                                                       |
+| `Expires`      | `time.Time` | When the certificate expires.                                                                  |
+| `Expiry`       | `Expiry`    |                                                                                                |
+| `FipsApproved` | `bool`      | Whether FIPS 186-5 and SP 800-131A approve the key and the signature algorithms.               |
+| `Issuer`       | `string`    | The issuer of the certificate. The subject again for a self-signed one.                        |
+| `Key`          | `string`    | The algorithm and size of the public key, such as ECDSA P-256.                                 |
+| `Name`         | `string`    | The name of the certificate, such as api or agent-metrics.                                     |
+| `Names`        | `[]string`  | The DNS names and the IP addresses that the certificate is for: its subject alternative names. |
+| `NotBefore`    | `time.Time` | When the certificate starts to be valid.                                                       |
+| `Source`       | `string`    | self-signed, which osapi made, or cert_file, the operator's.                                   |
+| `State`        | `string`    | ok; not made, when the component has not started on the host; or unreadable, with the reason.  |
+| `Subject`      | `string`    | The subject of the certificate, as a distinguished name.                                       |
+
+### PKITLSList
+
+| Field        | Type              | Description               |
+| ------------ | ----------------- | ------------------------- |
+| `Items`      | `[]PKITLSSection` |                           |
+| `TotalItems` | `int`             | The number of components. |
+
+### PKITLSSection
+
+| Field          | Type                | Description                                                                                                                                                  |
+| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Algorithms`   | `[]CryptoAlgorithm` | Each algorithm that the component uses, with whether FIPS 140-3 approves it.                                                                                 |
+| `Certificates` | `[]PKITLSCert`      | Each certificate that the component serves, from the certificates of pki cert list.                                                                          |
+| `Component`    | `Component`         |                                                                                                                                                              |
+| `Expiry`       | `Expiry`            |                                                                                                                                                              |
+| `Fips`         | `string`            | The FIPS 140-3 mode, then what is not approved, by kind, or approved.                                                                                        |
+| `Go`           | `string`            | The Go version that built the component.                                                                                                                     |
+| `Hostname`     | `string`            | The host of the component.                                                                                                                                   |
+| `Listeners`    | `[]CryptoListener`  | Each TLS listener of the component, with its lowest TLS version, its suites and its groups, and whether FIPS 140-3 approves them.                            |
+| `Module`       | `string`            | The version of the Go Cryptographic Module in the component.                                                                                                 |
+| `Reasons`      | `[]string`          | Each reason that the component is not in FIPS 140-3 mode with only approved algorithms, as a sentence with what closes it, or with the issue that tracks it. |
+| `Summary`      | `string`            | The section in one line, for a table: the FIPS 140-3 verdict, then the days left of the certificate that expires first.                                      |
 
 ## Example
 

@@ -38,7 +38,7 @@ export interface AgentInfo {
   facts?: AgentInfoFacts;
   /** The SHA256 fingerprint of the agent's PKI public key. Empty until the agent loads its keys. */
   fingerprint?: string;
-  /** The FIPS 140-3 mode of the agent's process, then approved, or the number of gaps that keep it from the mode with only approved algorithms. crypto has the detail. */
+  /** The FIPS 140-3 mode of the agent's process, then what is not approved, by kind, such as off · 1 TLS listener not approved, or approved. pki tls has the section, with each reason. */
   fips?: string;
   /** Fully qualified domain name. */
   fqdn?: string;

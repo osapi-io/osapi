@@ -38,6 +38,9 @@ type Deps struct {
 	Local func() []pki.Cert
 	// Hostname is the hostname of the controller's host.
 	Hostname string
+	// Processes are the controller and the NATS server, each with the
+	// crypto of its registration, for the TLS sections. Nil is none.
+	Processes func(ctx context.Context) []Process
 	// Rotation starts and shows the rotation of the controller's key.
 	Rotation Rotator
 	// CertRotation starts and shows the rotation of the NATS server's

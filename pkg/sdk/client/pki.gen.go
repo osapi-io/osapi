@@ -134,3 +134,70 @@ func (s *PkiService) Natscertrotate(
 ) (*Response[PKINATSCertRotation], error) {
 	return send[PKINATSCertRotation](ctx, s.client, http.MethodPost, "/api/pki/nats", nil, nil)
 }
+
+// PkiTlsParams are the parameters of PkiService.Tls that a request can leave
+// out.
+type PkiTlsParams struct {
+	// Hostname is the hostname of the query: only the components of this host: the
+	// controller's hostname, or an agent's. The zero value leaves it out.
+	Hostname string
+
+	// Component is the component of the query: only this component: controller,
+	// nats or agent. The zero value leaves it out.
+	Component Component
+}
+
+// Tls is the operation ListPKITLS: list the TLS of each component.
+//
+// Lists the TLS section of the controller, of the NATS server and of each
+// agent: the FIPS 140-3 mode, with each reason that the component is not
+// approved as a sentence; each certificate that it serves, from pki cert list,
+// with its subject, its issuer, its validity and the days that are left; each
+// TLS listener, with its lowest version, its suites and its groups, and
+// whether FIPS 140-3 approves them; and the Go version, the module and the
+// algorithms of its crypto. A certificate within 30 days of its end is soon,
+// and one past its end is expired.
+//
+// It sends GET /api/pki/tls, and needs the permission pki:read.
+func (s *PkiService) Tls(
+	ctx context.Context,
+	params PkiTlsParams,
+) (*Response[PKITLSList], error) {
+	q := url.Values{}
+	if params.Hostname != "" {
+		q.Set("hostname", params.Hostname)
+	}
+	if params.Component != "" {
+		q.Set("component", string(params.Component))
+	}
+	return send[PKITLSList](ctx, s.client, http.MethodGet, "/api/pki/tls", q, nil)
+}
+
+// PkiTlsgetParams are the parameters of PkiService.Tlsget that a request can
+// leave out.
+type PkiTlsgetParams struct {
+	// Hostname is the hostname of the query: the host of the component. Empty is
+	// the controller's host, which an agent's section must name. The zero value
+	// leaves it out.
+	Hostname string
+}
+
+// Tlsget is the operation GetPKITLS: get the TLS of one component.
+//
+// Reads the TLS section of one component of one host in full: the controller
+// or the NATS server of the controller's host when the hostname is empty, or
+// the agent of the hostname. It has the reasons, each certificate, each
+// listener and each algorithm.
+//
+// It sends GET /api/pki/tls/{component}, and needs the permission pki:read.
+func (s *PkiService) Tlsget(
+	ctx context.Context,
+	component Component,
+	params PkiTlsgetParams,
+) (*Response[PKITLSSection], error) {
+	q := url.Values{}
+	if params.Hostname != "" {
+		q.Set("hostname", params.Hostname)
+	}
+	return send[PKITLSSection](ctx, s.client, http.MethodGet, "/api/pki/tls/"+url.PathEscape(string(component)), q, nil)
+}
