@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -55,6 +56,7 @@ func (s *SpanPublicTestSuite) TestOperations() {
 	tests := []struct {
 		name string
 		span string
+		root bool
 		call func(w *admission.Watcher, ctx context.Context) error
 	}{
 		{
@@ -101,6 +103,16 @@ func (s *SpanPublicTestSuite) TestOperations() {
 				return w.Revoke(ctx, "m-1")
 			},
 		},
+		{
+			name: "when a connection asks the callout with no span opens admission.callout",
+			span: "admission.callout",
+			root: true,
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				user, _ := nkeys.CreateUser()
+				_, err := w.Callout(admission.CalloutRoles{})(ctx, nkeyRequest(user, user))
+				return err
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -127,9 +139,15 @@ func (s *SpanPublicTestSuite) TestOperations() {
 			w := admission.NewWatcher(slog.Default(), admissionMocks.NewMockNATSSubscriber(ctrl),
 				kv, "enrollment", admissionMocks.NewMockPKIProvider(ctrl), false, "osapi")
 
-			ctx, request := otel.Tracer("test").Start(context.Background(), "POST /api/admission")
+			ctx := context.Background()
+			var request trace.Span
+			if !tc.root {
+				ctx, request = otel.Tracer("test").Start(ctx, "POST /api/admission")
+			}
 			s.Error(tc.call(w, ctx))
-			request.End()
+			if request != nil {
+				request.End()
+			}
 
 			var span sdktrace.ReadOnlySpan
 			for _, sp := range recorder.Ended() {
@@ -138,7 +156,11 @@ func (s *SpanPublicTestSuite) TestOperations() {
 				}
 			}
 			s.Require().NotNil(span)
-			s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
+			if tc.root {
+				s.False(span.Parent().IsValid())
+			} else {
+				s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
+			}
 			s.Equal(codes.Error, span.Status().Code)
 			s.Require().NotEmpty(inside)
 			for _, c := range inside {
