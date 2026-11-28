@@ -1309,3 +1309,48 @@ func ExportConsumerRecovered(
 ) {
 	a.consumerRecovered(name, gen)
 }
+
+// origJobTimeout is the longest that a job runs, before a test swaps it.
+var origJobTimeout = jobTimeout
+
+// SetJobTimeoutFn swaps the longest that a job runs.
+func SetJobTimeoutFn(
+	d time.Duration,
+) {
+	jobTimeout = d
+}
+
+// ResetJobTimeoutFn puts back the longest that a job runs.
+func ResetJobTimeoutFn() {
+	jobTimeout = origJobTimeout
+}
+
+// origProcessors are the processors that SetAgentProcessorFn swapped, by
+// agent and category, for ResetAgentProcessorFn.
+var origProcessors = map[*Agent]map[string]ProcessorFunc{}
+
+// SetAgentProcessorFn makes fn the processor of the agent's category.
+func SetAgentProcessorFn(
+	a *Agent,
+	category string,
+	fn ProcessorFunc,
+) {
+	if origProcessors[a] == nil {
+		origProcessors[a] = map[string]ProcessorFunc{}
+	}
+	if _, ok := origProcessors[a][category]; !ok {
+		origProcessors[a][category] = a.registry.processors[category]
+	}
+	a.registry.processors[category] = fn
+}
+
+// ResetAgentProcessorFn puts back each processor of a that
+// SetAgentProcessorFn swapped.
+func ResetAgentProcessorFn(
+	a *Agent,
+) {
+	for category, fn := range origProcessors[a] {
+		a.registry.processors[category] = fn
+	}
+	delete(origProcessors, a)
+}

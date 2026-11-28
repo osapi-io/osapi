@@ -167,7 +167,7 @@ func openSecrets(
 	}
 	in := reflect.New(m.In)
 	if err := json.Unmarshal(data, in.Interface()); err != nil {
-		return nil, fmt.Errorf("%w: %s", behavior.ErrInvalid, err)
+		return nil, fmt.Errorf("%w: %w", behavior.ErrInvalid, err)
 	}
 	if err := secret.Map(in.Interface(), o.Value); err != nil {
 		return nil, err
