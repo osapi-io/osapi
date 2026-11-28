@@ -46,14 +46,37 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 	chpasswdErr := errors.New("chpasswd: PAM failure")
 	tests := []struct {
 		name        string
+		home        string
+		homeExists  bool
 		userdelErr  error
+		wantUseradd []string
+		wantUserdel []string
 		wantChanged bool
 	}{
-		{name: "the user is removed and nothing changed"},
+		{
+			name:        "the user is removed with the home that useradd made, and nothing changed",
+			wantUseradd: []string{"--create-home", "--", "osapitest"},
+			wantUserdel: []string{"-r", "--", "osapitest"},
+		},
 		{
 			name:        "when userdel fails too, the user stays and both errors return",
 			userdelErr:  errors.New("userdel: user is logged in"),
+			wantUseradd: []string{"--create-home", "--", "osapitest"},
+			wantUserdel: []string{"-r", "--", "osapitest"},
 			wantChanged: true,
+		},
+		{
+			name:        "a home that was there before useradd stays",
+			home:        "/srv/svc",
+			homeExists:  true,
+			wantUseradd: []string{"--create-home", "-d", "/srv/svc", "--", "osapitest"},
+			wantUserdel: []string{"--", "osapitest"},
+		},
+		{
+			name:        "a home that useradd makes goes with the user",
+			home:        "/srv/svc",
+			wantUseradd: []string{"--create-home", "-d", "/srv/svc", "--", "osapitest"},
+			wantUserdel: []string{"-r", "--", "osapitest"},
 		},
 	}
 
@@ -65,6 +88,9 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 			s.Require().NoError(fs.WriteFile("/etc/passwd",
 				[]byte("root:x:0:0:root:/root:/bin/sh\n"), 0o644))
 			s.Require().NoError(fs.WriteFile("/etc/group", []byte("root:x:0:\n"), 0o644))
+			if tc.homeExists {
+				s.Require().NoError(fs.MkdirAll(tc.home, 0o755))
+			}
 			exec := hostmocks.NewMockExec(ctrl)
 			behaviortest.ReadsThroughRunCmd(exec)
 			exec.EXPECT().
@@ -73,13 +99,13 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 				AnyTimes()
 			gomock.InOrder(
 				exec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "useradd", []string{"--create-home", "--", "osapitest"}).
+					RunPrivilegedCmd(gomock.Any(), "useradd", tc.wantUseradd).
 					Return("", nil),
 				exec.EXPECT().
 					RunPrivilegedCmdWithStdin(gomock.Any(), "chpasswd", []string{"-e"}, gomock.Any()).
 					Return("", chpasswdErr),
 				exec.EXPECT().
-					RunPrivilegedCmd(gomock.Any(), "userdel", []string{"-r", "--", "osapitest"}).
+					RunPrivilegedCmd(gomock.Any(), "userdel", tc.wantUserdel).
 					Return("", tc.userdelErr),
 			)
 			p, err := user.NewDebian(host.Host{FS: fs, Exec: exec, Platform: "debian"})
@@ -87,6 +113,7 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 
 			changed, err := p.Create(context.Background(), user.CreateInput{
 				Name:         "osapitest",
+				Home:         tc.home,
 				PasswordHash: "$6$salt$hash",
 			})
 

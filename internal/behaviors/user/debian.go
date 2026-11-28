@@ -28,9 +28,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/avfs/avfs"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
+
+// defaultHome is the directory under which useradd makes the home of a user
+// that names none, HOME of /etc/default/useradd as each supported Linux
+// ships it.
+const defaultHome = "/home"
 
 // debian changes the users with useradd, usermod, userdel and chpasswd, and
 // reads them as reader does. Each write reads first, so a second run reports
@@ -38,13 +45,14 @@ import (
 type debian struct {
 	*reader
 	exec host.Exec
+	fs   avfs.VFS
 }
 
 // newDebian is the provider on the Debian family.
 func newDebian(
 	h host.Host,
 ) (Provider, error) {
-	return &debian{reader: &reader{src: h.Sources()}, exec: h.Exec}, nil
+	return &debian{reader: &reader{src: h.Sources()}, exec: h.Exec, fs: h.FS}, nil
 }
 
 // Create adds the user, with its home directory, and sets its password when
@@ -80,6 +88,17 @@ func (d *debian) Create(
 	if in.System {
 		args = append(args, "-r")
 	}
+	// useradd keeps a home directory that is there already, so the clean-up
+	// below removes the home only when useradd made it.
+	home := in.Home
+	if home == "" {
+		home = defaultHome + "/" + in.Name
+	}
+	_, statErr := d.fs.Stat(home)
+	undo := []string{"-r", "--", in.Name}
+	if statErr == nil {
+		undo = []string{"--", in.Name}
+	}
 	if _, err := d.exec.RunPrivilegedCmd(ctx, "useradd", append(args, "--", in.Name)); err != nil {
 		return false, fmt.Errorf("add user %s: %w", in.Name, err)
 	}
@@ -87,10 +106,9 @@ func (d *debian) Create(
 		if err := d.chpasswd(ctx, in.Name, in.PasswordHash); err != nil {
 			// A user with no password would stay: a second run finds it and
 			// reports changed: false, and nothing sets the password. Thus
-			// the user goes, and a second run adds it again.
-			if _, delErr := d.exec.RunPrivilegedCmd(
-				ctx, "userdel", []string{"-r", "--", in.Name},
-			); delErr != nil {
+			// the user goes, and a second run adds it again. Its home goes
+			// with it only when useradd made it.
+			if _, delErr := d.exec.RunPrivilegedCmd(ctx, "userdel", undo); delErr != nil {
 				return true, errors.Join(
 					err, fmt.Errorf("remove user %s after it: %w", in.Name, delErr),
 				)

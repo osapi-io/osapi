@@ -60,8 +60,9 @@ Adds the user with useradd, with its home directory, and sets its password with
 chpasswd when one is given. The controller hashes the password, so the job and
 NATS have only the hash. A user that the host has already does not change and
 reports changed: false. When chpasswd fails, the user is removed again with
-userdel -r, so a second run adds it with its password. It runs on the Debian
-family only, and elsewhere reports skipped.
+userdel, so a second run adds it with its password. Its home directory goes with
+it only when useradd made it, so a home that was there before stays. It runs on
+the Debian family only, and elsewhere reports skipped.
 
 It sends `POST /api/node/{hostname}/user`, and needs the permission
 `user:write`.

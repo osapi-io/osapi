@@ -141,8 +141,9 @@ var Behavior = behavior.Register(behavior.Define(
 			"password with chpasswd when one is given. The controller hashes the "+
 			"password, so the job and NATS have only the hash. A user that the host "+
 			"has already does not change and reports changed: false. When chpasswd "+
-			"fails, the user is removed again with userdel -r, so a second run adds it "+
-			"with its password. It runs on the Debian family only, and elsewhere "+
+			"fails, the user is removed again with userdel, so a second run adds it "+
+			"with its password. Its home directory goes with it only when useradd "+
+			"made it, so a home that was there before stays. It runs on the Debian family only, and elsewhere "+
 			"reports skipped.").
 		Example("Add a user", CreateInput{Name: "osapitest"},
 			Result{Name: "osapitest", Changed: true},
