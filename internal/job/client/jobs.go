@@ -32,6 +32,7 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
@@ -69,6 +70,9 @@ func (c *Client) CreateJob(
 
 	// Generate job ID
 	jobID := uuid.New().String()
+	// Tell the audit trail which job answered this request, as
+	// publishAndWait does, so the entry of a retry names its new job.
+	audit.RecordJobID(ctx, jobID)
 
 	// Create job with status metadata
 	createdTime := time.Now().Format(time.RFC3339)
