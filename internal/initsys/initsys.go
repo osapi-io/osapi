@@ -77,10 +77,39 @@ func SystemdUnit(
 			"[Service]\nExecStart=%s\nRestart=always\nRestartSec=5\n\n"+
 			"[Install]\nWantedBy=multi-user.target\n",
 		s.Description,
-		strings.Join(s.Args, " "),
+		execStart(s.Args),
 	)
 
 	return []byte(b.String())
+}
+
+// systemdQuote escapes an argument inside the double quotes of a unit file:
+// systemd reads a backslash and a double quote as escapes, a % as a
+// specifier and a $ as a variable.
+var systemdQuote = strings.NewReplacer(
+	`\`, `\\`,
+	`"`, `\"`,
+	"%", "%%",
+	"$", "$$",
+	"\n", `\n`,
+	"\t", `\t`,
+)
+
+// execStart is the ExecStart line of args. An argument that systemd would
+// split, or expand, is in double quotes, so the service gets each argument
+// as it is.
+func execStart(
+	args []string,
+) string {
+	words := make([]string, len(args))
+	for i, a := range args {
+		words[i] = a
+		if a == "" || strings.ContainsAny(a, " \t\n\"'\\%$;") {
+			words[i] = `"` + systemdQuote.Replace(a) + `"`
+		}
+	}
+
+	return strings.Join(words, " ")
 }
 
 // SystemdEnable are the commands that load the unit of name and start it,
