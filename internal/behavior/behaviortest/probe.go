@@ -122,6 +122,10 @@ func probe(
 	h, p, _ := prepare(b, platform, ex)
 	before := files(h)
 	if _, err := call(m, p, input); err != nil {
+		if msg := panicOf(err); msg != "" {
+			return behavior.TestFailure(behavior.TestErrors, msg)
+		}
+
 		return ""
 	}
 
@@ -136,7 +140,7 @@ func probe(
 	}
 	for _, line := range h.ran {
 		args := strings.Fields(line)
-		if (args[0] == "sh" || args[0] == "bash") &&
+		if len(args) > 0 && (args[0] == "sh" || args[0] == "bash") &&
 			slices.Contains(args, "-c") && strings.Contains(line, probeMark) {
 			return behavior.TestFailure(behavior.TestShell, "it reached a shell script: "+line)
 		}

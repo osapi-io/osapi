@@ -121,6 +121,16 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 			options: []behavior.HostOption{behavior.Ran("tee", "/y")},
 		},
 		{
+			name: "when a privileged command's exit code is given, it answers",
+			in:   probeIn{Op: "full"},
+			want: "denied code=3",
+			options: []behavior.HostOption{
+				behavior.Prints("tee /y", "denied"),
+				behavior.Exits("tee /y", 3),
+				behavior.Ran("tee", "/y"),
+			},
+		},
+		{
 			name: "when a program of Runs(AnyProgram) runs in full, its output and exit code answer",
 			in:   probeIn{Op: "fullcmd"},
 			want: "out exit=2",

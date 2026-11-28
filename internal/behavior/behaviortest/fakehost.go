@@ -299,11 +299,15 @@ func (h *fakeHost) filesystem() avfs.VFS {
 			if fp.Flag&(os.O_WRONLY|os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND) != 0 {
 				h.checkWrite(fp.Path)
 			}
-		case avfs.FnWriteFile, avfs.FnRemove, avfs.FnRemoveAll, avfs.FnChmod, avfs.FnTruncate:
+		case avfs.FnWriteFile, avfs.FnRemove, avfs.FnRemoveAll, avfs.FnChmod, avfs.FnTruncate,
+			avfs.FnChown, avfs.FnLchown, avfs.FnChtimes:
 			h.checkWrite(fp.Path)
-		case avfs.FnRename:
+		case avfs.FnRename, avfs.FnSymlink, avfs.FnLink:
 			h.checkWrite(fp.NewPath)
 		}
+		// MkdirAll, Mkdir and CreateTemp are not checked: a parent directory
+		// is not a file that behavior.Writes names, and a temp file is made
+		// for the rename onto the path, which is checked.
 
 		return h.next()
 	})
@@ -394,8 +398,9 @@ func (h *fakeHost) commands(
 		DoAndReturn(func(ctx context.Context, name string, args []string, _ string) (string, string, int, error) {
 			h.check(name, true)
 			out, err := run(ctx, name, args)
+			line := strings.Join(append([]string{name}, args...), " ")
 
-			return out, "", 0, err
+			return out, "", h.exits[line], err
 		}).
 		AnyTimes()
 
