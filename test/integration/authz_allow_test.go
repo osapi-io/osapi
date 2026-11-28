@@ -25,7 +25,6 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"slices"
 	"strings"
@@ -65,7 +64,7 @@ func (s *AuthorizationSuite) TestEachReadAllows() {
 		}
 		role, ok := roleWith(authtoken.Permission(r.permission))
 		s.Require().True(ok, "%s %s: no built-in role grants %s", r.method, r.path, r.permission)
-		token, err := authtoken.New(slog.New(slog.DiscardHandler)).
+		token, err := authtoken.New().
 			Generate(signingKey, []types.Role{role}, "authz-allow@test", nil, nil)
 		s.Require().NoError(err)
 		count++
@@ -142,7 +141,7 @@ func (s *AuthorizationSuite) TestBadTokens() {
 // sets them, replace the permissions of its roles: a token of the admin
 // role with agent:read grants agent:read and no other.
 func (s *AuthorizationSuite) TestPermissionsToken() {
-	token, err := authtoken.New(slog.New(slog.DiscardHandler)).Generate(
+	token, err := authtoken.New().Generate(
 		signingKey, []types.Role{types.RoleAdmin}, "authz-perms@test", []string{"agent:read"}, nil,
 	)
 	s.Require().NoError(err)
@@ -177,7 +176,7 @@ func (s *AuthorizationSuite) TestAuditOfAWrite() {
 		s.T().Skip("a write: set OSAPI_INTEGRATION_WRITES=1")
 	}
 	user := fmt.Sprintf("authz-audit-%d@test", time.Now().UnixNano())
-	admin, err := authtoken.New(slog.New(slog.DiscardHandler)).
+	admin, err := authtoken.New().
 		Generate(signingKey, []types.Role{types.RoleAdmin}, user, nil, nil)
 	s.Require().NoError(err)
 	key := fmt.Sprintf("authz-%d", time.Now().UnixNano())

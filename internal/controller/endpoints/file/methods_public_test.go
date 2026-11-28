@@ -655,7 +655,7 @@ func (s *MethodsPublicTestSuite) TestStale() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).
+	t, _ := authtoken.New().
 		Generate(signingKey, []types.Role{types.RoleRead}, "test", perms, nil)
 
 	return t

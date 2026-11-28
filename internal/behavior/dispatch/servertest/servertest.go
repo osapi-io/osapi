@@ -428,7 +428,7 @@ func token(
 	case Admin:
 		roles = []types.Role{types.RoleAdmin}
 	}
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, roles, "servertest", perms, nil)
+	t, _ := authtoken.New().Generate(signingKey, roles, "servertest", perms, nil)
 
 	return t
 }

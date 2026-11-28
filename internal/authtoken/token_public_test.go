@@ -22,7 +22,6 @@ package authtoken_test
 
 import (
 	"encoding/base64"
-	"log/slog"
 	"testing"
 	"time"
 
@@ -44,14 +43,14 @@ type AuthTokenPublicTestSuite struct {
 }
 
 func (s *AuthTokenPublicTestSuite) SetupTest() {
-	s.token = authtoken.New(slog.Default())
+	s.token = authtoken.New()
 	s.signingKey = authtoken.Key{ID: "2026-11", Secret: "test-signing-key-for-jwt-operations"}
 	s.oldKey = authtoken.Key{ID: "2026-08", Secret: "test-old-signing-key-for-jwt-tests"}
 	s.keys = authtoken.Keys{s.signingKey, s.oldKey}
 }
 
 func (s *AuthTokenPublicTestSuite) TestNew() {
-	t := authtoken.New(slog.Default())
+	t := authtoken.New()
 	s.NotNil(t)
 }
 

@@ -83,7 +83,7 @@ func (s *AllPublicTestSuite) TestRefusals() {
 			}
 		}
 	}
-	token, err := authtoken.New(slog.Default()).
+	token, err := authtoken.New().
 		Generate(key, []types.Role{types.RoleAdmin}, "test", perms, nil)
 	s.Require().NoError(err)
 

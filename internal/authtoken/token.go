@@ -20,15 +20,7 @@
 
 package authtoken
 
-import (
-	"log/slog"
-)
-
 // New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-) *Token {
-	return &Token{
-		logger: logger.With(slog.String("subsystem", "authtoken")),
-	}
+func New() *Token {
+	return &Token{}
 }

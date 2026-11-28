@@ -26,7 +26,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -119,7 +118,7 @@ func startFixture(
 	if err != nil {
 		t.Fatal(err)
 	}
-	tok, err := authtoken.New(slog.New(slog.DiscardHandler)).
+	tok, err := authtoken.New().
 		Generate(signingKey, []types.Role{types.RoleAdmin}, "integration-fixture@test", nil, nil)
 	if err != nil {
 		t.Fatalf("make the fixture's token: %v", err)

@@ -95,7 +95,7 @@ import (
 // a command runs, after the config is read.
 func init() {
 	command.Provide(token.Group, func() token.Deps {
-		return token.Deps{Tokens: authtoken.New(logger), Config: tokenConfig{}, Audit: localAudit}
+		return token.Deps{Tokens: authtoken.New(), Config: tokenConfig{}, Audit: localAudit}
 	})
 	command.Provide(role.Group, func() role.Deps {
 		return role.Deps{Config: tokenConfig{}}
