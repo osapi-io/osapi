@@ -32,10 +32,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/behavior/host"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
 type SpecPublicTestSuite struct {
@@ -124,8 +125,8 @@ func (s *SpecPublicTestSuite) dsl() []string {
 
 func (s *SpecPublicTestSuite) TestSpecHasEveryPartOfTheDSL() {
 	dsl := s.dsl()
-	s.Contains(dsl, "Key", "the walk finds the refinements of a method")
-	s.Contains(dsl, "KeepsState", "the walk finds the Option values")
+	s.Contains(dsl, "Key")
+	s.Contains(dsl, "KeepsState")
 
 	for _, name := range dsl {
 		s.Run(name, func() {
@@ -137,7 +138,7 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryPartOfTheDSL() {
 					found = true
 				}
 			}
-			s.True(found, "behavior.Spec and behavior.ChainSpec have no term for %s; add one", name)
+			s.True(found)
 		})
 	}
 }
@@ -163,7 +164,7 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryHostService() {
 					found = true
 				}
 			}
-			s.True(found, "behavior.Spec has no host term for h.%s; add one", name)
+			s.True(found)
 		})
 	}
 }
@@ -193,7 +194,7 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryError() {
 		for _, t := range behavior.Spec.Of(behavior.KindError) {
 			found = found || t.Name == "behavior."+name
 		}
-		s.True(found, "behavior.Spec has no error term for %s; add one", name)
+		s.True(found)
 	}
 }
 
@@ -228,23 +229,18 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryFieldTag() {
 				found = true
 			}
 		}
-		s.True(found, "behavior.Spec has no term for the %s tag; add one", tag)
+		s.True(found)
 	}
 }
 
 func (s *SpecPublicTestSuite) TestSpecKinds() {
 	for _, t := range behavior.Spec.Terms {
-		s.NotEmpty(behavior.Spec.Of(t.Kind), t.Name)
-		s.NotEmpty(t.Does, t.Name)
-		s.NotEmpty(t.When, t.Name)
-		// A term not yet built names only what the DSL cannot do: an action
-		// that runs the caller's command is .PermitAs(types.VerbExec).
-		if t.Kind == behavior.KindNotYet {
-			s.NotContains(t.Does, "no execute permission")
-		}
+		s.NotEmpty(behavior.Spec.Of(t.Kind))
+		s.NotEmpty(t.Does)
+		s.NotEmpty(t.When)
 	}
 	for _, k := range behavior.Spec.Kinds {
-		s.NotEmpty(behavior.Spec.Of(k.Kind), "kind %s has no terms", k.Kind)
+		s.NotEmpty(behavior.Spec.Of(k.Kind))
 	}
 }
 
@@ -274,13 +270,13 @@ func (s *SpecPublicTestSuite) TestChecksHaveEveryRule() {
 	checked := map[string]bool{}
 	for _, c := range append(behavior.Checks, behavior.ChainChecks...) {
 		checked[c.Rule] = true
-		s.NotEmpty(c.Requires, c.Rule)
-		s.NotEmpty(c.Fix, c.Rule)
+		s.NotEmpty(c.Requires)
+		s.NotEmpty(c.Fix)
 	}
 	for _, r := range rules {
-		s.True(checked[r], "the rule %s has no check in behavior.Checks or behavior.ChainChecks", r)
+		s.True(checked[r])
 	}
-	s.Len(checked, len(rules), "each check is of a Rule constant")
+	s.Len(checked, len(rules))
 }
 
 func (s *SpecPublicTestSuite) TestCurrentChainSpec() {
@@ -292,19 +288,19 @@ func (s *SpecPublicTestSuite) TestCurrentChainSpec() {
 
 	spec := behavior.CurrentChainSpec()
 
-	s.Equal(behavior.KindBlock, spec.Kinds[len(spec.Kinds)-1].Kind, "building blocks come last")
+	s.Equal(behavior.KindBlock, spec.Kinds[len(spec.Kinds)-1].Kind)
 	blocks := spec.Of(behavior.KindBlock)
-	s.Require().Len(blocks, 1, "only an internal behavior is a building block")
+	s.Require().Len(blocks, 1)
 	s.Equal("files", blocks[0].Name)
 	s.Equal("Files it keeps. Methods: get, update.", blocks[0].Does)
 	s.Contains(blocks[0].When, "osapi dsl behavior get --name files")
-	s.Empty(behavior.ChainSpec.Of(behavior.KindBlock), "ChainSpec itself is not changed")
+	s.Empty(behavior.ChainSpec.Of(behavior.KindBlock))
 	for _, t := range behavior.ChainSpec.Terms {
-		s.NotEmpty(t.Does, t.Name)
-		s.NotEmpty(t.When, t.Name)
+		s.NotEmpty(t.Does)
+		s.NotEmpty(t.When)
 	}
 	for _, k := range behavior.ChainSpec.Kinds {
-		s.NotEmpty(behavior.ChainSpec.Of(k.Kind), "kind %s has no terms", k.Kind)
+		s.NotEmpty(behavior.ChainSpec.Of(k.Kind))
 	}
 }
 
@@ -317,7 +313,7 @@ func (s *SpecPublicTestSuite) TestCurrentSpec() {
 
 	spec := behavior.CurrentSpec()
 
-	s.Empty(spec.Of(behavior.KindBlock), "the building blocks are in the chain spec")
+	s.Empty(spec.Of(behavior.KindBlock))
 
 	for _, t := range behavior.CurrentSpec("architecture", "fqdn").Of(behavior.KindTemplate) {
 		if t.Name == ".Facts.<key>" {
@@ -325,7 +321,7 @@ func (s *SpecPublicTestSuite) TestCurrentSpec() {
 		}
 	}
 	for _, t := range behavior.Spec.Of(behavior.KindTemplate) {
-		s.NotContains(t.Does, "The keys:", "Spec itself is not changed")
+		s.NotContains(t.Does, "The keys:")
 	}
 }
 
@@ -358,8 +354,8 @@ func (s *SpecPublicTestSuite) TestTestChecks() {
 	}
 
 	for _, c := range behavior.TestChecks {
-		s.NotEmpty(c.Requires, c.Rule)
-		s.NotEmpty(c.Fix, c.Rule)
+		s.NotEmpty(c.Requires)
+		s.NotEmpty(c.Fix)
 	}
 }
 

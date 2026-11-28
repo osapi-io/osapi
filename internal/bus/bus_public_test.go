@@ -21,7 +21,15 @@
 package bus_test
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
+	"math/big"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -968,7 +976,7 @@ func (suite *BusPublicTestSuite) TestConnectionOptions() {
 	suite.Require().NoError(err)
 	suite.Equal("nats.lab", got.Host)
 	suite.Equal("osapi-agent", got.Name)
-	suite.Nil(got.TLS, "plain text when TLS is off")
+	suite.Nil(got.TLS)
 
 	conn.TLS = config.ClientTLS{Enabled: true, ServerName: "hub.lab"}
 	got, err = bus.ConnectionOptions(conn, "osapi-agent")
@@ -978,4 +986,48 @@ func (suite *BusPublicTestSuite) TestConnectionOptions() {
 	conn.TLS = config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"}
 	_, err = bus.ConnectionOptions(conn, "osapi-agent")
 	suite.ErrorContains(err, "nats tls: ")
+}
+
+// writeCert writes a self-signed certificate for localhost and its key, and
+// returns their paths.
+func writeCert(
+	t *testing.T,
+) (string, string) {
+	t.Helper()
+	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	tmpl := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		DNSNames:              []string{"localhost"},
+		IPAddresses:           []net.IP{net.IPv4(127, 0, 0, 1)},
+	}
+	der, _ := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &key.PublicKey, key)
+	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
+	dir := t.TempDir()
+	cert, keyFile := filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key")
+	if err := os.WriteFile(
+		cert,
+		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		keyFile,
+		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	return cert, keyFile
 }

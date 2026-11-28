@@ -36,13 +36,12 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/utils/ptr"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"k8s.io/utils/ptr"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type UIPublicTestSuite struct {
@@ -229,7 +228,7 @@ func (suite *UIPublicTestSuite) TestShapes() {
 			}
 
 			want, err := os.ReadFile(path)
-			suite.Require().NoError(err, "no golden file; run with -update")
+			suite.Require().NoError(err)
 			suite.Equal(string(want), got)
 		})
 	}
@@ -265,7 +264,7 @@ func (suite *UIPublicTestSuite) TestFlushTraceID() {
 	cli.PrintTraceID(id)
 	out := captureStdout(cli.FlushTraceID)
 	suite.Contains(out, "trace "+id)
-	suite.Empty(captureStdout(cli.FlushTraceID), "printed once")
+	suite.Empty(captureStdout(cli.FlushTraceID))
 
 	cli.PrintTraceID(id)
 	captureStdout(func() {
@@ -278,14 +277,14 @@ func (suite *UIPublicTestSuite) TestFlushTraceID() {
 			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
 		)
 	})
-	suite.Empty(captureStdout(cli.FlushTraceID), "the summary line had it")
+	suite.Empty(captureStdout(cli.FlushTraceID))
 
-	suite.Empty(captureStdout(cli.FlushTraceID), "no trace, no line")
+	suite.Empty(captureStdout(cli.FlushTraceID))
 
 	cli.SetJSONOutput(true)
 	defer cli.SetJSONOutput(false)
 	cli.PrintTraceID(id)
-	suite.Empty(captureStdout(cli.FlushTraceID), "--json prints none")
+	suite.Empty(captureStdout(cli.FlushTraceID))
 }
 
 // TestTraceTransport: each answer's traceresponse is the command's trace,
@@ -309,13 +308,12 @@ func (suite *UIPublicTestSuite) TestTraceTransport() {
 	suite.Contains(
 		captureStdout(cli.FlushTraceID),
 		"trace "+id,
-		"a failed answer has its trace too",
 	)
 
 	_, err := cli.TraceTransport{Base: http.DefaultTransport}.RoundTrip(
 		httptest.NewRequest(http.MethodGet, "http://127.0.0.1:1/", nil),
 	)
-	suite.Error(err, "no answer, no trace")
+	suite.Error(err)
 	suite.Empty(captureStdout(cli.FlushTraceID))
 }
 
@@ -335,7 +333,7 @@ func (suite *UIPublicTestSuite) TestHandleErrorTrace() {
 
 	suite.Contains(buf.String(), "not found")
 	suite.Contains(buf.String(), "trace 4bf92f3577b34da6a3ce929d0e0e4736")
-	suite.Empty(captureStdout(cli.FlushTraceID), "printed once")
+	suite.Empty(captureStdout(cli.FlushTraceID))
 }
 
 func (suite *UIPublicTestSuite) TestBuildBroadcastTable() {
@@ -1531,4 +1529,40 @@ func (suite *UIPublicTestSuite) TestPrintErrors() {
 			tc.validateFunc(output)
 		})
 	}
+}
+
+func (suite *UIPublicTestSuite) TestTreeSpacingIsKept() {
+	out := cli.Capture(func() {
+		cli.PrintCompactTable([]cli.Section{{
+			Title:     "Spans",
+			Headers:   []string{"TYPE", "DETAIL"},
+			Rows:      [][]string{{"│     └─ file.write", "a  b"}, {"two\nlines", "x"}},
+			Reference: true,
+		}})
+	})
+
+	plain := ansi(out)
+	suite.Contains(plain, "│     └─ file.write")
+	suite.Contains(plain, "a b")
+	suite.Contains(plain, "two lines")
+}
+
+// ansi drops the color codes of s.
+func ansi(
+	s string,
+) string {
+	var b strings.Builder
+	skip := false
+	for _, r := range s {
+		switch {
+		case r == '\x1b':
+			skip = true
+		case skip && r == 'm':
+			skip = false
+		case !skip:
+			b.WriteRune(r)
+		}
+	}
+
+	return b.String()
 }

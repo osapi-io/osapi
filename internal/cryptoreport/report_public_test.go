@@ -21,10 +21,18 @@
 package cryptoreport_test
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/fips140"
 	"crypto/tls"
+	"fmt"
+	"os"
+	"regexp"
 	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cryptoreport"
@@ -81,7 +89,7 @@ func (s *ReportPublicTestSuite) TestNew() {
 			mode: types.FIPSOn,
 			uses: []cryptoreport.Algorithm{cryptoreport.Seal, cryptoreport.NATSAuth},
 			validateFunc: func(r cryptoreport.Report) {
-				s.Empty(r.Gaps, "an approved algorithm is no gap")
+				s.Empty(r.Gaps)
 				s.False(r.Enforceable)
 			},
 		},
@@ -125,7 +133,7 @@ func (s *ReportPublicTestSuite) TestNew() {
 			mode:      types.FIPSOn,
 			listeners: []cryptoreport.TLS{{Name: "nats", Config: &tls.Config{}}},
 			validateFunc: func(r cryptoreport.Report) {
-				s.Equal("TLS 1.2", r.Listeners[0].MinVersion, "crypto/tls's lowest")
+				s.Equal("TLS 1.2", r.Listeners[0].MinVersion)
 				s.True(r.Listeners[0].Approved)
 				s.Empty(r.Gaps)
 			},
@@ -150,7 +158,7 @@ func (s *ReportPublicTestSuite) TestNew() {
 					l.Groups,
 				)
 				s.True(l.Approved)
-				s.Len(r.Gaps, 1, "only the mode")
+				s.Len(r.Gaps, 1)
 			},
 		},
 		{
@@ -268,4 +276,126 @@ func TestReportPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ReportPublicTestSuite))
+}
+
+// probe runs f, and is its error or the panic that it raised: FIPS 140-3
+// only mode refuses some calls with a panic.
+func probe(
+	f func() error,
+) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+
+	return f()
+}
+
+// nkeysSign is what osapi does with nkeys: make a user and sign with it.
+func nkeysSign() error {
+	kp, err := nkeys.CreateUser()
+	if err != nil {
+		return err
+	}
+	_, err = kp.Sign([]byte("osapi"))
+
+	return err
+}
+
+// storeSeal is the call that nats-server makes to encrypt a block of the
+// JetStream store: AES-GCM with a nonce that it picks.
+func storeSeal() error {
+	block, err := aes.NewCipher(make([]byte, 32))
+	if err != nil {
+		return err
+	}
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return err
+	}
+	aead.Seal(nil, make([]byte, aead.NonceSize()), []byte("osapi"), nil)
+
+	return nil
+}
+
+func (s *ReportPublicTestSuite) TestProbes() {
+	tests := []struct {
+		name  string
+		use   cryptoreport.Algorithm
+		probe func() error
+	}{
+		{name: "NATS JWTs sign with nkeys", use: cryptoreport.NATSAuth, probe: nkeysSign},
+		{
+			name:  "the JetStream store seals with its own nonce",
+			use:   cryptoreport.Store,
+			probe: storeSeal,
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := probe(tc.probe)
+			if !fips140.Enforced() {
+				s.NoError(err)
+				return
+			}
+			s.Equal(
+				tc.use.OnlyMode,
+				err == nil,
+			)
+		})
+	}
+}
+
+// TestOnlyModeIsTested: each use that claims to work in only mode is in a
+// package that the fips140=only CI job tests.
+func (s *ReportPublicTestSuite) TestOnlyModeIsTested() {
+	data, err := os.ReadFile("../../justfile")
+	s.Require().NoError(err)
+	m := regexp.MustCompile(`(?m)^go_fips_packages := "([^"]+)"`).FindSubmatch(data)
+	s.Require().NotNil(m)
+	tested := strings.Fields(string(m[1]))
+	tests := []struct {
+		use     cryptoreport.Algorithm
+		pkg     string
+		reasons bool
+	}{
+		{use: cryptoreport.APITokens, pkg: "./internal/authtoken/"},
+		{use: cryptoreport.Signatures, pkg: "./internal/pki/"},
+		{use: cryptoreport.Seal, pkg: "./internal/secret/seal/"},
+		{use: cryptoreport.Vault, pkg: "./internal/secret/vault/natsvault/"},
+		{use: cryptoreport.NATSAuth, pkg: "./internal/cryptoreport/"},
+		{use: cryptoreport.Store, pkg: "./internal/cryptoreport/"},
+	}
+	for _, tc := range tests {
+		s.Run(tc.use.Name, func() {
+			s.Contains(tested, tc.pkg)
+			s.True(tc.use.Approved)
+			if !tc.use.OnlyMode {
+				s.NotEmpty(tc.use.Reason)
+			}
+		})
+	}
+}
+
+// TestMode: the report reads the mode that Go runs the process in.
+func (s *ReportPublicTestSuite) TestMode() {
+	cryptoreport.ResetMode()
+	s.Equal(cryptoreport.ModeOf(fips140.Enabled(), fips140.Enforced()),
+		cryptoreport.New(nil, nil).Mode)
+	tests := []struct {
+		name     string
+		enabled  bool
+		enforced bool
+		want     types.FIPSMode
+	}{
+		{name: "when the module is not enabled", want: types.FIPSOff},
+		{name: "when it is enabled", enabled: true, want: types.FIPSOn},
+		{name: "when it is enforced", enabled: true, enforced: true, want: types.FIPSOnly},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, cryptoreport.ModeOf(tc.enabled, tc.enforced))
+		})
+	}
 }

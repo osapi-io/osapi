@@ -22,11 +22,16 @@ package config_test
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
 	"errors"
 	"log/slog"
+	"math/big"
 	"net"
 	"os"
 	"path/filepath"
@@ -139,7 +144,7 @@ func (s *TLSPublicTestSuite) TestWarn() {
 	log := slog.New(slog.NewTextHandler(&buf, nil))
 
 	config.ClientTLS{}.Warn(log, "controller.client.tls")
-	s.Empty(buf.String(), "a check is no warning")
+	s.Empty(buf.String())
 
 	config.ClientTLS{InsecureSkipVerify: true}.Warn(log, "controller.client.tls")
 	s.Contains(buf.String(), "controller.client.tls.insecure_skip_verify")
@@ -218,7 +223,7 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 
 	got, err := config.ServerTLS{}.Config()
 	s.Require().NoError(err)
-	s.Nil(got, "off serves plain HTTP")
+	s.Nil(got)
 
 	_, err = config.ServerTLS{Enabled: true}.Config()
 	s.ErrorContains(err, "tls.enabled needs cert_file and key_file")
@@ -229,19 +234,19 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 	got, err = config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
 	s.Require().NoError(err)
 	first := s.leaf(got)
-	s.Equal(first, s.leaf(got), "unchanged files serve the same certificate")
+	s.Equal(first, s.leaf(got))
 
 	s.replace(other, otherKey, cert, key)
 	second := s.leaf(got)
-	s.NotEqual(first, second, "a replaced certificate is served at the next handshake")
+	s.NotEqual(first, second)
 
 	s.Require().NoError(os.WriteFile(cert, []byte("not a certificate"), 0o600))
 	later := time.Now().Add(2 * time.Second)
 	s.Require().NoError(os.Chtimes(cert, later, later))
-	s.Equal(second, s.leaf(got), "a pair that does not load keeps the last one")
+	s.Equal(second, s.leaf(got))
 
 	s.Require().NoError(os.Remove(cert))
-	s.Equal(second, s.leaf(got), "a missing file keeps the last one")
+	s.Equal(second, s.leaf(got))
 
 	// A copy that keeps the time of the file, such as cp -p, is read too:
 	// the reloader compares the content.
@@ -257,7 +262,7 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 		s.Require().NoError(os.WriteFile(f[1], data, 0o600))
 		s.Require().NoError(os.Chtimes(f[1], fi.ModTime(), fi.ModTime()))
 	}
-	s.NotEqual(before, s.leaf(again), "a copy with the same time is served")
+	s.NotEqual(before, s.leaf(again))
 
 	// Within the interval, a handshake reads no file.
 	config.CertCheckInterval = time.Hour
@@ -266,46 +271,44 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 	heldLeaf := s.leaf(held)
 	fourth, fourthKey := writeCert(s.T())
 	s.replace(fourth, fourthKey, other, otherKey)
-	s.Equal(heldLeaf, s.leaf(held), "a change within the interval waits for the next check")
-	s.Equal(uint16(tls.VersionTLS12), got.MinVersion, "it serves what Negotiation says")
+	s.Equal(heldLeaf, s.leaf(held))
+	s.Equal(uint16(tls.VersionTLS12), got.MinVersion)
 }
 
 func (s *TLSPublicTestSuite) TestNegotiation() {
-	s.Nil(config.ServerTLS{}.Negotiation(), "when TLS is off, it negotiates nothing")
+	s.Nil(config.ServerTLS{}.Negotiation())
 
 	got := config.ServerTLS{Enabled: true}.Negotiation()
 	s.True(
 		tlspolicy.Approved(got, true),
-		"when TLS is on, it negotiates only approved suites and groups",
 	)
 }
 
 func (s *TLSPublicTestSuite) TestPolicy() {
 	got, err := config.ClientTLS{Enabled: true}.Config()
 	s.Require().NoError(err)
-	s.True(tlspolicy.Approved(got, false), "a client offers only approved suites and groups")
+	s.True(tlspolicy.Approved(got, false))
 	s.True(
 		tlspolicy.Approved(config.SelfClient(&tls.Config{}), false),
-		"so does a server's client of itself",
 	)
 }
 
 func (s *TLSPublicTestSuite) TestDial() {
 	got, err := config.ClientTLS{CAFile: "/no/such/ca.crt"}.Dial("hub.lab")
-	s.Require().NoError(err, "off reads nothing")
+	s.Require().NoError(err)
 	s.Nil(got)
 
 	got, err = config.ClientTLS{Enabled: true, ServerName: "hub.lab"}.Dial("10.0.0.1")
 	s.Require().NoError(err)
 	s.Equal("hub.lab", got.ServerName)
-	s.Nil(got.VerifyConnection, "with no ca_file, crypto/tls checks the system roots")
+	s.Nil(got.VerifyConnection)
 
 	_, err = config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt"}.Dial("hub.lab")
 	s.ErrorContains(err, "read ca_file")
 
 	got, err = config.ClientTLS{Enabled: true, CAFile: "/no/such/ca.crt", InsecureSkipVerify: true}.
 		Dial("hub.lab")
-	s.ErrorContains(err, "read ca_file", "the file must load once, also with no check")
+	s.ErrorContains(err, "read ca_file")
 	s.Nil(got)
 
 	cert, key := writeCertFor(s.T(), []string{"localhost"}, nil)
@@ -319,25 +322,25 @@ func (s *TLSPublicTestSuite) TestDial() {
 
 	client, err := config.ClientTLS{Enabled: true, CAFile: ca}.Dial("localhost")
 	s.Require().NoError(err)
-	s.NoError(handshake(server, client), "the server's certificate is in ca_file")
+	s.NoError(handshake(server, client))
 
 	wrongName, err := config.ClientTLS{Enabled: true, CAFile: ca}.Dial("hub.lab")
 	s.Require().NoError(err)
-	s.Error(handshake(server, wrongName), "the certificate does not name the host")
+	s.Error(handshake(server, wrongName))
 
 	s.replace(next, nextKey, cert, key)
-	s.Error(handshake(server, client), "ca_file does not have the new certificate yet")
+	s.Error(handshake(server, client))
 
 	nextPEM, err := os.ReadFile(next)
 	s.Require().NoError(err)
 	s.Require().NoError(os.WriteFile(ca, append(current, nextPEM...), 0o600))
-	s.NoError(handshake(server, client), "the same config trusts what ca_file gained")
+	s.NoError(handshake(server, client))
 	block, _ := pem.Decode(nextPEM)
 	leaf, err := x509.ParseCertificate(block.Bytes)
 	s.Require().NoError(err)
 	s.NoError(client.VerifyConnection(tls.ConnectionState{
 		PeerCertificates: []*x509.Certificate{leaf, leaf},
-	}), "a chain with an intermediate checks it too")
+	}))
 
 	s.Require().NoError(os.WriteFile(ca, []byte("not a certificate"), 0o600))
 	s.ErrorContains(handshake(server, client), "no PEM certificate")
@@ -350,21 +353,21 @@ func (s *TLSPublicTestSuite) TestDial() {
 	skip, err := config.ClientTLS{Enabled: true, CAFile: cert, InsecureSkipVerify: true}.
 		Dial("localhost")
 	s.Require().NoError(err)
-	s.Nil(skip.VerifyConnection, "insecure_skip_verify checks nothing")
+	s.Nil(skip.VerifyConnection)
 }
 
 func (s *TLSPublicTestSuite) TestSelfClient() {
-	s.Nil(config.SelfClient(nil), "no TLS is plain text")
+	s.Nil(config.SelfClient(nil))
 
 	cert, key := writeCertFor(s.T(), []string{"hub.lab"}, nil)
 	next, nextKey := writeCertFor(s.T(), nil, []net.IP{net.IPv4(10, 0, 0, 1)})
 	server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
 	s.Require().NoError(err)
 	client := config.SelfClient(server)
-	s.NoError(handshake(server, client), "it trusts the server's own certificate")
+	s.NoError(handshake(server, client))
 
 	s.replace(next, nextKey, cert, key)
-	s.NoError(handshake(server, client), "and the one that the server loaded again")
+	s.NoError(handshake(server, client))
 
 	stranger, strangerKey := writeCert(s.T())
 	other, err := config.ServerTLS{Enabled: true, CertFile: stranger, KeyFile: strangerKey}.Config()
@@ -390,4 +393,58 @@ func (s *TLSPublicTestSuite) TestAddress() {
 
 func TestTLSPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(TLSPublicTestSuite))
+}
+
+// writeCert writes a self-signed certificate for localhost and its key, and
+// returns their paths.
+func writeCert(
+	t *testing.T,
+) (string, string) {
+	return writeCertFor(t, []string{"localhost"}, nil)
+}
+
+// writeCertFor writes a self-signed certificate for names and ips and its
+// key, and returns their paths.
+func writeCertFor(
+	t *testing.T,
+	names []string,
+	ips []net.IP,
+) (string, string) {
+	t.Helper()
+	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	tmpl := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		DNSNames:              names,
+		IPAddresses:           ips,
+	}
+	der, _ := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &key.PublicKey, key)
+	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
+	dir := t.TempDir()
+	cert, keyFile := filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key")
+	if err := os.WriteFile(
+		cert,
+		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		keyFile,
+		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	return cert, keyFile
 }

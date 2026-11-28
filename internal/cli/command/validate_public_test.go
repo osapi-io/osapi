@@ -23,6 +23,7 @@ package command_test
 import (
 	"context"
 	"log/slog"
+	"reflect"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -482,7 +483,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			for _, p := range command.Validate(tc.group) {
 				got = append(got, p.Message)
 				seen[p.Rule] = true
-				s.Equal(command.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
+				s.Equal(command.Checks.Fix(p.Rule), p.Fix)
 				s.NotEmpty(p.Fix)
 				s.Equal(p.Message+" Fix: "+p.Fix, p.String())
 				s.Equal(tc.group.Path(), p.Group)
@@ -518,7 +519,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		}
 		got = append(got, p.Message)
 		seen[p.Rule] = true
-		s.Equal(command.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
+		s.Equal(command.Checks.Fix(p.Rule), p.Fix)
 	}
 	s.Equal([]string{
 		`badTags.Size has render:"nope", which the output does not know.`,
@@ -536,7 +537,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 	checked := make([]string, 0, len(command.Checks))
 	for _, c := range command.Checks {
 		checked = append(checked, c.Rule)
-		s.NotEmpty(c.Requires, c.Rule)
+		s.NotEmpty(c.Requires)
 	}
 	triggered := make([]string, 0, len(seen))
 	for r := range seen {
@@ -545,7 +546,6 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 	s.ElementsMatch(
 		checked,
 		triggered,
-		"each check is triggered by a case, and each rule has a check",
 	)
 }
 
@@ -572,15 +572,15 @@ func (s *ValidatePublicTestSuite) TestGlobalFlag() {
 func (s *ValidatePublicTestSuite) TestRootGroups() {
 	seen := map[string]bool{}
 	for _, r := range command.RootGroups {
-		s.False(seen[r.Name], "%s is in RootGroups once", r.Name)
+		s.False(seen[r.Name])
 		seen[r.Name] = true
-		s.NotEmpty(r.Purpose, r.Name)
+		s.NotEmpty(r.Purpose)
 		got, ok := command.Root(r.Name)
 		s.True(ok)
 		s.Equal(r, got)
 	}
 	_, ok := command.Root("token")
-	s.False(ok, "a word that is not in RootGroups")
+	s.False(ok)
 
 	root := &cobra.Command{Use: "osapi"}
 	version := &cobra.Command{Use: "version", Short: "x"}
@@ -589,7 +589,7 @@ func (s *ValidatePublicTestSuite) TestRootGroups() {
 	command.DescribeRoot(root)
 	want, _ := command.Root("version")
 	s.Equal(want.Purpose, version.Short)
-	s.Equal("Help about any command", other.Short, "a word of cobra keeps its help")
+	s.Equal("Help about any command", other.Short)
 }
 
 func TestValidatePublicTestSuite(
@@ -601,4 +601,81 @@ func TestValidatePublicTestSuite(
 // spanSecretIn records its secret on a span, which the secret rule refuses.
 type spanSecretIn struct {
 	Token secret.Value `json:"token" validate:"omitempty" doc:"The token" telemetry:"attr"`
+}
+
+func (s *ValidatePublicTestSuite) TestFlaggable() {
+	for t, want := range map[reflect.Type]bool{
+		reflect.TypeFor[string]():            true,
+		reflect.TypeFor[bool]():              true,
+		reflect.TypeFor[int]():               true,
+		reflect.TypeFor[[]string]():          true,
+		reflect.TypeFor[map[string]string](): true,
+		reflect.TypeFor[[]byte]():            true,
+		reflect.TypeFor[command.Parent]():    true,
+		reflect.TypeFor[int64]():             false,
+		reflect.TypeFor[float64]():           false,
+		reflect.TypeFor[[]int]():             false,
+	} {
+		s.Equal(want, command.Flaggable(t))
+	}
+}
+
+func (s *ValidatePublicTestSuite) TestNamedString() {
+	for t, want := range map[reflect.Type]bool{
+		reflect.TypeFor[command.Parent](): true,
+		reflect.TypeFor[string]():         false,
+		reflect.TypeFor[secret.Value]():   false,
+		reflect.TypeFor[int]():            false,
+	} {
+		s.Equal(want, command.NamedString(t))
+	}
+}
+
+func (s *ValidatePublicTestSuite) TestTagProblems() {
+	type out struct {
+		Size int `json:"size" render:"bytes"`
+		Odd  int `json:"odd"  render:"furlongs"`
+	}
+	got := command.TagProblems(reflect.TypeFor[out]())
+	s.Len(got, 1)
+	s.Contains(got[0], `render:"furlongs"`)
+}
+
+func (s *ValidatePublicTestSuite) TestTagKeys() {
+	tests := []struct {
+		name string
+		tag  reflect.StructTag
+		want []string
+	}{
+		{
+			name: "when the tag has keys, each in order",
+			tag:  `json:"a" doc:"The \"a\""`,
+			want: []string{"json", "doc"},
+		},
+		{
+			name: "when the tag ends in a space, it stops there",
+			tag:  `json:"a" `,
+			want: []string{"json"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, command.TagKeys(tc.tag))
+		})
+	}
+}
+
+func (s *ValidatePublicTestSuite) TestCommandFlags() {
+	type body struct {
+		Reason string `json:"reason"`
+	}
+	type in struct {
+		Hostname string `json:"hostname" flag:"target" short:"T"`
+		MaxJobs  int    `json:"max_jobs"`
+		Body     body   `                                        in:"body"`
+		Hidden   string `json:"-"`
+	}
+	s.Equal(map[string]bool{"target": true, "T": true, "max-jobs": true, "reason": true},
+		command.InputFlags(reflect.TypeFor[in]()))
 }

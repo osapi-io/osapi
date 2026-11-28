@@ -23,13 +23,22 @@ package metrics_test
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"math/big"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -496,9 +505,9 @@ func (s *ServerPublicTestSuite) TestBehaviorMetricNames() {
 		"\nosapi_behavior_changes_total{",
 		"\nosapi_behavior_duration_seconds_bucket{",
 	} {
-		s.Contains(string(body), want, "the name that the docs give")
+		s.Contains(string(body), want)
 	}
-	s.NotContains(string(body), "osapi_osapi_", "the namespace once")
+	s.NotContains(string(body), "osapi_osapi_")
 }
 
 func (s *ServerPublicTestSuite) TestNewPrometheusError() {
@@ -652,4 +661,47 @@ func (s *ServerPublicTestSuite) TestStartServes() {
 			srv.Stop(context.Background())
 		})
 	}
+}
+
+// writeCert writes a self-signed certificate for localhost and its key, and
+// returns their paths.
+func writeCert(
+	t *testing.T,
+) (string, string) {
+	t.Helper()
+	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	tmpl := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		DNSNames:              []string{"localhost"},
+	}
+	der, _ := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &key.PublicKey, key)
+	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
+	dir := t.TempDir()
+	cert, keyFile := filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key")
+	if err := os.WriteFile(
+		cert,
+		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		keyFile,
+		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	return cert, keyFile
 }

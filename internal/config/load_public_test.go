@@ -36,6 +36,10 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret/vault"
+
+	// Each command group, which registers the owner of each section of the
+	// config and its defaults (command.Config), as the binary does.
+	_ "github.com/osapi-io/osapi/internal/cli/commands/all"
 )
 
 // validConfig is a config file holding the two required keys, then extra.
@@ -100,12 +104,10 @@ func (s *LoadPublicTestSuite) TestLoad() {
 			body: validConfig(),
 			validateFunc: func(v *viper.Viper, c config.Config) {
 				s.Equal(8080, c.Controller.API.Port)
-				s.Equal("localhost", c.Controller.NATS.Host, "the controller's NATS default")
-				s.Equal("/var/kv", behavior.Settings[kvSettings](s.kv).Dir,
-					"a behavior's setting default")
+				s.Equal("localhost", c.Controller.NATS.Host)
+				s.Equal("/var/kv", behavior.Settings[kvSettings](s.kv).Dir)
 				s.Equal(config.SourceDefault, config.Source(v, "behaviors.kv.dir"))
-				s.Equal(config.SourceUnset, config.Source(v, "controller.api.url"),
-					"a choice of the operator that nothing set")
+				s.Equal(config.SourceUnset, config.Source(v, "controller.api.url"))
 				s.Equal(config.SourceUnset, config.Source(v, "no.such.key"))
 			},
 		},
@@ -440,7 +442,7 @@ func (s *LoadPublicTestSuite) TestSource() {
 			s.Equal(tc.want, config.Source(v, tc.key))
 		})
 	}
-	s.Equal("web-01", c.Agent.Hostname, "an environment variable applies with no key in the file")
+	s.Equal("web-01", c.Agent.Hostname)
 }
 
 func (s *LoadPublicTestSuite) TestDefaultVault() {
@@ -448,7 +450,7 @@ func (s *LoadPublicTestSuite) TestDefaultVault() {
 	var c config.Config
 	s.Require().NoError(config.Load(v, s.write(validConfig()), &c))
 	s.Equal([]vault.Spec{{Name: "default", Type: "nats", KeyFile: config.DefaultVaultKeyFile}},
-		c.Controller.Secrets.Vaults, "a config with no vault has the default vault")
+		c.Controller.Secrets.Vaults)
 
 	v = viper.New()
 	c = config.Config{}
@@ -459,7 +461,7 @@ func (s *LoadPublicTestSuite) TestDefaultVault() {
 		1,
 	)), &c))
 	s.Equal([]vault.Spec{{Name: "prod", Type: "nats", KeyFile: "/tmp/prod.key"}},
-		c.Controller.Secrets.Vaults, "the vaults of the config replace the default")
+		c.Controller.Secrets.Vaults)
 }
 
 func (s *LoadPublicTestSuite) TestValue() {
@@ -507,5 +509,5 @@ func (s *LoadPublicTestSuite) TestLoadDefaultFile() {
 	}
 	var c config.Config
 	s.Require().NoError(config.Load(viper.New(), config.DefaultFile, &c))
-	s.Equal(8080, c.Controller.API.Port, "the default of controller start")
+	s.Equal(8080, c.Controller.API.Port)
 }

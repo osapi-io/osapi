@@ -25,12 +25,22 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"log/slog"
+	"net"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
+	natsserver "github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go/jetstream"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/secret/vault"
@@ -228,7 +238,7 @@ func (s *NATSVaultPublicTestSuite) TestPut() {
 		second, err := v.Put(context.Background(), "registry-token", []byte("two"))
 		s.Require().NoError(err)
 		s.Equal(uint64(2), second.Version)
-		s.Empty(second.By, "a Put with no actor records nobody")
+		s.Empty(second.By)
 
 		value, meta, err := v.Get(s.ctx, "registry-token")
 		s.Require().NoError(err)
@@ -250,8 +260,8 @@ func (s *NATSVaultPublicTestSuite) TestPut() {
 		s.Require().NoError(err)
 		b, err := nc.KVGet(s.ctx, testBucket, "default.b")
 		s.Require().NoError(err)
-		s.NotEqual(a.Value(), b.Value(), "each value has its own nonce")
-		s.NotContains(string(a.Value()), "same", "the bucket has no plain value")
+		s.NotEqual(a.Value(), b.Value())
+		s.NotContains(string(a.Value()), "same")
 	})
 
 	s.Run("when the key is not a valid name refuses it", func() {
@@ -522,7 +532,7 @@ func (s *NATSVaultPublicTestSuite) TestRotate() {
 		after, meta, err := v.Get(s.ctx, "a")
 		s.Require().NoError(err)
 		s.Equal(before, after)
-		s.Equal(uint64(1), meta.Version, "a rotation keeps the version")
+		s.Equal(uint64(1), meta.Version)
 	})
 
 	s.Run("when the list fails returns the error", func() {
@@ -648,4 +658,98 @@ func TestNATSVaultPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(NATSVaultPublicTestSuite))
+}
+
+// testBucket is the secrets bucket of the server that startNATS runs.
+const testBucket = "test-secrets"
+
+// startNATS runs a NATS server with JetStream and the secrets bucket, and
+// is a client of it.
+func startNATS(
+	t *testing.T,
+) *natsclient.Client {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	port := l.Addr().(*net.TCPAddr).Port
+	require.NoError(t, l.Close())
+
+	ns, err := natsserver.NewServer(&natsserver.Options{
+		Host:      "127.0.0.1",
+		Port:      port,
+		JetStream: true,
+		StoreDir:  t.TempDir(),
+	})
+	require.NoError(t, err)
+	ns.Start()
+	t.Cleanup(ns.Shutdown)
+	require.True(t, ns.ReadyForConnections(5*time.Second))
+
+	nc := natsclient.New(slog.New(slog.DiscardHandler), &natsclient.Options{
+		Host: "127.0.0.1",
+		Port: port,
+		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+		Name: "test",
+	})
+	require.NoError(t, nc.Connect(context.Background()))
+	t.Cleanup(nc.Close)
+	require.NoError(t, nc.KVCreateOrUpdate(context.Background(), jetstream.KeyValueConfig{
+		Bucket:  testBucket,
+		History: 5,
+		Storage: jetstream.MemoryStorage,
+	}))
+
+	return nc
+}
+
+// keyFile is a file system with a new vault key in /etc/osapi/secrets.key,
+// and the keys of the vault that read it.
+func keyFile(
+	t *testing.T,
+) (avfs.VFS, natsvault.Keys) {
+	fs := memfs.New()
+	_, err := natsvault.CreateKey(context.Background(), fs, "/etc/osapi/secrets.key")
+	require.NoError(t, err)
+
+	return fs, natsvault.Keys{FS: fs, File: "/etc/osapi/secrets.key"}
+}
+
+// TestSpans: each operation of the vault opens its span, which names the
+// vault and the key, and never the value (osapi-io/osapi#1426).
+func (s *NATSVaultPublicTestSuite) TestSpans() {
+	recorder := tracetest.NewSpanRecorder()
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	defer otel.SetTracerProvider(previous)
+
+	// A span opens under the request's, as in the controller.
+	ctx, root := otel.Tracer("test").Start(s.ctx, "request")
+	defer root.End()
+	nc := startNATS(s.T())
+	_, keys := keyFile(s.T())
+	v, err := natsvault.Open(s.ctx, nc, testBucket, "default", keys)
+	s.Require().NoError(err)
+	secret := "hunter2-do-not-trace"
+
+	_, err = v.Put(ctx, "db-password", []byte(secret))
+	s.Require().NoError(err)
+	_, _, err = v.Get(ctx, "db-password")
+	s.Require().NoError(err)
+	ring, err := keys.Load()
+	s.Require().NoError(err)
+	_, err = v.Rotate(ctx, ring)
+	s.Require().NoError(err)
+	s.Require().NoError(v.Delete(ctx, "db-password"))
+
+	seen := map[string]bool{}
+	for _, sp := range recorder.Ended() {
+		seen[sp.Name()] = true
+		for _, a := range sp.Attributes() {
+			s.False(
+				strings.Contains(a.Value.String(), secret),
+			)
+		}
+	}
+	for _, name := range []string{"vault.put", "vault.get", "vault.rotate", "vault.delete"} {
+		s.True(seen[name])
+	}
 }

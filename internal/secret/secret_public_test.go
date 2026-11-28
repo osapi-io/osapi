@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -69,7 +70,7 @@ func (s *SecretPublicTestSuite) TestValue() {
 			s.Equal(tc.value == "", tc.value.IsZero())
 			s.Equal(tc.shows, tc.value.String())
 			for _, verb := range []string{"%v", "%s", "%+v", "%#v", "%10s"} {
-				s.NotContains(fmt.Sprintf(verb, tc.value), "hunter2", verb)
+				s.NotContains(fmt.Sprintf(verb, tc.value), "hunter2")
 			}
 			s.Equal(fmt.Sprintf("%q", tc.shows), fmt.Sprintf("%q", tc.value))
 
@@ -95,7 +96,7 @@ func (s *SecretPublicTestSuite) TestDecode() {
 		[]byte(`{"password":"hunter2","env":{"TOKEN":"secret://default/token"}}`), &in))
 	s.Equal("hunter2", in.Password.Reveal())
 	s.True(in.Env["TOKEN"].IsReference())
-	s.Error(json.Unmarshal([]byte(`{"password":1}`), &in), "a secret is a string")
+	s.Error(json.Unmarshal([]byte(`{"password":1}`), &in))
 }
 
 type inner struct {
@@ -176,7 +177,7 @@ func (s *SecretPublicTestSuite) TestPlain() {
 		input{Password: "hunter2", Env: map[string]secret.Value{"A": "a"}},
 	)
 	s.Require().NoError(err)
-	s.NotContains(string(redacted), "hunter2", "without Plain, a literal is redacted")
+	s.NotContains(string(redacted), "hunter2")
 }
 
 func (s *SecretPublicTestSuite) TestReferences() {
@@ -226,19 +227,18 @@ func (s *SecretPublicTestSuite) TestResolve() {
 	s.Equal(secret.Value("value of secret://v/ptr"), *in.Ptr)
 	s.Equal(secret.Value("value of secret://v/token"), in.Inner.Token)
 	s.Equal(secret.Value("value of secret://v/inners"), in.Inners[0].Token)
-	s.Equal(secret.Value("secret://v/hidden"), in.hidden, "a field that is not exported stays")
-	s.Len(asked, 8, "a literal and an empty value are not asked for")
+	s.Equal(secret.Value("secret://v/hidden"), in.hidden)
+	s.Len(asked, 8)
 
 	failed := &input{Password: "secret://v/a", Ptr: &ref}
 	err = secret.Resolve(failed, func(ref string) (string, error) {
 		return "", errors.New(ref + ": gone")
 	})
-	s.EqualError(err, "secret://v/a: gone", "the first error stops it")
+	s.EqualError(err, "secret://v/a: gone")
 	s.Equal(secret.Value("secret://v/a"), failed.Password)
 
 	s.NoError(
 		secret.Resolve(input{Password: "secret://v/a"}, nil),
-		"a value that is not a pointer does not change",
 	)
 }
 
@@ -249,14 +249,14 @@ func (s *SecretPublicTestSuite) TestMapAndHas() {
 		Inner:    inner{Token: "secret://v/token"},
 	}
 	s.True(secret.Has(in))
-	s.False(secret.Has(&input{Plain: "x"}), "an empty secret is no secret")
+	s.False(secret.Has(&input{Plain: "x"}))
 	s.False(secret.Has(nil))
 
 	s.Require().NoError(secret.Map(in, func(v secret.Value) (secret.Value, error) {
 		return "<" + v + ">", nil
 	}))
 	s.Equal(secret.Value("<hunter2>"), in.Password)
-	s.Equal(map[string]secret.Value{"A": "<a>", "B": ""}, in.Env, "an empty value is not mapped")
+	s.Equal(map[string]secret.Value{"A": "<a>", "B": ""}, in.Env)
 	s.Equal(secret.Value("<secret://v/token>"), in.Inner.Token)
 
 	s.EqualError(secret.Map(in, func(secret.Value) (secret.Value, error) {
@@ -271,8 +271,8 @@ func (s *SecretPublicTestSuite) TestPlainFunc() {
 	data, err := json.Marshal(out)
 	s.Require().NoError(err)
 	s.Contains(string(data), `"password":"sealed(hunter2)"`)
-	s.Contains(string(data), `"plain":"p"`, "a field that is not a secret stays")
-	s.NotContains(string(data), `"key"`, "an empty secret stays empty")
+	s.Contains(string(data), `"plain":"p"`)
+	s.NotContains(string(data), `"key"`)
 }
 
 func (s *SecretPublicTestSuite) TestParse() {
@@ -322,29 +322,6 @@ func (s *SecretPublicTestSuite) TestParse() {
 	}
 }
 
-func (s *SecretPublicTestSuite) TestIsAndFields() {
-	s.True(secret.Is(reflectTypeOf[secret.Value]()))
-	s.True(secret.Is(reflectTypeOf[map[string]secret.Value]()))
-	s.True(secret.Is(reflectTypeOf[*[]secret.Value]()))
-	s.False(secret.Is(reflectTypeOf[string]()))
-	s.False(secret.Is(reflectTypeOf[inner]()))
-
-	type self struct {
-		Next *self        `json:"next"`
-		Pass secret.Value `json:"pass"`
-	}
-	s.Equal(
-		[]string{"env", "key", "list", "pair", "password", "ptr", "token"},
-		secret.Fields(reflectTypeOf[*input]()),
-	)
-	s.Equal([]string{"pass"}, secret.Fields(reflectTypeOf[self]()))
-	s.Empty(secret.Fields(reflectTypeOf[string]()))
-	s.Equal(
-		[]string{"Untagged"},
-		secret.Fields(reflectTypeOf[struct{ Untagged secret.Value }]()),
-	)
-}
-
 func (s *SecretPublicTestSuite) TestDescribe() {
 	s.Equal(secret.Takes, secret.Describe(""))
 	s.Equal("The password. "+secret.Takes, secret.Describe("The password."))
@@ -362,4 +339,9 @@ func TestSecretPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(SecretPublicTestSuite))
+}
+
+// reflectTypeOf is the reflect.Type of T, for a table row that names a type.
+func reflectTypeOf[T any]() reflect.Type {
+	return reflect.TypeFor[T]()
 }

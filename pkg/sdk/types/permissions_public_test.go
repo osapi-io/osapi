@@ -18,10 +18,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package secret_test
+package types_test
 
-import "reflect"
+import (
+	"testing"
 
-func reflectTypeOf[T any]() reflect.Type {
-	return reflect.TypeFor[T]()
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
+
+type PermissionsPublicTestSuite struct {
+	suite.Suite
+}
+
+func TestPermissionsPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(PermissionsPublicTestSuite))
+}
+
+// TestValid: a value of a closed set is valid when its type lists it.
+func (s *PermissionsPublicTestSuite) TestValid() {
+	tests := []struct {
+		name  string
+		valid func() bool
+		want  bool
+	}{
+		{name: "when a permission is listed", valid: types.PermFileRead.Valid, want: true},
+		{name: "when a permission is not listed", valid: types.Permission("helth:read").Valid},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.valid())
+		})
+	}
 }

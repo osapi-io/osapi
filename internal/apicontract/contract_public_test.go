@@ -25,11 +25,12 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/getkin/kin-openapi/openapi3"
-
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 
@@ -43,6 +44,8 @@ var update = flag.Bool("update", false, "rewrite the golden contract of the full
 
 type ContractPublicTestSuite struct {
 	suite.Suite
+
+	doc map[string]any
 }
 
 func (s *ContractPublicTestSuite) load(
@@ -70,7 +73,7 @@ func (s *ContractPublicTestSuite) TestJoinedSpec() {
 		s.Require().NoError(os.WriteFile(golden, []byte(got), 0o644))
 	}
 	want, err := os.ReadFile(golden)
-	s.Require().NoError(err, "no golden file; run with -update")
+	s.Require().NoError(err)
 	s.Equal(string(want), got)
 }
 
@@ -186,4 +189,114 @@ func TestContractPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ContractPublicTestSuite))
+}
+
+// probes are the operations whose failure has a body of its own, not an
+// ErrorResponse: a readiness probe answers 503 and says what is not ready.
+var probes = map[string]bool{"GET /api/health/ready 503": true}
+
+// notCollections are the controller's GETs without a key that are not a
+// list of things: the health of the controller, the catalog, one document
+// that the UI reads, and the controller's key and the NATS server's certificate, with their rotations.
+var notCollections = map[string]bool{
+	"/api/health": true, "/api/health/ready": true, "/api/health/status": true,
+	"/api/catalog": true, "/api/pki/key": true, "/api/pki/nats": true,
+}
+
+func (s *ContractPublicTestSuite) SetupSuite() {
+	data, err := os.ReadFile(filepath.Join("..", "controller", "api", "gen", "api.yaml"))
+	s.Require().NoError(err)
+	s.Require().NoError(yaml.Unmarshal(data, &s.doc))
+}
+
+// op is one operation of the full spec.
+type op struct {
+	verb, path string
+	body       map[string]any
+}
+
+func (s *ContractPublicTestSuite) ops() []op {
+	var out []op
+	paths, _ := s.doc["paths"].(map[string]any)
+	for path, item := range paths {
+		verbs, _ := item.(map[string]any)
+		for verb, body := range verbs {
+			b, ok := body.(map[string]any)
+			if !ok || b["operationId"] == nil {
+				continue
+			}
+			out = append(out, op{verb: strings.ToUpper(verb), path: path, body: b})
+		}
+	}
+	sort.Slice(
+		out,
+		func(i, j int) bool { return out[i].path+out[i].verb < out[j].path+out[j].verb },
+	)
+
+	return out
+}
+
+// schema is the name of the JSON schema a response refers to, or "".
+func schema(
+	response any,
+) string {
+	r, _ := response.(map[string]any)
+	content, _ := r["content"].(map[string]any)
+	js, _ := content["application/json"].(map[string]any)
+	sch, _ := js["schema"].(map[string]any)
+	ref, _ := sch["$ref"].(string)
+
+	return ref[strings.LastIndex(ref, "/")+1:]
+}
+
+// TestConventions holds the API to the conventions of
+// components/osapi/api.md in osapi-io/specs. A failure names the operation
+// and the rule; change the operation, not the test.
+func (s *ContractPublicTestSuite) TestConventions() {
+	// Each operationId is Pascal case. A 202 is for work that is not done when
+	// the answer goes, and each operation answers when it is done. A 201 has a
+	// Location header, a 4xx or 5xx answers {"error": "..."}, a delete of the
+	// controller answers 204, and a list answers items and total_items.
+	schemas, _ := s.doc["components"].(map[string]any)["schemas"].(map[string]any)
+	var bad []string
+	for _, o := range s.ops() {
+		where := o.verb + " " + o.path
+		id, _ := o.body["operationId"].(string)
+		if unicode.IsLower([]rune(id)[0]) {
+			bad = append(bad, where+": operationId "+id+" is not Pascal case")
+		}
+
+		responses, _ := o.body["responses"].(map[string]any)
+		node := strings.HasPrefix(o.path, "/api/node/")
+		for code, r := range responses {
+			switch {
+			case code == "202":
+				bad = append(bad, where+": answers 202")
+			case code == "201":
+				headers, _ := r.(map[string]any)["headers"].(map[string]any)
+				if _, ok := headers["Location"]; !ok {
+					bad = append(bad, where+": a 201 with no Location header")
+				}
+			case code[0] == '4' || code[0] == '5':
+				if !probes[where+" "+code] && schema(r) != "ErrorResponse" {
+					bad = append(bad, where+": a "+code+" that is not ErrorResponse")
+				}
+			}
+		}
+		if o.verb == "DELETE" && !node {
+			if _, ok := responses["204"]; !ok {
+				bad = append(bad, where+": a delete with no 204")
+			}
+		}
+		if o.verb == "GET" && !node && !strings.Contains(o.path, "{") && !notCollections[o.path] {
+			name := schema(responses["200"])
+			props, _ := schemas[name].(map[string]any)["properties"].(map[string]any)
+			for _, p := range []string{"items", "total_items"} {
+				if _, ok := props[p]; !ok {
+					bad = append(bad, where+": a list with no "+p)
+				}
+			}
+		}
+	}
+	s.Empty(bad)
 }
