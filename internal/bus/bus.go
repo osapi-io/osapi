@@ -29,9 +29,7 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-
 	natsserver "github.com/nats-io/nats-server/v2/server"
-
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -39,7 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // StorageType maps "memory"/"file" strings to jetstream.StorageType.

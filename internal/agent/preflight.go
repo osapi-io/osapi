@@ -38,7 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // PreflightResult holds the outcome of a single preflight check. A failed

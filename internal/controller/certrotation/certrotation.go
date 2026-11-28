@@ -35,7 +35,6 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/config"
@@ -43,7 +42,7 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // interval is how often Run looks whether the agents trust the next

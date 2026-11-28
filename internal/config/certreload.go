@@ -31,7 +31,7 @@ import (
 	"github.com/avfs/avfs/vfs/osfs"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // certReloader serves the certificate of a server from its files, and reads

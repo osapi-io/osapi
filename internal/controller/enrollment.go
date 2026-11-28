@@ -29,30 +29,26 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
-
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/nats-io/nkeys"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
-	"github.com/osapi-io/osapi/internal/natscallout"
 
 	"github.com/osapi-io/osapi/internal/audit"
-
-	"github.com/osapi-io/osapi/internal/controller/jointoken"
-
-	"github.com/avfs/avfs/vfs/osfs"
-
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/controller/certrotation"
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/natscallout"
 	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/natsrevoke"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // defaultControllerKeyGrace is the overlap of a rotation of the

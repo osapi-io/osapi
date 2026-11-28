@@ -30,6 +30,7 @@ import (
 	"strings"
 
 	"github.com/avfs/avfs"
+
 	"github.com/osapi-io/osapi/internal/validation"
 )
 

@@ -30,20 +30,17 @@ import (
 	"time"
 
 	"github.com/avfs/avfs"
-
 	"github.com/avfs/avfs/vfs/osfs"
-	"github.com/osapi-io/osapi/internal/natsauth"
-
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	natsembedded "github.com/osapi-io/nats-server/pkg/server"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/natsauth"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // dialFn connects to NATS (injectable for testing).

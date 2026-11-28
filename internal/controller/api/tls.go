@@ -34,7 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // The files of the self-signed certificate in controller.pki.key_dir.

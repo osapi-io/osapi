@@ -33,14 +33,13 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
 
 	"github.com/osapi-io/osapi/internal/bus"
 )
 
-// hostFS is the filesystem of the host, which a test replaces.
+// hostFS is the filesystem of the host.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // ErrSigningKey is a signing key file that holds no account seed.
