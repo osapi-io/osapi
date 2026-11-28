@@ -31,26 +31,28 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/labstack/echo/v5"
-
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/yaml.v3"
 
+	"github.com/osapi-io/osapi/internal/apicontract"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all/gen"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type AllPublicTestSuite struct {
@@ -114,12 +116,12 @@ func (s *AllPublicTestSuite) TestRefusals() {
 					rec := httptest.NewRecorder()
 					e.ServeHTTP(rec, req)
 
-					s.Equal(http.StatusBadRequest, rec.Code, rec.Body.String())
+					s.Equal(http.StatusBadRequest, rec.Code)
 					var answer struct {
 						Error string `json:"error"`
 					}
 					s.Require().
-						NoError(json.Unmarshal(rec.Body.Bytes(), &answer), rec.Body.String())
+						NoError(json.Unmarshal(rec.Body.Bytes(), &answer))
 					s.NotEmpty(answer.Error)
 				})
 			}
@@ -232,4 +234,81 @@ func directCalls(
 	})
 
 	return problems
+}
+
+// repoRoot is the repository root, from this package's directory.
+const repoRoot = "../../../.."
+
+// moving is each group whose hand-written spec the controller still serves,
+// and that spec. A row goes when its group moves and the spec is deleted;
+// when the table is empty, the test goes too.
+var moving = []struct {
+	group string
+	spec  string
+	// accepted are the lines that differ on purpose, each with its reason:
+	// a line only the hand-written spec has starts with -, one only the
+	// generated spec has with +.
+	accepted map[string]string
+}{
+	// each group moved: their hand-written specs are gone,
+	// and TestJoinedSpec holds the full spec, which has their generated
+	// specs, to the same contract.
+}
+
+// TestEndpointParity holds the generated spec of each group that moves to
+// its hand-written spec: the same operations, parameters, auth, bodies,
+// responses and schemas. Prose is not compared; osapi dsl endpoint
+// openapi get --name <group> prints the generated spec to read beside the old one.
+func (s *AllPublicTestSuite) TestEndpointParity() {
+	for _, m := range moving {
+		s.Run("when "+m.group+" replaces "+m.spec, func() {
+			g := endpoint.Lookup(m.group)
+			s.Require().NotNil(g)
+
+			data, err := os.ReadFile(filepath.Join(repoRoot, m.spec))
+			s.Require().NoError(err)
+			var hand map[string]any
+			s.Require().NoError(yaml.Unmarshal(data, &hand))
+
+			doc, err := endpoint.OpenAPI(g)
+			s.Require().NoError(err)
+			raw, err := json.Marshal(doc)
+			s.Require().NoError(err)
+			var gen map[string]any
+			s.Require().NoError(json.Unmarshal(raw, &gen))
+
+			want := set(apicontract.Lines(hand))
+			got := set(apicontract.Lines(gen))
+			var diff []string
+			for l := range want {
+				if !got[l] {
+					diff = append(diff, "-"+l)
+				}
+			}
+			for l := range got {
+				if !want[l] {
+					diff = append(diff, "+"+l)
+				}
+			}
+			var unexpected []string
+			for _, d := range diff {
+				if _, ok := m.accepted[d]; !ok {
+					unexpected = append(unexpected, d)
+				}
+			}
+			sort.Strings(unexpected)
+			s.Empty(unexpected)
+		})
+	}
+}
+
+func set(
+	lines []string,
+) map[string]bool {
+	out := make(map[string]bool, len(lines))
+	for _, l := range lines {
+		out[l] = true
+	}
+
+	return out
 }

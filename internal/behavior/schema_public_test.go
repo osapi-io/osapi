@@ -24,13 +24,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/osapi-io/osapi/internal/validation/rule"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
 // onOff is a switch, a closed set for the enum rule.
@@ -141,10 +140,10 @@ func (s *SchemaPublicTestSuite) TestSchemaFor() {
 				assert.Equal(s.T(), "ip", p["addr"].Format)
 				assert.Equal(s.T(), `^x+$`, p["custom"].Pattern)
 				assert.Equal(s.T(), "hostname", p["formatted"].Format)
-				assert.Equal(s.T(), "password", p["pass"].Format, "a secret is a password field")
-				assert.True(s.T(), p["pass"].WriteOnly, "a secret is never shown back")
+				assert.Equal(s.T(), "password", p["pass"].Format)
+				assert.True(s.T(), p["pass"].WriteOnly)
 				assert.False(s.T(), p["formatted"].WriteOnly)
-				assert.Equal(s.T(), `^/etc`, p["dir"].Pattern, "startswith is a prefix pattern")
+				assert.Equal(s.T(), `^/etc`, p["dir"].Pattern)
 				assert.Equal(s.T(), "string", p["labels"].AdditionalProperties.Type)
 				assert.Equal(s.T(), "object", p["child"].Type)
 				assert.Equal(s.T(), "string", p["items"].Items.Properties["name"].Type)
@@ -160,7 +159,7 @@ func (s *SchemaPublicTestSuite) TestSchemaFor() {
 				assert.Equal(s.T(), "array", kids.Type)
 				assert.Equal(s.T(), "object", kids.Items.Type)
 				assert.Equal(s.T(), "a treeNode, as above", kids.Items.Description)
-				assert.Nil(s.T(), kids.Items.Properties, "the type is expanded one time")
+				assert.Nil(s.T(), kids.Items.Properties)
 				assert.Equal(s.T(), "a treeNode, as above", sch.Properties["parent"].Description)
 			},
 		},
@@ -188,6 +187,13 @@ func (s *SchemaPublicTestSuite) TestSchemaFor() {
 			name:    "when a bound is not a number",
 			t:       reflect.TypeFor[badBound](),
 			wantErr: "not a number",
+		},
+		{
+			name: "when dive is on a field with no items, it constrains no item",
+			t:    reflect.TypeFor[diveNoItems](),
+			validateFunc: func(sch *behavior.Schema) {
+				s.Nil(sch.Properties["name"].MaxLength)
+			},
 		},
 	}
 
@@ -229,24 +235,25 @@ func (s *SchemaPublicTestSuite) TestShape() {
 	in, err := behavior.SchemaFor(reflect.TypeFor[shapeIn]())
 	s.Require().NoError(err)
 	s.Equal("shapeIn { key*, value }", behavior.Shape(reflect.TypeFor[shapeIn](), in, true))
-	s.Equal("shapeIn { key, value }", behavior.Shape(reflect.TypeFor[shapeIn](), in, false),
-		"an output marks no field required")
+	s.Equal("shapeIn { key, value }", behavior.Shape(reflect.TypeFor[shapeIn](), in, false))
 	list, err := behavior.SchemaFor(reflect.TypeFor[[]shapeIn]())
 	s.Require().NoError(err)
 	s.Equal("[]shapeIn { key, value }", behavior.Shape(reflect.TypeFor[[]shapeIn](), list, false))
-	s.Equal("emptyIn", behavior.Shape(reflect.TypeFor[emptyIn](), &behavior.Schema{}, true),
-		"a type with no field is its name")
+	s.Equal("emptyIn", behavior.Shape(reflect.TypeFor[emptyIn](), &behavior.Schema{}, true))
 }
 
 func (s *SchemaPublicTestSuite) TestFieldShape() {
-	s.Equal("shapeIn { key*, value }", behavior.FieldShape(reflect.TypeFor[shapeIn](), true),
-		"a field with no json name, or json \"-\", or unexported, is left out")
-	s.Equal("spanTree { name, children }", behavior.FieldShape(reflect.TypeFor[spanTree](), false),
-		"a type that holds itself has a shape")
+	s.Equal("shapeIn { key*, value }", behavior.FieldShape(reflect.TypeFor[shapeIn](), true))
+	s.Equal("spanTree { name, children }", behavior.FieldShape(reflect.TypeFor[spanTree](), false))
 	s.Equal(
 		"[]spanTree { name, children }",
 		behavior.FieldShape(reflect.TypeFor[[]spanTree](), false),
 	)
 	s.Equal("string", behavior.FieldShape(reflect.TypeFor[string](), true))
 	s.Equal("", behavior.FieldShape(reflect.TypeFor[struct{ quiet int }](), true))
+}
+
+// diveNoItems has dive on a field that has no items.
+type diveNoItems struct {
+	Name string `json:"name" validate:"dive,max=3" doc:"test"`
 }

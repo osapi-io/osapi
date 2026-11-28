@@ -21,9 +21,13 @@
 package all_test
 
 import (
-	"errors"
+	"go/parser"
+	"go/token"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -33,6 +37,8 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
+	"github.com/osapi-io/osapi/internal/dsl"
+	"github.com/osapi-io/osapi/internal/skills"
 )
 
 type AllPublicTestSuite struct {
@@ -64,9 +70,8 @@ func (s *AllPublicTestSuite) TestRefusals() {
 					err := command.Run(&cobra.Command{}, g, m.MethodName(), r.Input)
 
 					var ue *command.UsageError
-					s.Require().True(errors.As(err, &ue), "a usage error, not %v", err)
-					s.NotEmpty(ue.Msg)
-					s.True(strings.HasPrefix(ue.Msg, "--"), "it names the flag: %s", ue.Msg)
+					s.Require().ErrorAs(err, &ue)
+					s.Regexp(`^--`, ue.Msg)
 				})
 			}
 		}
@@ -86,6 +91,7 @@ func (s *AllPublicTestSuite) TestEachPackageRegistered() {
 	dirs, err := os.ReadDir("..")
 	s.Require().NoError(err)
 	checked := 0
+	var missing []string
 	for _, d := range dirs {
 		if !d.IsDir() || d.Name() == "all" {
 			continue
@@ -104,19 +110,105 @@ func (s *AllPublicTestSuite) TestEachPackageRegistered() {
 		}
 		checked++
 		pkg := "github.com/osapi-io/osapi/internal/cli/commands/" + d.Name()
-		s.Contains(string(all), `"`+pkg+`"`, "all.go does not import %s", d.Name())
-		s.Contains(
-			string(gen),
-			`"`+pkg+`/gen"`,
-			"gen/gen.go does not import %s/gen: run go generate ./internal/cli/commands/all",
-			d.Name(),
-		)
+		if !strings.Contains(string(all), `"`+pkg+`"`) {
+			missing = append(missing, "all.go: "+pkg)
+		}
+		if !strings.Contains(string(gen), `"`+pkg+`/gen"`) {
+			missing = append(missing, "gen/gen.go: "+pkg+"/gen")
+		}
 	}
 	s.NotZero(checked)
+	s.Empty(missing)
 }
 
 func TestAllPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(AllPublicTestSuite))
+}
+
+// TestEveryDSLHasTheSharedParts holds each DSL to the contract that they
+// share: each shared command under the command of its group, unless it says
+// why the command does not apply, its skill in the binary, and its docs page.
+// A change that reaches one DSL and not the others fails here.
+func (s *AllPublicTestSuite) TestEveryDSLHasTheSharedParts() {
+	paths := map[string]bool{}
+	for _, g := range command.All() {
+		for _, m := range g.Methods {
+			words := slices.Clone(g.CommandPath())
+			if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
+				words = append(words, sub)
+			}
+			paths[strings.Join(append(words, m.CommandName()), " ")] = true
+		}
+	}
+
+	all := dsl.All()
+	names := make([]string, 0, len(all))
+	for _, d := range all {
+		names = append(names, d.Name)
+		s.Run(d.Name, func() {
+			var wrong []string
+			for _, c := range dsl.Commands() {
+				path := strings.Join(d.Command, " ") + " " + c
+				why, without := d.Without[c]
+				switch {
+				case without && why == "":
+					wrong = append(wrong, "no reason in Without: "+c)
+				case without && paths[path]:
+					wrong = append(wrong, "in Without but exists: osapi "+path)
+				case !without && !paths[path]:
+					wrong = append(wrong, "missing: osapi "+path)
+				}
+			}
+			s.Empty(wrong)
+			for c := range d.Without {
+				s.Contains(dsl.Commands(), c)
+			}
+			_, openapi := d.Without[dsl.CommandOpenAPI]
+			s.Equal(d.ServesAPI(), !openapi)
+			s.Equal(d.ServesAPI(), d.Operations != nil)
+
+			_, err := fs.Stat(skills.Dev(), d.Skill+"/SKILL.md")
+			s.NoError(err)
+			_, err = os.Stat(filepath.Join(
+				"..", "..", "..", "..", "docs", "docs", "sidebar", "development", "dsl", d.Page))
+			s.NoError(err)
+		})
+	}
+	s.Equal([]string{"behavior", "chain", "command", "endpoint"}, names)
+}
+
+// packageDoc is a comment line that starts the doc of a package.
+var packageDoc = regexp.MustCompile(`^// Package (\w+) `)
+
+// TestEachPackageDocNamesItsPackage fails when a file of a local group has a
+// "// Package x" comment for a package that is not its own. A copy of the
+// token group's comment once headed each file of config, skill and version,
+// and go doc joined it to each package's doc (osapi-io/osapi#1251).
+func (s *AllPublicTestSuite) TestEachPackageDocNamesItsPackage() {
+	files, err := filepath.Glob(filepath.Join("..", "*", "*.go"))
+	s.Require().NoError(err)
+	s.Require().NotEmpty(files)
+
+	for _, f := range files {
+		parsed, err := parser.ParseFile(
+			token.NewFileSet(),
+			f,
+			nil,
+			parser.ParseComments|parser.PackageClauseOnly,
+		)
+		s.Require().NoError(err)
+		data, err := os.ReadFile(f)
+		s.Require().NoError(err)
+		for _, line := range strings.Split(string(data), "\n") {
+			if strings.HasPrefix(line, "package ") {
+				break
+			}
+			if m := packageDoc.FindStringSubmatch(line); m != nil {
+				pkg := strings.TrimSuffix(parsed.Name.Name, "_test")
+				s.Equal(f+": "+pkg, f+": "+m[1])
+			}
+		}
+	}
 }

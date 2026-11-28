@@ -144,7 +144,7 @@ func (s *DebianPublicTestSuite) TestOneChangeAtATime() {
 	}
 	wg.Wait()
 
-	s.Equal(int32(1), peak.Load(), "one netplan command at a time")
+	s.Equal(int32(1), peak.Load())
 }
 
 // TestFailedStepIsInTheTree is a chain that fails after a step changed the
@@ -394,4 +394,19 @@ func TestDebianPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(DebianPublicTestSuite))
+}
+
+func (s *DebianPublicTestSuite) TestSection() {
+	for t, want := range map[string]string{
+		"wifi":         "wifis",
+		"bridge":       "bridges",
+		"bond":         "bonds",
+		"tunnel":       "tunnels",
+		"vxlan":        "tunnels",
+		"dummy-device": "dummy-devices",
+		"ethernet":     "ethernets",
+		"":             "ethernets",
+	} {
+		s.Equal(want, netplan.Section(t))
+	}
 }

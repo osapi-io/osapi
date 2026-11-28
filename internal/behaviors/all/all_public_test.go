@@ -21,12 +21,14 @@
 package all_test
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
@@ -67,7 +69,7 @@ func (s *AllPublicTestSuite) TestOperationsAgreeWithTheSpec() {
 	s.Require().NoError(err)
 	full, err := authtoken.OperationPermissions(spec)
 	s.Require().NoError(err)
-	s.Equal(full, authtoken.Operations(), "the definitions agree with the full spec")
+	s.Equal(full, authtoken.Operations())
 }
 
 // TestPermissionsAreDeclared checks the permissions of every registered
@@ -84,8 +86,7 @@ func (s *AllPublicTestSuite) TestPermissionsAreDeclared() {
 func (s *AllPublicTestSuite) TestSDKPermissionsAreCurrent() {
 	got, err := os.ReadFile(filepath.Join("..", "..", "..", authtoken.GoFile))
 	s.Require().NoError(err)
-	s.Equal(authtoken.Go(), string(got),
-		"%s is stale: run go generate ./internal/behaviors/all", authtoken.GoFile)
+	s.Equal(authtoken.Go(), string(got))
 }
 
 func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
@@ -105,13 +106,11 @@ func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 		for _, m := range b.Methods {
 			g := behavior.GroupOf(b)
 			s.Require().
-				NotNil(g, "%s has no endpoint group; run go generate ./internal/behaviors/all", b.Name)
+				NotNil(g)
 			route := m.HTTPMethod() + " " + server.Path(g, g.Method(m.Name))
 			s.Run(route, func() {
 				s.True(
 					mounted[route],
-					"%s is not mounted; run go generate ./internal/behaviors/all",
-					route,
 				)
 			})
 		}
@@ -142,8 +141,6 @@ func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
 				s.Equal(
 					m.Name,
 					cmd.Name(),
-					"%s is not attached; run go generate ./internal/behaviors/all",
-					line,
 				)
 			})
 		}
@@ -154,4 +151,34 @@ func TestAllPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(AllPublicTestSuite))
+}
+
+// repoRoot is the repository root, from this package's directory.
+const repoRoot = "../../.."
+
+// TestSpec loads every spec the behaviors' endpoint groups produced, each
+// behavior's gen/api.yaml, with kin-openapi, the library
+// oapi-codegen reads specs with, and validates it, references to the shared
+// spec included.
+func (s *AllPublicTestSuite) TestSpec() {
+	var specs []string
+	for _, pattern := range []string{
+		"internal/behaviors/*/gen/api*.yaml",
+		"internal/behaviors/*/*/gen/api*.yaml",
+	} {
+		found, err := filepath.Glob(filepath.Join(repoRoot, pattern))
+		s.Require().NoError(err)
+		specs = append(specs, found...)
+	}
+	s.Require().NotEmpty(specs)
+
+	for _, spec := range specs {
+		s.Run(spec, func() {
+			loader := openapi3.NewLoader()
+			loader.IsExternalRefsAllowed = true
+			doc, err := loader.LoadFromFile(spec)
+			s.Require().NoError(err)
+			s.NoError(doc.Validate(context.Background()))
+		})
+	}
 }

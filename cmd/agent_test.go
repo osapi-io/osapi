@@ -17,38 +17,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
-package netplan_test
+package cmd
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/behaviors/netplan"
+	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 )
 
-type SectionPublicTestSuite struct {
+// AgentTestSuite holds that the agent keeps its keys in a directory of its
+// own. A default of /etc/osapi/pki, the controller's and the NATS server's,
+// made an agent that had keys there from an older install sign with them,
+// so the controller refused each of its results (osapi-io/osapi#1393).
+type AgentTestSuite struct {
 	suite.Suite
 }
 
-func (s *SectionPublicTestSuite) TestSection() {
-	for t, want := range map[string]string{
-		"wifi":         "wifis",
-		"bridge":       "bridges",
-		"bond":         "bonds",
-		"tunnel":       "tunnels",
-		"vxlan":        "tunnels",
-		"dummy-device": "dummy-devices",
-		"ethernet":     "ethernets",
-		"":             "ethernets",
-	} {
-		s.Equal(want, netplan.Section(t), t)
-	}
+func (s *AgentTestSuite) TestAgentKeyDirIsItsOwn() {
+	s.Equal("/etc/osapi/pki/agent", agentcmd.Defaults.PKI.KeyDir)
+	s.NotEqual(controllercmd.Defaults.PKI.KeyDir, agentcmd.Defaults.PKI.KeyDir)
+	s.NotEqual(natsserver.Defaults.Server.KeyDir, agentcmd.Defaults.PKI.KeyDir)
 }
 
-func TestSectionPublicTestSuite(
-	t *testing.T,
-) {
-	suite.Run(t, new(SectionPublicTestSuite))
+func TestAgentTestSuite(t *testing.T) {
+	suite.Run(t, new(AgentTestSuite))
 }

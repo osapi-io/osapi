@@ -25,14 +25,13 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type fakeProvider struct{ prefix string }
@@ -417,7 +416,7 @@ func (s *BehaviorPublicTestSuite) TestServedAt() {
 func (s *BehaviorPublicTestSuite) TestChildTypeName() {
 	s.Equal("SysctlPart", child(top()).TypeName())
 	s.Equal("LogSourcePart", child(underLog()).TypeName())
-	s.Empty(behavior.Define("", "x").TypeName(), "a behavior with no name has no type name")
+	s.Empty(behavior.Define("", "x").TypeName())
 }
 
 // TestPathKeys: a child's methods put the parent's key in the path before
@@ -431,13 +430,12 @@ func (s *BehaviorPublicTestSuite) TestPathKeys() {
 	s.False(c.Method("list").InPath("part"))
 	s.Equal([]string{"key"}, top().Method("get").PathKeys())
 	s.Empty(top().Method("list").PathKeys())
-	s.Empty(top().ParentKey(), "a behavior of the host has no parent key")
-	s.Empty(child(underLog()).ParentKey(), "a parent with no keyed method gives no key")
-	s.Empty(underLog().ParentKey(), "a child under the collection has no parent key")
+	s.Empty(top().ParentKey())
+	s.Empty(child(underLog()).ParentKey())
+	s.Empty(underLog().ParentKey())
 	s.Empty(underLog().Method("get").PathKeys())
 	s.Empty(
 		behavior.Read("get", get).Key("key").PathKeys()[1:],
-		"a method of no behavior has its own key only",
 	)
 }
 
@@ -459,8 +457,7 @@ func (s *BehaviorPublicTestSuite) TestCommand() {
 			want: "osapi client node log source get",
 		},
 	}
-	s.Equal("osapi client node sysctl part list", child(top()).Command(child(top()).Method("list")),
-		"a child's command is under its parent's")
+	s.Equal("osapi client node sysctl part list", child(top()).Command(child(top()).Method("list")))
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
@@ -493,14 +490,14 @@ func (s *BehaviorPublicTestSuite) TestHTTPMethod() {
 func (s *BehaviorPublicTestSuite) TestAction() {
 	m := behavior.Action("restart", set)
 	s.True(m.Action)
-	s.Equal(types.VerbWrite, m.Verb, "an action is a write: <group>:write and a modify job")
+	s.Equal(types.VerbWrite, m.Verb)
 	s.False(behavior.Write("update", set).Action)
 	s.True(behavior.Action("restart", set).Always().AlwaysChanges)
 }
 
 func (s *BehaviorPublicTestSuite) TestNotAFact() {
 	s.Equal("not a fact", behavior.Read("list", set).NotAFact("not a fact").NonFact)
-	s.Empty(behavior.Read("list", set).NonFact, "a read goes through gohai unless it says why")
+	s.Empty(behavior.Read("list", set).NonFact)
 }
 
 func (s *BehaviorPublicTestSuite) TestKey() {
