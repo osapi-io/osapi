@@ -24,7 +24,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -35,6 +34,8 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
+
+	"github.com/avfs/avfs"
 )
 
 type RevocationPublicTestSuite struct {
@@ -57,7 +58,7 @@ func (s *RevocationPublicTestSuite) seedFile(
 		data, _ = kp.Seed()
 	}
 	f := filepath.Join(s.T().TempDir(), "operator-signing.nk")
-	s.Require().NoError(os.WriteFile(f, data, 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, f, data, 0o600))
 
 	return f
 }
@@ -116,7 +117,7 @@ func (s *RevocationPublicTestSuite) TestStartRevocation() {
 			defer controller.SetRevocationConnect(connect)()
 			r := &cfg.Controller.Join.Revocation
 			r.AccountJWTFile = filepath.Join(s.T().TempDir(), "account.jwt")
-			s.Require().NoError(os.WriteFile(r.AccountJWTFile, []byte("eyJ"), 0o600))
+			s.Require().NoError(avfs.WriteFile(testFS, r.AccountJWTFile, []byte("eyJ"), 0o600))
 			r.OperatorSigningKeyFile = tt.key()
 			r.SystemCredsFile = filepath.Join(s.T().TempDir(), "system.creds")
 			cfg.Controller.Join.AgentTTL = "1h"

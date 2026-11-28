@@ -20,7 +20,12 @@
 
 package certrotation
 
-import "time"
+import (
+	"time"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+)
 
 // SetInterval sets how often Run steps, and returns the one before.
 func SetInterval(
@@ -41,4 +46,16 @@ func SetMakeCert(
 	makeCert = f
 
 	return old
+}
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }

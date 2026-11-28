@@ -54,6 +54,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	behaviorHost "github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/config"
@@ -450,6 +451,18 @@ func SetAgentHostname(
 	hostname string,
 ) {
 	a.setHostname(hostname)
+}
+
+// SetHostFS replaces the filesystem that the preflight reads.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }
 
 // SetProcStatusPath overrides the procStatusPath for testing.

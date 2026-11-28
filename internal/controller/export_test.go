@@ -52,6 +52,8 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/notify"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+
+	"github.com/avfs/avfs/vfs/osfs"
 )
 
 // ExportNewMetricsProvider calls newMetricsProvider.
@@ -308,4 +310,16 @@ func SetRevocationConnect(
 	revocationConnect = fn
 
 	return func() { revocationConnect = was }
+}
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }

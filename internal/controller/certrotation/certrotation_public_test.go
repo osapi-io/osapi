@@ -44,7 +44,12 @@ import (
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
+
+	"github.com/avfs/avfs"
 )
+
+// testFS is the host's filesystem, through avfs. The certificates, keys and NATS configs here are read by path, by crypto/tls and the NATS server as well as by the code under test.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 const bucket = "state"
 
@@ -103,7 +108,7 @@ func (s *CertRotationPublicTestSuite) rotation(
 
 // current is the PEM certificate that the server serves.
 func (s *CertRotationPublicTestSuite) current() []byte {
-	data, err := os.ReadFile(s.src.CertFile)
+	data, err := avfs.ReadFile(testFS, s.src.CertFile)
 	s.Require().NoError(err)
 
 	return data
@@ -113,7 +118,7 @@ func (s *CertRotationPublicTestSuite) current() []byte {
 func (s *CertRotationPublicTestSuite) makeNext() []byte {
 	cert, key := certrotation.NextFiles(s.src)
 	s.Require().NoError(config.MakeSelfSigned(cert, key))
-	data, err := os.ReadFile(cert)
+	data, err := avfs.ReadFile(testFS, cert)
 	s.Require().NoError(err)
 
 	return data
@@ -212,7 +217,7 @@ func (s *CertRotationPublicTestSuite) TestStart() {
 		got, err := s.rotation(true).Start(context.Background())
 		s.Require().NoError(err)
 		next, _ := certrotation.NextFiles(s.src)
-		data, err := os.ReadFile(next)
+		data, err := avfs.ReadFile(testFS, next)
 		s.Require().NoError(err)
 		s.Equal(pki.CertFingerprint(data), got.Next)
 		s.Equal(pki.CertFingerprint(s.current()), got.Current)
@@ -275,7 +280,7 @@ func (s *CertRotationPublicTestSuite) TestStart() {
 	s.Run("when the certificate is not on this host, it says where to rotate it", func() {
 		s.kv.EXPECT().KVGet(gomock.Any(), bucket, pki.NATSCertStateKey).
 			Return(nil, jetstream.ErrKeyNotFound)
-		s.Require().NoError(os.Remove(s.src.CertFile))
+		s.Require().NoError(testFS.Remove(s.src.CertFile))
 		_, err := s.rotation(true).Start(context.Background())
 		s.ErrorContains(err, "rotate it on the host of the NATS server")
 	})
@@ -316,7 +321,7 @@ func (s *CertRotationPublicTestSuite) TestStatus() {
 	s.Run("with no record and no certificate, it is an error", func() {
 		s.kv.EXPECT().KVGet(gomock.Any(), bucket, pki.NATSCertStateKey).
 			Return(nil, jetstream.ErrKeyNotFound)
-		s.Require().NoError(os.Remove(s.src.CertFile))
+		s.Require().NoError(testFS.Remove(s.src.CertFile))
 		_, err := s.rotation(true).Status(context.Background())
 		s.ErrorIs(err, os.ErrNotExist)
 	})
@@ -415,8 +420,8 @@ func (s *CertRotationPublicTestSuite) TestStep() {
 		next := s.makeNext()
 		s.record(s.rotating(next, s.now.Add(-2*time.Hour)), s.keys.PrivateKey())
 		cert, key := certrotation.NextFiles(s.src)
-		s.Require().NoError(os.Rename(key, s.src.KeyFile))
-		s.Require().NoError(os.Rename(cert, s.src.CertFile))
+		s.Require().NoError(testFS.Rename(key, s.src.KeyFile))
+		s.Require().NoError(testFS.Rename(cert, s.src.CertFile))
 		s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, pki.NATSCertStateKey, gomock.Any(), uint64(3)).
 			Return(uint64(4), nil)
 		got, err := s.rotation(false).Step(context.Background())
@@ -427,7 +432,7 @@ func (s *CertRotationPublicTestSuite) TestStep() {
 		next := s.makeNext()
 		s.record(s.rotating(next, s.now.Add(-2*time.Hour)), s.keys.PrivateKey())
 		_, key := certrotation.NextFiles(s.src)
-		s.Require().NoError(os.Rename(key, s.src.KeyFile))
+		s.Require().NoError(testFS.Rename(key, s.src.KeyFile))
 		s.kv.EXPECT().KVUpdate(gomock.Any(), bucket, pki.NATSCertStateKey, gomock.Any(), uint64(3)).
 			Return(uint64(4), nil)
 		got, err := s.rotation(false).Step(context.Background())
@@ -439,7 +444,7 @@ func (s *CertRotationPublicTestSuite) TestStep() {
 		next := s.makeNext()
 		s.record(s.rotating(next, s.now.Add(-2*time.Hour)), s.keys.PrivateKey())
 		_, key := certrotation.NextFiles(s.src)
-		s.Require().NoError(os.Remove(key))
+		s.Require().NoError(testFS.Remove(key))
 		_, err := s.rotation(false).Step(context.Background())
 		s.ErrorContains(err, "switch to the next certificate")
 	})
@@ -462,8 +467,8 @@ func (s *CertRotationPublicTestSuite) TestStep() {
 			if file == "cert" {
 				target = s.src.CertFile
 			}
-			s.Require().NoError(os.Remove(target))
-			s.Require().NoError(os.MkdirAll(filepath.Join(target, "busy"), 0o700))
+			s.Require().NoError(testFS.Remove(target))
+			s.Require().NoError(testFS.MkdirAll(filepath.Join(target, "busy"), 0o700))
 			_, err := s.rotation(false).Step(context.Background())
 			s.ErrorContains(err, "switch to the next certificate")
 		})

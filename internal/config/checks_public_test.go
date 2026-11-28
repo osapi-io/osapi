@@ -25,7 +25,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
@@ -42,7 +41,7 @@ type ChecksPublicTestSuite struct {
 }
 
 func (s *ChecksPublicTestSuite) TestChecksHaveEveryRule() {
-	entries, err := os.ReadDir(".")
+	entries, err := testFS.ReadDir(".")
 	s.Require().NoError(err)
 
 	var rules []string

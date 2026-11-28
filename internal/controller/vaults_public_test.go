@@ -34,6 +34,8 @@ import (
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
+
+	"github.com/avfs/avfs"
 )
 
 type VaultsPublicTestSuite struct {
@@ -56,7 +58,7 @@ func (s *VaultsPublicTestSuite) TestMakeVaultKeys() {
 		err := controller.ExportMakeVaultKeys(ctx, slog.New(slog.NewTextHandler(&log, nil)), vfs,
 			[]vault.Spec{{Name: "default", Type: "nats", KeyFile: file}})
 		s.Require().NoError(err)
-		info, err := os.Stat(file)
+		info, err := testFS.Stat(file)
 		s.Require().NoError(err)
 		s.Equal(os.FileMode(0o600), info.Mode().Perm())
 		s.Contains(log.String(), "vault key created")
@@ -67,12 +69,12 @@ func (s *VaultsPublicTestSuite) TestMakeVaultKeys() {
 		file := filepath.Join(s.T().TempDir(), "secrets.key")
 		ring, err := natsvault.CreateKey(ctx, vfs, file)
 		s.Require().NoError(err)
-		before, _ := os.ReadFile(file)
+		before, _ := avfs.ReadFile(testFS, file)
 		var log bytes.Buffer
 		s.Require().NoError(controller.ExportMakeVaultKeys(ctx,
 			slog.New(slog.NewTextHandler(&log, nil)), vfs,
 			[]vault.Spec{{Name: "default", Type: "nats", KeyFile: file}}))
-		after, _ := os.ReadFile(file)
+		after, _ := avfs.ReadFile(testFS, file)
 		s.Equal(before, after, "the key "+ring.ID()+" stays")
 		s.Empty(log.String())
 	})
@@ -92,7 +94,7 @@ func (s *VaultsPublicTestSuite) TestMakeVaultKeys() {
 					{Name: "other", Type: "vault", KeyFile: filepath.Join(dir, "other.key")},
 					{Name: "none", Type: "nats"},
 				}))
-			entries, _ := os.ReadDir(dir)
+			entries, _ := testFS.ReadDir(dir)
 			s.Empty(entries)
 		},
 	)

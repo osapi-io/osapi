@@ -22,7 +22,6 @@ package bus_test
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -39,7 +38,13 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/mocks"
 	"github.com/osapi-io/osapi/internal/config"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The certificates, keys and NATS configs here are read by path, by crypto/tls and the NATS server as well as by the code under test.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type BusPublicTestSuite struct {
 	suite.Suite
@@ -201,7 +206,7 @@ func (suite *BusPublicTestSuite) resolverFile() (string, string) {
 	path := filepath.Join(suite.T().TempDir(), "resolver.conf")
 	content := fmt.Sprintf("operator: %s\nsystem_account: %s\nresolver: MEMORY\n"+
 		"resolver_preload: {\n  %s: %s\n}\n", opJWT, acctPub, acctPub, acctJWT)
-	suite.Require().NoError(os.WriteFile(path, []byte(content), 0o600))
+	suite.Require().NoError(avfs.WriteFile(testFS, path, []byte(content), 0o600))
 
 	return path, acctPub
 }
@@ -209,7 +214,7 @@ func (suite *BusPublicTestSuite) resolverFile() (string, string) {
 func (suite *BusPublicTestSuite) TestBuildNATSServerOptions() {
 	resolver, sysAccount := suite.resolverFile()
 	noOperator := filepath.Join(suite.T().TempDir(), "empty.conf")
-	suite.Require().NoError(os.WriteFile(noOperator, []byte("port: 4222\n"), 0o600))
+	suite.Require().NoError(avfs.WriteFile(testFS, noOperator, []byte("port: 4222\n"), 0o600))
 
 	tests := []struct {
 		name         string
@@ -301,7 +306,7 @@ func (suite *BusPublicTestSuite) TestJetStreamKey() {
 	dir := suite.T().TempDir()
 	write := func(name, content string) string {
 		path := filepath.Join(dir, name)
-		suite.Require().NoError(os.WriteFile(path, []byte(content), 0o600))
+		suite.Require().NoError(avfs.WriteFile(testFS, path, []byte(content), 0o600))
 
 		return path
 	}
@@ -945,7 +950,7 @@ func (suite *BusPublicTestSuite) TestServerOptionsTLS() {
 	suite.FileExists(filepath.Join(dir, "nats.crt"))
 
 	blocked := filepath.Join(suite.T().TempDir(), "file")
-	suite.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+	suite.Require().NoError(avfs.WriteFile(testFS, blocked, nil, 0o600))
 	_, err = bus.ServerOptions("0.0.0.0", 4222, "/var/lib/nats",
 		config.NATSServerAuth{Type: "none"}, config.ServerTLS{Enabled: true},
 		filepath.Join(blocked, "pki"))

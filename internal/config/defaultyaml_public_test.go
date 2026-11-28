@@ -21,7 +21,6 @@
 package config_test
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -30,6 +29,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
+
+	"github.com/avfs/avfs"
 )
 
 type DefaultYAMLPublicTestSuite struct {
@@ -47,7 +48,7 @@ func (s *DefaultYAMLPublicTestSuite) TestDefaultYAML() {
 	s.Contains(out, "back_off:\n      - 30s\n", "a list is a block under its key")
 
 	path := filepath.Join(s.T().TempDir(), "osapi.yaml")
-	s.Require().NoError(os.WriteFile(path, []byte(out), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, path, []byte(out), 0o600))
 	var c config.Config
 	s.Require().NoError(config.Load(viper.New(), path, &c))
 	s.Equal(8080, c.Controller.API.Port)

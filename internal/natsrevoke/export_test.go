@@ -20,7 +20,24 @@
 
 package natsrevoke
 
-import "time"
+import (
+	"time"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+)
+
+// SetHostFS replaces the filesystem that the package reads.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
+}
 
 // SetNowFn overrides the nowFn variable for testing.
 func SetNowFn(

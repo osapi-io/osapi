@@ -34,6 +34,9 @@ import (
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/behavior"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 )
 
 type PreflightPublicTestSuite struct {
@@ -42,6 +45,7 @@ type PreflightPublicTestSuite struct {
 	mockCtrl    *gomock.Controller
 	mockExecMgr *execmocks.MockManager
 	logger      *slog.Logger
+	fs          *memfs.MemFS
 	tmpDir      string
 }
 
@@ -53,17 +57,22 @@ func TestPreflightPublicTestSuite(
 
 func (s *PreflightPublicTestSuite) SetupTest() {
 	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	s.tmpDir = s.T().TempDir()
+	s.fs = memfs.New()
+	dir, err := avfs.MkdirTemp(s.fs, "", "preflight")
+	s.Require().NoError(err)
+	s.tmpDir = dir
 }
 
 func (s *PreflightPublicTestSuite) SetupSubTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockExecMgr = execmocks.NewMockManager(s.mockCtrl)
+	agent.SetHostFS(s.fs)
 }
 
 func (s *PreflightPublicTestSuite) TearDownSubTest() {
 	s.mockCtrl.Finish()
 	agent.ResetProcStatusPath()
+	agent.ResetHostFS()
 	agent.ResetLookPath()
 	behavior.Reset()
 }
@@ -79,7 +88,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 			setup: func() {
 				path := filepath.Join(s.tmpDir, "status_all_caps")
 				content := "Name:\tosapi\nCapEff:\t000000000000102f\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
+				err := avfs.WriteFile(s.fs, path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
 			},
@@ -96,7 +105,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 			setup: func() {
 				path := filepath.Join(s.tmpDir, "status_no_caps")
 				content := "Name:\tosapi\nCapEff:\t0000000000000000\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
+				err := avfs.WriteFile(s.fs, path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
 			},
@@ -126,7 +135,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 			setup: func() {
 				path := filepath.Join(s.tmpDir, "status_bad_hex")
 				content := "Name:\tosapi\nCapEff:\tNOTHEX\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
+				err := avfs.WriteFile(s.fs, path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
 			},
@@ -150,7 +159,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 					longLine[i] = 'x'
 				}
 				content := string(longLine) + "\nCapEff:\t000000000000102f\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
+				err := avfs.WriteFile(s.fs, path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
 			},
@@ -167,7 +176,7 @@ func (s *PreflightPublicTestSuite) TestCheckCapabilities() {
 			setup: func() {
 				path := filepath.Join(s.tmpDir, "status_no_capeff")
 				content := "Name:\tosapi\nCapInh:\t0000000000000000\n"
-				err := os.WriteFile(path, []byte(content), 0o644)
+				err := avfs.WriteFile(s.fs, path, []byte(content), 0o644)
 				s.Require().NoError(err)
 				agent.SetProcStatusPath(path)
 			},
@@ -344,7 +353,12 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 				Return(tc.sudoOut, tc.sudoErr)
 
 			path := filepath.Join(s.tmpDir, "status")
-			err := os.WriteFile(path, []byte("Name:\tosapi\nCapEff:\t"+tc.capEff+"\n"), 0o644)
+			err := avfs.WriteFile(
+				s.fs,
+				path,
+				[]byte("Name:\tosapi\nCapEff:\t"+tc.capEff+"\n"),
+				0o644,
+			)
 			s.Require().NoError(err)
 			agent.SetProcStatusPath(path)
 

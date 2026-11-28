@@ -24,7 +24,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -32,6 +31,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/nats-io/jwt/v2"
 	natsserver "github.com/nats-io/nats-server/v2/server"
@@ -53,8 +53,11 @@ const bucket = "enrollment"
 type NatsRevokePublicTestSuite struct {
 	suite.Suite
 	ctrl *gomock.Controller
-	dir  string
-	now  time.Time
+	// fs is the host's own filesystem: the NATS server of a test reads the
+	// resolver config and the account JWT by their paths.
+	fs  avfs.VFS
+	dir string
+	now time.Time
 }
 
 func TestNatsRevokePublicTestSuite(t *testing.T) {
@@ -63,6 +66,8 @@ func TestNatsRevokePublicTestSuite(t *testing.T) {
 
 func (s *NatsRevokePublicTestSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
+	s.fs = osfs.NewWithNoIdm()
+	natsrevoke.SetHostFS(s.fs)
 	s.dir = s.T().TempDir()
 	s.now = time.Unix(1_800_000_000, 0)
 	natsrevoke.SetNowFn(func() time.Time { return s.now })
@@ -70,6 +75,7 @@ func (s *NatsRevokePublicTestSuite) SetupTest() {
 
 func (s *NatsRevokePublicTestSuite) TearDownTest() {
 	natsrevoke.ResetNowFn()
+	natsrevoke.ResetHostFS()
 }
 
 // memKV is a KV of a map, for a test that needs the store to keep what it
@@ -140,14 +146,14 @@ func entry(
 // key and the public key of the account.
 func (s *NatsRevokePublicTestSuite) setup() (nkeys.KeyPair, string) {
 	_, err := natsauth.Operator(
-		context.Background(), osfs.New(), s.dir, "osapi", config.NATS{},
+		context.Background(), s.fs, s.dir, "osapi", config.NATS{},
 	)
 	s.Require().NoError(err)
-	seed, err := os.ReadFile(filepath.Join(s.dir, natsauth.OperatorSigningKeyFile))
+	seed, err := avfs.ReadFile(s.fs, filepath.Join(s.dir, natsauth.OperatorSigningKeyFile))
 	s.Require().NoError(err)
 	signer, err := nkeys.FromSeed(seed)
 	s.Require().NoError(err)
-	acct, err := os.ReadFile(filepath.Join(s.dir, natsauth.AccountPubFile))
+	acct, err := avfs.ReadFile(s.fs, filepath.Join(s.dir, natsauth.AccountPubFile))
 	s.Require().NoError(err)
 
 	return signer, strings.TrimSpace(string(acct))
@@ -172,7 +178,7 @@ func (s *NatsRevokePublicTestSuite) startServer() *natsserver.Server {
 func (s *NatsRevokePublicTestSuite) userKey(
 	name string,
 ) string {
-	raw, err := os.ReadFile(filepath.Join(s.dir, name))
+	raw, err := avfs.ReadFile(s.fs, filepath.Join(s.dir, name))
 	s.Require().NoError(err)
 	token, err := jwt.ParseDecoratedJWT(raw)
 	s.Require().NoError(err)
@@ -356,7 +362,7 @@ func (s *NatsRevokePublicTestSuite) TestSend() {
 				kv.EXPECT().KVKeys(gomock.Any(), bucket, gomock.Any()).Return([]string{key}, nil)
 				kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(entry(s.ctrl, at), nil)
 			},
-			account: func(path string) { s.Require().NoError(os.Remove(path)) },
+			account: func(path string) { s.Require().NoError(s.fs.Remove(path)) },
 			wantErr: "read the account",
 		},
 		{
@@ -365,7 +371,7 @@ func (s *NatsRevokePublicTestSuite) TestSend() {
 				kv.EXPECT().KVKeys(gomock.Any(), bucket, gomock.Any()).Return([]string{key}, nil)
 				kv.EXPECT().KVGet(gomock.Any(), bucket, key).Return(entry(s.ctrl, at), nil)
 			},
-			account: func(path string) { s.Require().NoError(os.WriteFile(path, []byte("x"), 0o600)) },
+			account: func(path string) { s.Require().NoError(avfs.WriteFile(s.fs, path, []byte("x"), 0o600)) },
 			wantErr: "decode the account",
 		},
 		{

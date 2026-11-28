@@ -20,7 +20,23 @@
 
 package natsjwt
 
-import "github.com/nats-io/nkeys"
+import (
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/nats-io/nkeys"
+)
+
+// SetHostFS replaces the filesystem that the package reads.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
+}
 
 // SetCreateUser swaps how a user nkey is made, and returns a func that puts
 // it back.

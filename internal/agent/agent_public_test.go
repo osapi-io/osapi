@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -55,7 +54,12 @@ import (
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
+
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The code under test reads these files by path.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type AgentPublicTestSuite struct {
 	suite.Suite
@@ -402,7 +406,7 @@ func (s *AgentPublicTestSuite) TestStart() {
 				// Write a fake proc status file with all capabilities set.
 				tmpDir := s.T().TempDir()
 				path := filepath.Join(tmpDir, "status")
-				err := os.WriteFile(
+				err := avfs.WriteFile(testFS,
 					path,
 					[]byte("Name:\tosapi\nCapEff:\t000000000000102f\n"),
 					0o644,

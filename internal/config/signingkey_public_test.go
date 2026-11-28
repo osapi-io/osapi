@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
+
+	"github.com/avfs/avfs"
 )
 
 type SigningKeyPublicTestSuite struct {
@@ -51,7 +53,7 @@ func (s *SigningKeyPublicTestSuite) TestEnsureSigningKey() {
 	made := c.Controller.API.Security.SigningKeys[0]
 	s.Equal(config.SigningKeyID, made.ID)
 	s.Len(made.Key, 64, "32 bytes, as hex")
-	info, err := os.Stat(filepath.Join(c.Controller.PKI.KeyDir, config.SigningKeyFile))
+	info, err := testFS.Stat(filepath.Join(c.Controller.PKI.KeyDir, config.SigningKeyFile))
 	s.Require().NoError(err)
 	s.Equal(os.FileMode(0o600), info.Mode().Perm())
 
@@ -70,18 +72,18 @@ func (s *SigningKeyPublicTestSuite) TestEnsureSigningKey() {
 	var unreadable config.Config
 	unreadable.Controller.PKI.KeyDir = filepath.Join(dir, "dirkey")
 	s.Require().
-		NoError(os.MkdirAll(filepath.Join(unreadable.Controller.PKI.KeyDir, config.SigningKeyFile), 0o700))
+		NoError(testFS.MkdirAll(filepath.Join(unreadable.Controller.PKI.KeyDir, config.SigningKeyFile), 0o700))
 	s.ErrorContains(config.EnsureSigningKey(&unreadable), "read the signing key")
 
 	locked := filepath.Join(dir, "locked")
-	s.Require().NoError(os.MkdirAll(locked, 0o500))
+	s.Require().NoError(testFS.MkdirAll(locked, 0o500))
 	var blocked config.Config
 	blocked.Controller.PKI.KeyDir = filepath.Join(locked, "pki")
 	s.ErrorContains(config.EnsureSigningKey(&blocked), "make the signing key")
 
 	var readonly config.Config
 	readonly.Controller.PKI.KeyDir = filepath.Join(dir, "ro")
-	s.Require().NoError(os.MkdirAll(readonly.Controller.PKI.KeyDir, 0o500))
+	s.Require().NoError(testFS.MkdirAll(readonly.Controller.PKI.KeyDir, 0o500))
 	s.ErrorContains(config.EnsureSigningKey(&readonly), "write the signing key")
 
 	config.SetRandRead(func([]byte) (int, error) { return 0, errors.New("no entropy") })
@@ -102,16 +104,16 @@ func (s *SigningKeyPublicTestSuite) TestShortSigningKey() {
 			// A first start that made the file and failed to write it.
 			name: "an empty file in the key dir",
 			setup: func(c *config.Config) {
-				s.Require().NoError(os.MkdirAll(c.Controller.PKI.KeyDir, 0o700))
-				s.Require().NoError(os.WriteFile(
+				s.Require().NoError(testFS.MkdirAll(c.Controller.PKI.KeyDir, 0o700))
+				s.Require().NoError(avfs.WriteFile(testFS,
 					filepath.Join(c.Controller.PKI.KeyDir, config.SigningKeyFile), nil, 0o600))
 			},
 		},
 		{
 			name: "a short file in the key dir",
 			setup: func(c *config.Config) {
-				s.Require().NoError(os.MkdirAll(c.Controller.PKI.KeyDir, 0o700))
-				s.Require().NoError(os.WriteFile(
+				s.Require().NoError(testFS.MkdirAll(c.Controller.PKI.KeyDir, 0o700))
+				s.Require().NoError(avfs.WriteFile(testFS,
 					filepath.Join(
 						c.Controller.PKI.KeyDir,
 						config.SigningKeyFile,
@@ -164,7 +166,7 @@ func (s *SigningKeyPublicTestSuite) TestSigningKeyRace() {
 	for range n - 1 {
 		s.Equal(first, <-keys)
 	}
-	entries, err := os.ReadDir(dir)
+	entries, err := testFS.ReadDir(dir)
 	s.Require().NoError(err)
 	s.Len(entries, 1, "no temporary file is left")
 }
@@ -203,7 +205,7 @@ func (s *SigningKeyPublicTestSuite) TestSigningKeyWriteErrors() {
 			var c config.Config
 			c.Controller.PKI.KeyDir = filepath.Join(s.T().TempDir(), "pki")
 			s.ErrorContains(config.EnsureSigningKey(&c), tt.wantErr)
-			entries, _ := os.ReadDir(c.Controller.PKI.KeyDir)
+			entries, _ := testFS.ReadDir(c.Controller.PKI.KeyDir)
 			for _, e := range entries {
 				s.NotContains(e.Name(), ".tmp", "no temporary file is left")
 			}

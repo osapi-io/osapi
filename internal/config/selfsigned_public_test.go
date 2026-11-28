@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
+
+	"github.com/avfs/avfs"
 )
 
 type SelfSignedPublicTestSuite struct {
@@ -54,7 +56,7 @@ func (s *SelfSignedPublicTestSuite) TearDownTest() {
 func (s *SelfSignedPublicTestSuite) cert(
 	file string,
 ) *x509.Certificate {
-	data, err := os.ReadFile(file)
+	data, err := avfs.ReadFile(testFS, file)
 	s.Require().NoError(err)
 	block, _ := pem.Decode(data)
 	c, err := x509.ParseCertificate(block.Bytes)
@@ -111,7 +113,7 @@ func (s *SelfSignedPublicTestSuite) TestWithCurrentSelfSigned() {
 		dir := s.T().TempDir()
 		config.SelfSignedHostname = func() (string, error) { return "web-01", nil }
 		crt, _ := config.SelfSignedFiles(dir, "agent-metrics")
-		s.Require().NoError(os.WriteFile(crt, []byte("nope"), 0o644))
+		s.Require().NoError(avfs.WriteFile(testFS, crt, []byte("nope"), 0o644))
 		got, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
 		s.Require().NoError(err)
 		s.Contains(s.cert(got.CertFile).DNSNames, "web-01")
@@ -129,7 +131,7 @@ func (s *SelfSignedPublicTestSuite) TestWithCurrentSelfSigned() {
 		dir := s.T().TempDir()
 		config.SelfSignedHostname = func() (string, error) { return "web-01", nil }
 		crt, _ := config.SelfSignedFiles(dir, "agent-metrics")
-		s.Require().NoError(os.WriteFile(crt,
+		s.Require().NoError(avfs.WriteFile(testFS, crt,
 			[]byte("-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n"), 0o644))
 		got, err := config.ServerTLS{Enabled: true}.WithCurrentSelfSigned(dir, "agent-metrics")
 		s.Require().NoError(err)
@@ -167,9 +169,9 @@ func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 		dir := s.T().TempDir()
 		first, err := config.ServerTLS{Enabled: true}.WithSelfSigned(dir, "api")
 		s.Require().NoError(err)
-		data, err := os.ReadFile(first.CertFile)
+		data, err := avfs.ReadFile(testFS, first.CertFile)
 		s.Require().NoError(err)
-		s.Require().NoError(os.WriteFile(first.CertFile, data[:len(data)/2], 0o644))
+		s.Require().NoError(avfs.WriteFile(testFS, first.CertFile, data[:len(data)/2], 0o644))
 
 		got, err := config.ServerTLS{Enabled: true}.WithSelfSigned(dir, "api")
 		s.Require().NoError(err)
@@ -188,7 +190,7 @@ func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 		c := s.cert(got.CertFile)
 		s.ElementsMatch([]string{"localhost", "web-01", "nats.example.com"}, c.DNSNames)
 		s.Len(c.IPAddresses, 3, "127.0.0.1, ::1 and 10.0.0.5")
-		info, err := os.Stat(got.KeyFile)
+		info, err := testFS.Stat(got.KeyFile)
 		s.Require().NoError(err)
 		s.Equal(os.FileMode(0o600), info.Mode().Perm())
 
@@ -205,7 +207,7 @@ func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 	})
 	s.Run("a key directory that cannot be made is the error", func() {
 		blocked := filepath.Join(s.T().TempDir(), "file")
-		s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+		s.Require().NoError(avfs.WriteFile(testFS, blocked, nil, 0o600))
 		_, err := config.ServerTLS{
 			Enabled: true,
 		}.WithSelfSigned(
@@ -225,7 +227,7 @@ func (s *SelfSignedPublicTestSuite) TestWithSelfSigned() {
 				return errors.New("disk full")
 			}
 
-			return os.WriteFile(name, data, perm)
+			return avfs.WriteFile(testFS, name, data, perm)
 		}
 		_, err := config.ServerTLS{Enabled: true}.WithSelfSigned(s.T().TempDir(), "api")
 		s.ErrorContains(err, "api.crt: disk full")

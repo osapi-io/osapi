@@ -29,10 +29,11 @@ import (
 	"encoding/pem"
 	"math/big"
 	"net"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/avfs/avfs"
 )
 
 // writeCert writes a self-signed certificate for localhost and its key, and
@@ -61,14 +62,14 @@ func writeCert(
 	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
 	dir := t.TempDir()
 	cert, keyFile := filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key")
-	if err := os.WriteFile(
+	if err := avfs.WriteFile(testFS,
 		cert,
 		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
 		0o600,
 	); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(
+	if err := avfs.WriteFile(testFS,
 		keyFile,
 		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}),
 		0o600,

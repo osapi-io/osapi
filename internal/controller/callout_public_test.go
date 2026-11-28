@@ -23,7 +23,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -34,7 +33,13 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/pki"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The certificates, keys and NATS configs here are read by path, by crypto/tls and the NATS server as well as by the code under test.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type CalloutPublicTestSuite struct {
 	suite.Suite
@@ -49,7 +54,7 @@ func (s *CalloutPublicTestSuite) issuerFile(
 	seed []byte,
 ) string {
 	f := filepath.Join(s.T().TempDir(), "issuer.nk")
-	s.Require().NoError(os.WriteFile(f, seed, 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, f, seed, 0o600))
 
 	return f
 }

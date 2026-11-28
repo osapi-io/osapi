@@ -21,7 +21,6 @@
 package controller_test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -33,6 +32,8 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/pki"
+
+	"github.com/avfs/avfs"
 )
 
 type JoinUserPublicTestSuite struct {
@@ -61,7 +62,7 @@ func (s *JoinUserPublicTestSuite) TestJoinAgentUser() {
 		acctPub, _ := acct.PublicKey()
 		seed, _ := acct.Seed()
 		file := filepath.Join(s.T().TempDir(), "signing.nk")
-		s.Require().NoError(os.WriteFile(file, seed, 0o600))
+		s.Require().NoError(avfs.WriteFile(testFS, file, seed, 0o600))
 		var cfg config.Config
 		cfg.Controller.Join.SigningKeyFile = file
 		cfg.Controller.Join.Account = acctPub

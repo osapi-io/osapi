@@ -24,7 +24,6 @@ import (
 	"context"
 	"log/slog"
 	"net"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -46,6 +45,8 @@ import (
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 	"github.com/osapi-io/osapi/internal/validation"
+
+	"github.com/avfs/avfs"
 )
 
 type ControllerPublicTestSuite struct {
@@ -212,7 +213,8 @@ func (s *ControllerPublicTestSuite) TestNew() {
 				seed, _ := acct.Seed()
 				cfg.Controller.Join.Account, _ = acct.PublicKey()
 				cfg.Controller.Join.SigningKeyFile = filepath.Join(s.T().TempDir(), "signing.nk")
-				s.Require().NoError(os.WriteFile(cfg.Controller.Join.SigningKeyFile, seed, 0o600))
+				s.Require().
+					NoError(avfs.WriteFile(testFS, cfg.Controller.Join.SigningKeyFile, seed, 0o600))
 				return cfg
 			},
 		},
@@ -231,7 +233,7 @@ func (s *ControllerPublicTestSuite) TestNew() {
 					Type: "user_pass", Username: "callout", Password: "pw",
 				}
 				s.Require().
-					NoError(os.WriteFile(cfg.Controller.Join.Callout.IssuerKeyFile, seed, 0o600))
+					NoError(avfs.WriteFile(testFS, cfg.Controller.Join.Callout.IssuerKeyFile, seed, 0o600))
 				return cfg
 			},
 		},
@@ -293,7 +295,7 @@ func (s *ControllerPublicTestSuite) TestNew() {
 				cfg.Controller.API.Security.SigningKeys = nil
 				cfg.Controller.PKI.KeyDir = s.T().TempDir()
 				s.Require().
-					NoError(os.Mkdir(filepath.Join(cfg.Controller.PKI.KeyDir, config.SigningKeyFile), 0o700))
+					NoError(testFS.Mkdir(filepath.Join(cfg.Controller.PKI.KeyDir, config.SigningKeyFile), 0o700))
 				return cfg
 			},
 			wantErr: "read the signing key",
@@ -321,7 +323,7 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			cfg: func() config.Config {
 				cfg := withVault(s.T(), startServer(s.T()))
 				blocked := filepath.Join(s.T().TempDir(), "file")
-				s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+				s.Require().NoError(avfs.WriteFile(testFS, blocked, nil, 0o600))
 				cfg.Controller.Secrets.Vaults[0].KeyFile = filepath.Join(blocked, "secrets.key")
 				return cfg
 			},
@@ -374,7 +376,7 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			cfg: func() config.Config {
 				cfg := startServer(s.T())
 				blocked := filepath.Join(s.T().TempDir(), "file")
-				s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+				s.Require().NoError(avfs.WriteFile(testFS, blocked, nil, 0o600))
 				cfg.Controller.PKI.KeyDir = filepath.Join(blocked, "keys")
 				return cfg
 			},

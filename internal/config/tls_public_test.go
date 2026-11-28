@@ -37,6 +37,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/tlspolicy"
+
+	"github.com/avfs/avfs"
 )
 
 type TLSPublicTestSuite struct {
@@ -46,7 +48,7 @@ type TLSPublicTestSuite struct {
 func (s *TLSPublicTestSuite) TestClientConfig() {
 	cert, key := writeCert(s.T())
 	notPEM := filepath.Join(s.T().TempDir(), "not.pem")
-	s.Require().NoError(os.WriteFile(notPEM, []byte("not a certificate"), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, notPEM, []byte("not a certificate"), 0o600))
 
 	tests := []struct {
 		name         string
@@ -83,7 +85,7 @@ func (s *TLSPublicTestSuite) TestClientConfig() {
 			noSystem: true,
 			validateFunc: func(got *tls.Config, err error) {
 				s.Require().NoError(err)
-				pemData, err := os.ReadFile(cert)
+				pemData, err := avfs.ReadFile(testFS, cert)
 				s.Require().NoError(err)
 				want := x509.NewCertPool()
 				s.Require().True(want.AppendCertsFromPEM(pemData))
@@ -194,9 +196,9 @@ func (s *TLSPublicTestSuite) replace(
 	toKey string,
 ) {
 	for _, f := range [][2]string{{fromCert, toCert}, {fromKey, toKey}} {
-		data, err := os.ReadFile(f[0])
+		data, err := avfs.ReadFile(testFS, f[0])
 		s.Require().NoError(err)
-		s.Require().NoError(os.WriteFile(f[1], data, 0o600))
+		s.Require().NoError(avfs.WriteFile(testFS, f[1], data, 0o600))
 		later := time.Now().Add(time.Second)
 		s.Require().NoError(os.Chtimes(f[1], later, later))
 	}
@@ -235,12 +237,12 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 	second := s.leaf(got)
 	s.NotEqual(first, second, "a replaced certificate is served at the next handshake")
 
-	s.Require().NoError(os.WriteFile(cert, []byte("not a certificate"), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, cert, []byte("not a certificate"), 0o600))
 	later := time.Now().Add(2 * time.Second)
 	s.Require().NoError(os.Chtimes(cert, later, later))
 	s.Equal(second, s.leaf(got), "a pair that does not load keeps the last one")
 
-	s.Require().NoError(os.Remove(cert))
+	s.Require().NoError(testFS.Remove(cert))
 	s.Equal(second, s.leaf(got), "a missing file keeps the last one")
 
 	// A copy that keeps the time of the file, such as cp -p, is read too:
@@ -250,11 +252,11 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 	before := s.leaf(again)
 	third, thirdKey := writeCert(s.T())
 	for _, f := range [][2]string{{third, other}, {thirdKey, otherKey}} {
-		fi, err := os.Stat(f[1])
+		fi, err := testFS.Stat(f[1])
 		s.Require().NoError(err)
-		data, err := os.ReadFile(f[0])
+		data, err := avfs.ReadFile(testFS, f[0])
 		s.Require().NoError(err)
-		s.Require().NoError(os.WriteFile(f[1], data, 0o600))
+		s.Require().NoError(avfs.WriteFile(testFS, f[1], data, 0o600))
 		s.Require().NoError(os.Chtimes(f[1], fi.ModTime(), fi.ModTime()))
 	}
 	s.NotEqual(before, s.leaf(again), "a copy with the same time is served")
@@ -313,9 +315,9 @@ func (s *TLSPublicTestSuite) TestDial() {
 	server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
 	s.Require().NoError(err)
 	ca := filepath.Join(s.T().TempDir(), "ca.crt")
-	current, err := os.ReadFile(cert)
+	current, err := avfs.ReadFile(testFS, cert)
 	s.Require().NoError(err)
-	s.Require().NoError(os.WriteFile(ca, current, 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, ca, current, 0o600))
 
 	client, err := config.ClientTLS{Enabled: true, CAFile: ca}.Dial("localhost")
 	s.Require().NoError(err)
@@ -328,9 +330,9 @@ func (s *TLSPublicTestSuite) TestDial() {
 	s.replace(next, nextKey, cert, key)
 	s.Error(handshake(server, client), "ca_file does not have the new certificate yet")
 
-	nextPEM, err := os.ReadFile(next)
+	nextPEM, err := avfs.ReadFile(testFS, next)
 	s.Require().NoError(err)
-	s.Require().NoError(os.WriteFile(ca, append(current, nextPEM...), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, ca, append(current, nextPEM...), 0o600))
 	s.NoError(handshake(server, client), "the same config trusts what ca_file gained")
 	block, _ := pem.Decode(nextPEM)
 	leaf, err := x509.ParseCertificate(block.Bytes)
@@ -339,10 +341,10 @@ func (s *TLSPublicTestSuite) TestDial() {
 		PeerCertificates: []*x509.Certificate{leaf, leaf},
 	}), "a chain with an intermediate checks it too")
 
-	s.Require().NoError(os.WriteFile(ca, []byte("not a certificate"), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, ca, []byte("not a certificate"), 0o600))
 	s.ErrorContains(handshake(server, client), "no PEM certificate")
 
-	s.Require().NoError(os.Remove(ca))
+	s.Require().NoError(testFS.Remove(ca))
 	s.ErrorContains(handshake(server, client), "read ca_file")
 
 	s.ErrorContains(client.VerifyConnection(tls.ConnectionState{}), "no certificate")

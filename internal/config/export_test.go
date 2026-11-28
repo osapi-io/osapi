@@ -26,6 +26,9 @@ import (
 	"reflect"
 
 	"github.com/go-playground/validator/v10"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
 
 // SetRegisterValidatorsFn overrides the registerValidatorsFn variable for testing.
@@ -104,4 +107,16 @@ func SetSigningKeyFS(
 	}
 
 	return func() { readFile, writeFile, link = r, w, l }
+}
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }

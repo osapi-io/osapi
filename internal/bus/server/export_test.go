@@ -32,6 +32,8 @@ import (
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/osapi-io/osapi/internal/bus"
+
+	"github.com/avfs/avfs/vfs/osfs"
 )
 
 // SetHostnameFn replaces the function that returns the name of the host.
@@ -76,4 +78,16 @@ func SetNatsauthUpdateOperator(
 	natsauthUpdateOperator = fn
 
 	return func() { natsauthUpdateOperator = was }
+}
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }

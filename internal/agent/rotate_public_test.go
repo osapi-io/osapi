@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -374,7 +373,7 @@ func (s *RotateKeyPublicTestSuite) TestNATSDialOptions() {
 	user, _ := nkeys.CreateUser()
 	seed, _ := user.Seed()
 	seedFile := filepath.Join(dir, "agent.nk")
-	s.Require().NoError(os.WriteFile(seedFile, seed, 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, seedFile, seed, 0o600))
 
 	tests := []struct {
 		name     string

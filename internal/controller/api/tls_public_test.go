@@ -33,7 +33,13 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The certificates, keys and NATS configs here are read by path, by crypto/tls and the NATS server as well as by the code under test.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type TLSPublicTestSuite struct {
 	suite.Suite
@@ -43,7 +49,7 @@ type TLSPublicTestSuite struct {
 func (s *TLSPublicTestSuite) leaf(
 	file string,
 ) *x509.Certificate {
-	data, err := os.ReadFile(file)
+	data, err := avfs.ReadFile(testFS, file)
 	s.Require().NoError(err)
 	block, _ := pem.Decode(data)
 	s.Require().NotNil(block)
@@ -68,7 +74,7 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 				s.Contains(cert.DNSNames, "localhost")
 				s.Contains(cert.DNSNames, "osapi.example.com")
 				s.Len(cert.IPAddresses, 3, "127.0.0.1, ::1 and 10.0.0.1")
-				info, err := os.Stat(filepath.Join(dir, api.SelfSignedKey))
+				info, err := testFS.Stat(filepath.Join(dir, api.SelfSignedKey))
 				s.Require().NoError(err)
 				s.Equal(os.FileMode(0o600), info.Mode().Perm())
 			},
@@ -78,7 +84,8 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 			setup: func(dir string) config.ServerTLS {
 				_, err := api.TLSConfig(config.ServerTLS{}, dir)
 				s.Require().NoError(err)
-				s.Require().NoError(os.WriteFile(filepath.Join(dir, "marker"), nil, 0o600))
+				s.Require().
+					NoError(avfs.WriteFile(testFS, filepath.Join(dir, "marker"), nil, 0o600))
 
 				return config.ServerTLS{}
 			},
@@ -104,7 +111,7 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 			},
 			validateFunc: func(dir string, err error) {
 				s.Require().NoError(err)
-				_, statErr := os.Stat(filepath.Join(dir, api.SelfSignedCert))
+				_, statErr := testFS.Stat(filepath.Join(dir, api.SelfSignedCert))
 				s.True(os.IsNotExist(statErr), "no self-signed certificate is made")
 			},
 		},
@@ -154,7 +161,7 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 						return errors.New("disk full")
 					}
 
-					return os.WriteFile(name, data, perm)
+					return avfs.WriteFile(testFS, name, data, perm)
 				})
 
 				return config.ServerTLS{}
@@ -166,7 +173,7 @@ func (s *TLSPublicTestSuite) TestTLSConfig() {
 		{
 			name: "when the key directory cannot be made, it is an error",
 			setup: func(dir string) config.ServerTLS {
-				s.Require().NoError(os.WriteFile(filepath.Join(dir, "file"), nil, 0o600))
+				s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(dir, "file"), nil, 0o600))
 
 				return config.ServerTLS{}
 			},
@@ -230,7 +237,7 @@ func (s *TLSPublicTestSuite) TestCertFingerprint() {
 	s.ErrorContains(err, "read the API's certificate")
 
 	bad := filepath.Join(dir, "bad.crt")
-	s.Require().NoError(os.WriteFile(bad, []byte("not pem"), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, bad, []byte("not pem"), 0o600))
 	_, err = api.CertFingerprint(config.ServerTLS{CertFile: bad}, dir)
 	s.ErrorContains(err, "no PEM certificate")
 }

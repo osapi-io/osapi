@@ -22,12 +22,13 @@ package natsjwt_test
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
@@ -38,6 +39,7 @@ import (
 
 type NatsJWTPublicTestSuite struct {
 	suite.Suite
+	fs      *memfs.MemFS
 	dir     string
 	account string
 	keyFile string
@@ -50,7 +52,11 @@ func TestNatsJWTPublicTestSuite(
 }
 
 func (s *NatsJWTPublicTestSuite) SetupTest() {
-	s.dir = s.T().TempDir()
+	s.fs = memfs.New()
+	natsjwt.SetHostFS(s.fs)
+	dir, err := avfs.MkdirTemp(s.fs, "", "natsjwt")
+	s.Require().NoError(err)
+	s.dir = dir
 	acct, err := nkeys.CreateAccount()
 	s.Require().NoError(err)
 	s.account, _ = acct.PublicKey()
@@ -58,7 +64,11 @@ func (s *NatsJWTPublicTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	seed, _ := signing.Seed()
 	s.keyFile = filepath.Join(s.dir, "signing.nk")
-	s.Require().NoError(os.WriteFile(s.keyFile, append(seed, '\n'), 0o600))
+	s.Require().NoError(avfs.WriteFile(s.fs, s.keyFile, append(seed, '\n'), 0o600))
+}
+
+func (s *NatsJWTPublicTestSuite) TearDownTest() {
+	natsjwt.ResetHostFS()
 }
 
 func (s *NatsJWTPublicTestSuite) TestMint() {
@@ -156,14 +166,16 @@ func (s *NatsJWTPublicTestSuite) TestLoadAccountPub() {
 	acct, _ := nkeys.CreateAccount()
 	seed, _ := acct.Seed()
 	pub, _ := acct.PublicKey()
-	dir := s.T().TempDir()
+	dir, err := avfs.MkdirTemp(s.fs, "", "pub")
+	s.Require().NoError(err)
 	file := filepath.Join(dir, "agent-signing.nk")
-	s.Require().NoError(os.WriteFile(file, seed, 0o600))
+	s.Require().NoError(avfs.WriteFile(s.fs, file, seed, 0o600))
 
-	_, err := natsjwt.Load(file, "")
+	_, err = natsjwt.Load(file, "")
 	s.ErrorContains(err, "no account.pub beside the signing key")
 
-	s.Require().NoError(os.WriteFile(filepath.Join(dir, "account.pub"), []byte(pub+"\n"), 0o600))
+	s.Require().
+		NoError(avfs.WriteFile(s.fs, filepath.Join(dir, "account.pub"), []byte(pub+"\n"), 0o600))
 	signer, err := natsjwt.Load(file, "")
 	s.Require().NoError(err)
 	s.NotNil(signer)
@@ -173,9 +185,9 @@ func (s *NatsJWTPublicTestSuite) TestLoad() {
 	user, _ := nkeys.CreateUser()
 	userSeed, _ := user.Seed()
 	userFile := filepath.Join(s.dir, "user.nk")
-	s.Require().NoError(os.WriteFile(userFile, userSeed, 0o600))
+	s.Require().NoError(avfs.WriteFile(s.fs, userFile, userSeed, 0o600))
 	badFile := filepath.Join(s.dir, "bad.nk")
-	s.Require().NoError(os.WriteFile(badFile, []byte("nope"), 0o600))
+	s.Require().NoError(avfs.WriteFile(s.fs, badFile, []byte("nope"), 0o600))
 
 	tests := []struct {
 		name    string

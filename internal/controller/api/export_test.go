@@ -32,6 +32,9 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/authtoken"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
 
 // ExportAuditMiddleware exposes the private auditMiddleware for testing,
@@ -126,4 +129,16 @@ func (a *AuditWriter) Close(
 	ctx context.Context,
 ) {
 	a.w.close(ctx)
+}
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }

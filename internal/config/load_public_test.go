@@ -22,7 +22,6 @@ package config_test
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -36,6 +35,8 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret/vault"
+
+	"github.com/avfs/avfs"
 )
 
 // validConfig is a config file holding the two required keys, then extra.
@@ -78,7 +79,7 @@ func (s *LoadPublicTestSuite) write(
 	body string,
 ) string {
 	path := filepath.Join(s.T().TempDir(), "osapi.yaml")
-	s.Require().NoError(os.WriteFile(path, []byte(body), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, path, []byte(body), 0o600))
 
 	return path
 }
@@ -502,7 +503,7 @@ func TestLoadPublicTestSuite(
 // TestLoadDefaultFile is a host with no config file at the default path: it
 // runs on the defaults, where a missing file that -f names is an error.
 func (s *LoadPublicTestSuite) TestLoadDefaultFile() {
-	if _, err := os.Stat(config.DefaultFile); err == nil {
+	if _, err := testFS.Stat(config.DefaultFile); err == nil {
 		s.T().Skip(config.DefaultFile + " is there on this host")
 	}
 	var c config.Config
