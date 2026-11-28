@@ -212,14 +212,9 @@ func VerifyNkey(
 	return nil
 }
 
-// decodeSig is a signature as a client sends it, in raw URL base64, or in
-// standard base64 from an older client.
+// decodeSig is a signature as a client sends it, in raw URL base64.
 func decodeSig(
 	s string,
 ) ([]byte, error) {
-	if b, err := base64.RawURLEncoding.DecodeString(s); err == nil {
-		return b, nil
-	}
-
-	return base64.StdEncoding.DecodeString(s)
+	return base64.RawURLEncoding.DecodeString(s)
 }
