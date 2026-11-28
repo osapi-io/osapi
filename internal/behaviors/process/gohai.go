@@ -41,6 +41,10 @@ type gohai struct {
 	exec host.Exec
 }
 
+// maxPID is Linux's largest pid_max, the largest PID that GetInput and
+// SignalInput allow.
+const maxPID = 4194304
+
 func newGohai(
 	h host.Host,
 ) (Provider, error) {
@@ -69,6 +73,16 @@ func (g *gohai) Get(
 	ctx context.Context,
 	pid int,
 ) (Entry, error) {
+	// The PID becomes an int32 and an argument of kill, so the provider
+	// checks the bound of the validate rule again.
+	if pid < 1 || pid > maxPID {
+		return Entry{}, fmt.Errorf(
+			"process %d: a PID is from 1 to %d: %w",
+			pid,
+			maxPID,
+			behavior.ErrInvalid,
+		)
+	}
 	p, err := process.NewWith(g.src).Read(ctx, int32(pid))
 	if err != nil {
 		return Entry{}, fmt.Errorf("process %d: %w", pid, behavior.ErrNotFound)

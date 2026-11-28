@@ -116,9 +116,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE    | REQUIRED | CONSTRAINTS | DESCRIPTION                  |
-| ----- | ------- | -------- | ----------- | ---------------------------- |
-| pid   | integer | yes      | min 1       | The process ID, such as 1234 |
+| FIELD | TYPE    | REQUIRED | CONSTRAINTS             | DESCRIPTION                  |
+| ----- | ------- | -------- | ----------------------- | ---------------------------- |
+| pid   | integer | yes      | min 1, max 4.194304e+06 | The process ID, such as 1234 |
 
 ### Output (9)
 
@@ -143,24 +143,24 @@ None. The method takes no input; its command needs only --target.
 
 ## Method signal
 
-|             |                                                                                                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | signal                                                                                                                                                                                                                                                     |
-| Verb        | write                                                                                                                                                                                                                                                      |
-| Description | Send a signal to a process                                                                                                                                                                                                                                 |
-| Detail      | Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID. |
-| HTTP        | POST                                                                                                                                                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/process/&#123;pid&#125;/signal                                                                                                                                                                                              |
-| Permission  | process:execute                                                                                                                                                                                                                                            |
-| Command     | [osapi client node process signal](../../../../usage/cli/client/node/process/signal.md)                                                                                                                                                                    |
-| Input type  | SignalInput                                                                                                                                                                                                                                                |
-| Output type | Result                                                                                                                                                                                                                                                     |
+|             |                                                                                                                                                                                                                                                                                                                        |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | signal                                                                                                                                                                                                                                                                                                                 |
+| Verb        | write                                                                                                                                                                                                                                                                                                                  |
+| Description | Send a signal to a process                                                                                                                                                                                                                                                                                             |
+| Detail      | Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID. One above 4194304, Linux's largest pid_max, is refused too. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                   |
+| Route       | /api/node/&#123;hostname&#125;/process/&#123;pid&#125;/signal                                                                                                                                                                                                                                                          |
+| Permission  | process:execute                                                                                                                                                                                                                                                                                                        |
+| Command     | [osapi client node process signal](../../../../usage/cli/client/node/process/signal.md)                                                                                                                                                                                                                                |
+| Input type  | SignalInput                                                                                                                                                                                                                                                                                                            |
+| Output type | Result                                                                                                                                                                                                                                                                                                                 |
 
 ### Input (2)
 
 | FIELD  | TYPE    | REQUIRED | CONSTRAINTS                        | DESCRIPTION                                    |
 | ------ | ------- | -------- | ---------------------------------- | ---------------------------------------------- |
-| pid    | integer | yes      | min 1                              | The process ID, such as 1234                   |
+| pid    | integer | yes      | min 1, max 4.194304e+06            | The process ID, such as 1234                   |
 | signal | string  | yes      | one of TERM KILL HUP INT USR1 USR2 | The signal: TERM, KILL, HUP, INT, USR1 or USR2 |
 
 ### Output (3)

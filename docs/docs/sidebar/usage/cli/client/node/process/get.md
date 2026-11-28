@@ -120,10 +120,11 @@ With `--json`, the API's response:
 
 The command fails in these cases:
 
-| Call                                  | Flags         | Fails with |
-| ------------------------------------- | ------------- | ---------- |
-| A process that the host does not have | `--pid 99999` | not found  |
-| A process ID below 1                  | `--pid -1`    | min        |
+| Call                                                          | Flags              | Fails with |
+| ------------------------------------------------------------- | ------------------ | ---------- |
+| A process that the host does not have                         | `--pid 99999`      | not found  |
+| A process ID below 1                                          | `--pid -1`         | min        |
+| A process ID above Linux's largest pid_max, which int32 wraps | `--pid 4294967297` | max        |
 
 ## Permission
 

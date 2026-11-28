@@ -83,7 +83,7 @@ Send a signal to a process.
 Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports
 changed: true. A process that the host does not have is not found. A process ID
 below 1 is refused, because kill sends to a group of processes for 0 and for a
-negative ID.
+negative ID. One above 4194304, Linux's largest pid_max, is refused too.
 
 It sends `POST /api/node/{hostname}/process/{pid}/signal`, and needs the
 permission `process:execute`.

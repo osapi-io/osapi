@@ -116,7 +116,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A process of a Mac", GetInput{PID: 1234}, sleepingMac,
 			append(ps("-p 1234"), behavior.Live("pid", behavior.FactPID))...).
 		Fails("A process that the host does not have", GetInput{PID: 99999}, "not found").
-		Fails("A process ID below 1", GetInput{PID: -1}, "min"),
+		Fails("A process ID below 1", GetInput{PID: -1}, "min").
+		Fails("A process ID above Linux's largest pid_max, which int32 wraps",
+			GetInput{PID: 4294967297}, "max"),
 	behavior.Action("signal", Signal).Key("pid").
 		Sudo("kill").
 		Always().
@@ -124,7 +126,8 @@ var Behavior = behavior.Register(behavior.Define(
 		Explain("Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and "+
 			"reports changed: true. A process that the host does not have is not found. "+
 			"A process ID below 1 is refused, because kill sends to a group of processes "+
-			"for 0 and for a negative ID.").
+			"for 0 and for a negative ID. One above 4194304, Linux's largest pid_max, is "+
+			"refused too.").
 		Example("Stop a process", SignalInput{PID: 1234, Signal: "TERM"},
 			Result{PID: 1234, Signal: "TERM", Changed: true},
 			append(both,
@@ -135,5 +138,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A process that the host does not have",
 			SignalInput{PID: 99999, Signal: "TERM"}, "not found").
 		Fails("A process ID below 1", SignalInput{PID: -1, Signal: "TERM"}, "min").
+		Fails("A process ID above Linux's largest pid_max, which int32 wraps",
+			SignalInput{PID: 4294967297, Signal: "TERM"}, "max").
 		Fails("A signal that osapi does not send", SignalInput{PID: 1234, Signal: "STOP"}, "enum"),
 ))
