@@ -22,7 +22,6 @@ package api_test
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,8 +45,7 @@ type MiddlewarePublicTestSuite struct {
 }
 
 func (s *MiddlewarePublicTestSuite) SetupSuite() {
-	logger := slog.Default()
-	s.tokenManager = authtoken.New(logger)
+	s.tokenManager = authtoken.New()
 }
 
 func (s *MiddlewarePublicTestSuite) generateToken(

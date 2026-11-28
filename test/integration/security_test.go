@@ -25,7 +25,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -95,7 +94,7 @@ func (s *SecurityDefaultsSuite) tokenFor(
 	key authtoken.Key,
 	roles ...types.Role,
 ) string {
-	t, err := authtoken.New(slog.New(slog.DiscardHandler)).
+	t, err := authtoken.New().
 		Generate(key, roles, "security@test", nil, nil)
 	s.Require().NoError(err)
 

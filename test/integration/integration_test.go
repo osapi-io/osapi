@@ -28,7 +28,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -145,7 +144,7 @@ func runSuite(
 		return 1
 	}
 
-	t := authtoken.New(slog.New(slog.DiscardHandler))
+	t := authtoken.New()
 	token, err = t.Generate(signingKey, []types.Role{types.RoleAdmin}, "integration@test", nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "generate token: %v\n", err)

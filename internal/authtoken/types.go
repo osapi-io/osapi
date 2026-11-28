@@ -21,17 +21,13 @@
 package authtoken
 
 import (
-	"log/slog"
-
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
 // Token implementation of the token operations.
-type Token struct {
-	logger *slog.Logger
-}
+type Token struct{}
 
 // Key is one key that signs and verifies tokens. A token carries the ID of
 // its key in its kid header.

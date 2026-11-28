@@ -749,7 +749,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).
+	t, _ := authtoken.New().
 		Generate(signingKey, []types.Role{types.RoleObserver}, "test", perms, nil)
 
 	return t

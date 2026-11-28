@@ -81,7 +81,7 @@ func New(
 ) *Server {
 	s := &Server{
 		logger:      logger.With(slog.String("subsystem", "controller.endpoint")),
-		tokens:      authtoken.New(logger),
+		tokens:      authtoken.New(),
 		signingKeys: signingKeys,
 		customRoles: customRoles,
 		deps:        make(map[reflect.Type]any, len(deps)),
