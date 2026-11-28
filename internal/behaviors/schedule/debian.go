@@ -194,12 +194,20 @@ func (d *debian) Update(
 	if in.Schedule != "" {
 		meta["schedule"] = in.Schedule
 	}
-	if in.User != "" {
-		meta["user"] = in.User
-	}
 	mode := "0644"
 	if !strings.HasPrefix(path, cronDir+"/") {
 		mode = "0755"
+	}
+	if in.User != "" {
+		if mode != "0644" {
+			return false, fmt.Errorf(
+				"%s runs as root: a user is for an entry in %s: %w",
+				path,
+				cronDir,
+				behavior.ErrInvalid,
+			)
+		}
+		meta["user"] = in.User
 	}
 
 	return d.deploy(ctx, path, mode, obj, types.ContentType(in.ContentType), in.Vars, meta)
@@ -254,6 +262,15 @@ func (d *debian) deploy(
 			return false, err
 		}
 	}
+	if strings.HasPrefix(path, cronDir+"/") {
+		// The object is the command, and the line is what cron runs: the
+		// cron expression and the user of the record, so a read gives what
+		// cron runs. An entry with no user runs as root.
+		meta["user"] = or(meta["user"], "root")
+		if content, err = cronLine(meta["schedule"], meta["user"], content); err != nil {
+			return false, err
+		}
+	}
 	record := map[string]string{"object": objectName}
 	for k, v := range meta {
 		if v != "" {
@@ -272,6 +289,25 @@ func (d *debian) deploy(
 		})
 
 	return result.Changed, err
+}
+
+// cronLine is the line of an entry in /etc/cron.d that runs command, which
+// is one line, at schedule as user.
+func cronLine(
+	schedule string,
+	user string,
+	command string,
+) (string, error) {
+	command = strings.TrimSpace(command)
+	if command == "" || strings.Contains(command, "\n") {
+		return "", fmt.Errorf(
+			"the object of an entry in %s is one command line: %w",
+			cronDir,
+			behavior.ErrInvalid,
+		)
+	}
+
+	return schedule + " " + user + " " + command + "\n", nil
 }
 
 // find is the path of the entry that osapi deployed under name: in

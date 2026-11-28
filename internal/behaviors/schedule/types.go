@@ -38,7 +38,7 @@ type CreateInput struct {
 	Object      string            `json:"object"                 validate:"required,min=1,max=255"                                                   doc:"The object that holds the entry, from osapi client file upload"`
 	Schedule    string            `json:"schedule,omitempty"     validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule" doc:"A cron expression, such as */5 * * * *; give it or interval"`
 	Interval    types.Interval    `json:"interval,omitempty"     validate:"required_without=Schedule,excluded_with=Schedule,omitempty,enum"          doc:"The interval of a script in /etc/cron.daily and the like; give it or schedule"`
-	User        string            `json:"user,omitempty"         validate:"omitempty,account_name"                                                   doc:"The user the entry runs as"`
+	User        string            `json:"user,omitempty"         validate:"excluded_with=Interval,omitempty,account_name"                            doc:"The user a cron expression's entry runs as; root when empty. A script of an interval runs as root"`
 	ContentType types.ContentType `json:"content_type,omitempty" validate:"omitempty,enum"                                                           doc:"The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty"`
 	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                                                                doc:"The vars of a template, as key=value"`
 }

@@ -914,7 +914,7 @@ func Services() []ServiceSpec {
 			Result:     "Collection[ScheduleEntry]",
 		}, {
 			Doc:        "Deploy a cron entry",
-			Examples:   3,
+			Examples:   4,
 			HTTP:       "POST /api/node/{hostname}/schedule",
 			Input:      "ScheduleCreateInput",
 			Name:       "Create",

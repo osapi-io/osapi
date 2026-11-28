@@ -69,6 +69,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"An entry with a cron expression and a user\" is run",
+			args: []string{"node", "schedule", "create", "--target", "server1", "--name", "osapitest", "--object", "osapitest.cron", "--schedule", "0 2 * * *", "--user", "nobody"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/schedule",
+				Body:   "{\"name\":\"osapitest\",\"object\":\"osapitest.cron\",\"schedule\":\"0 2 * * *\",\"user\":\"nobody\"}",
+			},
+		},
+		{
 			name: "when the example \"A script that runs daily\" is run",
 			args: []string{"node", "schedule", "create", "--target", "server1", "--name", "osapitest", "--object", "osapitest.sh", "--interval", "daily"},
 			want: commandtest.Request{

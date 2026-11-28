@@ -57,14 +57,16 @@ func (s *ScheduleService) Create(
 
 Deploy a cron entry.
 
-Gets the object from the object store and writes it as /etc/cron.d/backup for
-backup, mode 0644, for a cron expression, or as /etc/cron.daily/backup, mode
-0755, for a daily interval. An object of content type template, or content_type
-template, is rendered with the agent's facts and the vars. A file that has the
-content does not change. An entry of the name in a different directory does not
-change: move it with delete and create. A file at the path that osapi did not
-deploy is refused. An entry runs as its user, root included, so only admin can
-deploy one.
+Gets the object from the object store. For a cron expression, the object is the
+command, and the entry is /etc/cron.d/backup for backup, mode 0644: one line of
+the cron expression, the user (root when none is given) and the command. For a
+daily interval, the object is the script, written as /etc/cron.daily/backup,
+mode 0755, which runs as root, so a user is refused. An object of content type
+template, or content_type template, is rendered with the agent's facts and the
+vars. A file that has the content does not change. An entry of the name in a
+different directory does not change: move it with delete and create. A file at
+the path that osapi did not deploy is refused. An entry runs as its user, root
+included, so only admin can deploy one.
 
 It sends `POST /api/node/{hostname}/schedule`, and needs the permission
 `schedule:write`.
@@ -82,7 +84,18 @@ resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
 })
 ```
 
-A script that runs daily, `go run schedule.go create-2`:
+An entry with a cron expression and a user, `go run schedule.go create-2`:
+
+```go
+resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
+	Name:     "osapitest",
+	Object:   "osapitest.cron",
+	Schedule: "0 2 * * *",
+	User:     "nobody",
+})
+```
+
+A script that runs daily, `go run schedule.go create-3`:
 
 ```go
 resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
@@ -92,7 +105,7 @@ resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
 })
 ```
 
-A template, rendered with its vars, `go run schedule.go create-3`:
+A template, rendered with its vars, `go run schedule.go create-4`:
 
 ```go
 resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
@@ -143,9 +156,11 @@ func (s *ScheduleService) Update(
 Deploy a cron entry that osapi deployed again.
 
 Writes a new object, or the entry's own, at the entry's path, with the fields
-that the request gives and the entry's own for the rest. A file that has the
-content does not change. An entry that osapi did not deploy is not found. The
-entry stays in its directory: an interval does not change with update.
+that the request gives and the entry's own for the rest. A new cron expression
+or user writes the entry's line again, so cron runs what a read gives. A file
+that has the content does not change. An entry that osapi did not deploy is not
+found. The entry stays in its directory: an interval does not change with
+update.
 
 It sends `PUT /api/node/{hostname}/schedule/{name}`, and needs the permission
 `schedule:write`.
@@ -250,7 +265,7 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 | `Name`        | `string`            | The entry, and its file name, such as backup.                                                                                                 |
 | `Object`      | `string`            | The object that holds the entry, from osapi client file upload.                                                                               |
 | `Schedule`    | `string`            | A cron expression, such as */5 * * * *; give it or interval.                                                                                  |
-| `User`        | `string`            | The user the entry runs as.                                                                                                                   |
+| `User`        | `string`            | The user a cron expression's entry runs as; root when empty. A script of an interval runs as root.                                            |
 | `Vars`        | `map[string]string` | The vars of a template, as key=value.                                                                                                         |
 
 ### ScheduleEntry

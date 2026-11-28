@@ -111,11 +111,11 @@ func (s *DebianPublicTestSuite) TestCreateRendersTheFacts() {
 	s.files.EXPECT().Read(gomock.Any(), gomock.Any()).
 		Return(managedfile.Record{}, managedfile.ErrNotManaged).AnyTimes()
 	s.objects.EXPECT().Object(gomock.Any(), "arch.tmpl").
-		Return(object.Object{Name: "arch.tmpl", Content: "# {{ .Facts.architecture }}\n", ContentType: "template", SHA256: "object"}, nil)
+		Return(object.Object{Name: "arch.tmpl", Content: "/bin/echo {{ .Facts.architecture }}\n", ContentType: "template", SHA256: "object"}, nil)
 	s.files.EXPECT().Write(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_ context.Context, f managedfile.File) (bool, error) {
 			s.Equal("/etc/cron.d/arch", f.Path)
-			s.Equal("# arm64\n", string(f.Content))
+			s.Equal("0 2 * * * root /bin/echo arm64\n", string(f.Content))
 			s.Equal("arch.tmpl", f.Object)
 			s.Equal(types.ContentTemplate, f.ContentType)
 			s.Equal("object", f.ObjectSHA256)

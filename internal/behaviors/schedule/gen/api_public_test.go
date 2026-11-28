@@ -593,6 +593,52 @@ func (s *APIPublicTestSuite) TestCreate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"An entry with a cron expression and a user\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"nobody"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "nobody",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An entry with a cron expression and a user\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"nobody"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "nobody",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the example \"A script that runs daily\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
@@ -943,6 +989,16 @@ func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/schedule",
 				Body:   `{"name":[]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a user for a script of an interval, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.sh","interval":"daily","user":"nobody"}`,
 			},
 			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
