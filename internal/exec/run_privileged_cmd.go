@@ -31,7 +31,7 @@ func (e *Exec) RunPrivilegedCmd(
 ) (string, error) {
 	if e.sudo {
 		args = sudoArgs(name, args)
-		name = "sudo"
+		name = sudoProgram
 	}
 
 	return e.RunCmdImpl(ctx, name, args, "")

@@ -31,19 +31,18 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 )
 
-type RunCmdDirPublicTestSuite struct {
+type ExecPublicTestSuite struct {
 	suite.Suite
 
 	logger *slog.Logger
 }
 
-func (suite *RunCmdDirPublicTestSuite) SetupTest() {
-	suite.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+func (s *ExecPublicTestSuite) SetupTest() {
+	s.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
-func (suite *RunCmdDirPublicTestSuite) TearDownTest() {}
-
-func (suite *RunCmdDirPublicTestSuite) TestRunCmd() {
+func (s *ExecPublicTestSuite) TestRunCmdImpl() {
+	dir := s.T().TempDir()
 	tests := []struct {
 		name         string
 		command      string
@@ -52,59 +51,37 @@ func (suite *RunCmdDirPublicTestSuite) TestRunCmd() {
 		validateFunc func(string, error)
 	}{
 		{
-			name:    "Valid command with no arguments",
-			command: "ls",
-			args:    []string{},
+			name:    "a command runs in the working directory that it is given",
+			command: "pwd",
+			cwd:     dir,
 			validateFunc: func(output string, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotEmpty(output)
+				s.Require().NoError(err)
+				resolved, _ := os.Readlink(dir)
+				s.Contains([]string{dir + "\n", resolved + "\n", "/private" + dir + "\n"}, output)
 			},
 		},
 		{
-			name:    "Valid command with no arguments and working dir",
-			command: "ls",
-			args:    []string{},
-			cwd:     "/tmp",
-			validateFunc: func(output string, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotEmpty(output)
-			},
-		},
-		{
-			name:    "Valid command with output",
+			name:    "a command with no working directory runs in the agent's",
 			command: "echo",
-			args:    []string{"-n", "foo"},
-			cwd:     "/tmp",
+			args:    []string{"-n", "ok"},
 			validateFunc: func(output string, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotEmpty(output)
-			},
-		},
-		{
-			name:    "Invalid command",
-			command: "invalid",
-			args:    []string{"foo"},
-			cwd:     "/tmp",
-			validateFunc: func(_ string, err error) {
-				suite.Require().Error(err)
-				suite.Require().Contains(err.Error(), "not found")
+				s.Require().NoError(err)
+				s.Equal("ok", output)
 			},
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			em := exec.New(suite.logger, false)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			em := exec.New(s.logger, false)
 
-			tc.validateFunc(em.RunCmdInDir(context.Background(), tc.command, tc.args, tc.cwd))
+			tt.validateFunc(em.RunCmdImpl(context.Background(), tt.command, tt.args, tt.cwd))
 		})
 	}
 }
 
-// In order for `go test` to run this suite, we need to create
-// a normal test function and pass our suite to suite.Run.
-func TestRunCmdDirPublicTestSuite(
+func TestExecPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(RunCmdDirPublicTestSuite))
+	suite.Run(t, new(ExecPublicTestSuite))
 }

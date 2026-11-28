@@ -21,7 +21,6 @@
 package exec
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -33,7 +32,8 @@ import (
 
 // RunCmdFull executes the provided command with separate stdout and stderr
 // capture, an optional working directory, and a timeout in seconds.
-// A timeout of 0 defaults to 30 seconds.
+// A timeout of 0 is DefaultCommandTimeout. Each stream keeps at most
+// MaxCommandOutput bytes.
 func (e *Exec) RunCmdFull(
 	ctx context.Context,
 	name string,
@@ -55,7 +55,7 @@ func (e *Exec) runFull(
 	stdin string,
 ) (*CmdResult, error) {
 	if timeout <= 0 {
-		timeout = 30
+		timeout = int(DefaultCommandTimeout / time.Second)
 	}
 
 	ctx, span := startSpan(ctx, name, args)
@@ -73,9 +73,10 @@ func (e *Exec) runFull(
 		cmd.Stdin = strings.NewReader(stdin)
 	}
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	stdout := &output{max: MaxCommandOutput}
+	stderr := &output{max: MaxCommandOutput}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
 	start := time.Now()
 	err := cmd.Run()
@@ -102,8 +103,8 @@ func (e *Exec) runFull(
 }
 
 // fullResult sets the exit code of result from the error of Run, and gives
-// the error of the run: a timeout, a program that did not start, or nil for
-// a command that ran, with any exit code.
+// the error of the run: a timeout, a cancel, a program that did not start,
+// or nil for a command that ran, with any exit code.
 func fullResult(
 	ctx context.Context,
 	result *CmdResult,
@@ -113,10 +114,17 @@ func fullResult(
 	if err == nil {
 		return nil
 	}
-	if ctx.Err() == context.DeadlineExceeded {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		result.ExitCode = -1
 
 		return fmt.Errorf("command timed out after %ds", timeout)
+	}
+	// The command was killed because its caller stopped, not because it
+	// failed, so its exit code says nothing.
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		result.ExitCode = -1
+
+		return fmt.Errorf("command stopped: %w", ctxErr)
 	}
 
 	var exitErr *exec.ExitError

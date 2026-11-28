@@ -78,11 +78,17 @@ func (d *defaultExecutor) run(
 		cmd.Dir = cwd
 	}
 	cmd.Stdin = stdin
-	out, err := cmd.CombinedOutput()
+	combined := &output{max: MaxCommandOutput}
+	cmd.Stdout = combined
+	cmd.Stderr = combined
+	err := cmd.Run()
+	out := combined.String()
 
-	logOutput := string(out)
+	logOutput := out
 	if len(logOutput) > maxLogOutputLen {
-		logOutput = logOutput[:maxLogOutputLen] + fmt.Sprintf("... (%d bytes total)", len(out))
+		// The cut can fall inside a character, which ToValidUTF8 drops.
+		logOutput = strings.ToValidUTF8(logOutput[:maxLogOutputLen], "") +
+			fmt.Sprintf("... (%d bytes total)", len(out))
 	}
 
 	d.logger.Debug(
@@ -97,17 +103,17 @@ func (d *defaultExecutor) run(
 		// The command was killed rather than having failed on its own terms,
 		// so the reason it stopped is not in its output.
 		if ctxErr := ctx.Err(); ctxErr != nil {
-			return string(out), fmt.Errorf(
+			return out, fmt.Errorf(
 				"command %s: %w",
 				name,
 				ctxErr,
 			)
 		}
 
-		return string(out), err
+		return out, err
 	}
 
-	return string(out), nil
+	return out, nil
 }
 
 // New factory to create a new Exec instance.

@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,23 +47,18 @@ func (suite *RunCmdPublicTestSuite) SetupTest() {
 func (suite *RunCmdPublicTestSuite) TearDownTest() {}
 
 func (suite *RunCmdPublicTestSuite) TestRunCmd() {
+	background := func() (context.Context, context.CancelFunc) {
+		return context.Background(), func() {}
+	}
 	tests := []struct {
 		name         string
 		command      string
 		args         []string
+		ctxFunc      func() (context.Context, context.CancelFunc)
 		validateFunc func(string, error)
 	}{
 		{
 			name:    "Valid command with no arguments",
-			command: "ls",
-			args:    []string{},
-			validateFunc: func(output string, err error) {
-				suite.Require().NoError(err)
-				suite.Require().NotEmpty(output)
-			},
-		},
-		{
-			name:    "Valid command with no arguments and working dir",
 			command: "ls",
 			args:    []string{},
 			validateFunc: func(output string, err error) {
@@ -75,7 +72,23 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 			args:    []string{"-n", "foo"},
 			validateFunc: func(output string, err error) {
 				suite.Require().NoError(err)
-				suite.Require().NotEmpty(output)
+				suite.Equal("foo", output)
+			},
+		},
+		{
+			name:    "output over the limit is kept to the limit, with the rest counted",
+			command: "head",
+			args:    []string{"-c", strconv.Itoa(exec.MaxCommandOutput + 10), "/dev/zero"},
+			validateFunc: func(output string, err error) {
+				suite.Require().NoError(err)
+				suite.Equal(
+					strings.Repeat("\x00", exec.MaxCommandOutput),
+					output[:exec.MaxCommandOutput],
+				)
+				suite.Equal(
+					"\n[10 more bytes of output not kept]\n",
+					output[exec.MaxCommandOutput:],
+				)
 			},
 		},
 		{
@@ -87,29 +100,12 @@ func (suite *RunCmdPublicTestSuite) TestRunCmd() {
 				suite.Require().Contains(err.Error(), "not found")
 			},
 		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			em := exec.New(suite.logger, false)
-
-			tc.validateFunc(em.RunCmd(context.Background(), tc.command, tc.args))
-		})
-	}
-}
-
-// TestRunCmdCancellation covers what the context is for: a command that would
-// otherwise run to completion is killed when the caller's context ends, and the
-// reason it stopped comes from the context rather than from the command's own
-// output, which a killed command does not produce.
-func (suite *RunCmdPublicTestSuite) TestRunCmdCancellation() {
-	tests := []struct {
-		name         string
-		ctxFunc      func() (context.Context, context.CancelFunc)
-		validateFunc func(string, error)
-	}{
 		{
-			name: "a context cancelled before the command starts",
+			// The reason a killed command stopped comes from the context, not
+			// from its own output, which a killed command does not produce.
+			name:    "a context cancelled before the command starts",
+			command: "sleep",
+			args:    []string{"5"},
 			ctxFunc: func() (context.Context, context.CancelFunc) {
 				ctx, cancel := context.WithCancel(context.Background())
 				cancel()
@@ -117,18 +113,18 @@ func (suite *RunCmdPublicTestSuite) TestRunCmdCancellation() {
 				return ctx, func() {}
 			},
 			validateFunc: func(_ string, err error) {
-				suite.Require().Error(err)
 				suite.Require().ErrorIs(err, context.Canceled)
 				suite.Require().Contains(err.Error(), "command sleep")
 			},
 		},
 		{
-			name: "a deadline that passes while the command runs",
+			name:    "a deadline that passes while the command runs",
+			command: "sleep",
+			args:    []string{"5"},
 			ctxFunc: func() (context.Context, context.CancelFunc) {
 				return context.WithTimeout(context.Background(), 10*time.Millisecond)
 			},
 			validateFunc: func(_ string, err error) {
-				suite.Require().Error(err)
 				suite.Require().ErrorIs(err, context.DeadlineExceeded)
 			},
 		},
@@ -136,12 +132,16 @@ func (suite *RunCmdPublicTestSuite) TestRunCmdCancellation() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			ctx, cancel := tc.ctxFunc()
+			ctxFunc := tc.ctxFunc
+			if ctxFunc == nil {
+				ctxFunc = background
+			}
+			ctx, cancel := ctxFunc()
 			defer cancel()
 
 			em := exec.New(suite.logger, false)
 
-			tc.validateFunc(em.RunCmd(ctx, "sleep", []string{"5"}))
+			tc.validateFunc(em.RunCmd(ctx, tc.command, tc.args))
 		})
 	}
 }

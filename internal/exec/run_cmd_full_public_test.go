@@ -24,7 +24,10 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -48,6 +51,7 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 		args          []string
 		cwd           string
 		timeout       int
+		ctxFunc       func() (context.Context, context.CancelFunc)
 		expectError   bool
 		errorContains string
 		validateFunc  func(*exec.CmdResult)
@@ -95,7 +99,7 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 			},
 		},
 		{
-			name:    "zero timeout defaults to 30 seconds",
+			name:    "a zero timeout runs the command",
 			command: "echo",
 			args:    []string{"ok"},
 			timeout: 0,
@@ -128,6 +132,42 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 			},
 		},
 		{
+			name:    "output over the limit is kept to the limit, with the rest counted",
+			command: "/bin/sh",
+			args: []string{
+				"-c",
+				"head -c " + strconv.Itoa(exec.MaxCommandOutput+3) + " /dev/zero; echo err >&2",
+			},
+			timeout: 5,
+			validateFunc: func(r *exec.CmdResult) {
+				suite.Equal(
+					strings.Repeat("\x00", exec.MaxCommandOutput)+
+						"\n[3 more bytes of output not kept]\n",
+					r.Stdout,
+				)
+				suite.Equal("err\n", r.Stderr)
+			},
+		},
+		{
+			// The caller stops while the command runs, so Run gives the exit
+			// error of the killed process, not the error of the context.
+			name:    "a command that its caller stops is an error",
+			command: "sleep",
+			args:    []string{"5"},
+			timeout: 5,
+			ctxFunc: func() (context.Context, context.CancelFunc) {
+				ctx, cancel := context.WithCancel(context.Background())
+				time.AfterFunc(100*time.Millisecond, cancel)
+
+				return ctx, cancel
+			},
+			expectError:   true,
+			errorContains: "command stopped: context canceled",
+			validateFunc: func(r *exec.CmdResult) {
+				suite.Equal(-1, r.ExitCode)
+			},
+		},
+		{
 			name:          "command not found",
 			command:       "nonexistent-command-xyz",
 			args:          []string{},
@@ -139,10 +179,15 @@ func (suite *RunCmdFullPublicTestSuite) TestRunCmdFull() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			ctx, cancel := context.Background(), context.CancelFunc(func() {})
+			if tc.ctxFunc != nil {
+				ctx, cancel = tc.ctxFunc()
+			}
+			defer cancel()
 			em := exec.New(suite.logger, false)
 
 			result, err := em.RunCmdFull(
-				context.Background(),
+				ctx,
 				tc.command,
 				tc.args,
 				tc.cwd,
