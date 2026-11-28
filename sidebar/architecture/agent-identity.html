@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Agent identity and PKI | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Agent identity and PKI | OSAPI"><meta data-rh="true" name="description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><meta data-rh="true" property="og:description" content="An osapi agent identifies itself with a permanent machine ID. As an option, PKI"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Agent Identity & PKI","item":"https://osapi-io.github.io/osapi/sidebar/architecture/agent-identity"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.85f02125.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.b7a5a12c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.516a0584.js" defer="defer"></script>
 </head>
 <body>
@@ -164,6 +164,14 @@ certificate in <code>nats-join.json</code> (mode 0600), connects with its own us
 starts to take jobs. Each later start reads <code>nats-join.json</code>, and does not
 join again.</li>
 </ol>
+<p>A join does not replace the keys of an admitted machine. When the controller
+admitted the machine ID with different keys, it refuses the join with a 409 and
+takes no use of the token. Delete the admission with
+<code>osapi client admission delete</code>, then join again. A join of a machine that is
+revoked or rejected is permitted, because the token is the decision of the
+operator. An enrollment request with different keys for an admitted machine is
+pending, and <code>auto_admit</code> does not admit it: a request has no proof that it
+comes from the machine. Compare its fingerprint with the host, then admit it.</p>
 <!-- -->
 <p>The bootstrap user can send the join request, and nothing else. A join that
 fails, such as with an expired token, stops the agent with the reason. The join
@@ -257,8 +265,10 @@ sign them. The signature is next to these fields, not in the signed bytes.</p>
 machine. A rename through osapi, by hand, or by a rebuild that keeps the machine
 ID keeps the machine admitted, and the host keeps its timeline.</p>
 <!-- -->
-<p>The controller refuses the new hostname when another admitted machine holds it.
-Then the registration is not verified, and the host gets no work by that name.</p>
+<p>The controller refuses the new hostname when another admitted machine holds it,
+also when that machine is offline. Then the registration is not verified, and
+the host gets no work by that name. To give the name to a different machine,
+delete the admission of the machine that holds it first.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-controller-checks">What the controller checks<a href="#what-the-controller-checks" class="hash-link" aria-label="Direct link to What the controller checks" title="Direct link to What the controller checks" translate="no">​</a></h3>
 <p>When the controller has a key for the agent, it verifies each registration
 before it uses the registration for a decision:</p>
