@@ -51,7 +51,7 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 	}{
 		{
 			name:    "when parsing valid query subject",
-			subject: "jobs.query.server-01",
+			subject: "jobs.query.host.server-01",
 			validateFunc: func(gotPrefix string, gotHostname string, err error) {
 				if false {
 					suite.Error(err)
@@ -65,7 +65,7 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 		},
 		{
 			name:    "when parsing valid modify subject",
-			subject: "jobs.modify.web-01",
+			subject: "jobs.modify.host.web-01",
 			validateFunc: func(gotPrefix string, gotHostname string, err error) {
 				if false {
 					suite.Error(err)
@@ -78,17 +78,10 @@ func (suite *SubjectsPublicTestSuite) TestParseSubject() {
 			},
 		},
 		{
-			name:    "when parsing subject with wildcard hostname",
+			name:    "when parsing a subject with a bare token that is not _any or _all",
 			subject: "jobs.query.*",
-			validateFunc: func(gotPrefix string, gotHostname string, err error) {
-				if false {
-					suite.Error(err)
-					return
-				}
-
-				suite.NoError(err)
-				suite.Equal("jobs.query", gotPrefix)
-				suite.Equal("*", gotHostname)
+			validateFunc: func(_ string, _ string, err error) {
+				suite.ErrorContains(err, "invalid subject format")
 			},
 		},
 		{

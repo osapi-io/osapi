@@ -149,7 +149,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 					"id": "job-123",
 					"status": "completed",
 					"created": "2024-01-01T00:00:00Z",
-					"subject": "jobs.query.server1",
+					"subject": "jobs.query.host.server1",
 					"operation": {"type": "node.hostname.get"}
 				}`))
 				s.mockNATSClient.EXPECT().
@@ -202,7 +202,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z","subject":"jobs.query.server1"}`,
+					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z","subject":"jobs.query.host.server1"}`,
 				))
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "jobs", "jobs.job-1").
@@ -266,7 +266,7 @@ func (s *JobsPublicTestSuite) TestGetJobStatus() {
 			setupMocks: func() {
 				mockJobEntry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
 				mockJobEntry.EXPECT().Value().Return([]byte(
-					`{"id":"job-changed","operation":{"type":"file.deploy.execute"},"created":"2024-01-01T00:00:00Z","subject":"jobs.modify.server1"}`,
+					`{"id":"job-changed","operation":{"type":"file.deploy.execute"},"created":"2024-01-01T00:00:00Z","subject":"jobs.modify.host.server1"}`,
 				))
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "jobs", "jobs.job-changed").

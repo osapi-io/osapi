@@ -1268,9 +1268,9 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// GetAgentTimeline: returns one key
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
-					Return([]string{"timeline.server1.drain.1000000000"}, nil)
+					Return([]string{"timeline.abc123.drain.1000000000"}, nil)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
+					KVGet(gomock.Any(), "state", "timeline.abc123.drain.1000000000").
 					Return(timelineEntry, nil)
 
 				return s.newClientWithAllKVs("registry", "", "state")
@@ -1373,9 +1373,9 @@ func (s *AgentPublicTestSuite) TestGetAgent() {
 				// GetAgentTimeline for hostname fallback.
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "state").
-					Return([]string{"timeline.server1.drain.1000000000"}, nil)
+					Return([]string{"timeline.abc123.drain.1000000000"}, nil)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "state", "timeline.server1.drain.1000000000").
+					KVGet(gomock.Any(), "state", "timeline.abc123.drain.1000000000").
 					Return(timelineEntry, nil)
 
 				return s.newClientWithAllKVs("registry", "", "state")

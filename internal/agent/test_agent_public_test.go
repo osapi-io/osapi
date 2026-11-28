@@ -157,7 +157,7 @@ func enroll(
 ) {
 	ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
 	_ = fs.MkdirAll(keyDir, 0o700)
-	_ = fs.WriteFile(keyDir+"/controller.pub", pem.EncodeToMemory(&pem.Block{
+	_ = fs.WriteFile(keyDir+"/enrolled-controller.pub", pem.EncodeToMemory(&pem.Block{
 		Type:  "ED25519 PUBLIC KEY",
 		Bytes: ctrlPub,
 	}), 0o644)

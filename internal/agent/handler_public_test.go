@@ -221,7 +221,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when successful job processing",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("test-job-123"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("test-job-123"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("test-job-123")
@@ -269,7 +269,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when job processing fails",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("test-job-456"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("test-job-456"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("test-job-456")
@@ -331,7 +331,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when job not found",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("nonexistent-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("nonexistent-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("nonexistent-job")
@@ -349,7 +349,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when invalid job data format",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("invalid-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("invalid-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("invalid-job")
@@ -367,7 +367,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when missing job ID",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-id-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("missing-id-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("missing-id-job")
@@ -390,7 +390,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when missing operation",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-op-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("missing-op-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("missing-op-job")
@@ -410,7 +410,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when missing operation type",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("missing-type-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("missing-type-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("missing-type-job")
@@ -433,7 +433,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when invalid operation type format",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("invalid-type-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("invalid-type-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("invalid-type-job")
@@ -457,7 +457,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when acknowledged write error logged",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("ack-err-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("ack-err-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("ack-err-job")
@@ -494,7 +494,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when started write error logged",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("start-err-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("start-err-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("start-err-job")
@@ -531,7 +531,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when completed write error logged",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("comp-err-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("comp-err-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("comp-err-job")
@@ -568,7 +568,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when failed write error logged",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fail-err-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("fail-err-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("fail-err-job")
@@ -607,7 +607,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when processor returns ErrUnsupported sets skipped status",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("skip-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("skip-job"))
 			},
 			setupMocks: func() {
 				// The node processor returns ErrUnsupported for this one job.
@@ -648,7 +648,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when skipped write error logged",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("skip-err-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("skip-err-job"))
 			},
 			setupMocks: func() {
 				agent.SetAgentProcessorOnce(s.testAgent, "node",
@@ -688,7 +688,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when fact reference resolved in job data",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fact-resolve-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("fact-resolve-job"))
 			},
 			setupMocks: func() {
 				agent.SetAgentCachedFacts(s.testAgent, &job.FactsRegistration{
@@ -729,7 +729,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when fact reference with nil cached facts writes error to KV",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fact-nil-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("fact-nil-job"))
 			},
 			setupMocks: func() {
 				agent.SetAgentCachedFacts(s.testAgent, nil)
@@ -771,7 +771,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when unresolvable fact reference writes error to KV",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("fact-fail-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("fact-fail-job"))
 			},
 			setupMocks: func() {
 				agent.SetAgentCachedFacts(s.testAgent, &job.FactsRegistration{})
@@ -811,7 +811,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when response storage failure",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("storage-fail-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("storage-fail-job"))
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("storage-fail-job")
@@ -860,7 +860,11 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when response storage failure and the failed-event write also fails",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("storage-fail-double-job"))
+				return newTestMsg(
+					ctrl,
+					"jobs.query.host.test-agent",
+					[]byte("storage-fail-double-job"),
+				)
 			},
 			setupMocks: func() {
 				s.expectNotAnswered("storage-fail-double-job")
@@ -922,7 +926,11 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when job already answered by this agent skips redelivered execution",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("already-answered-job"))
+				return newTestMsg(
+					ctrl,
+					"jobs.query.host.test-agent",
+					[]byte("already-answered-job"),
+				)
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -938,7 +946,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 		{
 			name: "when checking for an existing response fails proceeds with execution",
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("check-err-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("check-err-job"))
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -1003,7 +1011,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageConcurrently() {
 			msgs := make([]jetstream.Msg, tt.jobs)
 			for i := range tt.jobs {
 				id := fmt.Sprintf("concurrent-job-%d", i)
-				msgs[i] = newTestMsg(s.mockCtrl, "jobs.query.test-agent", []byte(id))
+				msgs[i] = newTestMsg(s.mockCtrl, "jobs.query.host.test-agent", []byte(id))
 				s.expectNotAnswered(id)
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs."+id).
@@ -1045,7 +1053,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 	}{
 		{
 			name:    "when modify job type identification",
-			subject: "jobs.modify.test-agent",
+			subject: "jobs.modify.host.test-agent",
 			jobData: `{
 				"id": "modify-job-123",
 				"operation": {
@@ -1427,7 +1435,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
 				WriteJobResponse(gomock.Any(), tt.jobID, gomock.Any(), gomock.Any(), tt.wantStatus, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(nil)
 
-			msg := newTestMsg(s.mockCtrl, "jobs.query.test-agent", []byte(tt.jobID))
+			msg := newTestMsg(s.mockCtrl, "jobs.query.host.test-agent", []byte(tt.jobID))
 			s.NoError(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
 		})
 	}
@@ -1458,7 +1466,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				agent.SetAgentPKIManager(s.testAgent, nil)
 			},
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("signed-job-ok"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("signed-job-ok"))
 			},
 			setupMocks: func() {
 				// Create signed job data.
@@ -1507,7 +1515,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				agent.SetAgentPKIManager(s.testAgent, nil)
 			},
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("bad-sig-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("bad-sig-job"))
 			},
 			setupMocks: func() {
 				// Create job data with invalid signature.
@@ -1545,7 +1553,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				agent.SetAgentPKIManager(s.testAgent, nil)
 			},
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("not-enrolled-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("not-enrolled-job"))
 			},
 			setupMocks: func() {
 				payload := []byte(
@@ -1584,7 +1592,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				agent.SetAgentPKIManager(s.testAgent, nil)
 			},
 			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
-				return newTestMsg(ctrl, "jobs.query.test-agent", []byte("unwrapped-job"))
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("unwrapped-job"))
 			},
 			setupMocks: func() {
 				// Plain, unsigned job data: PKI is enabled, so this is

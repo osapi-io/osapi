@@ -79,9 +79,8 @@ func (c *Client) WriteAgentTimelineEvent(
 	return nil
 }
 
-// GetAgentTimeline returns the sorted timeline events of the agent with
-// machineID: its own, and the ones that an agent before #1423 wrote under
-// its hostname, so that an upgraded agent keeps its history.
+// agentTimeline returns the sorted timeline events of the agent with
+// machineID. hostname names the agent in an error.
 func (c *Client) agentTimeline(
 	ctx context.Context,
 	machineID string,
@@ -92,10 +91,6 @@ func (c *Client) agentTimeline(
 	}
 
 	prefixes := []string{"timeline." + job.SanitizeHostname(machineID) + "."}
-	if legacy := "timeline." + job.SanitizeHostname(hostname) + "."; hostname != "" &&
-		legacy != prefixes[0] {
-		prefixes = append(prefixes, legacy)
-	}
 
 	keys, err := c.natsClient.KVKeys(ctx, c.stateBucket)
 	if err != nil {

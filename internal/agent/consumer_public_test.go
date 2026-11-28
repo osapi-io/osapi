@@ -653,7 +653,7 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 		{
 			name:       "successful message handling",
 			msgData:    []byte("test-job-key"),
-			msgSubject: "jobs.query.test-agent",
+			msgSubject: "jobs.query.host.test-agent",
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					HasJobResponse(gomock.Any(), "test-job-key", gomock.Any()).
@@ -695,7 +695,7 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 		{
 			name:       "job processing failure",
 			msgData:    []byte("failed-job-key"),
-			msgSubject: "jobs.query.test-agent",
+			msgSubject: "jobs.query.host.test-agent",
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					HasJobResponse(gomock.Any(), "failed-job-key", gomock.Any()).
