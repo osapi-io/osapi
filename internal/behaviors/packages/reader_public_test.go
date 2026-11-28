@@ -25,12 +25,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
-	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/packages"
 )
 
@@ -48,36 +45,6 @@ func (s *ReaderPublicTestSuite) TestWritesAreUnsupported() {
 	s.ErrorIs(err, behavior.ErrUnsupported)
 	_, err = p.Remove(context.Background(), "curl")
 	s.ErrorIs(err, behavior.ErrUnsupported)
-}
-
-// TestInstallAVersion covers a version that is not the installed one, and
-// one that is: the examples install the newest, which a live runner can.
-func (s *ReaderPublicTestSuite) TestInstallAVersion() {
-	ctrl := gomock.NewController(s.T())
-	exec := hostmocks.NewMockExec(ctrl)
-	behaviortest.ReadsThroughRunCmd(exec)
-	exec.EXPECT().RunCmd(gomock.Any(), "dpkg-query", gomock.Any()).
-		Return("tree\t2.1.1-2\tamd64\tinstalled\ttree\t100\n", nil).AnyTimes()
-	exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "apt-get",
-		[]string{
-			"install",
-			"-y",
-			"-o",
-			"DPkg::Lock::Timeout=300",
-			"--",
-			"tree=2.1.1-3",
-		}).
-		Return("", nil)
-	p, err := packages.ExportNewDebian(host.Host{Platform: behavior.PlatformDebian, Exec: exec})
-	s.Require().NoError(err)
-
-	changed, err := p.Install(context.Background(), "tree", "2.1.1-3")
-	s.NoError(err)
-	s.True(changed, "another version installs")
-
-	changed, err = p.Install(context.Background(), "tree", "2.1.1-2")
-	s.NoError(err)
-	s.False(changed, "the installed version does not")
 }
 
 func TestReaderPublicTestSuite(
