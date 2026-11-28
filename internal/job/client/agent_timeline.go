@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
@@ -90,9 +89,12 @@ func (c *Client) agentTimeline(
 		return nil, fmt.Errorf("agent state bucket not configured")
 	}
 
-	prefixes := []string{"timeline." + job.SanitizeHostname(machineID) + "."}
+	// Ask the server for this agent's timeline keys only: the bucket holds
+	// each agent's drain, config, seen and timeline keys, and the timeline
+	// keys are never removed.
+	filter := "timeline." + job.SanitizeHostname(machineID) + ".>"
 
-	keys, err := c.natsClient.KVKeys(ctx, c.stateBucket)
+	keys, err := c.natsClient.KVKeys(ctx, c.stateBucket, filter)
 	if err != nil {
 		// An empty bucket has no keys and no error, so it is an empty
 		// timeline. An error is a bucket that could not be read, and
@@ -103,10 +105,6 @@ func (c *Client) agentTimeline(
 
 	events := []job.TimelineEvent{}
 	for _, key := range keys {
-		if !hasAnyPrefix(key, prefixes) {
-			continue
-		}
-
 		entry, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
 		if err != nil {
 			continue
@@ -142,18 +140,4 @@ func (c *Client) GetAgentTimeline(
 	events, err := c.agentTimeline(ctx, machineID, hostname)
 
 	return events, opspan.End(span, err)
-}
-
-// hasAnyPrefix reports whether s starts with one of prefixes.
-func hasAnyPrefix(
-	s string,
-	prefixes []string,
-) bool {
-	for _, p := range prefixes {
-		if strings.HasPrefix(s, p) {
-			return true
-		}
-	}
-
-	return false
 }
