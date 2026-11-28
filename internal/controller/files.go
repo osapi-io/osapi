@@ -125,6 +125,7 @@ type objects struct {
 	bucket string
 }
 
+// Put stores the object of meta, read from r, in the bucket.
 func (o objects) Put(
 	ctx context.Context,
 	meta jetstream.ObjectMeta,
@@ -133,6 +134,7 @@ func (o objects) Put(
 	return o.nc.ObjectPut(ctx, o.bucket, meta, r)
 }
 
+// Info is the metadata of the object name.
 func (o objects) Info(
 	ctx context.Context,
 	name string,
@@ -140,6 +142,7 @@ func (o objects) Info(
 	return o.nc.ObjectInfo(ctx, o.bucket, name)
 }
 
+// Delete removes the object name.
 func (o objects) Delete(
 	ctx context.Context,
 	name string,
@@ -147,6 +150,7 @@ func (o objects) Delete(
 	return o.nc.ObjectDelete(ctx, o.bucket, name)
 }
 
+// List is the metadata of each object of the bucket.
 func (o objects) List(
 	ctx context.Context,
 ) ([]*jetstream.ObjectInfo, error) {
@@ -159,12 +163,14 @@ type states struct {
 	bucket string
 }
 
+// Keys is each key of the deploy state.
 func (s states) Keys(
 	ctx context.Context,
 ) ([]string, error) {
 	return s.nc.KVKeys(ctx, s.bucket)
 }
 
+// Get is the deploy state of key.
 func (s states) Get(
 	ctx context.Context,
 	key string,

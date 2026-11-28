@@ -633,15 +633,28 @@ func extension(
 // tag are set on.
 type target struct{ s *openapi3.Schema }
 
-func (t target) Enum(values []string) {
+// Enum adds values to the enum of the schema.
+func (t target) Enum(
+	values []string,
+) {
 	for _, v := range values {
 		t.s.Enum = append(t.s.Enum, v)
 	}
 }
 
-func (t target) Pattern(re string) { t.s.Pattern = re }
+// Pattern sets the pattern of the schema.
+func (t target) Pattern(
+	re string,
+) {
+	t.s.Pattern = re
+}
 
-func (t target) Format(format string) { t.s.Format = format }
+// Format sets the format of the schema.
+func (t target) Format(
+	format string,
+) {
+	t.s.Format = format
+}
 
 // Items is the target of the array's items. A schema with no items has
 // nothing to constrain, so the rules go to a schema nobody reads.

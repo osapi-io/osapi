@@ -57,7 +57,7 @@ func (w *Watcher) Delete(
 	)
 
 	hostname := w.hostnameOf(ctx, machineID)
-	if err := w.delete(ctx, machineID); err != nil {
+	if err := w.deleteMachine(ctx, machineID); err != nil {
 		return opspan.End(span, err)
 	}
 	w.event(ctx, machineID, hostname, "deleted", "deleted by an operator")
@@ -65,7 +65,9 @@ func (w *Watcher) Delete(
 	return opspan.End(span, nil)
 }
 
-func (w *Watcher) delete(
+// deleteMachine removes the admitted key and each other record of
+// machineID. A machine with no record is ErrNotFound.
+func (w *Watcher) deleteMachine(
 	ctx context.Context,
 	machineID string,
 ) error {
@@ -127,7 +129,7 @@ func (w *Watcher) DeleteStale(
 		if at.IsZero() || now.Sub(at) < after {
 			continue
 		}
-		if err := w.delete(ctx, r.MachineID); err != nil {
+		if err := w.deleteMachine(ctx, r.MachineID); err != nil {
 			w.logger.Warn("failed to delete a stale machine",
 				slog.String("machine_id", r.MachineID),
 				slog.String("error", err.Error()),
