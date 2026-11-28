@@ -20,10 +20,13 @@
 package natscallout_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,6 +39,31 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/natscallout"
 )
+
+// lockedBuffer is the log of a Service that answers in its own goroutine,
+// which the test reads while that goroutine may still write.
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+// Write appends p to the log, under the lock.
+func (b *lockedBuffer) Write(
+	p []byte,
+) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.Write(p)
+}
+
+// String is the log so far, under the lock.
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.String()
+}
 
 type CalloutPublicTestSuite struct {
 	suite.Suite
@@ -385,6 +413,32 @@ func (s *CalloutPublicTestSuite) TestServe() {
 			s.Fail("the second request was decided after ctx ended")
 		case <-time.After(100 * time.Millisecond):
 		}
+	})
+	s.Run("an answer that cannot be sent is logged", func() {
+		logs := &lockedBuffer{}
+		svc := natscallout.Service{
+			Issuer: s.issuer, Account: "OSAPI", Logger: slog.New(slog.NewTextHandler(logs, nil)),
+			Decide: func(context.Context, *jwt.AuthorizationRequest) (natscallout.Decision, error) {
+				return natscallout.Decision{}, natscallout.ErrRefused
+			},
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		handlers := make(chan nats.MsgHandler, 1)
+		go func() {
+			_ = svc.Serve(ctx, func(_ string, h nats.MsgHandler) (*nats.Subscription, error) {
+				handlers <- h
+
+				return &nats.Subscription{}, nil
+			})
+		}()
+		handler := <-handlers
+		// A message with no subscription has nowhere to send the answer.
+		handler(&nats.Msg{Data: request(s)})
+		s.Eventually(func() bool {
+			return strings.Contains(logs.String(),
+				"could not send the answer to an authorization request")
+		}, 2*time.Second, 10*time.Millisecond)
 	})
 	s.Run("a request that is not one is logged, and has no answer", func() {
 		svc := natscallout.Service{Issuer: s.issuer, Logger: slog.New(slog.DiscardHandler)}

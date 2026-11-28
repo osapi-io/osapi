@@ -21,8 +21,10 @@
 package audit_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
 	"os/user"
 	"testing"
 
@@ -89,6 +91,9 @@ func (s *ActorPublicTestSuite) TestRecordLocal() {
 	defer audit.SetCurrentUser(
 		func() (*user.User, error) { return &user.User{Username: "ops"}, nil },
 	)()
+	var logs bytes.Buffer
+	defer slog.SetDefault(slog.Default())
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
 	var got []audit.Entry
 	audit.RecordLocal(context.Background(), func(_ context.Context, e audit.Entry) error {
 		got = append(got, e)
@@ -100,6 +105,8 @@ func (s *ActorPublicTestSuite) TestRecordLocal() {
 	s.Equal("ops", got[0].User)
 	s.Equal("token.generate", got[0].Action)
 	s.Equal("admin@example.com", got[0].Target)
+	s.Contains(logs.String(), "the audit entry of a local command was not written")
+	s.Contains(logs.String(), "the stream is down")
 
 	s.NotPanics(func() { audit.RecordLocal(context.Background(), nil, "x", "y", "") })
 }
