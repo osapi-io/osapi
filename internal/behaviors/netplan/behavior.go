@@ -23,6 +23,8 @@
 package netplan
 
 import (
+	"time"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
@@ -47,16 +49,23 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Internal,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Requires(managedfile.Behavior),
+	// netplan try waits up to tryTimeout for the agent, and the agent then
+	// answers, so a write that requires netplan takes longer than 30 s when
+	// the change cuts NATS. The controller waits past tryTimeout for it.
+	behavior.JobWait(tryTimeout*time.Second+30*time.Second),
 	behavior.Sudo("netplan"),
 	behavior.Runs("netplan"),
 	behavior.Writes(Dir+"/osapi-*.yaml"),
 	behavior.Write("update", Update).
 		Describe("Write a netplan file, validate it and apply it").
 		Explain("Writes the file with mode 0600, validates the whole config with netplan "+
-			"generate, and applies it with netplan apply. When netplan generate refuses "+
-			"it, the file gets back the content it had, or a new file is removed, because "+
-			"netplan reads every file in the directory. A file that already holds the "+
-			"content changes nothing.").
+			"generate, and applies it with netplan try. The agent confirms the change only "+
+			"when it still reaches NATS after it; otherwise netplan reverts the change "+
+			"after 60 seconds. A change that netplan try cannot "+
+			"revert, such as a bond with parameters of its own, is applied with netplan "+
+			"apply. When netplan generate refuses the file, the file gets back the content "+
+			"it had, or a new file is removed, because netplan reads every file in the "+
+			"directory. A file that already holds the content changes nothing.").
 		Example("A new file", UpdateInput{Path: dnsFile, Content: dnsYAML},
 			Result{Path: dnsFile, Changed: true},
 			behavior.Wrote(dnsFile, dnsYAML),

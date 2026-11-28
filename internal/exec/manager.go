@@ -20,7 +20,10 @@
 
 package exec
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 // Manager manager responsible for exec operations.
 //
@@ -55,6 +58,17 @@ type Manager interface {
 		stdin string,
 	) (string, error)
 
+	// RunPrivilegedCmdInteractive runs name with args, through sudo when
+	// privilege escalation is on, and calls interact with its standard input
+	// while it runs, for a command that waits for an answer that the caller
+	// gives later, such as the confirmation of netplan try. The standard
+	// input closes when interact returns. The result is the combined output.
+	RunPrivilegedCmdInteractive(
+		ctx context.Context,
+		name string,
+		args []string,
+		interact func(ctx context.Context, stdin io.Writer) error,
+	) (string, error)
 	// RunPrivilegedCmdFull runs a command through sudo when privilege
 	// escalation is on, with the standard output, the standard error and
 	// the exit code apart.

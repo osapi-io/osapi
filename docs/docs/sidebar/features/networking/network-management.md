@@ -25,9 +25,11 @@ platform: `resolvectl` on Linux, `resolv.conf` on a host that has no resolvers
 per interface, such as a container, and `scutil` on macOS. An update writes a
 Netplan file of the interface's own, `/etc/netplan/osapi-dns-<interface>.yaml`,
 on the Debian family. It validates the file with `netplan generate`, removes it
-again when that fails, and applies it with `netplan apply`. Thus DNS changes
-stay after a reboot, and the resolvers of each interface are separate. An update
-or a delete reports skipped in a container and on other platforms.
+again when that fails, and applies it with `netplan try`. The agent keeps the
+change only when it still reaches NATS after it, and otherwise netplan reverts
+it ([Network interface management](network-interface-management.md)). Thus DNS
+changes stay after a reboot, and the resolvers of each interface are separate.
+An update or a delete reports skipped in a container and on other platforms.
 
 The `--interface-name` parameter accepts
 [fact references](../node/system-facts.md). Use `@fact.interface.primary` to

@@ -23,11 +23,15 @@ package netplan
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/avfs/avfs"
 
@@ -48,6 +52,9 @@ type debian struct {
 	files managedfile.Provider
 	exec  host.Exec
 	fs    avfs.VFS
+	// reach is the agent's round trip to NATS. With one, a change runs
+	// through netplan try and stays only when reach answers after it.
+	reach func(ctx context.Context) error
 }
 
 func newDebian(
@@ -57,6 +64,7 @@ func newDebian(
 		files: host.Require[managedfile.Provider](h, managedfile.Behavior),
 		exec:  h.Exec,
 		fs:    h.FS,
+		reach: h.Reach,
 	}, nil
 }
 
@@ -109,7 +117,15 @@ func (d *debian) Apply(
 
 		return false, fmt.Errorf("netplan generate refused %s, so it was removed: %w", in.Path, err)
 	}
-	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); err != nil {
+	err = d.apply(ctx)
+	if errors.Is(err, errReverted) {
+		// netplan put the directory back as it was, so the record goes back
+		// with it: a retry with the same input then tries again.
+		d.putBack(ctx, in.Path, previous, readErr, in.Metadata)
+
+		return false, err
+	}
+	if err != nil {
 		// The file stays as it was asked, and its record is marked: a retry
 		// with the same input then changes and applies again.
 		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
@@ -117,7 +133,7 @@ func (d *debian) Apply(
 				Path: in.Path, Content: in.Content, Mode: "0600", Metadata: in.Metadata,
 			}))
 
-		return false, fmt.Errorf("netplan apply: %w", err)
+		return false, err
 	}
 
 	return true, nil
@@ -141,24 +157,175 @@ func (d *debian) Remove(
 	if err != nil || !result.Changed {
 		return false, err
 	}
-	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); err != nil {
+	if err := d.apply(ctx); err != nil {
 		// The record of a file that osapi stopped managing keeps its
 		// metadata, which the file gets back.
 		rec, recErr := behavior.Call(ctx, managedfile.Behavior, managedfile.Get, d.files,
 			managedfile.GetInput{Path: path})
+		if errors.Is(err, errReverted) && readErr == nil && recErr == nil {
+			// netplan put the file back itself: its record comes back as
+			// it was, so a retry removes it and tries again.
+			d.putBack(ctx, path, previous, nil, rec.Metadata)
+
+			return false, fmt.Errorf("%w, so %s was put back", err, path)
+		}
 		if readErr == nil && recErr == nil {
 			_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
 				managedfile.MarkUnapplied(managedfile.UpdateInput{
 					Path: path, Content: string(previous), Mode: "0600", Metadata: rec.Metadata,
 				}))
 
-			return false, fmt.Errorf("netplan apply: %w, so %s was put back", err, path)
+			return false, fmt.Errorf("%w, so %s was put back", err, path)
 		}
 
-		return false, fmt.Errorf("netplan apply: %w", err)
+		return false, err
 	}
 
 	return true, nil
+}
+
+// tryTimeout is how long netplan try waits for the agent to confirm a change
+// before it reverts it, in seconds. The agent confirms when it reaches NATS,
+// within reachFor of the change.
+const tryTimeout = 60
+
+// defaultReachFor is how long the agent tries to reach NATS after a change
+// before it lets netplan revert it, and reachFor is that time, which a test
+// sets shorter.
+const defaultReachFor = 45 * time.Second
+
+var reachFor = defaultReachFor
+
+// tryReady is the file that netplan try writes when it has applied the
+// change and waits for the confirmation.
+const tryReady = "/run/netplan/netplan-try.ready"
+
+// errReverted is a change that netplan try reverted, because the agent did
+// not reach NATS after it.
+var errReverted = errors.New("netplan reverted the change")
+
+// apply applies the files of Dir. With reach, it runs netplan try: netplan
+// applies the change, and keeps it only when the agent confirms, which it
+// does when it still reaches NATS. Otherwise netplan reverts the files and
+// the network by itself at the timeout, also when the job ends first. A
+// change that netplan try cannot revert, such as a bond with parameters of
+// its own, is applied with netplan apply, as with no reach.
+func (d *debian) apply(
+	ctx context.Context,
+) error {
+	if d.reach == nil {
+		return d.applyDirect(ctx)
+	}
+	// netplan try runs to its end whatever happens to the job: when the
+	// change cuts NATS, the agent restarts its consumers, which ends the
+	// job's context, and a netplan try killed then reverts nothing. It ends
+	// on its own, at its timeout at the latest.
+	out, err := d.exec.RunPrivilegedCmdInteractive(context.WithoutCancel(ctx), "netplan",
+		[]string{"try", "--timeout", strconv.Itoa(tryTimeout)},
+		func(ctx context.Context, stdin io.Writer) error {
+			if !d.waitFor(ctx, tryReady) {
+				return nil
+			}
+			if err := d.reachWithin(ctx, reachFor); err != nil {
+				// No confirmation: netplan reverts at its timeout.
+				return fmt.Errorf("the agent did not reach NATS after the change: %w", err)
+			}
+			_, err := io.WriteString(stdin, "\n")
+
+			return err
+		})
+	switch {
+	case strings.Contains(out, "Configuration accepted"):
+		return nil
+	case strings.Contains(out, "use 'netplan apply' directly"):
+		return d.applyDirect(ctx)
+	case strings.Contains(out, "Reverting"):
+		return fmt.Errorf(
+			"%w: %w",
+			errReverted,
+			errors.Join(err, errors.New(strings.TrimSpace(out))),
+		)
+	case err != nil:
+		return fmt.Errorf("netplan try: %w: %s", err, strings.TrimSpace(out))
+	default:
+		return fmt.Errorf("netplan try: no answer it knows: %s", strings.TrimSpace(out))
+	}
+}
+
+// applyDirect runs netplan apply.
+func (d *debian) applyDirect(
+	ctx context.Context,
+) error {
+	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); err != nil {
+		return fmt.Errorf("netplan apply: %w", err)
+	}
+
+	return nil
+}
+
+// waitFor reports whether path is there before ctx ends. ctx ends when
+// netplan try exits, such as when it refuses a change that it cannot
+// revert.
+func (d *debian) waitFor(
+	ctx context.Context,
+	path string,
+) bool {
+	for {
+		if _, err := d.fs.Stat(path); err == nil {
+			return true
+		}
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(250 * time.Millisecond):
+		}
+	}
+}
+
+// reachWithin calls reach until it answers, for at most within: a change
+// that moves the host's address breaks the connection, and the client
+// reconnects on its own.
+func (d *debian) reachWithin(
+	ctx context.Context,
+	within time.Duration,
+) error {
+	ctx, cancel := context.WithTimeout(ctx, within)
+	defer cancel()
+	for {
+		attempt, stop := context.WithTimeout(ctx, 5*time.Second)
+		err := d.reach(attempt)
+		stop()
+		if err == nil {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(time.Second):
+		}
+	}
+}
+
+// putBack puts the record of path back as it was before a change that
+// netplan reverted: its previous content, or no record for a file that was
+// new. netplan put the file itself back.
+func (d *debian) putBack(
+	ctx context.Context,
+	path string,
+	previous []byte,
+	readErr error,
+	metadata map[string]string,
+) {
+	if readErr == nil {
+		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+			managedfile.UpdateInput{
+				Path: path, Content: string(previous), Mode: "0600", Metadata: metadata,
+			})
+
+		return
+	}
+	_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, d.files,
+		managedfile.DeleteInput{Path: path})
 }
 
 // Interface reads netplan status. netplan lists only the interfaces it

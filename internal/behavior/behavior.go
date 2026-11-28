@@ -28,6 +28,7 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -114,6 +115,10 @@ type Behavior struct {
 	// KeepsState is set when its providers keep a record in the file-state
 	// bucket, declared with KeepsState.
 	KeepsState bool
+	// JobWait is how long the controller waits for the answer of a write of
+	// this behavior, or of one that requires it, when that is longer than
+	// the job client's timeout. Declared with JobWait.
+	JobWait time.Duration
 }
 
 // Option configures a behavior in Define.

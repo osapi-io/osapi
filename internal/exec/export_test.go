@@ -37,8 +37,9 @@ func SetExecutor(
 // ExportStartSpan exposes startSpan for testing.
 var ExportStartSpan = startSpan
 
-// SetSudoProgram replaces the program that RunPrivilegedCmdFull runs a
-// command through, and returns a function that puts it back.
+// SetSudoProgram replaces the program that RunPrivilegedCmdFull and
+// RunPrivilegedCmdInteractive run a command through, and returns a function
+// that puts it back.
 func SetSudoProgram(
 	name string,
 ) func() {
@@ -59,4 +60,10 @@ func SetKillGroup(
 	killGroup, waitDelay = kill, delay
 
 	return func() { killGroup, waitDelay = oldKill, oldDelay }
+}
+
+// ResetSudoProgram puts back sudo as the program that a privileged command
+// runs through.
+func ResetSudoProgram() {
+	sudoProgram = "sudo"
 }

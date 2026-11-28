@@ -140,6 +140,9 @@ func Run[Out any](
 	// The agent reads the category from the operation's first segment.
 	op := job.OperationType(job.CategoryBehavior + "." + b.Operation(m))
 	write := m.Verb == types.VerbWrite
+	if wait := behavior.WriteWait(b); write && wait > 0 {
+		ctx = job.WithWait(ctx, wait)
+	}
 
 	var answer response
 	if job.IsBroadcastTarget(target) {

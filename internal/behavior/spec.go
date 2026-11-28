@@ -125,6 +125,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: "JobWait(d)",
+			Does: "Makes the controller wait d for the answer of a write of the behavior, and of each behavior that requires it, in place of the job client's timeout of 30 s when d is longer.",
+			When: "When a write takes longer than 30 s on a host, such as a netplan change that netplan try confirms only after it checks NATS.",
+		},
+		{
+			Kind: KindOption,
 			Name: "Requires(behaviors...)",
 			Does: "Builds the providers of those behaviors first. The builder gets them with host.Require.",
 			When: "When the behavior uses the methods of another behavior.",
@@ -286,6 +292,12 @@ var Spec = guide.Spec{
 			Name: "h.Resolver, h.Logger",
 			Does: "The name resolver that gohai uses, such as for the canonical FQDN, and the logger of the agent. The tests give a resolver that answers without the network, and a logger that discards.",
 			When: "The resolver goes to gohai through h.Sources(). Log with h.Logger only what a span does not carry.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Reach",
+			Does: "A round trip from the agent to its NATS server: nil when the server answers. The agent gives a request to the server; the tests give none.",
+			When: "For a change that can cut the host off its network, such as netplan's: keep the change only when Reach answers after it. A nil Reach is a host that nothing checks.",
 		},
 		{
 			Kind: KindCall,

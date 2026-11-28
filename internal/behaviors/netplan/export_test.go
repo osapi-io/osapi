@@ -20,5 +20,21 @@
 
 package netplan
 
+import "time"
+
 // ExportNewDebian exposes newDebian for testing.
 var ExportNewDebian = newDebian
+
+// SetReachFor sets how long a change waits for the agent to reach NATS, for
+// a test.
+func SetReachFor(
+	d time.Duration,
+) {
+	reachFor = d
+}
+
+// ResetReachFor puts back how long a change waits for the agent to reach
+// NATS.
+func ResetReachFor() {
+	reachFor = defaultReachFor
+}

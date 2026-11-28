@@ -11,6 +11,7 @@ package mocks
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	exec "github.com/osapi-io/osapi/internal/exec"
@@ -102,6 +103,21 @@ func (m *MockExec) RunPrivilegedCmdFull(ctx context.Context, name string, args [
 func (mr *MockExecMockRecorder) RunPrivilegedCmdFull(ctx, name, args, stdin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdFull", reflect.TypeOf((*MockExec)(nil).RunPrivilegedCmdFull), ctx, name, args, stdin)
+}
+
+// RunPrivilegedCmdInteractive mocks base method.
+func (m *MockExec) RunPrivilegedCmdInteractive(ctx context.Context, name string, args []string, interact func(context.Context, io.Writer) error) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunPrivilegedCmdInteractive", ctx, name, args, interact)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RunPrivilegedCmdInteractive indicates an expected call of RunPrivilegedCmdInteractive.
+func (mr *MockExecMockRecorder) RunPrivilegedCmdInteractive(ctx, name, args, interact any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdInteractive", reflect.TypeOf((*MockExec)(nil).RunPrivilegedCmdInteractive), ctx, name, args, interact)
 }
 
 // RunPrivilegedCmdWithStdin mocks base method.
