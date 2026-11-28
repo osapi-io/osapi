@@ -50,9 +50,16 @@ type debian struct {
 func newDebian(
 	h host.Host,
 ) (Provider, error) {
+	np := host.Require[netplan.Provider](h, netplan.Behavior)
+	// A write goes through netplan, which needs the file state store, so an
+	// agent with it off reads only.
+	if np == nil {
+		return newReader(h)
+	}
+
 	return &debian{
 		reader:    &reader{src: h.Sources()},
-		netplan:   host.Require[netplan.Provider](h, netplan.Behavior),
+		netplan:   np,
 		fs:        h.FS,
 		container: h.Container,
 	}, nil

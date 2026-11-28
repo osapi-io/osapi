@@ -25,22 +25,32 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
-	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
-	netplanmocks "github.com/osapi-io/osapi/internal/behaviors/netplan/mocks"
-	"go.uber.org/mock/gomock"
-
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
+	netplanmocks "github.com/osapi-io/osapi/internal/behaviors/netplan/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/network/route"
 )
 
 type DebianPublicTestSuite struct {
 	suite.Suite
+}
+
+// withNetplan is a host with fs and a netplan that the test does not reach:
+// the provider reads only on a host with no netplan.
+func (s *DebianPublicTestSuite) withNetplan(
+	fs avfs.VFS,
+) host.Host {
+	np := netplanmocks.NewMockProvider(gomock.NewController(s.T()))
+
+	return host.Host{FS: fs, Required: map[string]any{netplan.Behavior.Name: np}}
 }
 
 // TestUnsupported: a container and a platform with no writer read the
@@ -49,7 +59,9 @@ func (s *DebianPublicTestSuite) TestUnsupported() {
 	ctx := context.Background()
 	in := route.CreateInput{Name: "osapi0", Destination: "198.51.100.0/24", Via: "192.0.2.1"}
 	del := route.DeleteInput{Name: "osapi0", Destination: "198.51.100.0/24"}
-	inContainer, err := route.ExportNewDebian(host.Host{Container: true})
+	inside := s.withNetplan(memfs.New())
+	inside.Container = true
+	inContainer, err := route.ExportNewDebian(inside)
 	s.Require().NoError(err)
 	reader, err := route.ExportNewReader(host.Host{})
 	s.Require().NoError(err)
@@ -73,7 +85,7 @@ func (s *DebianPublicTestSuite) TestDamagedFile() {
 		fs := memfs.New()
 		s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
 		s.Require().NoError(fs.WriteFile(file, []byte(content), 0o600))
-		p, err := route.ExportNewDebian(host.Host{FS: fs})
+		p, err := route.ExportNewDebian(s.withNetplan(fs))
 		s.Require().NoError(err)
 
 		_, err = route.Update(context.Background(), p,
@@ -121,7 +133,7 @@ func (s *DebianPublicTestSuite) TestUnreadableFile() {
 	// A directory where the file goes fails the read, as permission denied
 	// does, and is not "does not exist".
 	s.Require().NoError(fs.MkdirAll(netplan.Dir+"/osapi-osapi0-routes.yaml", 0o755))
-	p, err := route.ExportNewDebian(host.Host{FS: fs})
+	p, err := route.ExportNewDebian(s.withNetplan(fs))
 	s.Require().NoError(err)
 
 	_, err = route.Create(context.Background(), p,
@@ -180,7 +192,7 @@ func (s *DebianPublicTestSuite) TestDestinationThatDoesNotParse() {
 	s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
 	s.Require().NoError(fs.WriteFile(file, []byte("network:\n  version: 2\n  ethernets:\n"+
 		"    osapi0:\n      routes:\n        - to: 198.51.100.0/24\n          via: 192.0.2.1\n"), 0o600))
-	p, err := route.ExportNewDebian(host.Host{FS: fs})
+	p, err := route.ExportNewDebian(s.withNetplan(fs))
 	s.Require().NoError(err)
 
 	result, err := route.Delete(context.Background(), p,

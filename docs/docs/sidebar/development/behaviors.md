@@ -384,9 +384,13 @@ no job goes on the queue. The CLI page of the method lists the refusals under
 
 On the fake host, each filesystem, command and store call of the example fails
 in turn. Each store read returns a damaged record in turn. The method must
-return an error and must not panic. With its examples and refusals, the test of
-sysctl reaches all of its Debian provider. The only exception is a JSON encoding
-error that a struct of strings cannot cause.
+return an error and must not panic. Each example also runs on a fake host that
+has no file state store and no object store, as an agent has when a bucket is
+not set. A provider that needs a store declines that host with
+`behavior.ErrUnsupported`. A provider that builds must not panic. With its
+examples and refusals, the test of sysctl reaches all of its Debian provider.
+The only exception is a JSON encoding error that a struct of strings cannot
+cause.
 
 ## The checks
 
