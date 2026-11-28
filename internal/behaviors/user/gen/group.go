@@ -198,7 +198,7 @@ var Group = endpoint.Define(
 		Describe("Add a user").
 		Permission("user:write").
 		Returns("Each target host's result, with whether it changed.").
-		Explain("Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. When chpasswd fails, the user is removed again with userdel -r, so a second run adds it with its password. It runs on the Debian family only, and elsewhere reports skipped.").
+		Explain("Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. When chpasswd fails, the user is removed again with userdel, so a second run adds it with its password. Its home directory goes with it only when useradd made it, so a home that was there before stays. It runs on the Debian family only, and elsewhere reports skipped.").
 		Example("--target web-01 --name osapitest", "Add a user").
 		Example("--target web-01 --name osapitest --shell /bin/sh --groups root --password -", "Add a user with a shell, groups and a password").
 		Example("--target web-01 --name osapitest --uid 1999 --gid 100 --home /home/osapitest --system", "Add a system user with its IDs and its home").
