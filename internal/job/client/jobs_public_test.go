@@ -1419,36 +1419,33 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 			},
 		},
 		{
-			name:  "limit exceeding max capped to default",
+			name:  "limit exceeding max capped to max",
 			limit: 200,
 			setupMocks: func() {
+				keys := make([]string, 0, client.MaxPageSize+5)
+				for i := range client.MaxPageSize + 5 {
+					keys = append(keys, fmt.Sprintf("jobs.job-%03d", i))
+				}
 				s.mockNATSClient.EXPECT().
 					KVKeys(gomock.Any(), "jobs").
-					Return([]string{"jobs.job-1", "jobs.job-2"}, nil)
-
-				// Limit 200 → capped to DefaultPageSize (10)
-				// Both jobs are within page
-				mockEntry2 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry2.EXPECT().Value().Return([]byte(
-					`{"id":"job-2","operation":{"type":"node.status.get"},"created":"2024-01-02T00:00:00Z"}`,
-				))
+					Return(keys, nil)
 				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "jobs", "jobs.job-2").
-					Return(mockEntry2, nil)
+					KVGet(gomock.Any(), "jobs", gomock.Any()).
+					DoAndReturn(func(_ context.Context, _, key string) (jetstream.KeyValueEntry, error) {
+						entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+						entry.EXPECT().Value().Return([]byte(fmt.Sprintf(
+							`{"id":%q,"operation":{"type":"node.status.get"},"created":"2024-01-01T00:00:00Z"}`,
+							key[len("jobs."):],
+						)))
 
-				mockEntry1 := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
-				mockEntry1.EXPECT().Value().Return([]byte(
-					`{"id":"job-1","operation":{"type":"node.hostname.get"},"created":"2024-01-01T00:00:00Z"}`,
-				))
-				s.mockNATSClient.EXPECT().
-					KVGet(gomock.Any(), "jobs", "jobs.job-1").
-					Return(mockEntry1, nil)
+						return entry, nil
+					}).
+					Times(client.MaxPageSize)
 			},
 			validateFunc: func(result *client.ListJobsResult, err error) {
 				s.NoError(err)
-				s.NotNil(result)
-				s.Len(result.Jobs, 2)
-				s.Equal(2, result.TotalCount)
+				s.Len(result.Jobs, client.MaxPageSize)
+				s.Equal(client.MaxPageSize+5, result.TotalCount)
 			},
 		},
 		{

@@ -297,10 +297,11 @@ func (c *Client) listJobs(
 	offset int,
 	keep func(target string) bool,
 ) (*ListJobsResult, error) {
-	// Cap limit to MaxPageSize
-	if limit <= 0 || limit > MaxPageSize {
+	if limit <= 0 {
 		limit = DefaultPageSize
 	}
+	// Cap limit to MaxPageSize
+	limit = min(limit, MaxPageSize)
 
 	c.logger.Debug(
 		"kv.keys",

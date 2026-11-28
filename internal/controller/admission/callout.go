@@ -96,7 +96,7 @@ func (w *Watcher) Callout(
 	r CalloutRoles,
 ) natscallout.Decide {
 	return func(ctx context.Context, req *jwt.AuthorizationRequest) (natscallout.Decision, error) {
-		ctx, span := opspan.Start(ctx, tracerName, "admission.callout")
+		ctx, span := opspan.Root(ctx, tracerName, "admission.callout")
 		d, actor, name, err := w.callout(ctx, r, req)
 		span.SetAttributes(attribute.String("osapi.callout.actor", name))
 		code, summary := http.StatusOK, "connected as "+d.Name
