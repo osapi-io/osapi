@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	file "github.com/osapi-io/osapi/internal/behaviors/file"
 	"github.com/osapi-io/osapi/internal/behaviors/file/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/file/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -57,4 +65,976 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestGet sends GET /api/node/{hostname}/file and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A deployed file\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","state":"in-sync","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","state":"in-sync","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A deployed file\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","state":"in-sync","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","state":"in-sync","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A path that osapi did not deploy\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","state":"unmanaged"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","path":"/etc/osapi/file-example.conf","state":"unmanaged","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A path that osapi did not deploy\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","state":"unmanaged"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","path":"/etc/osapi/file-example.conf","state":"unmanaged","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A file that osapi undeployed\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","state":"unmanaged"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","path":"/etc/osapi/file-example.conf","state":"unmanaged","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A file that osapi undeployed\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","state":"unmanaged"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","path":"/etc/osapi/file-example.conf","state":"unmanaged","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when path is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a relative path, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=etc%2Fexample.conf",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant file:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks file:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/file?path=%2Fetc%2Fosapi%2Ffile-example.conf",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"file.get",
+				file.StatusInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/file and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Deploy a file\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Deploy a file\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Render a template\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf.tmpl","path":"/etc/osapi/file-example.conf","vars":{"port":"8080"}}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf.tmpl",
+					Path:       "/etc/osapi/file-example.conf",
+					Vars:       map[string]string{"port": "8080"},
+				},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","sha256":"28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Render a template\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
+				Body:   `{"object_name":"example.conf.tmpl","path":"/etc/osapi/file-example.conf","vars":{"port":"8080"}}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf.tmpl",
+					Path:       "/etc/osapi/file-example.conf",
+					Vars:       map[string]string{"port": "8080"},
+				},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","sha256":"28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A file that holds the object\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A file that holds the object\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","path":"/etc/osapi/file-example.conf","sha256":"0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when object_name is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when path is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when object_name has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a relative path, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"etc/x"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no object, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a mode that is not octal, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","mode":"rw-r--r--"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an object name longer than 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a group that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","group":"-r"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an owner that is an option, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","owner":"-r"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a content type that is neither, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","content_type":"zip"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant file:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks file:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
+				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"file.update",
+				file.UpdateInput{
+					ObjectName: "example.conf",
+					Path:       "/etc/osapi/file-example.conf",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/file and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove a deployed file\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","path":"/etc/osapi/file-example.conf","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a deployed file\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","path":"/etc/osapi/file-example.conf","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A path that osapi did not deploy\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","path":"/etc/osapi/file-example.conf","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A path that osapi did not deploy\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","path":"/etc/osapi/file-example.conf","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when path is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when path has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a relative path, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"etc/x"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant file:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks file:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
+				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

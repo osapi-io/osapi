@@ -10,12 +10,21 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	schedule "github.com/osapi-io/osapi/internal/behaviors/schedule"
 	"github.com/osapi-io/osapi/internal/behaviors/schedule/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/schedule/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -67,4 +76,1795 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/schedule and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An entry that osapi deployed\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Completed("server1", `[{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root","source":"cron.d"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","source":"cron.d","status":"ok","user":"root"}]}`,
+		},
+		{
+			Name: "when the example \"An entry that osapi deployed\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Completed("server1", `[{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root","source":"cron.d"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","source":"cron.d","status":"ok","user":"root"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A daily script that osapi deployed\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Completed("server1", `[{"name":"osapitest","object":"osapitest.sh","interval":"daily","source":"daily"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","interval":"daily","name":"osapitest","object":"osapitest.sh","source":"daily","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A daily script that osapi deployed\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Completed("server1", `[{"name":"osapitest","object":"osapitest.sh","interval":"daily","source":"daily"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","interval":"daily","name":"osapitest","object":"osapitest.sh","source":"daily","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A host where osapi deployed none\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Completed("server1", `[]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A host where osapi deployed none\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Completed("server1", `[]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/schedule",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"schedule.list",
+				schedule.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/schedule",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//schedule",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant schedule:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks schedule:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"schedule.list",
+				schedule.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/schedule/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An entry that osapi deployed\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root","source":"cron.d"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","source":"cron.d","status":"ok","user":"root"}]}`,
+		},
+		{
+			Name: "when the example \"An entry that osapi deployed\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root","source":"cron.d"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","source":"cron.d","status":"ok","user":"root"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/schedule/osapitest",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//schedule/osapitest",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a space, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/a%20b",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name over 64 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant schedule:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks schedule:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/schedule/osapitest",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"schedule.get",
+				schedule.GetInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/schedule and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An entry with a cron expression\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An entry with a cron expression\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A script that runs daily\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.sh","interval":"daily"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Interval: types.Interval("daily"),
+					Name:     "osapitest",
+					Object:   "osapitest.sh",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A script that runs daily\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.sh","interval":"daily"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					Interval: types.Interval("daily"),
+					Name:     "osapitest",
+					Object:   "osapitest.sh",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A template, rendered with its vars\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.tmpl","schedule":"0 2 * * *","content_type":"template","vars":{"target":"/srv"}}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					ContentType: types.ContentType("template"),
+					Name:        "osapitest",
+					Object:      "osapitest.tmpl",
+					Schedule:    "0 2 * * *",
+					Vars:        map[string]string{"target": "/srv"},
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A template, rendered with its vars\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.tmpl","schedule":"0 2 * * *","content_type":"template","vars":{"target":"/srv"}}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					ContentType: types.ContentType("template"),
+					Name:        "osapitest",
+					Object:      "osapitest.tmpl",
+					Schedule:    "0 2 * * *",
+					Vars:        map[string]string{"target": "/srv"},
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An entry that has the content\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An entry that has the content\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An entry of the name in a different directory\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.sh","interval":"daily"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Interval: types.Interval("daily"),
+					Name:     "osapitest",
+					Object:   "osapitest.sh",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An entry of the name in a different directory\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.sh","interval":"daily"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					Interval: types.Interval("daily"),
+					Name:     "osapitest",
+					Object:   "osapitest.sh",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when object is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":[]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no object, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"","schedule":"0 2 * * *"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent neither a cron expression nor an interval, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a cron expression and an interval, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","interval":"daily"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a cron expression that does not parse, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"every day"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an interval that is not one, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","interval":"yearly"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a slash, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"a/b","object":"osapitest.cron","schedule":"0 2 * * *"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name over 64 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","object":"osapitest.cron","schedule":"0 2 * * *"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an object name over 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","schedule":"0 2 * * *"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a user that is not an account name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"a b"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a content type that is not one, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","content_type":"zip"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant schedule:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks schedule:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/schedule",
+				Body:   `{"name":"osapitest","object":"osapitest.cron","schedule":"0 2 * * *","user":"root"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.create",
+				schedule.CreateInput{
+					Name:     "osapitest",
+					Object:   "osapitest.cron",
+					Schedule: "0 2 * * *",
+					User:     "root",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/schedule/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A new object\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A new object\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A new cron expression, with the same object\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","schedule":"30 2 * * *"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:     "osapitest",
+					Schedule: "30 2 * * *",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A new cron expression, with the same object\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest","schedule":"30 2 * * *"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:     "osapitest",
+					Schedule: "30 2 * * *",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A new object, cron expression and user\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron","schedule":"30 2 * * *","user":"nobody"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:     "osapitest",
+					Object:   "osapitest-v2.cron",
+					Schedule: "30 2 * * *",
+					User:     "nobody",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A new object, cron expression and user\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron","schedule":"30 2 * * *","user":"nobody"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:     "osapitest",
+					Object:   "osapitest-v2.cron",
+					Schedule: "30 2 * * *",
+					User:     "nobody",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A daily script with a new object\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.sh"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.sh",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A daily script with a new object\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.sh"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.sh",
+				},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when object has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"object":[]}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a cron expression that does not parse, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","schedule":"every day"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a space, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/a%20b",
+				Body:   `{"name":"a b"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name over 64 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an object name over 255 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a user that is not an account name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","user":"a b"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a content type that is not one, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","content_type":"zip"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant schedule:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks schedule:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest","object":"osapitest-v2.cron"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.update",
+				schedule.UpdateInput{
+					Name:   "osapitest",
+					Object: "osapitest-v2.cron",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/schedule/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove an entry\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove an entry\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An entry that osapi did not deploy\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An entry that osapi did not deploy\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Completed("server1", `{"name":"osapitest","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"osapitest","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"_all",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a space, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/a%20b",
+				Body:   `{"name":"a b"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name over 64 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			},
+			Token:    servertest.Admin,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant schedule:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks schedule:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"schedule.delete",
+				schedule.DeleteInput{Name: "osapitest"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

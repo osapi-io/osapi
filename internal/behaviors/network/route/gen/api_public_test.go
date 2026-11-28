@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	route "github.com/osapi-io/osapi/internal/behaviors/network/route"
 	"github.com/osapi-io/osapi/internal/behaviors/network/route/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/network/route/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -62,4 +70,1375 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/interface/{name}/route and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An interface with routes\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+				servertest.Completed("server1", `[{"destination":"default","gateway":"10.0.0.1","interface":"eth0","family":"inet","metric":100,"proto":"dhcp","scope":""},{"destination":"10.0.0.0/24","gateway":"","interface":"eth0","family":"inet","metric":0,"proto":"kernel","scope":"link"},{"destination":"10.20.0.0/16","gateway":"10.0.0.254","interface":"eth0","family":"inet","metric":50,"proto":"static","scope":""}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"destination":"default","family":"inet","gateway":"10.0.0.1","hostname":"server1","interface":"eth0","metric":100,"proto":"dhcp","scope":"","status":"ok"},{"destination":"10.0.0.0/24","family":"inet","gateway":"","hostname":"server1","interface":"eth0","metric":0,"proto":"kernel","scope":"link","status":"ok"},{"destination":"10.20.0.0/16","family":"inet","gateway":"10.0.0.254","hostname":"server1","interface":"eth0","metric":50,"proto":"static","scope":"","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with routes\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+				servertest.Completed("server1", `[{"destination":"default","gateway":"10.0.0.1","interface":"eth0","family":"inet","metric":100,"proto":"dhcp","scope":""},{"destination":"10.0.0.0/24","gateway":"","interface":"eth0","family":"inet","metric":0,"proto":"kernel","scope":"link"},{"destination":"10.20.0.0/16","gateway":"10.0.0.254","interface":"eth0","family":"inet","metric":50,"proto":"static","scope":""}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"destination":"default","family":"inet","gateway":"10.0.0.1","hostname":"server1","interface":"eth0","metric":100,"proto":"dhcp","scope":"","status":"ok"},{"destination":"10.0.0.0/24","family":"inet","gateway":"","hostname":"server1","interface":"eth0","metric":0,"proto":"kernel","scope":"link","status":"ok"},{"destination":"10.20.0.0/16","family":"inet","gateway":"10.0.0.254","hostname":"server1","interface":"eth0","metric":50,"proto":"static","scope":"","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with no routes\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth1/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth1"},
+				servertest.Completed("server1", `[]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with no routes\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/interface/eth1/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"route.list",
+				route.ListInput{Name: "eth1"},
+				servertest.Completed("server1", `[]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/en0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "en0"},
+				servertest.Completed("server1", `[{"destination":"default","gateway":"192.168.0.1","interface":"en0","family":"inet","metric":0,"proto":"","scope":""}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"destination":"default","family":"inet","gateway":"192.168.0.1","hostname":"server1","interface":"en0","metric":0,"proto":"","scope":"","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/interface/en0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"route.list",
+				route.ListInput{Name: "en0"},
+				servertest.Completed("server1", `[{"destination":"default","gateway":"192.168.0.1","interface":"en0","family":"inet","metric":0,"proto":"","scope":""}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"destination":"default","family":"inet","gateway":"192.168.0.1","hostname":"server1","interface":"en0","metric":0,"proto":"","scope":"","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/interface/eth0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/interface/eth0/route",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//interface/eth0/route",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is not an interface name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0%3Breboot/route",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant interface:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks interface:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/interface/eth0/route",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "eth0"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/interface/{name}/route and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A route\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A route\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A second route, with a metric\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"2001:db8:1::/48","via":"2001:db8::1","metric":200}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "2001:db8:1::/48",
+					Metric:      200,
+					Name:        "osapi0",
+					Via:         "2001:db8::1",
+				},
+				servertest.Completed("server1", `{"destination":"2001:db8:1::/48","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"2001:db8:1::/48","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A second route, with a metric\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"2001:db8:1::/48","via":"2001:db8::1","metric":200}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.create",
+				route.CreateInput{
+					Destination: "2001:db8:1::/48",
+					Metric:      200,
+					Name:        "osapi0",
+					Via:         "2001:db8::1",
+				},
+				servertest.Completed("server1", `{"destination":"2001:db8:1::/48","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"2001:db8:1::/48","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A route osapi already has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A route osapi already has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when destination is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when via is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when destination has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"destination":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a destination that is not CIDR, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"10.0.0.0","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a gateway that is not an address, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"gateway"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a metric below 0, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1","metric":-1}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a metric over 4294967295, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1","metric":4294967296}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is not an interface name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/eth0%3Breboot/route",
+				Body:   `{"name":"eth0;reboot","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant interface:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks interface:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"route.create",
+				route.CreateInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+					Via:         "192.0.2.1",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/interface/{name}/route and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A new gateway and metric\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A new gateway and metric\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when destination is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"","via":"192.0.2.2","metric":10}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when via is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"","metric":10}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when destination has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"destination":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a destination that is not CIDR, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"10.0.0.0","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a gateway that is not an address, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"gateway"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a metric below 0, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1","metric":-1}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a metric over 4294967295, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1","metric":4294967296}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is not an interface name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/eth0%3Breboot/route",
+				Body:   `{"name":"eth0;reboot","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant interface:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks interface:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.2","metric":10}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"route.update",
+				route.UpdateInput{
+					Destination: "198.51.100.0/24",
+					Metric:      10,
+					Name:        "osapi0",
+					Via:         "192.0.2.2",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/interface/{name}/route and
+// checks each answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"One of two routes\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"One of two routes\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"The last route\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"The last route\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A route osapi does not have\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A route osapi does not have\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Completed("server1", `{"destination":"198.51.100.0/24","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"destination":"198.51.100.0/24","hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when destination is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when destination has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"destination":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a destination that is not CIDR, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"10.0.0.0"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is not an interface name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/eth0%3Breboot/route",
+				Body:   `{"name":"eth0;reboot","destination":"198.51.100.0/24"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant interface:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks interface:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/interface/osapi0/route",
+				Body:   `{"name":"osapi0","destination":"198.51.100.0/24"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"route.delete",
+				route.DeleteInput{
+					Destination: "198.51.100.0/24",
+					Name:        "osapi0",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

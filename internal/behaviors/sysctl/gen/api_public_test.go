@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -67,4 +75,1576 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/sysctl and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Every parameter, and which osapi manages\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{},
+				servertest.Completed("server1", `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"kernel.panic","managed":false,"status":"ok","value":"0"},{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"}]}`,
+		},
+		{
+			Name: "when the example \"Every parameter, and which osapi manages\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.list",
+				sysctl.ListInput{},
+				servertest.Completed("server1", `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"kernel.panic","managed":false,"status":"ok","value":"0"},{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"One part of the tree\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl?prefix=net.ipv4",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{Prefix: "net.ipv4"},
+				servertest.Completed("server1", `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"}]}`,
+		},
+		{
+			Name: "when the example \"One part of the tree\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl?prefix=net.ipv4",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.list",
+				sysctl.ListInput{Prefix: "net.ipv4"},
+				servertest.Completed("server1", `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.ipv4.ip_forward","managed":true,"status":"ok","value":"1"},{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A managed parameter the kernel does not have right now\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl?prefix=net.bridge",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{Prefix: "net.bridge"},
+				servertest.Completed("server1", `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.bridge.bridge-nf-call-iptables","managed":true,"status":"ok","value":"1"}]}`,
+		},
+		{
+			Name: "when the example \"A managed parameter the kernel does not have right now\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl?prefix=net.bridge",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.list",
+				sysctl.ListInput{Prefix: "net.bridge"},
+				servertest.Completed("server1", `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.bridge.bridge-nf-call-iptables","managed":true,"status":"ok","value":"1"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.list",
+				sysctl.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/sysctl",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//sysctl",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a prefix that is not a parameter name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl?prefix=..%2Fetc",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant sysctl:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks sysctl:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.list",
+				sysctl.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/sysctl/{key} and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A parameter osapi manages\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","value":"10","managed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"vm.swappiness","managed":true,"status":"ok","value":"10"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi manages\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","value":"10","managed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"vm.swappiness","managed":true,"status":"ok","value":"10"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi does not manage\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","value":"60","managed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"vm.swappiness","managed":false,"status":"ok","value":"60"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi does not manage\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","value":"60","managed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"vm.swappiness","managed":false,"status":"ok","value":"60"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A value of several fields\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/net.ipv4.ping_group_range",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "net.ipv4.ping_group_range"},
+				servertest.Completed("server1", `{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"}]}`,
+		},
+		{
+			Name: "when the example \"A value of several fields\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl/net.ipv4.ping_group_range",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.get",
+				sysctl.GetInput{Key: "net.ipv4.ping_group_range"},
+				servertest.Completed("server1", `{"key":"net.ipv4.ping_group_range","value":"0 2147483647","managed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.ipv4.ping_group_range","managed":false,"status":"ok","value":"0 2147483647"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A managed parameter the kernel does not have right now\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/net.bridge.bridge-nf-call-iptables",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "net.bridge.bridge-nf-call-iptables"},
+				servertest.Completed("server1", `{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.bridge.bridge-nf-call-iptables","managed":true,"status":"ok","value":"1"}]}`,
+		},
+		{
+			Name: "when the example \"A managed parameter the kernel does not have right now\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl/net.bridge.bridge-nf-call-iptables",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.get",
+				sysctl.GetInput{Key: "net.bridge.bridge-nf-call-iptables"},
+				servertest.Completed("server1", `{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"net.bridge.bridge-nf-call-iptables","managed":true,"status":"ok","value":"1"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/sysctl/vm.swappiness",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//sysctl/vm.swappiness",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key that is not a parameter name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness%3Breboot",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key holding a value, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness=1",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant sysctl:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks sysctl:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"sysctl.get",
+				sysctl.GetInput{Key: "vm.swappiness"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/sysctl and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Turn on IP forwarding\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+				servertest.Completed("server1", `{"key":"net.ipv4.ip_forward","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"net.ipv4.ip_forward","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Turn on IP forwarding\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+				servertest.Completed("server1", `{"key":"net.ipv4.ip_forward","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"net.ipv4.ip_forward","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when key is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when value is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when key has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no key, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key that is not a parameter name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"../etc/passwd","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key that would read as a flag, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"-w","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key that would be a hidden file, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":".hidden","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no value, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"vm.swappiness","value":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a value on two lines, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"vm.swappiness","value":"10\nkernel.panic = 0"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant sysctl:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks sysctl:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/sysctl",
+				Body:   `{"key":"net.ipv4.ip_forward","value":"1"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.create",
+				sysctl.CreateInput{
+					Key:   "net.ipv4.ip_forward",
+					Value: "1",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/sysctl/{key} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Lower swappiness\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Lower swappiness\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi did not manage\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi did not manage\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when value is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when value has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"value":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key that is not a parameter name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness%3Breboot",
+				Body:   `{"key":"vm.swappiness;reboot","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key holding a value, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness=1",
+				Body:   `{"key":"vm.swappiness=1","value":"1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no value, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a value on two lines, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10\nkernel.panic = 0"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant sysctl:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks sysctl:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness","value":"10"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.update",
+				sysctl.UpdateInput{
+					Key:   "vm.swappiness",
+					Value: "10",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/sysctl/{key} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove a parameter\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a parameter\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi does not manage\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi does not manage\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi already stopped managing\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A parameter osapi already stopped managing\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Completed("server1", `{"key":"vm.swappiness","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","key":"vm.swappiness","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key that is not a parameter name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness%3Breboot",
+				Body:   `{"key":"vm.swappiness;reboot"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a key holding a value, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness=1",
+				Body:   `{"key":"vm.swappiness=1"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant sysctl:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks sysctl:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
+				Body:   `{"key":"vm.swappiness"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"sysctl.delete",
+				sysctl.DeleteInput{Key: "vm.swappiness"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

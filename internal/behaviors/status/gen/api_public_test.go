@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	status "github.com/osapi-io/osapi/internal/behaviors/status"
 	"github.com/osapi-io/osapi/internal/behaviors/status/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/status/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -47,4 +55,220 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestGet sends GET /api/node/{hostname}/status and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An Ubuntu host\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+				servertest.Completed("server1", `{"name":"web-01","uptime":{"uptime":"1 day, 2 hours, 5 minutes","seconds":93900},"os_info":{"distribution":"ubuntu","version":"24.04"},"load_average":{"1min":0.32,"5min":0.28,"15min":0.25},"memory":{"total":8589934592,"free":2147483648,"used":4294967296},"disks":[{"name":"/","total":52428800000,"used":20971520000,"free":31457280000}]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","load_average":{"15min":0.25,"1min":0.32,"5min":0.28},"memory":{"free":2147483648,"total":8589934592,"used":4294967296},"name":"web-01","os_info":{"distribution":"ubuntu","version":"24.04"},"status":"ok","uptime":{"seconds":93900,"uptime":"1 day, 2 hours, 5 minutes"}}]}`,
+		},
+		{
+			Name: "when the example \"An Ubuntu host\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"status.get",
+				status.GetInput{},
+				servertest.Completed("server1", `{"name":"web-01","uptime":{"uptime":"1 day, 2 hours, 5 minutes","seconds":93900},"os_info":{"distribution":"ubuntu","version":"24.04"},"load_average":{"1min":0.32,"5min":0.28,"15min":0.25},"memory":{"total":8589934592,"free":2147483648,"used":4294967296},"disks":[{"name":"/","total":52428800000,"used":20971520000,"free":31457280000}]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","load_average":{"15min":0.25,"1min":0.32,"5min":0.28},"memory":{"free":2147483648,"total":8589934592,"used":4294967296},"name":"web-01","os_info":{"distribution":"ubuntu","version":"24.04"},"status":"ok","uptime":{"seconds":93900,"uptime":"1 day, 2 hours, 5 minutes"}},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+				servertest.Completed("server1", `{"name":"web-01","uptime":{"uptime":"1 day, 2 hours, 5 minutes","seconds":93900},"os_info":{"distribution":"darwin","version":"15.5"},"load_average":{"1min":0.32,"5min":0.28,"15min":0.25},"memory":{"total":8589934592,"free":2147483648,"used":4294967296},"disks":[{"name":"/","total":52428800000,"used":20971520000,"free":31457280000}]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","load_average":{"15min":0.25,"1min":0.32,"5min":0.28},"memory":{"free":2147483648,"total":8589934592,"used":4294967296},"name":"web-01","os_info":{"distribution":"darwin","version":"15.5"},"status":"ok","uptime":{"seconds":93900,"uptime":"1 day, 2 hours, 5 minutes"}}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"status.get",
+				status.GetInput{},
+				servertest.Completed("server1", `{"name":"web-01","uptime":{"uptime":"1 day, 2 hours, 5 minutes","seconds":93900},"os_info":{"distribution":"darwin","version":"15.5"},"load_average":{"1min":0.32,"5min":0.28,"15min":0.25},"memory":{"total":8589934592,"free":2147483648,"used":4294967296},"disks":[{"name":"/","total":52428800000,"used":20971520000,"free":31457280000}]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"disks":[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}],"hostname":"server1","load_average":{"15min":0.25,"1min":0.32,"5min":0.28},"memory":{"free":2147483648,"total":8589934592,"used":4294967296},"name":"web-01","os_info":{"distribution":"darwin","version":"15.5"},"status":"ok","uptime":{"seconds":93900,"uptime":"1 day, 2 hours, 5 minutes"}},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/status",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"status.get",
+				status.GetInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/status",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//status",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant status:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks status:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/status",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"status.get",
+				status.GetInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

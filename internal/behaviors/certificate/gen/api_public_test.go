@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	certificate "github.com/osapi-io/osapi/internal/behaviors/certificate"
 	"github.com/osapi-io/osapi/internal/behaviors/certificate/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/certificate/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -67,4 +75,1785 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestList sends GET /api/node/{hostname}/certificate and checks each answer's
+// response.
+func (s *APIPublicTestSuite) TestList() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A Debian host with a system CA\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"mozilla/Example_Root","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"mozilla/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A Debian host with a system CA\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"mozilla/Example_Root","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"mozilla/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed reads by its name\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"mozilla/Example_Root","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false},{"name":"internal-ca","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"mozilla/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed reads by its name\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"mozilla/Example_Root","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false},{"name":"internal-ca","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"mozilla/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/ca-certificates/mozilla/Example_Root.crt","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A host of the RHEL family\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"anchors/Example_Root","path":"/usr/share/pki/ca-trust-source/anchors/Example_Root.pem","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"anchors/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/pki/ca-trust-source/anchors/Example_Root.pem","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A host of the RHEL family\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"anchors/Example_Root","path":"/usr/share/pki/ca-trust-source/anchors/Example_Root.pem","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"anchors/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/pki/ca-trust-source/anchors/Example_Root.pem","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"osapi example CA","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"osapi example CA","not_after":"2126-10-29T23:38:01Z","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"osapi example CA","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"osapi example CA","not_after":"2126-10-29T23:38:01Z","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestListValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestListValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/certificate",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//certificate",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestListRBACHTTP sends tokens that do not grant certificate:read.
+func (s *APIPublicTestSuite) TestListRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks certificate:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestGet sends GET /api/node/{hostname}/certificate/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"A CA that osapi deployed, by the name it was deployed with\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed, by the name it was deployed with\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/usr/local/share/ca-certificates/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on the RHEL family\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","path":"/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on the RHEL family\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","path":"/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA of a Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/osapi%20example%20CA",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "osapi example CA"},
+				servertest.Completed("server1", `{"name":"osapi example CA","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"osapi example CA","not_after":"2126-10-29T23:38:01Z","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA of a Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate/osapi%20example%20CA",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.get",
+				certificate.GetInput{Name: "osapi example CA"},
+				servertest.Completed("server1", `{"name":"osapi example CA","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"osapi example CA","not_after":"2126-10-29T23:38:01Z","path":"/System/Library/Keychains/SystemRootCertificates.keychain","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/certificate/internal-ca",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//certificate/internal-ca",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a %, which an encoded slash has, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/mozilla%252FExample_Root",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name of 256 characters, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant certificate:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks certificate:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate/internal-ca",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"certificate.get",
+				certificate.GetInput{Name: "internal-ca"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestCreate sends POST /api/node/{hostname}/certificate and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestCreate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Add a CA\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Add a CA\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Add a CA on the RHEL family\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Add a CA on the RHEL family\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Add a CA on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Add a CA on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed with the same content\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed with the same content\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+	})
+}
+
+// TestCreateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestCreateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/nowhere/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node//certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when object is missing, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when name has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent no object, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":""}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a space, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"a b","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestCreateRBACHTTP sends tokens that do not grant certificate:write.
+func (s *APIPublicTestSuite) TestCreateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks certificate:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/certificate",
+				Body:   `{"name":"internal-ca","object":"internal-ca.pem"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.create",
+				certificate.CreateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca.pem",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/certificate/{name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Write a CA from a new object\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Write a CA from a new object\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Write a CA from a new object on the RHEL family\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Write a CA from a new object on the RHEL family\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Write a CA from a new object on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Write a CA from a new object on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"The object that it was deployed from\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"The object that it was deployed from\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.update",
+				certificate.UpdateInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when object has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"object":[]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a space, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/a%20b",
+				Body:   `{"name":"a b"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant certificate:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks certificate:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/certificate/{name} and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Remove a CA\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a CA\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a CA on the RHEL family\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a CA on the RHEL family\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a CA on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Remove a CA on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi did not deploy\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi did not deploy\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name with a space, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/a%20b",
+				Body:   `{"name":"a b"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant certificate:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks certificate:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.delete",
+				certificate.DeleteInput{Name: "internal-ca"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }

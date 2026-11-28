@@ -10,12 +10,20 @@ import (
 	suite "github.com/stretchr/testify/suite"
 
 	dispatch "github.com/osapi-io/osapi/internal/behavior/dispatch"
+	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
+	dns "github.com/osapi-io/osapi/internal/behaviors/network/dns"
 	"github.com/osapi-io/osapi/internal/behaviors/network/dns/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 )
 
 type APIPublicTestSuite struct {
 	suite.Suite
+
+	api *servertest.Harness
+}
+
+func (s *APIPublicTestSuite) SetupSuite() {
+	s.api = servertest.New(s.T(), "internal/behaviors/network/dns/gen/api.yaml", gen.Routes)
 }
 
 func (s *APIPublicTestSuite) TestRoutes() {
@@ -57,4 +65,946 @@ func TestAPIPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(APIPublicTestSuite))
+}
+
+// TestGet sends GET /api/node/{hostname}/dns/{interface_name} and checks each
+// answer's response.
+func (s *APIPublicTestSuite) TestGet() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An interface with servers and a domain\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"servers":["1.1.1.1","8.8.8.8"],"search_domains":["example.com"]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","search_domains":["example.com"],"servers":["1.1.1.1","8.8.8.8"],"status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with servers and a domain\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"servers":["1.1.1.1","8.8.8.8"],"search_domains":["example.com"]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","search_domains":["example.com"],"servers":["1.1.1.1","8.8.8.8"],"status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A container with no resolvers per interface\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"servers":["10.0.0.2"],"search_domains":["svc.local"]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","search_domains":["svc.local"],"servers":["10.0.0.2"],"status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A container with no resolvers per interface\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"servers":["10.0.0.2"],"search_domains":["svc.local"]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","search_domains":["svc.local"],"servers":["10.0.0.2"],"status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/en0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "en0"},
+				servertest.Completed("server1", `{"servers":["1.1.1.1"],"search_domains":[]}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","search_domains":[],"servers":["1.1.1.1"],"status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/dns/en0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"dns.get",
+				dns.GetInput{InterfaceName: "en0"},
+				servertest.Completed("server1", `{"servers":["1.1.1.1"],"search_domains":[]}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","search_domains":[],"servers":["1.1.1.1"],"status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestGetValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestGetValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/nowhere/dns/osapi0",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node//dns/osapi0",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an interface name that is not alphanumeric, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0%3Breboot",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestGetRBACHTTP sends tokens that do not grant dns:read.
+func (s *APIPublicTestSuite) TestGetRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks dns:read, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/dns/osapi0",
+			},
+			Token: servertest.Admin,
+			Job: servertest.Query(
+				"server1",
+				"dns.get",
+				dns.GetInput{InterfaceName: "osapi0"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestUpdate sends PUT /api/node/{hostname}/dns/{interface_name} and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestUpdate() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"Set the servers of an interface\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Set the servers of an interface\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"Set the search domains, and keep the servers\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","search_domains":["corp.example"],"override_dhcp":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					OverrideDHCP:  true,
+					SearchDomains: []string{"corp.example"},
+				},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Set the search domains, and keep the servers\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","search_domains":["corp.example"],"override_dhcp":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					OverrideDHCP:  true,
+					SearchDomains: []string{"corp.example"},
+				},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with no resolvers yet, with DHCP's dropped\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"],"override_dhcp":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					OverrideDHCP:  true,
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with no resolvers yet, with DHCP's dropped\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"],"override_dhcp":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					OverrideDHCP:  true,
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestUpdateValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node//dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the body is not JSON, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when servers has the wrong type, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"servers":"one"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a server that is not an IP address, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["one.one"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a search domain that is not a host name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","search_domains":["bad domain"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent more than 16 servers, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1","1.1.1.1"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent more than 16 search domains, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","search_domains":["a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b","a.b"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an interface name that is not alphanumeric, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0%3Breboot",
+				Body:   `{"interface_name":"osapi0;reboot","servers":["9.9.9.9"]}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestUpdateRBACHTTP sends tokens that do not grant dns:write.
+func (s *APIPublicTestSuite) TestUpdateRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks dns:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "osapi0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
+}
+
+// TestDelete sends DELETE /api/node/{hostname}/dns/{interface_name} and checks
+// each answer's response.
+func (s *APIPublicTestSuite) TestDelete() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the example \"An interface osapi set\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface osapi set\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"osapi0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"An interface osapi set nothing on\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":false}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","interface_name":"osapi0","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface osapi set nothing on\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Completed("server1", `{"interface_name":"osapi0","changed":false}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","interface_name":"osapi0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host skips it, its row says skipped",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+		{
+			Name: "when the host fails it, its row says failed",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Failed("server1", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"boom","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			Name: "when the host never answers, its row says timeout",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.TimedOut("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"","hostname":"server1","status":"timeout"}]}`,
+		},
+		{
+			Name: "when the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when broadcast and the job client fails, it is a 500",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+			).Fails(servertest.ErrUnreachable),
+			WantCode: http.StatusInternalServerError,
+		},
+		{
+			Name: "when the host does not have it, it is a 404",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+			).Fails(servertest.NotFound("server1")),
+			WantCode: http.StatusNotFound,
+		},
+	})
+}
+
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
+// queued.
+func (s *APIPublicTestSuite) TestDeleteValidationHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when the target is not an agent, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when the target is empty, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node//dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent an interface name that is not alphanumeric, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0%3Breboot",
+				Body:   `{"interface_name":"osapi0;reboot"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+	})
+}
+
+// TestDeleteRBACHTTP sends tokens that do not grant dns:write.
+func (s *APIPublicTestSuite) TestDeleteRBACHTTP() {
+	s.api.Run(s.T(), []servertest.Case{
+		{
+			Name: "when there is no token, it is a 401",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token:    servertest.NoToken,
+			WantCode: http.StatusUnauthorized,
+		},
+		{
+			Name: "when the token lacks dns:write, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token:    servertest.Lacking,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has only the read role, it is a 403",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the admin role, the request runs",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/dns/osapi0",
+				Body:   `{"interface_name":"osapi0"}`,
+			},
+			Token: servertest.Admin,
+			Job: servertest.Modify(
+				"server1",
+				"dns.delete",
+				dns.DeleteInput{InterfaceName: "osapi0"},
+				servertest.Skipped("server1"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"error":"unsupported","hostname":"server1","status":"skipped"}]}`,
+		},
+	})
 }
