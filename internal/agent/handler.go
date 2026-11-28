@@ -217,6 +217,51 @@ func (a *Agent) startInProgressKeepAlive(
 	}
 }
 
+// jobTimeout is the longest that a job runs. It is longer than each bound of
+// the work inside a job, such as exec.DefaultCommandTimeout, so it ends only a
+// job that one of those does not end. Tests swap it.
+var jobTimeout = 15 * time.Minute
+
+// runJob runs the operation of req, with the steps of the behaviors that it
+// called. It gives up at jobTimeout: a behavior that ignores its context,
+// such as a read of a hung mount, keeps its goroutine, but the job ends,
+// gives back its place among max_jobs, and stops the keepalive of its ack.
+func (a *Agent) runJob(
+	ctx context.Context,
+	req job.Request,
+) (json.RawMessage, []types.Step, error) {
+	ctx, cancel := context.WithTimeout(ctx, jobTimeout)
+	defer cancel()
+
+	type outcome struct {
+		result json.RawMessage
+		steps  []types.Step
+		err    error
+	}
+	done := make(chan outcome, 1)
+	go func() {
+		// Each behavior.Call under the method adds its step to root, so
+		// the response says which behaviors the job called on the host.
+		root := &behavior.Step{}
+		result, err := a.processJobOperation(behavior.Record(ctx, root), req)
+		done <- outcome{result: result, steps: root.Wire(), err: err}
+	}()
+
+	select {
+	case o := <-done:
+		return o.result, o.steps, o.err
+	case <-ctx.Done():
+		a.logger.ErrorContext(
+			ctx,
+			"job ran past its time, and its operation is still running",
+			slog.String("job_id", req.JobID),
+			slog.String("operation", req.Operation),
+		)
+
+		return nil, nil, fmt.Errorf("the job ran past %s: %w", jobTimeout, ctx.Err())
+	}
+}
+
 // terminateMessage tells JetStream not to redeliver msg, then returns err
 // unchanged. Used for pre-execution failures that redelivery can never fix:
 // a malformed payload, an unparsable subject, or a failed signature.
@@ -301,7 +346,7 @@ func (a *Agent) handleJobMessage(
 		// Redelivery can help here: the job's KV write and this
 		// notification are not transactional, so a very early delivery
 		// may briefly race the write.
-		return fmt.Errorf("job not found: %s", jobKey)
+		return fmt.Errorf("job not found: %s: %w", jobKey, err)
 	}
 
 	// Unwrap and verify the signed envelope. Each
@@ -334,21 +379,21 @@ func (a *Agent) handleJobMessage(
 	jobID, ok := jobData["id"].(string)
 	if !ok {
 		return a.terminateMessage(msg, "missing job id",
-			fmt.Errorf("invalid job format: missing id"))
+			errors.New("invalid job format: missing id"))
 	}
 
 	// Extract the operation data
 	operationData, ok := jobData["operation"].(map[string]interface{})
 	if !ok {
 		return a.terminateMessage(msg, "missing operation",
-			fmt.Errorf("invalid job format: missing operation"))
+			errors.New("invalid job format: missing operation"))
 	}
 
 	// Extract operation type from the operation data
 	operationType, ok := operationData["type"].(string)
 	if !ok {
 		return a.terminateMessage(msg, "missing operation type",
-			fmt.Errorf("invalid operation format: missing type field"))
+			errors.New("invalid operation format: missing type field"))
 	}
 
 	// Parse operation type to extract category and operation
@@ -482,12 +527,8 @@ func (a *Agent) handleJobMessage(
 		// Extend the ack deadline periodically while the operation runs, so
 		// an operation that outlives AckWait is not redelivered mid-flight.
 		stopKeepAlive := a.startInProgressKeepAlive(ctx, msg)
-		// Each behavior.Call under the method adds its step to root, so
-		// the response says which behaviors the job called on the host.
-		root := &behavior.Step{}
-		result, err = a.processJobOperation(behavior.Record(ctx, root), jobRequest)
+		result, response.Steps, err = a.runJob(ctx, jobRequest)
 		stopKeepAlive()
-		response.Steps = root.Wire()
 	}
 	if err != nil && errors.Is(err, provider.ErrUnsupported) {
 		a.logger.WarnContext(

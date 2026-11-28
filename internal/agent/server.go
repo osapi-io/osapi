@@ -178,8 +178,19 @@ func (a *Agent) lifecycle(
 	event string,
 	message string,
 ) {
+	a.timelineEvent(context.WithoutCancel(ctx), a.currentHostname(), event, message)
+}
+
+// timelineEvent writes event of the agent as hostname to its timeline, and
+// logs a write that fails: a missing event loses no work.
+func (a *Agent) timelineEvent(
+	ctx context.Context,
+	hostname string,
+	event string,
+	message string,
+) {
 	if err := a.jobClient.WriteAgentTimelineEvent(
-		context.WithoutCancel(ctx), a.machineID, a.currentHostname(), event, message,
+		ctx, a.machineID, hostname, event, message,
 	); err != nil {
 		a.logger.Warn("failed to write a timeline event",
 			slog.String("event", event),

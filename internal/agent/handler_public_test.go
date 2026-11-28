@@ -122,6 +122,11 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 	}
 }
 
+func (s *HandlerPublicTestSuite) TearDownSubTest() {
+	agent.ResetJobTimeoutFn()
+	agent.ResetAgentProcessorFn(s.testAgent)
+}
+
 func (s *HandlerPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
@@ -307,6 +312,66 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				// The operation ran and its failure is already recorded in
 				// the response and status event, so the message is acked
 				// (nil) rather than left to redeliver.
+				s.NoError(err)
+			},
+		},
+		{
+			// The operation ignores its context, as a read of a hung mount
+			// does. The job still ends at its deadline, and its failure is
+			// recorded.
+			name: "when the operation runs past the job's time",
+			setupMsg: func(ctrl *gomock.Controller) jetstream.Msg {
+				return newTestMsg(ctrl, "jobs.query.host.test-agent", []byte("test-job-hung"))
+			},
+			setupMocks: func() {
+				// The processor blocks until the row ends. TearDownSubTest
+				// puts back the timeout and the node processor.
+				release, entered := make(chan struct{}), make(chan struct{})
+				s.T().Cleanup(func() { close(release) })
+				agent.SetJobTimeoutFn(50 * time.Millisecond)
+				agent.SetAgentProcessorFn(
+					s.testAgent,
+					"node",
+					func(context.Context, job.Request) (json.RawMessage, error) {
+						close(entered)
+						<-release
+
+						return nil, nil
+					},
+				)
+				s.expectNotAnswered("test-job-hung")
+				s.mockJobClient.EXPECT().
+					GetJobData(gomock.Any(), "jobs.test-job-hung").
+					Return(signedJob(`{
+						"id": "test-job-hung",
+						"operation": {"type": "node.hostname.get", "data": {}}
+					}`), nil)
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), "test-job-hung", gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(3)
+				s.mockJobClient.EXPECT().
+					WriteJobResponse(gomock.Any(), "test-job-hung", gomock.Any(), gomock.Any(), types.AgentJobStatusFailed, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						_ []byte,
+						_ types.AgentJobStatus,
+						errMsg string,
+						_ job.ErrorCode,
+						_ *bool,
+						_ []types.Step,
+					) error {
+						// The job's goroutine read the processor before it
+						// blocked, so TearDownSubTest may put it back.
+						<-entered
+						s.Contains(errMsg, "the job ran past 50ms")
+
+						return nil
+					})
+			},
+			validateFunc: func(err error) {
 				s.NoError(err)
 			},
 		},

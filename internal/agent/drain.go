@@ -62,28 +62,36 @@ func (a *Agent) handleDrainDetection(
 
 	// The transition is taken under the lock: reading the state, moving the
 	// consumers, and recording the new state are one step, so an enrollment
-	// acceptance arriving now waits rather than interleaving with it.
+	// acceptance arriving now waits rather than interleaving with it. The
+	// timeline event, a call to NATS, is written after the lock, so a slow
+	// NATS does not hold State and the enrollment for its length.
 	a.lifecycleMu.Lock()
-	defer a.lifecycleMu.Unlock()
-
+	var event, message string
+	var drained *sync.WaitGroup
 	switch {
 	case drainRequested && a.state == types.AgentReady:
 		a.logger.Info("drain detected, stopping job consumption")
-		set := a.cancelConsumersLocked()
+		drained = a.cancelConsumersLocked()
 		a.state = types.AgentDraining
-		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, a.machineID, hostname, "drain", "Drain initiated",
-		)
+		event, message = "drain", "Drain initiated"
+		// Counted under the lock, so a Stop that waits on wg now waits for
+		// finishDrain, which starts after the unlock.
 		a.wg.Add(1)
-		go a.finishDrain(ctx, set, hostname)
 
 	case !drainRequested && a.state == types.AgentCordoned:
 		a.logger.Info("undrain detected, resuming job consumption")
 		a.startConsumersLocked()
 		a.state = types.AgentReady
-		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, a.machineID, hostname, "undrain", "Resumed accepting jobs",
-		)
+		event, message = "undrain", "Resumed accepting jobs"
+	}
+	a.lifecycleMu.Unlock()
+
+	if event == "" {
+		return
+	}
+	a.timelineEvent(ctx, hostname, event, message)
+	if event == "drain" {
+		go a.finishDrain(ctx, drained, hostname)
 	}
 }
 
@@ -129,9 +137,7 @@ func (a *Agent) finishDrain(
 
 	if cordoned {
 		a.logger.Info("all consumers stopped, agent cordoned")
-		_ = a.jobClient.WriteAgentTimelineEvent(
-			ctx, a.machineID, hostname, "cordoned", "All jobs completed",
-		)
+		a.timelineEvent(ctx, hostname, "cordoned", "All jobs completed")
 	}
 }
 
