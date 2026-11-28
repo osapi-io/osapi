@@ -25,16 +25,18 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
+// fakeProvider is the provider type of the test behaviors. It is no double:
+// a behavior names a provider type, and these behaviors call none of its
+// methods.
 type fakeProvider struct{ prefix string }
 
 // secretIn has a field that carries a secret.

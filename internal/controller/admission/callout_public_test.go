@@ -29,6 +29,7 @@ import (
 
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/bus"
@@ -58,7 +59,7 @@ func (c checkTokens) Check(
 func (s *StorePublicTestSuite) joinWithUserKey(
 	user nkeys.KeyPair,
 ) {
-	s.watcher.SetJoinTokens(fakeTokens{})
+	s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
 	userPub, _ := user.PublicKey()
 	r := pki.JoinRequest{
