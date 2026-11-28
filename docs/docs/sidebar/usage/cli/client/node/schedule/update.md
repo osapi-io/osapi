@@ -3,9 +3,11 @@
 Deploy a cron entry that osapi deployed again.
 
 Writes a new object, or the entry's own, at the entry's path, with the fields
-that the request gives and the entry's own for the rest. A file that has the
-content does not change. An entry that osapi did not deploy is not found. The
-entry stays in its directory: an interval does not change with update.
+that the request gives and the entry's own for the rest. A new cron expression
+or user writes the entry's line again, so cron runs what a read gives. A file
+that has the content does not change. An entry that osapi did not deploy is not
+found. The entry stays in its directory: an interval does not change with
+update.
 
 ```bash
 osapi client node schedule update [flags]
@@ -201,9 +203,9 @@ With the default settings, each example does this on the host:
 
 | Example                                     | On the host                                                                                  |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| A new object                                | writes `/etc/cron.d/osapitest`: `30 2 * * * root /usr/local/bin/backup --full`               |
-| A new cron expression, with the same object | writes `/etc/cron.d/osapitest`: `0 2 * * * root /usr/local/bin/backup`                       |
-| A new object, cron expression and user      | writes `/etc/cron.d/osapitest`: `30 2 * * * root /usr/local/bin/backup --full`               |
+| A new object                                | writes `/etc/cron.d/osapitest`: `0 2 * * * root /usr/local/bin/backup --full`                |
+| A new cron expression, with the same object | writes `/etc/cron.d/osapitest`: `30 2 * * * root /usr/local/bin/backup`                      |
+| A new object, cron expression and user      | writes `/etc/cron.d/osapitest`: `30 2 * * * nobody /usr/local/bin/backup --full`             |
 | A daily script with a new object            | writes `/etc/cron.daily/osapitest`: `#!/bin/sh\n/usr/local/bin/backup\n/usr/local/bin/prune` |
 
 The command fails in these cases:
@@ -217,6 +219,7 @@ The command fails in these cases:
 | A name over 64 characters             | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`                                                                                                                                                                                                                   | Name                   |
 | An object name over 255 characters    | `--name osapitest --object aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | Object                 |
 | A user that is not an account name    | `--name osapitest --user 'a b'`                                                                                                                                                                                                                                                              | User                   |
+| A user for a script of an interval    | `--name osapitest --user nobody`                                                                                                                                                                                                                                                             | runs as root           |
 | A content type that is not one        | `--name osapitest --content-type zip`                                                                                                                                                                                                                                                        | ContentType            |
 
 ## Permission
