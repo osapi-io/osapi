@@ -562,6 +562,7 @@ components:
         - PostNodeSysctl
         - PostNodeUser
         - PostNodeUserSshkey
+        - PostSecret
         - PutAgentConfig
         - PutFileByName
         - PutNodeCertificate

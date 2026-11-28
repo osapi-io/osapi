@@ -74,7 +74,7 @@ var fileUpdateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client file update --name app.conf --file /tmp/app.conf",
-	Long:    "The command replaces the content of a stored file, or stores it when the\nname is new. The same content changes nothing (`Changed: false`).",
+	Long:    "The command replaces the content of a stored file. The same content\nchanges nothing (`Changed: false`). A name that is not there is refused\nwith 404: `file upload` creates it.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 		contentType, _ := cmd.Flags().GetString("content-type")

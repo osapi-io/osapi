@@ -40,6 +40,8 @@ var (
 	ErrNoVault = errors.New("vault not found")
 	// ErrNoKey is a key that is not in its vault.
 	ErrNoKey = errors.New("key not found")
+	// ErrExists is a key that exists.
+	ErrExists = errors.New("key exists")
 )
 
 // noVault404 is the 404 of each method that names a vault.
@@ -133,18 +135,53 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a key that is not letters, digits, - or _", RevealInput{Vault: "default", Key: "a.b"}).
 		Fails("a key over 128 characters", RevealInput{Vault: "default", Key: long(129)}).
 		Errors(noVault404, endpoint.NotFound(ErrNoKey, "The vault has no key with that name.")),
+	endpoint.Post[CreateInput, Info]("create").
+		Handle(Create).
+		Key("vault").
+		ID("PostSecret").
+		Describe("Create a key").
+		Explain("Write a value as version 1 of a new key. A key that exists is 409, whatever its "+
+			"value: update changes it. The answer is the metadata of the key. The API never "+
+			"gives the value back.").
+		Returns("The key is new.").
+		Status(http.StatusCreated).
+		Location("vault", "key").
+		Command("Create a key in a vault",
+			"The command reads the value from standard input with --value -, so the\n"+
+				"value is not in the shell history. A key that exists is refused with 409\n"+
+				"Conflict: secret update changes it. A request then uses the key as\n"+
+				"secret://<vault>/<key>.").
+		Example("--vault default --key registry-token --value -",
+			"Read the value from standard input").
+		Prints(sampleCreate).
+		Check("client secret get", "--vault default --key registry-token",
+			"vault", "default", "key", "registry-token", "version", "{out.version}", "value", command.Absent).
+		Check("client secret reveal", "--vault default --key registry-token", "value", "int-cli-value").
+		Fails("no key", CreateInput{Vault: "default", Body: CreateRequest{Value: "v"}}).
+		Fails("no value", CreateInput{Vault: "default", Body: CreateRequest{Key: "k"}}).
+		Fails("a value over 64 KiB", CreateInput{Vault: "default", Body: create("k", 65537)}).
+		Fails("a vault name that is not letters, digits, - or _", CreateInput{Vault: "a.b", Body: create("k", 1)}).
+		Fails("a vault name over 64 characters", CreateInput{Vault: long(65), Body: create("k", 1)}).
+		Fails("a key that is not letters, digits, - or _", CreateInput{Vault: "default", Body: create("a.b", 1)}).
+		Fails("a key over 128 characters", CreateInput{Vault: "default", Body: create(long(129), 1)}).
+		Errors(
+			noVault404,
+			endpoint.Conflict(ErrExists,
+				"The key exists. Change it with PUT /api/secret/{vault}/{key}."),
+		),
 	endpoint.Put[UpdateInput, Info]("update").
 		Handle(Update).
 		Key("vault", "key").
 		ID("PutSecret").
-		Describe("Write the value of a key").
-		Explain("Write a value as the next version of a key, or as version 1 of a new key. "+
-			"The answer is the metadata of the key. The API never gives the value back.").
+		Describe("Change the value of a key").
+		Explain("Write a value as the next version of a key that exists. A key that is not "+
+			"there is 404: create makes it. The answer is the metadata of the key. The "+
+			"API never gives the value back.").
 		Returns("The metadata of the key after the write.").
-		Command("Write the value of a key",
+		Command("Change the value of a key",
 			"The command reads the value from standard input with --value -, so the\n"+
-				"value is not in the shell history. A request then uses the key as\n"+
-				"secret://<vault>/<key>.").
+				"value is not in the shell history. A key that is not there is refused\n"+
+				"with 404: secret create makes it.").
 		Example("--vault default --key registry-token --value -",
 			"Read the value from standard input").
 		Prints(sampleUpdate).
@@ -157,7 +194,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a vault name over 64 characters", UpdateInput{Vault: long(65), Key: "k", Body: body(1)}).
 		Fails("a key that is not letters, digits, - or _", UpdateInput{Vault: "default", Key: "a.b", Body: body(1)}).
 		Fails("a key over 128 characters", UpdateInput{Vault: "default", Key: long(129), Body: body(1)}).
-		Errors(noVault404),
+		Errors(noVault404, endpoint.NotFound(ErrNoKey, "The vault has no key with that name. Create it with POST.")),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
 		Handle(Delete).
 		Key("vault", "key").

@@ -65,6 +65,14 @@ var (
 
 	sampleValue = Value{Value: "glpat-xxxxxxxxxxxxxxxxxxxx"}
 
+	sampleCreate = Info{
+		Vault:   "default",
+		Key:     "registry-token",
+		Version: 1,
+		Changed: time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC),
+		By:      "ops@example.com",
+	}
+
 	sampleUpdate = Info{
 		Vault:   "default",
 		Key:     "registry-token",
@@ -79,4 +87,13 @@ func body(
 	n int,
 ) UpdateRequest {
 	return UpdateRequest{Value: secretvalue.Value(strings.Repeat("v", n))}
+}
+
+// create is a create of key with a value of n bytes, for the inputs that
+// Fails declares.
+func create(
+	key string,
+	n int,
+) CreateRequest {
+	return CreateRequest{Key: key, Value: secretvalue.Value(strings.Repeat("v", n))}
 }

@@ -81,14 +81,18 @@ key: its version, when it changed and who changed it. Only
 `osapi client secret reveal` gives a value. Give the value on standard input:
 
 ```bash
-osapi client secret update --vault default --key registry-token --value - < token.txt
+osapi client secret create --vault default --key registry-token --value - < token.txt
+osapi client secret update --vault default --key registry-token --value - < new-token.txt
 osapi client secret list --vault default
 osapi client secret vault list
 ```
 
-Each write is a new version of the key. `osapi client secret delete` deletes a
-key. The Secrets page of the UI, in the Admin menu, lists the keys of a vault,
-writes a value with a password field and deletes a key.
+`create` makes a key, as version 1. A create of a key that exists is refused
+with 409, whatever its value. `update` writes the next version of a key that
+exists, and a key that is not there is refused with 404.
+`osapi client secret delete` deletes a key. The Secrets page of the UI, in the
+Admin menu, lists the keys of a vault, writes a value with a password field and
+deletes a key.
 
 The permissions:
 
@@ -99,8 +103,9 @@ The permissions:
 | `secret:use`    | `admin`, `automation`                     | give a reference to a secret in a call |
 | `secret:reveal` | `admin`                                   | print the value of a key               |
 
-A reference as the value of `osapi client secret update` resolves too, so it
-copies the value of that key. It needs `secret:use`, as each reference does.
+A reference as the value of `osapi client secret create` or
+`osapi client secret update` resolves too, so it copies the value of that key.
+It needs `secret:use`, as each reference does.
 
 A tool that needs the value itself, such as ansible, reads it with `reveal`. It
 needs `secret:reveal`, which only `admin` has. It prints only the value, for a

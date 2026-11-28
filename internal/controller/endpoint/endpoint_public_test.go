@@ -594,7 +594,7 @@ func (s *EndpointPublicTestSuite) TestReadBack() {
 
 func (s *EndpointPublicTestSuite) TestLocation() {
 	m := endpoint.Post[noInput, Node]("make").Status(http.StatusCreated).Location("name")
-	s.Equal("name", m.LocationField())
+	s.Equal([]string{"name"}, m.LocationFields())
 
 	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes", m))
 	s.Require().NoError(err)

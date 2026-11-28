@@ -1,10 +1,10 @@
 # Update
 
-Write the value of a key.
+Change the value of a key.
 
 The command reads the value from standard input with --value -, so the value is
-not in the shell history. A request then uses the key as
-secret://&lt;vault&gt;/&lt;key&gt;.
+not in the shell history. A key that is not there is refused with 404: secret
+create makes it.
 
 ```bash
 osapi client secret update [flags]

@@ -268,7 +268,7 @@ func (b *builder) operation(
 			return nil, fmt.Errorf("response: %w", err)
 		}
 		success = success.WithJSONSchemaRef(out)
-		if m.location != "" {
+		if len(m.location) > 0 {
 			success.Headers = openapi3.Headers{"Location": &openapi3.HeaderRef{
 				Value: &openapi3.Header{Parameter: openapi3.Parameter{
 					Description: "The URL of the resource that the request created.",

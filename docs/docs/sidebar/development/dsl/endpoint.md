@@ -310,13 +310,13 @@ command name goes under a command of the Sub.
 Use: When the command's verb is a method name the group has already, such as
 list under pending beside the group's own list.
 
-### `.Location("field")`
+### `.Location("field", ...)`
 
-Gives a 201 the Location header: the group's path and the value of the output's
-field with that json name.
+Gives a 201 the Location header: the group's path, then the value of each output
+field with that json name, joined by / and escaped.
 
 Use: For each method that creates a resource and answers 201, such as job retry
-with job_id.
+with job_id, or secret create with vault and key.
 
 ### `.Answers(code, "doc")`
 

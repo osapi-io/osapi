@@ -26,6 +26,7 @@ import {
   deleteSecret,
   getSecretVaults,
   getSecrets,
+  postSecret,
   putSecret,
 } from "@/sdk/gen/secret-management-api-secret-operations/secret-management-api-secret-operations";
 
@@ -72,8 +73,12 @@ export function Secrets() {
 
   const write = async (key: string, value: string) => {
     setActionError(null);
-    const res = await putSecret(vault, key, { value });
-    if (res.status !== 200) {
+    // A key in the list gets a new version; a new key is created.
+    const exists = rows.some((r) => r.key === key);
+    const res = exists
+      ? await putSecret(vault, key, { value })
+      : await postSecret(vault, { key, value });
+    if (res.status !== 200 && res.status !== 201) {
       setActionError(
         (res.data as { error?: string } | undefined)?.error ??
           "Failed to write the key",
@@ -144,7 +149,7 @@ export function Secrets() {
             </Picker>
           </div>
 
-          {canCall("PutSecret") && (
+          {(canCall("PostSecret") || canCall("PutSecret")) && (
             <section className="mb-6">
               <SectionLabel>Write a value</SectionLabel>
               <SecretForm key={vault} onWrite={write} />

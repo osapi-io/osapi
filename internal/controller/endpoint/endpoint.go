@@ -473,7 +473,7 @@ type Method struct {
 	adminOnly     bool
 	handler       any
 	cmdShort      string
-	location      string
+	location      []string
 	cmdUse        string
 	cmdLong       string
 	examples      []CommandExample
@@ -875,19 +875,20 @@ func (m *Method) CommandName() string {
 	return m.Name
 }
 
-// Location names the field of the output that holds the ID of the resource
-// a 201 created, such as job_id: the answer's Location header is the
-// group's path and that ID, such as /api/job/7c9e6679-....
+// Location names the fields of the output that hold the ID of the
+// resource a 201 created, such as job_id: the answer's Location header is
+// the group's path and the value of each field, joined by /, such as
+// /api/job/7c9e6679-... or /api/secret/default/registry-token.
 func (m *Method) Location(
-	field string,
+	fields ...string,
 ) *Method {
-	m.location = field
+	m.location = fields
 
 	return m
 }
 
-// LocationField is the field Location named, or "".
-func (m *Method) LocationField() string {
+// LocationFields are the fields Location named, or none.
+func (m *Method) LocationFields() []string {
 	return m.location
 }
 

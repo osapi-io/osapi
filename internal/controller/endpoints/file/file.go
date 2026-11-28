@@ -118,26 +118,26 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--name app.conf --json").
 		Errors(endpoint.NotFound(ErrNotFound, "File not found."), noStore503),
 	endpoint.Put[UpdateInput, UploadResponse]("update").
-		Fails("no file", UpdateInput{Name: "app.conf"}).
-		Fails("a name over 255 characters", UpdateInput{Name: long, File: content}).
-		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: notAContentType, File: content}).
-		Fails("an empty file", UpdateInput{Name: "app.conf", File: []byte{}}).
 		Handle(Update).
 		ID("PutFileByName").
 		Describe("Replace a file").
-		Explain("Replace a file in the Object Store, or create it when the name is new.").
-		Returns("The file is new.").
-		Status(http.StatusCreated).
-		Location("name").
-		Answers(http.StatusOK, "The file existed. changed says whether its content changed.").
+		Explain("Replace a file that exists in the Object Store. A name that is not there is "+
+			"404: upload creates it.").
+		Returns("The file after the update. changed says whether its content changed.").
 		Command("Replace a file in the Object Store",
-			"The command replaces the content of a stored file, or stores it when the\n"+
-				"name is new. The same content changes nothing (`Changed: false`).").
+			"The command replaces the content of a stored file. The same content\n"+
+				"changes nothing (`Changed: false`). A name that is not there is refused\n"+
+				"with 404: `file upload` creates it.").
 		Example("--name app.conf --file /tmp/app.conf").
 		Prints(sampleUpload).
 		Check("client file get", "--name app.conf",
 			"name", "app.conf", "sha256", "{out.sha256}", "content_type", "raw").
+		Fails("no file", UpdateInput{Name: "app.conf"}).
+		Fails("a name over 255 characters", UpdateInput{Name: long, File: content}).
+		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: notAContentType, File: content}).
+		Fails("an empty file", UpdateInput{Name: "app.conf", File: []byte{}}).
 		Errors(
+			endpoint.NotFound(ErrNotFound, "No file has that name. Upload it with POST /api/file."),
 			endpoint.Forbidden(ErrProtected, "The file is an osapi file, which a caller cannot write."),
 			noStore503,
 		),

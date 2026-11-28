@@ -470,7 +470,7 @@ paths:
             name: app.conf
       x-osapi-method: get
     put:
-      description: Replace a file in the Object Store, or create it when the name is new.
+      description: 'Replace a file that exists in the Object Store. A name that is not there is 404: upload creates it.'
       operationId: PutFileByName
       parameters:
         - description: The name of the file in the Object Store.
@@ -507,18 +507,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileUploadResponse'
-          description: The file existed. changed says whether its content changed.
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUploadResponse'
-          description: The file is new.
-          headers:
-            Location:
-              description: The URL of the resource that the request created.
-              schema:
-                type: string
+          description: The file after the update. changed says whether its content changed.
         "400":
           content:
             application/json:
@@ -537,6 +526,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The file is an osapi file, which a caller cannot write.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: No file has that name. Upload it with POST /api/file.
         "500":
           content:
             application/json:

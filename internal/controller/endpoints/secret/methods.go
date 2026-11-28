@@ -121,8 +121,42 @@ func Reveal(
 	return Value{Value: string(value)}, nil
 }
 
-// Update writes the value as the next version of the key, and records the
-// subject of the token as who changed it. The answer is the metadata.
+// Create writes the value as version 1 of a new key, and records the
+// subject of the token as who wrote it. A key that exists is ErrExists,
+// whatever its value: update changes it. Create checks only that the key
+// exists, from the list of the vault, and never reads a value. The answer
+// is the metadata.
+func Create(
+	ctx context.Context,
+	d Deps,
+	in CreateInput,
+) (Info, error) {
+	v, err := open(d, in.Vault)
+	if err != nil {
+		return Info{}, err
+	}
+
+	_, err = find(ctx, v, in.Vault, in.Body.Key)
+	switch {
+	case err == nil:
+		return Info{}, endpoint.Errorf(ErrExists,
+			"vault %s has key %s; change it with secret update", in.Vault, in.Body.Key)
+	case !errors.Is(err, ErrNoKey):
+		return Info{}, err
+	}
+
+	ctx = vault.WithActor(ctx, authtoken.SubjectFrom(ctx))
+	m, err := v.Put(ctx, in.Body.Key, []byte(in.Body.Value.Reveal()))
+	if err != nil {
+		return Info{}, endpoint.Internal("failed to write the key", err)
+	}
+
+	return info(in.Vault, m), nil
+}
+
+// Update writes the value as the next version of a key that exists, and
+// records the subject of the token as who changed it. A key that is not
+// there is ErrNoKey: create makes it. The answer is the metadata.
 func Update(
 	ctx context.Context,
 	d Deps,
@@ -132,6 +166,13 @@ func Update(
 	if err != nil {
 		return Info{}, err
 	}
+	if _, _, err := v.Get(ctx, in.Key); errors.Is(err, vault.ErrNotFound) {
+		return Info{}, endpoint.Errorf(ErrNoKey,
+			"vault %s has no key %s; make it with secret create", in.Vault, in.Key)
+	} else if err != nil {
+		return Info{}, endpoint.Internal("failed to read the key", err)
+	}
+
 	ctx = vault.WithActor(ctx, authtoken.SubjectFrom(ctx))
 	m, err := v.Put(ctx, in.Key, []byte(in.Body.Value.Reveal()))
 	if err != nil {

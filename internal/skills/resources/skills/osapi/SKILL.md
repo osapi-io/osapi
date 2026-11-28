@@ -38,8 +38,9 @@ host.
 5. **Give a secret as a reference.** A secret field, such as a password or the
    `--env` of a container, takes `secret://<vault>/<key>`. Put the value in a
    vault first, from standard input:
-   `osapi client secret update --vault default --key registry-token --value - < token.txt`.
-   Then give `secret://default/registry-token`.
+   `osapi client secret create --vault default --key registry-token --value - < token.txt`.
+   `osapi client secret update` changes a key that exists. Then give
+   `secret://default/registry-token`.
    `osapi client secret list --vault default --json` gives the keys. Never put a
    value in a flag, a plan or a file: the shell history and the disk keep it.
 

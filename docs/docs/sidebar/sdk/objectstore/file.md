@@ -163,7 +163,8 @@ func (s *FileService) Update(
 ) (*Response[FileUploadResponse], error)
 ```
 
-Update replaces a file in the Object Store, or creates it when the name is new.
+Update replaces a file that exists in the Object Store. A name that is not there
+is a NotFoundError: Upload creates it.
 
 The examples of the method's definition:
 

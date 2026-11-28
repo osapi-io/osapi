@@ -6,6 +6,7 @@
  */
 import type {
   ErrorResponse,
+  SecretCreateRequest,
   SecretInfo,
   SecretListResponse,
   SecretUpdateRequest,
@@ -147,6 +148,75 @@ export const getSecrets = async (vault: string, options?: Parameters<typeof apiF
     method: 'GET'
 
 
+  }
+);}
+
+
+export type postSecretResponse201 = {
+  data: SecretInfo
+  status: 201
+}
+
+export type postSecretResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type postSecretResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type postSecretResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type postSecretResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type postSecretResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type postSecretResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type postSecretResponseSuccess = (postSecretResponse201) & {
+  headers: Headers;
+};
+export type postSecretResponseError = (postSecretResponse400 | postSecretResponse401 | postSecretResponse403 | postSecretResponse404 | postSecretResponse409 | postSecretResponse500) & {
+  headers: Headers;
+};
+
+export type postSecretResponse = (postSecretResponseSuccess | postSecretResponseError)
+
+export const getPostSecretUrl = (vault: string,) => {
+
+
+
+
+  return `/api/secret/${vault}`
+}
+
+/**
+ * Write a value as version 1 of a new key. A key that exists is 409, whatever its value: update changes it. The answer is the metadata of the key. The API never gives the value back.
+ * @summary Create a key
+ */
+export const postSecret = async (vault: string,
+    secretCreateRequest: SecretCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postSecretResponse> => {
+
+  return apiFetch<postSecretResponse>(getPostSecretUrl(vault),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(secretCreateRequest)
   }
 );}
 
@@ -330,8 +400,8 @@ export const getPutSecretUrl = (vault: string,
 }
 
 /**
- * Write a value as the next version of a key, or as version 1 of a new key. The answer is the metadata of the key. The API never gives the value back.
- * @summary Write the value of a key
+ * Write a value as the next version of a key that exists. A key that is not there is 404: create makes it. The answer is the metadata of the key. The API never gives the value back.
+ * @summary Change the value of a key
  */
 export const putSecret = async (vault: string,
     key: string,

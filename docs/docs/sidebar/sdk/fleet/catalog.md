@@ -237,13 +237,13 @@ A `string`, one of `AdmitMachine`, `DeleteFileByName`, `DeleteJobByID`,
 `PostNodeSchedule`, `PostNodeService`, `PostNodeServiceDisable`,
 `PostNodeServiceEnable`, `PostNodeServiceRestart`, `PostNodeServiceStart`,
 `PostNodeServiceStop`, `PostNodeSysctl`, `PostNodeUser`, `PostNodeUserSshkey`,
-`PutAgentConfig`, `PutFileByName`, `PutNodeCertificate`, `PutNodeDns`,
-`PutNodeFile`, `PutNodeGroup`, `PutNodeHostname`, `PutNodeInterface`,
-`PutNodeInterfaceRoute`, `PutNodeNtp`, `PutNodePackageUpdates`,
-`PutNodeSchedule`, `PutNodeService`, `PutNodeSysctl`, `PutNodeTimezone`,
-`PutNodeUser`, `PutNodeUserPassword`, `PutSecret`, `RejectMachine`,
-`RetryJobByID`, `RevokeMachine`, `RotatePKIKey`, `RotatePKINATSCert`,
-`UndrainAgent`.
+`PostSecret`, `PutAgentConfig`, `PutFileByName`, `PutNodeCertificate`,
+`PutNodeDns`, `PutNodeFile`, `PutNodeGroup`, `PutNodeHostname`,
+`PutNodeInterface`, `PutNodeInterfaceRoute`, `PutNodeNtp`,
+`PutNodePackageUpdates`, `PutNodeSchedule`, `PutNodeService`, `PutNodeSysctl`,
+`PutNodeTimezone`, `PutNodeUser`, `PutNodeUserPassword`, `PutSecret`,
+`RejectMachine`, `RetryJobByID`, `RevokeMachine`, `RotatePKIKey`,
+`RotatePKINATSCert`, `UndrainAgent`.
 
 ### Permission
 

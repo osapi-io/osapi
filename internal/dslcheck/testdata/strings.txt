@@ -232,7 +232,7 @@ endpoint.Method.Explain(text string)	free text	prose for a page or a message
 endpoint.Method.Fails(doc string)	free text	prose for a page or a message
 endpoint.Method.ID(id string)	identity	a name that the registry, the route or the command path holds
 endpoint.Method.Key(fields []string)	checked	the path fields of the input; the key rule checks each
-endpoint.Method.Location(field string)	checked	a json field of the output; the field rule checks it
+endpoint.Method.Location(fields []string)	checked	json fields of the output; the field rule checks each
 endpoint.Method.Name string	identity	a name that the registry, the route or the command path holds
 endpoint.Method.NoCheck(why string)	free text	a reason that a person reads
 endpoint.Method.Notes(text string)	free text	prose for a page or a message

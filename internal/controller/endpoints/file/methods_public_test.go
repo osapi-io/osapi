@@ -322,21 +322,27 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 			wantErr: errBoom,
 		},
 		{
-			name:     "when an update names a new file, it is stored: 201",
+			name:     "when an update names a file that is not there, it is ErrNotFound and writes nothing",
 			update:   true,
 			fileName: "nginx.conf",
 			setup: func() {
 				s.objects.EXPECT().
 					Info(gomock.Any(), "nginx.conf").
 					Return(nil, jetstream.ErrObjectNotFound)
-				s.objects.EXPECT().
-					Put(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(&jetstream.ObjectInfo{}, nil)
 			},
-			changed: true,
+			wantErr: file.ErrNotFound,
 		},
 		{
-			name:     "when an update has other content, it is replaced: 200",
+			name:     "when the store has no info and no error, the update is ErrNotFound",
+			update:   true,
+			fileName: "nginx.conf",
+			setup: func() {
+				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(nil, nil)
+			},
+			wantErr: file.ErrNotFound,
+		},
+		{
+			name:     "when an update has other content, it is replaced",
 			update:   true,
 			fileName: "nginx.conf",
 			setup: func() {
@@ -345,17 +351,15 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{}, nil)
 			},
-			wantCode: http.StatusOK,
-			changed:  true,
+			changed: true,
 		},
 		{
-			name:     "when an update has the same content, nothing is written: 200",
+			name:     "when an update has the same content, nothing is written",
 			update:   true,
 			fileName: "nginx.conf",
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(exists, nil)
 			},
-			wantCode: http.StatusOK,
 		},
 		{
 			name:     "when an update names an osapi file, it is ErrProtected",
@@ -367,9 +371,7 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 		{
 			name: "when the store fails, the update is a 500", update: true, fileName: "nginx.conf",
 			setup: func() {
-				s.objects.EXPECT().
-					Info(gomock.Any(), "nginx.conf").
-					Return(nil, jetstream.ErrObjectNotFound)
+				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(other, nil)
 				s.objects.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errBoom)
@@ -775,6 +777,18 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 					Return(&jetstream.ObjectInfo{}, nil)
 			},
 			wantCode: http.StatusOK,
+		},
+		{
+			name:   "when an update names a file that is not there, it is a 404",
+			method: http.MethodPut,
+			path:   "/api/file/nginx.conf",
+			data:   content,
+			token:  token("file:write"),
+			setup: func() {
+				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").
+					Return(nil, jetstream.ErrObjectNotFound)
+			},
+			wantCode: http.StatusNotFound,
 		},
 		{
 			name: "when the token has only file:read, an update is a 403", method: http.MethodPut,
