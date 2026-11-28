@@ -264,7 +264,7 @@ type JobClient interface {
 	CheckDrainFlag(
 		ctx context.Context,
 		hostname string,
-	) bool
+	) (bool, error)
 	SetDrainFlag(
 		ctx context.Context,
 		hostname string,

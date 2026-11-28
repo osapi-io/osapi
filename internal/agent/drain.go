@@ -36,7 +36,7 @@ import (
 func (a *Agent) checkDrainFlag(
 	ctx context.Context,
 	machineID string,
-) bool {
+) (bool, error) {
 	return a.jobClient.CheckDrainFlag(ctx, machineID)
 }
 
@@ -58,7 +58,17 @@ func (a *Agent) handleDrainDetection(
 	machineID string,
 	hostname string,
 ) {
-	drainRequested := a.checkDrainFlag(ctx, machineID)
+	drainRequested, err := a.checkDrainFlag(ctx, machineID)
+	if err != nil {
+		// The flag is unknown, not absent: keep the state until a read
+		// answers, so an outage does not undrain a cordoned agent.
+		a.logger.Warn(
+			"drain flag not read, the state stays",
+			slog.String("error", err.Error()),
+		)
+
+		return
+	}
 
 	// The transition is taken under the lock: reading the state, moving the
 	// consumers, and recording the new state are one step, so an enrollment

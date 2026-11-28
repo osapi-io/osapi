@@ -212,7 +212,7 @@ func ExportCheckDrainFlag(
 	ctx context.Context,
 	a *Agent,
 	machineID string,
-) bool {
+) (bool, error) {
 	return a.checkDrainFlag(ctx, machineID)
 }
 

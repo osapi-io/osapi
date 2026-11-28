@@ -64,11 +64,12 @@ func (mr *MockJobClientMockRecorder) AgentsLastSeen(ctx any) *gomock.Call {
 }
 
 // CheckDrainFlag mocks base method.
-func (m *MockJobClient) CheckDrainFlag(ctx context.Context, hostname string) bool {
+func (m *MockJobClient) CheckDrainFlag(ctx context.Context, hostname string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckDrainFlag", ctx, hostname)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CheckDrainFlag indicates an expected call of CheckDrainFlag.

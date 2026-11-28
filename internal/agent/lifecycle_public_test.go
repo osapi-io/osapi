@@ -91,7 +91,7 @@ func (s *LifecyclePublicTestSuite) TearDownTest() {
 func (s *LifecyclePublicTestSuite) TestStateUnderConcurrentAccess() {
 	s.mockJobClient.EXPECT().
 		CheckDrainFlag(gomock.Any(), "test-machine-id").
-		Return(false).
+		Return(false, nil).
 		AnyTimes()
 
 	const iterations = 50

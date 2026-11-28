@@ -348,9 +348,15 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 			"agents.drain-01",
 		}, nil)
 		// Only drain-01 has its drain flag set, and it has not applied it.
+		// The flags of the others cannot be read, so they keep the state
+		// that they reported.
 		s.jobs.EXPECT().CheckDrainFlag(gomock.Any(), gomock.Any()).
-			DoAndReturn(func(_ context.Context, machineID string) bool {
-				return machineID == "m-drain"
+			DoAndReturn(func(_ context.Context, machineID string) (bool, error) {
+				if machineID == "m-drain" {
+					return true, nil
+				}
+
+				return false, errBoom
 			}).
 			AnyTimes()
 		s.nc.EXPECT().
