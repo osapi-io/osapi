@@ -31,6 +31,8 @@ import (
 	"github.com/osapi-io/osapi/internal/settings"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // LocalGroup is a group of local commands: commands that run in the CLI
@@ -193,7 +195,8 @@ var (
 )
 
 // Register adds g to the local groups the CLI has, and returns it. Two
-// groups with one command path are a mistake in the code, so it panics.
+// groups with one command path are a mistake in the code: Register reports
+// it to wiring and keeps the first.
 func Register(
 	g *LocalGroup,
 ) *LocalGroup {
@@ -201,7 +204,9 @@ func Register(
 	defer localMu.Unlock()
 	key := g.Path()
 	if _, ok := locals[key]; ok {
-		panic(fmt.Sprintf("command: group %q registered twice", key))
+		wiring.Report(fmt.Errorf("command: group %q registered twice", key))
+
+		return g
 	}
 	locals[key] = g
 	if g.ConfigPrefix != "" {
@@ -246,14 +251,16 @@ func All() []*LocalGroup {
 
 // Provide gives the group's methods their deps: fn makes them when a
 // command runs, after the config is read. D must be the type the group
-// Uses; any other is a mistake in the code, so it panics. A group whose Deps
-// has no field needs none.
+// Uses; any other is a mistake in the code, which Provide reports to wiring.
+// A group whose Deps has no field needs none.
 func Provide[D any](
 	g *LocalGroup,
 	fn func() D,
 ) {
 	if t := reflect.TypeFor[D](); t != g.Deps {
-		panic(fmt.Sprintf("command: %s uses %v, and Provide gives %v", g.Name, g.Deps, t))
+		wiring.Report(fmt.Errorf("command: %s uses %v, and Provide gives %v", g.Name, g.Deps, t))
+
+		return
 	}
 	g.provide = func() any { return fn() }
 }

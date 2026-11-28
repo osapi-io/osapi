@@ -38,6 +38,8 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // Group is a set of endpoints under one path, /api/<name>, such as agent.
@@ -389,14 +391,17 @@ var (
 )
 
 // Register adds g to the groups the controller has, and returns it. Two
-// groups with one name are a mistake in the code, so it panics.
+// groups with one name are a mistake in the code: Register reports it to
+// wiring and keeps the first.
 func Register(
 	g *Group,
 ) *Group {
 	registryMu.Lock()
 	defer registryMu.Unlock()
 	if _, ok := registry[g.Name]; ok {
-		panic(fmt.Sprintf("endpoint: group %q registered twice", g.Name))
+		wiring.Report(fmt.Errorf("endpoint: group %q registered twice", g.Name))
+
+		return g
 	}
 	registry[g.Name] = g
 

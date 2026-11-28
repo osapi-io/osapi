@@ -23,6 +23,7 @@ package commandgen
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"slices"
 	"strings"
@@ -30,6 +31,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // ExampleTraceID is the trace that each example output ends with, and
@@ -160,7 +163,9 @@ func screen(
 			cli.PrintTraceID(ExampleTraceID)
 		}
 		if err := command.Derive(docsPrinter{}, g, m, in, answer); err != nil {
-			panic("example output of " + g.GroupName() + " " + m.MethodName() + ": " + err.Error())
+			wiring.Report(fmt.Errorf(
+				"example output of %s %s: %w", g.GroupName(), m.MethodName(), err,
+			))
 		}
 		if traced {
 			cli.FlushTraceID()

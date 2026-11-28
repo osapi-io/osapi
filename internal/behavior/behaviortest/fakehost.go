@@ -262,13 +262,13 @@ func (h *fakeHost) checkState() {
 }
 
 // Errorf is the reporter of the mock controller. The command mock answers
-// each method of host.Exec, so a report is a fault of the fake host itself,
-// and it stops the test with that report.
+// each method of host.Exec, so a report is a fault of the fake host itself.
+// It joins the problems that the check of the behavior reports.
 func (h *fakeHost) Errorf(
 	format string,
 	args ...any,
 ) {
-	panic(fmt.Sprintf("the fake host has no answer for a call: "+format, args...))
+	h.report(fmt.Sprintf("the fake host has no answer for a call: "+format, args...))
 }
 
 // Fatalf is Errorf, for the mock controller.

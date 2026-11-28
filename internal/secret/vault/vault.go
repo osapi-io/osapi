@@ -34,6 +34,8 @@ import (
 	"sync"
 
 	"github.com/go-viper/mapstructure/v2"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 var (
@@ -63,15 +65,17 @@ func Define[C any](
 }
 
 // Register adds t to the types that the controller and the config check
-// know, and returns it. Two types with one name are a mistake in the code,
-// so it panics.
+// know, and returns it. Two types with one name are a mistake in the code:
+// Register reports it to wiring and keeps the first.
 func Register(
 	t Type,
 ) Type {
 	mu.Lock()
 	defer mu.Unlock()
 	if _, ok := types[t.Name]; ok {
-		panic(fmt.Sprintf("vault: type %q registered twice", t.Name))
+		wiring.Report(fmt.Errorf("vault: type %q registered twice", t.Name))
+
+		return t
 	}
 	types[t.Name] = t
 

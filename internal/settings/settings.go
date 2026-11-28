@@ -28,6 +28,8 @@ package settings
 import (
 	"fmt"
 	"sync"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // Owner is the definition that owns a section of the config.
@@ -47,8 +49,8 @@ var (
 )
 
 // Own records that by owns the section prefix, with defaults. Two owners of
-// one section is a mistake of the code, so it panics, as a group registered
-// twice does.
+// one section is a mistake of the code: Own reports it to wiring, keeps the
+// first owner, and the program stops with it when it starts.
 func Own(
 	prefix string,
 	by string,
@@ -57,7 +59,9 @@ func Own(
 	mu.Lock()
 	defer mu.Unlock()
 	if o, ok := owners[prefix]; ok {
-		panic(fmt.Sprintf("settings: %s and %s both own %q", o.By, by, prefix))
+		wiring.Report(fmt.Errorf("settings: %s and %s both own %q", o.By, by, prefix))
+
+		return
 	}
 	owners[prefix] = Owner{Prefix: prefix, By: by, Defaults: defaults}
 }

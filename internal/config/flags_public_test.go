@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 type FlagsPublicTestSuite struct {
@@ -105,7 +106,9 @@ func (s *FlagsPublicTestSuite) TestBindFlagAs() {
 	f := fs.Lookup("url")
 	s.Require().NotNil(f)
 	s.Equal("https://localhost:8080", f.DefValue, "the default of the owner, not a copy")
-	s.Panics(func() { config.BindFlagAs(fs, "no.such.key", "nope") })
+	_ = wiring.Take()
+	config.BindFlagAs(fs, "no.such.key", "nope")
+	s.EqualError(wiring.Take(), `config: no key "no.such.key" for a flag`)
 }
 
 func (s *FlagsPublicTestSuite) TestBindFlagsSets() {
@@ -116,9 +119,9 @@ func (s *FlagsPublicTestSuite) TestBindFlagsSets() {
 }
 
 func (s *FlagsPublicTestSuite) TestBindFlagsUnknown() {
-	s.PanicsWithValue(`config: no key "agent.nosuch" for a flag`, func() {
-		config.BindFlags(pflag.NewFlagSet("t", pflag.ContinueOnError), "agent.nosuch")
-	})
+	_ = wiring.Take()
+	config.BindFlags(pflag.NewFlagSet("t", pflag.ContinueOnError), "agent.nosuch")
+	s.EqualError(wiring.Take(), `config: no key "agent.nosuch" for a flag`)
 }
 
 func TestFlagsPublicTestSuite(

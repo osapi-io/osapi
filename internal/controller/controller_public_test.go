@@ -22,6 +22,7 @@ package controller_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"os"
@@ -46,6 +47,7 @@ import (
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 type ControllerPublicTestSuite struct {
@@ -190,6 +192,15 @@ func (s *ControllerPublicTestSuite) TestNew() {
 		{
 			name: "when NATS runs serves the API and answers health checks",
 			cfg:  func() config.Config { return startServer(s.T()) },
+		},
+		{
+			name: "when a route is wired wrong does not start",
+			cfg: func() config.Config {
+				cfg := startServer(s.T())
+				wiring.Report(errors.New("endpoint: no deps given to the server"))
+				return cfg
+			},
+			wantErr: "the controller's routes are wired wrong: endpoint: no deps given",
 		},
 		{
 			name: "when PKI, stale cleanup, notifications and metrics are on starts each of them",

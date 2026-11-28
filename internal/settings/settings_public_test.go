@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/settings"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 type SettingsPublicTestSuite struct {
@@ -44,9 +45,11 @@ func (s *SettingsPublicTestSuite) TestOwn() {
 	_, ok = settings.Of("zzb")
 	s.True(ok)
 
-	s.PanicsWithValue(`settings: zz a start and zz again both own "zza"`, func() {
-		settings.Own("zza", "zz again", 3)
-	})
+	_ = wiring.Take()
+	settings.Own("zza", "zz again", 3)
+	s.EqualError(wiring.Take(), `settings: zz a start and zz again both own "zza"`)
+	got, _ = settings.Of("zza")
+	s.Equal("zz a start", got.By, "the first owner stays")
 }
 
 func TestSettingsPublicTestSuite(t *testing.T) {

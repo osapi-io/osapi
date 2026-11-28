@@ -30,6 +30,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/secret/vault/mocks"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // testConfig is the config block of the type that the tests register.
@@ -86,9 +87,9 @@ func (s *VaultPublicTestSuite) SetupTest() {
 }
 
 func (s *VaultPublicTestSuite) TestRegister() {
-	s.Panics(func() {
-		vault.Register(vault.Define[struct{}]("test", "", nil, nil))
-	}, "two types with one name panic")
+	_ = wiring.Take()
+	vault.Register(vault.Define[struct{}]("test", "", nil, nil))
+	s.EqualError(wiring.Take(), `vault: type "test" registered twice`)
 }
 
 func (s *VaultPublicTestSuite) TestLookup() {

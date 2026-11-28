@@ -32,6 +32,7 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -44,6 +45,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/reference"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // Group is a group of commands, osapi client <group>, with one command for
@@ -195,19 +198,22 @@ func OneOf(
 }
 
 // Fields pairs paths and wants, such as Fields("max_jobs", 4,
-// "log_level", "debug"). It panics on an odd count or a path that is not a
-// string: a definition is wrong, and the gate's tests catch it.
+// "log_level", "debug"). An odd count or a path that is not a string is a
+// wrong definition: Fields reports it to wiring and leaves the pair out.
 func Fields(
 	pathsAndWants ...any,
 ) []Field {
 	if len(pathsAndWants)%2 != 0 {
-		panic("command.Fields: an odd count of paths and wants")
+		wiring.Report(errors.New("command.Fields: an odd count of paths and wants"))
+		pathsAndWants = pathsAndWants[:len(pathsAndWants)-1]
 	}
 	out := make([]Field, 0, len(pathsAndWants)/2)
 	for i := 0; i < len(pathsAndWants); i += 2 {
 		path, ok := pathsAndWants[i].(string)
 		if !ok {
-			panic(fmt.Sprintf("command.Fields: path %v is not a string", pathsAndWants[i]))
+			wiring.Report(fmt.Errorf("command.Fields: path %v is not a string", pathsAndWants[i]))
+
+			continue
 		}
 		out = append(out, Field{Path: path, Want: pathsAndWants[i+1]})
 	}

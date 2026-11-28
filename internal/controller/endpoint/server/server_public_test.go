@@ -39,6 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/secret/vault"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-endpoint-server"}
@@ -584,12 +585,11 @@ func (s *ServerPublicTestSuite) TestDeps() {
 	srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, deps{result: "x"})
 
 	s.Equal("x", server.Deps[deps](srv).result)
-	s.PanicsWithValue("endpoint: no string given to the server", func() {
-		server.Deps[string](srv)
-	})
-	s.PanicsWithValue("endpoint: no server_test.deps given to the server", func() {
-		server.Deps[deps](server.New(slog.Default(), authtoken.Keys{signingKey}, nil))
-	})
+	_ = wiring.Take()
+	s.Empty(server.Deps[string](srv))
+	s.EqualError(wiring.Take(), "endpoint: no string given to the server")
+	server.Deps[deps](server.New(slog.Default(), authtoken.Keys{signingKey}, nil))
+	s.EqualError(wiring.Take(), "endpoint: no server_test.deps given to the server")
 	s.Equal(struct{}{}, server.Deps[struct{}](srv), "an empty struct needs no wiring")
 }
 

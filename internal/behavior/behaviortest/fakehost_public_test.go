@@ -191,9 +191,9 @@ func (s *FakeHostPublicTestSuite) TestClock() {
 
 func (s *FakeHostPublicTestSuite) TestReport() {
 	for _, fatal := range []bool{false, true} {
-		s.PanicsWithValue(
-			"the fake host has no answer for a call: Exec.Unknown",
-			func() { behaviortest.ExportReport(fatal) },
+		s.Equal(
+			[]string{"the fake host has no answer for a call: Exec.Unknown"},
+			behaviortest.ExportReport(fatal),
 		)
 	}
 }

@@ -24,6 +24,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -39,6 +40,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 var (
@@ -80,6 +82,14 @@ func Root() *cobra.Command {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	// A mistake in how the commands are put together, such as a group
+	// registered twice, is reported while they register. osapi stops here
+	// with each of them.
+	if err := wiring.Take(); err != nil {
+		fmt.Fprintln(os.Stderr, "osapi is built wrong:", err)
+		os.Exit(1)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

@@ -27,6 +27,8 @@ import (
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // FlagName is the flag that sets key: the key with its dots and
@@ -66,7 +68,7 @@ func BindFlagAs(
 			return
 		}
 	}
-	panic(fmt.Sprintf("config: no key %q for a flag", key))
+	wiring.Report(fmt.Errorf("config: no key %q for a flag", key))
 }
 
 // AddFlag adds the flag name to fs for k, with its type, default and doc,

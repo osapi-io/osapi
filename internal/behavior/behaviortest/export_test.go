@@ -27,15 +27,19 @@ import (
 )
 
 // ExportReport calls the mock reporter of a fake host, as the mock
-// controller would for a call that the host has no answer for.
+// controller would for a call that the host has no answer for, and returns
+// what it reported.
 func ExportReport(
 	fatal bool,
-) {
+) []string {
 	h := &fakeHost{}
 	if fatal {
 		h.Fatalf("Exec.%s", "Unknown")
+	} else {
+		h.Errorf("Exec.%s", "Unknown")
 	}
-	h.Errorf("Exec.%s", "Unknown")
+
+	return h.undeclared
 }
 
 // SetSourceDir sets the directory Run reads Go files from, and returns a

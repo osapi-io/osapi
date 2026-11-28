@@ -39,6 +39,7 @@ import (
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/wiring"
 )
 
 // Controller is the controller process.
@@ -212,6 +213,13 @@ func newController(
 		version:         o.version,
 		health:          reporter,
 	}))
+	// A route whose deps the controller did not give is reported when the
+	// routes are made. The controller stops before it serves.
+	if err := wiring.Take(); err != nil {
+		stopMetrics()
+
+		return nil, fmt.Errorf("the controller's routes are wired wrong: %w", err)
+	}
 
 	subs := subComponents(cfg)
 	startHeartbeat(
