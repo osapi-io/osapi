@@ -247,6 +247,15 @@ func (s *StorePublicTestSuite) TestList() {
 
 		s.ErrorContains(err, "list admission keys: kv down")
 	})
+
+	s.Run("when a record cannot be read returns the error", func() {
+		s.pending("m-new", "web-03")
+		s.kv.failGet = admission.KVPrefix()
+
+		_, err := s.watcher.List(context.Background())
+
+		s.ErrorContains(err, "read the admission record enrollment.m-new: kv: down")
+	})
 }
 
 func (s *StorePublicTestSuite) TestGet() {
@@ -266,6 +275,23 @@ func (s *StorePublicTestSuite) TestGet() {
 		_, err := s.watcher.Get(context.Background(), "m-none")
 
 		s.ErrorIs(err, admission.ErrNotFound)
+	})
+
+	s.Run("when a record cannot be read returns the error, not ErrNotFound", func() {
+		s.kv.failGet = admission.AcceptedKVPrefix()
+
+		_, err := s.watcher.Get(context.Background(), "m-ok")
+
+		s.ErrorContains(err, "kv: down")
+		s.NotErrorIs(err, admission.ErrNotFound)
+	})
+
+	s.Run("when a record does not decode returns the error", func() {
+		s.kv.data[admission.AcceptedKVPrefix()+"m-bad"] = []byte("{")
+
+		_, err := s.watcher.Get(context.Background(), "m-bad")
+
+		s.ErrorContains(err, "the admission record does not decode: accepted.m-bad")
 	})
 }
 
@@ -330,6 +356,16 @@ func (s *StorePublicTestSuite) TestAdmit() {
 		s.ErrorIs(s.watcher.Admit(context.Background(), "m-1", s.fp), admission.ErrNoPendingAgent)
 	})
 
+	s.Run("when the request cannot be read returns the error, not ErrNoPendingAgent", func() {
+		s.pending("m-1", "web-01")
+		s.kv.failGet = admission.KVPrefix()
+
+		err := s.watcher.Admit(context.Background(), "m-1", s.fp)
+
+		s.ErrorContains(err, "kv: down")
+		s.NotErrorIs(err, admission.ErrNoPendingAgent)
+	})
+
 	s.Run("when publishing the answer fails returns the error", func() {
 		s.pending("m-1", "web-01")
 		nc := admissionMocks.NewMockNATSSubscriber(s.ctrl)
@@ -368,6 +404,16 @@ func (s *StorePublicTestSuite) TestReject() {
 
 	s.Run("when the machine has no request returns ErrNoPendingAgent", func() {
 		s.ErrorIs(s.watcher.Reject(context.Background(), "m-1", "x"), admission.ErrNoPendingAgent)
+	})
+
+	s.Run("when the request cannot be read returns the error, not ErrNoPendingAgent", func() {
+		s.pending("m-1", "web-01")
+		s.kv.failGet = admission.KVPrefix()
+
+		err := s.watcher.Reject(context.Background(), "m-1", "x")
+
+		s.ErrorContains(err, "kv: down")
+		s.NotErrorIs(err, admission.ErrNoPendingAgent)
 	})
 
 	s.Run("when publishing the answer fails keeps no record", func() {
@@ -419,6 +465,15 @@ func (s *StorePublicTestSuite) TestRevoke() {
 
 	s.Run("when the machine is not admitted returns ErrNoAcceptedAgent", func() {
 		s.ErrorIs(s.watcher.Revoke(context.Background(), "m-1"), admission.ErrNoAcceptedAgent)
+	})
+
+	s.Run("when the record cannot be read returns the error, not ErrNoAcceptedAgent", func() {
+		s.kv.failGet = admission.AcceptedKVPrefix()
+
+		err := s.watcher.Revoke(context.Background(), "m-1")
+
+		s.ErrorContains(err, "kv: down")
+		s.NotErrorIs(err, admission.ErrNoAcceptedAgent)
 	})
 }
 
