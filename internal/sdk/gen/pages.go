@@ -27,16 +27,22 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
-	"os"
 	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+
 	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
 	"github.com/osapi-io/osapi/internal/guide"
 	"github.com/osapi-io/osapi/internal/sdk/gen/sdkmodel"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // pageDir is the SDK's section of the docs site, from the root of the
 // repository. The page of each service is in the folder of its area, such
@@ -119,7 +125,7 @@ func runPages(
 	}
 
 	index := filepath.Join(pageDir, indexPage)
-	data, err := os.ReadFile(filepath.Join(root, index))
+	data, err := avfs.ReadFile(hostFS, filepath.Join(root, index))
 	if err != nil {
 		return err
 	}
@@ -141,10 +147,10 @@ func runPages(
 func removeEmpty(
 	root string,
 ) {
-	entries, _ := os.ReadDir(filepath.Join(root, pageDir))
+	entries, _ := hostFS.ReadDir(filepath.Join(root, pageDir))
 	for _, e := range entries {
 		if e.IsDir() {
-			_ = os.Remove(filepath.Join(root, pageDir, e.Name()))
+			_ = hostFS.Remove(filepath.Join(root, pageDir, e.Name()))
 		}
 	}
 }
@@ -158,11 +164,11 @@ func removeOld(
 	w *genfile.Writer,
 	root string,
 ) {
-	old, _ := os.ReadDir(filepath.Join(root, pageDir))
+	old, _ := hostFS.ReadDir(filepath.Join(root, pageDir))
 	for _, e := range old {
 		name := filepath.Join(pageDir, e.Name())
 		if !e.IsDir() {
-			data, err := os.ReadFile(filepath.Join(root, name))
+			data, err := avfs.ReadFile(hostFS, filepath.Join(root, name))
 			if err == nil && strings.Contains(string(data), pageHeader) {
 				_ = w.Remove(name)
 			}
@@ -173,10 +179,10 @@ func removeOld(
 			continue
 		}
 		_ = w.Remove(filepath.Join(name, categoryFile))
-		pages, _ := os.ReadDir(filepath.Join(root, name))
+		pages, _ := hostFS.ReadDir(filepath.Join(root, name))
 		for _, p := range pages {
 			page := filepath.Join(name, p.Name())
-			data, err := os.ReadFile(filepath.Join(root, page))
+			data, err := avfs.ReadFile(hostFS, filepath.Join(root, page))
 			if err == nil && strings.Contains(string(data), pageHeader) {
 				_ = w.Remove(page)
 			}
@@ -440,7 +446,7 @@ func cell(
 func sourceMethods(
 	dir string,
 ) (map[string][]*goMethod, error) {
-	entries, err := os.ReadDir(dir)
+	entries, err := hostFS.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

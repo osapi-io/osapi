@@ -25,17 +25,22 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
-
-	"github.com/osapi-io/osapi/internal/guide"
-
 	"github.com/osapi-io/osapi/internal/cli/reference"
+	"github.com/osapi-io/osapi/internal/guide"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // The directories of the generated pages, under the root of the repository.
 const (
@@ -101,29 +106,35 @@ func WriteDSL(
 	if dir == "" {
 		dir = dslDir
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := hostFS.MkdirAll(dir, 0o755); err != nil {
 		return DSLOutput{}, fmt.Errorf("write the DSL pages into %s: %w", dir, err)
 	}
 	written := map[string]bool{}
 	for _, l := range d.DSLs() {
 		name := l.Slug + ".md"
 		page := l.Spec.Markdown(l.Title, l.Intro, l.Position)
-		if err := os.WriteFile(filepath.Join(dir, name), []byte(page), 0o644); err != nil {
+		if err := atomicfile.Write(
+			context.Background(),
+			hostFS,
+			filepath.Join(dir, name),
+			[]byte(page),
+			0o644,
+		); err != nil {
 			return DSLOutput{}, fmt.Errorf("write the DSL pages into %s: %w", dir, err)
 		}
 		written[name] = true
 	}
-	entries, _ := os.ReadDir(dir)
+	entries, _ := hostFS.ReadDir(dir)
 	for _, e := range entries {
 		if written[e.Name()] || !strings.HasSuffix(e.Name(), ".md") {
 			continue
 		}
 		path := filepath.Join(dir, e.Name())
-		if data, err := os.ReadFile(
+		if data, err := avfs.ReadFile(hostFS,
 			path,
 		); err == nil &&
 			strings.Contains(string(data), guide.Generated) {
-			_ = os.Remove(path)
+			_ = hostFS.Remove(path)
 		}
 	}
 
@@ -168,10 +179,16 @@ func WriteReference(
 			return ReferenceOutput{}, fmt.Errorf("%s: %w", p.Path, err)
 		}
 		path := filepath.Join(root, p.Path)
-		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		if err := hostFS.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return ReferenceOutput{}, err
 		}
-		if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
+		if err := atomicfile.Write(
+			context.Background(),
+			hostFS,
+			path,
+			[]byte(text),
+			0o644,
+		); err != nil {
 			return ReferenceOutput{}, err
 		}
 		written[filepath.Clean(path)] = true
@@ -191,15 +208,15 @@ func WriteReference(
 					return nil
 				}
 				if e.Name() == categoryFile && filepath.Dir(path) != top {
-					_ = os.Remove(path)
+					_ = hostFS.Remove(path)
 
 					return nil
 				}
-				if data, err := os.ReadFile(
+				if data, err := avfs.ReadFile(hostFS,
 					path,
 				); err == nil &&
 					strings.Contains(string(data), guide.Generated) {
-					_ = os.Remove(path)
+					_ = hostFS.Remove(path)
 				}
 
 				return nil
@@ -208,7 +225,7 @@ func WriteReference(
 		// The walk lists a folder before the folders in it, so the last
 		// is removed first; a folder that is not empty stays.
 		for i := len(folders) - 1; i > 0; i-- {
-			_ = os.Remove(folders[i])
+			_ = hostFS.Remove(folders[i])
 		}
 	}
 
@@ -246,7 +263,7 @@ func writeTables(
 				if err != nil || e.IsDir() || !strings.HasSuffix(path, ".md") {
 					return err
 				}
-				data, err := os.ReadFile(path)
+				data, err := avfs.ReadFile(hostFS, path)
 				if err != nil {
 					return err
 				}
@@ -258,7 +275,7 @@ func writeTables(
 					return nil
 				}
 
-				return os.WriteFile(path, []byte(text), 0o644)
+				return atomicfile.Write(context.Background(), hostFS, path, []byte(text), 0o644)
 			},
 		)
 		if err != nil {

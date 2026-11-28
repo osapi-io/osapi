@@ -51,6 +51,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/avfs/avfs"
 	"github.com/dave/jennifer/jen"
 	"github.com/getkin/kin-openapi/openapi3"
 
@@ -142,7 +143,7 @@ func run(
 			continue
 		}
 		rel := filepath.Join(exampleDir, snake(s.Name)+".go")
-		if data, err := os.ReadFile(filepath.Join(root, rel)); err == nil &&
+		if data, err := avfs.ReadFile(hostFS, filepath.Join(root, rel)); err == nil &&
 			!strings.HasPrefix(string(data), header) {
 			return fmt.Errorf("%s is a person's: the example of %s goes there", rel, s.Name)
 		}
@@ -174,7 +175,7 @@ func clean(
 	w *genfile.Writer,
 	root string,
 ) (map[string]bool, error) {
-	entries, err := os.ReadDir(filepath.Join(root, dir))
+	entries, err := hostFS.ReadDir(filepath.Join(root, dir))
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +186,7 @@ func clean(
 			continue
 		}
 		path := filepath.Join(root, dir, e.Name())
-		data, err := os.ReadFile(path)
+		data, err := avfs.ReadFile(hostFS, path)
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +223,7 @@ func declaredTypes(
 	dir string,
 ) (map[string]*goType, error) {
 	out := map[string]*goType{}
-	entries, err := os.ReadDir(dir)
+	entries, err := hostFS.ReadDir(dir)
 	if os.IsNotExist(err) {
 		return out, nil
 	}

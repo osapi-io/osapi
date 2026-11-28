@@ -24,18 +24,25 @@
 package reference
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/guide"
-
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/osapi-io/osapi/internal/atomicfile"
+	"github.com/osapi-io/osapi/internal/guide"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // The keys of the annotations of a command that its page shows. --help does
 // not show them, so a page has detail that a terminal does not need.
@@ -137,10 +144,16 @@ func writePage(
 	file string,
 	content string,
 ) error {
-	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+	if err := hostFS.MkdirAll(filepath.Dir(file), 0o755); err != nil {
 		return fmt.Errorf("make directory for %s: %w", file, err)
 	}
-	if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+	if err := atomicfile.Write(
+		context.Background(),
+		hostFS,
+		file,
+		[]byte(content),
+		0o644,
+	); err != nil {
 		return fmt.Errorf("write %s: %w", file, err)
 	}
 
@@ -168,7 +181,7 @@ func removeStale(
 		if written[rel] || keep[rel] {
 			return nil
 		}
-		if err := os.Remove(p); err != nil {
+		if err := hostFS.Remove(p); err != nil {
 			return fmt.Errorf("remove stale page %s: %w", rel, err)
 		}
 

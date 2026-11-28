@@ -41,7 +41,7 @@ func typesDocFile(
 	dir string,
 ) (*jen.File, error) {
 	fset := token.NewFileSet()
-	entries, err := os.ReadDir(dir)
+	entries, err := hostFS.ReadDir(dir)
 	if os.IsNotExist(err) {
 		return nil, nil
 	}

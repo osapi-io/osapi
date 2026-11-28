@@ -22,15 +22,24 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // main writes the SDK's constants, authtoken.Go, under --root.
 func main() {
@@ -38,7 +47,13 @@ func main() {
 	flag.Parse()
 
 	path := filepath.Join(*root, authtoken.GoFile)
-	if err := os.WriteFile(path, []byte(authtoken.Go()), 0o644); err != nil {
+	if err := atomicfile.Write(
+		context.Background(),
+		hostFS,
+		path,
+		[]byte(authtoken.Go()),
+		0o644,
+	); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

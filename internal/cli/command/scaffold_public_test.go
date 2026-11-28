@@ -20,11 +20,16 @@
 package command_test
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -50,6 +55,7 @@ type ScaffoldPublicTestSuite struct {
 
 func (s *ScaffoldPublicTestSuite) TearDownSubTest() {
 	command.ResetScaffold()
+	command.ResetHostFS()
 }
 
 // checkout makes a minimal osapi checkout: its go.mod and the registry.
@@ -193,23 +199,13 @@ func (s *ScaffoldPublicTestSuite) TestScaffoldErrors() {
 			name: "when the registry cannot be written",
 			setup: func() string {
 				root := s.checkout(allGo)
-				s.Require().NoError(os.Chmod(
-					filepath.Join(
-						root,
-						"internal",
-						"cli",
-						"commands",
-						"all",
-						"all.go",
-					),
-					0o444,
-				))
+				command.SetHostFS(renameFails("all.go"))
 
 				return root
 			},
 			gname:   "widget",
 			doc:     "x",
-			wantErr: "permission denied",
+			wantErr: "injected rename error",
 		},
 	}
 
@@ -232,4 +228,26 @@ func TestScaffoldPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ScaffoldPublicTestSuite))
+}
+
+// renameFails is a filesystem of the host that fails each rename to a path
+// that ends with suffix, as a full disk fails the last step of an atomic
+// write.
+func renameFails(
+	suffix string,
+) avfs.VFS {
+	vfs := failfs.New(osfs.NewWithNoIdm())
+	_ = vfs.SetFailFunc(func(
+		_ avfs.VFSBase,
+		fn avfs.FnVFS,
+		p *failfs.FailParam,
+	) error {
+		if fn == avfs.FnRename && strings.HasSuffix(p.NewPath, suffix) {
+			return errors.New("injected rename error")
+		}
+
+		return nil
+	})
+
+	return vfs
 }

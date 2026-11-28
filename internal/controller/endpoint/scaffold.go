@@ -22,14 +22,23 @@ package endpoint
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	gofmt "go/format"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+
+	"github.com/osapi-io/osapi/internal/atomicfile"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // module is the module a scaffold is written into.
 const module = "github.com/osapi-io/osapi"
@@ -56,17 +65,17 @@ func Scaffold(
 		return nil, errors.New("description must be one line")
 	}
 
-	mod, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	mod, err := avfs.ReadFile(hostFS, filepath.Join(root, "go.mod"))
 	if err != nil || !strings.HasPrefix(string(mod), "module "+module+"\n") {
 		return nil, fmt.Errorf("%s is not an osapi checkout", root)
 	}
 
 	dir := filepath.Join("internal", "controller", "endpoints", name)
-	if _, err := os.Stat(filepath.Join(root, dir)); err == nil {
+	if _, err := hostFS.Stat(filepath.Join(root, dir)); err == nil {
 		return nil, fmt.Errorf("%s already exists", dir)
 	}
 
-	all, err := os.ReadFile(filepath.Join(root, allFile))
+	all, err := avfs.ReadFile(hostFS, filepath.Join(root, allFile))
 	if err != nil {
 		return nil, err
 	}
@@ -93,10 +102,10 @@ func Scaffold(
 	written := make([]string, 0, len(files))
 	for _, f := range files {
 		p := filepath.Join(root, f.rel)
-		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		if err := hostFS.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			return written, err
 		}
-		if err := os.WriteFile(p, f.data, 0o644); err != nil {
+		if err := atomicfile.Write(context.Background(), hostFS, p, f.data, 0o644); err != nil {
 			return written, err
 		}
 		written = append(written, f.rel)

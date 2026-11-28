@@ -35,18 +35,16 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"reflect"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
+	"github.com/avfs/avfs"
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-
 	"github.com/osapi-io/osapi/internal/wiring"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Group is a group of commands, osapi client <group>, with one command for
@@ -656,7 +654,7 @@ func Strings[T ~string](
 func ReadFile(
 	path string,
 ) ([]byte, bool) {
-	data, err := os.ReadFile(path)
+	data, err := avfs.ReadFile(hostFS, path)
 	if err != nil {
 		deps.Error(fmt.Errorf("read %s: %w", path, err))
 

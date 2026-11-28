@@ -27,16 +27,20 @@ import (
 	"fmt"
 	gofmt "go/format"
 	"go/token"
-	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
 
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
 )
+
+// hostFS is the filesystem that the generator reads and writes, which a
+// test replaces.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // module is the module a scaffold is written into.
 const module = "github.com/osapi-io/osapi"
@@ -93,14 +97,14 @@ func Scaffold(
 		return nil, err
 	}
 
-	mod, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	mod, err := avfs.ReadFile(hostFS, filepath.Join(root, "go.mod"))
 	if err != nil || !strings.HasPrefix(string(mod), "module "+module+"\n") {
 		return nil, fmt.Errorf("%s is not an osapi checkout", root)
 	}
 
 	path := goPackage
 	dir := filepath.Join("internal", "behaviors", filepath.FromSlash(path))
-	if _, err := os.Stat(filepath.Join(root, dir)); err == nil {
+	if _, err := hostFS.Stat(filepath.Join(root, dir)); err == nil {
 		return nil, fmt.Errorf("%s already exists", dir)
 	}
 	// A name is the behavior's name in the registry, apart from its
@@ -110,7 +114,7 @@ func Scaffold(
 			"behavior %q is already registered: osapi dsl behavior list names each one", name)
 	}
 
-	all, err := os.ReadFile(filepath.Join(root, allFile))
+	all, err := avfs.ReadFile(hostFS, filepath.Join(root, allFile))
 	if err != nil {
 		return nil, err
 	}
@@ -143,16 +147,15 @@ func Scaffold(
 	// all.go included. The behavior's files go in a directory that did not
 	// exist, and all.go last. Thus a failure removes the directory, and
 	// leaves no part of the behavior and no registration.
-	fsys := osfs.NewWithNoIdm()
 	written := make([]string, 0, len(files))
 	for _, f := range files {
 		p := filepath.Join(root, f.rel)
-		err := os.MkdirAll(filepath.Dir(p), 0o755)
+		err := hostFS.MkdirAll(filepath.Dir(p), 0o755)
 		if err == nil {
-			err = atomicfile.Write(context.Background(), fsys, p, f.data, 0o644)
+			err = atomicfile.Write(context.Background(), hostFS, p, f.data, 0o644)
 		}
 		if err != nil {
-			_ = os.RemoveAll(filepath.Join(root, dir))
+			_ = hostFS.RemoveAll(filepath.Join(root, dir))
 
 			return nil, err
 		}

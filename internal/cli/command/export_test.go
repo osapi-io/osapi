@@ -20,7 +20,11 @@
 
 package command
 
-import "github.com/dave/jennifer/jen"
+import (
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+	"github.com/dave/jennifer/jen"
+)
 
 // groupScaffoldGo is the scaffold's real sources, put back after a test
 // swaps them.
@@ -40,4 +44,16 @@ func BreakScaffold() {
 // ResetScaffold puts the scaffold's real sources back.
 func ResetScaffold() {
 	scaffoldSources = groupScaffoldGo
+}
+
+// SetHostFS replaces the filesystem of the generator.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }
