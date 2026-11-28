@@ -83,8 +83,8 @@ func id(avfs.VFS, string) (*identity.Identity, error) {
 func (s *NATSJoinPublicTestSuite) reply(
 	r pki.JoinReply,
 	wantSubject string,
-) func(string, []nats.Option, string, []byte) ([]byte, error) {
-	return func(_ string, _ []nats.Option, subject string, data []byte) ([]byte, error) {
+) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
+	return func(_ context.Context, _ string, _ []nats.Option, subject string, data []byte) ([]byte, error) {
 		s.Equal(wantSubject, subject)
 		var req pki.JoinRequest
 		s.Require().NoError(json.Unmarshal(data, &req))
@@ -136,7 +136,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 
 		defer agent.SetJoinNATSFns(
 			nil,
-			func(string, []nats.Option, string, []byte) ([]byte, error) {
+			func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				s.Fail("a second start does not join again")
 				return nil, nil
 			},
@@ -152,7 +152,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		s.cfg.Agent.Join = "tls://hub:4222?token=t&ns=prod&fp=SHA256:" + hex.EncodeToString(sum[:])
 		defer agent.SetJoinNATSFns(
 			id,
-			func(_ string, opts []nats.Option, subject string, _ []byte) ([]byte, error) {
+			func(_ context.Context, _ string, opts []nats.Option, subject string, _ []byte) ([]byte, error) {
 				s.Equal("prod.join.request", subject)
 				o := nats.GetDefaultOptions()
 				for _, opt := range opts {
@@ -184,7 +184,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		s.cfg.Agent.Join = "tls://hub:4222?token=t&ns=&fp=SHA256:" + hex.EncodeToString(sum[:])
 		defer agent.SetJoinNATSFns(
 			id,
-			func(_ string, _ []nats.Option, subject string, _ []byte) ([]byte, error) {
+			func(_ context.Context, _ string, _ []nats.Option, subject string, _ []byte) ([]byte, error) {
 				s.Equal("join.request", subject)
 
 				return json.Marshal(pki.JoinReply{ControllerPublicKey: make([]byte, 32)})
@@ -204,7 +204,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		s.cfg.Agent.Join = "tls://10.0.0.1:4222?token=t&fp=SHA256:" + hex.EncodeToString(sum[:])
 		defer agent.SetJoinNATSFns(
 			id,
-			func(_ string, opts []nats.Option, _ string, _ []byte) ([]byte, error) {
+			func(_ context.Context, _ string, opts []nats.Option, _ string, _ []byte) ([]byte, error) {
 				o := nats.GetDefaultOptions()
 				for _, opt := range opts {
 					s.Require().NoError(opt(&o))
@@ -265,7 +265,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		name    string
 		join    string
 		id      func(avfs.VFS, string) (*identity.Identity, error)
-		req     func(string, []nats.Option, string, []byte) ([]byte, error)
+		req     func(context.Context, string, []nats.Option, string, []byte) ([]byte, error)
 		setup   func(fs avfs.VFS)
 		wantErr string
 		gone    []string
@@ -296,21 +296,21 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		},
 		{
 			name: "a server that does not answer",
-			req: func(string, []nats.Option, string, []byte) ([]byte, error) {
+			req: func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return nil, nats.ErrTimeout
 			},
 			wantErr: "nats://hub:4222: nats: timeout",
 		},
 		{
 			name: "a reply that is not JSON",
-			req: func(string, []nats.Option, string, []byte) ([]byte, error) {
+			req: func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return []byte("{"), nil
 			},
 			wantErr: "the reply of the join",
 		},
 		{
 			name: "a token that does not admit",
-			req: func(string, []nats.Option, string, []byte) ([]byte, error) {
+			req: func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return json.Marshal(pki.JoinReply{Error: "join token has expired"})
 			},
 			wantErr: "join over NATS: join token has expired",
@@ -369,7 +369,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		)
 		defer agent.SetJoinNATSFns(
 			id,
-			func(_ string, opts []nats.Option, _ string, data []byte) ([]byte, error) {
+			func(_ context.Context, _ string, opts []nats.Option, _ string, data []byte) ([]byte, error) {
 				o := nats.GetDefaultOptions()
 				for _, opt := range opts {
 					s.Require().NoError(opt(&o))
@@ -417,7 +417,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		acct, _ := nkeys.CreateAccount()
 		defer agent.SetJoinNATSFns(
 			id,
-			func(_ string, _ []nats.Option, _ string, data []byte) ([]byte, error) {
+			func(_ context.Context, _ string, _ []nats.Option, _ string, data []byte) ([]byte, error) {
 				var req pki.JoinRequest
 				s.Require().NoError(json.Unmarshal(data, &req))
 				agentJWT, _ := jwt.NewUserClaims(req.NATSUserKey).Encode(acct)
@@ -436,12 +436,15 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 	})
 
 	s.Run("with auth callout the agent keeps its own user key and connects with it", func() {
-		defer agent.SetJoinNATSFns(id, func(string, []nats.Option, string, []byte) ([]byte, error) {
-			return json.Marshal(pki.JoinReply{
-				ControllerPublicKey: make([]byte, 32),
-				NATS:                pki.JoinNATS{Callout: true},
-			})
-		})()
+		defer agent.SetJoinNATSFns(
+			id,
+			func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
+				return json.Marshal(pki.JoinReply{
+					ControllerPublicKey: make([]byte, 32),
+					NATS:                pki.JoinNATS{Callout: true},
+				})
+			},
+		)()
 
 		got, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
 
@@ -455,12 +458,15 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 
 	s.Run("with auth callout a user key that cannot be kept is the error", func() {
 		s.Require().NoError(s.fs.MkdirAll("/pki/nats-user.nk/x", 0o700))
-		defer agent.SetJoinNATSFns(id, func(string, []nats.Option, string, []byte) ([]byte, error) {
-			return json.Marshal(pki.JoinReply{
-				ControllerPublicKey: make([]byte, 32),
-				NATS:                pki.JoinNATS{Callout: true},
-			})
-		})()
+		defer agent.SetJoinNATSFns(
+			id,
+			func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
+				return json.Marshal(pki.JoinReply{
+					ControllerPublicKey: make([]byte, 32),
+					NATS:                pki.JoinNATS{Callout: true},
+				})
+			},
+		)()
 
 		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
 
@@ -529,6 +535,27 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
 
 		s.ErrorContains(err, "no responders")
+	})
+
+	s.Run("a join ends when its ctx ends, before a controller that does not answer", func() {
+		srv := natstest.RunRandClientPortServer()
+		defer srv.Shutdown()
+		nc, err := nats.Connect(srv.ClientURL())
+		s.Require().NoError(err)
+		defer nc.Close()
+		_, err = nc.Subscribe("osapi.join.request", func(*nats.Msg) {})
+		s.Require().NoError(err)
+		s.Require().NoError(nc.Flush())
+		s.cfg.Agent.Join = srv.ClientURL() + "?token=t"
+		defer agent.SetJoinNATSFns(id, nil)()
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+		start := time.Now()
+
+		_, err = agent.ExportJoinNATS(ctx, slog.Default(), s.fs, s.cfg)
+
+		s.ErrorIs(err, context.DeadlineExceeded)
+		s.Less(time.Since(start), 5*time.Second)
 	})
 
 	s.Run("a server that is not there is the error", func() {

@@ -188,9 +188,14 @@ var newNATSUser = natsjwt.NewUser
 // getIdentity is the machine ID and hostname of the host. Tests swap it.
 var getIdentity = identity.GetIdentity
 
+// natsRequestTimeout is the longest that natsRequest waits for a reply.
+const natsRequestTimeout = 15 * time.Second
+
 // natsRequest connects to url with opts, sends data to subject as a
-// request, and returns the reply. Tests swap it.
+// request, and returns the reply. It ends when ctx ends, so a Stop does not
+// wait for a reply, or after natsRequestTimeout. Tests swap it.
 var natsRequest = func(
+	ctx context.Context,
 	url string,
 	opts []nats.Option,
 	subject string,
@@ -201,7 +206,9 @@ var natsRequest = func(
 		return nil, err
 	}
 	defer nc.Close()
-	msg, err := nc.Request(subject, data, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, natsRequestTimeout)
+	defer cancel()
+	msg, err := nc.RequestWithContext(ctx, subject, data)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +243,7 @@ func joinNATS(
 		}
 	}
 
-	return applyJoin(fs, cfg, saved)
+	return applyJoin(ctx, fs, cfg, saved)
 }
 
 // readJoin is the join that key_dir keeps.
@@ -333,7 +340,7 @@ func joinNow(
 		slog.String("server", addr),
 		slog.String("machine_id", id.MachineID),
 	)
-	raw, err := natsRequest(addr, opts, subject, data)
+	raw, err := natsRequest(ctx, addr, opts, subject, data)
 	if err != nil {
 		return savedJoin{}, fmt.Errorf("%s: %w", addr, err)
 	}
@@ -433,6 +440,7 @@ func keepJoin(
 
 // applyJoin is cfg with the NATS settings of s.
 func applyJoin(
+	ctx context.Context,
 	fs avfs.VFS,
 	cfg config.Config,
 	s savedJoin,
@@ -459,7 +467,7 @@ func applyJoin(
 		if n.TLS.CAFile == "" && s.CA != "" {
 			ca := filepath.Join(cfg.Agent.PKI.KeyDir, natsJoinCA)
 			if err := atomicfile.Write(
-				context.Background(),
+				ctx,
 				fs,
 				ca,
 				[]byte(s.CA),

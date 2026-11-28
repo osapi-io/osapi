@@ -183,9 +183,9 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 	// taken is a controller that takes the rotation, after it checks it
 	// against old, the keys that it admitted.
 	taken := func(old *pki.Manager, wantURL, wantSubject string) func(
-		string, []nats.Option, string, []byte,
+		context.Context, string, []nats.Option, string, []byte,
 	) ([]byte, error) {
-		return func(url string, _ []nats.Option, subject string, data []byte) ([]byte, error) {
+		return func(_ context.Context, url string, _ []nats.Option, subject string, data []byte) ([]byte, error) {
 			s.Equal(wantURL, url)
 			s.Equal(wantSubject, subject)
 			var req pki.RotateRequest
@@ -198,7 +198,7 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 			})
 		}
 	}
-	refused := func(string, []nats.Option, string, []byte) ([]byte, error) {
+	refused := func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 		return json.Marshal(pki.RotateReply{Error: "the machine is not admitted"})
 	}
 
@@ -210,7 +210,7 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		fs      func(avfs.VFS) avfs.VFS
 		cfg     func(config.Config) config.Config
 		id      func(avfs.VFS, string) (*identity.Identity, error)
-		request func(old *pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error)
+		request func(old *pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error)
 		wantErr string
 		// wantNext is whether the new keys stay in agent.next.* after, and
 		// wantRotated whether they are the agent's keys.
@@ -221,14 +221,14 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		{
 			name:   "an agent that joined over tls rotates, as it connects",
 			joined: true,
-			request: func(old *pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(old *pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return taken(old, "tls://hub:4222", "osapi.join.rotate")
 			},
 			wantRotated: true,
 		},
 		{
 			name: "an agent with the NATS user of its config rotates, with no namespace",
-			request: func(old *pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(old *pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return taken(old, "nats://nats.example.com:4222", "join.rotate")
 			},
 			wantRotated: true,
@@ -271,8 +271,8 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		},
 		{
 			name: "the controller does not answer: the new keys stay for a second rotation",
-			request: func(*pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
-				return func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(*pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
+				return func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 					return nil, nats.ErrTimeout
 				}
 			},
@@ -281,8 +281,8 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		},
 		{
 			name: "a reply that is not JSON",
-			request: func(*pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
-				return func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(*pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
+				return func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 					return []byte("{"), nil
 				}
 			},
@@ -291,7 +291,7 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		},
 		{
 			name: "the controller refuses: the new keys are removed",
-			request: func(*pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(*pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return refused
 			},
 			wantErr:   "the controller refused the rotation: the machine is not admitted",
@@ -300,7 +300,7 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		{
 			name: "the controller refuses, and the new keys cannot be removed",
 			fs:   func(fs avfs.VFS) avfs.VFS { return failOn(fs, avfs.FnRemove, ".next.key") },
-			request: func(*pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(*pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return refused
 			},
 			wantErr:   "the controller refused the rotation",
@@ -310,7 +310,7 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 		{
 			name: "the controller takes the keys, and they cannot be moved in place",
 			fs:   func(fs avfs.VFS) avfs.VFS { return failOn(fs, avfs.FnRename, ".next.ekey") },
-			request: func(old *pki.Manager) func(string, []nats.Option, string, []byte) ([]byte, error) {
+			request: func(old *pki.Manager) func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 				return taken(old, "nats://nats.example.com:4222", "join.rotate")
 			},
 			wantErr:  "run the rotation again to move them in place",
@@ -335,11 +335,11 @@ func (s *RotatePublicTestSuite) TestRotateKey() {
 			if id == nil {
 				id = identityOf
 			}
-			var req func(string, []nats.Option, string, []byte) ([]byte, error)
+			var req func(context.Context, string, []nats.Option, string, []byte) ([]byte, error)
 			if tt.request != nil {
 				req = tt.request(old)
 			} else {
-				req = func(string, []nats.Option, string, []byte) ([]byte, error) {
+				req = func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 					s.Fail("no request is sent")
 
 					return nil, nil
