@@ -25,9 +25,9 @@ takes an optional `version`, such as `--version 8.5.0-2ubuntu10`; with none, it
 installs the newest that the index has. On other hosts they report skipped. A
 package that is installed does not install again, and a package that is not
 installed does not remove: each reports `changed: false`. A package that is
-installed at another version than the one asked for installs that version.
-Install does not refresh the index first. Run the index refresh for the newest
-version.
+installed at another version than the one asked for installs that version, also
+when that version is lower: apt-get gets `--allow-downgrades`. Install does not
+refresh the index first. Run the index refresh for the newest version.
 
 ### The package index
 

@@ -43,7 +43,8 @@ func newDebian(
 }
 
 // Install runs apt-get install, unless the package is installed, at
-// version when it is not empty.
+// version when it is not empty. A version lower than the installed one
+// downgrades the package.
 func (d *debian) Install(
 	ctx context.Context,
 	name string,
@@ -56,14 +57,18 @@ func (d *debian) Install(
 	if installed, err := d.installed(ctx, name, version); err != nil || installed {
 		return false, err
 	}
+	args := []string{"install", "-y", "-o", lockTimeout}
 	target := name
 	if version != "" {
+		// A version below the installed one is a downgrade, which apt-get
+		// refuses without this flag. A create makes the version true.
+		args = append(args, "--allow-downgrades")
 		target = name + "=" + version
 	}
 	if _, err := d.exec.RunPrivilegedCmd(
 		ctx,
 		"apt-get",
-		[]string{"install", "-y", "-o", lockTimeout, "--", target},
+		append(args, "--", target),
 	); err != nil {
 		return false, fmt.Errorf("install %s: %w", target, err)
 	}
