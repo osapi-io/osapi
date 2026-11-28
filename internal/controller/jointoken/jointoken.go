@@ -125,6 +125,11 @@ func (s Store) create(
 	if uses < 1 || expires <= 0 {
 		return "", Token{}, fmt.Errorf("%w: uses %d, expires %s", ErrBounds, uses, expires)
 	}
+	// Each create prunes the tokens that admit no one, so the bucket does
+	// not keep every token ever made.
+	if _, err := s.list(ctx); err != nil {
+		return "", Token{}, err
+	}
 	id := make([]byte, 4)
 	secret := make([]byte, 32)
 	if _, err := randRead(id); err != nil {
@@ -150,7 +155,8 @@ func (s Store) create(
 	return tokenPrefix + t.ID + "." + base64.RawURLEncoding.EncodeToString(secret), t, nil
 }
 
-// List is each token that the controller keeps, by when it was made.
+// List is each token that the controller keeps, by when it was made. A
+// token that expired or has no use left admits no one, so list deletes it.
 func (s Store) list(
 	ctx context.Context,
 ) ([]Token, error) {
@@ -162,6 +168,13 @@ func (s Store) list(
 	for _, k := range keys {
 		t, _, err := s.get(ctx, strings.TrimPrefix(k, prefix))
 		if err != nil {
+			continue
+		}
+		if t.UsesLeft < 1 || !s.Now().Before(t.ExpiresAt) {
+			if err := s.KV.KVDelete(ctx, s.Bucket, k); err != nil {
+				return nil, fmt.Errorf("prune the join token %s: %w", t.ID, err)
+			}
+
 			continue
 		}
 		out = append(out, t)

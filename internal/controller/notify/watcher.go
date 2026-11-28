@@ -65,7 +65,11 @@ type Watcher struct {
 	names map[string]string
 	// unreachable is each key whose heartbeat expired, so its next
 	// heartbeat resolves the ComponentUnreachable that the expiry sent.
-	unreachable      map[string]bool
+	unreachable map[string]bool
+	// seen is when each key of names and unreachable was last written. A
+	// key unseen for staleAfter is forgotten, so a fleet that rebuilds its
+	// machines with new IDs does not grow the maps for ever.
+	seen             map[string]time.Time
 	renotifyInterval time.Duration
 	// rewatchDelay is how long Start waits before it watches the registry
 	// again after a watch ended.
@@ -76,6 +80,14 @@ type Watcher struct {
 // defaultRewatchDelay is how long Start waits to watch again after the
 // registry watch ended, such as on a NATS reconnect.
 const defaultRewatchDelay = time.Second
+
+// staleAfter is how long a key with no heartbeat and no delete is kept in
+// names and unreachable. A component that comes back after it gets no
+// "heartbeat resumed" event.
+const staleAfter = 24 * time.Hour
+
+// nowFn is time.Now, for a test to replace.
+var nowFn = time.Now
 
 // NewWatcher creates a new Watcher that monitors registry KV entries and
 // notifies on condition transitions. Active conditions are re-notified
@@ -95,6 +107,7 @@ func NewWatcher(
 		prev:             make(map[string]map[types.ConditionType]*conditionState),
 		names:            make(map[string]string),
 		unreachable:      make(map[string]bool),
+		seen:             make(map[string]time.Time),
 		renotifyInterval: renotifyInterval,
 		rewatchDelay:     defaultRewatchDelay,
 	}
@@ -241,6 +254,7 @@ func (w *Watcher) handleDelete(
 	}
 	delete(w.prev, key)
 	w.unreachable[key] = true
+	w.touchLocked(key)
 	w.mu.Unlock()
 
 	w.notify(ctx, ConditionEvent{
@@ -265,6 +279,7 @@ func (w *Watcher) resolveUnreachable(
 	w.names[key] = name
 	was := w.unreachable[key]
 	delete(w.unreachable, key)
+	w.touchLocked(key)
 	w.mu.Unlock()
 
 	if was {
@@ -276,6 +291,22 @@ func (w *Watcher) resolveUnreachable(
 			Reason:        "heartbeat resumed",
 			Timestamp:     time.Now(),
 		})
+	}
+}
+
+// touchLocked records that key was written now, and forgets each key that
+// was not written for staleAfter. The caller holds mu.
+func (w *Watcher) touchLocked(
+	key string,
+) {
+	now := nowFn()
+	w.seen[key] = now
+	for k, at := range w.seen {
+		if now.Sub(at) > staleAfter {
+			delete(w.seen, k)
+			delete(w.names, k)
+			delete(w.unreachable, k)
+		}
 	}
 }
 
