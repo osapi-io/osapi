@@ -118,6 +118,8 @@ func (s *AgentPublicTestSuite) TearDownTest() {
 
 func (s *AgentPublicTestSuite) TearDownSubTest() {
 	agent.ResetLookPath()
+	agent.ResetJoinNATSFns()
+	agent.ResetRenewFns()
 	behavior.Reset()
 	// Restore the default identity mock between table rows so tests
 	// that override getIdentityFn (e.g., identity-fails) don't leak

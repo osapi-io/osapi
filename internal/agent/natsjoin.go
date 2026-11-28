@@ -31,6 +31,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net"
 	"net/url"
 	"path/filepath"
@@ -434,7 +435,9 @@ func applyJoin(
 		}
 	}
 	// The labels of the token are the agent's, except a label that the
-	// agent's own config sets.
+	// agent's own config sets. The map is a copy, so the caller's config
+	// keeps its own.
+	cfg.Agent.Labels = maps.Clone(cfg.Agent.Labels)
 	for k, v := range s.Labels {
 		if _, ok := cfg.Agent.Labels[k]; ok {
 			continue

@@ -477,6 +477,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 
 		s.Require().NoError(err)
 		s.Equal(map[string]string{"group": "db", "dc": "east"}, got.Agent.Labels)
+		s.Equal(map[string]string{"group": "db"}, s.cfg.Agent.Labels)
 	})
 
 	s.Run("a saved join that is not JSON joins again", func() {
