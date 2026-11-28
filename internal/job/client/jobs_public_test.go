@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
@@ -1757,12 +1758,14 @@ func (s *JobsPublicTestSuite) TestRetriedEventInTimeline() {
 
 func (s *JobsPublicTestSuite) TestCreateJob() {
 	tests := []struct {
-		name         string
-		jobType      types.JobType
-		opData       map[string]interface{}
-		target       string
-		setupMocks   func()
-		validateFunc func(*client.CreateJobResult, error)
+		name       string
+		jobType    types.JobType
+		opData     map[string]interface{}
+		target     string
+		setupMocks func()
+		// validateFunc gets the job ID that the audit trail of the
+		// request recorded.
+		validateFunc func(*client.CreateJobResult, string, error)
 	}{
 		{
 			name: "missing type field returns error",
@@ -1771,7 +1774,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 			target:     "_any",
 			setupMocks: func() {},
-			validateFunc: func(_ *client.CreateJobResult, err error) {
+			validateFunc: func(_ *client.CreateJobResult, _ string, err error) {
 				s.Error(err)
 				s.Contains(err.Error(), "invalid operation format: missing type field")
 			},
@@ -1785,7 +1788,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			target: "_any",
 			setupMocks: func() {
 			},
-			validateFunc: func(_ *client.CreateJobResult, err error) {
+			validateFunc: func(_ *client.CreateJobResult, _ string, err error) {
 				s.Error(err)
 				s.Contains(err.Error(), "failed to marshal job with status")
 			},
@@ -1798,7 +1801,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			},
 			target:     "web-01",
 			setupMocks: func() {},
-			validateFunc: func(_ *client.CreateJobResult, err error) {
+			validateFunc: func(_ *client.CreateJobResult, _ string, err error) {
 				s.ErrorContains(err, `invalid job type "other"`)
 			},
 		},
@@ -1819,7 +1822,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 					Publish(gomock.Any(), job.BuildSubjectFromTarget(job.JobsQueryPrefix, "web-01"), gomock.Any()).
 					Return(nil)
 			},
-			validateFunc: func(_ *client.CreateJobResult, err error) {
+			validateFunc: func(_ *client.CreateJobResult, _ string, err error) {
 				s.NoError(err)
 			},
 		},
@@ -1839,10 +1842,11 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 					Publish(gomock.Any(), job.BuildSubjectFromTarget(job.JobsModifyPrefix, "web-01"), gomock.Any()).
 					Return(nil)
 			},
-			validateFunc: func(result *client.CreateJobResult, err error) {
+			validateFunc: func(result *client.CreateJobResult, recorded string, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
 				s.Equal(types.JobStatusSubmitted, result.Status)
+				s.Equal(result.JobID, recorded)
 			},
 		},
 		{
@@ -1865,7 +1869,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
-			validateFunc: func(result *client.CreateJobResult, err error) {
+			validateFunc: func(result *client.CreateJobResult, _ string, err error) {
 				s.NoError(err)
 				s.NotEmpty(result.JobID)
 				s.Equal(types.JobStatusSubmitted, result.Status)
@@ -1887,7 +1891,7 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 					Publish(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("publish failed"))
 			},
-			validateFunc: func(_ *client.CreateJobResult, err error) {
+			validateFunc: func(_ *client.CreateJobResult, _ string, err error) {
 				s.Error(err)
 				s.Contains(err.Error(), "failed to send notification")
 			},
@@ -1902,7 +1906,9 @@ func (s *JobsPublicTestSuite) TestCreateJob() {
 			if jobType == "" {
 				jobType = types.JobTypeModify
 			}
-			tt.validateFunc(s.jobsClient.CreateJob(s.ctx, jobType, tt.opData, tt.target))
+			ctx := audit.WithJobIDSink(s.ctx)
+			result, err := s.jobsClient.CreateJob(ctx, jobType, tt.opData, tt.target)
+			tt.validateFunc(result, audit.JobIDFrom(ctx), err)
 		})
 	}
 }
