@@ -226,7 +226,7 @@ export const getPostNodeProcessSignalUrl = (hostname: string,
 }
 
 /**
- * Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID.
+ * Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID. One above 4194304, Linux's largest pid_max, is refused too.
  * @summary Send a signal to a process
  */
 export const postNodeProcessSignal = async (hostname: string,

@@ -7158,7 +7158,7 @@ paths:
       x-osapi-method: get
   /api/node/{hostname}/process/{pid}/signal:
     post:
-      description: 'Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID.'
+      description: 'Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID. One above 4194304, Linux''s largest pid_max, is refused too.'
       operationId: PostNodeProcessSignal
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -16010,10 +16010,11 @@ components:
       name: pid
       required: true
       schema:
+        maximum: 4194304
         minimum: 1
         type: integer
       x-oapi-codegen-extra-tags:
-        validate: required,min=1
+        validate: required,min=1,max=4194304
     ScheduleName:
       description: The entry, such as backup
       in: path

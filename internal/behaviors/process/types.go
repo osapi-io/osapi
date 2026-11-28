@@ -27,13 +27,13 @@ type ListInput struct{}
 
 // GetInput names the process to read.
 type GetInput struct {
-	PID int `json:"pid" validate:"required,min=1" doc:"The process ID, such as 1234"`
+	PID int `json:"pid" validate:"required,min=1,max=4194304" doc:"The process ID, such as 1234"`
 }
 
 // SignalInput is the signal to send, and the process to send it to.
 type SignalInput struct {
-	PID    int          `json:"pid"    validate:"required,min=1" doc:"The process ID, such as 1234"                   telemetry:"attr"`
-	Signal types.Signal `json:"signal" validate:"required,enum"  doc:"The signal: TERM, KILL, HUP, INT, USR1 or USR2" telemetry:"attr"`
+	PID    int          `json:"pid"    validate:"required,min=1,max=4194304" doc:"The process ID, such as 1234"                   telemetry:"attr"`
+	Signal types.Signal `json:"signal" validate:"required,enum"              doc:"The signal: TERM, KILL, HUP, INT, USR1 or USR2" telemetry:"attr"`
 }
 
 // Entry is one process of the host.

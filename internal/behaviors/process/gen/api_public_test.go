@@ -480,6 +480,15 @@ func (s *APIPublicTestSuite) TestGetValidationHTTP() {
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
 		},
+		{
+			Name: "when sent a process ID above Linux's largest pid_max, which int32 wraps, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/process/4294967297",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
 	})
 }
 
@@ -746,6 +755,16 @@ func (s *APIPublicTestSuite) TestSignalValidationHTTP() {
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/process/-1/signal",
 				Body:   `{"pid":-1,"signal":"TERM"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a process ID above Linux's largest pid_max, which int32 wraps, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/process/4294967297/signal",
+				Body:   `{"pid":4294967297,"signal":"TERM"}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,

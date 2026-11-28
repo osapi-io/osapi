@@ -5,7 +5,7 @@ Send a signal to a process.
 Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports
 changed: true. A process that the host does not have is not found. A process ID
 below 1 is refused, because kill sends to a group of processes for 0 and for a
-negative ID.
+negative ID. One above 4194304, Linux's largest pid_max, is refused too.
 
 ```bash
 osapi client node process signal [flags]
@@ -71,11 +71,12 @@ With the default settings, each example does this on the host:
 
 The command fails in these cases:
 
-| Call                                  | Flags                       | Fails with |
-| ------------------------------------- | --------------------------- | ---------- |
-| A process that the host does not have | `--pid 99999 --signal TERM` | not found  |
-| A process ID below 1                  | `--pid -1 --signal TERM`    | min        |
-| A signal that osapi does not send     | `--pid 1234 --signal STOP`  | enum       |
+| Call                                                          | Flags                            | Fails with |
+| ------------------------------------------------------------- | -------------------------------- | ---------- |
+| A process that the host does not have                         | `--pid 99999 --signal TERM`      | not found  |
+| A process ID below 1                                          | `--pid -1 --signal TERM`         | min        |
+| A process ID above Linux's largest pid_max, which int32 wraps | `--pid 4294967297 --signal TERM` | max        |
+| A signal that osapi does not send                             | `--pid 1234 --signal STOP`       | enum       |
 
 ## Permission
 
