@@ -198,7 +198,7 @@ func (w *Watcher) refuseOtherKey(
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("read the admitted key of %s: %w", machineID, err)
 	}
 	if record.Fingerprint != pki.FingerprintOfKeys(publicKey, encryptionKey) {
 		return fmt.Errorf("%w: %s", ErrMachineAdmitted, machineID)

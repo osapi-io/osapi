@@ -228,7 +228,7 @@ func (w *Watcher) refuseHeldHostname(
 		}
 		r, err := w.LookupAgentKey(ctx, other)
 		if err != nil {
-			return err
+			return fmt.Errorf("read admitted machine %s: %w", other, err)
 		}
 		if r.Hostname == hostname {
 			return fmt.Errorf("%w: %s is the hostname of %s", ErrHostnameHeld, hostname, other)
