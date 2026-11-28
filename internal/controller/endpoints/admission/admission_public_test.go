@@ -27,8 +27,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -39,14 +37,15 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-admission-group"}
 
-// HTTPPublicTestSuite runs requests through the admission group's generated
+// AdmissionPublicTestSuite runs requests through the admission group's generated
 // routes, with the auth, the decoding and the status mapping of the
 // endpoint runtime, as the controller serves them.
-type HTTPPublicTestSuite struct {
+type AdmissionPublicTestSuite struct {
 	suite.Suite
 
 	ctrl  *gomock.Controller
@@ -54,13 +53,13 @@ type HTTPPublicTestSuite struct {
 	jobs  *mocks.MockJobs
 }
 
-func TestHTTPPublicTestSuite(
+func TestAdmissionPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(HTTPPublicTestSuite))
+	suite.Run(t, new(AdmissionPublicTestSuite))
 }
 
-func (s *HTTPPublicTestSuite) SetupSubTest() {
+func (s *AdmissionPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.store = mocks.NewMockStore(s.ctrl)
 	s.jobs = mocks.NewMockJobs(s.ctrl)
@@ -77,7 +76,7 @@ func token(
 	return t
 }
 
-func (s *HTTPPublicTestSuite) serve(
+func (s *AdmissionPublicTestSuite) serve(
 	deps admission.Deps,
 	method, path, body, tok string,
 ) *httptest.ResponseRecorder {
@@ -96,7 +95,7 @@ func (s *HTTPPublicTestSuite) serve(
 	return rec
 }
 
-func (s *HTTPPublicTestSuite) TestRoutes() {
+func (s *AdmissionPublicTestSuite) TestRoutes() {
 	read, write := token("admission:read"), token("admission:read", "admission:write")
 	agentWrite := token("agent:read", "agent:write")
 
@@ -212,7 +211,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 
 			rec := s.serve(deps, tc.method, tc.path, tc.body, tc.tok)
 
-			s.Equal(tc.code, rec.Code, rec.Body.String())
+			s.Equal(tc.code, rec.Code)
 			if tc.want != "" {
 				s.Contains(rec.Body.String(), tc.want)
 			}

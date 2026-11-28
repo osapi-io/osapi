@@ -30,8 +30,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/apicontract"
@@ -40,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/wiring"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // letter is a name of a test, a closed set for the enum rule.
@@ -259,7 +258,7 @@ func (s *EndpointPublicTestSuite) TestDeclared() {
 		{Permission: "node:read", Where: "node list"},
 		{Permission: "node:write", AdminOnly: true, Where: "node drain"},
 		{Permission: "trace:read", Named: true, Where: "node trace"},
-	}, g.Declared(), "a public method needs no permission")
+	}, g.Declared())
 }
 
 func (s *EndpointPublicTestSuite) TestCommandHelp() {
@@ -291,8 +290,7 @@ func (s *EndpointPublicTestSuite) TestInternal() {
 	s.Equal(reflect.TypeFor[Node](), m.Output())
 	s.Equal("trace", m.SubPath())
 	s.Equal("vault",
-		endpoint.Get[noInput, Node]("vaults").CommandSub("vault").Use("list").SubPath(),
-		"the command's word, which the path does not have")
+		endpoint.Get[noInput, Node]("vaults").CommandSub("vault").Use("list").SubPath())
 	s.Equal("get", m.CommandName())
 	s.Equal("list", endpoint.Get[noInput, Node]("pending").Use("list").CommandName())
 
@@ -415,7 +413,7 @@ func (s *EndpointPublicTestSuite) TestRegistry() {
 	_ = wiring.Take()
 	endpoint.Register(endpoint.Define("zzregistry", "Again"))
 	s.EqualError(wiring.Take(), `endpoint: group "zzregistry" registered twice`)
-	s.Same(g, endpoint.Lookup("zzregistry"), "the first group stays")
+	s.Same(g, endpoint.Lookup("zzregistry"))
 	endpoint.Register(endpoint.Define("zzaregistry", "Sorts first"))
 	all := endpoint.All()
 	for i := 1; i < len(all); i++ {
@@ -619,8 +617,7 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.Equal(true, sample.Properties["on"].Value.Example)
 	s.Equal(`{"host":"web-01"}`, sample.Properties["name"].Value.Example)
 	s.Equal("many", sample.Properties["bad"].Value.Example)
-	s.Equal(map[string]any{"ok": float64(5)}, sample.Properties["counts"].Value.Example,
-		"an object's example is an object, not a string")
+	s.Equal(map[string]any{"ok": float64(5)}, sample.Properties["counts"].Value.Example)
 	s.Equal([]any{"web"}, sample.Properties["tags"].Value.Example)
 	s.Equal("not json", sample.Properties["odd"].Value.Example)
 	s.Equal("x", sample.Properties["badf"].Value.Example)
@@ -728,13 +725,13 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 	s.Equal(area.Config, g.Area)
 	s.Equal("/api/fleet/node/{hostname}/sysctl", g.Path(g.Method("list")))
 	s.Equal("/api/fleet/node/{hostname}/sysctl/{key}", g.Path(g.Method("get")))
-	s.Empty(g.Method("list").KeyField(), "the prefix's field is not the key")
+	s.Empty(g.Method("list").KeyField())
 	s.Empty(g.Method("list").Keys())
 	s.Equal("key", g.Method("get").KeyField())
 	s.Equal([]string{"key"}, g.Method("get").Keys())
 	two := endpoint.Get[underIn, Node]("get").Key("vault", "key")
 	s.Equal([]string{"vault", "key"}, two.Keys())
-	s.Equal("key", two.KeyField(), "the last field names what the method acts on")
+	s.Equal("key", two.KeyField())
 	s.Empty(endpoint.Validate(g))
 
 	doc, err := endpoint.OpenAPI(g)
@@ -751,8 +748,8 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 	get := doc.Paths.Value("/api/fleet/node/{hostname}/sysctl/{key}").Get
 	s.Equal("#/components/parameters/Hostname", get.Parameters[0].Ref)
 	s.Equal("#/components/parameters/NodeKey", get.Parameters[1].Ref)
-	s.Equal("config", get.Extensions[endpoint.AreaExtension], "the operation has its group's area")
-	s.Equal("sysctl", doc.Tags[0].Extensions[endpoint.GroupExtension], "the tag names its group")
+	s.Equal("config", get.Extensions[endpoint.AreaExtension])
+	s.Equal("sysctl", doc.Tags[0].Extensions[endpoint.GroupExtension])
 
 	missing := endpoint.Define(
 		"sysctl",
@@ -822,7 +819,7 @@ func (s *EndpointPublicTestSuite) TestNoCommand() {
 	)
 
 	methods := g.Commands()
-	s.Require().Len(methods, 1, "join has no command")
+	s.Require().Len(methods, 1)
 	s.Equal("list", methods[0].MethodName())
 
 	doc, err := endpoint.OpenAPI(g)
@@ -1167,6 +1164,17 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when an optional field of a pointer body is sent empty",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.SubDoc("one", "One node"),
+				endpoint.Post[pointerBodyIn, Node]("reject").Sub("one"),
+			),
+			want: []string{
+				"no .Fails input breaks required on Body.",
+				"optional body field reason is sent as its zero value when it is empty.",
+			},
+		},
+		{
 			name:  "when the group has a bad name and no methods",
 			group: endpoint.Define("Node", "The nodes"),
 			want: []string{
@@ -1250,7 +1258,7 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			for _, p := range endpoint.Validate(tc.group) {
 				got = append(got, p.Message)
 				seen[p.Rule] = true
-				s.Equal(endpoint.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
+				s.Equal(endpoint.Checks.Fix(p.Rule), p.Fix)
 				s.NotEmpty(p.Fix)
 				s.Equal(p.Message+" Fix: "+p.Fix, p.String())
 			}
@@ -1264,7 +1272,7 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 	checked := make([]string, 0, len(endpoint.Checks))
 	for _, c := range endpoint.Checks {
 		checked = append(checked, c.Rule)
-		s.NotEmpty(c.Requires, c.Rule)
+		s.NotEmpty(c.Requires)
 	}
 	triggered := make([]string, 0, len(seen))
 	for r := range seen {
@@ -1273,7 +1281,6 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 	s.ElementsMatch(
 		checked,
 		triggered,
-		"each check is triggered by a case, and each rule has a check",
 	)
 }
 
@@ -1306,4 +1313,51 @@ type exampleBodyIn struct {
 
 type exampleBody struct {
 	Reason string `json:"reason,omitempty" validate:"omitempty" doc:"Why"`
+}
+
+type pointerBodyIn struct {
+	ID   string         `json:"id" in:"path" validate:"required"`
+	Body *sentEmptyBody `          in:"body" validate:"required"`
+}
+
+type secretIn struct {
+	Password secret.Value            `json:"password" validate:"required"`
+	Env      map[string]secret.Value `json:"env"      validate:"omitempty"`
+	Vars     map[string]secret.Value `json:"vars"`
+	Tags     []string                `json:"tags"     validate:"omitempty,max=3,dive,max=9"`
+	Bare     string                  `json:"bare"     validate:"omitempty,dive,max=9"`
+}
+
+func (s *EndpointPublicTestSuite) TestSecretAndDiveInTheSpec() {
+	doc, err := endpoint.OpenAPI(
+		endpoint.Define("node", "The nodes", endpoint.Post[secretIn, Node]("create")))
+	s.Require().NoError(err)
+	var body map[string]any
+	for _, path := range doc.Paths.Map() {
+		schema := path.Post.RequestBody.Value.Content["application/json"].Schema.Value
+		pw := schema.Properties["password"].Value
+		s.True(pw.WriteOnly)
+		s.Equal("password", pw.Format)
+		s.Equal(true, pw.Extensions[endpoint.SecretExtension])
+		s.Equal(secret.Takes, pw.Description)
+		env := schema.Properties["env"].Value
+		s.True(env.WriteOnly)
+		s.Equal("password", env.AdditionalProperties.Schema.Value.Format)
+		s.Equal(true, schema.Properties["vars"].Value.Extensions[endpoint.SecretExtension])
+		tags := schema.Properties["tags"].Value
+		s.Equal(uint64(3), *tags.MaxItems)
+		s.Equal(uint64(9), *tags.Items.Value.MaxLength)
+		s.Nil(schema.Properties["bare"].Value.MaxLength)
+		body = map[string]any{"ok": true}
+	}
+	s.NotNil(body)
+}
+
+func (s *EndpointPublicTestSuite) TestSecretFields() {
+	endpoint.Register(endpoint.Define("zzsecretfields", "Secret fields",
+		endpoint.Post[secretIn, Node]("create")))
+	got := endpoint.SecretFields()
+	s.True(got["password"])
+	s.True(got["env"])
+	s.False(got["tags"])
 }

@@ -96,11 +96,17 @@ func (s *StorePublicTestSuite) TestDelete() {
 		s.Require().NoError(s.watcher.Delete(context.Background(), "m-1"))
 
 		_, err := s.watcher.Get(context.Background(), "m-1")
-		s.ErrorIs(err, admission.ErrNotFound, "it leaves no record")
+		s.ErrorIs(err, admission.ErrNotFound)
 		_, err = s.watcher.LookupAgentKey(context.Background(), "m-1")
-		s.ErrorIs(err, admission.ErrAgentKeyNotFound, "nothing it signs verifies")
+		s.ErrorIs(err, admission.ErrAgentKeyNotFound)
 		_, err = s.watcher.Get(context.Background(), "m-2")
-		s.NoError(err, "another machine stays")
+		s.NoError(err)
+	})
+
+	s.Run("when a machine is deleted opens admission.delete", func() {
+		s.spanOf("admission.delete", func(w *admission.Watcher, ctx context.Context) error {
+			return w.Delete(ctx, "m-1")
+		})
 	})
 
 	s.Run("when the machine has no record returns ErrNotFound", func() {
@@ -143,7 +149,7 @@ func (s *StorePublicTestSuite) TestDeleteStale() {
 		deleted, err := s.watcher.DeleteStale(context.Background(), seen, after)
 
 		s.Require().NoError(err)
-		s.Len(log.entries, 2, "each deletion by delete_after is audited")
+		s.Len(log.entries, 2)
 		for _, e := range log.entries {
 			s.Equal(audit.ActorSystem, e.Actor)
 			s.Equal("delete_after", e.User)
@@ -152,11 +158,10 @@ func (s *StorePublicTestSuite) TestDeleteStale() {
 		s.ElementsMatch(
 			[]string{"gone", "old"},
 			deleted,
-			"gone by its last report, old by its admission; not online, recent, new, unknown or pending",
 		)
 		for _, id := range []string{"up", "recent", "new", "unknown", "asks"} {
 			_, err := s.watcher.Get(context.Background(), id)
-			s.NoError(err, id)
+			s.NoError(err)
 		}
 	})
 

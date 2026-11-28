@@ -29,24 +29,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/controller/admission"
-	"github.com/osapi-io/osapi/internal/controller/jointoken"
-	"github.com/osapi-io/osapi/internal/pki"
-
-	"github.com/osapi-io/osapi/internal/controller/endpoint"
-
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/cryptoreport"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type MethodsPublicTestSuite struct {
@@ -90,7 +87,7 @@ func (s *MethodsPublicTestSuite) TestFacts() {
 		s.NotEmpty(got.Items)
 		for _, k := range got.Items {
 			s.True(k.Builtin)
-			s.NotEmpty(k.Description, k.Key)
+			s.NotEmpty(k.Description)
 		}
 	})
 }
@@ -115,7 +112,6 @@ func (s *MethodsPublicTestSuite) TestList() {
 				s.Equal(
 					types.AgentReady,
 					got.Items[1].State,
-					"an agent that reported no state is Ready",
 				)
 			},
 		},
@@ -194,7 +190,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 			},
 			validateFunc: func(got agent.Info) {
 				s.Equal("m-1", got.MachineID)
-				s.Equal("on, approved", got.FIPS, "the verdict of the agent's crypto")
+				s.Equal("on, approved", got.FIPS)
 				s.Equal(types.FIPSOn, got.Crypto.Mode)
 				s.Equal("v1.4.0", got.Version)
 				s.Equal(map[string]string{"role": "web"}, got.Labels)
@@ -206,8 +202,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				)
 				s.Equal(&agent.LoadAverageResponse{OneMin: 0.5, FiveMin: 0.25, FifteenMin: 0.125},
 					got.LoadAverage)
-				s.Equal(&agent.MemoryResponse{Total: 8, Free: 2, Used: 3}, got.Memory,
-					"used is the total less the available, not the cached")
+				s.Equal(&agent.MemoryResponse{Total: 8, Free: 2, Used: 3}, got.Memory)
 				s.Equal(4, got.CPUCount)
 				s.Equal([]agent.NetworkInterfaceResponse{{
 					Name: "eth0", IPv4: "10.0.0.2", IPv6: "fe80::1", MAC: "aa:bb", Family: "dual",
@@ -222,7 +217,6 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 						{Type: "HighLoad", Reason: "load", LastTransitionTime: at},
 					},
 					got.Conditions,
-					"a condition that does not hold is left out",
 				)
 				s.Equal("e", got.Timeline[0].Error)
 				s.True(*got.KeyStored)
@@ -606,7 +600,7 @@ func (s *MethodsPublicTestSuite) TestJoin() {
 			Join(gomock.Any(), gomock.Any()).
 			DoAndReturn(func(_ context.Context, req pki.JoinRequest) (ed25519.PublicKey, error) {
 				s.Equal("osapi_jt_t1.secret", req.Token)
-				s.Equal(pub, req.PublicKey, "the key, decoded from base64")
+				s.Equal(pub, req.PublicKey)
 				s.Equal("XKEY", req.EncryptionKey)
 
 				return ctrlKey, nil
@@ -654,4 +648,115 @@ func TestMethodsPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(MethodsPublicTestSuite))
+}
+
+func (s *MethodsPublicTestSuite) TestConfig() {
+	s.Run("list and get report the version that the controller holds, and behind", func() {
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().ListAgents(gomock.Any()).
+			Return([]job.AgentInfo{{MachineID: "m-1", Hostname: "server1", ConfigVersion: 2}}, nil)
+		s.jobs.EXPECT().GetAgentConfig(gomock.Any(), "m-1").Return(job.AgentConfig{Version: 3}, nil)
+		got, err := agent.List(context.Background(), s.deps(), agent.ListInput{})
+		s.Require().NoError(err)
+		s.Equal(3, got.Items[0].ConfigWanted)
+		s.True(got.Items[0].ConfigBehind)
+
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").
+			Return(&job.AgentInfo{MachineID: "m-1", Hostname: "server1", ConfigVersion: 3}, nil)
+		s.jobs.EXPECT().GetAgentConfig(gomock.Any(), "m-1").Return(job.AgentConfig{Version: 3}, nil)
+		one, err := agent.Get(context.Background(), s.deps(), agent.GetInput{Hostname: "server1"})
+		s.Require().NoError(err)
+		s.False(one.ConfigBehind)
+
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").
+			Return(&job.AgentInfo{MachineID: "m-1", Hostname: "server1"}, nil)
+		s.jobs.EXPECT().GetAgentConfig(gomock.Any(), "m-1").Return(job.AgentConfig{}, errBoom)
+		one, err = agent.Get(context.Background(), s.deps(), agent.GetInput{Hostname: "server1"})
+		s.Require().NoError(err)
+		s.Zero(one.ConfigWanted)
+	})
+
+	ctx := context.Background()
+	host := &job.AgentInfo{MachineID: "m-1", Hostname: "server1"}
+	at := time.Date(2026, 11, 25, 12, 0, 0, 0, time.UTC)
+
+	s.Run("get: the config that the controller holds", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
+		s.jobs.EXPECT().GetAgentConfig(gomock.Any(), "m-1").
+			Return(job.AgentConfig{Version: 2, Labels: map[string]string{"group": "web"}, UpdatedAt: at}, nil)
+		got, err := agent.GetConfig(ctx, s.deps(), agent.ConfigGetInput{Hostname: "server1"})
+		s.Require().NoError(err)
+		s.Equal(2, got.Version)
+		s.Equal(at, *got.UpdatedAt)
+	})
+	s.Run("get: an agent with none has version 0, and no time", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
+		s.jobs.EXPECT().GetAgentConfig(gomock.Any(), "m-1").Return(job.AgentConfig{}, nil)
+		got, err := agent.GetConfig(ctx, s.deps(), agent.ConfigGetInput{Hostname: "server1"})
+		s.Require().NoError(err)
+		s.Zero(got.Version)
+		s.Nil(got.UpdatedAt)
+	})
+	s.Run("get: an agent that is not there", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(nil, missing())
+		_, err := agent.GetConfig(ctx, s.deps(), agent.ConfigGetInput{Hostname: "server1"})
+		s.ErrorIs(err, agent.ErrNotFound)
+	})
+	s.Run("get: a config that cannot be read", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
+		s.jobs.EXPECT().GetAgentConfig(gomock.Any(), "m-1").Return(job.AgentConfig{}, errBoom)
+		_, err := agent.GetConfig(ctx, s.deps(), agent.ConfigGetInput{Hostname: "server1"})
+		s.ErrorIs(err, errBoom)
+	})
+	s.Run("update: the next version", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		labels := map[string]string{"group": "web"}
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
+		s.jobs.EXPECT().
+			SetAgentConfig(gomock.Any(), "m-1",
+				job.AgentConfig{
+					Labels: labels, MaxJobs: 4, LogLevel: types.LogWarn, FactsInterval: "5m",
+				}).
+			Return(job.AgentConfig{
+				Version: 3, Labels: labels, MaxJobs: 4, LogLevel: types.LogWarn,
+				FactsInterval: "5m", UpdatedAt: at,
+			}, nil)
+		got, err := agent.SetConfig(ctx, s.deps(), agent.ConfigSetInput{
+			Hostname: "server1",
+			Body: agent.ConfigRequest{
+				Labels: labels, MaxJobs: 4, LogLevel: types.LogWarn, FactsInterval: "5m",
+			},
+		})
+		s.Require().NoError(err)
+		s.Equal(3, got.Version)
+		s.Equal(4, got.MaxJobs)
+		s.Equal(types.LogWarn, got.LogLevel)
+		s.Equal("5m", got.FactsInterval)
+	})
+	s.Run("update: an agent that is not there", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(nil, missing())
+		_, err := agent.SetConfig(ctx, s.deps(), agent.ConfigSetInput{Hostname: "server1"})
+		s.ErrorIs(err, agent.ErrNotFound)
+	})
+	s.Run("update: a config that cannot be written", func() {
+		// A mock with no default read of the config.
+		s.jobs = mocks.NewMockJobs(s.ctrl)
+		s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").Return(host, nil)
+		s.jobs.EXPECT().
+			SetAgentConfig(gomock.Any(), "m-1", gomock.Any()).
+			Return(job.AgentConfig{}, errBoom)
+		_, err := agent.SetConfig(ctx, s.deps(), agent.ConfigSetInput{Hostname: "server1"})
+		s.ErrorIs(err, errBoom)
+	})
 }

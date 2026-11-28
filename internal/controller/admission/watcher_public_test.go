@@ -29,15 +29,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/audit"
-
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
-
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	admissionMocks "github.com/osapi-io/osapi/internal/controller/admission/mocks"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
@@ -76,10 +74,19 @@ func (s *WatcherPublicTestSuite) SetupTest() {
 		false,
 		"osapi",
 	)
+	s.watcher = admission.NewWatcher(
+		slog.Default(),
+		s.mockNC,
+		s.mockKV, "enrollment",
+		s.mockPKI,
+		false,
+		"osapi",
+	)
 }
 
 func (s *WatcherPublicTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
+	admission.ResetNowFn()
 }
 
 func (s *WatcherPublicTestSuite) TearDownSubTest() {
@@ -111,14 +118,13 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 					) (uint64, error) {
 						var stored admission.PendingAgent
 						err := json.Unmarshal(value, &stored)
-						s.Require().NoError(err, "stored value must be valid JSON")
+						s.Require().NoError(err)
 						s.Equal("machine-001", stored.MachineID)
 						s.Equal("web-01", stored.Hostname)
 						s.Equal("SHA256:abc123", stored.Fingerprint)
 						s.Equal(testEncryptionKey, stored.EncryptionKey)
 						s.False(
 							stored.RequestedAt.IsZero(),
-							"requested_at must be non-zero",
 						)
 
 						return uint64(1), nil
@@ -241,11 +247,10 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 							ControllerPublicKey []byte `json:"controller_public_key"`
 						}
 						err := json.Unmarshal(data, &resp)
-						s.Require().NoError(err, "response must be valid JSON")
-						s.True(resp.Accepted, "response must indicate acceptance")
+						s.Require().NoError(err)
+						s.True(resp.Accepted)
 						s.NotEmpty(
 							resp.ControllerPublicKey,
-							"response must include controller public key",
 						)
 
 						return nil
@@ -290,7 +295,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequestAutoAdmit() {
 			autoWatcher.SetAudit(log)
 			admission.ExportHandleEnrollmentRequest(s.ctx, autoWatcher, tc.msg)
 			if tc.name == "auto-admits on successful store" {
-				s.Require().Len(log.entries, 2, "the request and the admission are audited")
+				s.Require().Len(log.entries, 2)
 				s.Equal(audit.ActorAgent, log.entries[0].Actor)
 				s.Equal("agent.enroll.request", log.entries[0].Action)
 				e := log.entries[1]
@@ -397,7 +402,6 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 						s.Equal(
 							pki.FingerprintOfKeys([]byte("test-pubkey"), testEncryptionKey),
 							stored.Fingerprint,
-							"the fingerprint is recomputed over both keys, not taken from the request",
 						)
 						s.Equal(testEncryptionKey, stored.EncryptionKey)
 						s.Equal(s.fixedTime, stored.AcceptedAt)

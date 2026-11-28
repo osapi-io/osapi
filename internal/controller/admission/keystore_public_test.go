@@ -50,6 +50,8 @@ type KeyStorePublicTestSuite struct {
 	watcher   *admission.Watcher
 	fixedTime time.Time
 	pubKey    ed25519.PublicKey
+	oldKey    ed25519.PublicKey
+	newKey    ed25519.PublicKey
 }
 
 func (s *KeyStorePublicTestSuite) SetupTest() {
@@ -62,6 +64,11 @@ func (s *KeyStorePublicTestSuite) SetupTest() {
 	s.pubKey = make(ed25519.PublicKey, ed25519.PublicKeySize)
 
 	admission.SetNowFn(func() time.Time { return s.fixedTime })
+	oldPub, _, err := ed25519.GenerateKey(nil)
+	s.Require().NoError(err)
+	newPub, _, err := ed25519.GenerateKey(nil)
+	s.Require().NoError(err)
+	s.oldKey, s.newKey = oldPub, newPub
 
 	s.watcher = admission.NewWatcher(
 		slog.Default(),
@@ -529,4 +536,149 @@ func TestKeyStorePublicTestSuite(
 	// rotation suite already runs in parallel. A second parallel suite races
 	// it over those globals.
 	suite.Run(t, new(KeyStorePublicTestSuite))
+}
+
+// TestRemovalDuringLookup: a lookup that read the record before a removal,
+// and caches it after, must not keep the removed key verifying.
+func (s *StorePublicTestSuite) TestRemovalDuringLookup() {
+	s.Run("a removal between the read and the cache wins", func() {
+		ctx := context.Background()
+		s.put("accepted.m-1", map[string]any{"machine_id": "m-1", "hostname": "web-01"})
+		removed := false
+		s.kv.beforeGet = func(key string) {
+			if key == "accepted.m-1" && !removed {
+				removed = true
+				// The revocation runs while this read is in flight.
+				s.Require().NoError(s.watcher.RemoveAgentKey(ctx, "m-1"))
+			}
+		}
+		_, _ = s.watcher.LookupAgentKey(ctx, "m-1")
+		s.kv.beforeGet = nil
+
+		_, err := s.watcher.LookupAgentKey(ctx, "m-1")
+		s.Error(err)
+	})
+}
+
+// existing returns a KV entry holding the record a rotation replaces.
+func (s *KeyStorePublicTestSuite) existing() []byte {
+	s.T().Helper()
+
+	data, err := json.Marshal(admission.AcceptedAgent{
+		MachineID:  "machine-001",
+		Hostname:   "web-01",
+		PublicKey:  s.oldKey,
+		AcceptedAt: s.fixedTime.Add(-time.Hour),
+	})
+	s.Require().NoError(err)
+
+	return data
+}
+
+func (s *KeyStorePublicTestSuite) TestRecordAgentKeyRotation() {
+	tests := []struct {
+		name         string
+		grace        time.Duration
+		setupMock    func()
+		validateFunc func(admission.AcceptedAgent)
+	}{
+		{
+			name:  "a replacement keeps the outgoing key for the grace period",
+			grace: 24 * time.Hour,
+			setupMock: func() {
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(s.existing())
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(entry, nil)
+			},
+			validateFunc: func(stored admission.AcceptedAgent) {
+				s.Equal(ed25519.PublicKey(s.newKey), stored.PublicKey)
+				s.Equal(ed25519.PublicKey(s.oldKey), stored.SupersededKey)
+				s.Equal(s.fixedTime.Add(24*time.Hour), stored.SupersededUntil)
+			},
+		},
+		{
+			name:  "with no grace configured the replacement takes effect at once",
+			grace: 0,
+			setupMock: func() {
+				// No Get at all: nothing is carried forward, so there is
+				// nothing to read.
+			},
+			validateFunc: func(stored admission.AcceptedAgent) {
+				s.Equal(ed25519.PublicKey(s.newKey), stored.PublicKey)
+				s.Empty(stored.SupersededKey)
+				s.True(stored.SupersededUntil.IsZero())
+			},
+		},
+		{
+			name:  "re-accepting the same key is not a rotation",
+			grace: 24 * time.Hour,
+			setupMock: func() {
+				data, err := json.Marshal(admission.AcceptedAgent{
+					MachineID: "machine-001",
+					Hostname:  "web-01",
+					PublicKey: s.newKey,
+				})
+				s.Require().NoError(err)
+
+				entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(data)
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(entry, nil)
+			},
+			validateFunc: func(stored admission.AcceptedAgent) {
+				s.Empty(stored.SupersededKey)
+			},
+		},
+		{
+			name:  "a first acceptance has nothing to supersede",
+			grace: 24 * time.Hour,
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
+					Return(nil, jetstream.ErrKeyNotFound)
+			},
+			validateFunc: func(stored admission.AcceptedAgent) {
+				s.Empty(stored.SupersededKey)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.watcher = admission.NewWatcher(
+				slog.Default(), s.mockNC, s.mockKV, "enrollment", s.mockPKI, false, "osapi",
+			)
+			s.watcher.SetRotationGracePeriod(tt.grace)
+			tt.setupMock()
+
+			var stored admission.AcceptedAgent
+
+			s.mockKV.EXPECT().
+				KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
+				DoAndReturn(func(
+					_ context.Context, _ string,
+					_ string,
+					data []byte,
+				) (uint64, error) {
+					s.Require().NoError(json.Unmarshal(data, &stored))
+
+					return uint64(1), nil
+				})
+
+			s.Require().NoError(admission.ExportRecordAgentKey(
+				s.ctx,
+				s.watcher,
+				admission.PendingAgent{
+					MachineID: "machine-001",
+					Hostname:  "web-01",
+					PublicKey: s.newKey,
+				},
+			))
+
+			tt.validateFunc(stored)
+		})
+	}
 }
