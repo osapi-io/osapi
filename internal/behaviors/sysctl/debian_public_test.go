@@ -215,7 +215,10 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when the drop-in already holds what was asked for",
+			// A drop-in with the value and no record, as a retry after a
+			// record that failed to write finds it: the create records it, so
+			// osapi manages the key from then on.
+			name: "when the drop-in holds the value and has no record, it is recorded",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
@@ -223,6 +226,12 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, jetstream.ErrKeyNotFound)
+				suite.mockStateKV.EXPECT().
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					Return("", nil)
 				suite.NoError(suite.memFs.MkdirAll("/etc/sysctl.d", 0o755))
 				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
@@ -237,6 +246,76 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				suite.NoError(err)
 				suite.NotNil(result)
 				suite.Equal("net.ipv4.ip_forward", result.Key)
+				suite.True(result.Changed)
+			},
+		},
+		{
+			// osapi deployed the drop-in and it holds the value, and the kernel
+			// has no such parameter right now: nothing changes, and nothing is
+			// applied again.
+			name: "when the drop-in and its record hold the value and the kernel has no such parameter",
+			entry: sysctl.Entry{
+				Key:   "net.ipv6.conf.all.forwarding",
+				Value: "1",
+			},
+			setup: func() {
+				path := "/etc/sysctl.d/osapi-net.ipv6.conf.all.forwarding.conf"
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().
+					Value().
+					Return(managedStateJSON("net.ipv6.conf.all.forwarding", "1", path))
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(mockEntry, nil)
+				suite.NoError(suite.memFs.MkdirAll("/etc/sysctl.d", 0o755))
+				suite.NoError(
+					suite.memFs.WriteFile(
+						path,
+						[]byte("net.ipv6.conf.all.forwarding = 1\n"),
+						0o644,
+					),
+				)
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
+				suite.Equal("net.ipv6.conf.all.forwarding", result.Key)
+				suite.False(result.Changed)
+			},
+		},
+		{
+			// osapi deployed the drop-in, and the kernel holds its value:
+			// nothing changes, and nothing is applied again.
+			name: "when the drop-in, its record and the kernel hold the value",
+			entry: sysctl.Entry{
+				Key:   "kernel.osapi_probe",
+				Value: "0 2147483647",
+			},
+			setup: func() {
+				path := "/etc/sysctl.d/osapi-kernel.osapi_probe.conf"
+				mockEntry := jobmocks.NewMockKeyValueEntry(suite.ctrl)
+				mockEntry.EXPECT().
+					Value().
+					Return(managedStateJSON("kernel.osapi_probe", "0 2147483647", path))
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(mockEntry, nil)
+				suite.NoError(suite.memFs.MkdirAll("/etc/sysctl.d", 0o755))
+				suite.NoError(suite.memFs.WriteFile(
+					path,
+					[]byte("kernel.osapi_probe = 0 2147483647\n"),
+					0o644,
+				))
+				suite.NoError(suite.memFs.MkdirAll("/proc/sys/kernel", 0o755))
+				suite.NoError(suite.memFs.WriteFile(
+					"/proc/sys/kernel/osapi_probe", []byte("0\t2147483647\n"), 0o644,
+				))
+			},
+			validateFunc: func(
+				result *sysctl.CreateResult,
+				err error,
+			) {
+				suite.NoError(err)
 				suite.False(result.Changed)
 			},
 		},
@@ -580,6 +659,9 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, jetstream.ErrKeyNotFound)
+				suite.mockStateKV.EXPECT().
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
 				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
 					[]byte("net.ipv4.ip_forward = 1\n"),
@@ -602,7 +684,9 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			},
 		},
 		{
-			name: "when the drop-in is unchanged and the kernel holds the value",
+			// The drop-in and the kernel hold the value, but no record does:
+			// the create records the key, and applies the drop-in once.
+			name: "when the drop-in and the kernel hold the value and no record does",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ping_group_range",
 				Value: "0 2147483647",
@@ -610,6 +694,12 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, jetstream.ErrKeyNotFound)
+				suite.mockStateKV.EXPECT().
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ping_group_range.conf"}).
+					Return("", nil)
 				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ping_group_range.conf",
 					[]byte("net.ipv4.ping_group_range = 0 2147483647\n"),
@@ -625,7 +715,7 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				err error,
 			) {
 				suite.NoError(err)
-				suite.False(result.Changed)
+				suite.True(result.Changed)
 			},
 		},
 	}
@@ -800,7 +890,9 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			},
 		},
 		{
-			name: "when content unchanged returns not changed",
+			// Update manages the key whether osapi did before or not, so a
+			// drop-in with the value and no record is recorded.
+			name: "when the drop-in holds the value and has no record, it is recorded",
 			entry: sysctl.Entry{
 				Key:   "net.ipv4.ip_forward",
 				Value: "1",
@@ -808,15 +900,17 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			setup: func() {
 				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
 					Return(nil, jetstream.ErrKeyNotFound)
-				// Write the file to disk so Stat succeeds.
-				content := []byte("net.ipv4.ip_forward = 1\n")
-				_ = suite.memFs.WriteFile(
+				suite.mockStateKV.EXPECT().
+					KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+					Return(uint64(1), nil)
+				suite.mockExec.EXPECT().
+					RunPrivilegedCmd(gomock.Any(), "sysctl", []string{"-e", "-p", "/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf"}).
+					Return("", nil)
+				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
-					content,
+					[]byte("net.ipv4.ip_forward = 1\n"),
 					0o644,
-				)
-
-				// Create state with matching SHA.
+				))
 			},
 			validateFunc: func(
 				result *sysctl.UpdateResult,
@@ -824,7 +918,7 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 			) {
 				suite.NoError(err)
 				suite.Equal("net.ipv4.ip_forward", result.Key)
-				suite.False(result.Changed)
+				suite.True(result.Changed)
 			},
 		},
 		{
