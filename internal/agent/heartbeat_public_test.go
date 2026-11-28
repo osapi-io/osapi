@@ -691,6 +691,24 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestDeregister() {
 				s.NotPanics(deregister)
 			},
 		},
+		{
+			// The agent's context has ended when it deregisters, so the
+			// delete needs a deadline of its own.
+			name: "when Delete runs it has a deadline",
+			setupMock: func() {
+				s.mockKV.EXPECT().
+					KVDelete(gomock.Any(), "registry", "agents.test_machine_id").
+					DoAndReturn(func(ctx context.Context, _ string, _ string) error {
+						_, ok := ctx.Deadline()
+						s.True(ok)
+
+						return nil
+					})
+			},
+			validateFunc: func(deregister assert.PanicTestFunc) {
+				s.NotPanics(deregister)
+			},
+		},
 	}
 
 	for _, tt := range tests {
