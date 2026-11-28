@@ -23,9 +23,13 @@ package agent
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -39,120 +43,68 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 )
 
-// consumeQueryJobs handles read-only job operations using JetStream consumers.
-func (a *Agent) consumeQueryJobs(
+// consumeJobs starts the job consumers of kind: one for the jobs of any
+// agent, one for the jobs of all agents, one for the jobs of the agent's
+// machine ID, and one for each prefix of each label. For "group:
+// web.dev.us-east", the label consumers filter on
+// jobs.<kind>.label.group.web, jobs.<kind>.label.group.web.dev and
+// jobs.<kind>.label.group.web.dev.us-east. Direct targeting uses the
+// machine ID, which is permanent, not the hostname, which can change.
+func (a *Agent) consumeJobs(
 	ctx context.Context,
 	machineID string,
-) error {
-	streamName := a.streamName
-
-	// Sanitize machine ID for consumer names (alphanumeric and underscores only).
-	sanitizedMachineID := job.SanitizeHostname(machineID)
-
-	// Use configured consumer name as prefix, falling back to empty string
-	consumerPrefix := a.consumerNamePrefix()
-
-	// Create consumers for different query patterns.
-	// Direct targeting uses machine ID (permanent), not hostname (mutable).
-	consumers := []consumerSpec{
-		{
-			name:   consumerPrefix + "query_any_" + sanitizedMachineID,
-			filter: job.JobsQueryPrefix + "._any",
-		},
-		{
-			name:   consumerPrefix + "query_all_" + sanitizedMachineID,
-			filter: job.JobsQueryPrefix + "._all",
-		},
-		{
-			name:   consumerPrefix + "query_direct_" + sanitizedMachineID,
-			filter: job.JobsQueryPrefix + ".host." + sanitizedMachineID,
-		},
+	kind types.JobType,
+) {
+	for _, c := range a.jobConsumers(machineID, kind) {
+		a.startConsumer(ctx, a.streamName, c, kind)
 	}
-
-	// Add label-based consumers with hierarchical prefix subscriptions.
-	// For "group: web.dev.us-east", creates consumers for each prefix level:
-	//   jobs.query.label.group.web
-	//   jobs.query.label.group.web.dev
-	//   jobs.query.label.group.web.dev.us-east
-	for key, value := range a.appConfig.Agent.Labels {
-		segments := strings.Split(value, ".")
-		for i := range segments {
-			prefix := strings.Join(segments[:i+1], ".")
-			sanitizedPrefix := job.SanitizeHostname(prefix)
-			consumers = append(consumers, consumerSpec{
-				name: fmt.Sprintf(
-					"%squery_label_%s_%s_%s",
-					consumerPrefix,
-					key,
-					sanitizedPrefix,
-					sanitizedMachineID,
-				),
-				filter: job.JobsQueryPrefix + ".label." + key + "." + prefix,
-			})
-		}
-	}
-
-	for _, consumer := range consumers {
-		a.startConsumer(ctx, streamName, consumer, types.JobTypeQuery)
-	}
-
-	return nil
 }
 
-// consumeModifyJobs handles write job operations using JetStream consumers.
-func (a *Agent) consumeModifyJobs(
-	ctx context.Context,
+// jobConsumers is the consumers of kind that consumeJobs starts, in a
+// fixed order: the labels by key.
+func (a *Agent) jobConsumers(
 	machineID string,
-) error {
-	streamName := a.streamName
-
-	// Sanitize machine ID for consumer names (alphanumeric and underscores only).
-	sanitizedMachineID := job.SanitizeHostname(machineID)
-
-	// Use configured consumer name as prefix, falling back to empty string
-	consumerPrefix := a.consumerNamePrefix()
-
-	// Create consumers for different modify patterns.
-	// Direct targeting uses machine ID (permanent), not hostname (mutable).
-	consumers := []consumerSpec{
-		{
-			name:   consumerPrefix + "modify_any_" + sanitizedMachineID,
-			filter: job.JobsModifyPrefix + "._any",
-		},
-		{
-			name:   consumerPrefix + "modify_all_" + sanitizedMachineID,
-			filter: job.JobsModifyPrefix + "._all",
-		},
-		{
-			name:   consumerPrefix + "modify_direct_" + sanitizedMachineID,
-			filter: job.JobsModifyPrefix + ".host." + sanitizedMachineID,
-		},
+	kind types.JobType,
+) []consumerSpec {
+	subjectPrefix := job.JobsQueryPrefix
+	if kind == types.JobTypeModify {
+		subjectPrefix = job.JobsModifyPrefix
 	}
+	// A consumer name has only letters, digits and underscores.
+	id := job.SanitizeHostname(machineID)
+	name := a.consumerNamePrefix() + string(kind) + "_"
 
-	// Add label-based consumers with hierarchical prefix subscriptions.
-	for key, value := range a.appConfig.Agent.Labels {
-		segments := strings.Split(value, ".")
+	consumers := []consumerSpec{
+		{name: name + "any_" + id, filter: subjectPrefix + "._any"},
+		{name: name + "all_" + id, filter: subjectPrefix + "._all"},
+		{name: name + "direct_" + id, filter: subjectPrefix + ".host." + id},
+	}
+	labels := a.appConfig.Agent.Labels
+	for _, key := range slices.Sorted(maps.Keys(labels)) {
+		segments := strings.Split(labels[key], ".")
 		for i := range segments {
-			prefix := strings.Join(segments[:i+1], ".")
-			sanitizedPrefix := job.SanitizeHostname(prefix)
+			label := key + "." + strings.Join(segments[:i+1], ".")
 			consumers = append(consumers, consumerSpec{
-				name: fmt.Sprintf(
-					"%smodify_label_%s_%s_%s",
-					consumerPrefix,
-					key,
-					sanitizedPrefix,
-					sanitizedMachineID,
-				),
-				filter: job.JobsModifyPrefix + ".label." + key + "." + prefix,
+				name:   name + "label_" + labelConsumerName(label) + "_" + id,
+				filter: subjectPrefix + ".label." + label,
 			})
 		}
 	}
 
-	for _, consumer := range consumers {
-		a.startConsumer(ctx, streamName, consumer, types.JobTypeModify)
-	}
+	return consumers
+}
 
-	return nil
+// labelConsumerName is the part of a consumer name for the label subject
+// key.prefix. The sanitized text keeps the name readable, and a hash of the
+// subject keeps two labels that sanitize to the same text, such as
+// group.web.dev and group.web-dev, from sharing one consumer: a
+// CreateOrUpdate of one would replace the filter of the other.
+func labelConsumerName(
+	label string,
+) string {
+	sum := sha256.Sum256([]byte(label))
+
+	return job.SanitizeHostname(label) + "_" + hex.EncodeToString(sum[:4])
 }
 
 // consumerSpec is one durable job consumer of the agent: its name and the
@@ -170,8 +122,9 @@ var consumerRetryInterval = 10 * time.Second
 // of the running set. A consumer that cannot be created or bound, such as
 // when the stream has reached its limit of consumers, is recorded for the
 // ConsumersUnavailable condition, and the goroutine tries again each
-// consumerRetryInterval until it runs or ctx ends. The first try is not in
-// the goroutine, so a caller sees each consumer created that can be.
+// consumerRetryInterval until it runs or ctx ends. Each try, the first
+// too, is in the goroutine: the caller can hold lifecycleMu, and a request
+// to a slow NATS must not hold State, a drain or a config apply.
 func (a *Agent) startConsumer(
 	ctx context.Context,
 	streamName string,
@@ -180,11 +133,6 @@ func (a *Agent) startConsumer(
 ) {
 	// The caller holds lifecycleMu, or no set runs yet.
 	gen := a.consumerGen
-	err := a.createConsumer(ctx, streamName, c.name, c.filter)
-	if err != nil {
-		a.consumerFailed(c.name, gen, "failed to create "+string(kind)+" consumer", err)
-	}
-
 	opts := &natsclient.ConsumeOptions{
 		MaxInFlight: a.appConfig.Agent.MaxJobs,
 	}
@@ -204,6 +152,10 @@ func (a *Agent) startConsumer(
 		// clears it from the condition.
 		defer a.consumerRecovered(c.name, gen)
 
+		err := a.createConsumer(ctx, streamName, c.name, c.filter)
+		if err != nil {
+			a.consumerFailed(c.name, gen, "failed to create "+string(kind)+" consumer", err)
+		}
 		for {
 			if err == nil {
 				err = a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
@@ -372,8 +324,8 @@ func (a *Agent) startConsumersLocked() {
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
 	a.consumerSetWg = &sync.WaitGroup{}
 	a.consumerGen++
-	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
-	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
+	a.consumeJobs(a.consumerCtx, a.machineID, types.JobTypeQuery)
+	a.consumeJobs(a.consumerCtx, a.machineID, types.JobTypeModify)
 }
 
 // cancelConsumersLocked cancels the running set of consumers and returns

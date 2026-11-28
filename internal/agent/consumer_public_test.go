@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -134,174 +135,121 @@ func (s *ConsumerPublicTestSuite) TestConsumerNamePrefix() {
 	}
 }
 
-func (s *ConsumerPublicTestSuite) TestConsumeQueryJobs() {
+func (s *ConsumerPublicTestSuite) TestConsumeJobs() {
+	createFailed := errors.New("consumer creation failed")
+
 	tests := []struct {
-		name         string
-		hostname     string
-		labels       map[string]string
-		setupMocks   func()
-		validateFunc func(error)
+		name      string
+		kind      types.JobType
+		machineID string
+		labels    map[string]string
+		// create answers the n-th create, from 0.
+		create       func(n int) error
+		validateFunc func(created map[string]string, consumes int)
 	}{
 		{
-			name:     "successful query job consumption",
-			hostname: "test-agent",
-			setupMocks: func() {
-				// Expect consumer creation for all 3 query patterns
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(3)
-
-				// Expect job consumption for all consumers
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
+			name:      "when the kind is query it consumes the any, all and direct jobs",
+			kind:      types.JobTypeQuery,
+			machineID: "test-agent",
+			create:    func(int) error { return nil },
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Equal(map[string]string{
+					"query_any_test_agent":    "jobs.query._any",
+					"query_all_test_agent":    "jobs.query._all",
+					"query_direct_test_agent": "jobs.query.host.test_agent",
+				}, created)
+				s.Equal(3, consumes)
 			},
 		},
 		{
-			name:     "consumer creation failure",
-			hostname: "test-agent",
-			setupMocks: func() {
-				// Fail all consumer creations
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(errors.New("consumer creation failed")).
-					Times(3)
-
-				// No consumption should happen since creation failed
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
+			name:      "when the kind is modify it consumes the modify jobs",
+			kind:      types.JobTypeModify,
+			machineID: "test-agent",
+			create:    func(int) error { return nil },
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Equal(map[string]string{
+					"modify_any_test_agent":    "jobs.modify._any",
+					"modify_all_test_agent":    "jobs.modify._all",
+					"modify_direct_test_agent": "jobs.modify.host.test_agent",
+				}, created)
+				s.Equal(3, consumes)
 			},
 		},
 		{
-			name:     "partial consumer creation failure",
-			hostname: "test-agent",
-			setupMocks: func() {
-				// First consumer succeeds
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(1)
-
-				// Second and third consumers fail
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(errors.New("consumer creation failed")).
-					Times(2)
-
-				// Only one consumption should happen
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(1)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
+			name:      "when the machine ID is empty it still consumes the any, all and direct jobs",
+			kind:      types.JobTypeQuery,
+			machineID: "",
+			create:    func(int) error { return nil },
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Len(created, 3)
+				s.Equal("jobs.query.host.", created["query_direct_"])
+				s.Equal(3, consumes)
 			},
 		},
 		{
-			name:     "empty hostname",
-			hostname: "",
-			setupMocks: func() {
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(3)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
+			name:      "when a label has three segments it consumes each prefix",
+			kind:      types.JobTypeQuery,
+			machineID: "test-agent",
+			labels:    map[string]string{"group": "web.dev.us-east"},
+			create:    func(int) error { return nil },
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Len(created, 6)
+				s.Equal(
+					"jobs.query.label.group.web",
+					created["query_label_group_web_50abe6c3_test_agent"],
+				)
+				s.Equal(
+					"jobs.query.label.group.web.dev",
+					created["query_label_group_web_dev_f8216cd3_test_agent"],
+				)
+				s.Equal(
+					"jobs.query.label.group.web.dev.us-east",
+					created["query_label_group_web_dev_us_east_3d5ba244_test_agent"],
+				)
+				s.Equal(6, consumes)
 			},
 		},
 		{
-			name:     "consume error logged",
-			hostname: "test-agent",
-			setupMocks: func() {
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(3)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(errors.New("connection lost")).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
+			name:      "when two labels sanitize to the same text their consumers have different names",
+			kind:      types.JobTypeModify,
+			machineID: "test-agent",
+			labels:    map[string]string{"a": "web.dev", "b": "web-dev"},
+			create:    func(int) error { return nil },
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Len(created, 6)
+				filters := make(map[string]bool, len(created))
+				for _, f := range created {
+					filters[f] = true
 				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
+				s.True(filters["jobs.modify.label.a.web.dev"])
+				s.True(filters["jobs.modify.label.b.web-dev"])
+				s.Equal(6, consumes)
 			},
 		},
 		{
-			name:     "with labels creates extra consumers",
-			hostname: "test-agent",
-			labels: map[string]string{
-				"group": "web.dev.us-east",
+			name:      "when each create fails it consumes nothing",
+			kind:      types.JobTypeQuery,
+			machineID: "test-agent",
+			create:    func(int) error { return createFailed },
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Len(created, 3)
+				s.Zero(consumes)
 			},
-			setupMocks: func() {
-				// 3 base + 3 prefix levels for group:web.dev.us-east = 6 total
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(6)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(6)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
+		},
+		{
+			name:      "when one create succeeds it consumes only that consumer",
+			kind:      types.JobTypeQuery,
+			machineID: "test-agent",
+			create: func(n int) error {
+				if n == 0 {
+					return nil
 				}
 
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
+				return createFailed
+			},
+			validateFunc: func(created map[string]string, consumes int) {
+				s.Len(created, 3)
+				s.Equal(1, consumes)
 			},
 		},
 	}
@@ -309,168 +257,60 @@ func (s *ConsumerPublicTestSuite) TestConsumeQueryJobs() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			cfg := agent.GetAgentAppConfig(s.testAgent)
+			// Each row has its own mocks: the AnyTimes of one row would
+			// answer the next.
+			ctrl := gomock.NewController(s.T())
+			jobClient := mocks.NewMockJobClient(ctrl)
+			a := s.newAgent(ctrl, jobClient)
+			cfg := agent.GetAgentAppConfig(a)
 			cfg.Agent.Labels = tt.labels
-			agent.SetAgentAppConfig(s.testAgent, cfg)
+			agent.SetAgentAppConfig(a, cfg)
 
-			tt.setupMocks()
+			var mu sync.Mutex
+			created := make(map[string]string)
+			var consumes int
+			jobClient.EXPECT().
+				CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+				DoAndReturn(func(_ context.Context, _ string, c jetstream.ConsumerConfig) error {
+					mu.Lock()
+					defer mu.Unlock()
+					n := len(created)
+					created[c.Durable] = c.FilterSubject
 
-			tt.validateFunc(agent.ExportConsumeQueryJobs(ctx, s.testAgent, tt.hostname))
-		})
-	}
-}
+					return tt.create(n)
+				}).
+				AnyTimes()
+			jobClient.EXPECT().
+				ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+				DoAndReturn(func(
+					ctx context.Context,
+					_, _ string,
+					_ natsclient.JetStreamMessageHandler,
+					_ *natsclient.ConsumeOptions,
+				) error {
+					mu.Lock()
+					consumes++
+					mu.Unlock()
+					<-ctx.Done()
 
-func (s *ConsumerPublicTestSuite) TestConsumeModifyJobs() {
-	tests := []struct {
-		name         string
-		hostname     string
-		labels       map[string]string
-		setupMocks   func()
-		validateFunc func(error)
-	}{
-		{
-			name:     "successful modify job consumption",
-			hostname: "test-agent",
-			setupMocks: func() {
-				// Expect consumer creation for all 3 modify patterns
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(3)
+					return ctx.Err()
+				}).
+				AnyTimes()
 
-				// Expect job consumption for all consumers
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
+			agent.ExportConsumeJobs(ctx, a, tt.machineID, tt.kind)
+			// Each first create runs in its goroutine. A consume starts
+			// after its create, and returns at the cancel.
+			want := len(agent.ExportJobConsumers(a, tt.machineID, tt.kind))
+			s.Eventually(func() bool {
+				mu.Lock()
+				defer mu.Unlock()
 
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
-			},
-		},
-		{
-			name:     "consumer creation failure",
-			hostname: "test-agent",
-			setupMocks: func() {
-				// Fail all consumer creations
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(errors.New("consumer creation failed")).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
+				return len(created) == want
+			}, 2*time.Second, 5*time.Millisecond)
+			cancel()
+			agent.ExportWaitConsumers(a)
 
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
-			},
-		},
-		{
-			name:     "hostname with special characters",
-			hostname: "test-agent.domain.com",
-			setupMocks: func() {
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(3)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
-			},
-		},
-		{
-			name:     "consume error logged",
-			hostname: "test-agent",
-			setupMocks: func() {
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(3)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(errors.New("connection lost")).
-					Times(3)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
-			},
-		},
-		{
-			name:     "with labels creates extra consumers",
-			hostname: "test-agent",
-			labels: map[string]string{
-				"group": "web.dev.us-east",
-			},
-			setupMocks: func() {
-				// 3 base + 3 prefix levels for group:web.dev.us-east = 6 total
-				s.mockJobClient.EXPECT().
-					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
-					Return(nil).
-					Times(6)
-
-				s.mockJobClient.EXPECT().
-					ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(context.Canceled).
-					Times(6)
-			},
-			validateFunc: func(err error) {
-				if false {
-					s.Error(err)
-				} else {
-					s.NoError(err)
-				}
-
-				// Allow goroutines to execute before cleanup
-				time.Sleep(10 * time.Millisecond)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			cfg := agent.GetAgentAppConfig(s.testAgent)
-			cfg.Agent.Labels = tt.labels
-			agent.SetAgentAppConfig(s.testAgent, cfg)
-
-			tt.setupMocks()
-
-			tt.validateFunc(agent.ExportConsumeModifyJobs(ctx, s.testAgent, tt.hostname))
+			tt.validateFunc(created, consumes)
 		})
 	}
 }
@@ -876,7 +716,7 @@ func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
 				}).
 				AnyTimes()
 
-			s.NoError(agent.ExportConsumeQueryJobs(ctx, a, "test-agent"))
+			agent.ExportConsumeJobs(ctx, a, "test-agent", types.JobTypeQuery)
 
 			switch {
 			case tt.wantRecovers:
