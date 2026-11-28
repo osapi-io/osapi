@@ -55,6 +55,10 @@ type Server struct {
 	// registryBucket is the KV bucket of the registry, or "" when the config
 	// names none.
 	registryBucket string
+	// hbCancel stops the heartbeat, and hbDone closes when it has
+	// deregistered. Both are nil while no heartbeat runs.
+	hbCancel context.CancelFunc
+	hbDone   chan struct{}
 }
 
 // New starts the embedded NATS server that cfg.Server describes, connects to
@@ -128,11 +132,11 @@ func New(
 
 	log.Info(
 		"embedded NATS server running",
-		"host", sc.Host,
-		"port", sc.Port,
-		"store_dir", sc.StoreDir,
-		"namespace", sc.Namespace,
-		"auth.type", sc.Auth.Type,
+		slog.String("host", sc.Host),
+		slog.Int("port", sc.Port),
+		slog.String("store_dir", sc.StoreDir),
+		slog.String("namespace", sc.Namespace),
+		slog.String("auth.type", sc.Auth.Type),
 	)
 
 	return &Server{
@@ -148,12 +152,38 @@ func New(
 // run first.
 func (s *Server) Start() error { return nil }
 
-// Stop closes the connection of the server, then stops the server.
+// Stop stops the heartbeat and waits for its deregister, then closes the
+// connection of the server and stops the server. It returns when ctx ends,
+// also when a step has not finished: the process exits then.
 func (s *Server) Stop(
-	_ context.Context,
+	ctx context.Context,
 ) {
+	if s.hbCancel != nil {
+		s.hbCancel()
+		s.wait(ctx, s.hbDone, "the NATS heartbeat")
+	}
 	bus.Close(s.nc)
-	s.server.Stop()
+
+	stopped := make(chan struct{})
+	go func() {
+		defer close(stopped)
+		s.server.Stop()
+	}()
+	s.wait(ctx, stopped, "the embedded NATS server")
+}
+
+// wait returns when done closes or ctx ends. When ctx ends first, it logs
+// that what did not stop.
+func (s *Server) wait(
+	ctx context.Context,
+	done <-chan struct{},
+	what string,
+) {
+	select {
+	case <-done:
+	case <-ctx.Done():
+		s.log.Warn(what + " did not stop before the deadline")
+	}
 }
 
 // registryBucket is the name of the registry KV bucket of cfg in namespace,

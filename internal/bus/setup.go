@@ -90,6 +90,33 @@ type JetStream interface {
 	ObjectStoreCreateOrUpdate(ctx context.Context, config jetstream.ObjectStoreConfig) error
 }
 
+// checkDurations returns an error for the first duration of cfg that does
+// not parse. The builders of the streams and buckets read a duration that
+// does not parse as 0, which is no limit. Setup is exported, and a caller
+// such as osapi nats setup can give it a config that was not validated. An
+// empty duration is no limit, and passes.
+func checkDurations(
+	cfg config.NATS,
+) error {
+	for _, d := range []struct{ name, value string }{
+		{"nats.stream.max_age", cfg.Stream.MaxAge},
+		{"nats.kv.ttl", cfg.KV.TTL},
+		{"nats.registry.ttl", cfg.Registry.TTL},
+		{"nats.facts.ttl", cfg.Facts.TTL},
+		{"nats.audit.max_age", cfg.Audit.MaxAge},
+		{"nats.dlq.max_age", cfg.DLQ.MaxAge},
+	} {
+		if d.value == "" {
+			continue
+		}
+		if _, err := time.ParseDuration(d.value); err != nil {
+			return fmt.Errorf("%s: %w", d.name, err)
+		}
+	}
+
+	return nil
+}
+
 // Setup creates or updates each stream and bucket that osapi uses, with the
 // names in namespace. A second run with the same config changes nothing. A
 // bucket with no name in cfg is not made.
@@ -99,6 +126,9 @@ func Setup(
 	namespace string,
 	cfg config.NATS,
 ) error {
+	if err := checkDurations(cfg); err != nil {
+		return err
+	}
 	streamName := job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name)
 	streamMaxAge, _ := time.ParseDuration(cfg.Stream.MaxAge)
 

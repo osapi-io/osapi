@@ -145,6 +145,40 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			failStream: "ns-JOBS-DLQ",
 			wantErr:    "create DLQ stream: boom",
 		},
+		{
+			name: "when a duration is empty makes each stream and bucket with no limit",
+			cfg: func() config.NATS {
+				c := fullNATS()
+				c.Stream.MaxAge = ""
+				c.KV.TTL = ""
+				c.DLQ.MaxAge = ""
+				return c
+			},
+			wantStreams: []string{"ns-JOBS", "ns-AUDIT", "ns-JOBS-DLQ"},
+			wantKVs: []string{
+				"ns-job-queue", "ns-agent-registry",
+				"ns-agent-facts", "ns-agent-state", "ns-file-state", "ns-secrets",
+			},
+			wantObjects: 1,
+		},
+		{
+			name: "when the stream max age does not parse returns the error",
+			cfg: func() config.NATS {
+				c := fullNATS()
+				c.Stream.MaxAge = "7d"
+				return c
+			},
+			wantErr: `nats.stream.max_age: time: unknown unit "d" in duration "7d"`,
+		},
+		{
+			name: "when the facts TTL does not parse returns the error",
+			cfg: func() config.NATS {
+				c := fullNATS()
+				c.Facts.TTL = "soon"
+				return c
+			},
+			wantErr: `nats.facts.ttl: time: invalid duration "soon"`,
+		},
 	}
 
 	for _, tc := range tests {

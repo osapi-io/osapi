@@ -47,6 +47,7 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/cryptoreport"
 )
 
 type ServerPublicTestSuite struct {
@@ -306,6 +307,95 @@ func (s *ServerPublicTestSuite) TestNew() {
 			s.Require().NoError(err)
 			s.Require().NoError(srv.Start())
 			srv.Stop(context.Background())
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestStop() {
+	tests := []struct {
+		name         string
+		heartbeat    bool
+		validateFunc func(logs string)
+	}{
+		{
+			name:      "when a heartbeat runs it deregisters before the connection closes",
+			heartbeat: true,
+			validateFunc: func(logs string) {
+				s.Contains(logs, "component deregistered")
+				s.NotContains(logs, "failed to deregister component")
+			},
+		},
+		{
+			name: "when no heartbeat runs it stops the server",
+			validateFunc: func(logs string) {
+				s.NotContains(logs, "deregister")
+				s.NotContains(logs, "did not stop before the deadline")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var buf lockedBuffer
+			log := slog.New(slog.NewTextHandler(&buf, nil))
+			cfg := serverNATS(s.T())
+			srv, err := server.New(context.Background(), log, cfg, sdkmetric.NewMeterProvider())
+			s.Require().NoError(err)
+			if tt.heartbeat {
+				srv.StartHeartbeat(
+					context.Background(),
+					"v1.2.3-test",
+					config.ProcessConditions{},
+					&cryptoreport.Report{Go: "go1.27.3"},
+				)
+				s.Eventually(func() bool {
+					return strings.Contains(buf.String(), "registered in component registry")
+				}, 5*time.Second, 20*time.Millisecond)
+			}
+
+			srv.Stop(context.Background())
+
+			tt.validateFunc(buf.String())
+		})
+	}
+}
+
+func (s *ServerPublicTestSuite) TestWait() {
+	closed := make(chan struct{})
+	close(closed)
+	expired, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	tests := []struct {
+		name         string
+		ctx          context.Context
+		done         <-chan struct{}
+		validateFunc func(logs string)
+	}{
+		{
+			name: "when done closes it returns with no log",
+			ctx:  context.Background(),
+			done: closed,
+			validateFunc: func(logs string) {
+				s.Empty(logs)
+			},
+		},
+		{
+			name: "when ctx ends first it logs what did not stop",
+			ctx:  expired,
+			done: make(chan struct{}),
+			validateFunc: func(logs string) {
+				s.Contains(logs, "the part did not stop before the deadline")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var buf lockedBuffer
+			server.ExportWait(tt.ctx, slog.New(slog.NewTextHandler(&buf, nil)), tt.done, "the part")
+
+			tt.validateFunc(buf.String())
 		})
 	}
 }

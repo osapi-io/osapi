@@ -77,7 +77,13 @@ func (s *Server) StartHeartbeat(
 		SubComponents: SubComponents(s.cfg),
 		Crypto:        crypto,
 	})
-	go hb.Start(ctx)
+	hbCtx, cancel := context.WithCancel(ctx)
+	s.hbCancel = cancel
+	s.hbDone = make(chan struct{})
+	go func() {
+		defer close(s.hbDone)
+		hb.Start(hbCtx)
+	}()
 }
 
 // SubComponents returns the parts of the embedded NATS server that its

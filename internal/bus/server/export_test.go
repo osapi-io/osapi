@@ -77,3 +77,13 @@ func SetNatsauthUpdateOperator(
 
 	return func() { natsauthUpdateOperator = was }
 }
+
+// ExportWait exposes wait, on a Server that logs to log, for testing.
+func ExportWait(
+	ctx context.Context,
+	log *slog.Logger,
+	done <-chan struct{},
+	what string,
+) {
+	(&Server{log: log}).wait(ctx, done, what)
+}
