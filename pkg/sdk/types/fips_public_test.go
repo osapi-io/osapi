@@ -18,8 +18,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package config_test
+package types_test
 
-// Each command group, which registers the owner of each section of the
-// config and its defaults (command.Config), as the binary does.
-import _ "github.com/osapi-io/osapi/internal/cli/commands/all"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
+
+type FIPSPublicTestSuite struct {
+	suite.Suite
+}
+
+func TestFIPSPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(FIPSPublicTestSuite))
+}
+
+// TestValid: a value of a closed set is valid when its type lists it.
+func (s *FIPSPublicTestSuite) TestValid() {
+	tests := []struct {
+		name  string
+		valid func() bool
+		want  bool
+	}{
+		{name: "when a FIPS mode is listed", valid: types.FIPSOnly.Valid, want: true},
+		{name: "when a FIPS mode is not listed", valid: types.FIPSMode("strict").Valid},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.valid())
+		})
+	}
+}

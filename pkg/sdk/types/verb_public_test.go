@@ -23,8 +23,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type VerbPublicTestSuite struct {
@@ -99,4 +100,24 @@ func TestVerbPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(VerbPublicTestSuite))
+}
+
+// TestDoc: a type that describes itself in the spec says what it is.
+
+// TestValid: a value of a closed set is valid when its type lists it.
+func (s *VerbPublicTestSuite) TestValid() {
+	tests := []struct {
+		name  string
+		valid func() bool
+		want  bool
+	}{
+		{name: "when a method kind is listed", valid: types.KindAction.Valid, want: true},
+		{name: "when a method kind is not listed", valid: types.MethodKind("delete").Valid},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.valid())
+		})
+	}
 }

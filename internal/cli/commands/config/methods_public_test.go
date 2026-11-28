@@ -33,6 +33,10 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/config"
 	osapiconfig "github.com/osapi-io/osapi/internal/config"
+
+	// Each command group, which registers the owner of each section of the
+	// config and its defaults (command.Config), as the binary does.
+	_ "github.com/osapi-io/osapi/internal/cli/commands/all"
 )
 
 type MethodsPublicTestSuite struct {
@@ -121,7 +125,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			validateFunc: func(got config.GetOutput, err error) {
 				s.Require().NoError(err)
 				s.Equal("controller.api.security.signing_keys", got.Setting.Name)
-				s.Equal("********", got.Setting.Value, "a secret's value is hidden")
+				s.Equal("********", got.Setting.Value)
 			},
 		},
 		{
@@ -158,10 +162,10 @@ func (s *MethodsPublicTestSuite) TestFlag() {
 	for _, it := range got.Items {
 		if it.Flag != "" {
 			flags++
-			s.Contains(it.Flag, "osapi agent start --", it.Name)
+			s.Contains(it.Flag, "osapi agent start --")
 		}
 	}
-	s.Positive(flags, "a behavior's setting has a flag")
+	s.Positive(flags)
 }
 
 func (s *MethodsPublicTestSuite) TestSpec() {
@@ -189,7 +193,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 				s.Require().NoError(err)
 				s.True(got.Valid)
 				s.Empty(got.Problems)
-				s.NotNil(got.Problems, "an empty list, not null")
+				s.NotNil(got.Problems)
 				s.Nil(got.Fixes)
 			},
 		},

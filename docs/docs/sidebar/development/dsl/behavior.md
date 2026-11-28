@@ -866,6 +866,12 @@ in the definition or in internal/behavior/gen.
 
 ## Not supported yet
 
+### `A command or a shell from the caller`
+
+There is no execute permission.
+
+Use: Stop, and tell the person what is missing. Do not build around it.
+
 ### `Streaming and uploads`
 
 A method that streams its output, or that takes a file in its request. A

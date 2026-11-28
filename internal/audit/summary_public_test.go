@@ -23,12 +23,16 @@ package audit_test
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
 	"unicode/utf8"
 
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -188,7 +192,7 @@ func (s *SummaryPublicTestSuite) TestSummarize() {
 			contentType: "application/json",
 			validateFunc: func(got string) {
 				s.Contains(got, "[truncated]")
-				s.True(utf8.ValidString(got), "a truncated summary is still text")
+				s.True(utf8.ValidString(got))
 			},
 		},
 	}
@@ -333,5 +337,211 @@ func (s *SummaryPublicTestSuite) TestStepsSink() {
 func TestSummaryPublicTestSuite(
 	t *testing.T,
 ) {
+	suite.Run(t, new(SummaryPublicTestSuite))
+}
+
+// sensitiveLooking matches a property name that a reader would expect to carry
+// a credential. It is deliberately broader than the deny list: the point is to
+// stop a new field slipping past unreviewed, so a false positive costs one line
+// in reviewedNonSensitive and a false negative costs a secret in the audit
+// stream.
+var sensitiveLooking = regexp.MustCompile(
+	`(?i)pass|secret|token|cred|auth|key|bearer|signature|salt`,
+)
+
+// reviewedNonSensitive are property names that match sensitiveLooking and have
+// been read and found to carry no secret. Each needs its reason, because the
+// next person has to be able to tell a reviewed exception from an oversight.
+var reviewedNonSensitive = map[string]string{
+	"public_key": "agent/join's is the agent's Ed25519 public key, which the " +
+		"admission record keeps and shows; not a secret",
+	"encryption_key": "agent/join's is the agent's P-256 public key; not a secret",
+	"signature": "agent/join's is the agent's signature over its own request, " +
+		"which proves it holds its key; it is no credential and cannot be replayed " +
+		"as one",
+	"key": "node/user's is an SSH public key, which is not a secret; " +
+		"node/sysctl's is a parameter name",
+}
+
+func (s *SummaryPublicTestSuite) TestEverySensitiveLookingRequestFieldIsHandled() {
+	specs := s.specFiles()
+	s.NotEmpty(specs)
+
+	denied := audit.SensitiveFields()
+
+	type finding struct{ spec, field string }
+
+	var unhandled []finding
+
+	for _, spec := range specs {
+		for _, field := range s.requestBodyProperties(spec) {
+			if !sensitiveLooking.MatchString(field) {
+				continue
+			}
+
+			if denied[strings.ToLower(field)] {
+				continue
+			}
+
+			if _, ok := reviewedNonSensitive[strings.ToLower(field)]; ok {
+				continue
+			}
+
+			unhandled = append(unhandled, finding{spec: spec, field: field})
+		}
+	}
+
+	// A request body field that looks like it carries a credential is
+	// redacted or reviewed. If it carries a secret, add it to sensitiveFields
+	// in internal/audit/summary.go. If not, add it to reviewedNonSensitive in
+	// this file, with the reason.
+	s.Empty(unhandled)
+}
+
+// TestTheGuardWouldCatchANewField proves the check fails on the case it exists
+// for. Without this, a guard that matched nothing would pass exactly as a
+// working one does.
+func (s *SummaryPublicTestSuite) TestTheGuardWouldCatchANewField() {
+	denied := audit.SensitiveFields()
+
+	for _, field := range []string{
+		"api_key", "passphrase", "credentials", "bearer", "auth_token",
+		"client_secret", "refresh_token",
+	} {
+		s.True(sensitiveLooking.MatchString(field))
+		s.False(denied[field])
+		s.NotContains(reviewedNonSensitive, field)
+	}
+}
+
+// TestEveryDeniedFieldIsStillLowercase guards the lookup itself: redactValue
+// lowercases the incoming key before the map read, so an entry with any
+// uppercase in it can never match.
+func (s *SummaryPublicTestSuite) TestEveryDeniedFieldIsStillLowercase() {
+	for field := range audit.SensitiveFields() {
+		s.Equal(strings.ToLower(field), field)
+	}
+}
+
+// specFiles returns the full specification of the API, which has the
+// request body of each endpoint group and behavior.
+func (s *SummaryPublicTestSuite) specFiles() []string {
+	return []string{filepath.Join("..", "controller", "api", "gen", "api.yaml")}
+}
+
+// requestBodyProperties returns every property name reachable from any request
+// body in one specification, at every depth, following local schema references.
+func (s *SummaryPublicTestSuite) requestBodyProperties(
+	path string,
+) []string {
+	data, err := os.ReadFile(path) //nolint:gosec // a repository file, named by the walk above
+	s.Require().NoError(err)
+
+	var doc map[string]any
+	s.Require().NoError(yaml.Unmarshal(data, &doc))
+
+	schemas, _ := dig(doc, "components", "schemas").(map[string]any)
+
+	seen := map[string]bool{}
+	names := map[string]bool{}
+
+	paths, _ := doc["paths"].(map[string]any)
+	for _, item := range paths {
+		operations, _ := item.(map[string]any)
+		for _, op := range operations {
+			operation, ok := op.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			content, _ := dig(operation, "requestBody", "content").(map[string]any)
+			for _, media := range content {
+				m, ok := media.(map[string]any)
+				if !ok {
+					continue
+				}
+
+				collectProperties(m["schema"], schemas, seen, names)
+			}
+		}
+	}
+
+	out := make([]string, 0, len(names))
+	for n := range names {
+		out = append(out, n)
+	}
+
+	return out
+}
+
+// collectProperties walks a schema and records every property name it can
+// reach, resolving a local $ref through the schemas map. seen stops a
+// self-referential schema from recursing forever.
+func collectProperties(
+	schema any,
+	schemas map[string]any,
+	seen, names map[string]bool,
+) {
+	node, ok := schema.(map[string]any)
+	if !ok {
+		return
+	}
+
+	if ref, ok := node["$ref"].(string); ok {
+		name := ref[strings.LastIndex(ref, "/")+1:]
+		if seen[name] {
+			return
+		}
+
+		seen[name] = true
+
+		collectProperties(schemas[name], schemas, seen, names)
+
+		return
+	}
+
+	if props, ok := node["properties"].(map[string]any); ok {
+		for name, child := range props {
+			names[name] = true
+
+			collectProperties(child, schemas, seen, names)
+		}
+	}
+
+	collectProperties(node["items"], schemas, seen, names)
+	collectProperties(node["additionalProperties"], schemas, seen, names)
+
+	for _, key := range []string{"allOf", "anyOf", "oneOf"} {
+		list, _ := node[key].([]any)
+		for _, child := range list {
+			collectProperties(child, schemas, seen, names)
+		}
+	}
+}
+
+// dig walks nested maps by key, returning nil at the first key that is missing
+// or is not a map.
+func dig(
+	m map[string]any,
+	keys ...string,
+) any {
+	var current any = m
+
+	for _, key := range keys {
+		node, ok := current.(map[string]any)
+		if !ok {
+			return nil
+		}
+
+		current = node[key]
+	}
+
+	return current
+}
+
+func TestRedactionGuardPublicTestSuite(
+	t *testing.T,
+) {
+	t.Parallel()
 	suite.Run(t, new(SummaryPublicTestSuite))
 }

@@ -22,8 +22,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type StatusPublicTestSuite struct {
@@ -98,4 +99,26 @@ func TestStatusPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(StatusPublicTestSuite))
+}
+
+// TestValid: a value of a closed set is valid when its type lists it.
+func (s *StatusPublicTestSuite) TestValid() {
+	tests := []struct {
+		name  string
+		valid func() bool
+		want  bool
+	}{
+		{name: "when a job status is listed", valid: types.JobStatusSkipped.Valid, want: true},
+		{name: "when a job status is not listed", valid: types.JobStatus("done").Valid},
+		{name: "when an agent state is listed", valid: types.AgentDraining.Valid, want: true},
+		{name: "when an agent state is not listed", valid: types.AgentState("Busy").Valid},
+		{name: "when a condition is listed", valid: types.ConditionDrainStuck.Valid, want: true},
+		{name: "when a condition is not listed", valid: types.ConditionType("Hot").Valid},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.valid())
+		})
+	}
 }

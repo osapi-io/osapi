@@ -23,19 +23,24 @@ package audit_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/audit/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type StreamStorePublicTestSuite struct {
@@ -666,4 +671,79 @@ func TestStreamStorePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(StreamStorePublicTestSuite))
+}
+
+func (s *StreamStorePublicTestSuite) TestReads() {
+	tests := []struct {
+		name string
+		span string
+		call func(st *audit.StreamStore, ctx context.Context) error
+	}{
+		{
+			name: "when a page is listed opens audit.list",
+			span: "audit.list",
+			call: func(st *audit.StreamStore, ctx context.Context) error {
+				_, _, err := st.List(ctx, 10, 0)
+				return err
+			},
+		},
+		{
+			name: "when one entry is read opens audit.get",
+			span: "audit.get",
+			call: func(st *audit.StreamStore, ctx context.Context) error {
+				_, err := st.Get(ctx, "e1")
+				return err
+			},
+		},
+		{
+			name: "when every entry is exported opens audit.export",
+			span: "audit.export",
+			call: func(st *audit.StreamStore, ctx context.Context) error {
+				_, err := st.ListAll(ctx)
+				return err
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			defer otel.SetTracerProvider(previous)
+
+			stream := mocks.NewMockStream(gomock.NewController(s.T()))
+			var inside []context.Context
+			stream.EXPECT().StreamInfo(gomock.Any(), "AUDIT").
+				DoAndReturn(func(ctx context.Context, _ string) (*jetstream.StreamInfo, error) {
+					inside = append(inside, ctx)
+					return nil, errors.New("stream down")
+				}).AnyTimes()
+			stream.EXPECT().StreamLastMsg(gomock.Any(), "AUDIT", gomock.Any()).
+				DoAndReturn(func(ctx context.Context, _, _ string) (*jetstream.RawStreamMsg, error) {
+					inside = append(inside, ctx)
+					return nil, errors.New("stream down")
+				}).
+				AnyTimes()
+			store := audit.NewStreamStore(slog.Default(), stream, "AUDIT", "audit.log")
+
+			ctx, request := otel.Tracer("test").Start(context.Background(), "GET /api/audit")
+			s.Error(tc.call(store, ctx))
+			request.End()
+
+			var span sdktrace.ReadOnlySpan
+			for _, sp := range recorder.Ended() {
+				if sp.Name() == tc.span {
+					span = sp
+				}
+			}
+			s.Require().NotNil(span)
+			s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
+			s.Equal(codes.Error, span.Status().Code)
+			s.Require().NotEmpty(inside)
+			for _, c := range inside {
+				s.Equal(span.SpanContext().SpanID(), trace.SpanContextFromContext(c).SpanID())
+			}
+		})
+	}
 }

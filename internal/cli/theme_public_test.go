@@ -251,6 +251,8 @@ func (suite *ThemePublicTestSuite) TestRenderCell() {
 		header string
 		cell   string
 		want   string
+		// wantPlain, when set, is the whole cell with its color removed.
+		wantPlain string
 	}{
 		{name: "when a status", header: "STATUS", cell: "ok", want: "ok"},
 		{name: "when a hostname", header: "HOSTNAME", cell: "web-01", want: "web-01"},
@@ -275,11 +277,41 @@ func (suite *ThemePublicTestSuite) TestRenderCell() {
 			want:   "/api/{broken",
 		},
 		{name: "when any other column", header: "VALUE", cell: "10", want: "10"},
+		{
+			name:      "when the cell is a root span",
+			header:    "SPAN",
+			cell:      "job.publish",
+			wantPlain: "job.publish",
+		},
+		{
+			name:      "when the cell is a child span, the tree is kept",
+			header:    "SPAN",
+			cell:      "│  └─ job.process",
+			wantPlain: "│  └─ job.process",
+		},
+		{
+			name:      "when a tree is in another column, it is kept",
+			header:    "TYPE",
+			cell:      "└─ api",
+			wantPlain: "└─ api",
+		},
+		{
+			name:      "when the cell is spaces alone, it is no tree",
+			header:    "TYPE",
+			cell:      "   x",
+			wantPlain: "   x",
+		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			suite.Contains(cli.ExportRenderCell(tc.header, tc.cell), tc.want)
+			got := cli.ExportRenderCell(tc.header, tc.cell)
+			if tc.wantPlain != "" {
+				suite.Equal(tc.wantPlain, ansi(got))
+
+				return
+			}
+			suite.Contains(got, tc.want)
 		})
 	}
 }
@@ -296,8 +328,8 @@ func (suite *ThemePublicTestSuite) TestCaptureColorsWhatIsPrintedToStdout() {
 		fmt.Fprintln(os.Stdout, cli.Success(os.Stdout, "web-01 deleted"))
 	})
 
-	suite.Contains(out, "\x1b[", "a status line printed to stdout has color in a capture")
-	suite.Contains(out, "✓\x1b[0m web-01 deleted", "a green check, then the message")
+	suite.Contains(out, "\x1b[")
+	suite.Contains(out, "✓\x1b[0m web-01 deleted")
 	suite.NotContains(out, "[ok]")
 }
 
@@ -337,8 +369,7 @@ func (suite *ThemePublicTestSuite) TestStatusCellStyledInParts() {
 					cli.ExportRenderCell("STATUS", "ok"),
 				)
 				suite.Equal(cli.OKStyle.Render("ok"), cli.RenderStatus("ok"))
-				suite.Equal(cli.ValueStyle.Render("web-01"), cli.RenderStatus("web-01"),
-					"a word that is not a status is plain")
+				suite.Equal(cli.ValueStyle.Render("web-01"), cli.RenderStatus("web-01"))
 			},
 		},
 		{
@@ -380,7 +411,7 @@ func (suite *ThemePublicTestSuite) TestStatusCellStyledInParts() {
 				suite.Contains(out, "…")
 				for _, line := range strings.Split(out, "\n") {
 					// The indent, NAME and its gap, then the capped column.
-					suite.LessOrEqual(lipgloss.Width(line), 2+len("NAME")+2+79, line)
+					suite.LessOrEqual(lipgloss.Width(line), 2+len("NAME")+2+79)
 				}
 			},
 		},

@@ -23,9 +23,16 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"log/slog"
+	"math/big"
 	"net"
 	"os"
 	"path/filepath"
@@ -36,17 +43,15 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-	"github.com/osapi-io/osapi/internal/natsauth"
-
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/natsauth"
 )
 
 type ServerPublicTestSuite struct {
@@ -101,7 +106,7 @@ func (s *ServerPublicTestSuite) TestNewOperatorFromBefore() {
 		s.FileExists(filepath.Join(dir, natsauth.SystemCredsFile))
 		after, err := os.ReadFile(filepath.Join(dir, "account.nk"))
 		s.Require().NoError(err)
-		s.Equal(before, after, "the account keeps its key")
+		s.Equal(before, after)
 	})
 
 	s.Run("an update that fails is the error", func() {
@@ -526,13 +531,11 @@ func (s *ServerPublicTestSuite) TestDebugLog() {
 					created,
 					5*time.Second,
 					10*time.Millisecond,
-					"no connection line in:\n%s",
-					buf.String(),
 				)
 			}
 			srv.Stop(context.Background())
 			if !tt.want {
-				s.False(created(), buf.String())
+				s.False(created())
 			}
 		})
 	}
@@ -587,5 +590,49 @@ func (s *ServerPublicTestSuite) TestTLS() {
 	opts, err = bus.ConnectionOptions(conn, "test")
 	s.Require().NoError(err)
 	_, err = bus.Dial(context.Background(), slog.Default(), opts)
-	s.Error(err, "plain text is refused")
+	s.Error(err)
+}
+
+// writeCert writes a self-signed certificate for localhost and its key, and
+// returns their paths.
+func writeCert(
+	t *testing.T,
+) (string, string) {
+	t.Helper()
+	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	tmpl := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		DNSNames:              []string{"localhost"},
+		IPAddresses:           []net.IP{net.IPv4(127, 0, 0, 1)},
+	}
+	der, _ := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &key.PublicKey, key)
+	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
+	dir := t.TempDir()
+	cert, keyFile := filepath.Join(dir, "tls.crt"), filepath.Join(dir, "tls.key")
+	if err := os.WriteFile(
+		cert,
+		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		keyFile,
+		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	return cert, keyFile
 }

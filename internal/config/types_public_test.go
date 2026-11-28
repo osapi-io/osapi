@@ -28,11 +28,11 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 )
 
-type JoinPublicTestSuite struct {
+type TypesPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *JoinPublicTestSuite) TestJoinUsers() {
+func (s *TypesPublicTestSuite) TestJoinUsers() {
 	server := []config.NATSServerUser{
 		{Username: "setup", Password: "s", Role: "setup"},
 		{Username: "join", Password: "j", Role: "join"},
@@ -83,7 +83,7 @@ func (s *JoinPublicTestSuite) TestJoinUsers() {
 	}
 }
 
-func (s *JoinPublicTestSuite) TestJoinURL() {
+func (s *TypesPublicTestSuite) TestJoinURL() {
 	var c config.Config
 	c.NATS.Server.URL = "tls://hub:4222"
 	s.Equal("tls://hub:4222", c.JoinURL())
@@ -91,8 +91,8 @@ func (s *JoinPublicTestSuite) TestJoinURL() {
 	s.Equal("nats://edge:4222", c.JoinURL())
 }
 
-func TestJoinPublicTestSuite(
+func TestTypesPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(JoinPublicTestSuite))
+	suite.Run(t, new(TypesPublicTestSuite))
 }
