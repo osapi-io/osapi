@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">FIPS 140-3 mode | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="FIPS 140-3 mode | OSAPI"><meta data-rh="true" name="description" content="FIPS 140-3 is the US standard for cryptographic modules. Go has its own"><meta data-rh="true" property="og:description" content="FIPS 140-3 is the US standard for cryptographic modules. Go has its own"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/operate/secure/fips" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Operate","item":"https://osapi-io.github.io/osapi/sidebar/operate/"},{"@type":"ListItem","position":2,"name":"FIPS 140-3 Mode","item":"https://osapi-io.github.io/osapi/sidebar/operate/secure/fips"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.b1443638.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.76a3cc12.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.f7daa4ea.js" defer="defer"></script>
 </head>
 <body>
@@ -131,18 +131,34 @@ controller, the NATS server and each agent. The report goes in each heartbeat.</
 <table><thead><tr><th>Where</th><th>What it shows</th></tr></thead><tbody><tr><td><code>osapi client health status</code></td><td>The FIPS column of the controller and NATS</td></tr><tr><td><code>osapi client health status --json</code></td><td>The <code>crypto</code> of each component</td></tr><tr><td><code>osapi client agent get --hostname &lt;name&gt;</code></td><td>The FIPS line and the crypto of the agent</td></tr><tr><td>The dashboard and the agent card in the UI</td><td>The FIPS line, with each gap in its tooltip</td></tr><tr><td><code>osapi pki list</code> and <code>osapi pki key list</code></td><td>Whether FIPS 140-3 approves each key</td></tr></tbody></table>
 <p>The report of a process has:</p>
 <ul>
-<li class=""><strong>The Go version and the module version</strong>, from <code>crypto/fips140.Version()</code>.</li>
-<li class=""><strong>The mode:</strong> <code>off</code>, <code>on</code>, or <code>only</code>.</li>
-<li class=""><strong>Each TLS listener</strong>, such as <code>api</code>, <code>nats</code> or <code>metrics</code>: its lowest TLS
-version, its suites and its groups. In FIPS 140-3 mode, crypto/tls negotiates
-only approved suites and groups. Out of the mode, a listener that sets no
-groups can negotiate X25519, which is not approved.</li>
-<li class=""><strong>Each algorithm that the process uses</strong>, with <code>approved</code> and <code>only_mode</code>. An
+<li class="">
+<p><strong>The Go version and the module version</strong>, from <code>crypto/fips140.Version()</code>.</p>
+</li>
+<li class="">
+<p><strong>The mode:</strong> <code>off</code>, <code>on</code>, or <code>only</code>.</p>
+</li>
+<li class="">
+<p><strong>Each TLS listener</strong>, such as <code>api</code>, <code>nats</code> or <code>metrics</code>: its lowest TLS
+version, its suites and its groups. Each listener and each client of osapi
+uses only approved suites and groups, also out of FIPS 140-3 mode: the AES-GCM
+suites, and P-256, P-384, P-521 and P-256 with ML-KEM-768. Thus a listener is
+approved in each mode.</p>
+<p>crypto/tls has no setting for the suites of TLS 1.3. Out of FIPS 140-3 mode,
+it can select ChaCha20-Poly1305 for TLS 1.3, which is not approved: when the
+client prefers it, offers no AES-GCM, or when the CPU has no AES in hardware.
+For such a client, a listener of osapi offers TLS 1.2 only, with the approved
+suites. A client that has no approved suite or group cannot connect.</p>
+</li>
+<li class="">
+<p><strong>Each algorithm that the process uses</strong>, with <code>approved</code> and <code>only_mode</code>. An
 approved algorithm can still fail in only mode, as NATS authentication does.
-<code>only_mode</code> says so, and <code>reason</code> names the issue.</li>
-<li class=""><strong>The gaps:</strong> each reason that the process is not in FIPS 140-3 mode with only
+<code>only_mode</code> says so, and <code>reason</code> names the issue.</p>
+</li>
+<li class="">
+<p><strong>The gaps:</strong> each reason that the process is not in FIPS 140-3 mode with only
 approved algorithms. The FIPS line is the mode, then <code>approved</code> when there is
-no gap, or the number of gaps.</li>
+no gap, or the number of gaps.</p>
+</li>
 </ul>
 <p>A test holds <code>only_mode</code> to what the code does. Each algorithm that claims to
 operate in only mode is in a package that the <code>fips140=only</code> job tests. For NATS
