@@ -529,12 +529,24 @@ func (sc scaffold) debianFile() *jen.File {
 				Call(d().Dot("path")),
 			jen.Err().Op("==").Nil().Op("&&").String().Call(jen.Id("current")).Op("==").Id("value"),
 		).Block(jen.Return(jen.False(), jen.Nil())),
-		jen.Comment("A directory that cannot be made fails the write below, which reports it."),
-		jen.Id("_").Op("=").Add(d()).Dot("fs").Dot("MkdirAll").
-			Call(jen.Qual("path/filepath", "Dir").Call(d().Dot("path")), octal(0o755)),
+		jen.If(
+			jen.Err().Op(":=").Add(d()).Dot("fs").Dot("MkdirAll").
+				Call(jen.Qual("path/filepath", "Dir").Call(d().Dot("path")), octal(0o755)),
+			jen.Err().Op("!=").Nil(),
+		).Block(
+			jen.Return(jen.False(), jen.Qual("fmt", "Errorf").
+				Call(jen.Lit("make the directory of %s: %w"), d().Dot("path"), jen.Err())),
+		),
+		jen.If(
+			jen.Err().Op(":=").Qual(atomicfilePath, "Write").Call(jen.Id("ctx"), d().Dot("fs"),
+				d().Dot("path"), jen.Index().Byte().Call(jen.Id("value")), octal(0o644)),
+			jen.Err().Op("!=").Nil(),
+		).Block(
+			jen.Return(jen.False(), jen.Qual("fmt", "Errorf").
+				Call(jen.Lit("write %s: %w"), d().Dot("path"), jen.Err())),
+		),
 		jen.Line(),
-		jen.Return(jen.True(), jen.Qual(atomicfilePath, "Write").Call(jen.Id("ctx"), d().Dot("fs"),
-			d().Dot("path"), jen.Index().Byte().Call(jen.Id("value")), octal(0o644))),
+		jen.Return(jen.True(), jen.Nil()),
 	)
 
 	return f
@@ -701,6 +713,7 @@ func (sc scaffold) methodsTestFile() *jen.File {
 
 func (sc scaffold) debianTestFile() *jen.File {
 	f := sc.newTestFile()
+	f.ImportName(avfsPath, "avfs")
 	f.ImportName(memfsPath, "memfs")
 	f.ImportName(hostPath, "host")
 	const suite = "DebianPublicTestSuite"
@@ -717,11 +730,12 @@ func (sc scaffold) debianTestFile() *jen.File {
 	f.Type().Id(suite).Struct(
 		jen.Qual(suitePath, "Suite"),
 		jen.Line(),
+		jen.Id("fs").Qual(avfsPath, "VFS"),
 		jen.Id("provider").Add(q("Provider")),
 	)
 	f.Line()
 	hostFields := []jen.Code{
-		field("FS", jen.Qual(memfsPath, "New").Call()),
+		field("FS", jen.Id("s").Dot("fs")),
 		field(
 			"Settings",
 			q("Settings").Values(field("Path", jen.Lit("/etc/osapi/"+sc.name))),
@@ -744,6 +758,7 @@ func (sc scaffold) debianTestFile() *jen.File {
 		setup = append(setup,
 			jen.Id("ctrl").Op(":=").Qual(gomockPath, "NewController").Call(s("T")))
 	}
+	setup = append(setup, jen.Id("s").Dot("fs").Op("=").Qual(memfsPath, "New").Call())
 	suiteMethod(f, suite, "SetupSubTest", append(setup,
 		jen.List(jen.Id("p"), jen.Err()).Op(":=").Add(q("Behavior")).Dot("Provider").Call(
 			jen.Lit("debian"),
@@ -799,21 +814,59 @@ func (sc scaffold) debianTestFile() *jen.File {
 		),
 	)
 	f.Line()
+	validate := func(body ...jen.Code) *jen.Statement {
+		return jen.Func().Params(jen.Id("changed").Bool(), jen.Err().Error()).Block(body...)
+	}
+	fsCall := func(method string, args ...jen.Code) jen.Code {
+		return s("Require").Dot("NoError").Call(jen.Id("s").Dot("fs").Dot(method).Call(args...))
+	}
 	suiteMethod(f, suite, "TestSet",
 		table(
 			[]jen.Code{
 				jen.Id("name").String(),
 				jen.Id("setup").Func().Params(),
-				jen.Id("wantChanged").Bool(),
+				jen.Id("validateFunc").Func().Params(jen.Bool(), jen.Error()),
 			},
 			[]jen.Code{
 				field("name", jen.Lit("when the value is new, it is written")),
 				field("setup", noSetup.Clone()),
-				field("wantChanged", jen.True()),
+				field("validateFunc", validate(
+					s("NoError", jen.Err()),
+					s("True", jen.Id("changed")),
+				)),
 			},
 			[]jen.Code{
 				field("name", jen.Lit("when the file already holds the value, nothing changes")),
 				field("setup", setHello.Clone()),
+				field("validateFunc", validate(
+					s("NoError", jen.Err()),
+					s("False", jen.Id("changed")),
+				)),
+			},
+			[]jen.Code{
+				field("name", jen.Lit("when the directory cannot be made, it is an error")),
+				field("setup", jen.Func().Params().Block(
+					fsCall("MkdirAll", jen.Lit("/etc"), octal(0o755)),
+					fsCall("WriteFile", jen.Lit("/etc/osapi"), jen.Nil(), octal(0o644)),
+				)),
+				field("validateFunc", validate(
+					s(
+						"ErrorContains",
+						jen.Err(),
+						jen.Lit("make the directory of /etc/osapi/"+sc.name),
+					),
+					s("False", jen.Id("changed")),
+				)),
+			},
+			[]jen.Code{
+				field("name", jen.Lit("when the file cannot be written, it is an error")),
+				field("setup", jen.Func().Params().Block(
+					fsCall("MkdirAll", jen.Lit("/etc/osapi/"+sc.name), octal(0o755)),
+				)),
+				field("validateFunc", validate(
+					s("ErrorContains", jen.Err(), jen.Lit("write /etc/osapi/"+sc.name)),
+					s("False", jen.Id("changed")),
+				)),
 			},
 		),
 		jen.Line(),
@@ -823,8 +876,7 @@ func (sc scaffold) debianTestFile() *jen.File {
 			jen.List(jen.Id("changed"), jen.Err()).Op(":=").Add(provider()).Dot("Set").
 				Call(bg.Clone(), jen.Lit("hello")),
 			jen.Line(),
-			s("Require").Dot("NoError").Call(jen.Err()),
-			s("Equal", jen.Id("tc").Dot("wantChanged"), jen.Id("changed")),
+			jen.Id("tc").Dot("validateFunc").Call(jen.Id("changed"), jen.Err()),
 		),
 	)
 	suiteRunner(f, suite)
