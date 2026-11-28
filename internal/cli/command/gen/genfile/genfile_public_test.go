@@ -28,7 +28,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The generator under test writes real files, and the test reads them back.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type GenfilePublicTestSuite struct {
 	suite.Suite
@@ -46,15 +52,15 @@ func (s *GenfilePublicTestSuite) put(
 	content string,
 ) {
 	p := filepath.Join(s.root, rel)
-	s.Require().NoError(os.MkdirAll(filepath.Dir(p), 0o755))
-	s.Require().NoError(os.WriteFile(p, []byte(content), 0o644))
+	s.Require().NoError(testFS.MkdirAll(filepath.Dir(p), 0o755))
+	s.Require().NoError(avfs.WriteFile(testFS, p, []byte(content), 0o644))
 }
 
 // read is the content at rel under the root, or "" when it is not there.
 func (s *GenfilePublicTestSuite) read(
 	rel string,
 ) string {
-	data, err := os.ReadFile(filepath.Join(s.root, rel))
+	data, err := avfs.ReadFile(testFS, filepath.Join(s.root, rel))
 	if os.IsNotExist(err) {
 		return ""
 	}
@@ -213,8 +219,8 @@ func (s *GenfilePublicTestSuite) TestRun() {
 			name: "when a file's directory cannot be written",
 			run: func(w *genfile.Writer) error {
 				dir := filepath.Join(s.root, "pkg/gen")
-				s.Require().NoError(os.Chmod(dir, 0o555))
-				s.T().Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+				s.Require().NoError(testFS.Chmod(dir, 0o555))
+				s.T().Cleanup(func() { _ = testFS.Chmod(dir, 0o755) })
 				if err := w.Write("pkg/gen/new.go", []byte("x")); err != nil {
 					return err
 				}
@@ -235,7 +241,7 @@ func (s *GenfilePublicTestSuite) TestRun() {
 			},
 			wantErr: "pkg/gen/dir.go",
 			validateFunc: func() {
-				entries, err := os.ReadDir(filepath.Join(s.root, "pkg/gen"))
+				entries, err := testFS.ReadDir(filepath.Join(s.root, "pkg/gen"))
 				s.Require().NoError(err)
 				for _, e := range entries {
 					s.NotContains(e.Name(), ".dir.go.", "the temporary file is removed")

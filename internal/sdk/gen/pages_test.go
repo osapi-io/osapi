@@ -21,11 +21,12 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/avfs/avfs"
 )
 
 type PagesTestSuite struct {
@@ -80,7 +81,7 @@ func (s *PagesTestSuite) SetupTest() {
 func (s *PagesTestSuite) page(
 	rel string,
 ) string {
-	data, err := os.ReadFile(filepath.Join(s.root, pageDir, rel))
+	data, err := avfs.ReadFile(testFS, filepath.Join(s.root, pageDir, rel))
 	s.Require().NoError(err)
 
 	return string(data)
@@ -223,7 +224,7 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 	}{
 		{
 			name:    "when the SDK is not there",
-			setup:   func() { s.Require().NoError(os.RemoveAll(filepath.Join(s.root, dir))) },
+			setup:   func() { s.Require().NoError(testFS.RemoveAll(filepath.Join(s.root, dir))) },
 			wantErr: "no such file or directory",
 		},
 		{
@@ -236,7 +237,7 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 			setup: func() {
 				// A root of its own: the loader of the spec keeps each file it
 				// read by its path, and the setup read this one.
-				data, err := os.ReadFile("sdkmodel/testdata/spec.yaml")
+				data, err := avfs.ReadFile(testFS, "sdkmodel/testdata/spec.yaml")
 				s.Require().NoError(err)
 				s.root = s.T().TempDir()
 				s.write(spec, replaceOnce(string(data),
@@ -248,14 +249,14 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 		{
 			name: "when client.md is not there",
 			setup: func() {
-				s.Require().NoError(os.Remove(filepath.Join(s.root, pageDir, indexPage)))
+				s.Require().NoError(testFS.Remove(filepath.Join(s.root, pageDir, indexPage)))
 			},
 			wantErr: "client.md",
 		},
 		{
 			name: "when the folder of an area is a file",
 			setup: func() {
-				s.Require().NoError(os.RemoveAll(filepath.Join(s.root, pageDir, "fleet")))
+				s.Require().NoError(testFS.RemoveAll(filepath.Join(s.root, pageDir, "fleet")))
 				s.write(pageDir+"/fleet", "a file that a person wrote\n")
 			},
 			wantErr: "fleet",

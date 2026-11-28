@@ -22,7 +22,6 @@ package behavior_test
 
 import (
 	"flag"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -31,7 +30,13 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The generator under test writes real files, and the test reads them back.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 const allGo = `// Package all registers every behavior.
 package all
@@ -69,10 +74,10 @@ func (s *ScaffoldPublicTestSuite) checkout(
 	all string,
 ) string {
 	root := s.T().TempDir()
-	s.Require().NoError(os.WriteFile(filepath.Join(root, "go.mod"),
+	s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(root, "go.mod"),
 		[]byte("module github.com/osapi-io/osapi\n\ngo 1.25\n"), 0o644))
-	s.Require().NoError(os.MkdirAll(filepath.Join(root, "internal", "behaviors", "all"), 0o755))
-	s.Require().NoError(os.WriteFile(
+	s.Require().NoError(testFS.MkdirAll(filepath.Join(root, "internal", "behaviors", "all"), 0o755))
+	s.Require().NoError(avfs.WriteFile(testFS,
 		filepath.Join(root, "internal", "behaviors", "all", "all.go"), []byte(all), 0o644))
 
 	return root
@@ -113,17 +118,20 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			doc:       "The packages on the host",
 			validateFunc: func(root string, files []string) {
 				s.Contains(files, "internal/behaviors/packages/behavior.go")
-				def, err := os.ReadFile(
+				def, err := avfs.ReadFile(testFS,
 					filepath.Join(root, "internal/behaviors/packages/behavior.go"),
 				)
 				s.Require().NoError(err)
 				s.Contains(string(def), "package packages")
 				s.Contains(string(def), `"package", "The packages on the host",`)
-				test, err := os.ReadFile(
+				test, err := avfs.ReadFile(testFS,
 					filepath.Join(root, "internal/behaviors/packages/behavior_public_test.go"))
 				s.Require().NoError(err)
 				s.Contains(string(test), "package packages_test")
-				all, err := os.ReadFile(filepath.Join(root, "internal/behaviors/all/all.go"))
+				all, err := avfs.ReadFile(
+					testFS,
+					filepath.Join(root, "internal/behaviors/all/all.go"),
+				)
 				s.Require().NoError(err)
 				s.Contains(string(all), `"github.com/osapi-io/osapi/internal/behaviors/packages"`)
 			},
@@ -148,18 +156,24 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 					"internal/behaviors/all/all.go",
 				}, files)
 
-				def, err := os.ReadFile(filepath.Join(root, "internal/behaviors/motd/behavior.go"))
+				def, err := avfs.ReadFile(
+					testFS,
+					filepath.Join(root, "internal/behaviors/motd/behavior.go"),
+				)
 				s.Require().NoError(err)
 				s.Contains(string(def), `"motd", "The \"message\" shown at login",`)
 				s.Contains(string(def), "package motd")
 
-				settings, err := os.ReadFile(
+				settings, err := avfs.ReadFile(testFS,
 					filepath.Join(root, "internal/behaviors/motd/settings.go"),
 				)
 				s.Require().NoError(err)
 				s.Contains(string(settings), "OSAPI_BEHAVIORS_MOTD_<FIELD>")
 
-				all, err := os.ReadFile(filepath.Join(root, "internal/behaviors/all/all.go"))
+				all, err := avfs.ReadFile(
+					testFS,
+					filepath.Join(root, "internal/behaviors/all/all.go"),
+				)
 				s.Require().NoError(err)
 				s.Contains(string(all), "import (\n"+
 					"\t// Each import registers its behavior.\n"+
@@ -174,11 +188,14 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			doc:      "x",
 			requires: []string{"managedfile", "chained"},
 			validateFunc: func(root string, _ []string) {
-				def, err := os.ReadFile(filepath.Join(root, "internal/behaviors/motd/behavior.go"))
+				def, err := avfs.ReadFile(
+					testFS,
+					filepath.Join(root, "internal/behaviors/motd/behavior.go"),
+				)
 				s.Require().NoError(err)
 				s.Contains(string(def),
 					"behavior.Requires(managedfile.Behavior, behavior_test.Behavior),")
-				debian, err := os.ReadFile(
+				debian, err := avfs.ReadFile(testFS,
 					filepath.Join(root, "internal/behaviors/motd/debian.go"))
 				s.Require().NoError(err)
 				s.Contains(string(debian),
@@ -241,7 +258,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			name: "when root is another module",
 			setup: func() string {
 				root := s.checkout(allGo)
-				s.Require().NoError(os.WriteFile(filepath.Join(root, "go.mod"),
+				s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(root, "go.mod"),
 					[]byte("module example.com/other\n"), 0o644))
 
 				return root
@@ -262,7 +279,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			setup: func() string {
 				root := s.checkout(allGo)
 				s.Require().
-					NoError(os.RemoveAll(filepath.Join(root, "internal", "behaviors", "all")))
+					NoError(testFS.RemoveAll(filepath.Join(root, "internal", "behaviors", "all")))
 
 				return root
 			},
@@ -289,8 +306,8 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			setup: func() string {
 				root := s.checkout(allGo)
 				dir := filepath.Join(root, "internal", "behaviors")
-				s.Require().NoError(os.Chmod(dir, 0o555))
-				s.T().Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+				s.Require().NoError(testFS.Chmod(dir, 0o555))
+				s.T().Cleanup(func() { _ = testFS.Chmod(dir, 0o755) })
 
 				return root
 			},
@@ -305,8 +322,8 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 				// all.go is written through a temp file in its directory,
 				// so the directory, not the file, is what refuses it.
 				dir := filepath.Join(root, "internal", "behaviors", "all")
-				s.Require().NoError(os.Chmod(dir, 0o555))
-				s.T().Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+				s.Require().NoError(testFS.Chmod(dir, 0o555))
+				s.T().Cleanup(func() { _ = testFS.Chmod(dir, 0o755) })
 
 				return root
 			},
@@ -317,7 +334,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 				s.Nil(files)
 				s.NoDirExists(filepath.Join(root, "internal", "behaviors", "motd"),
 					"the behavior's files are removed")
-				all, err := os.ReadFile(
+				all, err := avfs.ReadFile(testFS,
 					filepath.Join(root, "internal", "behaviors", "all", "all.go"))
 				s.Require().NoError(err)
 				s.Equal(allGo, string(all), "all.go is as it was")
@@ -412,14 +429,14 @@ func (s *ScaffoldPublicTestSuite) TestGolden() {
 			s.Require().NoError(err)
 
 			for _, rel := range files {
-				got, err := os.ReadFile(filepath.Join(root, rel))
+				got, err := avfs.ReadFile(testFS, filepath.Join(root, rel))
 				s.Require().NoError(err)
 				golden := filepath.Join("testdata", "scaffold", tc.name, rel+".golden")
 				if *update {
-					s.Require().NoError(os.MkdirAll(filepath.Dir(golden), 0o755))
-					s.Require().NoError(os.WriteFile(golden, got, 0o644))
+					s.Require().NoError(testFS.MkdirAll(filepath.Dir(golden), 0o755))
+					s.Require().NoError(avfs.WriteFile(testFS, golden, got, 0o644))
 				}
-				want, err := os.ReadFile(golden)
+				want, err := avfs.ReadFile(testFS, golden)
 				s.Require().NoError(err, "no golden file; run with -update")
 				s.Equal(string(want), string(got), rel)
 			}

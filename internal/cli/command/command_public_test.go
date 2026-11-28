@@ -22,7 +22,6 @@ package command_test
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -34,7 +33,13 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The generator under test writes real files, and the test reads them back.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 // group is a group of commands with no endpoint under it.
 type group struct {
@@ -85,7 +90,7 @@ func (s *CommandPublicTestSuite) TestReadFile() {
 	}))
 
 	path := filepath.Join(s.T().TempDir(), "a.conf")
-	s.Require().NoError(os.WriteFile(path, []byte("data"), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, path, []byte("data"), 0o600))
 	data, ok := command.ReadFile(path)
 	s.True(ok)
 	s.Equal("data", string(data))

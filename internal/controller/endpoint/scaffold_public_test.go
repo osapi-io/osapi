@@ -22,7 +22,6 @@ package endpoint_test
 import (
 	"errors"
 	"flag"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -34,6 +33,9 @@ import (
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
+
+// testFS is the host's filesystem, through avfs. The generator under test writes real files, and the test reads them back.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 // update rewrites the scaffold's golden files from the current scaffold:
 //
@@ -63,12 +65,13 @@ func (s *ScaffoldPublicTestSuite) checkout(
 	all string,
 ) string {
 	root := s.T().TempDir()
-	s.Require().NoError(os.WriteFile(filepath.Join(root, "go.mod"),
+	s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(root, "go.mod"),
 		[]byte("module github.com/osapi-io/osapi\n\ngo 1.25\n"), 0o644))
 	dir := filepath.Join(root, "internal", "controller", "endpoints", "all")
-	s.Require().NoError(os.MkdirAll(dir, 0o755))
+	s.Require().NoError(testFS.MkdirAll(dir, 0o755))
 	if all != "" {
-		s.Require().NoError(os.WriteFile(filepath.Join(dir, "all.go"), []byte(all), 0o644))
+		s.Require().
+			NoError(avfs.WriteFile(testFS, filepath.Join(dir, "all.go"), []byte(all), 0o644))
 	}
 
 	return root
@@ -84,14 +87,14 @@ func (s *ScaffoldPublicTestSuite) TestGolden() {
 	s.Require().NoError(err)
 
 	for _, rel := range files {
-		got, err := os.ReadFile(filepath.Join(root, rel))
+		got, err := avfs.ReadFile(testFS, filepath.Join(root, rel))
 		s.Require().NoError(err)
 		golden := filepath.Join("testdata", "scaffold", rel+".golden")
 		if *update {
-			s.Require().NoError(os.MkdirAll(filepath.Dir(golden), 0o755))
-			s.Require().NoError(os.WriteFile(golden, got, 0o644))
+			s.Require().NoError(testFS.MkdirAll(filepath.Dir(golden), 0o755))
+			s.Require().NoError(avfs.WriteFile(testFS, golden, got, 0o644))
 		}
-		want, err := os.ReadFile(golden)
+		want, err := avfs.ReadFile(testFS, golden)
 		s.Require().NoError(err, "no golden file; run with -update")
 		s.Equal(string(want), string(got), rel)
 	}
@@ -136,7 +139,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffoldErrors() {
 			name: "when the group exists already",
 			setup: func() string {
 				root := s.checkout(allGo)
-				s.Require().NoError(os.MkdirAll(
+				s.Require().NoError(testFS.MkdirAll(
 					filepath.Join(root, "internal", "controller", "endpoints", "widget"), 0o755))
 
 				return root
@@ -175,9 +178,12 @@ func (s *ScaffoldPublicTestSuite) TestScaffoldErrors() {
 			setup: func() string {
 				root := s.checkout(allGo)
 				s.Require().
-					NoError(os.Chmod(filepath.Join(root, "internal", "controller", "endpoints"), 0o555))
+					NoError(testFS.Chmod(filepath.Join(root, "internal", "controller", "endpoints"), 0o555))
 				s.T().Cleanup(func() {
-					_ = os.Chmod(filepath.Join(root, "internal", "controller", "endpoints"), 0o755)
+					_ = testFS.Chmod(
+						filepath.Join(root, "internal", "controller", "endpoints"),
+						0o755,
+					)
 				})
 
 				return root

@@ -25,7 +25,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -122,7 +121,7 @@ var notDSL = map[string]bool{
 // exported method of LocalMethod, that the spec has no term for. Thus osapi
 // dsl command spec get cannot fall behind the code.
 func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
-	entries, err := os.ReadDir(".")
+	entries, err := testFS.ReadDir(".")
 	s.Require().NoError(err)
 	fset := token.NewFileSet()
 	var files []*ast.File

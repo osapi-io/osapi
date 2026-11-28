@@ -21,12 +21,13 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/avfs/avfs"
 )
 
 // genSuite has a root with the test spec, and the helpers of the suites of
@@ -43,7 +44,7 @@ type MainTestSuite struct {
 
 func (s *genSuite) SetupTest() {
 	s.root = s.T().TempDir()
-	spec, err := os.ReadFile("sdkmodel/testdata/spec.yaml")
+	spec, err := avfs.ReadFile(testFS, "sdkmodel/testdata/spec.yaml")
 	s.Require().NoError(err)
 	s.write("internal/controller/api/gen/api.yaml", string(spec))
 	// A type a person wrote, and a file of the last run that is gone now.
@@ -60,14 +61,14 @@ func (s *genSuite) write(
 	text string,
 ) {
 	path := filepath.Join(s.root, rel)
-	s.Require().NoError(os.MkdirAll(filepath.Dir(path), 0o755))
-	s.Require().NoError(os.WriteFile(path, []byte(text), 0o644))
+	s.Require().NoError(testFS.MkdirAll(filepath.Dir(path), 0o755))
+	s.Require().NoError(avfs.WriteFile(testFS, path, []byte(text), 0o644))
 }
 
 func (s *genSuite) read(
 	rel string,
 ) string {
-	data, err := os.ReadFile(filepath.Join(s.root, dir, rel))
+	data, err := avfs.ReadFile(testFS, filepath.Join(s.root, dir, rel))
 	s.Require().NoError(err)
 
 	return string(data)
@@ -202,7 +203,7 @@ func (s *MainTestSuite) TestRunTypesDoc() {
 			types: "package types\n\n// Shade is a tone.\ntype Shade string\n\nfunc (Shade) Values() []Shade { return nil }\n",
 			validateFunc: func(err error) {
 				s.Require().NoError(err)
-				data, err := os.ReadFile(filepath.Join(s.root, typesDir, typesDocName))
+				data, err := avfs.ReadFile(testFS, filepath.Join(s.root, typesDir, typesDocName))
 				s.Require().NoError(err)
 				s.Contains(string(data), "func (Shade) Doc() string")
 			},

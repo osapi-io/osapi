@@ -24,7 +24,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -47,7 +46,7 @@ type SpecPublicTestSuite struct {
 func (s *SpecPublicTestSuite) sources(
 	dir string,
 ) []*ast.File {
-	entries, err := os.ReadDir(dir)
+	entries, err := testFS.ReadDir(dir)
 	s.Require().NoError(err)
 
 	fset := token.NewFileSet()

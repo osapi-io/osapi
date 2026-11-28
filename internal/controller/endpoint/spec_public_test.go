@@ -25,7 +25,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -102,7 +101,7 @@ var notDSL = map[string]bool{
 // exported method of Method, that the spec has no term for. Thus osapi
 // dsl endpoint spec get cannot fall behind the code.
 func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
-	entries, err := os.ReadDir(".")
+	entries, err := testFS.ReadDir(".")
 	s.Require().NoError(err)
 	fset := token.NewFileSet()
 	var files []*ast.File

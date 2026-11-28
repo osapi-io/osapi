@@ -37,8 +37,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
-// hostFS is the filesystem that the generator reads and writes, which a
-// test replaces.
+// hostFS is the filesystem that the generator reads and writes.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // main writes the SDK's constants, authtoken.Go, under --root.

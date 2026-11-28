@@ -21,7 +21,6 @@
 package reference_test
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -30,7 +29,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/reference"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The generator under test writes real files, and the test reads them back.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type ReferencePublicTestSuite struct {
 	suite.Suite
@@ -105,7 +110,7 @@ func (s *ReferencePublicTestSuite) read(
 	dir string,
 	file string,
 ) string {
-	b, err := os.ReadFile(filepath.Join(dir, file))
+	b, err := avfs.ReadFile(testFS, filepath.Join(dir, file))
 	s.Require().NoError(err)
 
 	return string(b)
@@ -115,11 +120,12 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 	s.Run("when the tree has commands writes one page for each", func() {
 		dir := s.T().TempDir()
 		stale := filepath.Join(dir, "old", "gone.md")
-		s.Require().NoError(os.MkdirAll(filepath.Dir(stale), 0o755))
-		s.Require().NoError(os.WriteFile(stale, []byte("# Gone\n"), 0o644))
+		s.Require().NoError(testFS.MkdirAll(filepath.Dir(stale), 0o755))
+		s.Require().NoError(avfs.WriteFile(testFS, stale, []byte("# Gone\n"), 0o644))
 		s.Require().
-			NoError(os.WriteFile(filepath.Join(dir, "output.md"), []byte("# Output\n"), 0o644))
-		s.Require().NoError(os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("x"), 0o644))
+			NoError(avfs.WriteFile(testFS, filepath.Join(dir, "output.md"), []byte("# Output\n"), 0o644))
+		s.Require().
+			NoError(avfs.WriteFile(testFS, filepath.Join(dir, "notes.txt"), []byte("x"), 0o644))
 
 		n, err := reference.Write(tree(), dir)
 		s.Require().NoError(err)
@@ -172,7 +178,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 
 	s.Run("when a directory cannot be made returns the error", func() {
 		dir := s.T().TempDir()
-		s.Require().NoError(os.WriteFile(filepath.Join(dir, "node"), nil, 0o644))
+		s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(dir, "node"), nil, 0o644))
 
 		_, err := reference.Write(tree(), dir)
 
@@ -181,7 +187,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 
 	s.Run("when a page cannot be written returns the error", func() {
 		dir := s.T().TempDir()
-		s.Require().NoError(os.MkdirAll(filepath.Join(dir, "node", "node.mdx"), 0o755))
+		s.Require().NoError(testFS.MkdirAll(filepath.Join(dir, "node", "node.mdx"), 0o755))
 
 		_, err := reference.Write(tree(), dir)
 
@@ -191,10 +197,10 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 	s.Run("when a stale page cannot be removed returns the error", func() {
 		dir := s.T().TempDir()
 		locked := filepath.Join(dir, "locked")
-		s.Require().NoError(os.MkdirAll(locked, 0o755))
-		s.Require().NoError(os.WriteFile(filepath.Join(locked, "stale.md"), nil, 0o644))
-		s.Require().NoError(os.Chmod(locked, 0o500))
-		s.T().Cleanup(func() { _ = os.Chmod(locked, 0o755) })
+		s.Require().NoError(testFS.MkdirAll(locked, 0o755))
+		s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(locked, "stale.md"), nil, 0o644))
+		s.Require().NoError(testFS.Chmod(locked, 0o500))
+		s.T().Cleanup(func() { _ = testFS.Chmod(locked, 0o755) })
 
 		_, err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
 
@@ -204,9 +210,9 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 	s.Run("when the walk fails returns the error", func() {
 		dir := s.T().TempDir()
 		closed := filepath.Join(dir, "closed")
-		s.Require().NoError(os.MkdirAll(closed, 0o755))
-		s.Require().NoError(os.Chmod(closed, 0o000))
-		s.T().Cleanup(func() { _ = os.Chmod(closed, 0o755) })
+		s.Require().NoError(testFS.MkdirAll(closed, 0o755))
+		s.Require().NoError(testFS.Chmod(closed, 0o000))
+		s.T().Cleanup(func() { _ = testFS.Chmod(closed, 0o755) })
 
 		_, err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
 

@@ -22,7 +22,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -31,6 +30,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/sdk/gen/sdkmodel"
+
+	"github.com/avfs/avfs"
 )
 
 // SharedTestSuite covers the types of pkg/sdk/types, which the client refers
@@ -88,7 +89,8 @@ func f() {}
 `)
 				s.write(typesDir+"/a_test.go", "package types\n\ntype Hidden struct{}\n")
 				s.write(typesDir+"/notes.txt", "")
-				s.Require().NoError(os.MkdirAll(filepath.Join(s.root, typesDir, "dir.go"), 0o755))
+				s.Require().
+					NoError(testFS.MkdirAll(filepath.Join(s.root, typesDir, "dir.go"), 0o755))
 
 				return filepath.Join(s.root, typesDir)
 			},
@@ -141,10 +143,10 @@ func (s *SharedTestSuite) TestRunSharedType() {
 	s.Require().NoError(generate(s.root, false))
 
 	var all strings.Builder
-	entries, err := os.ReadDir(filepath.Join(s.root, dir))
+	entries, err := testFS.ReadDir(filepath.Join(s.root, dir))
 	s.Require().NoError(err)
 	for _, e := range entries {
-		data, err := os.ReadFile(filepath.Join(s.root, dir, e.Name()))
+		data, err := avfs.ReadFile(testFS, filepath.Join(s.root, dir, e.Name()))
 		s.Require().NoError(err)
 		all.Write(data)
 	}

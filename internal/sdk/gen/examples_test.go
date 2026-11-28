@@ -22,7 +22,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -30,7 +29,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/sdk/gen/sdkmodel"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// testFS is the host's filesystem, through avfs. The generator under test writes real files, and the test reads them back.
+var testFS avfs.VFS = osfs.NewWithNoIdm()
 
 type ExamplesTestSuite struct {
 	genSuite
@@ -39,7 +44,7 @@ type ExamplesTestSuite struct {
 func (s *ExamplesTestSuite) readExample(
 	name string,
 ) string {
-	data, err := os.ReadFile(filepath.Join(s.root, exampleDir, name))
+	data, err := avfs.ReadFile(testFS, filepath.Join(s.root, exampleDir, name))
 	s.Require().NoError(err)
 
 	return string(data)
@@ -137,14 +142,14 @@ func (s *ExamplesTestSuite) TestRunErrors() {
 		},
 		{
 			name:    "when the SDK's package is not there",
-			setup:   func() { s.Require().NoError(os.RemoveAll(filepath.Join(s.root, dir))) },
+			setup:   func() { s.Require().NoError(testFS.RemoveAll(filepath.Join(s.root, dir))) },
 			wantErr: "no such file or directory",
 		},
 		{
 			name: "when a name of the spec is not a name of Go",
 			setup: func() {
 				path := filepath.Join(s.root, spec)
-				data, err := os.ReadFile(path)
+				data, err := avfs.ReadFile(testFS, path)
 				s.Require().NoError(err)
 				s.write(spec, strings.ReplaceAll(string(data), "DnsEntry", "Dns-Entry"))
 			},
@@ -175,7 +180,7 @@ func (s *ExamplesTestSuite) edit(
 	repl string,
 ) {
 	path := filepath.Join(s.root, spec)
-	data, err := os.ReadFile(path)
+	data, err := avfs.ReadFile(testFS, path)
 	s.Require().NoError(err)
 	s.Require().Contains(string(data), old)
 	s.write(spec, replaceOnce(string(data), old, repl))

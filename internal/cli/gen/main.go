@@ -36,8 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// hostFS is the filesystem that the generator reads and writes, which a
-// test replaces.
+// hostFS is the filesystem that the generator reads and writes.
 var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 func main() {

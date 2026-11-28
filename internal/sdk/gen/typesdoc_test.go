@@ -22,11 +22,12 @@ package main
 
 import (
 	"bytes"
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/avfs/avfs"
 )
 
 type TypesDocTestSuite struct {
@@ -43,7 +44,7 @@ func (s *TypesDocTestSuite) put(
 	name string,
 	text string,
 ) {
-	s.Require().NoError(os.WriteFile(filepath.Join(s.dir, name), []byte(text), 0o600))
+	s.Require().NoError(avfs.WriteFile(testFS, filepath.Join(s.dir, name), []byte(text), 0o600))
 }
 
 // TestTypesDocFile writes Doc for each type with Values, from its comment,

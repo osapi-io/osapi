@@ -20,7 +20,12 @@
 
 package behavior
 
-import "github.com/dave/jennifer/jen"
+import (
+	"github.com/dave/jennifer/jen"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+)
 
 // ResetInstruments drops the instruments, so a test can exercise the first
 // call falling back to the global meter provider.
@@ -51,3 +56,15 @@ func ResetScaffold() {
 
 // ExportSchemaNameProblems exposes schemaNameProblems for testing.
 var ExportSchemaNameProblems = schemaNameProblems
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
+}

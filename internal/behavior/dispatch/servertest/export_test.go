@@ -20,5 +20,22 @@
 
 package servertest
 
+import (
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
+)
+
 // JobInput is jobInput, for its test.
 var JobInput = jobInput
+
+// SetHostFS replaces the filesystem that the package reads and writes.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
+
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
+}
