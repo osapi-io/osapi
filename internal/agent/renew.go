@@ -87,7 +87,7 @@ func (a *Agent) renewIfDue(
 ) error {
 	creds, err := avfs.ReadFile(a.appFs, s.CredsFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("read the NATS creds: %w", err)
 	}
 	// ParseDecoratedJWT gives text that is not a creds file as it is: the
 	// decode below refuses it.
@@ -155,7 +155,7 @@ func (a *Agent) renewIfDue(
 		next,
 		0o600,
 	); err != nil {
-		return err
+		return fmt.Errorf("write the renewed NATS creds: %w", err)
 	}
 	a.logger.Info("renewed the NATS user")
 
