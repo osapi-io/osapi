@@ -381,7 +381,7 @@ func (d *Debian) Get(
 		managedfile.GetInput{Path: d.confPath(key)},
 	)
 	if errors.Is(err, managedfile.ErrUnreadable) {
-		return nil, fmt.Errorf("sysctl entry %q: failed to read state", key)
+		return nil, fmt.Errorf("sysctl entry %q: read state: %w", key, err)
 	}
 	isManaged := err == nil && !record.Undeployed
 

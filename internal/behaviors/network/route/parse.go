@@ -23,6 +23,8 @@ package route
 import (
 	"fmt"
 	"net"
+
+	"github.com/osapi-io/osapi/internal/behavior"
 )
 
 // spec is one route, as netplan writes it.
@@ -56,11 +58,15 @@ func canon(
 // check refuses a default route, which osapi does not write: a wrong one cuts
 // the host off, and the interface behavior sets the gateway. It refuses a
 // gateway of the other family, which the validate tags of the two fields
-// cannot see. The tags have checked each one alone.
+// cannot see. The tags have checked each one alone, and check refuses a
+// destination that does not parse again, as canon leaves it for check to do.
 func check(
 	r spec,
 ) error {
-	_, dest, _ := net.ParseCIDR(r.To)
+	_, dest, err := net.ParseCIDR(r.To)
+	if err != nil {
+		return fmt.Errorf("destination %q: %w", r.To, behavior.ErrInvalid)
+	}
 	if ones, _ := dest.Mask.Size(); ones == 0 {
 		return fmt.Errorf("%s is a default route, which osapi does not write: "+
 			"give the interface a gateway with osapi client node interface", r.To)

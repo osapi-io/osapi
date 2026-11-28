@@ -52,10 +52,11 @@ func (g *gohai) List(
 	ctx context.Context,
 ) ([]Entry, error) {
 	got, err := process.NewWith(g.src).Collect(ctx, nil)
+	info, err := host.Collected[process.Info](got, err, "list the processes")
 	if err != nil {
-		return nil, fmt.Errorf("list the processes: %w", err)
+		return nil, err
 	}
-	procs := got.(*process.Info).Processes
+	procs := info.Processes
 	out := make([]Entry, 0, len(procs))
 	for _, p := range procs {
 		out = append(out, entry(p))

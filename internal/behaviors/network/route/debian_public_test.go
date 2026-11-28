@@ -173,20 +173,58 @@ func (s *DebianPublicTestSuite) TestSpellings() {
 }
 
 // TestDestinationThatDoesNotParse: a delete of a destination that is not a
-// network finds no route and changes nothing.
+// network finds no route and changes nothing, and a create of one is
+// refused, as the validate tag refuses it first.
 func (s *DebianPublicTestSuite) TestDestinationThatDoesNotParse() {
-	file := netplan.Dir + "/osapi-osapi0-routes.yaml"
-	fs := memfs.New()
-	s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
-	s.Require().NoError(fs.WriteFile(file, []byte("network:\n  version: 2\n  ethernets:\n"+
-		"    osapi0:\n      routes:\n        - to: 198.51.100.0/24\n          via: 192.0.2.1\n"), 0o600))
-	p, err := route.ExportNewDebian(host.Host{FS: fs})
-	s.Require().NoError(err)
+	tests := []struct {
+		name         string
+		call         func(route.Provider) (route.Result, error)
+		validateFunc func(route.Result, error)
+	}{
+		{
+			name: "a delete changes nothing",
+			call: func(p route.Provider) (route.Result, error) {
+				return route.Delete(context.Background(), p,
+					route.DeleteInput{Name: "osapi0", Destination: "not-a-network"})
+			},
+			validateFunc: func(result route.Result, err error) {
+				s.Require().NoError(err)
+				s.False(result.Changed)
+			},
+		},
+		{
+			name: "a create is refused",
+			call: func(p route.Provider) (route.Result, error) {
+				return route.Create(
+					context.Background(),
+					p,
+					route.CreateInput{
+						Name:        "osapi0",
+						Destination: "not-a-network",
+						Via:         "192.0.2.1",
+					},
+				)
+			},
+			validateFunc: func(_ route.Result, err error) {
+				s.ErrorIs(err, behavior.ErrInvalid)
+				s.ErrorContains(err, `destination "not-a-network"`)
+			},
+		},
+	}
 
-	result, err := route.Delete(context.Background(), p,
-		route.DeleteInput{Name: "osapi0", Destination: "not-a-network"})
-	s.Require().NoError(err)
-	s.False(result.Changed)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			file := netplan.Dir + "/osapi-osapi0-routes.yaml"
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+			s.Require().NoError(fs.WriteFile(file, []byte("network:\n  version: 2\n  ethernets:\n"+
+				"    osapi0:\n      routes:\n        - to: 198.51.100.0/24\n          via: 192.0.2.1\n"), 0o600))
+			p, err := route.ExportNewDebian(host.Host{FS: fs})
+			s.Require().NoError(err)
+
+			tc.validateFunc(tc.call(p))
+		})
+	}
 }
 
 func TestDebianPublicTestSuite(

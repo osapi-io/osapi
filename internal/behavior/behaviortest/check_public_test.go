@@ -311,6 +311,30 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 		},
 		{
+			name:     "when an example gives a file under a path that is a file",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("get", getNote).Describe("Get it").
+					Example("The note", getIn{}, noteOut{Text: "hello"},
+						behavior.Exists("/etc/x", "a file"),
+						behavior.Exists("/etc/x/y", "under it"),
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+			want: []string{"the example's host cannot hold /etc/x/y"},
+		},
+		{
+			name:     "when a command writes a file under a path that is a file",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Write("set", setNote).Describe("Set it").
+					Example("A note", noteIn{Text: "hello"}, noteOut{Text: "hello", Changed: true},
+						behavior.Exists("/etc/x", "a file"),
+						behavior.ExistsAfter("apply /etc/note", "/etc/x/y", "under it"),
+						wrote, behavior.Ran("apply", notePath)),
+			},
+			want: []string{"the example's host cannot hold /etc/x/y after apply /etc/note"},
+		},
+		{
 			name:     "when a method runs only on a platform its provider does not serve",
 			platform: onDebian(nil),
 			methods: []behavior.Option{

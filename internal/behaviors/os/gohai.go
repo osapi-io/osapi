@@ -46,8 +46,18 @@ func newReader(
 func (r *reader) Release(
 	ctx context.Context,
 ) (Release, error) {
-	got, _ := platform.NewWith(r.src).Collect(ctx, nil)
-	info, _ := got.(*platform.Info)
+	return release(platform.NewWith(r.src).Collect(ctx, nil))
+}
+
+// release is the Release of the platform collector's result, or its error.
+func release(
+	got any,
+	err error,
+) (Release, error) {
+	info, err := host.Collected[platform.Info](got, err, "read the platform")
+	if err != nil {
+		return Release{}, err
+	}
 
 	return Release{Distribution: info.Name, Version: info.Version}, nil
 }

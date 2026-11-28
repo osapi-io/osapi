@@ -26,9 +26,9 @@ import (
 	"regexp"
 )
 
-// name is a hostname as RFC 1123 allows it: labels of letters, digits and
+// hostnamePattern is a hostname as RFC 1123 allows it: labels of letters, digits and
 // hyphens, with no hyphen at either end, up to 63 characters, joined by dots.
-var name = regexp.MustCompile(
+var hostnamePattern = regexp.MustCompile(
 	`^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$`,
 )
 
@@ -54,7 +54,7 @@ func Update(
 ) (Result, error) {
 	// The API checked the name, but the provider passes it to hostnamectl,
 	// so it is checked again here.
-	if len(in.Name) > 253 || !name.MatchString(in.Name) {
+	if len(in.Name) > 253 || !hostnamePattern.MatchString(in.Name) {
 		return Result{}, fmt.Errorf("invalid hostname %q", in.Name)
 	}
 	changed, err := p.SetHostname(ctx, in.Name)

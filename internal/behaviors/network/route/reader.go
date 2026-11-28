@@ -83,11 +83,8 @@ func (r *reader) read(
 	ctx context.Context,
 ) (*network.Info, error) {
 	out, err := network.NewWith(r.src).Collect(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("read the routes: %w", err)
-	}
 
-	return out.(*network.Info), nil
+	return host.Collected[network.Info](out, err, "read the routes")
 }
 
 // has reports whether the host has the interface.
