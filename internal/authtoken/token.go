@@ -29,6 +29,6 @@ func New(
 	logger *slog.Logger,
 ) *Token {
 	return &Token{
-		logger: logger,
+		logger: logger.With(slog.String("subsystem", "authtoken")),
 	}
 }

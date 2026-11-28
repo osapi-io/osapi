@@ -26,6 +26,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,9 +35,10 @@ import (
 	"testing"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
-	"gopkg.in/yaml.v3"
 )
 
 // fixtureServer is a second server of the suite's own: a NATS server and a
@@ -117,7 +119,7 @@ func startFixture(
 	if err != nil {
 		t.Fatal(err)
 	}
-	tok, err := authtoken.New(nil).
+	tok, err := authtoken.New(slog.New(slog.DiscardHandler)).
 		Generate(signingKey, []types.Role{types.RoleAdmin}, "integration-fixture@test", nil, nil)
 	if err != nil {
 		t.Fatalf("make the fixture's token: %v", err)

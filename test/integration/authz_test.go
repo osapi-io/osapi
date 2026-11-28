@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -150,7 +151,7 @@ func (s *AuthorizationSuite) TestEachRouteRefuses() {
 		// A permission that each built-in role grants, such as catalog:read,
 		// has no role to refuse: its route is checked for the 401 only.
 		role, refusable := roleWithout(authtoken.Permission(r.permission))
-		token, err := authtoken.New(nil).
+		token, err := authtoken.New(slog.New(slog.DiscardHandler)).
 			Generate(signingKey, []types.Role{role}, "authz@test", nil, nil)
 		if refusable {
 			s.Require().NoError(err)

@@ -103,6 +103,7 @@ func New(
 	for _, opt := range opts {
 		opt(c)
 	}
+	c.logger = c.logger.With(slog.String("subsystem", "sdk.client"))
 
 	transport := &authTransport{
 		base:       c.baseTransport,
