@@ -21,4 +21,4 @@
 // Package mocks provides generated mock implementations for testing.
 package mocks
 
-//go:generate go tool go.uber.org/mock/mockgen -destination=admission.gen.go -package=mocks github.com/osapi-io/osapi/internal/controller/admission NATSSubscriber,PKIProvider,AgentKeyStore,KVStore,Revoker
+//go:generate go tool go.uber.org/mock/mockgen -destination=admission.gen.go -package=mocks github.com/osapi-io/osapi/internal/controller/admission NATSSubscriber,PKIProvider,AgentKeyStore,KVStore,Revoker,TokenChecker

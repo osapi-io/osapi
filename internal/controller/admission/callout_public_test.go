@@ -29,29 +29,38 @@ import (
 
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/controller/admission"
+	admissionMocks "github.com/osapi-io/osapi/internal/controller/admission/mocks"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/natscallout"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
-// checkTokens admits osapi_jt_t1.secret until expires.
-type checkTokens struct {
-	expires time.Time
-}
+// tokens is a TokenChecker that admits osapi_jt_t1.secret until expires,
+// or fails each check with err.
+func (s *StorePublicTestSuite) tokens(
+	expires time.Time,
+	err error,
+) *admissionMocks.MockTokenChecker {
+	m := admissionMocks.NewMockTokenChecker(s.ctrl)
+	m.EXPECT().Check(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, token string) (jointoken.Token, error) {
+			if err != nil {
+				return jointoken.Token{}, err
+			}
+			if token != "osapi_jt_t1.secret" {
+				return jointoken.Token{}, jointoken.ErrInvalid
+			}
 
-func (c checkTokens) Check(
-	_ context.Context,
-	token string,
-) (jointoken.Token, error) {
-	if token != "osapi_jt_t1.secret" {
-		return jointoken.Token{}, jointoken.ErrInvalid
-	}
+			return jointoken.Token{ID: "t1", ExpiresAt: expires}, nil
+		}).
+		AnyTimes()
 
-	return jointoken.Token{ID: "t1", ExpiresAt: c.expires}, nil
+	return m
 }
 
 // joinWithUserKey joins m-1 with the NATS user key of user.
@@ -98,7 +107,7 @@ func (s *StorePublicTestSuite) TestCallout() {
 	other, _ := nkeys.CreateUser()
 	roles := func(expires time.Time, ttl time.Duration) admission.CalloutRoles {
 		return admission.CalloutRoles{
-			Join: join, Agent: agent, AgentTTL: ttl, Tokens: checkTokens{expires: expires},
+			Join: join, Agent: agent, AgentTTL: ttl, Tokens: s.tokens(expires, nil),
 		}
 	}
 
@@ -151,6 +160,21 @@ func (s *StorePublicTestSuite) TestCallout() {
 				}
 			},
 			wantErr: "the join token does not admit", refused: true, actor: audit.ActorJoinToken,
+		},
+		{
+			name: "a join token that cannot be read is undecided, not refused",
+			roles: func() admission.CalloutRoles {
+				return admission.CalloutRoles{
+					Join:   join,
+					Tokens: s.tokens(time.Time{}, errors.New("read the join token: kv: down")),
+				}
+			},
+			req: func() *jwt.AuthorizationRequest {
+				return &jwt.AuthorizationRequest{
+					ConnectOptions: jwt.ConnectOptions{Token: "osapi_jt_t1.secret"},
+				}
+			},
+			wantErr: "read the join token: kv: down", actor: audit.ActorJoinToken,
 		},
 		{
 			name:  "an admitted machine's NATS user key gets the agent role",

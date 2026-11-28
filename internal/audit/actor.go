@@ -22,6 +22,7 @@ package audit
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os/user"
 	"time"
@@ -107,8 +108,8 @@ type Recorder func(ctx context.Context, e Entry) error
 
 // RecordLocal writes, with record, the entry of a change that a local
 // command made, with the user of the operating system as the actor. A write
-// that fails does not fail the command, which already made the change. A nil
-// record writes nothing.
+// that fails does not fail the command, which already made the change: it is
+// a warning in the log. A nil record writes nothing.
 func RecordLocal(
 	ctx context.Context,
 	record Recorder,
@@ -119,5 +120,12 @@ func RecordLocal(
 	if record == nil {
 		return
 	}
-	_ = record(ctx, Change(ctx, ActorLocal, LocalUser(), action, target, http.StatusOK, summary))
+	err := record(ctx, Change(ctx, ActorLocal, LocalUser(), action, target, http.StatusOK, summary))
+	if err != nil {
+		slog.WarnContext(ctx, "the audit entry of a local command was not written",
+			slog.String("subsystem", "audit"),
+			slog.String("action", action),
+			slog.String("error", err.Error()),
+		)
+	}
 }

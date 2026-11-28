@@ -187,7 +187,10 @@ func (s Service) answer(
 
 		return
 	}
-	_ = msg.Respond(out)
+	if err := msg.Respond(out); err != nil {
+		s.logger().Warn("could not send the answer to an authorization request",
+			slog.String("error", err.Error()))
+	}
 }
 
 // VerifyNkey is nil when the connection of req holds the seed of its nkey:

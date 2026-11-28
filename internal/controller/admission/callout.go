@@ -121,9 +121,16 @@ func (w *Watcher) callout(
 	case strings.HasPrefix(o.Token, "osapi_jt_"):
 		id, _ := jointoken.ID(o.Token)
 		t, err := r.Tokens.Check(ctx, o.Token)
-		if err != nil {
+		if errors.Is(err, jointoken.ErrInvalid) || errors.Is(err, jointoken.ErrExpired) ||
+			errors.Is(err, jointoken.ErrUsed) {
 			return natscallout.Decision{}, audit.ActorJoinToken, id,
 				fmt.Errorf("%w: the join token does not admit: %w", natscallout.ErrRefused, err)
+		}
+		// A token that could not be read, such as when the bucket is down,
+		// is not a refusal: the connection is undecided, and the cause goes
+		// to the log, not to the NATS server.
+		if err != nil {
+			return natscallout.Decision{}, audit.ActorJoinToken, id, err
 		}
 		expires := nowFn().Add(joinSessionTTL)
 		if t.ExpiresAt.Before(expires) {
