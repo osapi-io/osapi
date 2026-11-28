@@ -24,18 +24,18 @@ import (
 	"context"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	filemocks "github.com/osapi-io/osapi/internal/behaviors/managedfile/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
 	objectmocks "github.com/osapi-io/osapi/internal/behaviors/object/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/schedule"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type DebianPublicTestSuite struct {
@@ -111,11 +111,11 @@ func (s *DebianPublicTestSuite) TestCreateRendersTheFacts() {
 	s.files.EXPECT().Read(gomock.Any(), gomock.Any()).
 		Return(managedfile.Record{}, managedfile.ErrNotManaged).AnyTimes()
 	s.objects.EXPECT().Object(gomock.Any(), "arch.tmpl").
-		Return(object.Object{Name: "arch.tmpl", Content: "# {{ .Facts.architecture }}\n", ContentType: "template", SHA256: "object"}, nil)
+		Return(object.Object{Name: "arch.tmpl", Content: "/bin/echo {{ .Facts.architecture }}\n", ContentType: "template", SHA256: "object"}, nil)
 	s.files.EXPECT().Write(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_ context.Context, f managedfile.File) (bool, error) {
 			s.Equal("/etc/cron.d/arch", f.Path)
-			s.Equal("# arm64\n", string(f.Content))
+			s.Equal("0 2 * * * root /bin/echo arm64\n", string(f.Content))
 			s.Equal("arch.tmpl", f.Object)
 			s.Equal(types.ContentTemplate, f.ContentType)
 			s.Equal("object", f.ObjectSHA256)
@@ -128,6 +128,79 @@ func (s *DebianPublicTestSuite) TestCreateRendersTheFacts() {
 	}).Create(context.Background(), schedule.CreateInput{Name: "arch", Object: "arch.tmpl", Schedule: "0 2 * * *"})
 	s.Require().NoError(err)
 	s.True(changed)
+}
+
+// TestCronLine: the line takes the schedule and the user from the input or
+// from the record, so it refuses each value that the input's rules refuse.
+func (s *DebianPublicTestSuite) TestCronLine() {
+	tests := []struct {
+		name         string
+		schedule     string
+		user         string
+		command      string
+		validateFunc func(line string, err error)
+	}{
+		{
+			name:     "a cron expression, a user and a command",
+			schedule: "0 2 * * *",
+			user:     "nobody",
+			command:  "/usr/local/bin/backup\n",
+			validateFunc: func(line string, err error) {
+				s.Require().NoError(err)
+				s.Equal("0 2 * * * nobody /usr/local/bin/backup\n", line)
+			},
+		},
+		{
+			name:     "a cron expression with a new line in it",
+			schedule: "0 2 * * *\n* * * * * root /bin/sh",
+			user:     "root",
+			command:  "/usr/local/bin/backup",
+			validateFunc: func(_ string, err error) {
+				s.ErrorIs(err, behavior.ErrInvalid)
+				s.ErrorContains(err, "cron expression")
+			},
+		},
+		{
+			name:     "a cron expression of four fields",
+			schedule: "0 2 * *",
+			user:     "root",
+			command:  "/usr/local/bin/backup",
+			validateFunc: func(_ string, err error) {
+				s.ErrorIs(err, behavior.ErrInvalid)
+			},
+		},
+		{
+			name:     "a user with a space in it",
+			schedule: "0 2 * * *",
+			user:     "root /bin/sh",
+			command:  "/usr/local/bin/backup",
+			validateFunc: func(_ string, err error) {
+				s.ErrorIs(err, behavior.ErrInvalid)
+				s.ErrorContains(err, "user")
+			},
+		},
+		{
+			name:     "a command of two lines",
+			schedule: "0 2 * * *",
+			user:     "root",
+			command:  "/bin/a\n/bin/b\n",
+			validateFunc: func(_ string, err error) {
+				s.ErrorIs(err, behavior.ErrInvalid)
+				s.ErrorContains(err, "one command line")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(schedule.ExportCronLine(
+				context.Background(),
+				tc.schedule,
+				tc.user,
+				tc.command,
+			))
+		})
+	}
 }
 
 func TestDebianPublicTestSuite(

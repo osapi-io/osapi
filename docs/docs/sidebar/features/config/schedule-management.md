@@ -46,12 +46,22 @@ different. Thus it puts back an entry that somebody changed by hand.
 
 ### Custom schedule (`/etc/cron.d/`)
 
-For an entry with a `schedule` field, the provider writes a drop-in file. The
-file content comes from the object in the Object Store:
+For an entry with a `schedule` field, the object in the Object Store is the
+command, on one line:
+
+```
+/usr/local/bin/backup.sh --full
+```
+
+The provider writes a drop-in file with one line: the cron expression, the user
+and the command. The user is `root` when you give none:
 
 ```
 0 2 * * * root /usr/local/bin/backup.sh --full
 ```
+
+An `update` with a new `--schedule` or `--user` writes the line again. Thus cron
+runs what `list` and `get` show. An object of more than one line is refused.
 
 root owns the file, and its mode is `0644`. The provider writes no header
 comment. The file-state KV records the ownership.
@@ -68,6 +78,7 @@ must start with a `#!/bin/sh` line:
 ```
 
 The provider writes the file with mode `0755`, so that `run-parts` can run it.
+`run-parts` runs the script as root, so `--user` is refused for an interval.
 
 Give `schedule` or `interval`, not both. The API checks this. If you give both
 or neither, it returns 400.
@@ -77,7 +88,7 @@ or neither, it returns 400.
 The provider records the deploy state in the file-state KV bucket. It does not
 put a header comment in the deployed file. Thus:
 
-- A deployed cron file has only the script content. It has no
+- A deployed cron file has only its line or its script. It has no
   `# Managed by osapi` marker.
 - The list and get operations read the file-state KV to find the managed
   entries. They do not touch files that somebody made by hand.

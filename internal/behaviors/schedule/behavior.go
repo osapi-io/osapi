@@ -37,13 +37,15 @@ import (
 // Fails.
 const notAContentType = "zip"
 
-// The objects of the examples: an entry with a cron expression, a new
-// version of it, a daily script, and a template.
+// The objects of the examples: the command of an entry with a cron
+// expression, a new version of it, a daily script, and a template. backupLine
+// is the line that osapi writes for backupText at 0 2 * * * as root.
 const (
-	backupText   = "0 2 * * * root /usr/local/bin/backup\n"
-	backupV2Text = "30 2 * * * root /usr/local/bin/backup --full\n"
+	backupText   = "/usr/local/bin/backup\n"
+	backupV2Text = "/usr/local/bin/backup --full\n"
 	scriptText   = "#!/bin/sh\n/usr/local/bin/backup\n"
-	templateText = "0 2 * * * root /usr/local/bin/backup {{ .Vars.target }}\n"
+	templateText = "/usr/local/bin/backup {{ .Vars.target }}\n"
+	backupLine   = "0 2 * * * root /usr/local/bin/backup\n"
 	backupPath   = "/etc/cron.d/osapitest"
 	scriptPath   = "/etc/cron.daily/osapitest"
 )
@@ -60,7 +62,7 @@ var (
 		},
 	)
 	// theirs is a cron file at the path that osapi did not deploy.
-	theirs = behavior.Exists(backupPath, backupText)
+	theirs = behavior.Exists(backupPath, backupLine)
 )
 
 // entry is the entry that the examples deploy, as a read gives it.
@@ -72,8 +74,9 @@ var entry = Entry{
 // Behavior is the cron entries that osapi deploys. Each is an object that a
 // person uploads once with osapi client file upload, written as a file that
 // managedfile keeps a record of: /etc/cron.d/<name> for an entry with a
-// cron expression, /etc/cron.<interval>/<name> for a script that runs
-// hourly, daily, weekly or monthly. A cron file that osapi did not deploy is
+// cron expression, whose object is the command and whose line osapi writes
+// from the cron expression and the user, and /etc/cron.<interval>/<name> for
+// a script that runs hourly, daily, weekly or monthly. A cron file that osapi did not deploy is
 // not osapi's to read or change. A cron entry runs a command as its user,
 // root included, so each write is admin only.
 var Behavior = behavior.Register(behavior.Define(
@@ -115,13 +118,17 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Write("create", Create).
 		AdminOnly().
 		Describe("Deploy a cron entry").
-		Explain("Gets the object from the object store and writes it as /etc/cron.d/backup for "+
-			"backup, mode 0644, for a cron expression, or as /etc/cron.daily/backup, mode 0755, "+
-			"for a daily interval. An object of content type template, or content_type template, "+
-			"is rendered with the agent's facts and the vars. A file that has the content "+
-			"does not change. An entry of the name in a different directory does not change: "+
-			"move it with delete and create. A file at the path that osapi did not deploy is "+
-			"refused. An entry runs as its user, root included, so only admin can deploy one.").
+		Explain("Gets the object from the object store. For a cron expression, the object is "+
+			"the command, and the entry is /etc/cron.d/backup for backup, mode 0644: one "+
+			"line of the cron expression, the user (root when none is given) and the "+
+			"command. For a daily interval, the object is the script, written as "+
+			"/etc/cron.daily/backup, mode 0755, which runs as root, so a user is refused. "+
+			"An object of content type template, or content_type template, is rendered "+
+			"with the agent's facts and the vars. A file that has the content does not "+
+			"change. An entry of the name in a different directory does not change: move "+
+			"it with delete and create. A file at the path that osapi did not deploy is "+
+			"refused. An entry runs as its user, root included, so only admin can deploy "+
+			"one.").
 		Example("An entry with a cron expression",
 			CreateInput{
 				Name:     "osapitest",
@@ -131,8 +138,20 @@ var Behavior = behavior.Register(behavior.Define(
 			},
 			Result{Name: "osapitest", Changed: true},
 			stored,
-			behavior.Wrote(backupPath, backupText),
+			behavior.Wrote(backupPath, backupLine),
 			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *", User: "root"}),
+		).
+		Example("An entry with a cron expression and a user",
+			CreateInput{
+				Name:     "osapitest",
+				Object:   "osapitest.cron",
+				Schedule: "0 2 * * *",
+				User:     "nobody",
+			},
+			Result{Name: "osapitest", Changed: true},
+			stored,
+			behavior.Wrote(backupPath, "0 2 * * * nobody /usr/local/bin/backup\n"),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Schedule: "0 2 * * *", User: "nobody"}),
 		).
 		Example("A script that runs daily",
 			CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"},
@@ -152,7 +171,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "osapitest", Changed: true},
 			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw),
 			behavior.Wrote(backupPath, "0 2 * * * root /usr/local/bin/backup /srv\n"),
-			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.tmpl", Schedule: "0 2 * * *"}),
+			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest.tmpl", Schedule: "0 2 * * *", User: "root"}),
 		).
 		Example("An entry that has the content",
 			CreateInput{
@@ -184,6 +203,18 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A file that osapi did not deploy",
 			CreateInput{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *"},
 			"osapi did not deploy it", stored, theirs).
+		Fails("An object of more than one line for a cron expression",
+			CreateInput{Name: "osapitest", Object: "osapitest.two", Schedule: "0 2 * * *"},
+			"one command line",
+			behavior.Stored("osapitest.two", "/bin/a\n/bin/b\n", types.ContentRaw)).
+		Fails("A user for a script of an interval",
+			CreateInput{
+				Name:     "osapitest",
+				Object:   "osapitest.sh",
+				Interval: "daily",
+				User:     "nobody",
+			},
+			"User").
 		Fails("No object", CreateInput{Name: "osapitest", Schedule: "0 2 * * *"}, "Object").
 		Fails("Neither a cron expression nor an interval",
 			CreateInput{Name: "osapitest", Object: "osapitest.cron"}, "Schedule").
@@ -247,23 +278,23 @@ var Behavior = behavior.Register(behavior.Define(
 		AdminOnly().
 		Describe("Deploy a cron entry that osapi deployed again").
 		Explain("Writes a new object, or the entry's own, at the entry's path, with the "+
-			"fields that the request gives and the entry's own for the rest. A file that has "+
-			"the content does not change. An entry that osapi did not deploy is not found. "+
-			"The entry stays in its directory: an interval does not change with update.").
+			"fields that the request gives and the entry's own for the rest. A new cron "+
+			"expression or user writes the entry's line again, so cron runs what a read "+
+			"gives. A file that has the content does not change. An entry that osapi did "+
+			"not deploy is not found. The entry stays in its directory: an interval does "+
+			"not change with update.").
 		Example("A new object",
 			UpdateInput{Name: "osapitest", Object: "osapitest-v2.cron"},
 			Result{Name: "osapitest", Changed: true},
 			stored, deployed, storedV2,
-			behavior.Wrote(backupPath, backupV2Text),
+			behavior.Wrote(backupPath, "0 2 * * * root /usr/local/bin/backup --full\n"),
 			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest-v2.cron"}),
 		).
 		Example("A new cron expression, with the same object",
 			UpdateInput{Name: "osapitest", Schedule: "30 2 * * *"},
 			Result{Name: "osapitest", Changed: true},
 			stored, deployed,
-			// The file keeps its content; the entry's record takes the new
-			// cron expression, which a list then gives.
-			behavior.Wrote(backupPath, backupText),
+			behavior.Wrote(backupPath, "30 2 * * * root /usr/local/bin/backup\n"),
 			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Schedule: "30 2 * * *"}),
 		).
 		Example("A new object, cron expression and user",
@@ -275,7 +306,7 @@ var Behavior = behavior.Register(behavior.Define(
 			},
 			Result{Name: "osapitest", Changed: true},
 			stored, deployed, storedV2,
-			behavior.Wrote(backupPath, backupV2Text),
+			behavior.Wrote(backupPath, "30 2 * * * nobody /usr/local/bin/backup --full\n"),
 			behavior.Reads(GetInput{Name: "osapitest"}, Entry{Name: "osapitest", Object: "osapitest-v2.cron", Schedule: "30 2 * * *", User: "nobody"}),
 		).
 		Example("A daily script with a new object",
@@ -297,6 +328,12 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("An object name over 255 characters",
 			UpdateInput{Name: "osapitest", Object: strings.Repeat("a", 256)}, "Object").
 		Fails("A user that is not an account name", UpdateInput{Name: "osapitest", User: "a b"}, "User").
+		Fails("A user for a script of an interval",
+			UpdateInput{Name: "osapitest", User: "nobody"},
+			"runs as root",
+			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
+			behavior.After(CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"}),
+		).
 		Fails("A content type that is not one", UpdateInput{Name: "osapitest", ContentType: notAContentType},
 			"ContentType"),
 	behavior.Write("delete", Delete).Key("name").

@@ -23,3 +23,8 @@ package schedule
 // NewDebian builds the Debian provider, for the tests of its branches that
 // no example reaches.
 var NewDebian = newDebian
+
+// ExportCronLine is cronLine, the line of an entry in /etc/cron.d, which
+// checks its fields again: a contract of its own that no example can reach,
+// because the input's rules refuse the same values first.
+var ExportCronLine = cronLine

@@ -32,8 +32,9 @@ var examples = []struct {
 }{
 	{"list", "An entry that osapi deployed", runList},
 	{"create", "An entry with a cron expression", runCreate},
-	{"create-2", "A script that runs daily", runCreate2},
-	{"create-3", "A template, rendered with its vars", runCreate3},
+	{"create-2", "An entry with a cron expression and a user", runCreate2},
+	{"create-3", "A script that runs daily", runCreate3},
+	{"create-4", "A template, rendered with its vars", runCreate4},
 	{"get", "An entry that osapi deployed", runGet},
 	{"update", "A new object", runUpdate},
 	{"update-2", "A new cron expression, with the same object", runUpdate2},
@@ -75,8 +76,27 @@ func runCreate(
 	return show(resp.Data)
 }
 
-// runCreate2 runs the example create-2: a script that runs daily.
+// runCreate2 runs the example create-2: an entry with a cron expression and a user.
 func runCreate2(
+	ctx context.Context,
+	c *client.Client,
+	target string,
+) error {
+	resp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
+		Name:     "osapitest",
+		Object:   "osapitest.cron",
+		Schedule: "0 2 * * *",
+		User:     "nobody",
+	})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runCreate3 runs the example create-3: a script that runs daily.
+func runCreate3(
 	ctx context.Context,
 	c *client.Client,
 	target string,
@@ -93,8 +113,8 @@ func runCreate2(
 	return show(resp.Data)
 }
 
-// runCreate3 runs the example create-3: a template, rendered with its vars.
-func runCreate3(
+// runCreate4 runs the example create-4: a template, rendered with its vars.
+func runCreate4(
 	ctx context.Context,
 	c *client.Client,
 	target string,

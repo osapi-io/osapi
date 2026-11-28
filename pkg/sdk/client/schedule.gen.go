@@ -51,7 +51,8 @@ type ScheduleCreateInput struct {
 	// A cron expression, such as */5 * * * *; give it or interval.
 	Schedule string `json:"schedule,omitempty"`
 
-	// The user the entry runs as.
+	// The user a cron expression's entry runs as; root when empty. A script of an
+	// interval runs as root.
 	User string `json:"user,omitempty"`
 
 	// The vars of a template, as key=value.
@@ -60,14 +61,17 @@ type ScheduleCreateInput struct {
 
 // Create is the operation PostNodeSchedule: deploy a cron entry.
 //
-// Gets the object from the object store and writes it as /etc/cron.d/backup
-// for backup, mode 0644, for a cron expression, or as /etc/cron.daily/backup,
-// mode 0755, for a daily interval. An object of content type template, or
-// content_type template, is rendered with the agent's facts and the vars. A
-// file that has the content does not change. An entry of the name in a
-// different directory does not change: move it with delete and create. A file
-// at the path that osapi did not deploy is refused. An entry runs as its user,
-// root included, so only admin can deploy one.
+// Gets the object from the object store. For a cron expression, the object is
+// the command, and the entry is /etc/cron.d/backup for backup, mode 0644: one
+// line of the cron expression, the user (root when none is given) and the
+// command. For a daily interval, the object is the script, written as
+// /etc/cron.daily/backup, mode 0755, which runs as root, so a user is refused.
+// An object of content type template, or content_type template, is rendered
+// with the agent's facts and the vars. A file that has the content does not
+// change. An entry of the name in a different directory does not change: move
+// it with delete and create. A file at the path that osapi did not deploy is
+// refused. An entry runs as its user, root included, so only admin can deploy
+// one.
 //
 // It sends POST /api/node/{hostname}/schedule, and needs the permission
 // schedule:write.
@@ -122,10 +126,11 @@ type ScheduleUpdateInput struct {
 // deployed again.
 //
 // Writes a new object, or the entry's own, at the entry's path, with the
-// fields that the request gives and the entry's own for the rest. A file that
-// has the content does not change. An entry that osapi did not deploy is not
-// found. The entry stays in its directory: an interval does not change with
-// update.
+// fields that the request gives and the entry's own for the rest. A new cron
+// expression or user writes the entry's line again, so cron runs what a read
+// gives. A file that has the content does not change. An entry that osapi did
+// not deploy is not found. The entry stays in its directory: an interval does
+// not change with update.
 //
 // It sends PUT /api/node/{hostname}/schedule/{name}, and needs the permission
 // schedule:write.
