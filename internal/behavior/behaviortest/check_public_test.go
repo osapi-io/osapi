@@ -168,6 +168,12 @@ func onDebian(
 	err error,
 ) behavior.Option {
 	return behavior.Platform("debian", func(h host.Host) (note, error) {
+		// A note is in the file state store, so the provider declines a
+		// host without one, as a real provider does.
+		if h.FileState == nil {
+			return note{}, behavior.ErrUnsupported
+		}
+
 		return note{h: h}, err
 	})
 }
@@ -309,6 +315,18 @@ func (s *CheckPublicTestSuite) TestCheck() {
 						behavior.After(noteIn{Text: "hello"}),
 						behavior.Prints("cat /etc/note", "hello")),
 			},
+		},
+		{
+			name: "when a provider that uses the file state store builds without one",
+			platform: behavior.Platform("debian", func(h host.Host) (note, error) {
+				return note{h: h}, nil
+			}),
+			methods: []behavior.Option{
+				behavior.Write("set", setNote).Describe("Set it").
+					Example("A note", noteIn{Text: "hello"}, noteOut{Text: "hello", Changed: true},
+						wrote, behavior.Ran("apply", notePath)),
+			},
+			want: []string{"with no file state store and no object store: panicked"},
 		},
 		{
 			name:     "when a method runs only on a platform its provider does not serve",
@@ -704,7 +722,13 @@ func (s *CheckPublicTestSuite) TestCheckObjects() {
 		"obj",
 		"Objects",
 		behavior.Node,
-		behavior.Platform("debian", func(h host.Host) (pkg, error) { return pkg{h: h}, nil }),
+		behavior.Platform("debian", func(h host.Host) (pkg, error) {
+			if h.Objects == nil {
+				return pkg{}, behavior.ErrUnsupported
+			}
+
+			return pkg{h: h}, nil
+		}),
 		behavior.Read("get", read).Describe("Get one").
 			Example("A stored object", pkgIn{Name: "a"}, pkgOut{Changed: true},
 				behavior.Stored("a", "x", "raw")).

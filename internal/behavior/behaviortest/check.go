@@ -69,6 +69,9 @@ func Run(
 //   - a write run a second time reports changed: false;
 //   - with each filesystem, command and store call failing in turn, and
 //     with each store read returning a damaged record in turn, the method
+//     returns rather than panics;
+//   - on a host with no file state store and no object store, as an agent
+//     runs with file operations off, the provider declines or the method
 //     returns rather than panics.
 //
 // For each refusal declared with Fails, the call fails with an error that
@@ -96,6 +99,9 @@ func Check(
 					problems = append(problems, where+": "+p)
 				}
 				for _, p := range checkProbes(b, m, pp.Name, ex) {
+					problems = append(problems, where+": "+p)
+				}
+				if p := checkNoStores(b, m, pp.Name, ex); p != "" {
 					problems = append(problems, where+": "+p)
 				}
 			}
@@ -204,6 +210,31 @@ func checkExample(
 	}
 
 	return problems
+}
+
+// checkNoStores runs ex on a host with no file state store and no object
+// store, as an agent runs when either bucket is unset or does not open. A
+// provider that needs them declines with behavior.ErrUnsupported, and the
+// method is not served; one that builds must return, not panic. It reports
+// what is wrong, or "".
+func checkNoStores(
+	b *behavior.Behavior,
+	m *behavior.Method,
+	platform behavior.PlatformName,
+	ex behavior.Example,
+) string {
+	h := newHost(b, platform)
+	h.FileState, h.Objects = nil, nil
+	p, err := host.Build(b, h.Host)
+	if err != nil || p == nil {
+		return ""
+	}
+	if msg := survives(m, p, ex.Input); msg != "" {
+		return behavior.TestFailure(behavior.TestErrors,
+			"with no file state store and no object store: "+msg)
+	}
+
+	return ""
 }
 
 // checkRefusal runs r on a fake host and reports what is wrong with how the

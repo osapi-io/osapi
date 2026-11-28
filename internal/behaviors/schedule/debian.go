@@ -79,9 +79,17 @@ type debian struct {
 func newDebian(
 	h host.Host,
 ) (Provider, error) {
+	objects := host.Require[object.Provider](h, object.Behavior)
+	files := host.Require[managedfile.Provider](h, managedfile.Behavior)
+	// Each method reads the object store or the file state store, so an
+	// agent with either off has no provider.
+	if objects == nil || files == nil {
+		return nil, behavior.ErrUnsupported
+	}
+
 	return &debian{
-		objects:  host.Require[object.Provider](h, object.Behavior),
-		files:    host.Require[managedfile.Provider](h, managedfile.Behavior),
+		objects:  objects,
+		files:    files,
 		fs:       h.FS,
 		hostname: h.Hostname,
 		facts:    h.Facts,

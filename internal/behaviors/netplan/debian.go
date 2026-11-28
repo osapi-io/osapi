@@ -58,9 +58,16 @@ type debian struct {
 func newDebian(
 	h host.Host,
 ) (Provider, error) {
+	files := host.Require[managedfile.Provider](h, managedfile.Behavior)
+	// Each file is recorded in the file state store, so an agent with it
+	// off has no provider.
+	if files == nil {
+		return nil, behavior.ErrUnsupported
+	}
+
 	return &debian{
 		logger: h.Logger.With(slog.String("subsystem", "provider.netplan")),
-		files:  host.Require[managedfile.Provider](h, managedfile.Behavior),
+		files:  files,
 		exec:   h.Exec,
 		fs:     h.FS,
 		src:    h.Sources(),

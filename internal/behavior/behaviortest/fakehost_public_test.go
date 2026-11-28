@@ -156,6 +156,10 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 		s.Run(tc.name, func() {
 			b := behavior.Define("probe", "Reaches the fake host", behavior.Node,
 				behavior.Platform("debian", func(h host.Host) (probe, error) {
+					if h.FileState == nil {
+						return probe{}, behavior.ErrUnsupported
+					}
+
 					return probe{h: h}, nil
 				}),
 				behavior.Sudo("tee"),

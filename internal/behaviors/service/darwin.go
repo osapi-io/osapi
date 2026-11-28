@@ -59,10 +59,18 @@ type darwin struct {
 func newDarwin(
 	h host.Host,
 ) (Provider, error) {
+	objects := host.Require[object.Provider](h, object.Behavior)
+	files := host.Require[managedfile.Provider](h, managedfile.Behavior)
+	// A plist comes from the object store and is recorded in the file state
+	// store, so an agent with either off reads only.
+	if objects == nil || files == nil {
+		return newReader(h)
+	}
+
 	return &darwin{
 		reader:  &reader{src: h.Sources()},
-		objects: host.Require[object.Provider](h, object.Behavior),
-		files:   host.Require[managedfile.Provider](h, managedfile.Behavior),
+		objects: objects,
+		files:   files,
 		exec:    h.Exec,
 		fs:      h.FS,
 	}, nil
