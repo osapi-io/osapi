@@ -22,7 +22,6 @@ package load
 
 import (
 	"context"
-	"fmt"
 
 	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/load"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
@@ -47,10 +46,10 @@ func (r *reader) Load(
 	ctx context.Context,
 ) (Averages, error) {
 	got, err := gohai.NewWith(r.src).Collect(ctx, nil)
+	l, err := host.Collected[gohai.Info](got, err, "read load")
 	if err != nil {
-		return Averages{}, fmt.Errorf("read load: %w", err)
+		return Averages{}, err
 	}
-	l := got.(*gohai.Info)
 
 	return Averages{One: l.One, Five: l.Five, Fifteen: l.Fifteen}, nil
 }

@@ -22,7 +22,6 @@ package memory
 
 import (
 	"context"
-	"fmt"
 
 	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/memory"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
@@ -48,10 +47,10 @@ func (r *reader) Memory(
 	ctx context.Context,
 ) (Usage, error) {
 	got, err := gohai.NewWith(r.src).Collect(ctx, nil)
+	m, err := host.Collected[gohai.Info](got, err, "read memory")
 	if err != nil {
-		return Usage{}, fmt.Errorf("read memory: %w", err)
+		return Usage{}, err
 	}
-	m := got.(*gohai.Info)
 
 	return Usage{Total: int(m.Total), Free: int(m.Free), Used: int(m.Used)}, nil
 }

@@ -117,11 +117,8 @@ func (r *reader) read(
 	ctx context.Context,
 ) (*network.Info, error) {
 	out, err := network.NewWith(r.src).Collect(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("read the interfaces: %w", err)
-	}
 
-	return out.(*network.Info), nil
+	return host.Collected[network.Info](out, err, "read the interfaces")
 }
 
 // entry is an interface of info as osapi reports it.

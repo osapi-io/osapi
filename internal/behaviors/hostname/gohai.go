@@ -22,10 +22,11 @@ package hostname
 
 import (
 	"context"
-	"fmt"
 
 	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/hostname"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
+
+	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
 // machineName is the host's name as `hostname` prints it, from gohai's
@@ -35,9 +36,10 @@ func machineName(
 	src source.Sources,
 ) (string, error) {
 	got, err := gohai.NewWith(src).Collect(ctx, nil)
+	info, err := host.Collected[gohai.Info](got, err, "read the hostname")
 	if err != nil {
-		return "", fmt.Errorf("read the hostname: %w", err)
+		return "", err
 	}
 
-	return got.(*gohai.Info).MachineName, nil
+	return info.MachineName, nil
 }

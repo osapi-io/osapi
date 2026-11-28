@@ -158,6 +158,25 @@ func newHost(
 	return h
 }
 
+// place puts g, a file or a link that an example gives, on the host as its
+// setup, with its directory. An error is a Given that the host cannot hold,
+// such as a file under a path that is a file: the example would run on an
+// empty host and pass or fail for the wrong reason.
+func (h *fakeHost) place(
+	g behavior.Given,
+) error {
+	h.setup = true
+	defer func() { h.setup = false }()
+	if err := h.FS.MkdirAll(filepath.Dir(g.Path), 0o755); err != nil {
+		return err
+	}
+	if g.Kind == behavior.GivenLink {
+		return h.FS.Symlink(g.Content, g.Path)
+	}
+
+	return h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
+}
+
 // declare adds the programs b declares for the methods platform's provider
 // serves, and every program of each behavior b requires. An empty platform
 // is every method.
@@ -334,11 +353,12 @@ func (h *fakeHost) commands(
 		h.ran = append(h.ran, line)
 		h.history = append(h.history, line)
 		for _, g := range h.laterFiles {
-			if g.After == line {
-				h.setup = true
-				_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
-				_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
-				h.setup = false
+			if g.After != line {
+				continue
+			}
+			if err := h.place(g); err != nil {
+				h.undeclared = append(h.undeclared, fmt.Sprintf(
+					"the example's host cannot hold %s after %s: %v", g.Path, line, err))
 			}
 		}
 

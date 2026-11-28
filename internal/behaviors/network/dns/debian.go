@@ -116,10 +116,11 @@ func (d *debian) has(
 	name string,
 ) error {
 	out, err := network.NewWith(d.src).Collect(ctx, nil)
+	info, err := host.Collected[network.Info](out, err, "read the interfaces")
 	if err != nil {
-		return fmt.Errorf("read the interfaces: %w", err)
+		return err
 	}
-	for _, i := range out.(*network.Info).Interfaces {
+	for _, i := range info.Interfaces {
 		if i.Name == name {
 			return nil
 		}

@@ -22,7 +22,6 @@ package uptime
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/uptime"
@@ -48,9 +47,10 @@ func (r *reader) Uptime(
 	ctx context.Context,
 ) (time.Duration, error) {
 	got, err := gohai.NewWith(r.src).Collect(ctx, nil)
+	info, err := host.Collected[gohai.Info](got, err, "read uptime")
 	if err != nil {
-		return 0, fmt.Errorf("read uptime: %w", err)
+		return 0, err
 	}
 
-	return time.Duration(got.(*gohai.Info).Seconds) * time.Second, nil
+	return time.Duration(info.Seconds) * time.Second, nil
 }

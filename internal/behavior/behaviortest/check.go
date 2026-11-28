@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -261,23 +260,17 @@ func prepare(
 
 	for _, g := range ex.Given {
 		switch g.Kind {
-		case behavior.GivenFile:
+		case behavior.GivenFile, behavior.GivenLink:
 			if g.After != "" {
 				h.laterFiles = append(h.laterFiles, g)
 
 				continue
 			}
-			h.setup = true
-			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
-			_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
-			h.setup = false
+			if err := h.place(g); err != nil {
+				return nil, nil, fmt.Sprintf("the example's host cannot hold %s: %v", g.Path, err)
+			}
 		case behavior.GivenObject:
 			h.objects[g.Path] = g
-		case behavior.GivenLink:
-			h.setup = true
-			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
-			_ = h.FS.Symlink(g.Content, g.Path)
-			h.setup = false
 		case behavior.GivenOutput:
 			switch {
 			case g.ExitCode != 0:

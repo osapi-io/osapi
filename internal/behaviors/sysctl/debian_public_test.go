@@ -1437,7 +1437,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 					Return(entry, nil)
 			},
 			key:     "vm.swappiness",
-			wantErr: "failed to read state",
+			wantErr: "read state: ",
 		},
 	}
 

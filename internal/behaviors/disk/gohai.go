@@ -22,7 +22,6 @@ package disk
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/filesystem"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
@@ -58,12 +57,13 @@ func (r *reader) Disks(
 	ctx context.Context,
 ) ([]Disk, error) {
 	got, err := filesystem.NewWith(r.src).Collect(ctx, nil)
+	info, err := host.Collected[filesystem.Info](got, err, "read filesystems")
 	if err != nil {
-		return nil, fmt.Errorf("read filesystems: %w", err)
+		return nil, err
 	}
 	disks := []Disk{}
 	at := map[string]int{}
-	for _, m := range got.(*filesystem.Info).Mounts {
+	for _, m := range info.Mounts {
 		if m.Device == "" || !localTypes[m.Type] || m.Total == 0 {
 			continue
 		}
