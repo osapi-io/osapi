@@ -39,6 +39,10 @@ import (
 	"github.com/osapi-io/osapi/internal/tlspolicy"
 )
 
+// TLSPublicTestSuite writes its certificates with os, not avfs: ClientTLS,
+// ServerTLS and the certificate reloader read the files of their config
+// with os.ReadFile and os.Stat, so a file in memory is not one that they can
+// read.
 type TLSPublicTestSuite struct {
 	suite.Suite
 }
@@ -55,11 +59,12 @@ func (s *TLSPublicTestSuite) TestClientConfig() {
 		validateFunc func(*tls.Config, error)
 	}{
 		{
-			name: "when nothing is set, it trusts the system roots",
+			name: "when nothing is set, it trusts the system roots, with only approved suites and groups",
 			validateFunc: func(got *tls.Config, err error) {
 				s.Require().NoError(err)
 				s.Nil(got.RootCAs)
 				s.Equal(uint16(tls.VersionTLS12), got.MinVersion)
+				s.True(tlspolicy.Approved(got, false))
 			},
 		},
 		{
@@ -271,23 +276,30 @@ func (s *TLSPublicTestSuite) TestServerConfig() {
 }
 
 func (s *TLSPublicTestSuite) TestNegotiation() {
-	s.Nil(config.ServerTLS{}.Negotiation(), "when TLS is off, it negotiates nothing")
-
-	got := config.ServerTLS{Enabled: true}.Negotiation()
-	s.True(
-		tlspolicy.Approved(got, true),
-		"when TLS is on, it negotiates only approved suites and groups",
-	)
-}
-
-func (s *TLSPublicTestSuite) TestPolicy() {
-	got, err := config.ClientTLS{Enabled: true}.Config()
-	s.Require().NoError(err)
-	s.True(tlspolicy.Approved(got, false), "a client offers only approved suites and groups")
-	s.True(
-		tlspolicy.Approved(config.SelfClient(&tls.Config{}), false),
-		"so does a server's client of itself",
-	)
+	tests := []struct {
+		name         string
+		tls          config.ServerTLS
+		validateFunc func(*tls.Config)
+	}{
+		{
+			name: "when TLS is off, it negotiates nothing",
+			validateFunc: func(got *tls.Config) {
+				s.Nil(got)
+			},
+		},
+		{
+			name: "when TLS is on, it negotiates only approved suites and groups",
+			tls:  config.ServerTLS{Enabled: true},
+			validateFunc: func(got *tls.Config) {
+				s.True(tlspolicy.Approved(got, true))
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(tc.tls.Negotiation())
+		})
+	}
 }
 
 func (s *TLSPublicTestSuite) TestDial() {
@@ -361,6 +373,7 @@ func (s *TLSPublicTestSuite) TestSelfClient() {
 	server, err := config.ServerTLS{Enabled: true, CertFile: cert, KeyFile: key}.Config()
 	s.Require().NoError(err)
 	client := config.SelfClient(server)
+	s.True(tlspolicy.Approved(client, false))
 	s.NoError(handshake(server, client), "it trusts the server's own certificate")
 
 	s.replace(next, nextKey, cert, key)

@@ -22,15 +22,16 @@ package tlspolicy
 
 import "crypto/tls"
 
-// SetAESHardware sets whether the CPU has AES in hardware, and returns a
-// func that puts it back.
+// SetAESHardware sets whether the CPU has AES in hardware.
 func SetAESHardware(
 	on bool,
-) func() {
-	was := aesHardware
+) {
 	aesHardware = on
+}
 
-	return func() { aesHardware = was }
+// ResetAESHardware restores what the CPU reports.
+func ResetAESHardware() {
+	aesHardware = cpuAESHardware()
 }
 
 // ChaCha is chacha, for the tests.

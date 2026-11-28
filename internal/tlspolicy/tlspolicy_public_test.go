@@ -44,6 +44,10 @@ func TestTLSPolicyPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(TLSPolicyPublicTestSuite))
 }
 
+func (s *TLSPolicyPublicTestSuite) TearDownSubTest() {
+	tlspolicy.ResetAESHardware()
+}
+
 // cert is a self-signed P-256 certificate for localhost.
 func (s *TLSPolicyPublicTestSuite) cert() tls.Certificate {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -153,7 +157,7 @@ func (s *TLSPolicyPublicTestSuite) TestHandshake() {
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			defer tlspolicy.SetAESHardware(tc.hardware)()
+			tlspolicy.SetAESHardware(tc.hardware)
 			tc.validateFunc(s.handshake(server, tc.client()))
 		})
 	}
@@ -243,7 +247,7 @@ func (s *TLSPolicyPublicTestSuite) TestChaCha() {
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			defer tlspolicy.SetAESHardware(tc.hardware)()
+			tlspolicy.SetAESHardware(tc.hardware)
 			s.Equal(tc.want, tlspolicy.ChaCha(&tc.hello))
 		})
 	}
