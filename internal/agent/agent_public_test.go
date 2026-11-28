@@ -23,16 +23,19 @@ package agent_test
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
-
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
@@ -44,17 +47,27 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/agent/identity"
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/exec"
 	execmocks "github.com/osapi-io/osapi/internal/exec/mocks"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
+	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
+	"github.com/osapi-io/osapi/internal/provider/node/load"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
+	"github.com/osapi-io/osapi/internal/telemetry/process"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type AgentPublicTestSuite struct {
@@ -66,7 +79,9 @@ type AgentPublicTestSuite struct {
 	appConfig     config.Config
 	logger        *slog.Logger
 	// startLog is what an agent logs when a case gives it its own logger.
-	startLog *bytes.Buffer
+	startLog  *bytes.Buffer
+	mockKV    *agentMocks.MockNATSClient
+	testAgent *agent.Agent
 }
 
 func (s *AgentPublicTestSuite) getFreePort() int {
@@ -109,6 +124,24 @@ func (s *AgentPublicTestSuite) SetupTest() {
 		},
 	}
 	enroll(s.appFs, s.mockJobClient)
+	s.mockKV = agentMocks.NewMockNATSClient(s.mockCtrl)
+	s.testAgent = newTestAgent(newTestAgentParams{
+		appConfig:       config.Config{},
+		jobClient:       s.mockJobClient,
+		streamName:      "test-stream",
+		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+		registryBucket:  "registry",
+		natsClient:      s.mockKV,
+	})
+	agent.SetAgentState(s.testAgent, types.AgentReady)
+	agent.SetAgentMachineID(s.testAgent, "test-machine-id")
+	ctx, cancel := context.WithCancel(context.Background())
+	consumerCtx, consumerCancel := context.WithCancel(ctx)
+	agent.SetAgentLifecycle(ctx, consumerCtx, s.testAgent, cancel, consumerCancel)
 }
 
 func (s *AgentPublicTestSuite) TearDownTest() {
@@ -662,4 +695,208 @@ func (s *AgentPublicTestSuite) TestLifecycle() {
 	s.NotPanics(func() { agent.ExportLifecycle(a, "m-1", "web-01", "stopped", "stopped") })
 
 	s.Equal("unknown", agent.ExportVersionOrUnknown(s.buildAgent()))
+}
+
+// TestStateUnderConcurrentAccess runs the drain check against a state another
+// goroutine is writing, which is what the heartbeat goroutine and an enrollment
+// acceptance do to each other.
+func (s *AgentPublicTestSuite) TestStateUnderConcurrentAccess() {
+	s.mockJobClient.EXPECT().
+		CheckDrainFlag(gomock.Any(), "test-machine-id").
+		Return(false).
+		AnyTimes()
+
+	const iterations = 50
+
+	var wg sync.WaitGroup
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+
+		for range iterations {
+			agent.ExportHandleDrainDetection(
+				context.Background(),
+				s.testAgent,
+				"test-machine-id",
+				"test-agent",
+			)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		for range iterations {
+			agent.SetAgentState(s.testAgent, types.AgentReady)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		for range iterations {
+			s.NotEmpty(agent.GetAgentState(s.testAgent))
+		}
+	}()
+
+	wg.Wait()
+
+	s.Equal(types.AgentReady, agent.GetAgentState(s.testAgent))
+}
+
+// TestCachedFactsUnderConcurrentAccess replaces the cached facts while another
+// goroutine reads them, which is what the facts refresh does to a job in flight.
+func (s *AgentPublicTestSuite) TestCachedFactsUnderConcurrentAccess() {
+	const iterations = 50
+
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		for i := range iterations {
+			agent.SetAgentCachedFacts(s.testAgent, &job.FactsRegistration{
+				FQDN:     "test-agent",
+				CPUCount: i,
+			})
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		for range iterations {
+			// Nil until the first write lands, which is itself a valid answer.
+			_ = s.testAgent.GetFacts()
+		}
+	}()
+
+	wg.Wait()
+
+	s.NotNil(agent.GetAgentCachedFacts(s.testAgent))
+}
+
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.
+// newTestAgentParams holds all provider dependencies for building a test agent.
+// This mirrors the old agent.New() parameter list, making test migration mechanical.
+type newTestAgentParams struct {
+	appFs           avfs.VFS
+	appConfig       config.Config
+	logger          *slog.Logger
+	jobClient       client.JobClient
+	streamName      string
+	hostProvider    nodeHost.Provider
+	diskProvider    disk.Provider
+	memoryProvider  memory.Provider
+	loadProvider    load.Provider
+	processProvider process.Provider
+	execManager     exec.Manager
+	registryBucket  string
+	factsBucket     string
+	natsClient      agent.NATSClient
+}
+
+// newTestAgent builds a ProviderRegistry from the supplied providers and
+// constructs an Agent — replacing the old 19-argument agent.New() call used
+// across all test suites.
+func newTestAgent(
+	p newTestAgentParams,
+) *agent.Agent {
+	logger := p.logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	streamName := p.streamName
+	if streamName == "" {
+		streamName = "test-stream"
+	}
+
+	registry := agent.NewProviderRegistry()
+
+	registry.Register("node", agent.NewNodeProcessor(logger))
+
+	// The handler tests send network.ping.do as a sample job. The network
+	// domain is a behavior now, so a test processor answers it.
+	registry.Register(
+		"network",
+		func(context.Context, job.Request) (json.RawMessage, error) {
+			return json.RawMessage(`{"packets_sent":3,"packets_received":3,"packet_loss":0}`), nil
+		},
+	)
+
+	a := agent.New(
+		p.appFs,
+		p.appConfig,
+		logger,
+		p.jobClient,
+		streamName,
+		p.hostProvider,
+		p.diskProvider,
+		p.memoryProvider,
+		p.loadProvider,
+		p.processProvider,
+		registry,
+		p.registryBucket,
+		p.factsBucket,
+		p.execManager,
+		p.natsClient,
+	)
+	// The agent is enrolled: it trusts testControllerKey, and verifies
+	// each job that signedJob signs with it.
+	agent.SetAgentPKIManager(a, trustedPKI())
+
+	return a
+}
+
+// testControllerKey signs the jobs of the tests, as the controller does.
+var testControllerPub, testControllerPriv, _ = ed25519.GenerateKey(rand.Reader)
+
+// trustedPKI is the keys of an enrolled agent, which trusts
+// testControllerKey.
+func trustedPKI() *pki.Manager {
+	m := pki.New(memfs.New(), keyDir, "agent", pki.WithEncryptionKey())
+	_ = m.LoadOrGenerate()
+	m.SetControllerPublicKey(testControllerPub)
+
+	return m
+}
+
+// signedJob is the job data payload in the envelope that the controller
+// writes, signed with testControllerKey.
+func signedJob(
+	payload string,
+) []byte {
+	data, _ := json.Marshal(job.SignedEnvelope{
+		Payload:     []byte(payload),
+		Signature:   ed25519.Sign(testControllerPriv, []byte(payload)),
+		Fingerprint: "SHA256:test-controller",
+	})
+
+	return data
+}
+
+// keyDir is the PKI key directory of the test agents.
+const keyDir = "/keys"
+
+// enroll makes the agent of fs enrolled: keyDir has the controller's public
+// key, so Start takes jobs at once and does not wait for admission. The
+// enrollment gives the job client the agent's signer and machine ID.
+func enroll(
+	fs avfs.VFS,
+	jobClient *mocks.MockJobClient,
+) {
+	ctrlPub, _, _ := ed25519.GenerateKey(rand.Reader)
+	_ = fs.MkdirAll(keyDir, 0o700)
+	_ = fs.WriteFile(keyDir+"/enrolled-controller.pub", pem.EncodeToMemory(&pem.Block{
+		Type:  "ED25519 PUBLIC KEY",
+		Bytes: ctrlPub,
+	}), 0o644)
+	jobClient.EXPECT().SetPKISigner(gomock.Any()).AnyTimes()
+	jobClient.EXPECT().SetMachineID(gomock.Any()).AnyTimes()
 }

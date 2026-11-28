@@ -22,6 +22,8 @@ package client_test
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,16 +32,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type AgentPublicTestSuite struct {
@@ -49,6 +51,9 @@ type AgentPublicTestSuite struct {
 	mockNATSClient *jobmocks.MockNATSClient
 	jobsClient     *client.Client
 	ctx            context.Context
+	mockNC         *jobmocks.MockNATSClient
+	pub            ed25519.PublicKey
+	priv           ed25519.PrivateKey
 }
 
 func (s *AgentPublicTestSuite) SetupTest() {
@@ -63,6 +68,10 @@ func (s *AgentPublicTestSuite) SetupTest() {
 	var err error
 	s.jobsClient, err = newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
+	s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	s.Require().NoError(err)
+	s.pub, s.priv = pub, priv
 }
 
 func (s *AgentPublicTestSuite) TearDownTest() {
@@ -1524,4 +1533,578 @@ func TestAgentPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(AgentPublicTestSuite))
+}
+
+// The keys of the tests: the controller's, which signs each job record,
+// and the agents', which signs each response.
+var (
+	testControllerPub, testControllerPriv, _ = ed25519.GenerateKey(rand.Reader)
+	testAgentPub, testAgentPriv, _           = ed25519.GenerateKey(rand.Reader)
+)
+
+// testSigner signs with the controller's key, and verifies a record with
+// it, as the controller's job client does.
+type testSigner struct{}
+
+func (testSigner) Sign(data []byte) []byte { return ed25519.Sign(testControllerPriv, data) }
+
+func (testSigner) Fingerprint() string { return "SHA256:test-controller" }
+
+func (testSigner) ControllerPublicKey() ed25519.PublicKey { return testControllerPub }
+
+func (testSigner) StoredRecordKeys() []ed25519.PublicKey {
+	return []ed25519.PublicKey{testControllerPub}
+}
+
+// testAgentKeys is the admission store of the tests: each machine ID
+// m-<hostname> is an agent admitted as <hostname>, with testAgentPub.
+type testAgentKeys struct{}
+
+func (testAgentKeys) RenameAgentKey(
+	context.Context,
+	string,
+	string,
+) error {
+	return nil
+}
+
+func (testAgentKeys) LookupAgentKey(
+	_ context.Context,
+	machineID string,
+) (*client.AgentKey, error) {
+	return &client.AgentKey{
+		MachineID: machineID,
+		Hostname:  strings.TrimPrefix(machineID, "m-"),
+		PublicKey: testAgentPub,
+	}, nil
+}
+
+// trust gives c the keys of the controller, as the controller sets them at
+// startup: the admission store, and a signer when opts names none.
+func trust(
+	c *client.Client,
+	opts *client.Options,
+) {
+	if opts == nil || opts.PKISigner == nil {
+		c.SetPKISigner(testSigner{})
+	}
+	c.SetAgentKeyStore(testAgentKeys{})
+}
+
+// envelope is payload signed with priv, from machineID.
+func envelope(
+	priv ed25519.PrivateKey,
+	machineID string,
+	payload []byte,
+) []byte {
+	data, _ := json.Marshal(job.SignedEnvelope{
+		Payload:     payload,
+		Signature:   ed25519.Sign(priv, payload),
+		Fingerprint: "SHA256:test",
+		MachineID:   machineID,
+	})
+
+	return data
+}
+
+// agentSigned is the response resp as the agent that it names writes it:
+// signed, from m-<hostname>.
+func agentSigned(
+	resp []byte,
+) []byte {
+	var r struct {
+		Hostname string `json:"hostname"`
+	}
+	_ = json.Unmarshal(resp, &r)
+
+	return envelope(testAgentPriv, "m-"+r.Hostname, resp)
+}
+
+// controllerSigned is the job record as the controller writes it.
+func controllerSigned(
+	record []byte,
+) []byte {
+	return envelope(testControllerPriv, "", record)
+}
+
+// signingNATS is the NATS of the tests, with each value signed as the
+// controller and the agents write it: a job record (jobs.<id>) by the
+// controller, a response (responses.*) by its agent. The tests give the
+// mock plain JSON.
+type signingNATS struct {
+	*jobmocks.MockNATSClient
+}
+
+// signed is the entry of key with its value signed as its writer signs it.
+type signedEntry struct {
+	jetstream.KeyValueEntry
+	sign func([]byte) []byte
+}
+
+// Value is the value of the entry, signed. A value that a test gives as a
+// signed envelope already is the value as the test wrote it.
+func (e signedEntry) Value() []byte {
+	value := e.KeyValueEntry.Value()
+	var env job.SignedEnvelope
+	if json.Unmarshal(value, &env) == nil && len(env.Signature) > 0 {
+		return value
+	}
+
+	return e.sign(value)
+}
+
+func signerOf(
+	key string,
+) func([]byte) []byte {
+	switch {
+	case strings.HasPrefix(key, "jobs."):
+		return controllerSigned
+	case strings.HasPrefix(key, "responses."):
+		return agentSigned
+	default:
+		return nil
+	}
+}
+
+func (n signingNATS) KVGet(
+	ctx context.Context,
+	bucket string,
+	key string,
+) (jetstream.KeyValueEntry, error) {
+	entry, err := n.MockNATSClient.KVGet(ctx, bucket, key)
+	if sign := signerOf(key); entry != nil && sign != nil {
+		return signedEntry{KeyValueEntry: entry, sign: sign}, err
+	}
+
+	return entry, err
+}
+
+func (n signingNATS) KVWatch(
+	ctx context.Context,
+	bucket string,
+	pattern string,
+	opts ...jetstream.WatchOpt,
+) (<-chan jetstream.KeyValueEntry, error) {
+	in, err := n.MockNATSClient.KVWatch(ctx, bucket, pattern, opts...)
+	sign := signerOf(pattern)
+	if in == nil || sign == nil {
+		return in, err
+	}
+	out := make(chan jetstream.KeyValueEntry, cap(in))
+	go func() {
+		defer close(out)
+		for e := range in {
+			if e == nil {
+				out <- nil
+
+				continue
+			}
+			out <- signedEntry{KeyValueEntry: e, sign: sign}
+		}
+	}()
+
+	return out, err
+}
+
+// newTrusted is a job client of the controller on nc: it signs, verifies,
+// and reads the values of nc as its writers signed them.
+func newTrusted(
+	nc *jobmocks.MockNATSClient,
+	opts *client.Options,
+) (*client.Client, error) {
+	c, err := client.New(slog.Default(), signingNATS{nc}, opts)
+	if err == nil {
+		trust(c, opts)
+	}
+
+	return c, err
+}
+
+// registry makes the registry bucket hold exactly this registration.
+func (s *AgentPublicTestSuite) registry(
+	reg job.AgentRegistration,
+) {
+	s.T().Helper()
+
+	data, err := json.Marshal(reg)
+	s.Require().NoError(err)
+
+	s.mockNC.EXPECT().
+		KVKeys(gomock.Any(), "registry").
+		Return([]string{"agents." + reg.MachineID}, nil)
+
+	entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+	entry.EXPECT().Value().Return(data)
+	s.mockNC.EXPECT().
+		KVGet(gomock.Any(), "registry", "agents."+reg.MachineID).
+		Return(entry, nil)
+}
+
+func (s *AgentPublicTestSuite) signed(
+	reg job.AgentRegistration,
+) job.AgentRegistration {
+	s.T().Helper()
+
+	reg.Signature = ed25519.Sign(s.priv, job.RegistrationSigningBytes(&reg))
+
+	return reg
+}
+
+func (s *AgentPublicTestSuite) base() job.AgentRegistration {
+	return job.AgentRegistration{
+		MachineID:    "machine-001",
+		Hostname:     "web-01",
+		State:        "Ready",
+		RegisteredAt: time.Now(),
+	}
+}
+
+func (s *AgentPublicTestSuite) TestListAgentsTrust() {
+	tests := []struct {
+		name         string
+		reg          func() job.AgentRegistration
+		setupStore   func(*jobmocks.MockAgentKeyStore)
+		noStore      bool
+		validateFunc func(job.AgentInfo)
+	}{
+		{
+			name: "a registration signed by the stored key is authoritative",
+			reg:  func() job.AgentRegistration { return s.signed(s.base()) },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "web-01",
+						PublicKey: s.pub,
+					}, nil)
+			},
+			validateFunc: func(a job.AgentInfo) {
+				s.True(a.Verified)
+				s.True(a.KeyStored)
+			},
+		},
+		{
+			name: "an unsigned registration is not authoritative",
+			reg:  func() job.AgentRegistration { return s.base() },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "web-01",
+						PublicKey: s.pub,
+					}, nil)
+			},
+			validateFunc: func(a job.AgentInfo) {
+				s.False(a.Verified)
+				s.True(a.KeyStored, "the key is stored; the registration just is not signed")
+			},
+		},
+		{
+			name: "a registration signed by another key is not authoritative",
+			reg:  func() job.AgentRegistration { return s.signed(s.base()) },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				other, _, _ := ed25519.GenerateKey(rand.Reader)
+				st.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(&client.AgentKey{
+						MachineID: "machine-001",
+						Hostname:  "web-01",
+						PublicKey: other,
+					}, nil)
+			},
+			validateFunc: func(a job.AgentInfo) {
+				s.False(a.Verified)
+			},
+		},
+		{
+			name: "an agent with no stored key is visible but not authoritative",
+			reg:  func() job.AgentRegistration { return s.signed(s.base()) },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(nil, client.ErrResponseKeyUnknown)
+			},
+			validateFunc: func(a job.AgentInfo) {
+				s.False(a.Verified)
+				s.False(a.KeyStored)
+				s.Equal("web-01", a.Hostname, "still listed, so a rollout can be staged")
+			},
+		},
+		{
+			name: "an unreadable store never yields an authoritative registration",
+			reg:  func() job.AgentRegistration { return s.signed(s.base()) },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().
+					LookupAgentKey(gomock.Any(), "machine-001").
+					Return(nil, client.ErrResponseStoreUnavailable)
+			},
+			validateFunc: func(a job.AgentInfo) {
+				s.False(a.Verified)
+			},
+		},
+		{
+			name:    "with no store wired no registration is trusted",
+			reg:     func() job.AgentRegistration { return s.base() },
+			noStore: true,
+			validateFunc: func(a job.AgentInfo) {
+				s.False(a.Verified)
+				s.False(a.KeyStored)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			reg := tt.reg()
+			s.registry(reg)
+
+			c, err := client.New(slog.Default(), s.mockNC, &client.Options{
+				Timeout:        30 * time.Second,
+				JobsBucket:     "jobs",
+				RegistryBucket: "registry",
+				StreamName:     "JOBS",
+			})
+			s.Require().NoError(err)
+
+			if !tt.noStore {
+				store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+				tt.setupStore(store)
+				c.SetAgentKeyStore(store)
+			}
+
+			agents, err := c.ListAgents(s.ctx)
+			s.Require().NoError(err)
+			s.Require().Len(agents, 1)
+
+			tt.validateFunc(agents[0])
+		})
+	}
+}
+
+// newClient is a job client of the mocked NATS, with store.
+func (s *AgentPublicTestSuite) newClient(
+	store client.AgentKeyStore,
+) *client.Client {
+	s.T().Helper()
+
+	c, err := client.New(slog.Default(), s.mockNC, &client.Options{
+		Timeout:        30 * time.Second,
+		JobsBucket:     "jobs",
+		RegistryBucket: "registry",
+		StreamName:     "JOBS",
+	})
+	s.Require().NoError(err)
+	c.SetAgentKeyStore(store)
+
+	return c
+}
+
+// registryOf makes the registry bucket hold regs, for each read.
+func (s *AgentPublicTestSuite) registryOf(
+	regs ...job.AgentRegistration,
+) {
+	s.T().Helper()
+
+	keys := make([]string, 0, len(regs))
+	for _, reg := range regs {
+		keys = append(keys, "agents."+reg.MachineID)
+		data, err := json.Marshal(reg)
+		s.Require().NoError(err)
+		entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+		entry.EXPECT().Value().Return(data).AnyTimes()
+		s.mockNC.EXPECT().
+			KVGet(gomock.Any(), "registry", "agents."+reg.MachineID).
+			Return(entry, nil).AnyTimes()
+	}
+	s.mockNC.EXPECT().KVKeys(gomock.Any(), "registry").Return(keys, nil).AnyTimes()
+}
+
+// TestHostnameFollows is a host whose hostname changed: its record follows a
+// signed registration, unless another admitted machine that is online holds
+// the name (GHSA-j73r).
+func (s *AgentPublicTestSuite) TestHostnameFollows() {
+	renamed := func() job.AgentRegistration {
+		reg := s.base()
+		reg.Hostname = "web-02"
+
+		return s.signed(reg)
+	}
+	record := func(machineID, hostname string) *client.AgentKey {
+		return &client.AgentKey{MachineID: machineID, Hostname: hostname, PublicKey: s.pub}
+	}
+	tests := []struct {
+		name         string
+		regs         func() []job.AgentRegistration
+		setupStore   func(*jobmocks.MockAgentKeyStore)
+		wantVerified bool
+	}{
+		{
+			name: "when no other machine holds the new name, the record follows it",
+			regs: func() []job.AgentRegistration { return []job.AgentRegistration{renamed()} },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+					Return(record("machine-001", "web-01"), nil).AnyTimes()
+				st.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").Return(nil)
+			},
+			wantVerified: true,
+		},
+		{
+			name: "when another admitted machine online holds the name, the claim is refused",
+			regs: func() []job.AgentRegistration {
+				holder := job.AgentRegistration{
+					MachineID: "machine-002",
+					Hostname:  "web-02",
+					State:     "Ready",
+				}
+
+				return []job.AgentRegistration{renamed(), holder}
+			},
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+					Return(record("machine-001", "web-01"), nil).AnyTimes()
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-002").
+					Return(record("machine-002", "web-02"), nil).AnyTimes()
+			},
+		},
+		{
+			name: "when the record cannot be renamed, the claim is refused",
+			regs: func() []job.AgentRegistration { return []job.AgentRegistration{renamed()} },
+			setupStore: func(st *jobmocks.MockAgentKeyStore) {
+				st.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+					Return(record("machine-001", "web-01"), nil).AnyTimes()
+				st.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").
+					Return(errors.New("kv: down"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.mockCtrl = gomock.NewController(s.T())
+			s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
+			s.registryOf(tc.regs()...)
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			tc.setupStore(store)
+			c := s.newClient(store)
+
+			agents, err := c.ListAgents(s.ctx)
+
+			s.Require().NoError(err)
+			s.Equal(tc.wantVerified, agents[0].Verified)
+		})
+	}
+}
+
+// auditLog keeps each audit entry that the client writes.
+type auditLog struct {
+	entries []audit.Entry
+	err     error
+}
+
+func (l *auditLog) Write(
+	_ context.Context,
+	e audit.Entry,
+) error {
+	l.entries = append(l.entries, e)
+
+	return l.err
+}
+
+// TestHostnameRenameAudited: a rename that an agent reported, with no
+// request, is an audit entry as the machine (osapi-io/osapi#1453). An audit
+// log that fails does not undo the rename.
+func (s *AgentPublicTestSuite) TestHostnameRenameAudited() {
+	for _, fail := range []bool{false, true} {
+		s.Run(fmt.Sprintf("the audit log fails: %v", fail), func() {
+			s.mockCtrl = gomock.NewController(s.T())
+			s.mockNC = jobmocks.NewMockNATSClient(s.mockCtrl)
+			reg := s.base()
+			reg.Hostname = "web-02"
+			s.registryOf(s.signed(reg))
+			store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+			store.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+				Return(&client.AgentKey{
+					MachineID: "machine-001", Hostname: "web-01", PublicKey: s.pub,
+				}, nil).AnyTimes()
+			store.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").Return(nil)
+			c := s.newClient(store)
+			log := &auditLog{}
+			if fail {
+				log.err = errors.New("stream down")
+			}
+			c.SetAudit(log)
+
+			agents, err := c.ListAgents(s.ctx)
+
+			s.Require().NoError(err)
+			s.True(agents[0].Verified)
+			s.Require().Len(log.entries, 1)
+			e := log.entries[0]
+			s.Equal(audit.ActorAgent, e.Actor)
+			s.Equal("machine-001", e.User)
+			s.Equal("agent.rename", e.Action)
+			s.Equal("hostname changed from web-01 to web-02", e.RequestSummary)
+		})
+	}
+}
+
+// TestHostnameRegistryUnreadable is a rename while the registry cannot be
+// read for the check: the claim is refused, not taken on a guess.
+func (s *AgentPublicTestSuite) TestHostnameRegistryUnreadable() {
+	reg := s.base()
+	reg.Hostname = "web-02"
+	data, err := json.Marshal(s.signed(reg))
+	s.Require().NoError(err)
+	entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+	entry.EXPECT().Value().Return(data).AnyTimes()
+	gomock.InOrder(
+		s.mockNC.EXPECT().
+			KVKeys(gomock.Any(), "registry").
+			Return([]string{"agents.machine-001"}, nil),
+		s.mockNC.EXPECT().KVKeys(gomock.Any(), "registry").Return(nil, errors.New("kv: down")),
+	)
+	s.mockNC.EXPECT().
+		KVGet(gomock.Any(), "registry", "agents.machine-001").
+		Return(entry, nil).
+		AnyTimes()
+	store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+	store.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+		Return(&client.AgentKey{MachineID: "machine-001", Hostname: "web-01", PublicKey: s.pub}, nil).
+		AnyTimes()
+
+	agents, err := s.newClient(store).ListAgents(s.ctx)
+
+	s.Require().NoError(err)
+	s.False(agents[0].Verified)
+}
+
+// TestHostnameEntryUnreadable is a registry entry that cannot be read
+// during the check: it is skipped, and the rename goes on.
+func (s *AgentPublicTestSuite) TestHostnameEntryUnreadable() {
+	reg := s.base()
+	reg.Hostname = "web-02"
+	data, err := json.Marshal(s.signed(reg))
+	s.Require().NoError(err)
+	entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+	entry.EXPECT().Value().Return(data).AnyTimes()
+	s.mockNC.EXPECT().KVKeys(gomock.Any(), "registry").
+		Return([]string{"agents.machine-001", "agents.machine-002"}, nil).AnyTimes()
+	s.mockNC.EXPECT().
+		KVGet(gomock.Any(), "registry", "agents.machine-001").
+		Return(entry, nil).
+		AnyTimes()
+	s.mockNC.EXPECT().KVGet(gomock.Any(), "registry", "agents.machine-002").
+		Return(nil, errors.New("kv: gone")).AnyTimes()
+	store := jobmocks.NewMockAgentKeyStore(s.mockCtrl)
+	store.EXPECT().LookupAgentKey(gomock.Any(), "machine-001").
+		Return(&client.AgentKey{MachineID: "machine-001", Hostname: "web-01", PublicKey: s.pub}, nil).
+		AnyTimes()
+	store.EXPECT().RenameAgentKey(gomock.Any(), "machine-001", "web-02").Return(nil)
+
+	agents, err := s.newClient(store).ListAgents(s.ctx)
+
+	s.Require().NoError(err)
+	s.True(agents[0].Verified)
 }

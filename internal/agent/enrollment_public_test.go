@@ -32,14 +32,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
-	natsclient "github.com/osapi-io/nats-client/pkg/client"
-
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/nats.go"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -50,6 +47,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type EnrollmentPublicTestSuite struct {
@@ -937,3 +935,94 @@ func TestEnrollmentPublicTestSuite(
 	t.Parallel()
 	suite.Run(t, new(EnrollmentPublicTestSuite))
 }
+
+// pendingAgent builds an agent with a loaded keypair and the state the test wants.
+func (suite *EnrollmentPublicTestSuite) pendingAgent(
+	state types.AgentState,
+	publisher *agentMocks.MockNATSClient,
+) *agent.Agent {
+	fs := memfs.New()
+	cfg := config.Config{
+		Agent: config.AgentConfig{
+			PKI: config.AgentPKI{KeyDir: "/keys"},
+		},
+	}
+
+	a := agent.New(
+		fs, cfg, slog.Default(),
+		nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, publisher,
+	)
+
+	m := pki.New(fs, "/keys", "agent")
+	suite.Require().NoError(m.LoadOrGenerate())
+	agent.SetAgentPKIManager(a, m)
+	agent.SetAgentState(a, state)
+	agent.SetAgentMachineID(a, "machine-1")
+
+	return a
+}
+
+func (suite *EnrollmentPublicTestSuite) TestRetryEnrollmentIfPending() {
+	tests := []struct {
+		name      string
+		state     types.AgentState
+		setupMock func(*agentMocks.MockNATSClient)
+	}{
+		{
+			name:  "a pending agent asks again",
+			state: types.AgentPending,
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
+				// The controller keys acceptance by machine ID, so asking again
+				// overwrites the pending entry rather than adding one.
+				publisher.EXPECT().
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			name:  "a pending agent whose republish fails keeps trying",
+			state: types.AgentPending,
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
+				publisher.EXPECT().
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(fmt.Errorf("no route to controller")).
+					Times(1)
+			},
+		},
+		{
+			name:  "a ready agent asks for nothing",
+			state: types.AgentReady,
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
+				publisher.EXPECT().
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+		},
+		{
+			name:  "a cordoned agent asks for nothing either",
+			state: types.AgentCordoned,
+			setupMock: func(publisher *agentMocks.MockNATSClient) {
+				publisher.EXPECT().
+					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			ctrl := gomock.NewController(suite.T())
+			publisher := agentMocks.NewMockNATSClient(ctrl)
+
+			tt.setupMock(publisher)
+
+			a := suite.pendingAgent(tt.state, publisher)
+
+			agent.ExportRetryEnrollmentIfPending(a)
+		})
+	}
+}
+
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.

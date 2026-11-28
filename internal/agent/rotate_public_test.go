@@ -43,14 +43,14 @@ import (
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
-type RotateKeyPublicTestSuite struct {
+type RotatePublicTestSuite struct {
 	suite.Suite
 }
 
 // TestLoadAgentKeys checks that the agent finishes a rotation that stopped
 // between the renames of Promote before it loads its keys, so it does not
 // sign with the private key of one pair and the public key of the other.
-func (s *RotateKeyPublicTestSuite) TestLoadAgentKeys() {
+func (s *RotatePublicTestSuite) TestLoadAgentKeys() {
 	moves := [][2]string{
 		{"/keys/agent.next.ekey", "/keys/agent.ekey"},
 		{"/keys/agent.next.key", "/keys/agent.key"},
@@ -116,8 +116,8 @@ func (s *RotateKeyPublicTestSuite) TestLoadAgentKeys() {
 	}
 }
 
-func TestRotateKeyPublicTestSuite(t *testing.T) {
-	suite.Run(t, new(RotateKeyPublicTestSuite))
+func TestRotatePublicTestSuite(t *testing.T) {
+	suite.Run(t, new(RotatePublicTestSuite))
 }
 
 // failOn is fs, failing fn on a path that ends with suffix, or that holds
@@ -149,7 +149,7 @@ func identityOf(avfs.VFS, string) (*identity.Identity, error) {
 	return &identity.Identity{MachineID: "m-1", Hostname: "web-01"}, nil
 }
 
-func (s *RotateKeyPublicTestSuite) TestRotateKey() {
+func (s *RotatePublicTestSuite) TestRotateKey() {
 	// keys makes the agent's keys in /pki, with a saved join over tls when
 	// joined is true, and returns the file system and the keys. The join
 	// trusts the system's roots for a name, or a pinned CA when ca is true.
@@ -191,7 +191,7 @@ func (s *RotateKeyPublicTestSuite) TestRotateKey() {
 			var req pki.RotateRequest
 			s.Require().NoError(json.Unmarshal(data, &req))
 			s.Equal("m-1", req.MachineID)
-			s.True(req.Verify(old.PublicKey()), "signed with the old key and the new one")
+			s.True(req.Verify(old.PublicKey()))
 
 			return json.Marshal(pki.RotateReply{
 				Fingerprint: pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey),
@@ -369,7 +369,7 @@ func (s *RotateKeyPublicTestSuite) TestRotateKey() {
 	}
 }
 
-func (s *RotateKeyPublicTestSuite) TestNATSDialOptions() {
+func (s *RotatePublicTestSuite) TestNATSDialOptions() {
 	dir := s.T().TempDir()
 	user, _ := nkeys.CreateUser()
 	seed, _ := user.Seed()
