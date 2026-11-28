@@ -125,11 +125,27 @@ func (s *ClientPublicTestSuite) TestQuery() {
 		withMeter bool
 		// timeout, when set, is the client's timeout, so a case that waits
 		// for no answer does not wait the suite's 30 seconds.
-		timeout      time.Duration
+		timeout time.Duration
+		// cancelAfter, when set, ends the caller's ctx this long after the
+		// call starts, before the client's timeout.
+		cancelAfter  time.Duration
 		setupMocks   func()
 		expectedErr  string
 		validateFunc func(jobID string, resp *job.Response)
 	}{
+		{
+			name:        "when the caller's ctx ends first the error is the cancel, not a timeout",
+			timeout:     5 * time.Second,
+			cancelAfter: 20 * time.Millisecond,
+			setupMocks: func() {
+				setupPublishAndWaitMocksWithOpts(
+					s.mockCtrl, s.mockNATSClient, s.mockNATSClient,
+					subject,
+					&publishAndWaitMockOpts{closeWatch: true},
+				)
+			},
+			expectedErr: "wait for job response: context canceled",
+		},
 		{
 			name:      "when succeeds with meter provider",
 			data:      nil,
@@ -307,8 +323,14 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			if tt.timeout != 0 {
 				jobs = s.newClient(tt.timeout, "")
 			}
+			ctx := s.ctx
+			if tt.cancelAfter != 0 {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithCancel(s.ctx)
+				time.AfterFunc(tt.cancelAfter, cancel)
+			}
 			jobID, resp, err := jobs.Query(
-				s.ctx,
+				ctx,
 				target,
 				category,
 				operation,
@@ -346,13 +368,42 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 	host2FailResp := `{"status":"failed","error":"provider error","hostname":"server2"}`
 
 	tests := []struct {
-		name         string
-		data         any
-		withMeter    bool
+		name      string
+		data      any
+		withMeter bool
+		// cancelAfter, when set, ends the caller's ctx this long after the
+		// call starts, before the client's timeout.
+		cancelAfter  time.Duration
 		setupMocks   func() *client.Client
 		expectedErr  string
 		validateFunc func(jobID string, results map[string]*job.Response)
 	}{
+		{
+			name:        "when the caller's ctx ends first the answer is the cancel, with no timeout rows",
+			cancelAfter: 20 * time.Millisecond,
+			setupMocks: func() *client.Client {
+				setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+				c, err := newTrusted(s.mockNATSClient, &client.Options{
+					Timeout:        5 * time.Second,
+					JobsBucket:     "jobs",
+					StreamName:     "JOBS",
+					RegistryBucket: "registry",
+				})
+				s.Require().NoError(err)
+				setupPublishAndCollectMocks(
+					s.mockCtrl, s.mockNATSClient, s.mockNATSClient,
+					subject,
+					&publishAndCollectMockOpts{
+						responseEntries: []string{host1Resp},
+						mockError:       errors.New("partial"),
+						errorMode:       errorOnTimeoutWithPartialResponse,
+					},
+				)
+
+				return c
+			},
+			expectedErr: "wait for broadcast responses: context canceled",
+		},
 		{
 			name:      "when succeeds with meter provider",
 			data:      nil,
@@ -812,8 +863,14 @@ func (s *ClientPublicTestSuite) TestQueryBroadcast() {
 				c.SetMeterProvider(sdkmetric.NewMeterProvider())
 			}
 
+			ctx := s.ctx
+			if tt.cancelAfter != 0 {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithCancel(s.ctx)
+				time.AfterFunc(tt.cancelAfter, cancel)
+			}
 			jobID, results, err := c.QueryBroadcast(
-				s.ctx,
+				ctx,
 				target,
 				category,
 				operation,
@@ -2119,62 +2176,5 @@ func (s *ClientPublicTestSuite) TestAuditRecordsSteps() {
 				{Behavior: "managedfile", Method: "update", DurationMS: 3},
 			},
 		}}, audit.StepsFrom(ctx))
-	})
-}
-
-// TestCancelIsNotATimeout: a caller whose ctx ends first stopped waiting.
-// No agent timed out, so the error says the wait ended, and a broadcast
-// fills no timeout rows. Before, both said timeout.
-func (s *ClientPublicTestSuite) TestCancelIsNotATimeout() {
-	opts := &client.Options{
-		Timeout:        5 * time.Second,
-		JobsBucket:     "jobs",
-		StreamName:     "JOBS",
-		RegistryBucket: "registry",
-	}
-	cancelSoon := func() context.Context {
-		ctx, cancel := context.WithCancel(context.Background())
-		time.AfterFunc(20*time.Millisecond, cancel)
-
-		return ctx
-	}
-
-	s.Run("a query", func() {
-		c, err := newTrusted(s.mockNATSClient, opts)
-		s.Require().NoError(err)
-		setupPublishAndWaitMocksWithOpts(
-			s.mockCtrl, s.mockNATSClient, s.mockNATSClient,
-			"jobs.query.host.server1",
-			&publishAndWaitMockOpts{closeWatch: true},
-		)
-
-		_, _, err = c.Query(cancelSoon(), "server1", "node",
-			job.OperationType("node.hostname.get"), nil)
-
-		s.ErrorIs(err, context.Canceled)
-		s.ErrorContains(err, "wait for job response")
-		s.NotContains(err.Error(), "timeout")
-	})
-
-	s.Run("a broadcast with one answer", func() {
-		setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
-		c, err := newTrusted(s.mockNATSClient, opts)
-		s.Require().NoError(err)
-		setupPublishAndCollectMocks(
-			s.mockCtrl, s.mockNATSClient, s.mockNATSClient,
-			"jobs.query._all",
-			&publishAndCollectMockOpts{
-				responseEntries: []string{`{"status":"completed","hostname":"server1"}`},
-				mockError:       errors.New("partial"),
-				errorMode:       errorOnTimeoutWithPartialResponse,
-			},
-		)
-
-		_, results, err := c.QueryBroadcast(cancelSoon(), "_all", "node",
-			job.OperationType("node.hostname.get"), nil)
-
-		s.ErrorIs(err, context.Canceled)
-		s.ErrorContains(err, "wait for broadcast responses")
-		s.Nil(results, "no timeout rows")
 	})
 }
