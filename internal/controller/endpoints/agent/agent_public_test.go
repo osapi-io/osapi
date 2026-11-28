@@ -26,8 +26,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -38,21 +36,22 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-agent-group"}
 
-// HTTPPublicTestSuite runs requests through the agent group's generated
+// AgentPublicTestSuite runs requests through the agent group's generated
 // routes, with the auth, the decoding and the status mapping of the
 // endpoint runtime, as the controller serves them.
-type HTTPPublicTestSuite struct {
+type AgentPublicTestSuite struct {
 	suite.Suite
 
 	ctrl *gomock.Controller
 	jobs *mocks.MockJobs
 }
 
-func (s *HTTPPublicTestSuite) SetupSubTest() {
+func (s *AgentPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.jobs = mocks.NewMockJobs(s.ctrl)
 	// List and Get read the controller's config of each agent.
@@ -60,7 +59,7 @@ func (s *HTTPPublicTestSuite) SetupSubTest() {
 		Return(job.AgentConfig{}, nil).AnyTimes()
 }
 
-func (s *HTTPPublicTestSuite) TearDownSubTest() {
+func (s *AgentPublicTestSuite) TearDownSubTest() {
 	s.ctrl.Finish()
 }
 
@@ -73,7 +72,7 @@ func token(
 	return t
 }
 
-func (s *HTTPPublicTestSuite) serve(
+func (s *AgentPublicTestSuite) serve(
 	method string,
 	path string,
 	tok string,
@@ -97,7 +96,7 @@ func (s *HTTPPublicTestSuite) serve(
 	return rec
 }
 
-func (s *HTTPPublicTestSuite) TestRoutes() {
+func (s *AgentPublicTestSuite) TestRoutes() {
 	read, write := token("agent:read"), token("agent:write")
 	long := strings.Repeat("a", 256)
 
@@ -219,7 +218,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 
 			rec := s.serve(tc.method, tc.path, tc.token)
 
-			s.Equal(tc.wantCode, rec.Code, rec.Body.String())
+			s.Equal(tc.wantCode, rec.Code)
 			if tc.wantBody != "" {
 				s.JSONEq(tc.wantBody, rec.Body.String())
 			}
@@ -227,8 +226,8 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 	}
 }
 
-func TestHTTPPublicTestSuite(
+func TestAgentPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(HTTPPublicTestSuite))
+	suite.Run(t, new(AgentPublicTestSuite))
 }

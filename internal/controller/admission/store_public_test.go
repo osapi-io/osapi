@@ -31,16 +31,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	admissionMocks "github.com/osapi-io/osapi/internal/controller/admission/mocks"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // fakeKV is an in-memory enrollment bucket, so a test checks what the store
@@ -217,7 +221,7 @@ func (s *StorePublicTestSuite) TestList() {
 			s.Equal(types.AdmissionRejected, got[1].State)
 			s.Equal("unknown host", got[1].Reason)
 			s.Equal(types.AdmissionPending, got[2].State)
-			s.Equal(s.fp, got[2].Fingerprint, "the fingerprint of the keys the request carries")
+			s.Equal(s.fp, got[2].Fingerprint)
 			s.Equal(
 				"BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 				got[2].EncryptionKey,
@@ -311,8 +315,7 @@ func (s *StorePublicTestSuite) TestAdmit() {
 
 		err := s.watcher.Admit(context.Background(), "m-1", "SHA256:self-reported")
 
-		s.ErrorIs(err, admission.ErrFingerprintMismatch,
-			"the request's own fingerprint is not proof; the key's is")
+		s.ErrorIs(err, admission.ErrFingerprintMismatch)
 		s.Contains(s.kv.data, admission.KVPrefix()+"m-1")
 		s.NotContains(s.kv.data, admission.AcceptedKVPrefix()+"m-1")
 	})
@@ -414,7 +417,7 @@ func (s *StorePublicTestSuite) TestRevoke() {
 		s.Equal(s.fp, got.Fingerprint)
 		s.Equal(s.at, got.AdmittedAt)
 		_, err = s.watcher.LookupAgentKey(context.Background(), "m-1")
-		s.ErrorIs(err, admission.ErrAgentKeyNotFound, "nothing it signs verifies")
+		s.ErrorIs(err, admission.ErrAgentKeyNotFound)
 	})
 
 	s.Run("when the machine is not admitted returns ErrNoAcceptedAgent", func() {
@@ -476,4 +479,105 @@ func (s *StorePublicTestSuite) TestWriteFailures() {
 
 		s.ErrorContains(w.Reject(context.Background(), "m-1", "x"), "delete failed")
 	})
+}
+
+// spanOf runs call on a watcher whose KV fails, under a request span, and
+// checks that call opens span as a child of the request, marks it failed,
+// and gives the KV calls its context.
+func (s *StorePublicTestSuite) spanOf(
+	name string,
+	call func(w *admission.Watcher, ctx context.Context) error,
+) {
+	recorder := tracetest.NewSpanRecorder()
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	defer otel.SetTracerProvider(previous)
+
+	ctrl := gomock.NewController(s.T())
+	kv := admissionMocks.NewMockKVStore(ctrl)
+	var inside []context.Context
+	kv.EXPECT().KVKeys(gomock.Any(), "enrollment").
+		DoAndReturn(func(ctx context.Context, _ string, _ ...string) ([]string, error) {
+			inside = append(inside, ctx)
+			return nil, errors.New("kv down")
+		}).AnyTimes()
+	kv.EXPECT().KVGet(gomock.Any(), "enrollment", gomock.Any()).
+		DoAndReturn(func(ctx context.Context, _, _ string) (jetstream.KeyValueEntry, error) {
+			inside = append(inside, ctx)
+			return nil, errors.New("kv down")
+		}).
+		AnyTimes()
+	w := admission.NewWatcher(slog.Default(), admissionMocks.NewMockNATSSubscriber(ctrl),
+		kv, "enrollment", admissionMocks.NewMockPKIProvider(ctrl), false, "osapi")
+
+	ctx, request := otel.Tracer("test").Start(context.Background(), "POST /api/admission")
+	s.Error(call(w, ctx))
+	request.End()
+
+	var span sdktrace.ReadOnlySpan
+	for _, sp := range recorder.Ended() {
+		if sp.Name() == name {
+			span = sp
+		}
+	}
+	s.Require().NotNil(span)
+	s.Equal(request.SpanContext().SpanID(), span.Parent().SpanID())
+	s.Equal(codes.Error, span.Status().Code)
+	s.Require().NotEmpty(inside)
+	for _, c := range inside {
+		s.Equal(span.SpanContext().SpanID(), trace.SpanContextFromContext(c).SpanID())
+	}
+}
+
+// TestOperations: each operation of store.go opens its span.
+func (s *StorePublicTestSuite) TestOperations() {
+	tests := []struct {
+		name string
+		span string
+		call func(w *admission.Watcher, ctx context.Context) error
+	}{
+		{
+			name: "when the records are listed opens admission.list",
+			span: "admission.list",
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				_, err := w.List(ctx)
+				return err
+			},
+		},
+		{
+			name: "when a record is read opens admission.get",
+			span: "admission.get",
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				_, err := w.Get(ctx, "m-1")
+				return err
+			},
+		},
+		{
+			name: "when a machine is admitted opens admission.admit",
+			span: "admission.admit",
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				return w.Admit(ctx, "m-1", "SHA256:ab")
+			},
+		},
+		{
+			name: "when a machine is rejected opens admission.reject",
+			span: "admission.reject",
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				return w.Reject(ctx, "m-1", "no")
+			},
+		},
+		{
+			name: "when a machine is revoked opens admission.revoke",
+			span: "admission.revoke",
+			call: func(w *admission.Watcher, ctx context.Context) error {
+				return w.Revoke(ctx, "m-1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.spanOf(tc.span, tc.call)
+		})
+	}
 }

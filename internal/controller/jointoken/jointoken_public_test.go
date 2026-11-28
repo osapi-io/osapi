@@ -31,6 +31,9 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 )
@@ -151,8 +154,7 @@ func (s *JoinTokenPublicTestSuite) TestCreate() {
 	)
 	s.Require().NoError(err)
 	s.True(strings.HasPrefix(token, "osapi_jt_"+t.ID+"."))
-	s.NotContains(string(s.kv.data["jointoken."+t.ID].value), strings.Split(token, ".")[1],
-		"the bucket has the hash, not the token")
+	s.NotContains(string(s.kv.data["jointoken."+t.ID].value), strings.Split(token, ".")[1])
 	s.Equal(s.now.Add(time.Hour), t.ExpiresAt)
 	s.Equal(2, t.UsesLeft)
 
@@ -165,7 +167,7 @@ func (s *JoinTokenPublicTestSuite) TestCreate() {
 		uses    int
 	}{{time.Hour, 0}, {0, 1}, {-time.Hour, 1}} {
 		_, _, err = s.store.Create(context.Background(), bad.expires, bad.uses, nil)
-		s.ErrorIs(err, jointoken.ErrBounds, "uses %d, expires %s", bad.uses, bad.expires)
+		s.ErrorIs(err, jointoken.ErrBounds)
 	}
 
 	for _, fail := range []int{1, 2} {
@@ -194,7 +196,7 @@ func (s *JoinTokenPublicTestSuite) TestCheck() {
 		t, err := s.store.Check(ctx, token)
 		s.Require().NoError(err)
 		s.Equal(made.ID, t.ID)
-		s.Equal(1, t.UsesLeft, "a check takes no use")
+		s.Equal(1, t.UsesLeft)
 	}
 	_, err = s.store.Check(ctx, "nope")
 	s.ErrorIs(err, jointoken.ErrInvalid)
@@ -202,7 +204,7 @@ func (s *JoinTokenPublicTestSuite) TestCheck() {
 	_, err = s.store.Consume(ctx, token)
 	s.Require().NoError(err)
 	_, err = s.store.Check(ctx, token)
-	s.ErrorIs(err, jointoken.ErrUsed, "a token with no use left does not admit")
+	s.ErrorIs(err, jointoken.ErrUsed)
 }
 
 func (s *JoinTokenPublicTestSuite) TestConsume() {
@@ -353,7 +355,7 @@ func (s *JoinTokenPublicTestSuite) TestListAndRevoke() {
 	ctx := context.Background()
 	got, err := s.store.List(ctx)
 	s.Require().NoError(err)
-	s.Empty(got, "an empty bucket lists none")
+	s.Empty(got)
 
 	_, first, err := s.store.Create(ctx, time.Hour, 1, nil)
 	s.Require().NoError(err)
@@ -367,11 +369,10 @@ func (s *JoinTokenPublicTestSuite) TestListAndRevoke() {
 	s.Equal(
 		[]string{first.ID, second.ID},
 		[]string{got[0].ID, got[1].ID},
-		"by when it was made; a bad one is left out",
 	)
 
 	s.Require().NoError(s.store.Revoke(ctx, first.ID))
-	s.ErrorIs(s.store.Revoke(ctx, first.ID), jointoken.ErrInvalid, "a revoked token is gone")
+	s.ErrorIs(s.store.Revoke(ctx, first.ID), jointoken.ErrInvalid)
 
 	s.kv.delErr = errors.New("kv down")
 	s.ErrorContains(s.store.Revoke(ctx, second.ID), "revoke the join token")
@@ -391,4 +392,36 @@ func (s *JoinTokenPublicTestSuite) TestID() {
 
 func TestJoinTokenPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(JoinTokenPublicTestSuite))
+}
+
+// TestSpans: each operation of the store opens its span, which names the
+// token's ID, never the token (osapi-io/osapi#1426).
+func (s *JoinTokenPublicTestSuite) TestSpans() {
+	recorder := tracetest.NewSpanRecorder()
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	defer otel.SetTracerProvider(previous)
+	// A span opens under the request's, as in the controller.
+	ctx, root := otel.Tracer("test").Start(context.Background(), "request")
+	defer root.End()
+
+	token, t, err := s.store.Create(ctx, time.Hour, 2, nil)
+	s.Require().NoError(err)
+	_, err = s.store.Consume(ctx, token)
+	s.Require().NoError(err)
+	_, err = s.store.List(ctx)
+	s.Require().NoError(err)
+	s.Require().NoError(s.store.Revoke(ctx, t.ID))
+
+	secret := token[strings.Index(token, ".")+1:]
+	seen := map[string]bool{}
+	for _, sp := range recorder.Ended() {
+		seen[sp.Name()] = true
+		for _, a := range sp.Attributes() {
+			s.False(strings.Contains(a.Value.String(), secret))
+		}
+	}
+	for _, name := range []string{"jointoken.create", "jointoken.consume", "jointoken.list", "jointoken.revoke"} {
+		s.True(seen[name])
+	}
 }

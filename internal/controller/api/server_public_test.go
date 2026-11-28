@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -164,7 +165,6 @@ func (s *ServerPublicTestSuite) TestNew() {
 				s.Equal(
 					"http://localhost:3000",
 					s.corsHeaderFor(server),
-					"a configured origin is answered",
 				)
 			},
 		},
@@ -188,7 +188,6 @@ func (s *ServerPublicTestSuite) TestNew() {
 				s.NotNil(server)
 				s.Empty(
 					s.corsHeaderFor(server),
-					"an unconfigured server allows no origin",
 				)
 			},
 		},
@@ -584,6 +583,95 @@ func (s *ServerPublicTestSuite) TestStartServes() {
 				}, 2*time.Second, 10*time.Millisecond)
 			}
 			server.Stop(context.Background())
+		})
+	}
+}
+
+// TestErrorBody holds each error that a route returns to the body of each
+// error of the API, {"error": "..."}.
+func (s *ServerPublicTestSuite) TestErrorBody() {
+	tests := []struct {
+		name     string
+		method   string
+		route    echo.HandlerFunc
+		wantCode int
+		wantBody string
+	}{
+		{
+			name:   "when a parameter does not bind, the 400 says why in error",
+			method: http.MethodGet,
+			route: func(_ *echo.Context) error {
+				return echo.NewHTTPError(
+					http.StatusBadRequest,
+					"query parameter 'path' is required",
+				)
+			},
+			wantCode: http.StatusBadRequest,
+			wantBody: `{"error":"query parameter 'path' is required","reason":"invalid_request"}`,
+		},
+		{
+			name:     "when the route is not there, the 404 is in error",
+			method:   http.MethodGet,
+			wantCode: http.StatusNotFound,
+			wantBody: `{"error":"Not Found","reason":"not_found"}`,
+		},
+		{
+			name:   "when a route fails with a plain error, it is a 500 that tells no detail",
+			method: http.MethodGet,
+			route: func(_ *echo.Context) error {
+				return errors.New("dial tcp 10.0.0.9:4222: refused")
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: `{"error":"Internal Server Error","reason":"server_error"}`,
+		},
+		{
+			name:   "when a 500 has a message, it still tells only its status",
+			method: http.MethodGet,
+			route: func(_ *echo.Context) error {
+				return echo.NewHTTPError(http.StatusInternalServerError, "nats: timeout")
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: `{"error":"Internal Server Error","reason":"server_error"}`,
+		},
+		{
+			name:   "when the request is a HEAD, the error has no body",
+			method: http.MethodHead,
+			route: func(_ *echo.Context) error {
+				return echo.NewHTTPError(http.StatusBadRequest, "bad")
+			},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:   "when the route already answered, the error changes nothing",
+			method: http.MethodGet,
+			route: func(c *echo.Context) error {
+				_ = c.NoContent(http.StatusAccepted)
+
+				return errors.New("after the answer")
+			},
+			wantCode: http.StatusAccepted,
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			srv := api.New(config.Config{}, slog.Default())
+			if tc.route != nil {
+				srv.Echo.Add(tc.method, "/api/thing", tc.route)
+			}
+			path := "/api/thing"
+			if tc.route == nil {
+				path = "/api/nothing-here"
+			}
+			rec := httptest.NewRecorder()
+			srv.Echo.ServeHTTP(rec, httptest.NewRequest(tc.method, path, nil))
+
+			s.Equal(tc.wantCode, rec.Code)
+			if tc.wantBody == "" {
+				s.Empty(rec.Body.String())
+
+				return
+			}
+			s.JSONEq(tc.wantBody, rec.Body.String())
 		})
 	}
 }
