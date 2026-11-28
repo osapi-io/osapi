@@ -44,10 +44,6 @@ var svc = initsys.Service{
 
 func (s *InitsysPublicTestSuite) TestSystemd() {
 	s.Equal("/etc/systemd/system/osapi-app.service", initsys.SystemdPath("osapi-app"))
-	s.Equal("# Written by a test.\n[Unit]\nDescription=osapi app\nAfter=network-online.target\n"+
-		"Wants=network-online.target\n\n[Service]\nExecStart=/usr/local/bin/app --name a&b<c>\n"+
-		"Restart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target\n",
-		string(initsys.SystemdUnit(svc)))
 	s.Equal(
 		[][]string{{"systemctl", "daemon-reload"}, {"systemctl", "enable", "--now", "osapi-app"}},
 		initsys.SystemdEnable("osapi-app"),
@@ -61,6 +57,58 @@ func (s *InitsysPublicTestSuite) TestSystemd() {
 		[]string{"systemctl", "restart", "osapi-app.service"},
 		initsys.SystemdAct("restart", "osapi-app"),
 	)
+}
+
+func (s *InitsysPublicTestSuite) TestSystemdUnit() {
+	unit := func(execStart string) string {
+		return "# Written by a test.\n[Unit]\nDescription=osapi app\n" +
+			"After=network-online.target\nWants=network-online.target\n\n" +
+			"[Service]\nExecStart=" + execStart + "\nRestart=always\nRestartSec=5\n\n" +
+			"[Install]\nWantedBy=multi-user.target\n"
+	}
+	tests := []struct {
+		name         string
+		args         []string
+		validateFunc func(string)
+	}{
+		{
+			name: "arguments that systemd does not split stay as they are",
+			args: []string{"/usr/local/bin/app", "--name", "a&b<c>"},
+			validateFunc: func(got string) {
+				s.Equal(unit("/usr/local/bin/app --name a&b<c>"), got)
+			},
+		},
+		{
+			name: "an argument with a space is quoted",
+			args: []string{"/usr/local/bin/osapi", "-f", "/etc/my osapi/agent.yaml"},
+			validateFunc: func(got string) {
+				s.Equal(unit(`/usr/local/bin/osapi -f "/etc/my osapi/agent.yaml"`), got)
+			},
+		},
+		{
+			name: "a specifier, a variable, a quote and a backslash are escaped",
+			args: []string{"/bin/app", `100%`, `$HOME`, `say "hi"`, `a\b`},
+			validateFunc: func(got string) {
+				s.Equal(unit(`/bin/app "100%%" "$$HOME" "say \"hi\"" "a\\b"`), got)
+			},
+		},
+		{
+			name: "an empty argument stays an argument",
+			args: []string{"/bin/app", ""},
+			validateFunc: func(got string) {
+				s.Equal(unit(`/bin/app ""`), got)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			service := svc
+			service.Args = tt.args
+
+			tt.validateFunc(string(initsys.SystemdUnit(service)))
+		})
+	}
 }
 
 func (s *InitsysPublicTestSuite) TestLaunchd() {
