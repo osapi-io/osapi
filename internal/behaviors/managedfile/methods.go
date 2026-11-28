@@ -26,8 +26,9 @@ import (
 	"io/fs"
 	"maps"
 	"path/filepath"
-	"regexp"
 	"strconv"
+
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 // Unapplied is the key of the metadata that marks a file whose write landed
@@ -61,7 +62,7 @@ func Update(
 	if err := absolute(in.Path); err != nil {
 		return Result{}, err
 	}
-	f, err := file(in)
+	f, err := file(ctx, in)
 	if err != nil {
 		return Result{}, err
 	}
@@ -115,12 +116,10 @@ func absolute(
 	return nil
 }
 
-// account is a user or group name chown can be given safely.
-var account = regexp.MustCompile(`^[a-z_][a-z0-9_-]*$`)
-
 // file is in as a File: its mode parsed, and its owner and group checked,
 // since they reach chown.
 func file(
+	ctx context.Context,
 	in UpdateInput,
 ) (File, error) {
 	f := File{
@@ -141,8 +140,10 @@ func file(
 		}
 		f.Mode = fs.FileMode(mode)
 	}
+	// The owner and the group reach chown, so they follow the account_name
+	// rule of the input, the one rule of an account name.
 	for _, name := range []string{in.Owner, in.Group} {
-		if name != "" && !account.MatchString(name) {
+		if _, ok := validation.Var(ctx, name, "omitempty,account_name"); !ok {
 			return File{}, fmt.Errorf("invalid owner or group %q", name)
 		}
 	}

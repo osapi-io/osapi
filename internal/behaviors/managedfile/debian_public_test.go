@@ -139,13 +139,40 @@ func (s *DebianPublicTestSuite) TestWriteOfTheSameContent() {
 		managedfile.State{Path: path, UndeployedAt: "2026-11-22T00:00:00Z"},
 	)
 	tests := []struct {
-		name   string
-		record []byte
-		err    error
+		name         string
+		record       []byte
+		err          error
+		validateFunc func(changed bool, err error, put []byte)
 	}{
-		{name: "when the path has no record, it does not change", err: jetstream.ErrKeyNotFound},
-		{name: "when the record cannot be read, it does not change", record: []byte("{")},
-		{name: "when the record is undeployed, it does not change", record: undeployed},
+		{
+			// A retry after a record that failed to write finds the file and
+			// no record: the write records it, so the path is managed.
+			name: "when the path has no record, the write records it",
+			err:  jetstream.ErrKeyNotFound,
+			validateFunc: func(changed bool, err error, put []byte) {
+				s.Require().NoError(err)
+				s.True(changed)
+				s.Contains(string(put), `"metadata":{"a":"b"}`)
+			},
+		},
+		{
+			name:   "when the record cannot be read, it does not change",
+			record: []byte("{"),
+			validateFunc: func(changed bool, err error, put []byte) {
+				s.Require().NoError(err)
+				s.False(changed)
+				s.Nil(put)
+			},
+		},
+		{
+			name:   "when the record is undeployed, the write records it again",
+			record: undeployed,
+			validateFunc: func(changed bool, err error, put []byte) {
+				s.Require().NoError(err)
+				s.True(changed)
+				s.NotContains(string(put), "undeployed_at")
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -159,6 +186,13 @@ func (s *DebianPublicTestSuite) TestWriteOfTheSameContent() {
 				entry.EXPECT().Value().Return(tc.record)
 			}
 			s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, tc.err)
+			var put []byte
+			s.state.EXPECT().KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+					put = data
+
+					return 1, nil
+				}).AnyTimes()
 			p := managedfile.NewDebian(fs, s.state, "file-state", nil, "web-01")
 
 			changed, err := p.Write(
@@ -170,8 +204,7 @@ func (s *DebianPublicTestSuite) TestWriteOfTheSameContent() {
 				},
 			)
 
-			s.NoError(err)
-			s.False(changed)
+			tc.validateFunc(changed, err, put)
 		})
 	}
 }

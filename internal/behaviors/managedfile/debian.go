@@ -58,6 +58,9 @@ type debian struct {
 	// stat are the arguments of stat that print a file's owner and group
 	// as owner:group: GNU's on Linux, BSD's on macOS.
 	stat []string
+	// now is the time of a record: the host's clock, so an example has one
+	// answer.
+	now func() time.Time
 }
 
 // gnuStat are the arguments of GNU stat that print owner:group.
@@ -74,6 +77,7 @@ func NewDebian(
 ) Provider {
 	return &debian{
 		fs: fs, state: state, bucket: bucket, exec: exec, hostname: hostname, stat: gnuStat,
+		now: time.Now,
 	}
 }
 
@@ -86,7 +90,10 @@ func newDebian(
 		return nil, behavior.ErrUnsupported
 	}
 
-	return NewDebian(h.FS, h.FileState, h.FileStateBucket, h.Exec, h.Hostname), nil
+	d := NewDebian(h.FS, h.FileState, h.FileStateBucket, h.Exec, h.Hostname).(*debian)
+	d.now = h.Time
+
+	return d, nil
 }
 
 // Write makes f.Path hold f.Content with its mode and ownership. Whether it
@@ -150,7 +157,7 @@ func (d *debian) Write(
 		Mode:        fmt.Sprintf("%04o", mode.Perm()),
 		Owner:       f.Owner,
 		Group:       f.Group,
-		DeployedAt:  time.Now().UTC().Format(time.RFC3339),
+		DeployedAt:  d.now().UTC().Format(time.RFC3339),
 		Metadata:    f.Metadata,
 	}
 	if !f.Secret {
@@ -173,17 +180,21 @@ func (d *debian) Write(
 // whose file did not, or another object, such as a template whose object
 // changed and renders the same file. The write then changes the record, so
 // that a read gives the new metadata and the stale check the new object. A
-// path that has no record, or an undeployed one, is not stale: a file with
-// the content that osapi did not deploy stays as it is. A record that
-// cannot be read is not stale either; Read reports it. A failed read of the
-// store is an error, so that a store outage does not pass for no record.
+// path that has no record, or an undeployed one, is stale too: a write
+// manages the path from then on, so a retry after a record that failed to
+// write records it. A record that cannot be read is not stale; Read reports
+// it. A failed read of the store is an error, so that a store outage does not
+// pass for no record.
 func (d *debian) stale(
 	ctx context.Context,
 	f File,
 ) (bool, error) {
 	entry, err := d.record(ctx, f.Path)
-	if err != nil || entry == nil {
+	if err != nil {
 		return false, err
+	}
+	if entry == nil {
+		return true, nil
 	}
 	var state State
 	if err := json.Unmarshal(entry.Value(), &state); err != nil {
@@ -195,7 +206,7 @@ func (d *debian) stale(
 		objectSHA = ""
 	}
 
-	return state.UndeployedAt == "" && (!maps.Equal(state.Metadata, f.Metadata) ||
+	return state.UndeployedAt != "" || (!maps.Equal(state.Metadata, f.Metadata) ||
 		state.ObjectName != f.Object || state.ContentType != f.ContentType ||
 		state.ObjectSHA256 != objectSHA), nil
 }
@@ -281,7 +292,7 @@ func (d *debian) Remove(
 		changed = true
 	}
 
-	state.UndeployedAt = time.Now().UTC().Format(time.RFC3339)
+	state.UndeployedAt = d.now().UTC().Format(time.RFC3339)
 	data, err := marshalJSON(state)
 	if err != nil {
 		return false, fmt.Errorf("marshal state: %w", err)

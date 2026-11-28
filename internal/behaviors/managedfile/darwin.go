@@ -45,5 +45,6 @@ func newDarwin(
 		exec:     h.Exec,
 		hostname: h.Hostname,
 		stat:     bsdStat,
+		now:      h.Time,
 	}, nil
 }
