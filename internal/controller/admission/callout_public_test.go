@@ -29,6 +29,7 @@ import (
 
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/bus"
@@ -58,7 +59,7 @@ func (c checkTokens) Check(
 func (s *StorePublicTestSuite) joinWithUserKey(
 	user nkeys.KeyPair,
 ) {
-	s.watcher.SetJoinTokens(fakeTokens{})
+	s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
 	userPub, _ := user.PublicKey()
 	r := pki.JoinRequest{
@@ -237,7 +238,7 @@ func (s *StorePublicTestSuite) TestCallout() {
 
 			got, err := s.watcher.Callout(tt.roles())(context.Background(), tt.req())
 
-			s.Require().NotEmpty(log.entries, "each decision is audited")
+			s.Require().NotEmpty(log.entries)
 			e := log.entries[len(log.entries)-1]
 			s.Equal("nats.connect", e.Action)
 			s.Equal(tt.actor, e.Actor)
@@ -263,6 +264,6 @@ func (s *StorePublicTestSuite) TestJoinIndexFails() {
 		user, _ := nkeys.CreateUser()
 		s.joinWithUserKey(user)
 		_, err := s.watcher.LookupAgentKey(context.Background(), "m-1")
-		s.NoError(err, "the machine is admitted")
+		s.NoError(err)
 	})
 }

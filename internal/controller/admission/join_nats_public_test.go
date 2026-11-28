@@ -25,11 +25,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/osapi-io/osapi/internal/audit"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/nats-io/nats.go"
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/pki"
@@ -102,7 +102,7 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		log := &joinLog{}
 		s.watcher.SetAudit(log)
 		defer s.watcher.SetAudit(nil)
-		s.watcher.SetJoinTokens(fakeTokens{})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 
 		reply := s.serveJoin(data, nil)
@@ -113,11 +113,10 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		s.Equal(
 			map[string]string{"group": "web"},
 			reply.Labels,
-			"the agent gets the token's labels",
 		)
 		s.Require().Len(log.entries, 1)
 		e := log.entries[0]
-		s.Equal("t1", e.User, "the token's ID, never the token")
+		s.Equal("t1", e.User)
 		s.Equal(audit.ActorJoinToken, e.Actor)
 		s.Equal("agent.join", e.Action)
 		s.Equal("m-1", e.Target)
@@ -134,7 +133,7 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		log := &joinLog{err: errors.New("audit down")}
 		s.watcher.SetAudit(log)
 		defer s.watcher.SetAudit(nil)
-		s.watcher.SetJoinTokens(fakeTokens{err: jointoken.ErrExpired})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), jointoken.ErrExpired))
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 
 		reply := s.serveJoin(data, errors.New("no reply subject"))
@@ -147,7 +146,7 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 	})
 
 	s.Run("a machine that is admitted but gets no user is told why", func() {
-		s.watcher.SetJoinTokens(fakeTokens{})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 		data, _ := json.Marshal(joinRequest("osapi_jt_t1.secret"))
 		var handler nats.MsgHandler
 		ready := make(chan struct{})
@@ -188,7 +187,7 @@ func (s *StorePublicTestSuite) TestServeJoin() {
 		reply := s.serveJoin([]byte("{"), nil)
 		s.Require().Len(log.entries, 1)
 		s.Equal(audit.ActorJoinToken, log.entries[0].Actor)
-		s.Empty(log.entries[0].User, "a request that is not JSON names no token")
+		s.Empty(log.entries[0].User)
 
 		s.Equal("the join request is not JSON", reply.Error)
 	})

@@ -26,46 +26,57 @@ import (
 	"crypto/rand"
 	"errors"
 
+	"go.uber.org/mock/gomock"
+
 	"github.com/osapi-io/osapi/internal/controller/admission"
+	admissionMocks "github.com/osapi-io/osapi/internal/controller/admission/mocks"
 	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// fakeTokens is a store of join tokens that admits one token.
-type fakeTokens struct {
-	err error
+// newTokens is a store of join tokens that admits the token
+// osapi_jt_t1.secret, or that fails each use with err.
+func newTokens(
+	ctrl *gomock.Controller,
+	err error,
+) *admissionMocks.MockJoinTokens {
+	m := admissionMocks.NewMockJoinTokens(ctrl)
+	m.EXPECT().Consume(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(_ context.Context, token string) (jointoken.Token, error) {
+			if err != nil {
+				return jointoken.Token{}, err
+			}
+			if token != "osapi_jt_t1.secret" {
+				return jointoken.Token{}, jointoken.ErrInvalid
+			}
+
+			return jointoken.Token{ID: "t1", Labels: map[string]string{"group": "web"}}, nil
+		},
+	).AnyTimes()
+
+	return m
 }
 
-func (f fakeTokens) Consume(
-	_ context.Context,
-	token string,
-) (jointoken.Token, error) {
-	if f.err != nil {
-		return jointoken.Token{}, f.err
-	}
-	if token != "osapi_jt_t1.secret" {
-		return jointoken.Token{}, jointoken.ErrInvalid
-	}
+// newCountingTokens admits each token whose ID is t1, and counts each use in
+// calls.
+func newCountingTokens(
+	ctrl *gomock.Controller,
+	calls *int,
+) *admissionMocks.MockJoinTokens {
+	m := admissionMocks.NewMockJoinTokens(ctrl)
+	m.EXPECT().Consume(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(_ context.Context, token string) (jointoken.Token, error) {
+			*calls++
+			if id, ok := jointoken.ID(token); !ok || id != "t1" {
+				return jointoken.Token{}, jointoken.ErrInvalid
+			}
 
-	return jointoken.Token{ID: "t1", Labels: map[string]string{"group": "web"}}, nil
-}
+			return jointoken.Token{ID: "t1", Labels: map[string]string{"group": "web"}}, nil
+		},
+	).AnyTimes()
 
-// countingTokens admits each token whose ID is t1, and counts each use.
-type countingTokens struct {
-	calls *int
-}
-
-func (c countingTokens) Consume(
-	_ context.Context,
-	token string,
-) (jointoken.Token, error) {
-	*c.calls++
-	if id, ok := jointoken.ID(token); !ok || id != "t1" {
-		return jointoken.Token{}, jointoken.ErrInvalid
-	}
-
-	return jointoken.Token{ID: "t1", Labels: map[string]string{"group": "web"}}, nil
+	return m
 }
 
 // joinRequest is a join of m-1 with token, signed by its own key.
@@ -87,7 +98,7 @@ func joinRequest(
 
 func (s *StorePublicTestSuite) TestJoin() {
 	s.Run("when the token admits, the machine is admitted at once, with the token named", func() {
-		s.watcher.SetJoinTokens(fakeTokens{})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 		s.pending("m-1", "web-01")
 		s.put("rejected.m-1", admission.Record{MachineID: "m-1"})
 		s.put("revoked.m-1", admission.Record{MachineID: "m-1"})
@@ -96,12 +107,12 @@ func (s *StorePublicTestSuite) TestJoin() {
 		key, err := s.watcher.Join(context.Background(), req)
 
 		s.Require().NoError(err)
-		s.Len(key, ed25519.PublicKeySize, "the controller's key, for the agent to keep")
+		s.Len(key, ed25519.PublicKeySize)
 		got, err := s.watcher.Get(context.Background(), "m-1")
 		s.Require().NoError(err)
 		s.Equal(types.AdmissionAdmitted, got.State)
 		s.Equal("t1", got.JoinToken)
-		s.Equal(map[string]string{"group": "web"}, got.JoinLabels, "the token's labels are kept")
+		s.Equal(map[string]string{"group": "web"}, got.JoinLabels)
 		s.Equal(pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey), got.Fingerprint)
 		s.NotContains(s.kv.data, admission.KVPrefix()+"m-1")
 		s.NotContains(s.kv.data, "rejected.m-1")
@@ -112,7 +123,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 		"when the reply was lost, the same machine, key and token join again with no use",
 		func() {
 			calls := 0
-			s.watcher.SetJoinTokens(countingTokens{calls: &calls})
+			s.watcher.SetJoinTokens(newCountingTokens(gomock.NewController(s.T()), &calls))
 			req := joinRequest("osapi_jt_t1.c2VjcmV0")
 
 			_, err := s.watcher.Join(context.Background(), req)
@@ -124,12 +135,12 @@ func (s *StorePublicTestSuite) TestJoin() {
 
 			s.Require().NoError(err)
 			s.Len(key, ed25519.PublicKeySize)
-			s.Equal(1, calls, "one use of the token")
+			s.Equal(1, calls)
 
 			other := joinRequest("osapi_jt_t1.c2VjcmV0")
 			_, err = s.watcher.Join(context.Background(), other)
 			s.Require().NoError(err)
-			s.Equal(2, calls, "a new key takes a use")
+			s.Equal(2, calls)
 
 			bad := joinRequest("not-a-token")
 			_, _ = s.watcher.Join(context.Background(), bad)
@@ -138,7 +149,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 	)
 
 	s.Run("when the request is not signed by its key, nothing is admitted", func() {
-		s.watcher.SetJoinTokens(fakeTokens{})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 		req := joinRequest("osapi_jt_t1.secret")
 		req.Hostname = "other"
 
@@ -149,7 +160,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 	})
 
 	s.Run("when the encryption key is not a P-256 key, nothing is admitted", func() {
-		s.watcher.SetJoinTokens(fakeTokens{})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 		pub, priv, _ := ed25519.GenerateKey(rand.Reader)
 		req := pki.JoinRequest{
 			Token:         "osapi_jt_t1.secret",
@@ -167,7 +178,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 	})
 
 	s.Run("when the token does not admit, its error comes back and nothing is admitted", func() {
-		s.watcher.SetJoinTokens(fakeTokens{err: jointoken.ErrExpired})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), jointoken.ErrExpired))
 
 		_, err := s.watcher.Join(context.Background(), joinRequest("osapi_jt_t1.secret"))
 
@@ -182,7 +193,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 	})
 
 	s.Run("when the record cannot be written, it is the error", func() {
-		s.watcher.SetJoinTokens(fakeTokens{})
+		s.watcher.SetJoinTokens(newTokens(gomock.NewController(s.T()), nil))
 		admission.SetMarshalFn(func(any) ([]byte, error) { return nil, errors.New("no marshal") })
 
 		_, err := s.watcher.Join(context.Background(), joinRequest("osapi_jt_t1.secret"))

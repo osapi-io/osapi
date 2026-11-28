@@ -31,8 +31,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -41,10 +39,13 @@ import (
 	admissionMocks "github.com/osapi-io/osapi/internal/controller/admission/mocks"
 	jobMocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // fakeKV is an in-memory enrollment bucket, so a test checks what the store
-// leaves in it rather than the calls it makes.
+// leaves in it rather than the calls it makes. It is the second exception of
+// CONTRIBUTING's Test doubles: a double with a real implementation of the
+// behavior under test, a key-value store.
 type fakeKV struct {
 	ctrl    *gomock.Controller
 	data    map[string][]byte
@@ -217,7 +218,7 @@ func (s *StorePublicTestSuite) TestList() {
 			s.Equal(types.AdmissionRejected, got[1].State)
 			s.Equal("unknown host", got[1].Reason)
 			s.Equal(types.AdmissionPending, got[2].State)
-			s.Equal(s.fp, got[2].Fingerprint, "the fingerprint of the keys the request carries")
+			s.Equal(s.fp, got[2].Fingerprint)
 			s.Equal(
 				"BH0Fq2u2_BBIGuYw6KRZYg4I1pT5DACIZUCrhDK5Y7Phpl1MRex_y4Y60InurvbYIiZDQ2MHIcmOXF8SfLlA5fs",
 				got[2].EncryptionKey,
@@ -311,8 +312,7 @@ func (s *StorePublicTestSuite) TestAdmit() {
 
 		err := s.watcher.Admit(context.Background(), "m-1", "SHA256:self-reported")
 
-		s.ErrorIs(err, admission.ErrFingerprintMismatch,
-			"the request's own fingerprint is not proof; the key's is")
+		s.ErrorIs(err, admission.ErrFingerprintMismatch)
 		s.Contains(s.kv.data, admission.KVPrefix()+"m-1")
 		s.NotContains(s.kv.data, admission.AcceptedKVPrefix()+"m-1")
 	})
@@ -414,7 +414,7 @@ func (s *StorePublicTestSuite) TestRevoke() {
 		s.Equal(s.fp, got.Fingerprint)
 		s.Equal(s.at, got.AdmittedAt)
 		_, err = s.watcher.LookupAgentKey(context.Background(), "m-1")
-		s.ErrorIs(err, admission.ErrAgentKeyNotFound, "nothing it signs verifies")
+		s.ErrorIs(err, admission.ErrAgentKeyNotFound)
 	})
 
 	s.Run("when the machine is not admitted returns ErrNoAcceptedAgent", func() {

@@ -30,39 +30,50 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/stretchr/testify/suite"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	agentMocks "github.com/osapi-io/osapi/internal/cli/commands/agentcmd/mocks"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
+	controllerMocks "github.com/osapi-io/osapi/internal/cli/commands/controllercmd/mocks"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
+	natsMocks "github.com/osapi-io/osapi/internal/cli/commands/natsserver/mocks"
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
-	"github.com/osapi-io/osapi/internal/cryptoreport"
-	"github.com/osapi-io/osapi/internal/job"
 )
 
 type MethodsPublicTestSuite struct {
 	suite.Suite
 }
 
-type fake struct{}
+// newServers are mocks of the NATS server, the controller and the agent
+// that answer each call, so Start runs each component to the end.
+func newServers(
+	ctrl *gomock.Controller,
+) (natsserver.Server, controllercmd.Controller, agentcmd.Agent) {
+	n := natsMocks.NewMockServer(ctrl)
+	n.EXPECT().Start().Return(nil).AnyTimes()
+	n.EXPECT().Stop(gomock.Any()).AnyTimes()
+	n.EXPECT().StartHeartbeat(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-func (fake) Start() error                                   { return nil }
-func (fake) Stop(context.Context)                           {}
-func (fake) IsReady() error                                 { return nil }
-func (fake) CheckHealth(context.Context) error              { return nil }
-func (fake) SubComponents() map[string]job.SubComponentInfo { return nil }
-func (fake) LastHeartbeatTime() time.Time                   { return time.Time{} }
-func (fake) SetVersion(string)                              {}
-func (fake) SetLogLevel(*slog.LevelVar)                     {}
-func (fake) SetMeterProvider(*sdkmetric.MeterProvider)      {}
+	c := controllerMocks.NewMockController(ctrl)
+	c.EXPECT().Start().Return(nil).AnyTimes()
+	c.EXPECT().Stop(gomock.Any()).AnyTimes()
+	c.EXPECT().CheckHealth(gomock.Any()).Return(nil).AnyTimes()
+	c.EXPECT().SubComponents().Return(nil).AnyTimes()
 
-func (fake) StartHeartbeat(
-	context.Context,
-	string,
-	config.ProcessConditions,
-	*cryptoreport.Report,
-) {
+	a := agentMocks.NewMockAgent(ctrl)
+	a.EXPECT().Start().Return(nil).AnyTimes()
+	a.EXPECT().Stop(gomock.Any()).AnyTimes()
+	a.EXPECT().IsReady().Return(nil).AnyTimes()
+	a.EXPECT().SetMeterProvider(gomock.Any()).AnyTimes()
+	a.EXPECT().SubComponents().Return(nil).AnyTimes()
+	a.EXPECT().LastHeartbeatTime().Return(time.Time{}).AnyTimes()
+	a.EXPECT().SetVersion(gomock.Any()).AnyTimes()
+	a.EXPECT().SetLogLevel(gomock.Any()).AnyTimes()
+
+	return n, c, a
 }
 
 // result is what Start made, and what its cleanup did.
@@ -93,8 +104,8 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				s.Equal(3, got.n)
 				s.Equal("osapi", got.tracer)
 				got.cleanup()
-				s.True(*got.closed, "the agent's connection closes")
-				s.True(*got.stopped, "the tracer stops")
+				s.True(*got.closed)
+				s.True(*got.stopped)
 			},
 		},
 		{
@@ -138,6 +149,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 		s.Run(tc.name, func() {
 			var closed, stopped bool
 			var tracer string
+			natsSrv, controllerSrv, agentSrv := newServers(gomock.NewController(s.T()))
 			log := slog.New(slog.DiscardHandler)
 			d := startcmd.Deps{
 				NATS: natsserver.Deps{
@@ -145,7 +157,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 					NewServer: func(
 						context.Context, *slog.Logger, config.NATS, *sdkmetric.MeterProvider,
 					) (natsserver.Server, error) {
-						return fake{}, tc.natsErr
+						return natsSrv, tc.natsErr
 					},
 				},
 				Controller: controllercmd.Deps{
@@ -153,7 +165,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 					NewController: func(
 						context.Context, *slog.Logger, config.Config, ...controller.Option,
 					) (controllercmd.Controller, error) {
-						return fake{}, tc.controlErr
+						return controllerSrv, tc.controlErr
 					},
 				},
 				Agent: agentcmd.Deps{
@@ -167,7 +179,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 					NewAgent: func(
 						context.Context, *slog.Logger, avfs.VFS, config.Config, *sdkmetric.MeterProvider,
 					) (agentcmd.Agent, func(), error) {
-						return fake{}, func() { closed = true }, tc.agentErr
+						return agentSrv, func() { closed = true }, tc.agentErr
 					},
 				},
 			}
