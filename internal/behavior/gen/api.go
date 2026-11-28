@@ -198,6 +198,10 @@ func responseCases(
 		if err != nil {
 			return nil, err
 		}
+		exIn, err := inputCode(ex.Doc, ex.Input)
+		if err != nil {
+			return nil, err
+		}
 		one, err := request(b, m, "server1", ex.Input)
 		if err != nil {
 			return nil, err
@@ -205,7 +209,7 @@ func responseCases(
 		one.name = "when the example " + strconv.Quote(
 			ex.Doc,
 		) + " is sent, the host's result is returned"
-		one.job = jobCall(b, m, "server1", ex.Input, completed("server1", string(out)))
+		one.job = jobCall(b, m, "server1", exIn, completed("server1", string(out)))
 		one.code = http.StatusOK
 		one.wantBody = body(rows(m, "server1", out))
 		cases = append(cases, one)
@@ -216,7 +220,7 @@ func responseCases(
 		}
 		all.name = "when the example " + strconv.Quote(ex.Doc) +
 			" is broadcast, every host's result is returned"
-		all.job = jobCall(b, m, string(types.TargetAll), ex.Input,
+		all.job = jobCall(b, m, string(types.TargetAll), exIn,
 			completed("server1", string(out)),
 			jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server2")),
 			jen.Qual(servertestPath, "Failed").Call(jen.Lit("server3"), jen.Lit("boom")),
@@ -229,6 +233,10 @@ func responseCases(
 	}
 
 	input := firstInput(m)
+	in, err := inputCode("the first example", input)
+	if err != nil {
+		return nil, err
+	}
 	base, err := request(b, m, "server1", input)
 	if err != nil {
 		return nil, err
@@ -249,14 +257,14 @@ func responseCases(
 			b,
 			m,
 			"server1",
-			input,
+			in,
 			jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server1")),
 		),
 		http.StatusOK,
 		body([]map[string]any{failedRow("server1", "skipped", "unsupported")}),
 	)
 	add(base, "when the host fails it, its row says failed",
-		jobCall(b, m, "server1", input,
+		jobCall(b, m, "server1", in,
 			jen.Qual(servertestPath, "Failed").Call(jen.Lit("server1"), jen.Lit("boom"))),
 		http.StatusOK, body([]map[string]any{failedRow("server1", "failed", "boom")}))
 	add(
@@ -266,20 +274,20 @@ func responseCases(
 			b,
 			m,
 			"server1",
-			input,
+			in,
 			jen.Qual(servertestPath, "TimedOut").Call(jen.Lit("server1")),
 		),
 		http.StatusOK,
 		body([]map[string]any{failedRow("server1", "timeout", "")}),
 	)
 	add(base, "when the job client fails, it is a 500",
-		failing(jobCall(b, m, "server1", input), jen.Qual(servertestPath, "ErrUnreachable")),
+		failing(jobCall(b, m, "server1", in), jen.Qual(servertestPath, "ErrUnreachable")),
 		http.StatusInternalServerError, "")
 	add(
 		all,
 		"when broadcast and the job client fails, it is a 500",
 		failing(
-			jobCall(b, m, string(types.TargetAll), input),
+			jobCall(b, m, string(types.TargetAll), in),
 			jen.Qual(servertestPath, "ErrUnreachable"),
 		),
 		http.StatusInternalServerError,
@@ -287,7 +295,7 @@ func responseCases(
 	)
 	if m.KeyField != "" {
 		add(base, "when the host does not have it, it is a 404",
-			failing(jobCall(b, m, "server1", input),
+			failing(jobCall(b, m, "server1", in),
 				jen.Qual(servertestPath, "NotFound").Call(jen.Lit("server1"))),
 			http.StatusNotFound, "")
 	}
@@ -431,7 +439,11 @@ func rbacCases(
 	admin := base
 	admin.name, admin.token, admin.code = "when the token has the admin role, the request runs",
 		"Admin", http.StatusOK
-	admin.job = jobCall(b, m, "server1", firstInput(m),
+	in, err := inputCode("the first example", firstInput(m))
+	if err != nil {
+		return nil, err
+	}
+	admin.job = jobCall(b, m, "server1", in,
 		jen.Qual(servertestPath, "Skipped").Call(jen.Lit("server1")))
 	admin.wantBody = body([]map[string]any{failedRow("server1", "skipped", "unsupported")})
 	cases = append(cases, admin)
@@ -533,21 +545,33 @@ func bodyField(
 	return jen.Id("Body").Op(":").Add(raw(body))
 }
 
-// jobCall is the servertest call the job client expects for input on target.
+// inputCode is input as the Go literal that a generated test sends. An
+// input with no literal is an error of the generator: a test that sent
+// something else would check the wrong input.
+func inputCode(
+	ex string,
+	input any,
+) (jen.Code, error) {
+	in, err := literal(reflect.ValueOf(input))
+	if err != nil {
+		return nil, fmt.Errorf("example %q: %w", ex, err)
+	}
+
+	return in, nil
+}
+
+// jobCall is the servertest call the job client expects for in, an input as
+// inputCode writes it, on target.
 func jobCall(
 	b *behavior.Behavior,
 	m *behavior.Method,
 	target string,
-	input any,
+	in jen.Code,
 	replies ...jen.Code,
 ) *jen.Statement {
 	fn := "Query"
 	if m.Verb == types.VerbWrite {
 		fn = "Modify"
-	}
-	in, err := literal(reflect.ValueOf(input))
-	if err != nil {
-		in = jen.Lit(fmt.Sprint(input))
 	}
 	args := append([]jen.Code{jen.Lit(target), jen.Lit(b.Operation(m)), in}, replies...)
 
