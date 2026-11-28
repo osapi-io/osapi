@@ -672,6 +672,20 @@ func (s *ValidationPublicTestSuite) TestGoDuration() {
 			},
 		},
 		{
+			name:  "when a negative duration -1h fails",
+			field: "-1h",
+			validateFunc: func(_ string, ok bool) {
+				s.False(ok)
+			},
+		},
+		{
+			name:  "when a zero duration 0s passes",
+			field: "0s",
+			validateFunc: func(_ string, ok bool) {
+				s.True(ok)
+			},
+		},
+		{
 			name:  "when invalid duration abc fails",
 			field: "abc",
 			validateFunc: func(_ string, ok bool) {

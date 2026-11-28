@@ -119,10 +119,13 @@ func ParseSubject(
 ) (prefix, hostname string, err error) {
 	parts := strings.Split(subject, ".")
 
-	// Find the "jobs" token in the parts to determine namespace offset.
+	// Find the "jobs" token that a job type follows, to determine the
+	// namespace offset. A namespace can hold a "jobs" token of its own, such
+	// as team.jobs, so the first "jobs" is not always the one.
 	jobsIdx := -1
 	for i, p := range parts {
-		if p == "jobs" {
+		if p == "jobs" && i+1 < len(parts) &&
+			(parts[i+1] == string(types.JobTypeQuery) || parts[i+1] == string(types.JobTypeModify)) {
 			jobsIdx = i
 			break
 		}
@@ -162,9 +165,12 @@ func SanitizeHostname(
 	hostname string,
 ) string {
 	// Replace any non-alphanumeric characters (except underscores) with underscores
-	reg := regexp.MustCompile(`[^a-zA-Z0-9_]`)
-	return reg.ReplaceAllString(hostname, "_")
+	return unsafeNameChars.ReplaceAllString(hostname, "_")
 }
+
+// unsafeNameChars are the characters that a NATS consumer or routing name
+// cannot hold, compiled once: SanitizeHostname runs for each job.
+var unsafeNameChars = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 // ParseTarget parses a --target value into routing components.
 // Returns routingType ("host", "label", AnyHost, or BroadcastHost), key, and value.

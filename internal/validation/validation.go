@@ -171,10 +171,13 @@ func init() {
 		return instance.Var(v, "ip") == nil
 	})
 
-	// go_duration validates a Go time.Duration string (e.g., "30s", "5m", "1h", "720h").
+	// go_duration validates a Go time.Duration string (e.g., "30s", "5m",
+	// "1h", "720h") of zero or more. A negative one is refused: the code
+	// reads a duration of zero or less as "no expiry" or "the default", so
+	// agent_ttl: -1h would be a JWT that never expires.
 	_ = instance.RegisterValidation("go_duration", func(fl validator.FieldLevel) bool {
-		_, err := time.ParseDuration(fl.Field().String())
-		return err == nil
+		d, err := time.ParseDuration(fl.Field().String())
+		return err == nil && d >= 0
 	})
 
 	// file_mode validates a file permission mode as three or four octal digits,
@@ -380,7 +383,7 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 	},
 	"go_duration": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
-			"%q is not a valid Go duration (e.g., 30s, 5m, 1h)",
+			"%q is not a valid Go duration of zero or more (e.g., 30s, 5m, 1h)",
 			fe.Value(),
 		)
 	},
