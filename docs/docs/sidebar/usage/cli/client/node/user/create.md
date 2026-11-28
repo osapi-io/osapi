@@ -216,9 +216,9 @@ The command fails in these cases:
 | A negative user ID                | `--name osapitest --uid -1`                                   | min          |
 | A negative group ID               | `--name osapitest --gid -1`                                   | min          |
 | A home that is not absolute       | `--name osapitest --home home`                                | startswith   |
-| A home with a line break          | `--name osapitest --home "/home/a\nb"`                        | no_linebreak |
+| A home with a line break          | `--name osapitest --home $'/home/a\nb'`                       | no_linebreak |
 | A shell that is not absolute      | `--name osapitest --shell bash`                               | startswith   |
-| A shell with a line break         | `--name osapitest --shell "/bin/a\nb"`                        | no_linebreak |
+| A shell with a line break         | `--name osapitest --shell $'/bin/a\nb'`                       | no_linebreak |
 | A group that is an option         | `--name osapitest --groups -r`                                | account_name |
 | A group longer than 32 characters | `--name osapitest --groups aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max          |
 | A password with a line break      | `--name osapitest --password -`                               | no_linebreak |

@@ -104,6 +104,78 @@ func (s *ExampleInputPublicTestSuite) TestExamples() {
 			},
 		},
 		{
+			name: "when the note is 'a b', it is a b",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note 'a b'`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "a b"}},
+			},
+		},
+		{
+			name: "when the note is '$(id)', it is $(id), not run",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note '$(id)'`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "$(id)"}},
+			},
+		},
+		{
+			name: "when the note is 'it'\\''s', it is it's",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note 'it'\''s'`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "it's"}},
+			},
+		},
+		{
+			name: "when the note is $'...' with escapes, each escape is its character",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note $'a\tb\n\'\\\x01'`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "a\tb\n'\\\x01"}},
+			},
+		},
+		{
+			name: "when the note is \"a\\nb\", the backslash and the n stay",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note "a\nb"`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "a\\nb"}},
+			},
+		},
+		{
+			name: "when the note is \"a \\\"b\\\" \\$c\", the escaped quotes and dollar are kept",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note "a \"b\" \$c"`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "a \"b\" $c"}},
+			},
+		},
+		{
+			name: "when the note is plain, it is plain",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note plain`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "plain"}},
+			},
+		},
+		{
+			name: "when the note is a$'\\r', the parts join as a and a carriage return",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note a$'\r'`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "a\r"}},
+			},
+		},
+		{
+			name: "when the note is a$b, the dollar is text",
+			method: endpoint.Put[specExampleIn, Node]("update").Describe("Update a node").
+				Example(`--note a$b`),
+			want: []endpoint.SpecExample{
+				{Doc: "Update a node", Input: map[string]any{"note": "a$b"}},
+			},
+		},
+		{
 			name:   "when the first example has no doc, it is the summary",
 			method: endpoint.Get[noInput, Node]("list").Describe("List the nodes").Example(""),
 			want:   []endpoint.SpecExample{{Doc: "List the nodes", Input: map[string]any{}}},
@@ -177,8 +249,28 @@ func (s *ExampleInputPublicTestSuite) TestExamplesErrors() {
 			wantErr: "has no closing quote",
 		},
 		{
-			name:    "when a quoted word is not a Go string",
-			flags:   `--note "\q"`,
+			name:    "when a single quote does not close",
+			flags:   `--note 'a b`,
+			wantErr: "has no closing quote",
+		},
+		{
+			name:    "when an ANSI-C quote does not close",
+			flags:   `--note $'a\n`,
+			wantErr: "has no closing quote",
+		},
+		{
+			name:    "when an ANSI-C quote ends in a backslash",
+			flags:   `--note $'a\`,
+			wantErr: "has no closing quote",
+		},
+		{
+			name:    "when an ANSI-C hex escape is cut short",
+			flags:   `--note $'\x1`,
+			wantErr: "has no closing quote",
+		},
+		{
+			name:    "when an ANSI-C hex escape is not hex",
+			flags:   `--note $'\xzz'`,
 			wantErr: "invalid syntax",
 		},
 	}

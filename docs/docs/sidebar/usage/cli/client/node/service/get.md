@@ -311,7 +311,7 @@ The command fails in these cases:
 | Call                                  | Flags           | Fails with |
 | ------------------------------------- | --------------- | ---------- |
 | A service that systemd has not loaded | `--name nosuch` | not found  |
-| A name with a space                   | `--name "a b"`  | Name       |
+| A name with a space                   | `--name 'a b'`  | Name       |
 
 ## Permission
 

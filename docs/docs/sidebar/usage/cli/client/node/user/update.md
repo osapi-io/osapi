@@ -214,9 +214,9 @@ The command fails in these cases:
 | A name that is an option              | `--name -r`                                               | account_name |
 | A name longer than 32 characters      | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`                | max          |
 | A shell that is not absolute          | `--name alice --shell bash`                               | startswith   |
-| A shell with a line break             | `--name alice --shell "/bin/a\nb"`                        | no_linebreak |
+| A shell with a line break             | `--name alice --shell $'/bin/a\nb'`                       | no_linebreak |
 | A home that is not absolute           | `--name alice --home home`                                | startswith   |
-| A home with a line break              | `--name alice --home "/home/a\nb"`                        | no_linebreak |
+| A home with a line break              | `--name alice --home $'/home/a\nb'`                       | no_linebreak |
 | A group that is an option             | `--name alice --groups -r`                                | account_name |
 | A group longer than 32 characters     | `--name alice --groups aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max          |
 | A lock that is not locked or unlocked | `--name alice --lock maybe`                               | enum         |

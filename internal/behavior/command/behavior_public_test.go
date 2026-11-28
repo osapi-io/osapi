@@ -311,9 +311,14 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 				behavior.Ran("kvctl", "sync")).
 			Example("A | B", input{Key: "p"}, result{Key: "p"},
 				behavior.Wrote("/var/kv/p", "a\nb\n")).
+			Example("A backtick", input{Key: "q"}, result{Key: "q"},
+				behavior.Wrote("/var/kv/q", "a`b\n")).
 			Fails("A key that is taken", input{Key: "k"}, "already exists").
 			Fails("No key", input{}, "key must not be empty").
-			Fails("A key on two lines", input{Key: "a\nb"}, "line breaks"),
+			Fails("A key on two lines", input{Key: "a\nb"}, "line breaks").
+			Fails("A key with a command in it", input{Key: "$(id)"}, "not a key").
+			Fails("A key with a quote", input{Key: "it's"}, "not a key").
+			Fails("A key with escapes", input{Key: "a\tb'\\c\r\x01"}, "not a key"),
 	)
 
 	list := command.Annotations(b, b.Method("list"))
@@ -348,8 +353,14 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	)
 	s.Contains(result, "| A key that is taken | `--key k` | already exists |")
 	s.Contains(result, "| No key |  | key must not be empty |")
-	s.Contains(result, `| A key on two lines | `+"`"+`--key "a\nb"`+"`"+` | line breaks |`,
+	s.Contains(result, `| A key on two lines | `+"`"+`--key $'a\nb'`+"`"+` | line breaks |`,
 		"a newline is quoted, not printed into the table row")
+	s.Contains(result, "| A key with a command in it | `--key '$(id)'` | not a key |")
+	s.Contains(result, `| A key with a quote | `+"`"+`--key 'it'\''s'`+"`"+` | not a key |`)
+	s.Contains(
+		result,
+		`| A key with escapes | `+"`"+`--key $'a\tb\'\\c\r\x01'`+"`"+` | not a key |`)
+	s.Contains(result, "| A backtick | writes `/var/kv/q`: `` a`b `` |")
 	s.Contains(result, `| A \| B | writes `+"`"+`/var/kv/p`+"`"+`: `+"`"+`a\nb`+"`"+` |`,
 		"a pipe and a newline stay in their cell")
 

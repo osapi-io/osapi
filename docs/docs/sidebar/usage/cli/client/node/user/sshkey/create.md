@@ -16,16 +16,16 @@ osapi client node user sshkey create [flags]
 
 ```bash
 # Add a key
-osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"
+osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'
 
 # Add a second key
-osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"
+osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'
 
 # A key after a last line with no line break
-osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"
+osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'
 
 # A key the user has
-osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"
+osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'
 ```
 
 ## Result
@@ -33,7 +33,7 @@ osapi client node user sshkey create --target web-01 --name osapitest --key "ssh
 Add a key, on one host:
 
 ```ansi
-$ osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"
+$ osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
@@ -44,7 +44,7 @@ $ osapi client node user sshkey create --target web-01 --name osapitest --key "s
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node user sshkey create --target _all --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"
+$ osapi client node user sshkey create --target _all --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
@@ -75,7 +75,7 @@ With `--json`, the API's response:
 Add a second key, on one host:
 
 ```ansi
-$ osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"
+$ osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
@@ -86,7 +86,7 @@ $ osapi client node user sshkey create --target web-01 --name osapitest --key "s
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node user sshkey create --target _all --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"
+$ osapi client node user sshkey create --target _all --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
@@ -117,7 +117,7 @@ With `--json`, the API's response:
 A key after a last line with no line break, on one host:
 
 ```ansi
-$ osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"
+$ osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
@@ -128,7 +128,7 @@ $ osapi client node user sshkey create --target web-01 --name osapitest --key "s
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node user sshkey create --target _all --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"
+$ osapi client node user sshkey create --target _all --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
@@ -159,7 +159,7 @@ With `--json`, the API's response:
 A key the user has, on one host:
 
 ```ansi
-$ osapi client node user sshkey create --target web-01 --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"
+$ osapi client node user sshkey create --target web-01 --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
@@ -170,7 +170,7 @@ $ osapi client node user sshkey create --target web-01 --name osapitest --key "s
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node user sshkey create --target _all --name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"
+$ osapi client node user sshkey create --target _all --name osapitest --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mFINGERPRINT[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
@@ -208,14 +208,14 @@ With the default settings, each example does this on the host:
 
 The command fails in these cases:
 
-| Call                               | Flags                                                                                                                                                                                                                         | Fails with            |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| A line with no public key          | `--name osapitest --key "not a key"`                                                                                                                                                                                          | not an SSH public key |
-| A key that is not base64           | `--name osapitest --key "ssh-ed25519 !!!"`                                                                                                                                                                                    | not an SSH public key |
-| A user that the host does not have | `--name nobody --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"`                                                                                                    | not found             |
-| A name that is not a user name     | `--name "Bad;name" --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"`                                                                                                | Name                  |
-| A name over 32 characters          | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"`                                                                         | max                   |
-| A key with a line break            | `--name osapitest --key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"` | no_linebreak          |
+| Call                               | Flags                                                                                                                                                                                                                          | Fails with            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| A line with no public key          | `--name osapitest --key 'not a key'`                                                                                                                                                                                           | not an SSH public key |
+| A key that is not base64           | `--name osapitest --key 'ssh-ed25519 !!!'`                                                                                                                                                                                     | not an SSH public key |
+| A user that the host does not have | `--name nobody --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'`                                                                                                     | not found             |
+| A name that is not a user name     | `--name 'Bad;name' --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'`                                                                                                 | Name                  |
+| A name over 32 characters          | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --key 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example'`                                                                          | max                   |
+| A key with a line break            | `--name osapitest --key $'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example'` | no_linebreak          |
 
 ## Permission
 

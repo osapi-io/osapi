@@ -216,7 +216,7 @@ The command fails in these cases:
 | A file that osapi did not write | `--name internal-ca --object internal-ca.pem` | osapi did not deploy it |
 | A name that is an option        | `--name -r --object internal-ca.pem`          | not a valid name        |
 | No object                       | `--name internal-ca`                          | required                |
-| A name with a space             | `--name "a b" --object internal-ca.pem`       | resource_name           |
+| A name with a space             | `--name 'a b' --object internal-ca.pem`       | resource_name           |
 
 ## Permission
 

@@ -115,7 +115,7 @@ The command fails in these cases:
 
 | Call                      | Flags                                                                      | Fails with             |
 | ------------------------- | -------------------------------------------------------------------------- | ---------------------- |
-| A name with a space       | `--name "a b"`                                                             | Name                   |
+| A name with a space       | `--name 'a b'`                                                             | Name                   |
 | A name that is an option  | `--name --now`                                                             | not a valid entry name |
 | A name over 64 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | Name                   |
 

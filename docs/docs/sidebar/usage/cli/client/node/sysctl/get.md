@@ -202,7 +202,7 @@ The command fails in these cases:
 | ------------------------------------ | ------------------------------ | --------------------- |
 | A parameter the kernel does not have | `--key vm.nosuch`              | not found             |
 | No key                               |                                | key must not be empty |
-| A key that is not a parameter name   | `--key "vm.swappiness;reboot"` | invalid sysctl key    |
+| A key that is not a parameter name   | `--key 'vm.swappiness;reboot'` | invalid sysctl key    |
 | A key holding a value                | `--key vm.swappiness=1`        | invalid sysctl key    |
 
 ## Permission

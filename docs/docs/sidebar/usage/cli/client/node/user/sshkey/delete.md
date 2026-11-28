@@ -161,12 +161,12 @@ With the default settings, each example does this on the host:
 
 The command fails in these cases:
 
-| Call                             | Flags                                                                                                                                     | Fails with   |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| A fingerprint that is not SHA256 | `--name osapitest --fingerprint MD5:aa`                                                                                                   | Fingerprint  |
-| A fingerprint with a line break  | `--name osapitest --fingerprint "SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk\nSHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE"` | no_linebreak |
-| A name that is not a user name   | `--name "Bad;name" --fingerprint SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk`                                                      | Name         |
-| A name over 32 characters        | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --fingerprint SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk`                               | max          |
+| Call                             | Flags                                                                                                                                      | Fails with   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| A fingerprint that is not SHA256 | `--name osapitest --fingerprint MD5:aa`                                                                                                    | Fingerprint  |
+| A fingerprint with a line break  | `--name osapitest --fingerprint $'SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk\nSHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE'` | no_linebreak |
+| A name that is not a user name   | `--name 'Bad;name' --fingerprint SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk`                                                       | Name         |
+| A name over 32 characters        | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --fingerprint SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk`                                | max          |
 
 ## Permission
 

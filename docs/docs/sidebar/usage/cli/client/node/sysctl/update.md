@@ -115,13 +115,13 @@ With the default settings, each example does this on the host:
 
 The command fails in these cases:
 
-| Call                               | Flags                                                | Fails with              |
-| ---------------------------------- | ---------------------------------------------------- | ----------------------- |
-| No key                             | `--value 10`                                         | key must not be empty   |
-| A key that is not a parameter name | `--key "vm.swappiness;reboot" --value 1`             | invalid sysctl key      |
-| A key holding a value              | `--key vm.swappiness=1 --value 1`                    | invalid sysctl key      |
-| No value                           | `--key vm.swappiness`                                | value must not be empty |
-| A value on two lines               | `--key vm.swappiness --value "10\nkernel.panic = 0"` | line breaks             |
+| Call                               | Flags                                                 | Fails with              |
+| ---------------------------------- | ----------------------------------------------------- | ----------------------- |
+| No key                             | `--value 10`                                          | key must not be empty   |
+| A key that is not a parameter name | `--key 'vm.swappiness;reboot' --value 1`              | invalid sysctl key      |
+| A key holding a value              | `--key vm.swappiness=1 --value 1`                     | invalid sysctl key      |
+| No value                           | `--key vm.swappiness`                                 | value must not be empty |
+| A value on two lines               | `--key vm.swappiness --value $'10\nkernel.panic = 0'` | line breaks             |
 
 ## Permission
 

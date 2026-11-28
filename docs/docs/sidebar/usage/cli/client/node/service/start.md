@@ -118,7 +118,7 @@ The command fails in these cases:
 | ------------------------------------------------ | -------------- | ------------------------ |
 | A service that osapi did not deploy              | `--name ssh`   | not found                |
 | A unit file or a plist that osapi did not deploy | `--name agent` | not found                |
-| A name with a space                              | `--name "a b"` | Name                     |
+| A name with a space                              | `--name 'a b'` | Name                     |
 | A name that is an option                         | `--name --now` | not a valid service name |
 
 ## Permission

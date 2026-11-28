@@ -71,14 +71,14 @@ With the default settings, each example does this on the host:
 
 The command fails in these cases:
 
-| Call                               | Flags                                                | Fails with              |
-| ---------------------------------- | ---------------------------------------------------- | ----------------------- |
-| No key                             | `--value 1`                                          | key must not be empty   |
-| A key that is not a parameter name | `--key ../etc/passwd --value 1`                      | invalid sysctl key      |
-| A key that would read as a flag    | `--key -w --value 1`                                 | invalid sysctl key      |
-| A key that would be a hidden file  | `--key .hidden --value 1`                            | invalid sysctl key      |
-| No value                           | `--key vm.swappiness`                                | value must not be empty |
-| A value on two lines               | `--key vm.swappiness --value "10\nkernel.panic = 0"` | line breaks             |
+| Call                               | Flags                                                 | Fails with              |
+| ---------------------------------- | ----------------------------------------------------- | ----------------------- |
+| No key                             | `--value 1`                                           | key must not be empty   |
+| A key that is not a parameter name | `--key ../etc/passwd --value 1`                       | invalid sysctl key      |
+| A key that would read as a flag    | `--key -w --value 1`                                  | invalid sysctl key      |
+| A key that would be a hidden file  | `--key .hidden --value 1`                             | invalid sysctl key      |
+| No value                           | `--key vm.swappiness`                                 | value must not be empty |
+| A value on two lines               | `--key vm.swappiness --value $'10\nkernel.panic = 0'` | line breaks             |
 
 ## Permission
 

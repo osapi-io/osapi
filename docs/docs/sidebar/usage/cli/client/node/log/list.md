@@ -19,7 +19,7 @@ osapi client node log list [flags]
 osapi client node log list --target web-01
 
 # The last entry of one unit at info or above
-osapi client node log list --target web-01 --unit nginx.service --lines 1 --since "1 hour ago" --priority info
+osapi client node log list --target web-01 --unit nginx.service --lines 1 --since '1 hour ago' --priority info
 ```
 
 ## Result
@@ -84,7 +84,7 @@ With `--json`, the API's response:
 The last entry of one unit at info or above, on one host:
 
 ```ansi
-$ osapi client node log list --target web-01 --unit nginx.service --lines 1 --since "1 hour ago" --priority info
+$ osapi client node log list --target web-01 --unit nginx.service --lines 1 --since '1 hour ago' --priority info
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mTIMESTAMP                    [0m[38;2;10;143;176mUNIT   [0m[38;2;10;143;176mPRIORITY  [0m[38;2;10;143;176mMESSAGE        [0m[38;2;10;143;176mPID[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m2024-03-31T23:50:45.123456Z[0m  nginx  info      Started nginx  1234
@@ -95,7 +95,7 @@ $ osapi client node log list --target web-01 --unit nginx.service --lines 1 --si
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node log list --target _all --unit nginx.service --lines 1 --since "1 hour ago" --priority info
+$ osapi client node log list --target _all --unit nginx.service --lines 1 --since '1 hour ago' --priority info
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mTIMESTAMP                    [0m[38;2;10;143;176mUNIT   [0m[38;2;10;143;176mPRIORITY  [0m[38;2;10;143;176mMESSAGE        [0m[38;2;10;143;176mPID[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m2024-03-31T23:50:45.123456Z[0m  nginx  info      Started nginx  1234
@@ -133,7 +133,7 @@ The command fails in these cases:
 | Lines below one                        | `--lines -1`             | min        |
 | More than 10000 lines                  | `--lines 10001`          | max        |
 | A priority that journald does not have | `--priority loud`        | enum       |
-| A unit with a space in it              | `--unit "nginx service"` | unit_name  |
+| A unit with a space in it              | `--unit 'nginx service'` | unit_name  |
 
 ## Permission
 

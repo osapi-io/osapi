@@ -162,7 +162,7 @@ The command fails in these cases:
 | Call                                 | Flags                                                | Fails with  |
 | ------------------------------------ | ---------------------------------------------------- | ----------- |
 | A destination that is not CIDR       | `--name osapi0 --destination 10.0.0.0`               | Destination |
-| A name that is not an interface name | `--name "eth0;reboot" --destination 198.51.100.0/24` | Name        |
+| A name that is not an interface name | `--name 'eth0;reboot' --destination 198.51.100.0/24` | Name        |
 
 ## Permission
 
