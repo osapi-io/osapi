@@ -43,12 +43,15 @@ func (s *FlagsPublicTestSuite) TestBindFlags() {
 	tests := []struct {
 		name         string
 		key          string
-		validateFunc func(f *pflag.Flag)
+		validateFunc func(fs *pflag.FlagSet, wired error)
 	}{
 		{
 			name: "when the key is an int, the flag is one, with its default",
 			key:  "agent.max_jobs",
-			validateFunc: func(f *pflag.Flag) {
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				f := fs.Lookup(config.FlagName("agent.max_jobs"))
+				s.Require().NotNil(f)
+				s.NoError(wired)
 				s.Equal("int", f.Value.Type())
 				s.Equal("10", f.DefValue)
 				s.Equal("Maximum number of concurrent jobs to process (agent.max_jobs)", f.Usage)
@@ -57,7 +60,10 @@ func (s *FlagsPublicTestSuite) TestBindFlags() {
 		{
 			name: "when the key is a string, the flag is one",
 			key:  "agent.consumer.ack_wait",
-			validateFunc: func(f *pflag.Flag) {
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				f := fs.Lookup(config.FlagName("agent.consumer.ack_wait"))
+				s.Require().NotNil(f)
+				s.NoError(wired)
 				s.Equal("string", f.Value.Type())
 				s.Equal("2m", f.DefValue)
 			},
@@ -65,7 +71,10 @@ func (s *FlagsPublicTestSuite) TestBindFlags() {
 		{
 			name: "when the key is a list, the flag is given once for each value",
 			key:  "agent.consumer.back_off",
-			validateFunc: func(f *pflag.Flag) {
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				f := fs.Lookup(config.FlagName("agent.consumer.back_off"))
+				s.Require().NotNil(f)
+				s.NoError(wired)
 				s.Equal("stringSlice", f.Value.Type())
 				s.Equal("[30s,2m,5m,15m,30m]", f.DefValue)
 			},
@@ -73,55 +82,90 @@ func (s *FlagsPublicTestSuite) TestBindFlags() {
 		{
 			name: "when the key is a bool, the flag is one",
 			key:  "agent.command.enabled",
-			validateFunc: func(f *pflag.Flag) {
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				f := fs.Lookup(config.FlagName("agent.command.enabled"))
+				s.Require().NotNil(f)
+				s.NoError(wired)
 				s.Equal("bool", f.Value.Type())
 			},
 		},
 		{
 			name: "when the key is a float, the flag is one",
 			key:  "agent.conditions.high_load_multiplier",
-			validateFunc: func(f *pflag.Flag) {
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				f := fs.Lookup(config.FlagName("agent.conditions.high_load_multiplier"))
+				s.Require().NotNil(f)
+				s.NoError(wired)
 				s.Equal("float64", f.Value.Type())
 				s.Equal("2", f.DefValue)
+			},
+		},
+		{
+			name: "when a person gives the flag, it sets its key",
+			key:  "agent.max_jobs",
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				s.NoError(wired)
+				s.Require().NoError(fs.Parse([]string{"--agent-max-jobs", "7"}))
+				s.Equal(7, viper.GetInt("agent.max_jobs"))
+			},
+		},
+		{
+			name: "when the key does not exist, it is a wiring mistake and no flag",
+			key:  "agent.nosuch",
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				s.EqualError(wired, `config: no key "agent.nosuch" for a flag`)
+				s.Nil(fs.Lookup(config.FlagName("agent.nosuch")))
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			_ = wiring.Take()
 			fs := pflag.NewFlagSet("t", pflag.ContinueOnError)
 			config.BindFlags(fs, tc.key)
-			f := fs.Lookup(config.FlagName(tc.key))
-			s.Require().NotNil(f)
-			tc.validateFunc(f)
+			tc.validateFunc(fs, wiring.Take())
 		})
 	}
 }
 
-// TestBindFlagsSets holds that a flag a person gives sets its key.
 func (s *FlagsPublicTestSuite) TestBindFlagAs() {
-	fs := pflag.NewFlagSet("client", pflag.ContinueOnError)
-	config.BindFlagAs(fs, "controller.client.url", "url")
+	tests := []struct {
+		name         string
+		key          string
+		flag         string
+		validateFunc func(fs *pflag.FlagSet, wired error)
+	}{
+		{
+			name: "when the key exists, the flag has its name and the owner's default",
+			key:  "controller.client.url",
+			flag: "url",
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				s.NoError(wired)
+				f := fs.Lookup("url")
+				s.Require().NotNil(f)
+				s.Equal("https://localhost:8080", f.DefValue)
+			},
+		},
+		{
+			name: "when the key does not exist, it is a wiring mistake and no flag",
+			key:  "no.such.key",
+			flag: "nope",
+			validateFunc: func(fs *pflag.FlagSet, wired error) {
+				s.EqualError(wired, `config: no key "no.such.key" for a flag`)
+				s.Nil(fs.Lookup("nope"))
+			},
+		},
+	}
 
-	f := fs.Lookup("url")
-	s.Require().NotNil(f)
-	s.Equal("https://localhost:8080", f.DefValue, "the default of the owner, not a copy")
-	_ = wiring.Take()
-	config.BindFlagAs(fs, "no.such.key", "nope")
-	s.EqualError(wiring.Take(), `config: no key "no.such.key" for a flag`)
-}
-
-func (s *FlagsPublicTestSuite) TestBindFlagsSets() {
-	fs := pflag.NewFlagSet("t", pflag.ContinueOnError)
-	config.BindFlags(fs, "agent.max_jobs")
-	s.Require().NoError(fs.Parse([]string{"--agent-max-jobs", "7"}))
-	s.Equal(7, viper.GetInt("agent.max_jobs"))
-}
-
-func (s *FlagsPublicTestSuite) TestBindFlagsUnknown() {
-	_ = wiring.Take()
-	config.BindFlags(pflag.NewFlagSet("t", pflag.ContinueOnError), "agent.nosuch")
-	s.EqualError(wiring.Take(), `config: no key "agent.nosuch" for a flag`)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			_ = wiring.Take()
+			fs := pflag.NewFlagSet("client", pflag.ContinueOnError)
+			config.BindFlagAs(fs, tc.key, tc.flag)
+			tc.validateFunc(fs, wiring.Take())
+		})
+	}
 }
 
 func TestFlagsPublicTestSuite(
