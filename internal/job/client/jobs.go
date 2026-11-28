@@ -168,7 +168,10 @@ func (c *Client) queueSummary(
 		return nil, fmt.Errorf("error fetching keys: %w", err)
 	}
 
-	_, jobStatuses := computeStatusFromKeyNames(keys)
+	// The jobs are the jobs.* keys, as listJobs counts them: a job that has
+	// no status event yet is submitted, and the events of a deleted job
+	// count for nothing.
+	jobIDs, jobStatuses := computeStatusFromKeyNames(keys)
 
 	statusCounts := map[types.JobStatus]int{
 		types.JobStatusSubmitted:      0,
@@ -178,11 +181,15 @@ func (c *Client) queueSummary(
 		types.JobStatusPartialFailure: 0,
 	}
 
-	for _, info := range jobStatuses {
-		statusCounts[info.Status]++
+	for _, id := range jobIDs {
+		status := types.JobStatusSubmitted
+		if info, ok := jobStatuses[id]; ok {
+			status = info.Status
+		}
+		statusCounts[status]++
 	}
 
-	total := len(jobStatuses)
+	total := len(jobIDs)
 
 	// DLQ count
 	dlqCount := 0
@@ -783,7 +790,8 @@ func (c *Client) retryJob(
 	return result, nil
 }
 
-// DeleteJob deletes a job from the KV store by its ID.
+// deleteJob deletes a job from the KV store by its ID, with its status
+// events and its responses.
 func (c *Client) deleteJob(
 	ctx context.Context,
 	jobID string,
@@ -800,6 +808,23 @@ func (c *Client) deleteJob(
 
 	if err := c.natsClient.KVDelete(ctx, c.jobsBucket, jobKey); err != nil {
 		return fmt.Errorf("failed to delete job: %w", err)
+	}
+
+	// The job's events and answers go with it, so no count or read finds
+	// them after the job is gone.
+	keys, err := c.natsClient.KVKeys(
+		ctx,
+		c.jobsBucket,
+		"status."+jobID+".>",
+		"responses."+jobID+".>",
+	)
+	if err != nil {
+		return fmt.Errorf("failed to list the events of job %s: %w", jobID, err)
+	}
+	for _, key := range keys {
+		if err := c.natsClient.KVDelete(ctx, c.jobsBucket, key); err != nil {
+			return fmt.Errorf("failed to delete %s: %w", key, err)
+		}
 	}
 
 	return nil
