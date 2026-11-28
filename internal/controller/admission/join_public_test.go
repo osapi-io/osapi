@@ -126,16 +126,63 @@ func (s *StorePublicTestSuite) TestJoin() {
 			s.Len(key, ed25519.PublicKeySize)
 			s.Equal(1, calls, "one use of the token")
 
-			other := joinRequest("osapi_jt_t1.c2VjcmV0")
-			_, err = s.watcher.Join(context.Background(), other)
-			s.Require().NoError(err)
-			s.Equal(2, calls, "a new key takes a use")
-
 			bad := joinRequest("not-a-token")
 			_, _ = s.watcher.Join(context.Background(), bad)
-			s.Equal(3, calls)
+			s.Equal(1, calls)
 		},
 	)
+
+	s.Run("when the machine is admitted with a different key, the join is refused", func() {
+		s.watcher.SetJoinTokens(fakeTokens{})
+		first := joinRequest("osapi_jt_t1.secret")
+		_, err := s.watcher.Join(context.Background(), first)
+		s.Require().NoError(err)
+
+		_, err = s.watcher.Join(context.Background(), joinRequest("osapi_jt_t1.secret"))
+
+		s.ErrorIs(err, admission.ErrMachineAdmitted)
+		got, err := s.watcher.Get(context.Background(), "m-1")
+		s.Require().NoError(err)
+		s.Equal(
+			pki.FingerprintOfKeys(first.PublicKey, first.EncryptionKey),
+			got.Fingerprint,
+		)
+	})
+
+	s.Run(
+		"when the machine is admitted with the same key, a join of a new token admits it",
+		func() {
+			calls := 0
+			s.watcher.SetJoinTokens(countingTokens{calls: &calls})
+			req := joinRequest("osapi_jt_t1.c2VjcmV0")
+			_, err := s.watcher.Join(context.Background(), req)
+			s.Require().NoError(err)
+			s.put(admission.AcceptedKVPrefix()+"m-1", func() admission.AcceptedAgent {
+				r, _ := s.watcher.LookupAgentKey(context.Background(), "m-1")
+				r.JoinToken = "t0"
+
+				return *r
+			}())
+			admission.ResetKeyCache(s.watcher)
+
+			_, err = s.watcher.Join(context.Background(), req)
+
+			s.NoError(err)
+			s.Equal(2, calls)
+		},
+	)
+
+	s.Run("when the machine was deleted, a join with a new key admits it", func() {
+		s.watcher.SetJoinTokens(fakeTokens{})
+		_, err := s.watcher.Join(context.Background(), joinRequest("osapi_jt_t1.secret"))
+		s.Require().NoError(err)
+		delete(s.kv.data, admission.AcceptedKVPrefix()+"m-1")
+		admission.ResetKeyCache(s.watcher)
+
+		_, err = s.watcher.Join(context.Background(), joinRequest("osapi_jt_t1.secret"))
+
+		s.NoError(err)
+	})
 
 	s.Run("when the request is not signed by its key, nothing is admitted", func() {
 		s.watcher.SetJoinTokens(fakeTokens{})

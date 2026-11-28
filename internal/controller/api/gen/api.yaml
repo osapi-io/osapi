@@ -1048,6 +1048,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The request is not signed by the key that it asks to admit.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The machine is admitted with a different key. Delete its admission with `osapi client admission delete`, then join again.
         "500":
           content:
             application/json:

@@ -30,7 +30,7 @@ var serviceUninstallCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi agent service uninstall --purge\n\x1b[1;38;2;0;213;255mRemoved:\x1b[0m\n  \x1b[38;2;10;143;176mRemoved:\x1b[0m  /etc/systemd/system/osapi-agent.service\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"removed\": [\n    \"/etc/systemd/system/osapi-agent.service\"\n  ]\n}\n```"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi agent service uninstall --purge",
-	Long:        "Run this as root on the host. It stops the service and removes its unit\nor launch daemon. With --purge it also removes the config file and the\nkeys in agent.pki.key_dir: then the host is new to osapi, and joins again\nonly with a new join string.",
+	Long:        "Run this as root on the host. It stops the service and removes its unit\nor launch daemon. With --purge it also removes the config file and the\nkeys in agent.pki.key_dir: then the host is new to osapi. To join it\nagain, delete its admission with osapi client admission delete, then\ngive it a new join string. The controller refuses a join that replaces\nthe keys of an admitted machine.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		purge, _ := cmd.Flags().GetBool("purge")
 

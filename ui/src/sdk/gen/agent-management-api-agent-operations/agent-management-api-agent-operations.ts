@@ -484,6 +484,11 @@ export type joinAgentResponse403 = {
   status: 403
 }
 
+export type joinAgentResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type joinAgentResponse500 = {
   data: ErrorResponse
   status: 500
@@ -497,7 +502,7 @@ export type joinAgentResponse503 = {
 export type joinAgentResponseSuccess = (joinAgentResponse200) & {
   headers: Headers;
 };
-export type joinAgentResponseError = (joinAgentResponse400 | joinAgentResponse403 | joinAgentResponse500 | joinAgentResponse503) & {
+export type joinAgentResponseError = (joinAgentResponse400 | joinAgentResponse403 | joinAgentResponse409 | joinAgentResponse500 | joinAgentResponse503) & {
   headers: Headers;
 };
 

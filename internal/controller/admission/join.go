@@ -47,6 +47,17 @@ var ErrJoinEncryptionKey = errors.New("the join request has no valid P-256 encry
 // ErrNoJoinTokens is a controller with no store of join tokens.
 var ErrNoJoinTokens = errors.New("this controller takes no join")
 
+// ErrMachineAdmitted is a join or an enrollment request for a machine that
+// is admitted with a different key. A request does not replace the key of
+// an admitted machine: the agent changes its key with a rotate request,
+// which its old key signs, or the operator deletes the machine first.
+var ErrMachineAdmitted = errors.New("the machine is admitted with a different key")
+
+// ErrHostnameHeld is a rename to the hostname of a different admitted
+// machine. Jobs and sealed secrets go to a hostname, so a machine does not
+// take the name of a different one, also when that one is offline.
+var ErrHostnameHeld = errors.New("the hostname is the name of a different admitted machine")
+
 // JoinTokens takes a use of a join token: the store of join tokens.
 type JoinTokens interface {
 	Consume(ctx context.Context, token string) (jointoken.Token, error)
@@ -116,6 +127,9 @@ func (w *Watcher) join(
 
 		return w.pkiProvider.PublicKey(), labels, nil
 	}
+	if err := w.refuseOtherKey(ctx, req.MachineID, req.PublicKey, req.EncryptionKey); err != nil {
+		return nil, nil, err
+	}
 	t, err := w.joinTokens.Consume(ctx, req.Token)
 	if err != nil {
 		return nil, nil, err
@@ -168,4 +182,27 @@ func (w *Watcher) joinedBefore(
 	}
 
 	return r.JoinLabels, true
+}
+
+// refuseOtherKey is ErrMachineAdmitted when machineID has an accepted record
+// whose keys are not publicKey and encryptionKey. A store that cannot be read
+// is an error too, so that no request replaces a key that it did not check.
+func (w *Watcher) refuseOtherKey(
+	ctx context.Context,
+	machineID string,
+	publicKey []byte,
+	encryptionKey string,
+) error {
+	record, err := w.LookupAgentKey(ctx, machineID)
+	if errors.Is(err, ErrAgentKeyNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read the admitted key of %s: %w", machineID, err)
+	}
+	if record.Fingerprint != pki.FingerprintOfKeys(publicKey, encryptionKey) {
+		return fmt.Errorf("%w: %s", ErrMachineAdmitted, machineID)
+	}
+
+	return nil
 }

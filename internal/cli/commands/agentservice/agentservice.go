@@ -53,8 +53,10 @@ var Group = command.Register(command.Define(
 		Short("Stop the agent's service and remove it").
 		Long("Run this as root on the host. It stops the service and removes its unit\n"+
 			"or launch daemon. With --purge it also removes the config file and the\n"+
-			"keys in agent.pki.key_dir: then the host is new to osapi, and joins again\n"+
-			"only with a new join string.").
+			"keys in agent.pki.key_dir: then the host is new to osapi. To join it\n"+
+			"again, delete its admission with osapi client admission delete, then\n"+
+			"give it a new join string. The controller refuses a join that replaces\n"+
+			"the keys of an admitted machine.").
 		Example("--purge").
 		Prints(sampleUninstall).
 		Handle(Uninstall),

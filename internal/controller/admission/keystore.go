@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -169,9 +170,9 @@ func (w *Watcher) LookupAgentKey(
 }
 
 // RenameAgentKey records hostname as the name that an accepted machine
-// answers as. Only a hostname update that an operator ran through osapi
-// calls it: the machine ID and the key stay the anchor, and an agent cannot
-// move its own name (GHSA-j73r).
+// answers as: after a hostname update through osapi, or a signed
+// registration with a new name. The machine ID and the key stay the anchor.
+// A name that a different admitted machine has, online or not, is refused.
 func (w *Watcher) RenameAgentKey(
 	ctx context.Context,
 	machineID string,
@@ -179,6 +180,12 @@ func (w *Watcher) RenameAgentKey(
 ) error {
 	record, err := w.LookupAgentKey(ctx, machineID)
 	if err != nil {
+		return err
+	}
+	// A different admitted machine keeps its name, also when it is offline.
+	// Jobs and sealed secrets go to a hostname, so an agent that takes the
+	// name of a different machine takes its work.
+	if err := w.refuseHeldHostname(ctx, machineID, hostname); err != nil {
 		return err
 	}
 	renamed := *record
@@ -198,6 +205,35 @@ func (w *Watcher) RenameAgentKey(
 	}
 
 	w.invalidateAgentKey(machineID)
+
+	return nil
+}
+
+// refuseHeldHostname is ErrHostnameHeld when an admitted machine other than
+// machineID has hostname. A store that cannot be read is an error, so that
+// no rename takes a name that it did not check.
+func (w *Watcher) refuseHeldHostname(
+	ctx context.Context,
+	machineID string,
+	hostname string,
+) error {
+	keys, err := w.enrollmentKV.KVKeys(ctx, w.enrollmentBucket)
+	if err != nil {
+		return fmt.Errorf("list admitted machines: %w", err)
+	}
+	for _, key := range keys {
+		other, ok := strings.CutPrefix(key, acceptedKVPrefix)
+		if !ok || other == machineID {
+			continue
+		}
+		r, err := w.LookupAgentKey(ctx, other)
+		if err != nil {
+			return fmt.Errorf("read admitted machine %s: %w", other, err)
+		}
+		if r.Hostname == hostname {
+			return fmt.Errorf("%w: %s is the hostname of %s", ErrHostnameHeld, hostname, other)
+		}
+	}
 
 	return nil
 }

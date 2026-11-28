@@ -192,6 +192,18 @@ func (s *KeyStorePublicTestSuite) TestRenameAgentKey() {
 			KVGet(gomock.Any(), "enrollment", "accepted.machine-001").
 			Return(entry, nil)
 	}
+	// others is the bucket with a second admitted machine, machine-002,
+	// named hostname.
+	others := func(hostname string) {
+		s.mockKV.EXPECT().
+			KVKeys(gomock.Any(), "enrollment").
+			Return([]string{"accepted.machine-001", "accepted.machine-002", "enrollment.machine-003"}, nil)
+		entry := jobMocks.NewMockKeyValueEntry(s.mockCtrl)
+		entry.EXPECT().Value().Return(s.makeAcceptedJSON("machine-002", hostname))
+		s.mockKV.EXPECT().
+			KVGet(gomock.Any(), "enrollment", "accepted.machine-002").
+			Return(entry, nil)
+	}
 	tests := []struct {
 		name      string
 		setupMock func()
@@ -201,6 +213,7 @@ func (s *KeyStorePublicTestSuite) TestRenameAgentKey() {
 			name: "when the record exists, it holds the new hostname",
 			setupMock: func() {
 				stored()
+				others("app-01")
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
@@ -224,9 +237,43 @@ func (s *KeyStorePublicTestSuite) TestRenameAgentKey() {
 			wantErr: "machine-001",
 		},
 		{
+			// GHSA-m92w-c649-c8jf: an agent cannot take the name, and with it
+			// the jobs and the sealed secrets, of an offline machine.
+			name: "when a different admitted machine has the hostname, it is refused",
+			setupMock: func() {
+				stored()
+				others("db-01")
+			},
+			wantErr: "the hostname is the name of a different admitted machine",
+		},
+		{
+			name: "when the admitted machines cannot be listed, it is an error",
+			setupMock: func() {
+				stored()
+				s.mockKV.EXPECT().
+					KVKeys(gomock.Any(), "enrollment").
+					Return(nil, errors.New("kv down"))
+			},
+			wantErr: "list admitted machines",
+		},
+		{
+			name: "when a different admitted machine cannot be read, it is an error",
+			setupMock: func() {
+				stored()
+				s.mockKV.EXPECT().
+					KVKeys(gomock.Any(), "enrollment").
+					Return([]string{"accepted.machine-002"}, nil)
+				s.mockKV.EXPECT().
+					KVGet(gomock.Any(), "enrollment", "accepted.machine-002").
+					Return(nil, errors.New("kv down"))
+			},
+			wantErr: "kv down",
+		},
+		{
 			name: "when the record does not encode, it is an error",
 			setupMock: func() {
 				stored()
+				others("app-01")
 				admission.SetMarshalFn(
 					func(any) ([]byte, error) { return nil, errors.New("encode") },
 				)
@@ -237,6 +284,7 @@ func (s *KeyStorePublicTestSuite) TestRenameAgentKey() {
 			name: "when the store refuses the write, it is an error",
 			setupMock: func() {
 				stored()
+				others("app-01")
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "enrollment", "accepted.machine-001", gomock.Any()).
 					Return(uint64(0), errors.New("kv error"))

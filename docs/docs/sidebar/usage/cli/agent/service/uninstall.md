@@ -4,8 +4,9 @@ Stop the agent's service and remove it.
 
 Run this as root on the host. It stops the service and removes its unit or
 launch daemon. With --purge it also removes the config file and the keys in
-agent.pki.key_dir: then the host is new to osapi, and joins again only with a
-new join string.
+agent.pki.key_dir: then the host is new to osapi. To join it again, delete its
+admission with osapi client admission delete, then give it a new join string.
+The controller refuses a join that replaces the keys of an admitted machine.
 
 ```bash
 osapi agent service uninstall [flags]
