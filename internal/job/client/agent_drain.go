@@ -22,23 +22,35 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+
+	"github.com/nats-io/nats.go/jetstream"
 )
 
-// CheckDrainFlag returns true if the drain flag exists for the given
+// CheckDrainFlag reports whether the drain flag exists for the given
 // identifier. Callers pass a machine ID (hex string, no sanitization needed).
+// Only a missing key is "no flag": a read that fails is an error, so a NATS
+// outage does not read as an undrain.
 func (c *Client) CheckDrainFlag(
 	ctx context.Context,
 	machineID string,
-) bool {
+) (bool, error) {
 	if c.stateBucket == "" {
-		return false
+		return false, nil
 	}
 
 	key := "drain." + machineID
 	_, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
-	return err == nil
+	if errors.Is(err, jetstream.ErrKeyNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read the drain flag of %s: %w", machineID, err)
+	}
+
+	return true, nil
 }
 
 // SetDrainFlag writes the drain flag for an agent in the state KV bucket.

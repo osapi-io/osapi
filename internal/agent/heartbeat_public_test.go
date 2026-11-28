@@ -145,7 +145,7 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 				// machineID is resolved from the real system at Start(), so use Any().
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), gomock.Any()).
-					Return(false).
+					Return(false, nil).
 					AnyTimes()
 
 				// Heartbeat initial write (machineID-based key from real system)
@@ -272,7 +272,7 @@ func (s *HeartbeatPublicTestSuite) TestStartOrder() {
 				calls = nil
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), gomock.Any()).
-					Return(false).
+					Return(false, nil).
 					AnyTimes()
 				s.mockKV.EXPECT().
 					KVPut(gomock.Any(), "registry", gomock.Any(), gomock.Any()).
@@ -408,7 +408,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 	// Default: no drain flag present.
 	s.mockJobClient.EXPECT().
 		CheckDrainFlag(gomock.Any(), "test-machine-id").
-		Return(false).
+		Return(false, nil).
 		AnyTimes()
 }
 
@@ -843,7 +843,7 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 			// Drain check — no drain flag present.
 			mockJobClient.EXPECT().
 				CheckDrainFlag(gomock.Any(), "test-machine-id").
-				Return(false).
+				Return(false, nil).
 				AnyTimes()
 
 			reply, replyErr := tt.hostnameReply, tt.hostnameErr
@@ -918,7 +918,10 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatRenamed() {
 		Return(pki.ControllerKeyRecord{}, false, nil).
 		AnyTimes()
 	mockJobClient.EXPECT().WriteAgentSeen(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false).AnyTimes()
+	mockJobClient.EXPECT().
+		CheckDrainFlag(gomock.Any(), "test-machine-id").
+		Return(false, nil).
+		AnyTimes()
 	testAgent := newTestAgent(newTestAgentParams{
 		jobClient:       mockJobClient,
 		streamName:      "test-stream",

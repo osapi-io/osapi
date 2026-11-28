@@ -1051,6 +1051,29 @@ func (s *AgentPublicTestSuite) TestListAgents() {
 			},
 		},
 		{
+			name: "when the drain flag cannot be read keeps the reported state",
+			setupClient: func() *client.Client {
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "registry").
+					Return([]string{"agents.abc123"}, nil)
+				entry := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				entry.EXPECT().Value().Return(agentRegistrationJSON("server1"))
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "registry", "agents.abc123").
+					Return(entry, nil)
+
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "drain.abc123").
+					Return(nil, errors.New("nats: timeout"))
+
+				return s.newClientWithAllKVs("registry", "", "state")
+			},
+			validateFunc: func(agents []job.AgentInfo) {
+				s.Len(agents, 1)
+				s.Equal(types.AgentReady, agents[0].State)
+			},
+		},
+		{
 			name: "when facts available merges into agent info",
 			setupClient: func() *client.Client {
 				s.mockNATSClient.EXPECT().

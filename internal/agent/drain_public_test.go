@@ -22,6 +22,7 @@ package agent_test
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -97,16 +98,17 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 	tests := []struct {
 		name         string
 		setupMock    func()
-		validateFunc func(bool)
+		validateFunc func(bool, error)
 	}{
 		{
 			name: "when drain key exists returns true",
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(true)
+					Return(true, nil)
 			},
-			validateFunc: func(result bool) {
+			validateFunc: func(result bool, err error) {
+				s.NoError(err)
 				s.True(result)
 			},
 		},
@@ -115,10 +117,22 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(false)
+					Return(false, nil)
 			},
-			validateFunc: func(result bool) {
+			validateFunc: func(result bool, err error) {
+				s.NoError(err)
 				s.False(result)
+			},
+		},
+		{
+			name: "when the drain key cannot be read returns the error",
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
+					Return(false, errors.New("nats: timeout"))
+			},
+			validateFunc: func(_ bool, err error) {
+				s.ErrorContains(err, "nats: timeout")
 			},
 		},
 	}
@@ -126,12 +140,11 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.setupMock()
-			result := agent.ExportCheckDrainFlag(
+			tt.validateFunc(agent.ExportCheckDrainFlag(
 				context.Background(),
 				s.testAgent,
 				"test-machine-id",
-			)
-			tt.validateFunc(result)
+			))
 		})
 	}
 }
@@ -169,7 +182,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 		AnyTimes()
 
 	// The heartbeat finds the drain flag first.
-	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true)
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true, nil)
 	agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
 	s.Eventually(func() bool { return s.testAgent.State() == types.AgentCordoned },
 		time.Second, 10*time.Millisecond)
@@ -180,7 +193,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 		"a cordoned agent takes no jobs")
 
 	// The undrain starts the one set.
-	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false)
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false, nil)
 	agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
 	s.Equal(types.AgentReady, s.testAgent.State())
 	s.Eventually(func() bool { return started.Load() > 0 }, time.Second, 10*time.Millisecond)
@@ -194,7 +207,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 	s.Never(func() bool { return started.Load() > n }, 200*time.Millisecond, 20*time.Millisecond)
 
 	// The next drain stops it, and returns.
-	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true)
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true, nil)
 	done := make(chan struct{})
 	go func() {
 		agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
@@ -244,7 +257,7 @@ func (s *DrainPublicTestSuite) TestDrainWithAStuckConsumer() {
 	s.Eventually(func() bool { return started.Load() > 0 }, time.Second, 10*time.Millisecond)
 	settled(&started)
 
-	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true)
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true, nil)
 	done := make(chan struct{})
 	go func() {
 		agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
@@ -285,7 +298,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 				s.release = agent.HoldConsumers(s.testAgent)
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(true)
+					Return(true, nil)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
@@ -327,7 +340,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(false)
+					Return(false, nil)
 			},
 			validateFunc: func(got types.AgentState) {
 				// The undrain applies once the drain has reached Cordoned.
@@ -340,7 +353,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(false)
+					Return(false, nil)
 				s.mockJobClient.EXPECT().
 					WriteAgentTimelineEvent(
 						gomock.Any(),
@@ -370,10 +383,22 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(true)
+					Return(true, nil)
 			},
 			validateFunc: func(got types.AgentState) {
 				s.Equal(types.AgentDraining, got)
+			},
+		},
+		{
+			name:         "when the drain flag cannot be read a Cordoned agent stays Cordoned",
+			initialState: types.AgentCordoned,
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					CheckDrainFlag(gomock.Any(), "test-machine-id").
+					Return(false, errors.New("nats: timeout"))
+			},
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentCordoned, got)
 			},
 		},
 		{
@@ -382,7 +407,7 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
-					Return(false)
+					Return(false, nil)
 			},
 			validateFunc: func(got types.AgentState) {
 				s.Equal(types.AgentReady, got)

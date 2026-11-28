@@ -347,9 +347,15 @@ func (c *Client) overlayDrainState(
 		return
 	}
 
-	key := "drain." + info.MachineID
-	_, err := c.natsClient.KVGet(ctx, c.stateBucket, key)
-	info.State = job.EffectiveState(info.State, err == nil)
+	drained, err := c.CheckDrainFlag(ctx, info.MachineID)
+	if err != nil {
+		c.logger.Warn(
+			"agent state shown without its drain flag",
+			slog.String("machine_id", info.MachineID),
+			slog.String("error", err.Error()),
+		)
+	}
+	info.State = job.EffectiveState(info.State, drained)
 }
 
 // mergeFacts reads facts from the facts KV bucket and merges them into the

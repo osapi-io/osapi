@@ -29,6 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -83,7 +84,7 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 		hostname     string
 		useState     bool
 		setupMocks   func(*jobmocks.MockNATSClient)
-		validateFunc func(bool)
+		validateFunc func(bool, error)
 	}{
 		{
 			name:     "when drain flag exists returns true",
@@ -95,8 +96,9 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 					KVGet(gomock.Any(), "state", "drain.server1").
 					Return(entry, nil)
 			},
-			validateFunc: func(got bool) {
-				s.Equal(true, got)
+			validateFunc: func(got bool, err error) {
+				s.NoError(err)
+				s.True(got)
 			},
 		},
 		{
@@ -106,18 +108,34 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 			setupMocks: func(_ *jobmocks.MockNATSClient) {
 				s.mockNATSClient.EXPECT().
 					KVGet(gomock.Any(), "state", "drain.server1").
-					Return(nil, errors.New("key not found"))
+					Return(nil, jetstream.ErrKeyNotFound)
 			},
-			validateFunc: func(got bool) {
-				s.Equal(false, got)
+			validateFunc: func(got bool, err error) {
+				s.NoError(err)
+				s.False(got)
+			},
+		},
+		{
+			name:     "when the flag cannot be read returns the error",
+			hostname: "server1",
+			useState: true,
+			setupMocks: func(_ *jobmocks.MockNATSClient) {
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "state", "drain.server1").
+					Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(got bool, err error) {
+				s.ErrorContains(err, "read the drain flag of server1: nats: timeout")
+				s.False(got)
 			},
 		},
 		{
 			name:     "when there is no state bucket returns false",
 			hostname: "server1",
 			useState: false,
-			validateFunc: func(got bool) {
-				s.Equal(false, got)
+			validateFunc: func(got bool, err error) {
+				s.NoError(err)
+				s.False(got)
 			},
 		},
 	}
@@ -134,8 +152,7 @@ func (s *AgentDrainPublicTestSuite) TestCheckDrainFlag() {
 				jobsClient = s.newClientWithoutState()
 			}
 
-			result := jobsClient.CheckDrainFlag(s.ctx, tt.hostname)
-			tt.validateFunc(result)
+			tt.validateFunc(jobsClient.CheckDrainFlag(s.ctx, tt.hostname))
 		})
 	}
 }

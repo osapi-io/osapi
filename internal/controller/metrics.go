@@ -263,7 +263,10 @@ func newMetricsProvider(
 					}
 					// The agent's scheduling state, by the same rule as agent
 					// list: a drain the agent has not applied yet is Draining.
-					status := job.EffectiveState(reg.State, jc.CheckDrainFlag(fnCtx, reg.MachineID))
+					// A drain flag that cannot be read leaves the state that
+					// the agent reported, as agent list does.
+					drained, err := jc.CheckDrainFlag(fnCtx, reg.MachineID)
+					status := job.EffectiveState(reg.State, drained && err == nil)
 					entry = health.ComponentEntry{
 						Type:     "agent",
 						Hostname: reg.Hostname,
