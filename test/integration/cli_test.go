@@ -260,17 +260,21 @@ func byGroup(
 }
 
 // weight orders the commands of a group: a command that makes a thing,
-// then those that read or use it, then one that removes it.
+// then those that read or use it, then one that removes it. An undrain
+// comes straight after the drain, before the reads: a read of the agent
+// checks that it is Ready, and a drained agent is not (osapi-io/osapi#1833).
 func weight(
 	name string,
 ) int {
 	switch name {
 	case "create", "upload", "update", "generate", "drain":
 		return 0
-	case "delete", "revoke":
-		return 2
-	default:
+	case "undrain":
 		return 1
+	case "delete", "revoke":
+		return 3
+	default:
+		return 2
 	}
 }
 
