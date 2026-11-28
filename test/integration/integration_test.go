@@ -28,6 +28,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -38,10 +39,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
-	"gopkg.in/yaml.v3"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // signingKey is the key of controller.api.security.signing_keys in
@@ -144,7 +145,7 @@ func runSuite(
 		return 1
 	}
 
-	t := authtoken.New(nil)
+	t := authtoken.New(slog.New(slog.DiscardHandler))
 	token, err = t.Generate(signingKey, []types.Role{types.RoleAdmin}, "integration@test", nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "generate token: %v\n", err)

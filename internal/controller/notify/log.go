@@ -35,7 +35,7 @@ type LogNotifier struct {
 func NewLogNotifier(
 	logger *slog.Logger,
 ) *LogNotifier {
-	return &LogNotifier{logger: logger}
+	return &LogNotifier{logger: logger.With(slog.String("subsystem", "controller.notify.log"))}
 }
 
 // Notify logs the condition event at INFO level and returns nil.

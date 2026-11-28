@@ -122,6 +122,7 @@ func (s *LogNotifierPublicTestSuite) TestNotifyKeys() {
 			s.Equal(1, strings.Count(out.String(), `"component":`))
 			s.Contains(out.String(), `"component":"controller"`)
 			s.Contains(out.String(), `"source":"agent"`)
+			s.Contains(out.String(), `"subsystem":"controller.notify.log"`)
 		})
 	}
 }
