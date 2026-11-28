@@ -23,6 +23,8 @@ package netplan_test
 import (
 	"context"
 	"errors"
+	"io"
+	"log/slog"
 	"maps"
 	"sync"
 	"sync/atomic"
@@ -90,6 +92,7 @@ func (s *DebianPublicTestSuite) TestRefusedFileIsRolledBack() {
 			exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
 				Return("", errors.New("bad yaml"))
 			p, err := netplan.ExportNewDebian(host.Host{
+				Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
 				FS:       fs,
 				Exec:     exec,
 				Required: map[string]any{managedfile.Behavior.Name: files},
@@ -128,6 +131,7 @@ func (s *DebianPublicTestSuite) TestOneChangeAtATime() {
 			return "", nil
 		}).AnyTimes()
 	p, err := netplan.ExportNewDebian(host.Host{
+		Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
 		FS:       fs,
 		Exec:     exec,
 		Required: map[string]any{managedfile.Behavior.Name: files},
@@ -209,6 +213,7 @@ func (s *DebianPublicTestSuite) TestFailedStepIsInTheTree() {
 			exec := hostmocks.NewMockExec(ctrl)
 			tc.expect(files, exec)
 			p, err := netplan.ExportNewDebian(host.Host{
+				Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
 				FS:       fs,
 				Exec:     exec,
 				Required: map[string]any{managedfile.Behavior.Name: files},
@@ -303,6 +308,7 @@ func (s *DebianPublicTestSuite) TestRetryAfterAFailedApply() {
 			exec := hostmocks.NewMockExec(ctrl)
 			tc.expect(files, exec)
 			p, err := netplan.ExportNewDebian(host.Host{
+				Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
 				FS:       memfs.New(),
 				Exec:     exec,
 				Required: map[string]any{managedfile.Behavior.Name: files},
@@ -376,6 +382,7 @@ func (s *DebianPublicTestSuite) TestRetryAfterAFailedRemove() {
 				files.EXPECT().Write(gomock.Any(), marked(content, meta)).Return(true, nil)
 			}
 			p, err := netplan.ExportNewDebian(host.Host{
+				Logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
 				FS:       fs,
 				Exec:     exec,
 				Required: map[string]any{managedfile.Behavior.Name: files},

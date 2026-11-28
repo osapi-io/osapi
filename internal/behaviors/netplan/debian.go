@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -47,20 +48,22 @@ import (
 var applying sync.Mutex
 
 type debian struct {
-	files managedfile.Provider
-	exec  host.Exec
-	fs    avfs.VFS
-	src   source.Sources
+	logger *slog.Logger
+	files  managedfile.Provider
+	exec   host.Exec
+	fs     avfs.VFS
+	src    source.Sources
 }
 
 func newDebian(
 	h host.Host,
 ) (Provider, error) {
 	return &debian{
-		files: host.Require[managedfile.Provider](h, managedfile.Behavior),
-		exec:  h.Exec,
-		fs:    h.FS,
-		src:   h.Sources(),
+		logger: h.Logger.With(slog.String("subsystem", "provider.netplan")),
+		files:  host.Require[managedfile.Provider](h, managedfile.Behavior),
+		exec:   h.Exec,
+		fs:     h.FS,
+		src:    h.Sources(),
 	}, nil
 }
 
@@ -229,22 +232,33 @@ var netplanType = map[string]string{
 
 // kind is the netplan type of the interface name from its kind as gohai reads
 // it, or "" when gohai cannot read the interfaces, does not know the
-// interface, or its kind has no section of its own.
+// interface, or its kind has no section of its own. A read that fails is
+// logged at Debug, and the interface goes in ethernets.
 func (d *debian) kind(
 	ctx context.Context,
 	name string,
 ) string {
 	out, err := network.NewWith(d.src).Collect(ctx, nil)
-	if err != nil {
+	info, ok := out.(*network.Info)
+	if err != nil || !ok {
+		d.logger.Debug(
+			"interfaces not read, interface goes in ethernets",
+			slog.String("name", name),
+			slog.Any("error", err),
+		)
+
 		return ""
 	}
-	for _, iface := range out.(*network.Info).Interfaces {
+	k := ""
+	for _, iface := range info.Interfaces {
 		if iface.Name == name {
-			return netplanType[iface.Kind]
+			k = iface.Kind
+
+			break
 		}
 	}
 
-	return ""
+	return netplanType[k]
 }
 
 // Section is the netplan section of an interface of type t.

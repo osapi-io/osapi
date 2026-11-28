@@ -138,7 +138,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("An interface netplan does not manage", GetInput{Name: "eth9"},
 			Interface{Name: "eth9", Section: "ethernets", ID: "eth9", Matches: []string{"eth9"}},
 			behavior.Prints("netplan status --format json", status),
-			behavior.Exists("/sys/class/net/eth0/type", "1\n"),
+			behavior.Exists("/sys/class/net/eth9/type", "1\n"),
 		).
 		Example("A bridge on a netplan without status", GetInput{Name: "br0"},
 			Interface{
