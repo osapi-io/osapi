@@ -34,12 +34,12 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/utils/ptr"
-
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
+	"k8s.io/utils/ptr"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
@@ -1741,6 +1741,7 @@ func (s *HandlerPublicTestSuite) TestStartInProgressKeepAlive() {
 			// stop() closes the stop channel. Without this, a canceled
 			// context and a closed stop channel are both ready and select
 			// picks at random, so the ctx.Done() path is only sometimes
+
 			// taken -- which made its coverage flap between runs.
 			time.Sleep(30 * time.Millisecond)
 
@@ -1755,4 +1756,167 @@ func TestHandlerPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(HandlerPublicTestSuite))
+}
+
+func (s *HandlerPublicTestSuite) TestClassifyProviderError() {
+	tests := []struct {
+		name string
+		err  error
+		want job.ErrorCode
+	}{
+		{
+			name: "a thing the host does not have",
+			err:  fmt.Errorf(`user "nobody": %w`, provider.ErrNotFound),
+			want: job.ErrorCodeNotFound,
+		},
+		{
+			name: "a thing osapi did not deploy",
+			err:  fmt.Errorf("cron entry %q: %w", "backup", provider.ErrNotManaged),
+			want: job.ErrorCodeNotManaged,
+		},
+		{
+			name: "a program the host does not have",
+			err:  fmt.Errorf("package %q: %w", "nginx", provider.ErrNotInstalled),
+			want: job.ErrorCodeNotInstalled,
+		},
+		{
+			name: "an input the host refuses",
+			err:  fmt.Errorf("/tmp: a directory, not a file: %w", provider.ErrInvalid),
+			want: job.ErrorCodeInvalid,
+		},
+		{
+			name: "an operation this OS family does not have",
+			err:  fmt.Errorf("timezone: %w", provider.ErrUnsupported),
+			want: job.ErrorCodeUnsupported,
+		},
+		{
+			name: "a failure with no cause the API distinguishes",
+			err:  errors.New("apt-get returned 100"),
+			want: "",
+		},
+		{
+			name: "a cause wrapped two errors deep",
+			err:  fmt.Errorf("get user: %w", fmt.Errorf("read passwd: %w", provider.ErrNotFound)),
+			want: job.ErrorCodeNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.want, agent.ExportClassifyProviderError(tt.err))
+		})
+	}
+}
+
+// In order for `go test` to run this suite, we need to create
+// a normal test function and pass our suite to suite.Run.
+
+// TestOpenJob: a running agent opens a job sealed to its keys, also after
+// a rotation moved the keys on disk.
+func (s *HandlerPublicTestSuite) TestOpenJob() {
+	// sealedTo is a job sealed to the public encryption key pub.
+	sealedTo := func(pub string) job.Request {
+		sealer, err := seal.New("job-1")
+		s.Require().NoError(err)
+		key, err := sealer.KeyFor(pub)
+		s.Require().NoError(err)
+
+		return job.Request{
+			JobID:      "job-1",
+			SealedKeys: map[string]string{"m-1": key},
+			SealedFrom: sealer.From(),
+		}
+	}
+	// rotate moves new keys in place on disk, as osapi pki key rotate
+	// does, and returns their public encryption key.
+	rotate := func(fs avfs.VFS) string {
+		disk := pki.New(fs, keyDir, "agent", pki.WithEncryptionKey())
+		s.Require().NoError(disk.Load())
+		next, err := disk.Next()
+		s.Require().NoError(err)
+		s.Require().NoError(disk.Promote(next))
+
+		return next.EncryptionPublicKey()
+	}
+
+	tests := []struct {
+		name string
+		// arrange changes the disk after the agent loaded its keys, and
+		// returns the job to open.
+		arrange      func(fs avfs.VFS, m *pki.Manager) job.Request
+		validateFunc func(err error, before string, m *pki.Manager)
+	}{
+		{
+			name: "a job sealed to the new key opens: the agent reads the new keys",
+			arrange: func(fs avfs.VFS, _ *pki.Manager) job.Request {
+				return sealedTo(rotate(fs))
+			},
+			validateFunc: func(err error, before string, m *pki.Manager) {
+				s.Require().NoError(err)
+				s.NotEqual(before, m.Fingerprint())
+			},
+		},
+		{
+			name: "a job sealed to the old key just before the rotation opens",
+			arrange: func(fs avfs.VFS, m *pki.Manager) job.Request {
+				req := sealedTo(m.EncryptionPublicKey())
+				rotate(fs)
+
+				return req
+			},
+			validateFunc: func(err error, _ string, _ *pki.Manager) {
+				s.Require().NoError(err)
+			},
+		},
+		{
+			name: "a job sealed to a key that is neither does not open",
+			arrange: func(fs avfs.VFS, _ *pki.Manager) job.Request {
+				rotate(fs)
+				other := pki.New(fs, "/other", "agent", pki.WithEncryptionKey())
+				s.Require().NoError(other.LoadOrGenerate())
+
+				return sealedTo(other.EncryptionPublicKey())
+			},
+			validateFunc: func(err error, _ string, _ *pki.Manager) {
+				s.Error(err)
+			},
+		},
+		{
+			name: "keys that are gone from the disk: the agent keeps the keys it has",
+			arrange: func(fs avfs.VFS, m *pki.Manager) job.Request {
+				req := sealedTo(m.EncryptionPublicKey())
+				s.Require().NoError(fs.Remove(keyDir + "/agent.pub"))
+
+				return req
+			},
+			validateFunc: func(err error, _ string, _ *pki.Manager) {
+				s.Require().NoError(err)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			fs := memfs.New()
+			a := newTestAgent(newTestAgentParams{
+				appFs:           fs,
+				jobClient:       s.mockJobClient,
+				streamName:      "test-stream",
+				hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
+				diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
+				memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
+				loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
+				processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+			})
+			agent.SetAgentMachineID(a, "m-1")
+			m := pki.New(fs, keyDir, "agent", pki.WithEncryptionKey())
+			s.Require().NoError(m.LoadOrGenerate())
+			agent.SetAgentPKIManager(a, m)
+			before := m.Fingerprint()
+
+			req := tt.arrange(fs, m)
+			_, err := agent.ExportOpenJob(a, req)
+			tt.validateFunc(err, before, m)
+		})
+	}
 }

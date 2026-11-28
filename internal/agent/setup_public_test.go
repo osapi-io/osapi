@@ -22,23 +22,29 @@ package agent_test
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"path/filepath"
 	"testing"
 
-	"github.com/osapi-io/osapi/internal/provider/gohaitest"
-
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type SetupPublicTestSuite struct {
@@ -270,7 +276,7 @@ func (s *SetupPublicTestSuite) TestDefaultContainerFn() {
 
 func (s *SetupPublicTestSuite) TestGohaiFacts() {
 	_, err := agent.ExportGohaiFacts(gohai.WithCollectors("no-such-collector"))
-	s.Error(err, "gohai's error comes back")
+	s.Error(err)
 }
 
 func (s *SetupPublicTestSuite) TestSubComponents() {
@@ -293,4 +299,68 @@ func (s *SetupPublicTestSuite) TestSubComponents() {
 		s.Equal("http://127.0.0.1:9091", subs["agent.metrics"].Address)
 		s.Equal("http://vm.example:9091/metrics", subs["agent.metrics"].URL)
 	})
+}
+
+func (s *SetupPublicTestSuite) TestObject() {
+	tests := []struct {
+		name      string
+		get       error
+		info      *jetstream.ObjectInfo
+		infoErr   error
+		wantType  types.ContentType
+		wantErr   error
+		wantError string
+	}{
+		{
+			name: "when the upload gave a content type returns it",
+			info: &jetstream.ObjectInfo{ObjectMeta: jetstream.ObjectMeta{
+				Headers: nats.Header{"Osapi-Content-Type": []string{"template"}},
+			}},
+			wantType: types.ContentTemplate,
+		},
+		{
+			name:     "when the object has no headers is raw",
+			info:     &jetstream.ObjectInfo{},
+			wantType: types.ContentRaw,
+		},
+		{
+			name:     "when the info does not read is raw",
+			infoErr:  errors.New("boom"),
+			wantType: types.ContentRaw,
+		},
+		{
+			name:    "when the store does not have the object is not found",
+			get:     jetstream.ErrObjectNotFound,
+			wantErr: behavior.ErrNotFound,
+		},
+		{
+			name:      "when the store fails returns its error",
+			get:       errors.New("store down"),
+			wantError: "store down",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			store := agentMocks.NewMockObjectReader(gomock.NewController(s.T()))
+			store.EXPECT().ObjectGetBytes(gomock.Any(), "b", "a").Return([]byte("x"), tc.get)
+			if tc.get == nil {
+				store.EXPECT().ObjectInfo(gomock.Any(), "b", "a").Return(tc.info, tc.infoErr)
+			}
+
+			content, contentType, err := agent.ExportStoreObjects(store, "b").
+				Object(context.Background(), "a")
+
+			switch {
+			case tc.wantErr != nil:
+				s.ErrorIs(err, tc.wantErr)
+			case tc.wantError != "":
+				s.ErrorContains(err, tc.wantError)
+			default:
+				s.Require().NoError(err)
+				s.Equal("x", string(content))
+				s.Equal(tc.wantType, contentType)
+			}
+		})
+	}
 }
