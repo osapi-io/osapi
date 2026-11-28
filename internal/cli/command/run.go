@@ -43,6 +43,7 @@ type UsageError struct {
 	Msg string
 }
 
+// Error is the message of the error.
 func (e *UsageError) Error() string {
 	return e.Msg
 }
@@ -52,6 +53,7 @@ func (e *UsageError) Error() string {
 // no message of its own. Fail returns it.
 type FailedError struct{}
 
+// Error is the message of the error.
 func (FailedError) Error() string {
 	return "the command failed: its output says why"
 }

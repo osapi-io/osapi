@@ -29,12 +29,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/types"
+	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/validation/rule"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // bearer is the security scheme of every endpoint that is not public.

@@ -984,6 +984,7 @@ type AnswerError struct {
 	Code int
 }
 
+// Error is the message of the error.
 func (e *AnswerError) Error() string {
 	return http.StatusText(e.Code)
 }
@@ -1142,10 +1143,12 @@ type wrapped struct {
 	sentinel error
 }
 
+// Error is the message of the error.
 func (w *wrapped) Error() string {
 	return w.msg
 }
 
+// Unwrap is the error that this one wraps.
 func (w *wrapped) Unwrap() error {
 	return w.sentinel
 }
@@ -1168,10 +1171,12 @@ type InternalError struct {
 	Cause error
 }
 
+// Error is the message of the error.
 func (e *InternalError) Error() string {
 	return e.Msg
 }
 
+// Unwrap is the error that this one wraps.
 func (e *InternalError) Unwrap() error {
 	return e.Cause
 }

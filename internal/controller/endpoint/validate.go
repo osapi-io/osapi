@@ -32,13 +32,10 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
-
-	"github.com/osapi-io/osapi/internal/validation"
-
-	"github.com/osapi-io/osapi/internal/validation/rule"
-
 	"github.com/osapi-io/osapi/internal/guide"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
 // name is a group, a method, a sub-path or an action: lowercase letters and

@@ -122,10 +122,12 @@ type RefusedError struct {
 	Hostname  string
 }
 
+// Error is the message of the error.
 func (e *RefusedError) Error() string {
 	return fmt.Sprintf("%s: machine %s", ErrResponseSignatureInvalid, e.MachineID)
 }
 
+// Unwrap is the error that this one wraps.
 func (e *RefusedError) Unwrap() error {
 	return ErrResponseSignatureInvalid
 }

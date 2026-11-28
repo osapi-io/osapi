@@ -32,8 +32,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/controller/endpoint"
-
 	echootel "github.com/labstack/echo-opentelemetry"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -41,6 +39,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/telemetry/httplog"
 	"github.com/osapi-io/osapi/internal/telemetry/respspan"
 )
@@ -150,7 +149,7 @@ func (s *Server) Start() error {
 	s.stop = cancel
 
 	go func() {
-		s.logger.Info("starting server", slog.String("address", addr))
+		s.logger.Info("starting server", slog.String("addr", addr))
 
 		sc := echo.StartConfig{
 			Listener:        ln,

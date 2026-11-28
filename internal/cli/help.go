@@ -74,8 +74,10 @@ type usageError struct {
 	err error
 }
 
+// Error is the message of the error.
 func (e *usageError) Error() string { return e.err.Error() }
 
+// Unwrap is the error that this one wraps.
 func (e *usageError) Unwrap() error { return e.err }
 
 // usagePrefixes are cobra's own messages for a bad invocation. Cobra returns

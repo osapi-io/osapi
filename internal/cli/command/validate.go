@@ -262,6 +262,7 @@ type Problem struct {
 	Fix string `json:"fix" table:"-"`
 }
 
+// String is the problem in one line.
 func (p Problem) String() string {
 	return p.Message + " Fix: " + p.Fix
 }
