@@ -35,6 +35,12 @@ import (
 // deadline is derived from the context it passed.
 const DefaultCommandTimeout = 10 * time.Minute
 
+// MaxCommandOutput is the most of a command's output that the agent keeps,
+// for each stream of a command that gives them apart. The rest is counted on
+// a last line. A job's answer goes into a NATS message, which takes no more
+// than this.
+const MaxCommandOutput = 1 << 20
+
 // CommandExecutor executes OS commands. The default implementation
 // runs real commands via os/exec. Tests inject a mock to assert
 // commands without executing them.

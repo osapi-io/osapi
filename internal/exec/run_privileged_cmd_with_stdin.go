@@ -36,7 +36,7 @@ func (e *Exec) RunPrivilegedCmdWithStdin(
 ) (string, error) {
 	if e.sudo {
 		args = sudoArgs(name, args)
-		name = "sudo"
+		name = sudoProgram
 	}
 
 	return e.executor.ExecuteWithStdin(ctx, name, args, "", stdin)

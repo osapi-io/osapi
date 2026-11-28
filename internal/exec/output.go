@@ -20,15 +20,43 @@
 
 package exec
 
-import "context"
+import (
+	"bytes"
+	"fmt"
+)
 
-// RunCmdInDir executes the provided command with arguments, using the current
-// provided directory.
-func (e *Exec) RunCmdInDir(
-	ctx context.Context,
-	name string,
-	args []string,
-	cwd string,
-) (string, error) {
-	return e.RunCmdImpl(ctx, name, args, cwd)
+// output is the writer of a command's output. It keeps the first max bytes
+// and counts the rest, so a command that prints without an end, such as
+// yes, does not fill the memory of the agent. A write never fails: the
+// command runs to its end as it would with no limit.
+type output struct {
+	buf     bytes.Buffer
+	max     int
+	dropped int64
+}
+
+// Write keeps what fits in o and counts the rest.
+func (o *output) Write(
+	p []byte,
+) (int, error) {
+	room := o.max - o.buf.Len()
+	if room >= len(p) {
+		return o.buf.Write(p)
+	}
+	if room > 0 {
+		o.buf.Write(p[:room])
+	}
+	o.dropped += int64(len(p) - max(room, 0))
+
+	return len(p), nil
+}
+
+// String is the output that o kept, with a last line that counts the bytes
+// that it did not keep.
+func (o *output) String() string {
+	if o.dropped == 0 {
+		return o.buf.String()
+	}
+
+	return fmt.Sprintf("%s\n[%d more bytes of output not kept]\n", o.buf.String(), o.dropped)
 }
