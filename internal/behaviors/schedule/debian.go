@@ -32,6 +32,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
+	"github.com/osapi-io/osapi/internal/validation"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -267,7 +268,7 @@ func (d *debian) deploy(
 		// cron expression and the user of the record, so a read gives what
 		// cron runs. An entry with no user runs as root.
 		meta["user"] = or(meta["user"], "root")
-		if content, err = cronLine(meta["schedule"], meta["user"], content); err != nil {
+		if content, err = cronLine(ctx, meta["schedule"], meta["user"], content); err != nil {
 			return false, err
 		}
 	}
@@ -292,12 +293,22 @@ func (d *debian) deploy(
 }
 
 // cronLine is the line of an entry in /etc/cron.d that runs command, which
-// is one line, at schedule as user.
+// is one line, at schedule as user. The schedule and the user become fields
+// of the line that cron runs, and an update can take them from the record,
+// so they follow the rules of the input again: cron_schedule and
+// account_name.
 func cronLine(
+	ctx context.Context,
 	schedule string,
 	user string,
 	command string,
 ) (string, error) {
+	if msg, ok := validation.Var(ctx, schedule, "required,cron_schedule"); !ok {
+		return "", fmt.Errorf("cron expression %q: %s: %w", schedule, msg, behavior.ErrInvalid)
+	}
+	if msg, ok := validation.Var(ctx, user, "required,account_name"); !ok {
+		return "", fmt.Errorf("user %q: %s: %w", user, msg, behavior.ErrInvalid)
+	}
 	command = strings.TrimSpace(command)
 	if command == "" || strings.Contains(command, "\n") {
 		return "", fmt.Errorf(

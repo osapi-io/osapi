@@ -119,14 +119,16 @@ var Behavior = behavior.Register(behavior.Define(
 		AdminOnly().
 		Describe("Deploy a cron entry").
 		Explain("Gets the object from the object store. For a cron expression, the object is "+
-			"the command, and the entry is /etc/cron.d/backup for backup, mode 0644: one line "+
-			"of the cron expression, the user (root when none is given) and the command. For a "+
-			"daily interval, the object is the script, written as /etc/cron.daily/backup, mode "+
-			"0755, which runs as root, so a user is refused. An object of content type template, or content_type template, "+
-			"is rendered with the agent's facts and the vars. A file that has the content "+
-			"does not change. An entry of the name in a different directory does not change: "+
-			"move it with delete and create. A file at the path that osapi did not deploy is "+
-			"refused. An entry runs as its user, root included, so only admin can deploy one.").
+			"the command, and the entry is /etc/cron.d/backup for backup, mode 0644: one "+
+			"line of the cron expression, the user (root when none is given) and the "+
+			"command. For a daily interval, the object is the script, written as "+
+			"/etc/cron.daily/backup, mode 0755, which runs as root, so a user is refused. "+
+			"An object of content type template, or content_type template, is rendered "+
+			"with the agent's facts and the vars. A file that has the content does not "+
+			"change. An entry of the name in a different directory does not change: move "+
+			"it with delete and create. A file at the path that osapi did not deploy is "+
+			"refused. An entry runs as its user, root included, so only admin can deploy "+
+			"one.").
 		Example("An entry with a cron expression",
 			CreateInput{
 				Name:     "osapitest",
@@ -278,8 +280,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Explain("Writes a new object, or the entry's own, at the entry's path, with the "+
 			"fields that the request gives and the entry's own for the rest. A new cron "+
 			"expression or user writes the entry's line again, so cron runs what a read "+
-			"gives. A file that has the content does not change. An entry that osapi did not deploy is not found. "+
-			"The entry stays in its directory: an interval does not change with update.").
+			"gives. A file that has the content does not change. An entry that osapi did "+
+			"not deploy is not found. The entry stays in its directory: an interval does "+
+			"not change with update.").
 		Example("A new object",
 			UpdateInput{Name: "osapitest", Object: "osapitest-v2.cron"},
 			Result{Name: "osapitest", Changed: true},
