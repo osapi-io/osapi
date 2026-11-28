@@ -22,6 +22,7 @@ package health_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -30,6 +31,10 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/health"
 )
 
+// callerKey marks the context of the caller, so a check can tell that it
+// got that context.
+type callerKey struct{}
+
 type CheckerPublicTestSuite struct {
 	suite.Suite
 
@@ -37,15 +42,50 @@ type CheckerPublicTestSuite struct {
 }
 
 func (s *CheckerPublicTestSuite) SetupTest() {
-	s.ctx = context.Background()
+	s.ctx = context.WithValue(context.Background(), callerKey{}, "caller")
+}
+
+// fromCaller is a check that fails unless it got the caller's context
+// with a deadline.
+func fromCaller(
+	ctx context.Context,
+) error {
+	if _, ok := ctx.Deadline(); !ok {
+		return errors.New("the check has no deadline")
+	}
+	if ctx.Value(callerKey{}) != "caller" {
+		return errors.New("the check did not get the caller's context")
+	}
+
+	return ctx.Err()
 }
 
 func (s *CheckerPublicTestSuite) TestCheckHealth() {
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+
 	tests := []struct {
-		name         string
-		checker      *health.NATSChecker
+		name    string
+		checker *health.NATSChecker
+		// ctx is the caller's context; nil is the suite's.
+		ctx          context.Context
 		validateFunc func(error)
 	}{
+		{
+			name:    "each check gets the caller's context, with a deadline",
+			checker: &health.NATSChecker{NATSCheck: fromCaller, KVCheck: fromCaller},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name:    "a cancel of the caller stops each check",
+			checker: &health.NATSChecker{NATSCheck: fromCaller, KVCheck: fromCaller},
+			ctx:     context.WithValue(cancelled, callerKey{}, "caller"),
+			validateFunc: func(err error) {
+				s.ErrorIs(err, context.Canceled)
+			},
+		},
 		{
 			name: "all checks pass",
 			checker: &health.NATSChecker{
@@ -100,7 +140,11 @@ func (s *CheckerPublicTestSuite) TestCheckHealth() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFunc(tt.checker.CheckHealth(s.ctx))
+			ctx := tt.ctx
+			if ctx == nil {
+				ctx = s.ctx
+			}
+			tt.validateFunc(tt.checker.CheckHealth(ctx))
 		})
 	}
 }
@@ -111,6 +155,13 @@ func (s *CheckerPublicTestSuite) TestCheckNATS() {
 		checker      *health.NATSChecker
 		validateFunc func(error)
 	}{
+		{
+			name:    "the check gets the caller's context, with a deadline",
+			checker: &health.NATSChecker{NATSCheck: fromCaller},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
 		{
 			name: "NATS check passes",
 			checker: &health.NATSChecker{
@@ -152,6 +203,13 @@ func (s *CheckerPublicTestSuite) TestCheckKV() {
 		validateFunc func(error)
 	}{
 		{
+			name:    "the check gets the caller's context, with a deadline",
+			checker: &health.NATSChecker{KVCheck: fromCaller},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
 			name: "KV check passes",
 			checker: &health.NATSChecker{
 				KVCheck: func(context.Context) error { return nil },
@@ -181,67 +239,6 @@ func (s *CheckerPublicTestSuite) TestCheckKV() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.validateFunc(tt.checker.CheckKV(s.ctx))
-		})
-	}
-}
-
-func (s *CheckerPublicTestSuite) TestChecksGetABoundedContext() {
-	type ctxKey struct{}
-
-	tests := []struct {
-		name         string
-		run          func(c *health.NATSChecker, ctx context.Context) error
-		validateFunc func(got context.Context)
-	}{
-		{
-			name: "the NATS check gets the caller's context with a deadline",
-			run: func(c *health.NATSChecker, ctx context.Context) error {
-				return c.CheckNATS(ctx)
-			},
-			validateFunc: func(got context.Context) {
-				_, ok := got.Deadline()
-				s.True(ok, "the check has a deadline")
-				s.Equal("caller", got.Value(ctxKey{}))
-			},
-		},
-		{
-			name: "the KV check gets the caller's context with a deadline",
-			run: func(c *health.NATSChecker, ctx context.Context) error {
-				return c.CheckKV(ctx)
-			},
-			validateFunc: func(got context.Context) {
-				_, ok := got.Deadline()
-				s.True(ok, "the check has a deadline")
-				s.Equal("caller", got.Value(ctxKey{}))
-			},
-		},
-		{
-			name: "a cancel of the caller stops the check",
-			run: func(c *health.NATSChecker, ctx context.Context) error {
-				cancelled, cancel := context.WithCancel(ctx)
-				cancel()
-
-				return c.CheckHealth(cancelled)
-			},
-			validateFunc: func(got context.Context) {
-				s.ErrorIs(got.Err(), context.Canceled)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			var got context.Context
-			record := func(ctx context.Context) error {
-				got = ctx
-
-				return ctx.Err()
-			}
-			c := &health.NATSChecker{NATSCheck: record, KVCheck: record}
-
-			_ = tt.run(c, context.WithValue(s.ctx, ctxKey{}, "caller"))
-
-			tt.validateFunc(got)
 		})
 	}
 }
