@@ -26,7 +26,10 @@ import (
 	"math"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel"
@@ -176,8 +179,7 @@ func (s *TelemetryPublicTestSuite) TestInvoke() {
 					instruments.BehaviorDuration,
 					instruments.BehaviorChanges,
 				} {
-					s.ElementsMatch(i.Labels, got[i.Name],
-						"the labels that the metrics reference gives for %s", i.Name)
+					s.ElementsMatch(i.Labels, got[i.Name])
 				}
 			},
 		},
@@ -190,7 +192,7 @@ func (s *TelemetryPublicTestSuite) TestInvoke() {
 				s.Equal(codes.Error, spans[0].Status().Code)
 				attrs := attribute.NewSet(spans[0].Attributes()...)
 				_, ok := attrs.Value(behavior.AttrChanged)
-				s.False(ok, "a read records no changed")
+				s.False(ok)
 				s.EqualValues(1, metrics[instruments.BehaviorCalls.Name])
 				s.Zero(metrics[instruments.BehaviorChanges.Name])
 			},
@@ -230,7 +232,7 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 		s.Equal(entry{Key: "k", Value: "v-k"}, out)
 		spans := s.spans.Ended()
 		s.Require().Len(spans, 2)
-		s.Equal("behavior.sysctl.list", spans[0].Name(), "the first method declared with get")
+		s.Equal("behavior.sysctl.list", spans[0].Name())
 		s.Equal(parent.SpanContext().SpanID(), spans[0].Parent().SpanID())
 		s.EqualValues(1, s.metrics()[instruments.BehaviorCalls.Name])
 	})
@@ -251,7 +253,7 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 
 		s.ErrorContains(err, "method list")
 		s.ErrorContains(err, "required")
-		s.Equal(codes.Error, s.spans.Ended()[0].Status().Code, "the refusal is on the span")
+		s.Equal(codes.Error, s.spans.Ended()[0].Status().Code)
 	})
 
 	s.Run(
@@ -265,13 +267,11 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 			s.ErrorContains(
 				m.Check(context.Background(), nil),
 				"required",
-				"no input is the zero input",
 			)
 
 			bare := behavior.Read("status", readBare)
 			s.NoError(
 				bare.Check(context.Background(), []byte(`"x"`)),
-				"an input that is not a struct has no tags to check",
 			)
 		},
 	)
@@ -300,7 +300,7 @@ func (s *TelemetryPublicTestSuite) TestQuiet() {
 	s.Empty(s.spans.Ended())
 	var rm metricdata.ResourceMetrics
 	s.Require().NoError(s.reader.Collect(context.Background(), &rm))
-	s.Empty(rm.ScopeMetrics, "no metric")
+	s.Empty(rm.ScopeMetrics)
 }
 
 func (s *TelemetryPublicTestSuite) TestSetMeterProvider() {
@@ -502,4 +502,76 @@ func TestTelemetryPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(TelemetryPublicTestSuite))
+}
+
+// counting is a provider that records how many calls run at once, and the
+// most that ever did. Each call takes long enough for the others to start.
+type counting struct {
+	active *atomic.Int32
+	peak   *atomic.Int32
+}
+
+func (c counting) enter() {
+	n := c.active.Add(1)
+	for {
+		p := c.peak.Load()
+		if n <= p || c.peak.CompareAndSwap(p, n) {
+			break
+		}
+	}
+	time.Sleep(50 * time.Millisecond)
+	c.active.Add(-1)
+}
+
+func countingRead(
+	_ context.Context,
+	c counting,
+	in getIn,
+) (entry, error) {
+	c.enter()
+
+	return entry{Key: in.Key}, nil
+}
+
+func countingWrite(
+	_ context.Context,
+	c counting,
+	in getIn,
+) (result, error) {
+	c.enter()
+
+	return result{Key: in.Key, Changed: true}, nil
+}
+
+// TestWrites: jobs that write one behavior run one at a time, as the agent
+// runs several jobs at once; reads of it run together.
+func (s *TelemetryPublicTestSuite) TestWrites() {
+	b := behavior.Define("locktest", "A behavior whose calls count",
+		behavior.Node,
+		behavior.Read("get", countingRead).Key("key"),
+		behavior.Write("update", countingWrite).Key("key"),
+	)
+	input, err := json.Marshal(getIn{Key: "k"})
+	s.Require().NoError(err)
+
+	for _, tc := range []struct {
+		method string
+		want   func(peak int32)
+	}{
+		{method: "update", want: func(peak int32) { s.Equal(int32(1), peak) }},
+		{method: "get", want: func(peak int32) { s.Greater(peak, int32(1)) }},
+	} {
+		s.Run(tc.method, func() {
+			c := counting{active: &atomic.Int32{}, peak: &atomic.Int32{}}
+			var wg sync.WaitGroup
+			for range 4 {
+				wg.Go(func() {
+					_, err := b.Method(tc.method).Invoke(context.Background(), c, input)
+					s.NoError(err)
+				})
+			}
+			wg.Wait()
+			tc.want(c.peak.Load())
+		})
+	}
 }

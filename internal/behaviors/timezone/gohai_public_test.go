@@ -28,11 +28,11 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/timezone"
 )
 
-type OffsetPublicTestSuite struct {
+type GohaiPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *OffsetPublicTestSuite) TestOffset() {
+func (s *GohaiPublicTestSuite) TestOffset() {
 	for seconds, want := range map[int]string{
 		0:      "+00:00",
 		19800:  "+05:30",
@@ -43,8 +43,8 @@ func (s *OffsetPublicTestSuite) TestOffset() {
 	}
 }
 
-func TestOffsetPublicTestSuite(
+func TestGohaiPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(OffsetPublicTestSuite))
+	suite.Run(t, new(GohaiPublicTestSuite))
 }

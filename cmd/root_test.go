@@ -21,14 +21,17 @@ package cmd
 
 import (
 	"os"
+	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
 // TestSkipConfig: a command that reads no config is matched by its path,
 // so osapi client agent config, a command of the API, reads the config and
 // osapi config does not.
-func TestSkipConfig(t *testing.T) {
+func (s *RootTestSuite) TestSkipConfig() {
 	was := os.Args
 	defer func() { os.Args = was }()
 	for args, want := range map[string]bool{
@@ -40,8 +43,14 @@ func TestSkipConfig(t *testing.T) {
 		"controller join token create": false,
 	} {
 		os.Args = append([]string{"osapi"}, strings.Fields(args)...)
-		if got := skipConfig(); got != want {
-			t.Errorf("osapi %s: skipConfig is %v, want %v", args, got, want)
-		}
+		s.Equal(args+": "+strconv.FormatBool(want), args+": "+strconv.FormatBool(skipConfig()))
 	}
+}
+
+type RootTestSuite struct {
+	suite.Suite
+}
+
+func TestRootTestSuite(t *testing.T) {
+	suite.Run(t, new(RootTestSuite))
 }
