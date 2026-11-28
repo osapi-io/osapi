@@ -4,7 +4,7 @@
 # `target: 100%` is declared again as JUST_COVERAGE_TARGET in the shared go
 # justfile module (osapi-io/osapi-justfiles), which gates `just test` locally
 # and in CI. Neither system can read the other's config, so the number lives in
-# both places — change both together.
+# both places. Change both together.
 #
 # The threshold absorbs rounding, not regression. With precision 2 and round
 # down, a change in statement count can render a genuine 100% as 99.99% and fail

@@ -48,10 +48,11 @@ Thank you for your contribution to osapi.
 - **Examine the work that exists.** Look for a pull request or an issue about
   the change. If you find one, use what it says in your work.
 
-- **Backward compatibility.** Make sure that your change does not stop a program
-  that uses osapi. A change that keeps compatibility is more likely to merge. If
-  your change cannot keep it, open an issue first. Then the maintainers can
-  discuss the API change before you do the work.
+- **No backward compatibility.** When a change makes something old or
+  inconsistent, change it or delete it everywhere, in the same change. Do not
+  add a deprecated flag, a field for old callers, or a shim for an old setup.
+  For a change to the API, open an issue first. Then the maintainers can discuss
+  it before you do the work.
 
 ## Prerequisites
 
@@ -69,7 +70,8 @@ mise install
   site and the React UI.
 - **[uv].** A Python package runner. `just md-fmt` uses it to run [mdformat]. It
   installs nothing into the repository.
-- **[just].** The task runner. Use it to build, test and format.
+- **[just].** The task runner. Use it to build, test and format. Without mise,
+  install it with `brew install just`.
 - **[NATS CLI].** Command-line tools for NATS. Use them to debug and monitor
   during development. Install them with `brew install nats-io/nats-tools/nats`.
 
@@ -232,6 +234,9 @@ type whose API name must differ from its Go name gets an explicit name, as a
 field gets one with `json`: the controller's endpoint types use the `schema` tag
 (`osapi dsl endpoint spec` describes it).
 
+Do not write an em dash, in a page or in a Go comment. The generated docs come
+from the comments, so a comment is a page too.
+
 `.golangci.yml` lists the linters that run. Read the list there. A copy of the
 list in a page becomes incorrect when the configuration changes. Formatting does
 not apply to generated files (`*.gen.go`, `*.pb.go`).
@@ -325,6 +330,10 @@ func FunctionName(
 }
 ```
 
+A test entry point, such as `func TestServerPublicTestSuite(t *testing.T)`, is
+the one exception. Write it on one line, as `go test` shows it. Each other
+function with parameters has the signature on more than one line.
+
 Write a function that has no parameters on one line:
 
 ```go
@@ -344,9 +353,10 @@ code that has no other place.
 `types.go` holds only type declarations: structs, interfaces, constants and
 aliases. Put a function in a file that has the name of what the function does.
 
-A test file has the name of the production file that it tests. If a test file
-becomes too large to read, split the production file first. Then each test file
-keeps its production file.
+A test file has the name of the production file that it tests: `foo.go` has
+`foo_public_test.go` and `foo_test.go`. `export_test.go` is the exception. If a
+test file becomes too large to read, split the production file first. Then each
+test file keeps its production file.
 
 A test file that holds no tests has the name of what it holds. Do not give it a
 name that tells only that other tests use it. `support`, `fixture` and `helper`
@@ -356,6 +366,13 @@ that file.
 
 ### Go patterns
 
+- Do not call `panic` in code that is not a test. Return an error, also for a
+  registration error or a programming error. `main` reports the error and exits
+  with a code that is not zero. A `recover` that stops a panic from a dependency
+  is permitted.
+- Read and write files through [avfs], so that a test can use a file system in
+  memory. This applies to tools that run at build time too: generators,
+  scaffolders and the tools that write docs.
 - Wrap errors with `fmt.Errorf("context: %w", err)`. Then the chain names each
   layer. `errors.Is` and `errors.As` can examine the chain.
 - Return early. Do not put the successful path inside conditions.
@@ -381,10 +398,12 @@ that file.
 ### NATS access
 
 - Call NATS only through the methods of
-  [nats-client](https://github.com/osapi-io/nats-client). Do not call `nats.go`
-  or `jetstream` yourself, and do not keep a JetStream handle. Each method makes
-  the span and the metric of its call. Thus a direct call is not in a trace, and
-  the trace does not show that it is missing.
+  [nats-client](https://github.com/osapi-io/nats-client). A package may import
+  `nats.go` or `jetstream` for their types. A call that connects, creates a
+  stream, a KV bucket or an object store, publishes or subscribes goes through
+  nats-client, and no package keeps a JetStream handle. Each method makes the
+  span and the metric of its call. Thus a direct call is not in a trace, and the
+  trace does not show that it is missing.
 - Give each method the `ctx` of the work, and the name of the bucket or the
   stream. A bucket goes into a package as its name, not as a handle.
 - When nats-client has no method for the call, add the method to nats-client
@@ -538,6 +557,12 @@ context that ends after `shutdownTimeout`.
 Use [avfs]. Use `memfs.New()` for work in memory. Use `failfs.New()` to inject
 an error at a specified operation. Do not use `afero`.
 
+The rule covers each file that osapi reads or writes: runtime code, and the
+tools that run at build time, such as the generators, the scaffolders and the
+tools that write docs. Write a file that a reader must never see half-written
+through `internal/atomicfile`. Do not call `os.ReadFile`, `os.WriteFile` or the
+other `os` file functions.
+
 ## Tests
 
 ```bash
@@ -557,7 +582,10 @@ just go-unit-cov-check   # Report coverage and fail below the target
 ```
 
 `.github/codecov.yml` and the shared `go` justfile module both declare the
-target. Change the two together.
+target. Change the two together. Put the Codecov settings only in
+`.github/codecov.yml`. A `codecov.yml` at the root replaces it, and nothing
+fails. The `threshold` of `.github/codecov.yml` absorbs the rounding of Codecov
+only. `just go-unit-cov-check` is the exact gate at the target.
 
 `.coverignore` limits what the coverage measures. It excludes `/cmd/`, `/gen/`,
 `/mocks/`, `/ui/` and `main.go`. A percentage that includes these paths does not
@@ -591,21 +619,26 @@ Integration tests run in their own workflow, `.github/workflows/go-int.yml`.
 
 ### Test file conventions
 
-- Public tests: `*_public_test.go`, in the `_test` package of the package. They
-  test the exported API. Write this type of test first.
-- Internal tests: `*_test.go`, in the same package. Use them only for what the
+- Public tests: `*_public_test.go`, in package `<name>_test`. They test the
+  exported API. Write this type of test first.
+- Internal tests: `*_test.go`, in package `<name>`. Use them only for what the
   exported API cannot reach.
+- A test in package `<name>_test` has a name that ends in `_public_test.go`. A
+  `*_test.go` file is always an internal test.
 - Suite names: `*_public_test.go` has `{Name}PublicTestSuite`, and `*_test.go`
   has `{Name}TestSuite`.
 - Use `testify/suite` with table-driven cases.
+- Do not write a custom assertion message. Write `s.Equal(want, got)`, not
+  `s.Equal(want, got, "expected equal")`. The name of the row tells what failed.
 - Write one suite method for each function under test. Success, errors and edge
   cases are rows in one table, not different methods.
 - `export_test.go` gives external tests access to unexported symbols, through an
   alias or a setter. Do not use an alias to test again what the test of the
   caller already reaches. Use it for a helper that has its own contract.
 
-In this repository, an external test is in a `_test` package next to the code
-that it tests. The tables have `validateFunc` callbacks.
+In this repository, an external test is a `*_public_test.go` in a `_test`
+package next to the code that it tests. The tables have `validateFunc`
+callbacks.
 
 ### Test layers
 
