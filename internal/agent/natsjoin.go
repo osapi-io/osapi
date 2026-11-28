@@ -34,6 +34,7 @@ import (
 	"maps"
 	"net"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -344,16 +345,62 @@ func joinNow(
 		return savedJoin{}, errors.New(reply.Error)
 	}
 
+	s, err := keepJoin(ctx, fs, keyDir, j, reply, userSeed, seen)
+	if err != nil {
+		return savedJoin{}, fmt.Errorf(
+			"keep the join: %w; the controller spent the token, so join again with a new one",
+			err,
+		)
+	}
+	log.Info("joined over NATS, agent admitted", slog.String("machine_id", id.MachineID))
+
+	return s, nil
+}
+
+// keepJoin writes what the reply of a join gives the agent: the controller's
+// key, the NATS user seed or creds, and last the saved join, which the next
+// start reads. When a write fails, it removes the files that it wrote, so no
+// file stays from a join that the agent did not keep.
+func keepJoin(
+	ctx context.Context,
+	fs avfs.VFS,
+	keyDir string,
+	j natsJoinString,
+	reply pki.JoinReply,
+	userSeed []byte,
+	seen []*x509.Certificate,
+) (savedJoin, error) {
+	// The creds are made before the first write, so a JWT that is not one
+	// leaves no file.
+	var creds []byte
+	if reply.NATS.JWT != "" {
+		var err error
+		if creds, err = natsjwt.Creds(reply.NATS.JWT, userSeed); err != nil {
+			return savedJoin{}, fmt.Errorf("the JWT of the join: %w", err)
+		}
+	}
+	var written []string
+	write := func(
+		path string,
+		data []byte,
+		mode os.FileMode,
+	) error {
+		if err := atomicfile.Write(ctx, fs, path, data, mode); err != nil {
+			for _, w := range written {
+				_ = fs.Remove(w)
+			}
+
+			return err
+		}
+		written = append(written, path)
+
+		return nil
+	}
+
 	keyPEM := pem.EncodeToMemory(
 		&pem.Block{Type: "ED25519 PUBLIC KEY", Bytes: reply.ControllerPublicKey},
 	)
-	if err := atomicfile.Write(
-		ctx,
-		fs,
-		filepath.Join(keyDir, EnrolledControllerKey),
-		keyPEM,
-		0o644,
-	); err != nil {
+	if err := write(filepath.Join(keyDir, EnrolledControllerKey), keyPEM, 0o644); err != nil {
 		return savedJoin{}, err
 	}
 	s := savedJoin{
@@ -365,32 +412,21 @@ func joinNow(
 	// the callout admits as this machine.
 	if reply.NATS.Callout {
 		s.NKeyFile = filepath.Join(keyDir, natsUserSeed)
-		if err := atomicfile.Write(ctx, fs, s.NKeyFile, userSeed, 0o600); err != nil {
+		if err := write(s.NKeyFile, userSeed, 0o600); err != nil {
 			return savedJoin{}, err
 		}
 	}
-	if reply.NATS.JWT != "" {
-		creds, err := natsjwt.Creds(reply.NATS.JWT, userSeed)
-		if err != nil {
-			return savedJoin{}, fmt.Errorf("the JWT of the join: %w", err)
-		}
+	if creds != nil {
 		s.CredsFile = filepath.Join(keyDir, natsCreds)
-		if err := atomicfile.Write(ctx, fs, s.CredsFile, creds, 0o600); err != nil {
+		if err := write(s.CredsFile, creds, 0o600); err != nil {
 			return savedJoin{}, err
 		}
 	}
 	s.CA, s.ServerName = joinTrust(seen)
 	out, _ := json.Marshal(s)
-	if err := atomicfile.Write(
-		ctx,
-		fs,
-		filepath.Join(keyDir, NATSJoinFile),
-		out,
-		0o600,
-	); err != nil {
+	if err := write(filepath.Join(keyDir, NATSJoinFile), out, 0o600); err != nil {
 		return savedJoin{}, err
 	}
-	log.Info("joined over NATS, agent admitted", slog.String("machine_id", id.MachineID))
 
 	return s, nil
 }

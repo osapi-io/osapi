@@ -31,6 +31,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"log/slog"
 	"math/big"
 	"path/filepath"
@@ -267,6 +268,7 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 		req     func(string, []nats.Option, string, []byte) ([]byte, error)
 		setup   func(fs avfs.VFS)
 		wantErr string
+		gone    []string
 	}{
 		{
 			name:    "a tls join with no fingerprint",
@@ -319,9 +321,12 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 			wantErr: "join over NATS: ",
 		},
 		{
+			// The token is spent, so the agent says to use a new one, and
+			// keeps no controller key of a join that it did not keep.
 			name:    "a join that cannot be kept",
 			setup:   func(fs avfs.VFS) { _ = fs.MkdirAll("/pki/"+agent.NATSJoinFile+"/x", 0o700) },
-			wantErr: "join over NATS: ",
+			wantErr: "the controller spent the token, so join again with a new one",
+			gone:    []string{"/pki/" + agent.EnrolledControllerKey},
 		},
 	}
 	for _, tt := range failures {
@@ -344,6 +349,10 @@ func (s *NATSJoinPublicTestSuite) TestJoinNATS() {
 			_, err := agent.ExportJoinNATS(context.Background(), slog.Default(), s.fs, s.cfg)
 
 			s.ErrorContains(err, tt.wantErr)
+			for _, path := range tt.gone {
+				_, statErr := s.fs.Stat(path)
+				s.ErrorIs(statErr, fs.ErrNotExist)
+			}
 		})
 	}
 
