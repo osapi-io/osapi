@@ -23,6 +23,7 @@ package motd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 
@@ -68,8 +69,12 @@ func (d *debian) Set(
 	if current, err := d.fs.ReadFile(d.path); err == nil && string(current) == value {
 		return false, nil
 	}
-	// A directory that cannot be made fails the write below, which reports it.
-	_ = d.fs.MkdirAll(filepath.Dir(d.path), 0o755)
+	if err := d.fs.MkdirAll(filepath.Dir(d.path), 0o755); err != nil {
+		return false, fmt.Errorf("make the directory of %s: %w", d.path, err)
+	}
+	if err := atomicfile.Write(ctx, d.fs, d.path, []byte(value), 0o644); err != nil {
+		return false, fmt.Errorf("write %s: %w", d.path, err)
+	}
 
-	return true, atomicfile.Write(ctx, d.fs, d.path, []byte(value), 0o644)
+	return true, nil
 }

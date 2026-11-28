@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -87,8 +88,9 @@ func SentWith(
 	endpointcommand.Use(func() endpointcommand.Caller { return caller{sent: &sent} })
 	require.NoError(t, clicommand.Attach(root, clicommand.Deps{
 		// The call fails, so the command reports the error and never asks
-		// whether to print JSON.
-		JSON:  testing.Short,
+		// whether to print JSON. The answer is a fixed false, the Load of a
+		// zero atomic.Bool, so the output never depends on how go test ran.
+		JSON:  new(atomic.Bool).Load,
 		Error: func(error) {},
 	}))
 	reset(root)

@@ -142,19 +142,25 @@ func newDebian(h host.Host) (Provider, error) {
     return &debian{fs: h.FS, path: host.Settings[Settings](h).Path}, nil
 }
 
-func (d *debian) Set(_ context.Context, value string) (bool, error) {
+func (d *debian) Set(ctx context.Context, value string) (bool, error) {
     if current, err := d.fs.ReadFile(d.path); err == nil && string(current) == value {
         return false, nil
     }
-    _ = d.fs.MkdirAll(filepath.Dir(d.path), 0o755)
+    if err := d.fs.MkdirAll(filepath.Dir(d.path), 0o755); err != nil {
+        return false, fmt.Errorf("make the directory of %s: %w", d.path, err)
+    }
+    if err := atomicfile.Write(ctx, d.fs, d.path, []byte(value), 0o644); err != nil {
+        return false, fmt.Errorf("write %s: %w", d.path, err)
+    }
 
-    return true, d.fs.WriteFile(d.path, []byte(value), 0o644)
+    return true, nil
 }
 ```
 
 Notice that `Set` compares before it writes: setting the message it already has
-changes nothing and says so. `host.Host` is what the agent hands every provider:
-the platform, the filesystem, a command runner, the file state store and the
+changes nothing and says so. A write that fails reports `false` with its error,
+because nothing changed. `host.Host` is what the agent hands every provider: the
+platform, the filesystem, a command runner, the file state store and the
 behavior's settings.
 
 The definition says which platforms have a provider. On any other, the methods

@@ -24,6 +24,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 
@@ -34,12 +35,14 @@ import (
 type DebianPublicTestSuite struct {
 	suite.Suite
 
+	fs       avfs.VFS
 	provider motd.Provider
 }
 
 func (s *DebianPublicTestSuite) SetupSubTest() {
+	s.fs = memfs.New()
 	p, err := motd.Behavior.Provider("debian", host.Host{
-		FS:       memfs.New(),
+		FS:       s.fs,
 		Settings: motd.Settings{Path: "/etc/osapi/motd"},
 	})
 	s.Require().NoError(err)
@@ -80,20 +83,48 @@ func (s *DebianPublicTestSuite) TestGet() {
 
 func (s *DebianPublicTestSuite) TestSet() {
 	tests := []struct {
-		name        string
-		setup       func()
-		wantChanged bool
+		name         string
+		setup        func()
+		validateFunc func(bool, error)
 	}{
 		{
-			name:        "when the value is new, it is written",
-			setup:       func() {},
-			wantChanged: true,
+			name:  "when the value is new, it is written",
+			setup: func() {},
+			validateFunc: func(changed bool, err error) {
+				s.NoError(err)
+				s.True(changed)
+			},
 		},
 		{
 			name: "when the file already holds the value, nothing changes",
 			setup: func() {
 				_, err := s.provider.Set(context.Background(), "hello")
 				s.Require().NoError(err)
+			},
+			validateFunc: func(changed bool, err error) {
+				s.NoError(err)
+				s.False(changed)
+			},
+		},
+		{
+			name: "when the directory cannot be made, it is an error",
+			setup: func() {
+				s.Require().NoError(s.fs.MkdirAll("/etc", 0o755))
+				s.Require().NoError(s.fs.WriteFile("/etc/osapi", nil, 0o644))
+			},
+			validateFunc: func(changed bool, err error) {
+				s.ErrorContains(err, "make the directory of /etc/osapi/motd")
+				s.False(changed)
+			},
+		},
+		{
+			name: "when the file cannot be written, it is an error",
+			setup: func() {
+				s.Require().NoError(s.fs.MkdirAll("/etc/osapi/motd", 0o755))
+			},
+			validateFunc: func(changed bool, err error) {
+				s.ErrorContains(err, "write /etc/osapi/motd")
+				s.False(changed)
 			},
 		},
 	}
@@ -104,8 +135,7 @@ func (s *DebianPublicTestSuite) TestSet() {
 
 			changed, err := s.provider.Set(context.Background(), "hello")
 
-			s.Require().NoError(err)
-			s.Equal(tc.wantChanged, changed)
+			tc.validateFunc(changed, err)
 		})
 	}
 }
