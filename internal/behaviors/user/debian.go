@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"slices"
 	"strconv"
 	"strings"
@@ -89,15 +90,15 @@ func (d *debian) Create(
 		args = append(args, "-r")
 	}
 	// useradd keeps a home directory that is there already, so the clean-up
-	// below removes the home only when useradd made it.
+	// below removes the home only when it was not there. A stat that fails
+	// for another reason keeps the home: the clean-up must not remove data.
 	home := in.Home
 	if home == "" {
 		home = defaultHome + "/" + in.Name
 	}
-	_, statErr := d.fs.Stat(home)
-	undo := []string{"-r", "--", in.Name}
-	if statErr == nil {
-		undo = []string{"--", in.Name}
+	undo := []string{"--", in.Name}
+	if _, err := d.fs.Stat(home); errors.Is(err, fs.ErrNotExist) {
+		undo = []string{"-r", "--", in.Name}
 	}
 	if _, err := d.exec.RunPrivilegedCmd(ctx, "useradd", append(args, "--", in.Name)); err != nil {
 		return false, fmt.Errorf("add user %s: %w", in.Name, err)

@@ -25,6 +25,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -48,6 +50,7 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 		name        string
 		home        string
 		homeExists  bool
+		statFails   bool
 		userdelErr  error
 		wantUseradd []string
 		wantUserdel []string
@@ -73,6 +76,13 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 			wantUserdel: []string{"--", "osapitest"},
 		},
 		{
+			name:        "a home that cannot be read stays, as one that was there does",
+			home:        "/srv/svc",
+			statFails:   true,
+			wantUseradd: []string{"--create-home", "-d", "/srv/svc", "--", "osapitest"},
+			wantUserdel: []string{"--", "osapitest"},
+		},
+		{
 			name:        "a home that useradd makes goes with the user",
 			home:        "/srv/svc",
 			wantUseradd: []string{"--create-home", "-d", "/srv/svc", "--", "osapitest"},
@@ -83,7 +93,18 @@ func (s *DebianPublicTestSuite) TestCreateWhenThePasswordFails() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			ctrl := gomock.NewController(s.T())
-			fs := memfs.New()
+			fs := failfs.New(memfs.New())
+			s.Require().NoError(fs.SetFailFunc(func(
+				_ avfs.VFSBase,
+				fn avfs.FnVFS,
+				param *failfs.FailParam,
+			) error {
+				if tc.statFails && fn == avfs.FnStat && param.Path == tc.home {
+					return errors.New("permission denied")
+				}
+
+				return nil
+			}))
 			s.Require().NoError(fs.MkdirAll("/etc", 0o755))
 			s.Require().NoError(fs.WriteFile("/etc/passwd",
 				[]byte("root:x:0:0:root:/root:/bin/sh\n"), 0o644))
