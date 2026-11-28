@@ -178,7 +178,7 @@ The command fails in these cases:
 | A gateway that is not an address                     | `--name osapi0 --destination 198.51.100.0/24 --via gateway`                       | Via                            |
 | A metric below 0                                     | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric -1`         | Metric                         |
 | A metric over 4294967295                             | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric 4294967296` | Metric                         |
-| A name that is not an interface name                 | `--name "eth0;reboot" --destination 198.51.100.0/24 --via 192.0.2.1`              | Name                           |
+| A name that is not an interface name                 | `--name 'eth0;reboot' --destination 198.51.100.0/24 --via 192.0.2.1`              | Name                           |
 
 ## Permission
 

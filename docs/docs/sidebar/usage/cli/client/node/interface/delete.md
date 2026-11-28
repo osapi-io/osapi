@@ -116,7 +116,7 @@ The command fails in these cases:
 
 | Call                                 | Flags                  | Fails with |
 | ------------------------------------ | ---------------------- | ---------- |
-| A name that is not an interface name | `--name "eth0;reboot"` | Name       |
+| A name that is not an interface name | `--name 'eth0;reboot'` | Name       |
 
 ## Permission
 

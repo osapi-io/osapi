@@ -182,7 +182,7 @@ The command fails in these cases:
 | Call                                 | Flags                  | Fails with |
 | ------------------------------------ | ---------------------- | ---------- |
 | An interface the host does not have  | `--name eth9`          | not found  |
-| A name that is not an interface name | `--name "eth0;reboot"` | Name       |
+| A name that is not an interface name | `--name 'eth0;reboot'` | Name       |
 
 ## Permission
 

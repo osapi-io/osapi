@@ -23,7 +23,7 @@ osapi client node certificate get --target web-01 --name internal-ca
 osapi client node certificate get --target web-01 --name internal-ca
 
 # A CA of a Mac
-osapi client node certificate get --target web-01 --name "osapi example CA"
+osapi client node certificate get --target web-01 --name 'osapi example CA'
 ```
 
 ## Result
@@ -178,7 +178,7 @@ With `--json`, the API's response:
 A CA of a Mac, on one host:
 
 ```ansi
-$ osapi client node certificate get --target web-01 --name "osapi example CA"
+$ osapi client node certificate get --target web-01 --name 'osapi example CA'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME              [0m[38;2;10;143;176mPATH                                                       [0m[38;2;10;143;176mSOURCE  [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mSUBJECT                      [0m[38;2;10;143;176mFINGERPRINT                                                       [0m[38;2;10;143;176mNOT AFTER             [0m[38;2;10;143;176mMANAGED  [0m[38;2;10;143;176mOBJECT[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mosapi example CA[0m  /System/Library/Keychains/SystemRootCertificates.keychain  system  yes      CN=osapi example CA,O=osapi  6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312  2126-10-29T23:38:01Z  no       -
@@ -189,7 +189,7 @@ $ osapi client node certificate get --target web-01 --name "osapi example CA"
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node certificate get --target _all --name "osapi example CA"
+$ osapi client node certificate get --target _all --name 'osapi example CA'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME              [0m[38;2;10;143;176mPATH                                                       [0m[38;2;10;143;176mSOURCE  [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mSUBJECT                      [0m[38;2;10;143;176mFINGERPRINT                                                       [0m[38;2;10;143;176mNOT AFTER             [0m[38;2;10;143;176mMANAGED  [0m[38;2;10;143;176mOBJECT[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mosapi example CA[0m  /System/Library/Keychains/SystemRootCertificates.keychain  system  yes      CN=osapi example CA,O=osapi  6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312  2126-10-29T23:38:01Z  no       -

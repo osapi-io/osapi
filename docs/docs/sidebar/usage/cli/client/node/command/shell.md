@@ -15,10 +15,10 @@ osapi client node command shell [flags]
 
 ```bash
 # A pipe
-osapi client node command shell --target web-01 --command "echo hello | tr a-z A-Z"
+osapi client node command shell --target web-01 --command 'echo hello | tr a-z A-Z'
 
 # A command line that exits non-zero
-osapi client node command shell --target web-01 --command "exit 3"
+osapi client node command shell --target web-01 --command 'exit 3'
 ```
 
 ## Result
@@ -26,7 +26,7 @@ osapi client node command shell --target web-01 --command "exit 3"
 A pipe, on one host:
 
 ```ansi
-$ osapi client node command shell --target web-01 --command "echo hello | tr a-z A-Z"
+$ osapi client node command shell --target web-01 --command 'echo hello | tr a-z A-Z'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mSTDOUT  [0m[38;2;10;143;176mSTDERR  [0m[38;2;10;143;176mEXIT CODE  [0m[38;2;10;143;176mDURATION MS[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  HELLO           0          0
@@ -37,7 +37,7 @@ $ osapi client node command shell --target web-01 --command "echo hello | tr a-z
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node command shell --target _all --command "echo hello | tr a-z A-Z"
+$ osapi client node command shell --target _all --command 'echo hello | tr a-z A-Z'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mSTDOUT  [0m[38;2;10;143;176mSTDERR  [0m[38;2;10;143;176mEXIT CODE  [0m[38;2;10;143;176mDURATION MS[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  HELLO           0          0
@@ -71,7 +71,7 @@ With `--json`, the API's response:
 A command line that exits non-zero, on one host:
 
 ```ansi
-$ osapi client node command shell --target web-01 --command "exit 3"
+$ osapi client node command shell --target web-01 --command 'exit 3'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mSTDOUT  [0m[38;2;10;143;176mSTDERR  [0m[38;2;10;143;176mEXIT CODE  [0m[38;2;10;143;176mDURATION MS[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m                  3          0
@@ -82,7 +82,7 @@ $ osapi client node command shell --target web-01 --command "exit 3"
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node command shell --target _all --command "exit 3"
+$ osapi client node command shell --target _all --command 'exit 3'
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mSTDOUT  [0m[38;2;10;143;176mSTDERR  [0m[38;2;10;143;176mEXIT CODE  [0m[38;2;10;143;176mDURATION MS[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m                  3          0

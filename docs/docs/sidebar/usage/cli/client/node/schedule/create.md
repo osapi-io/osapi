@@ -19,16 +19,16 @@ osapi client node schedule create [flags]
 
 ```bash
 # An entry with a cron expression
-osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule "0 2 * * *" --user root
+osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule '0 2 * * *' --user root
 
 # A script that runs daily
 osapi client node schedule create --target web-01 --name osapitest --object osapitest.sh --interval daily
 
 # A template, rendered with its vars
-osapi client node schedule create --target web-01 --name osapitest --object osapitest.tmpl --schedule "0 2 * * *" --content-type template --vars target=/srv
+osapi client node schedule create --target web-01 --name osapitest --object osapitest.tmpl --schedule '0 2 * * *' --content-type template --vars target=/srv
 
 # An entry that has the content
-osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule "0 2 * * *" --user root
+osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule '0 2 * * *' --user root
 
 # An entry of the name in a different directory
 osapi client node schedule create --target web-01 --name osapitest --object osapitest.sh --interval daily
@@ -39,7 +39,7 @@ osapi client node schedule create --target web-01 --name osapitest --object osap
 An entry with a cron expression, on one host:
 
 ```ansi
-$ osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule "0 2 * * *" --user root
+$ osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule '0 2 * * *' --user root
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -50,7 +50,7 @@ $ osapi client node schedule create --target web-01 --name osapitest --object os
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node schedule create --target _all --name osapitest --object osapitest.cron --schedule "0 2 * * *" --user root
+$ osapi client node schedule create --target _all --name osapitest --object osapitest.cron --schedule '0 2 * * *' --user root
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -123,7 +123,7 @@ With `--json`, the API's response:
 A template, rendered with its vars, on one host:
 
 ```ansi
-$ osapi client node schedule create --target web-01 --name osapitest --object osapitest.tmpl --schedule "0 2 * * *" --content-type template --vars target=/srv
+$ osapi client node schedule create --target web-01 --name osapitest --object osapitest.tmpl --schedule '0 2 * * *' --content-type template --vars target=/srv
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -134,7 +134,7 @@ $ osapi client node schedule create --target web-01 --name osapitest --object os
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node schedule create --target _all --name osapitest --object osapitest.tmpl --schedule "0 2 * * *" --content-type template --vars target=/srv
+$ osapi client node schedule create --target _all --name osapitest --object osapitest.tmpl --schedule '0 2 * * *' --content-type template --vars target=/srv
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -165,7 +165,7 @@ With `--json`, the API's response:
 An entry that has the content, on one host:
 
 ```ansi
-$ osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule "0 2 * * *" --user root
+$ osapi client node schedule create --target web-01 --name osapitest --object osapitest.cron --schedule '0 2 * * *' --user root
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mosapitest[0m
@@ -176,7 +176,7 @@ $ osapi client node schedule create --target web-01 --name osapitest --object os
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node schedule create --target _all --name osapitest --object osapitest.cron --schedule "0 2 * * *" --user root
+$ osapi client node schedule create --target _all --name osapitest --object osapitest.cron --schedule '0 2 * * *' --user root
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mosapitest[0m
@@ -258,20 +258,20 @@ The command fails in these cases:
 
 | Call                                                  | Flags                                                                                                                                                                                                                                                                                                               | Fails with              |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| An object the store does not have                     | `--name osapitest --object nosuch --schedule "0 2 * * *"`                                                                                                                                                                                                                                                           | not found               |
-| A template that reads a var the request does not give | `--name osapitest --object osapitest.tmpl --schedule "0 2 * * *" --content-type template`                                                                                                                                                                                                                           | render template         |
-| A file that osapi did not deploy                      | `--name osapitest --object osapitest.cron --schedule "0 2 * * *"`                                                                                                                                                                                                                                                   | osapi did not deploy it |
-| No object                                             | `--name osapitest --schedule "0 2 * * *"`                                                                                                                                                                                                                                                                           | Object                  |
+| An object the store does not have                     | `--name osapitest --object nosuch --schedule '0 2 * * *'`                                                                                                                                                                                                                                                           | not found               |
+| A template that reads a var the request does not give | `--name osapitest --object osapitest.tmpl --schedule '0 2 * * *' --content-type template`                                                                                                                                                                                                                           | render template         |
+| A file that osapi did not deploy                      | `--name osapitest --object osapitest.cron --schedule '0 2 * * *'`                                                                                                                                                                                                                                                   | osapi did not deploy it |
+| No object                                             | `--name osapitest --schedule '0 2 * * *'`                                                                                                                                                                                                                                                                           | Object                  |
 | Neither a cron expression nor an interval             | `--name osapitest --object osapitest.cron`                                                                                                                                                                                                                                                                          | Schedule                |
-| A cron expression and an interval                     | `--name osapitest --object osapitest.cron --schedule "0 2 * * *" --interval daily`                                                                                                                                                                                                                                  | Schedule                |
-| A cron expression that does not parse                 | `--name osapitest --object osapitest.cron --schedule "every day"`                                                                                                                                                                                                                                                   | Schedule                |
+| A cron expression and an interval                     | `--name osapitest --object osapitest.cron --schedule '0 2 * * *' --interval daily`                                                                                                                                                                                                                                  | Schedule                |
+| A cron expression that does not parse                 | `--name osapitest --object osapitest.cron --schedule 'every day'`                                                                                                                                                                                                                                                   | Schedule                |
 | An interval that is not one                           | `--name osapitest --object osapitest.cron --interval yearly`                                                                                                                                                                                                                                                        | Interval                |
-| A name with a slash                                   | `--name a/b --object osapitest.cron --schedule "0 2 * * *"`                                                                                                                                                                                                                                                         | Name                    |
-| A name that is an option                              | `--name --now --object osapitest.cron --schedule "0 2 * * *"`                                                                                                                                                                                                                                                       | not a valid entry name  |
-| A name over 64 characters                             | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --object osapitest.cron --schedule "0 2 * * *"`                                                                                                                                                                                           | Name                    |
-| An object name over 255 characters                    | `--name osapitest --object aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --schedule "0 2 * * *"` | Object                  |
-| A user that is not an account name                    | `--name osapitest --object osapitest.cron --schedule "0 2 * * *" --user "a b"`                                                                                                                                                                                                                                      | User                    |
-| A content type that is not one                        | `--name osapitest --object osapitest.cron --schedule "0 2 * * *" --content-type zip`                                                                                                                                                                                                                                | ContentType             |
+| A name with a slash                                   | `--name a/b --object osapitest.cron --schedule '0 2 * * *'`                                                                                                                                                                                                                                                         | Name                    |
+| A name that is an option                              | `--name --now --object osapitest.cron --schedule '0 2 * * *'`                                                                                                                                                                                                                                                       | not a valid entry name  |
+| A name over 64 characters                             | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --object osapitest.cron --schedule '0 2 * * *'`                                                                                                                                                                                           | Name                    |
+| An object name over 255 characters                    | `--name osapitest --object aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --schedule '0 2 * * *'` | Object                  |
+| A user that is not an account name                    | `--name osapitest --object osapitest.cron --schedule '0 2 * * *' --user 'a b'`                                                                                                                                                                                                                                      | User                    |
+| A content type that is not one                        | `--name osapitest --object osapitest.cron --schedule '0 2 * * *' --content-type zip`                                                                                                                                                                                                                                | ContentType             |
 
 ## Permission
 

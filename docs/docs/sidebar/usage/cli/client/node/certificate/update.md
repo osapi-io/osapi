@@ -210,7 +210,7 @@ The command fails in these cases:
 | ------------------------------ | ---------------- | ---------------- |
 | A CA that osapi did not deploy | `--name nothing` | not found        |
 | A name that is an option       | `--name -r`      | not a valid name |
-| A name with a space            | `--name "a b"`   | resource_name    |
+| A name with a space            | `--name 'a b'`   | resource_name    |
 
 ## Permission
 

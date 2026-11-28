@@ -241,49 +241,144 @@ func scalar(
 	}
 }
 
-// splitWords is the words of a command line: a word in double quotes is
-// one word, as a Go string literal, as the docs write a value with a space.
+// splitWords is the words of a command line, read as a shell reads them,
+// since the docs print each example for a reader to paste. '...' is
+// literal, and a quote in it is closed, escaped and opened again:
+//
+//	'it'\''s'
+//
+// "..." is literal but for a backslash before $, `, " or \, and $'...'
+// reads the escapes \n, \t, \r, \\, \' and \xHH. Outside quotes, a
+// backslash keeps the next character. The parts of one word join.
 func splitWords(
 	line string,
 ) ([]string, error) {
 	var out []string
 	rest := strings.TrimSpace(line)
 	for rest != "" {
-		if rest[0] != '"' {
-			word, after, _ := strings.Cut(rest, " ")
-			out = append(out, word)
-			rest = strings.TrimSpace(after)
-
-			continue
+		var word strings.Builder
+		for rest != "" && rest[0] != ' ' {
+			var part string
+			var err error
+			switch {
+			case rest[0] == '\'':
+				part, rest, err = singleQuoted(rest)
+			case strings.HasPrefix(rest, "$'"):
+				part, rest, err = ansiQuoted(rest)
+			case rest[0] == '"':
+				part, rest, err = doubleQuoted(rest)
+			case rest[0] == '\\' && len(rest) > 1:
+				part, rest = rest[1:2], rest[2:]
+			default:
+				n := bareEnd(rest)
+				part, rest = rest[:n], rest[n:]
+			}
+			if err != nil {
+				return nil, err
+			}
+			word.WriteString(part)
 		}
-		end := closingQuote(rest)
-		if end < 0 {
-			return nil, fmt.Errorf("%s has no closing quote", rest)
-		}
-		word, err := strconv.Unquote(rest[:end+1])
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", rest[:end+1], err)
-		}
-		out = append(out, word)
-		rest = strings.TrimSpace(rest[end+1:])
+		out = append(out, word.String())
+		rest = strings.TrimSpace(rest)
 	}
 
 	return out, nil
 }
 
-// closingQuote is the index of the quote that ends the quoted word at the
-// start of s, or -1.
-func closingQuote(
+// bareEnd is where the unquoted text at the start of s ends: at a space, a
+// quote, a backslash, or a $'.
+func bareEnd(
 	s string,
 ) int {
-	for i := 1; i < len(s); i++ {
+	for i := 0; i < len(s); i++ {
 		switch s[i] {
-		case '\\':
-			i++
-		case '"':
-			return i
+		case ' ', '\'', '"', '\\':
+			return max(i, 1)
+		case '$':
+			if strings.HasPrefix(s[i:], "$'") {
+				return max(i, 1)
+			}
 		}
 	}
 
-	return -1
+	return len(s)
+}
+
+// singleQuoted is the literal text of the '...' at the start of s, and the
+// rest of s after it.
+func singleQuoted(
+	s string,
+) (string, string, error) {
+	end := strings.IndexByte(s[1:], '\'')
+	if end < 0 {
+		return "", "", fmt.Errorf("%s has no closing quote", s)
+	}
+
+	return s[1 : end+1], s[end+2:], nil
+}
+
+// ansiQuoted is the text of the $'...' at the start of s, with its escapes
+// read, and the rest of s after it.
+func ansiQuoted(
+	s string,
+) (string, string, error) {
+	var b strings.Builder
+	for i := 2; i < len(s); i++ {
+		switch c := s[i]; c {
+		case '\'':
+			return b.String(), s[i+1:], nil
+		case '\\':
+			if i+1 >= len(s) {
+				return "", "", fmt.Errorf("%s has no closing quote", s)
+			}
+			i++
+			switch e := s[i]; e {
+			case 'n':
+				b.WriteByte('\n')
+			case 't':
+				b.WriteByte('\t')
+			case 'r':
+				b.WriteByte('\r')
+			case 'x':
+				if i+2 >= len(s) {
+					return "", "", fmt.Errorf("%s has no closing quote", s)
+				}
+				v, err := strconv.ParseUint(s[i+1:i+3], 16, 8)
+				if err != nil {
+					return "", "", fmt.Errorf("%s: %w", s, err)
+				}
+				b.WriteByte(byte(v))
+				i += 2
+			default:
+				b.WriteByte(e)
+			}
+		default:
+			b.WriteByte(c)
+		}
+	}
+
+	return "", "", fmt.Errorf("%s has no closing quote", s)
+}
+
+// doubleQuoted is the text of the "..." at the start of s, as a shell
+// reads it, and the rest of s after it. A backslash keeps a $, a backtick,
+// a quote or a backslash after it, and is itself kept before any other
+// character.
+func doubleQuoted(
+	s string,
+) (string, string, error) {
+	var b strings.Builder
+	for i := 1; i < len(s); i++ {
+		switch c := s[i]; {
+		case c == '"':
+			return b.String(), s[i+1:], nil
+		case c == '\\' && i+1 < len(s) && strings.IndexByte("$`\"\\", s[i+1]) >= 0:
+			i++
+			b.WriteByte(s[i])
+		default:
+			b.WriteByte(c)
+		}
+	}
+
+	return "", "", fmt.Errorf("%s has no closing quote", s)
 }

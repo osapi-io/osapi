@@ -156,7 +156,7 @@ The command fails in these cases:
 | Call                                       | Flags                              | Fails with    |
 | ------------------------------------------ | ---------------------------------- | ------------- |
 | An interface the host does not have        | `--interface-name eth9`            | not found     |
-| An interface name that is not alphanumeric | `--interface-name "osapi0;reboot"` | InterfaceName |
+| An interface name that is not alphanumeric | `--interface-name 'osapi0;reboot'` | InterfaceName |
 
 ## Permission
 

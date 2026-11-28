@@ -24,8 +24,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 
@@ -82,7 +82,7 @@ func Annotations(
 		for _, r := range m.Refusals {
 			flags := commandLine(Args(r.Input))
 			if flags != "" {
-				flags = "`" + flags + "`"
+				flags = codeSpan(flags)
 			}
 			rows = append(
 				rows,
@@ -307,21 +307,78 @@ func exampleArgs(
 // safeArg is an argument a shell reads as it is written.
 var safeArg = regexp.MustCompile(`^[A-Za-z0-9_@%+=:,./-]+$`)
 
-// commandLine joins args as a command line a reader can paste: an argument
-// with a space or a control character in it is quoted, so a newline shows as
-// \n rather than breaking the line, or a table row, it is printed in.
+// commandLine joins args as a command line a reader can paste into a shell.
+// An argument that is not plain is quoted the shell's way, so $(...) or a
+// backtick in a value does not run when pasted, and a newline shows as \n
+// rather than breaking the line, or a table row, it is printed in.
 func commandLine(
 	args []string,
 ) string {
 	quoted := make([]string, 0, len(args))
 	for _, a := range args {
 		if !safeArg.MatchString(a) {
-			a = strconv.Quote(a)
+			a = shellQuote(a)
 		}
 		quoted = append(quoted, a)
 	}
 
 	return strings.Join(quoted, " ")
+}
+
+// shellQuote quotes a for a POSIX shell: in single quotes, where nothing
+// expands, with a quote closed and opened again around it. An argument with
+// a control character uses $'...', which bash and zsh read, so the character
+// shows as its escape.
+func shellQuote(
+	a string,
+) string {
+	if !strings.ContainsFunc(a, unicode.IsControl) {
+		return "'" + strings.ReplaceAll(a, "'", `'\''`) + "'"
+	}
+	var b strings.Builder
+	b.WriteString("$'")
+	for _, r := range a {
+		switch {
+		case r == '\\' || r == '\'':
+			b.WriteRune('\\')
+			b.WriteRune(r)
+		case r == '\n':
+			b.WriteString(`\n`)
+		case r == '\t':
+			b.WriteString(`\t`)
+		case r == '\r':
+			b.WriteString(`\r`)
+		case unicode.IsControl(r):
+			fmt.Fprintf(&b, `\x%02x`, r)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	b.WriteString("'")
+
+	return b.String()
+}
+
+// codeSpan is s as a markdown code span: in a run of backticks longer than
+// any run in s, so a backtick in s stays inside the span.
+func codeSpan(
+	s string,
+) string {
+	longest, run := 0, 0
+	for _, r := range s {
+		if r == '`' {
+			run++
+			longest = max(longest, run)
+		} else {
+			run = 0
+		}
+	}
+	if longest == 0 {
+		return "`" + s + "`"
+	}
+	fence := strings.Repeat("`", longest+1)
+
+	return fence + " " + s + " " + fence
 }
 
 // effectLine says what one effect does, for a docs page.
@@ -330,11 +387,12 @@ func effectLine(
 ) string {
 	switch e.Kind {
 	case behavior.EffectWrote:
-		return fmt.Sprintf("writes `%s`: `%s`", e.Path, strings.TrimRight(e.Content, "\n"))
+		return fmt.Sprintf("writes %s: %s", codeSpan(e.Path),
+			codeSpan(strings.TrimRight(e.Content, "\n")))
 	case behavior.EffectRemoved:
-		return fmt.Sprintf("removes `%s`", e.Path)
+		return "removes " + codeSpan(e.Path)
 	default:
-		return fmt.Sprintf("runs `%s`", e.Command)
+		return "runs " + codeSpan(e.Command)
 	}
 }
 

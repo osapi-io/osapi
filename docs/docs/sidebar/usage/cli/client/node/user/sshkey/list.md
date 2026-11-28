@@ -156,7 +156,7 @@ The command fails in these cases:
 | Call                               | Flags                                      | Fails with |
 | ---------------------------------- | ------------------------------------------ | ---------- |
 | A user that the host does not have | `--name nobody`                            | not found  |
-| A name that is not a user name     | `--name "Bad;name"`                        | Name       |
+| A name that is not a user name     | `--name 'Bad;name'`                        | Name       |
 | A name over 32 characters          | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max        |
 
 ## Permission
