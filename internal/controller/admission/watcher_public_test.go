@@ -122,7 +122,6 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 						s.Equal(
 							testFingerprint,
 							stored.Fingerprint,
-							"the fingerprint of the keys, not the one the request reports",
 						)
 						s.Equal(testEncryptionKey, stored.EncryptionKey)
 						s.False(

@@ -766,7 +766,6 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 					suite.T(),
 					types.AgentPending,
 					agent.GetAgentState(a),
-					"agent state should remain pending after invalid JSON",
 				)
 			},
 		},
@@ -806,7 +805,6 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 					suite.T(),
 					types.AgentPending,
 					agent.GetAgentState(a),
-					"an agent that got no usable key keeps waiting",
 				)
 			},
 		},
@@ -839,7 +837,6 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 					suite.T(),
 					types.AgentPending,
 					agent.GetAgentState(a),
-					"agent state should remain pending after rejection",
 				)
 			},
 		},

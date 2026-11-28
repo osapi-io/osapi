@@ -128,7 +128,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 
 			bad := joinRequest("not-a-token")
 			_, _ = s.watcher.Join(context.Background(), bad)
-			s.Equal(1, calls, "a join for the admitted machine with a new key takes no use")
+			s.Equal(1, calls)
 		},
 	)
 
@@ -146,7 +146,6 @@ func (s *StorePublicTestSuite) TestJoin() {
 		s.Equal(
 			pki.FingerprintOfKeys(first.PublicKey, first.EncryptionKey),
 			got.Fingerprint,
-			"the admitted key is kept",
 		)
 	})
 
@@ -169,7 +168,7 @@ func (s *StorePublicTestSuite) TestJoin() {
 			_, err = s.watcher.Join(context.Background(), req)
 
 			s.NoError(err)
-			s.Equal(2, calls, "the same key with a token that did not admit it takes a use")
+			s.Equal(2, calls)
 		},
 	)
 
