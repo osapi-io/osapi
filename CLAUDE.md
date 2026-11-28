@@ -1,8 +1,7 @@
 # Claude Code
 
-All agent guidance lives in [AGENTS.md](AGENTS.md): how to invoke tools, why the
-Go toolchain is never called directly, where the rules come from, the commit
-trailer, and task tracking. This file exists so Claude Code finds it; the
-content is upstream.
+The guidance for agents is in [AGENTS.md](AGENTS.md). The rules are in the
+[osapi-io constitution](https://github.com/osapi-io/specs/blob/main/CONSTITUTION.md).
+This file exists so that Claude Code finds them.
 
 @AGENTS.md
