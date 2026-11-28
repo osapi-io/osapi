@@ -87,6 +87,25 @@ func literal(
 		}
 
 		return typeOf(t).Values(entries), nil
+	case reflect.Pointer:
+		if v.IsNil() {
+			return jen.Nil(), nil
+		}
+		if t.Elem().Kind() != reflect.Struct {
+			return nil, fmt.Errorf("a %s has no Go literal here", t)
+		}
+		c, err := literal(v.Elem())
+		if err != nil {
+			return nil, err
+		}
+
+		return jen.Op("&").Add(c), nil
+	case reflect.Interface:
+		if v.IsNil() {
+			return jen.Nil(), nil
+		}
+
+		return literal(v.Elem())
 	default:
 		return nil, fmt.Errorf("a %s has no Go literal here", t)
 	}
@@ -103,19 +122,23 @@ func scalar(
 		lit = jen.Lit(v.String())
 	case reflect.Bool:
 		lit = jen.Lit(v.Bool())
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float32:
+		lit = jen.Lit(float32(v.Float()))
+	case reflect.Float64:
 		lit = jen.Lit(v.Float())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		lit = jen.Lit(int(v.Uint()))
+		lit = jen.Lit(v.Uint())
 	default:
 		lit = jen.Lit(int(v.Int()))
 	}
 
 	t := v.Type()
-	// An untyped literal already is a string, bool, int or float64.
+	// An untyped literal already is a string, bool, int or float64, and
+	// jen writes a uint64 or a float32 with its conversion.
 	if t.PkgPath() == "" {
 		switch t.Kind() {
-		case reflect.String, reflect.Bool, reflect.Int, reflect.Float64:
+		case reflect.String, reflect.Bool, reflect.Int, reflect.Float64,
+			reflect.Uint64, reflect.Float32:
 			return lit
 		}
 	}
@@ -140,7 +163,13 @@ func typeOf(
 		return jen.Index().Add(typeOf(t.Elem()))
 	case reflect.Map:
 		return jen.Map(typeOf(t.Key())).Add(typeOf(t.Elem()))
+	case reflect.Interface:
+		// literal reads a value of an interface through its element, so an
+		// unnamed interface here is the type of a map's or a slice's values.
+		return jen.Id("any")
 	default:
+		// literal refuses each other kind before it asks for its type, so an
+		// unnamed type left is a pointer.
 		return jen.Op("*").Add(typeOf(t.Elem()))
 	}
 }
