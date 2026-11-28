@@ -69,7 +69,7 @@ func (a *Agent) startRenewal(
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				if err := a.renewIfDue(s); err != nil {
+				if err := a.renewIfDue(ctx, s); err != nil {
 					a.logger.Warn(
 						"failed to renew the NATS user",
 						slog.String("error", err.Error()),
@@ -83,6 +83,7 @@ func (a *Agent) startRenewal(
 // renewIfDue renews the JWT of s.CredsFile when a third of its life is
 // left.
 func (a *Agent) renewIfDue(
+	ctx context.Context,
 	s savedJoin,
 ) error {
 	creds, err := avfs.ReadFile(a.appFs, s.CredsFile)
@@ -111,7 +112,7 @@ func (a *Agent) renewIfDue(
 	req := pki.RenewRequest{MachineID: a.machineID, NATSUserKey: userKey, At: now}
 	req.Sign(a.pkiManager.PrivateKey())
 	data, _ := json.Marshal(req)
-	cfg, err := applyJoin(a.appFs, a.appConfig, s)
+	cfg, err := applyJoin(ctx, a.appFs, a.appConfig, s)
 	if err != nil {
 		return fmt.Errorf("the NATS settings of the join: %w", err)
 	}
@@ -126,7 +127,7 @@ func (a *Agent) renewIfDue(
 	if s.Namespace != "" {
 		subject = s.Namespace + "." + subject
 	}
-	raw, err := natsRequest(addr, opts, subject, data)
+	raw, err := natsRequest(ctx, addr, opts, subject, data)
 	if err != nil {
 		return fmt.Errorf("%s: %w", addr, err)
 	}
@@ -149,7 +150,7 @@ func (a *Agent) renewIfDue(
 		return fmt.Errorf("the JWT of the renewal: %w", err)
 	}
 	if err := writeCreds(
-		context.Background(),
+		ctx,
 		a.appFs,
 		s.CredsFile,
 		next,

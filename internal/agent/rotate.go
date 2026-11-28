@@ -82,7 +82,7 @@ func RotateKey(
 	data, _ := json.Marshal(req)
 
 	if s, err := readJoin(fs, keyDir); err == nil {
-		if cfg, err = applyJoin(fs, cfg, s); err != nil {
+		if cfg, err = applyJoin(ctx, fs, cfg, s); err != nil {
 			return "", err
 		}
 	}
@@ -94,7 +94,7 @@ func RotateKey(
 	if ns := cfg.Agent.NATS.Namespace; ns != "" {
 		subject = ns + "." + subject
 	}
-	raw, err := natsRequest(addr, opts, subject, data)
+	raw, err := natsRequest(ctx, addr, opts, subject, data)
 	if err != nil {
 		return "", fmt.Errorf(
 			"%s: %w; the new keys stay in %s, and a second rotation sends them again",

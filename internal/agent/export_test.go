@@ -999,7 +999,7 @@ func ExportJoinNATS(
 // sends its request, and returns a func that puts them back.
 func SetJoinNATSFns(
 	id func(avfs.VFS, string) (*identity.Identity, error),
-	req func(string, []nats.Option, string, []byte) ([]byte, error),
+	req func(context.Context, string, []nats.Option, string, []byte) ([]byte, error),
 ) func() {
 	oldID, oldReq := getIdentity, natsRequest
 	if id != nil {
@@ -1097,7 +1097,7 @@ func ExportRenewIfDue(
 		return err
 	}
 
-	return a.renewIfDue(s)
+	return a.renewIfDue(context.Background(), s)
 }
 
 // ExportStartRenewal calls startRenewal, and waits for it to stop after

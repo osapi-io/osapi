@@ -315,7 +315,7 @@ func (s *AgentPublicTestSuite) TestRenewIfDue() {
 			var calls []renewCall
 			agent.SetJoinNATSFns(
 				nil,
-				func(url string, opts []nats.Option, subject string, data []byte) ([]byte, error) {
+				func(_ context.Context, url string, opts []nats.Option, subject string, data []byte) ([]byte, error) {
 					call := renewCall{url: url, subject: subject}
 					for _, o := range opts {
 						if err := o(&call.opts); err != nil {
@@ -395,7 +395,7 @@ func (s *AgentPublicTestSuite) TestStartRenewal() {
 				calls := make(chan struct{}, 10)
 				agent.SetJoinNATSFns(
 					nil,
-					func(string, []nats.Option, string, []byte) ([]byte, error) {
+					func(context.Context, string, []nats.Option, string, []byte) ([]byte, error) {
 						calls <- struct{}{}
 
 						return nil, nats.ErrTimeout
