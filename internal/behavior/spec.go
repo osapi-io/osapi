@@ -660,12 +660,6 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindNotYet,
-			Name: "A command or a shell from the caller",
-			Does: "There is no execute permission.",
-			When: "Stop, and tell the person what is missing. Do not build around it.",
-		},
-		{
-			Kind: KindNotYet,
 			Name: "Streaming and uploads",
 			Does: "A method that streams its output, or that takes a file in its request. A behavior reads an object that osapi client file upload stored, with the object building block.",
 			When: "Stop, and tell the person what is missing. Do not build around it.",
