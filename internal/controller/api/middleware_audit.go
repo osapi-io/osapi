@@ -27,17 +27,17 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // maxAuditBodyBytes bounds what the middleware will read of a request body. A
@@ -176,7 +176,8 @@ func (w *auditWriter) close(
 
 // auditMiddleware returns Echo middleware that records audit entries for
 // authenticated requests, through w. A handler that panics gets an entry
-// too, with status 500, before the panic goes on to the Recover middleware.
+// too, with status 500. The middleware logs the panic and its stack, and
+// answers 500 with no detail of the panic.
 func auditMiddleware(
 	w *auditWriter,
 ) echo.MiddlewareFunc {
@@ -212,7 +213,15 @@ func auditMiddleware(
 			defer func() {
 				if r := recover(); r != nil {
 					record(w, c, start, summary, http.StatusInternalServerError)
-					panic(r)
+					logger.Error(
+						"handler panicked",
+						slog.String("path", path),
+						slog.Any("panic", r),
+						slog.String("stack", string(debug.Stack())),
+					)
+					// Echo's error handler writes the response. The panic text
+					// stays in the log, never in the answer.
+					err = echo.NewHTTPError(http.StatusInternalServerError, "internal error")
 				}
 			}()
 

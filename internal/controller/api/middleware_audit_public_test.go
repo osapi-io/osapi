@@ -37,12 +37,12 @@ import (
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/stretchr/testify/suite"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/controller/api"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
-	"go.uber.org/mock/gomock"
 )
 
 type AuditMiddlewarePublicTestSuite struct {
@@ -380,6 +380,8 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditStatus() {
 		name     string
 		handler  echo.HandlerFunc
 		wantCode int
+		wantLog  []string
+		wantBody string
 	}{
 		{
 			name: "a handler that writes its response records that status",
@@ -419,11 +421,13 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditStatus() {
 			wantCode: 0,
 		},
 		{
-			name: "a handler that panics records 500, and Recover answers",
+			name: "a handler that panics records 500, logs the panic, and answers no detail",
 			handler: func(*echo.Context) error {
 				panic("half done")
 			},
 			wantCode: http.StatusInternalServerError,
+			wantLog:  []string{"handler panicked", "panic=\"half done\"", "stack="},
+			wantBody: "internal error",
 		},
 	}
 
@@ -444,7 +448,11 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditStatus() {
 			e := echo.New()
 			// The order of the server: Recover outside the audit middleware.
 			e.Use(middleware.Recover())
-			mw, drain := api.ExportAuditMiddleware(store, slog.Default())
+			var logs strings.Builder
+			mw, drain := api.ExportAuditMiddleware(
+				store,
+				slog.New(slog.NewTextHandler(&logs, nil)),
+			)
 			defer drain(context.Background())
 			e.Use(mw)
 			e.POST("/api/file/f", func(c *echo.Context) error {
@@ -460,6 +468,13 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditStatus() {
 			s.Equal(tt.wantCode, entry.ResponseCode)
 			if tt.wantCode != 0 {
 				s.Equal(tt.wantCode, rec.Code)
+			}
+			for _, want := range tt.wantLog {
+				s.Contains(logs.String(), want)
+			}
+			if tt.wantBody != "" {
+				s.Contains(rec.Body.String(), tt.wantBody)
+				s.NotContains(rec.Body.String(), "half done", "the answer holds no panic text")
 			}
 		})
 	}
@@ -501,7 +516,11 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditDrain() {
 				Times(tt.requests)
 
 			e := echo.New()
-			mw, drain := api.ExportAuditMiddleware(store, slog.Default())
+			var logs strings.Builder
+			mw, drain := api.ExportAuditMiddleware(
+				store,
+				slog.New(slog.NewTextHandler(&logs, nil)),
+			)
 			e.Use(mw)
 			e.POST("/api/x", func(c *echo.Context) error {
 				c.Set(api.ContextKeySubject, "ops@example.com")
