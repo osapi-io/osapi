@@ -38,18 +38,22 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/nats-io/nkeys"
 )
+
+// hostFS is the filesystem of the host.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // kvPrefix keys the time of each revocation by the user's public key.
 const kvPrefix = "natsrevoked."
@@ -178,7 +182,7 @@ func (r *Revoker) Send(
 	if len(revoked) == 0 && r.sentKey == "" {
 		return nil
 	}
-	raw, err := os.ReadFile(r.cfg.AccountJWTFile)
+	raw, err := avfs.ReadFile(hostFS, r.cfg.AccountJWTFile)
 	if err != nil {
 		return fmt.Errorf("read the account: %w", err)
 	}

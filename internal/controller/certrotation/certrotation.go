@@ -33,12 +33,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
+
+// hostFS is the filesystem of the host.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // interval is how often Run looks whether the agents trust the next
 // certificate.
@@ -153,7 +158,7 @@ func (r *Rotation) trusted(
 
 // current is the PEM certificate that the server serves now.
 func (r *Rotation) current() ([]byte, error) {
-	data, err := os.ReadFile(r.cfg.Source.CertFile)
+	data, err := avfs.ReadFile(hostFS, r.cfg.Source.CertFile)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"read %s: rotate it on the host of the NATS server: %w",
@@ -190,7 +195,7 @@ func (r *Rotation) Start(
 		if err := makeCert(certFile, keyFile); err != nil {
 			return Status{}, fmt.Errorf("make the next certificate: %w", err)
 		}
-		next, err := os.ReadFile(certFile)
+		next, err := avfs.ReadFile(hostFS, certFile)
 		if err != nil {
 			return Status{}, fmt.Errorf("read the next certificate: %w", err)
 		}
@@ -351,7 +356,7 @@ func (r *Rotation) promote(
 	next string,
 ) error {
 	certFile, keyFile := NextFiles(r.cfg.Source)
-	data, err := os.ReadFile(certFile)
+	data, err := avfs.ReadFile(hostFS, certFile)
 	if errors.Is(err, os.ErrNotExist) {
 		current, cerr := r.current()
 		if cerr == nil && pki.CertFingerprint(current) == next {
@@ -366,12 +371,12 @@ func (r *Rotation) promote(
 			"the next certificate on the host is not the one of the record: %s, "+
 				"and the record has %s", pki.CertFingerprint(data), next)
 	}
-	if err := os.Rename(keyFile, r.cfg.Source.KeyFile); err != nil {
+	if err := hostFS.Rename(keyFile, r.cfg.Source.KeyFile); err != nil {
 		if !errors.Is(err, os.ErrNotExist) || !pairs(certFile, r.cfg.Source.KeyFile) {
 			return fmt.Errorf("switch to the next certificate: %w", err)
 		}
 	}
-	if err := os.Rename(certFile, r.cfg.Source.CertFile); err != nil {
+	if err := hostFS.Rename(certFile, r.cfg.Source.CertFile); err != nil {
 		return fmt.Errorf("switch to the next certificate: %w", err)
 	}
 

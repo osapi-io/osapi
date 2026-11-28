@@ -24,10 +24,15 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 )
+
+// hostFS is the filesystem of the host.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // certReloader serves the certificate of a server from its files, and reads
 // them again, at most once each CertCheckInterval, at a handshake: a rotation
@@ -70,8 +75,8 @@ func newCertReloader(
 // read is the content of the two files, or nil for a file that does not
 // read.
 func (r *certReloader) read() ([]byte, []byte) {
-	certPEM, _ := os.ReadFile(r.certFile)
-	keyPEM, _ := os.ReadFile(r.keyFile)
+	certPEM, _ := avfs.ReadFile(hostFS, r.certFile)
+	keyPEM, _ := avfs.ReadFile(hostFS, r.keyFile)
 
 	return certPEM, keyPEM
 }

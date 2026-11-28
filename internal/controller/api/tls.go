@@ -26,11 +26,16 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"os"
 	"path/filepath"
+
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 
 	"github.com/osapi-io/osapi/internal/config"
 )
+
+// hostFS is the filesystem of the host.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // The files of the self-signed certificate in controller.pki.key_dir.
 const (
@@ -72,7 +77,7 @@ func CertFingerprint(
 	if certFile == "" {
 		certFile = filepath.Join(keyDir, SelfSignedCert)
 	}
-	data, err := os.ReadFile(certFile)
+	data, err := avfs.ReadFile(hostFS, certFile)
 	if err != nil {
 		return "", fmt.Errorf("read the API's certificate: %w", err)
 	}

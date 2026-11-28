@@ -27,16 +27,20 @@ package natsjwt
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
 
 	"github.com/osapi-io/osapi/internal/bus"
 )
+
+// hostFS is the filesystem of the host.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // ErrSigningKey is a signing key file that holds no account seed.
 var ErrSigningKey = errors.New("the signing key file holds no account seed (SA...)")
@@ -54,7 +58,7 @@ func Load(
 	file string,
 	account string,
 ) (*Signer, error) {
-	data, err := os.ReadFile(file)
+	data, err := avfs.ReadFile(hostFS, file)
 	if err != nil {
 		return nil, fmt.Errorf("read the signing key: %w", err)
 	}
@@ -69,7 +73,7 @@ func Load(
 	// osapi nats auth operator create, and osapi's NATS server at its first
 	// start, write.
 	if account == "" {
-		pub, err := os.ReadFile(filepath.Join(filepath.Dir(file), "account.pub"))
+		pub, err := avfs.ReadFile(hostFS, filepath.Join(filepath.Dir(file), "account.pub"))
 		if err != nil {
 			return nil, fmt.Errorf("no account, and no account.pub beside the signing key: %w", err)
 		}

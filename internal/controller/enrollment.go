@@ -25,31 +25,31 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/nats-io/nkeys"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
-	"github.com/osapi-io/osapi/internal/natscallout"
 
 	"github.com/osapi-io/osapi/internal/audit"
-
-	"github.com/osapi-io/osapi/internal/controller/jointoken"
-
-	"github.com/avfs/avfs/vfs/osfs"
-
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
 	"github.com/osapi-io/osapi/internal/controller/certrotation"
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
 	"github.com/osapi-io/osapi/internal/controller/keyrotation"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/natscallout"
 	"github.com/osapi-io/osapi/internal/natsjwt"
 	"github.com/osapi-io/osapi/internal/natsrevoke"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/validation"
 )
+
+// hostFS is the filesystem of the host.
+var hostFS avfs.VFS = osfs.NewWithNoIdm()
 
 // defaultControllerKeyGrace is the overlap of a rotation of the
 // controller's key when controller.pki.rotation_grace_period is empty.
@@ -173,7 +173,7 @@ func startEnrollment(
 	// operator update, or the next start of osapi's own NATS server, writes
 	// one: until then a removed agent is cut when its JWT expires.
 	if f := cfg.Controller.Join.Revocation.AccountJWTFile; f != "" {
-		if _, err := os.Stat(f); err != nil {
+		if _, err := hostFS.Stat(f); err != nil {
 			log.Warn(
 				"no account JWT for the revocation of an agent's NATS user; a removed agent is cut from NATS when its JWT expires",
 				slog.String("account_jwt_file", f),
@@ -336,7 +336,7 @@ func calloutService(
 	log *slog.Logger,
 ) (natscallout.Service, error) {
 	c := cfg.Controller.Join.Callout
-	data, err := os.ReadFile(c.IssuerKeyFile)
+	data, err := avfs.ReadFile(hostFS, c.IssuerKeyFile)
 	if err != nil {
 		return natscallout.Service{}, fmt.Errorf("read the issuer key: %w", err)
 	}
@@ -373,7 +373,7 @@ func startRevocation(
 	watcher *admission.Watcher,
 ) error {
 	r := cfg.Controller.Join.Revocation
-	data, err := os.ReadFile(r.OperatorSigningKeyFile)
+	data, err := avfs.ReadFile(hostFS, r.OperatorSigningKeyFile)
 	if err != nil {
 		return fmt.Errorf("read the operator signing key: %w", err)
 	}

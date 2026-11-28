@@ -29,6 +29,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/avfs/avfs"
+
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -84,9 +86,11 @@ func EnsureSigningKey(
 // readFile, writeFile and link are the os calls of readOrMakeSigningKey,
 // for a test to replace.
 var (
-	readFile  = os.ReadFile
-	writeFile = os.WriteFile
-	link      = os.Link
+	readFile  = func(name string) ([]byte, error) { return avfs.ReadFile(hostFS, name) }
+	writeFile = func(name string, data []byte, perm os.FileMode) error {
+		return avfs.WriteFile(hostFS, name, data, perm)
+	}
+	link = func(oldname, newname string) error { return hostFS.Link(oldname, newname) }
 )
 
 // readOrMakeSigningKey is the key in path, which it makes when path is not
@@ -111,11 +115,11 @@ func readOrMakeSigningKey(
 		return "", fmt.Errorf("make the signing key: %w", err)
 	}
 	key, suffix := b[:32], b[32:]
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	if err := hostFS.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return "", fmt.Errorf("make the signing key: %w", err)
 	}
 	tmp := path + "." + hex.EncodeToString(suffix) + ".tmp"
-	defer func() { _ = os.Remove(tmp) }()
+	defer func() { _ = hostFS.Remove(tmp) }()
 	if err := writeFile(tmp, []byte(hex.EncodeToString(key)+"\n"), 0o600); err != nil {
 		return "", fmt.Errorf("write the signing key: %w", err)
 	}
