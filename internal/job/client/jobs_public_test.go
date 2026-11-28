@@ -1521,9 +1521,59 @@ func (s *JobsPublicTestSuite) TestDeleteJob() {
 					KVGet(gomock.Any(), "jobs", "jobs.job-123").
 					Return(mockEntry, nil)
 				s.mockNATSClient.EXPECT().KVDelete(gomock.Any(), "jobs", "jobs.job-123").Return(nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-123.>", "responses.job-123.>").
+					Return([]string{
+						"status.job-123.submitted._api.100",
+						"responses.job-123.web-01.101",
+					}, nil)
+				s.mockNATSClient.EXPECT().
+					KVDelete(gomock.Any(), "jobs", "status.job-123.submitted._api.100").
+					Return(nil)
+				s.mockNATSClient.EXPECT().
+					KVDelete(gomock.Any(), "jobs", "responses.job-123.web-01.101").
+					Return(nil)
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
+			},
+		},
+		{
+			name:  "when the events cannot be listed returns the error",
+			jobID: "job-123",
+			setupMocks: func() {
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-123").
+					Return(jobmocks.NewMockKeyValueEntry(s.mockCtrl), nil)
+				s.mockNATSClient.EXPECT().KVDelete(gomock.Any(), "jobs", "jobs.job-123").Return(nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-123.>", "responses.job-123.>").
+					Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(err, "failed to list the events of job job-123: nats: timeout")
+			},
+		},
+		{
+			name:  "when an event cannot be deleted returns the error",
+			jobID: "job-123",
+			setupMocks: func() {
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-123").
+					Return(jobmocks.NewMockKeyValueEntry(s.mockCtrl), nil)
+				s.mockNATSClient.EXPECT().KVDelete(gomock.Any(), "jobs", "jobs.job-123").Return(nil)
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs", "status.job-123.>", "responses.job-123.>").
+					Return([]string{"status.job-123.submitted._api.100"}, nil)
+				s.mockNATSClient.EXPECT().
+					KVDelete(gomock.Any(), "jobs", "status.job-123.submitted._api.100").
+					Return(errors.New("storage failure"))
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(
+					err,
+					"failed to delete status.job-123.submitted._api.100: storage failure",
+				)
 			},
 		},
 		{
@@ -2178,8 +2228,12 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 					// Job 5: retried → completed
 					"status.job-5.submitted._api.500",
 					"status.job-5.retried.agent1.501",
-					// Non-status keys should be ignored
+					// Each job's own key; responses are not counted
 					"jobs.job-1",
+					"jobs.job-2",
+					"jobs.job-3",
+					"jobs.job-4",
+					"jobs.job-5",
 					"responses.job-1.agent1.103",
 				}
 				s.mockNATSClient.EXPECT().
@@ -2204,6 +2258,7 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 			name: "when DLQ has messages includes DLQ count",
 			setupMocks: func() {
 				keys := []string{
+					"jobs.job-1",
 					"status.job-1.submitted._api.100",
 				}
 				s.mockNATSClient.EXPECT().
@@ -2230,6 +2285,7 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 			name: "when malformed status key is skipped",
 			setupMocks: func() {
 				keys := []string{
+					"jobs.job-1",
 					"status.incomplete",
 					"status.job-1.submitted._api.100",
 					"status.job-1.completed.agent1.101",
@@ -2256,6 +2312,7 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 			name: "when DLQ error returns zero DLQ count",
 			setupMocks: func() {
 				keys := []string{
+					"jobs.job-1",
 					"status.job-1.submitted._api.100",
 					"status.job-1.completed.agent1.101",
 				}
@@ -2275,6 +2332,30 @@ func (s *JobsPublicTestSuite) TestGetQueueSummary() {
 				s.Equal(1, stats.StatusCounts["completed"])
 				s.Equal(0, stats.StatusCounts["failed"])
 				s.Equal(0, stats.DLQCount)
+			},
+		},
+		{
+			name: "when a job has no event yet it is submitted, and a deleted job's events count for nothing",
+			setupMocks: func() {
+				keys := []string{
+					// job-1 was just sent: no agent wrote an event yet.
+					"jobs.job-1",
+					// job-2 was deleted, and its events stayed.
+					"status.job-2.submitted._api.100",
+					"status.job-2.failed.agent1.101",
+				}
+				s.mockNATSClient.EXPECT().
+					KVKeys(gomock.Any(), "jobs").
+					Return(keys, nil)
+				s.mockNATSClient.EXPECT().
+					StreamInfo(gomock.Any(), "JOBS-DLQ").
+					Return(nil, errors.New("no stream"))
+			},
+			validateFunc: func(stats *job.QueueStats, err error) {
+				s.NoError(err)
+				s.Equal(1, stats.TotalJobs)
+				s.Equal(1, stats.StatusCounts["submitted"])
+				s.Equal(0, stats.StatusCounts["failed"])
 			},
 		},
 	}
