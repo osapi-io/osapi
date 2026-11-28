@@ -24,7 +24,7 @@ its examples make.
 | Next        | no                                                                                                                                           |
 | Platforms   | debian                                                                                                                                       |
 | Sudo        | netplan                                                                                                                                      |
-| Runs        | netplan                                                                                                                                      |
+| Runs        | netplan, ip                                                                                                                                  |
 | Writes      | /etc/netplan/osapi-\*.yaml                                                                                                                   |
 | Keeps state | no                                                                                                                                           |
 | Uses        | [managedfile](../../internal/managedfile/managedfile.md)                                                                                     |
@@ -52,13 +52,13 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-|                 |                                                                                                                               |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Span            | behavior.netplan.&lt;method&gt;                                                                                               |
-| Child spans     | behavior.managedfile.&lt;method&gt;, exec netplan, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
-| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                     |
-| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed               |
-| Recorded inputs | path (update, delete), name (get)                                                                                             |
+|                 |                                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.netplan.&lt;method&gt;                                                                                                                      |
+| Child spans     | behavior.managedfile.&lt;method&gt;, exec netplan, exec ip, exec ethtool, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                            |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                      |
+| Recorded inputs | path (update, delete), name (get)                                                                                                                    |
 
 ## Method update
 

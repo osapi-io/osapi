@@ -31,6 +31,7 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/network"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -49,6 +50,7 @@ type debian struct {
 	files managedfile.Provider
 	exec  host.Exec
 	fs    avfs.VFS
+	src   source.Sources
 }
 
 func newDebian(
@@ -58,6 +60,7 @@ func newDebian(
 		files: host.Require[managedfile.Provider](h, managedfile.Behavior),
 		exec:  h.Exec,
 		fs:    h.FS,
+		src:   h.Sources(),
 	}, nil
 }
 
@@ -225,19 +228,19 @@ var netplanType = map[string]string{
 }
 
 // kind is the netplan type of the interface name from its kind as gohai reads
-// it from sysfs, or "" when gohai does not know the interface or its kind
-// has no section of its own. It reads sysfs only, with no commands, because
-// a write asks it for each interface it changes.
+// it, or "" when gohai cannot read the interfaces, does not know the
+// interface, or its kind has no section of its own.
 func (d *debian) kind(
 	ctx context.Context,
 	name string,
 ) string {
-	out, _ := (&network.Linux{FS: d.fs}).Collect(ctx, nil)
-	if info, ok := out.(*network.Info); ok {
-		for _, iface := range info.Interfaces {
-			if iface.Name == name {
-				return netplanType[iface.Kind]
-			}
+	out, err := network.NewWith(d.src).Collect(ctx, nil)
+	if err != nil {
+		return ""
+	}
+	for _, iface := range out.(*network.Info).Interfaces {
+		if iface.Name == name {
+			return netplanType[iface.Kind]
 		}
 	}
 
