@@ -771,6 +771,46 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 			},
 		},
 		{
+			name: "when the controller key is not an Ed25519 public key it changes nothing",
+			setupAgent: func() *agent.Agent {
+				fs := memfs.New()
+				logger := slog.Default()
+				cfg := config.Config{
+					Agent: config.AgentConfig{
+						PKI: config.AgentPKI{
+							KeyDir: "/keys",
+						},
+					},
+				}
+
+				a := agent.New(
+					fs, cfg, logger,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+				)
+
+				agent.SetAgentState(a, types.AgentPending)
+
+				return a
+			},
+			msg: func() *nats.Msg {
+				resp := pki.EnrollmentResponse{
+					Accepted:            true,
+					ControllerPublicKey: []byte("short"),
+				}
+				data, _ := json.Marshal(resp)
+
+				return &nats.Msg{Data: data}
+			}(),
+			validateFunc: func(a *agent.Agent) {
+				assert.Equal(
+					suite.T(),
+					types.AgentPending,
+					agent.GetAgentState(a),
+					"an agent that got no usable key keeps waiting",
+				)
+			},
+		},
+		{
 			name: "when accepted is false logs rejection and returns",
 			setupAgent: func() *agent.Agent {
 				fs := memfs.New()

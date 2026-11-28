@@ -294,6 +294,17 @@ func (a *Agent) handleEnrollmentResponse(
 		return
 	}
 
+	// A key that is not an Ed25519 public key verifies nothing, so the agent
+	// keeps waiting for a response with a key it can use.
+	if len(resp.ControllerPublicKey) != ed25519.PublicKeySize {
+		a.pkiLogger.Warn(
+			"ignored an enrollment response: the controller key is not an Ed25519 public key",
+			slog.Int("length", len(resp.ControllerPublicKey)),
+		)
+
+		return
+	}
+
 	if err := a.keepControllerKey(ed25519.PublicKey(resp.ControllerPublicKey)); err != nil {
 		a.pkiLogger.Error("failed to save controller public key", slog.String("error", err.Error()))
 
