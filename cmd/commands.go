@@ -29,38 +29,31 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osapi-io/osapi/internal/cli/commands/agentservice"
-	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
-	"github.com/osapi-io/osapi/internal/cli/commands/pkikey"
-	"github.com/osapi-io/osapi/internal/cli/commands/pkilist"
-	osapiexec "github.com/osapi-io/osapi/internal/exec"
-
-	"github.com/osapi-io/osapi/internal/audit"
-
-	"github.com/osapi-io/osapi/internal/controller/certrotation"
-	"github.com/osapi-io/osapi/internal/controller/jointoken"
-
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
-	"github.com/osapi-io/osapi/internal/guide/sdktypes"
-
-	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
-	"github.com/osapi-io/osapi/internal/cli/commands/chain"
-
 	"github.com/avfs/avfs/vfs/osfs"
-
 	"github.com/spf13/viper"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/agent/identity"
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/behavior/collectors"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/agentservice"
+	"github.com/osapi-io/osapi/internal/cli/commands/chain"
+	"github.com/osapi-io/osapi/internal/cli/commands/pkicert"
+	"github.com/osapi-io/osapi/internal/cli/commands/pkikey"
+	"github.com/osapi-io/osapi/internal/cli/commands/pkilist"
+	"github.com/osapi-io/osapi/internal/controller/certrotation"
+	"github.com/osapi-io/osapi/internal/controller/jointoken"
+	osapiexec "github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/guide/sdktypes"
+	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	// The generated command groups register themselves in their init.
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"

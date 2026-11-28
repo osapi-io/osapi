@@ -21,33 +21,18 @@
 package clidocs
 
 import (
-	"errors"
-	"strings"
-
 	"github.com/avfs/avfs"
-	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/osfs"
 )
 
-// FailHostRename makes the filesystem of the generator fail each rename to a
-// path that ends with suffix, and returns a function that puts it back.
-func FailHostRename(
-	suffix string,
-) func() {
-	old := hostFS
-	vfs := failfs.New(osfs.NewWithNoIdm())
-	_ = vfs.SetFailFunc(func(
-		_ avfs.VFSBase,
-		fn avfs.FnVFS,
-		p *failfs.FailParam,
-	) error {
-		if fn == avfs.FnRename && strings.HasSuffix(p.NewPath, suffix) {
-			return errors.New("injected rename error")
-		}
+// SetHostFS replaces the filesystem of the generator.
+func SetHostFS(
+	fs avfs.VFS,
+) {
+	hostFS = fs
+}
 
-		return nil
-	})
-	hostFS = vfs
-
-	return func() { hostFS = old }
+// ResetHostFS puts back the filesystem of the host.
+func ResetHostFS() {
+	hostFS = osfs.NewWithNoIdm()
 }

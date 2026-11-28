@@ -30,8 +30,8 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-	"github.com/osapi-io/osapi/internal/atomicfile"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"

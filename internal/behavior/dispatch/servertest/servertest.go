@@ -44,9 +44,6 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-
-	"github.com/osapi-io/osapi/pkg/sdk/types"
-
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
@@ -64,6 +61,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // hostFS is the filesystem that the generator reads and writes, which a

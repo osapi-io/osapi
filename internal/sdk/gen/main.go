@@ -52,7 +52,6 @@ import (
 	"strings"
 
 	"github.com/avfs/avfs"
-
 	"github.com/dave/jennifer/jen"
 	"github.com/getkin/kin-openapi/openapi3"
 

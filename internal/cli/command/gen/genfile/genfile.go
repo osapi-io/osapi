@@ -41,10 +41,10 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-	"github.com/osapi-io/osapi/internal/atomicfile"
-
 	"github.com/dave/jennifer/jen"
 	"golang.org/x/tools/imports"
+
+	"github.com/osapi-io/osapi/internal/atomicfile"
 )
 
 // hostFS is the filesystem that the generator reads and writes, which a

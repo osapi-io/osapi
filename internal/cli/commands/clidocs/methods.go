@@ -30,14 +30,12 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-	"github.com/osapi-io/osapi/internal/atomicfile"
 
+	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
-
-	"github.com/osapi-io/osapi/internal/guide"
-
 	"github.com/osapi-io/osapi/internal/cli/reference"
+	"github.com/osapi-io/osapi/internal/guide"
 )
 
 // hostFS is the filesystem that the generator reads and writes, which a

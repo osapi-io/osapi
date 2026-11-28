@@ -28,6 +28,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/failfs"
+	"github.com/avfs/avfs/vfs/osfs"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
@@ -390,10 +393,10 @@ func (s *MethodsPublicTestSuite) TestWriteReferenceTables() {
 
 	s.Require().NoError(os.Chmod(metrics, 0o644))
 	s.Require().NoError(os.WriteFile(metrics, []byte("TABLE"), 0o644))
-	restore := clidocs.FailHostRename("metrics.md")
+	clidocs.SetHostFS(renameFails("metrics.md"))
 	_, err = clidocs.WriteReference(context.Background(),
 		clidocs.Deps{Pages: none, Tables: tables}, clidocs.ReferenceInput{Root: root})
-	restore()
+	clidocs.ResetHostFS()
 	s.Error(err, "a page it cannot write")
 }
 
@@ -401,4 +404,26 @@ func TestMethodsPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(MethodsPublicTestSuite))
+}
+
+// renameFails is a filesystem of the host that fails each rename to a path
+// that ends with suffix, as a full disk fails the last step of an atomic
+// write.
+func renameFails(
+	suffix string,
+) avfs.VFS {
+	vfs := failfs.New(osfs.NewWithNoIdm())
+	_ = vfs.SetFailFunc(func(
+		_ avfs.VFSBase,
+		fn avfs.FnVFS,
+		p *failfs.FailParam,
+	) error {
+		if fn == avfs.FnRename && strings.HasSuffix(p.NewPath, suffix) {
+			return errors.New("injected rename error")
+		}
+
+		return nil
+	})
+
+	return vfs
 }
