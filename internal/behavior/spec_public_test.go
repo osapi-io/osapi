@@ -32,11 +32,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/osapi-io/osapi/internal/behavior/host"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
 type SpecPublicTestSuite struct {
@@ -238,6 +237,11 @@ func (s *SpecPublicTestSuite) TestSpecKinds() {
 		s.NotEmpty(behavior.Spec.Of(t.Kind), t.Name)
 		s.NotEmpty(t.Does, t.Name)
 		s.NotEmpty(t.When, t.Name)
+		// A term not yet built names only what the DSL cannot do: an action
+		// that runs the caller's command is .PermitAs(types.VerbExec).
+		if t.Kind == behavior.KindNotYet {
+			s.NotContains(t.Does, "no execute permission")
+		}
 	}
 	for _, k := range behavior.Spec.Kinds {
 		s.NotEmpty(behavior.Spec.Of(k.Kind), "kind %s has no terms", k.Kind)
